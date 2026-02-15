@@ -156,6 +156,7 @@ PLAYLISTS = {
 
 MARKETS_TO_TRY = ["US", None, "GB", "CA", "AU"]
 MAX_PAGES = 10
+MAX_BIAY_EPISODES_TO_SCAN = 2500
 
 
 def require_env(name: str) -> str:
@@ -398,26 +399,62 @@ def bible_in_a_year_for_today(sp: spotipy.Spotify, status: Dict[str, bool]):
     n = day_of_year_1_to_365(datetime.datetime.now())
     pattern = re.compile(rf"\bDay\s*0*{n}\b", re.IGNORECASE)
 
-    res = safe_call(sp.show_episodes, BIBLE_IN_A_YEAR_SHOW_ID, limit=50, market="US")
-    if not isinstance(res, dict):
-        status["Bible in a Year"] = False
-        return None, None, n
+    def release_key(release_date: str) -> Tuple[int, int, int]:
+        parts: List[int] = []
+        for part in (release_date or "").split("-"):
+            try:
+                parts.append(int(part))
+            except Exception:
+                break
+        while len(parts) < 3:
+            parts.append(1)
+        return tuple(parts[:3])  # type: ignore[return-value]
 
-    items = list(res.get("items") or [])
-    if res.get("next"):
-        res2 = safe_call(sp.next, res)
-        if isinstance(res2, dict):
-            items += list(res2.get("items") or [])
+    def episode_year(name: str, release_date: str) -> int:
+        years = [int(y) for y in re.findall(r"\b(20\d{2})\b", name)]
+        if years:
+            return max(years)
+        return release_key(release_date)[0]
 
-    for ep in items:
-        if not isinstance(ep, dict):
+    best = None
+    for market in MARKETS_TO_TRY:
+        first = safe_call(sp.show_episodes, BIBLE_IN_A_YEAR_SHOW_ID, limit=50, offset=0, market=market)
+        if not isinstance(first, dict):
             continue
-        name = ep.get("name") or ""
-        if pattern.search(name):
-            uri = ep.get("uri")
-            if uri:
-                status["Bible in a Year"] = True
-                return uri, name, n
+
+        total = first.get("total")
+        try:
+            total_int = int(total)
+        except Exception:
+            total_int = len(first.get("items") or [])
+        to_scan = min(total_int, MAX_BIAY_EPISODES_TO_SCAN)
+
+        pages = [first]
+        for offset in range(50, to_scan, 50):
+            page = safe_call(sp.show_episodes, BIBLE_IN_A_YEAR_SHOW_ID, limit=50, offset=offset, market=market)
+            if isinstance(page, dict):
+                pages.append(page)
+
+        for page in pages:
+            for ep in (page.get("items") or []):
+                if not isinstance(ep, dict):
+                    continue
+                name = ep.get("name") or ""
+                if not pattern.search(name):
+                    continue
+                uri = ep.get("uri")
+                if not uri:
+                    continue
+                rkey = release_key(ep.get("release_date") or "")
+                eyear = episode_year(name, ep.get("release_date") or "")
+                key = (eyear, rkey)
+                if best is None or key > best[0]:
+                    best = (key, uri, name)
+
+    if best:
+        status["Bible in a Year"] = True
+        print(f"INFO biay_day={n} selected={best[2]}")
+        return best[1], best[2], n
 
     status["Bible in a Year"] = False
     return None, None, n
