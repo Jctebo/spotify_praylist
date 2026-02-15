@@ -1,0 +1,41 @@
+name: Daily Spotify Playlist Refresh
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 10 * * *" # daily 10:00 UTC
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - profile: morning
+            playlist_id: "0sy9eBsySKuCppI0PxXRJN"
+          - profile: midday
+            playlist_id: "4gQAaPAMiezBaDaoqK6sFQ"
+          - profile: night
+            playlist_id: "1TAlNiKHMc41cT0fvkYxTD"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Refresh playlist
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
+          SPOTIFY_PLAYLIST_PROFILE: ${{ matrix.profile }}
+          SPOTIFY_PLAYLIST_ID: ${{ matrix.playlist_id }}
+        run: python refresh_playlist.py
