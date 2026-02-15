@@ -114,8 +114,8 @@ PLAYLISTS = {
             "BIBLE_IN_A_YEAR": True,
         },
         "order": [
-            "BIBLE_IN_A_YEAR",
             "SAINT_OF_DAY",
+            "BIBLE_IN_A_YEAR",
             "ROSARY",
             "MIDAFTERNOON",
             "USCCB",

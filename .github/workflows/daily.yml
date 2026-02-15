@@ -3,7 +3,7 @@ name: Daily Spotify Playlist Refresh
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 10 * * *" # daily 10:00 UTC
+    - cron: "0 9 * * *" # daily 03:00 CST / 04:00 CDT
 
 jobs:
   refresh:
