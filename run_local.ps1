@@ -18,15 +18,20 @@ $env:SPOTIFY_CLIENT_ID = $ClientId
 $env:SPOTIFY_CLIENT_SECRET = $ClientSecret
 $env:SPOTIFY_REFRESH_TOKEN = $RefreshToken
 
-$matrix = @(
-  @{ profile = "morning"; playlist_id = "0sy9eBsySKuCppI0PxXRJN" },
-  @{ profile = "midday";  playlist_id = "4gQAaPAMiezBaDaoqK6sFQ" },
-  @{ profile = "night";   playlist_id = "1TAlNiKHMc41cT0fvkYxTD" }
-)
+$configPath = "playlist_config.json"
+if (-not (Test-Path -Path $configPath)) {
+  throw "Missing config file: $configPath"
+}
+$config = Get-Content -Raw -Path $configPath | ConvertFrom-Json
+$matrix = @($config.runs)
+if ($matrix.Count -eq 0) {
+  throw "No runs found in $configPath"
+}
 
 foreach ($job in $matrix) {
-  $env:SPOTIFY_PLAYLIST_PROFILE = $job.profile
-  $env:SPOTIFY_PLAYLIST_ID = $job.playlist_id
+  $env:SPOTIFY_PLAYLIST_PROFILE = [string]$job.profile
+  $env:SPOTIFY_PLAYLIST_ID = [string]$job.playlist_id
+  $env:SPOTIFY_CONFIG_FILE = $configPath
 
   Write-Host ""
   Write-Host "Running profile=$($job.profile) playlist_id=$($job.playlist_id)"

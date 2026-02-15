@@ -1,0 +1,111 @@
+{
+  "runs": [
+    {
+      "profile": "morning",
+      "playlist_id": "0sy9eBsySKuCppI0PxXRJN"
+    },
+    {
+      "profile": "midday",
+      "playlist_id": "4gQAaPAMiezBaDaoqK6sFQ"
+    },
+    {
+      "profile": "night",
+      "playlist_id": "1TAlNiKHMc41cT0fvkYxTD"
+    }
+  ],
+  "profiles": {
+    "morning": {
+      "enable": {
+        "ANGELUS_SONG": true,
+        "AUXILIUM": true,
+        "SUNDAY_FRMIKE": true,
+        "SUNDAY_BARRON": true,
+        "MORNING": true,
+        "USCCB": false,
+        "DGE": false,
+        "TVMASS": false,
+        "OFFICE": false,
+        "MIDMORNING": false,
+        "MIDDAY": false,
+        "ROSARY": false,
+        "MIDAFTERNOON": false,
+        "ANGELUS_POD": false,
+        "EVENING": false,
+        "NIGHT": false,
+        "FRIDAY_STATIONS": false,
+        "SAINT_OF_DAY": false,
+        "NIGHT_PRE_COMPLINE": false,
+        "BIBLE_IN_A_YEAR": false
+      },
+      "order": [
+        "ANGELUS_SONG",
+        "MORNING",
+        "AUXILIUM",
+        "SUNDAY_FRMIKE",
+        "SUNDAY_BARRON"
+      ]
+    },
+    "midday": {
+      "enable": {
+        "ANGELUS_SONG": true,
+        "AUXILIUM": false,
+        "SUNDAY_FRMIKE": false,
+        "SUNDAY_BARRON": false,
+        "MORNING": false,
+        "USCCB": true,
+        "DGE": false,
+        "TVMASS": false,
+        "OFFICE": false,
+        "MIDMORNING": false,
+        "MIDDAY": false,
+        "ROSARY": true,
+        "MIDAFTERNOON": true,
+        "ANGELUS_POD": false,
+        "EVENING": false,
+        "NIGHT": false,
+        "FRIDAY_STATIONS": false,
+        "SAINT_OF_DAY": true,
+        "NIGHT_PRE_COMPLINE": false,
+        "BIBLE_IN_A_YEAR": true
+      },
+      "order": [
+        "SAINT_OF_DAY",
+        "ROSARY",
+        "BIBLE_IN_A_YEAR",
+        "MIDAFTERNOON",
+        "USCCB",
+        "ANGELUS_SONG"
+      ]
+    },
+    "night": {
+      "enable": {
+        "ANGELUS_SONG": true,
+        "AUXILIUM": false,
+        "SUNDAY_FRMIKE": false,
+        "SUNDAY_BARRON": false,
+        "MORNING": false,
+        "USCCB": false,
+        "DGE": false,
+        "TVMASS": false,
+        "OFFICE": false,
+        "MIDMORNING": false,
+        "MIDDAY": false,
+        "ROSARY": false,
+        "MIDAFTERNOON": false,
+        "ANGELUS_POD": false,
+        "EVENING": true,
+        "NIGHT": true,
+        "FRIDAY_STATIONS": false,
+        "SAINT_OF_DAY": false,
+        "NIGHT_PRE_COMPLINE": true,
+        "BIBLE_IN_A_YEAR": false
+      },
+      "order": [
+        "ANGELUS_SONG",
+        "EVENING",
+        "NIGHT_PRE_COMPLINE",
+        "NIGHT"
+      ]
+    }
+  }
+}

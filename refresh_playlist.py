@@ -1,10 +1,11 @@
 import base64
 import datetime
+import json
 import os
 import re
 import sys
 import time
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import requests
 import spotipy
@@ -24,6 +25,7 @@ SPOTIFY_USER_ID = "SPOTIFY_USER_ID"
 
 # Optional selector for which playlist profile to build into SPOTIFY_PLAYLIST_ID.
 SPOTIFY_PLAYLIST_PROFILE = "SPOTIFY_PLAYLIST_PROFILE"  # morning|midday|night, default morning
+SPOTIFY_CONFIG_FILE = "SPOTIFY_CONFIG_FILE"  # optional, defaults to playlist_config.json
 
 
 # ===== Core show IDs =====
@@ -57,103 +59,6 @@ DO_MATCH_MIDAFT = "Midafternoon Prayer"
 DO_MATCH_EVENING = "Evening Prayer"
 DO_MATCH_NIGHT_ANY = ("Night Prayer", "Compline")
 
-# ===== Playlist profiles =====
-PLAYLISTS = {
-    "morning": {
-        "enable": {
-            "ANGELUS_SONG": True,
-            "AUXILIUM": True,
-            "SUNDAY_FRMIKE": True,
-            "SUNDAY_BARRON": True,
-            "MORNING": True,
-            "USCCB": False,
-            "DGE": False,
-            "TVMASS": False,
-            "OFFICE": False,
-            "MIDMORNING": False,
-            "MIDDAY": False,
-            "ROSARY": False,
-            "MIDAFTERNOON": False,
-            "ANGELUS_POD": False,
-            "EVENING": False,
-            "NIGHT": False,
-            "FRIDAY_STATIONS": False,
-            "SAINT_OF_DAY": False,
-            "NIGHT_PRE_COMPLINE": False,
-            "BIBLE_IN_A_YEAR": False,
-        },
-        "order": [
-            "ANGELUS_SONG",
-            "MORNING",
-            "AUXILIUM",
-            "SUNDAY_FRMIKE",
-            "SUNDAY_BARRON",
-        ],
-    },
-    "midday": {
-        "enable": {
-            "ANGELUS_SONG": True,
-            "AUXILIUM": False,
-            "SUNDAY_FRMIKE": False,
-            "SUNDAY_BARRON": False,
-            "MORNING": False,
-            "USCCB": True,
-            "DGE": False,
-            "TVMASS": False,
-            "OFFICE": False,
-            "MIDMORNING": False,
-            "MIDDAY": False,
-            "ROSARY": True,
-            "MIDAFTERNOON": True,
-            "ANGELUS_POD": False,
-            "EVENING": False,
-            "NIGHT": False,
-            "FRIDAY_STATIONS": False,
-            "SAINT_OF_DAY": True,
-            "NIGHT_PRE_COMPLINE": False,
-            "BIBLE_IN_A_YEAR": True,
-        },
-        "order": [
-            "SAINT_OF_DAY",
-            "BIBLE_IN_A_YEAR",
-            "ROSARY",
-            "MIDAFTERNOON",
-            "USCCB",
-            "ANGELUS_SONG",
-        ],
-    },
-    "night": {
-        "enable": {
-            "ANGELUS_SONG": True,
-            "AUXILIUM": False,
-            "SUNDAY_FRMIKE": False,
-            "SUNDAY_BARRON": False,
-            "MORNING": False,
-            "USCCB": False,
-            "DGE": False,
-            "TVMASS": False,
-            "OFFICE": False,
-            "MIDMORNING": False,
-            "MIDDAY": False,
-            "ROSARY": False,
-            "MIDAFTERNOON": False,
-            "ANGELUS_POD": False,
-            "EVENING": True,
-            "NIGHT": True,
-            "FRIDAY_STATIONS": False,
-            "SAINT_OF_DAY": False,
-            "NIGHT_PRE_COMPLINE": True,
-            "BIBLE_IN_A_YEAR": False,
-        },
-        "order": [
-            "ANGELUS_SONG",
-            "EVENING",
-            "NIGHT_PRE_COMPLINE",
-            "NIGHT",
-        ],
-    },
-}
-
 MARKETS_TO_TRY = ["US", None, "GB", "CA", "AU"]
 MAX_PAGES = 10
 MAX_BIAY_EPISODES_TO_SCAN = 2500
@@ -164,6 +69,18 @@ def require_env(name: str) -> str:
     if not value:
         raise RuntimeError(f"Missing required environment variable: {name}")
     return value
+
+
+def load_playlist_config() -> Dict[str, Any]:
+    config_path = os.getenv(SPOTIFY_CONFIG_FILE, "playlist_config.json").strip() or "playlist_config.json"
+    with open(config_path, "r", encoding="utf-8") as fh:
+        cfg = json.load(fh)
+    if not isinstance(cfg, dict):
+        raise RuntimeError(f"Invalid config format in {config_path}: root must be an object.")
+    profiles = cfg.get("profiles")
+    if not isinstance(profiles, dict) or not profiles:
+        raise RuntimeError(f"Invalid config format in {config_path}: missing or empty 'profiles' object.")
+    return cfg
 
 
 def refresh_access_token(client_id: str, client_secret: str, refresh_token: str) -> str:
@@ -620,10 +537,16 @@ def resolve_item_uri(sp: spotipy.Spotify, key: str, weekday: str, status: Dict[s
     return None
 
 
-def build_queue_for_profile(sp: spotipy.Spotify, profile_name: str, weekday: str, status: Dict[str, bool]) -> List[str]:
-    cfg = PLAYLISTS.get(profile_name)
+def build_queue_for_profile(
+    sp: spotipy.Spotify,
+    profile_name: str,
+    weekday: str,
+    status: Dict[str, bool],
+    profiles_cfg: Dict[str, Any],
+) -> List[str]:
+    cfg = profiles_cfg.get(profile_name)
     if not cfg:
-        raise RuntimeError(f"Invalid profile '{profile_name}'. Use one of: {', '.join(sorted(PLAYLISTS.keys()))}")
+        raise RuntimeError(f"Invalid profile '{profile_name}'. Use one of: {', '.join(sorted(profiles_cfg.keys()))}")
 
     enable = cfg.get("enable", {})
     order = cfg.get("order", [])
@@ -652,11 +575,29 @@ def build_queue_for_profile(sp: spotipy.Spotify, profile_name: str, weekday: str
 
 def main() -> int:
     try:
-        playlist_id = require_env(SPOTIFY_PLAYLIST_ID)
+        cfg = load_playlist_config()
+        profiles_cfg = cfg.get("profiles", {})
+        runs_cfg = cfg.get("runs", [])
+
         profile = os.getenv(SPOTIFY_PLAYLIST_PROFILE, "morning").strip().lower() or "morning"
         if profile == "day":
             # Backward compatibility for older env values.
             profile = "morning"
+
+        playlist_id = os.getenv(SPOTIFY_PLAYLIST_ID, "").strip()
+        if not playlist_id and isinstance(runs_cfg, list):
+            for item in runs_cfg:
+                if not isinstance(item, dict):
+                    continue
+                if str(item.get("profile", "")).strip().lower() == profile:
+                    playlist_id = str(item.get("playlist_id", "")).strip()
+                    if playlist_id:
+                        break
+        if not playlist_id:
+            raise RuntimeError(
+                f"Missing required environment variable: {SPOTIFY_PLAYLIST_ID}. "
+                f"Set it, or add playlist_id for profile '{profile}' in playlist_config.json runs[]."
+            )
 
         # Optional compatibility read; not used by default flow.
         _ = os.getenv(SPOTIFY_USER_ID, "")
@@ -666,7 +607,7 @@ def main() -> int:
         status: Dict[str, bool] = {}
 
         removed = clear_streaming_keep_locals(sp, playlist_id)
-        queue = build_queue_for_profile(sp, profile, weekday, status)
+        queue = build_queue_for_profile(sp, profile, weekday, status, profiles_cfg)
         written = add_items(sp, playlist_id, queue)
 
         print(f"SUMMARY playlist_id={playlist_id} tracks_written={written}")
