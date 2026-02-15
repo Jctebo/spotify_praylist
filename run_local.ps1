@@ -23,9 +23,16 @@ if (-not (Test-Path -Path $configPath)) {
   throw "Missing config file: $configPath"
 }
 $config = Get-Content -Raw -Path $configPath | ConvertFrom-Json
-$matrix = @($config.runs)
+$matrix = @()
+foreach ($prop in $config.profiles.PSObject.Properties) {
+  $profileName = [string]$prop.Name
+  $playlistId = [string]$prop.Value.playlist_id
+  if (-not [string]::IsNullOrWhiteSpace($playlistId)) {
+    $matrix += @{ profile = $profileName; playlist_id = $playlistId }
+  }
+}
 if ($matrix.Count -eq 0) {
-  throw "No runs found in $configPath"
+  throw "No profiles with playlist_id found in $configPath"
 }
 
 foreach ($job in $matrix) {

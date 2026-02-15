@@ -1,42 +1,109 @@
 {
-  "runs": [
-    {
-      "profile": "morning",
-      "playlist_id": "0sy9eBsySKuCppI0PxXRJN"
+  "catalog": {
+    "ANGELUS_SONG": {
+      "label": "Angelus Song",
+      "description": "Fixed Angelus music track by Daughters of Mary used as a recurring anchor item.",
+      "kind": "fixed"
     },
-    {
-      "profile": "midday",
-      "playlist_id": "4gQAaPAMiezBaDaoqK6sFQ"
+    "ANGELUS_POD": {
+      "label": "Angelus Podcast",
+      "description": "Fixed Angelus prayer podcast episode from The Prayer Podcast.",
+      "kind": "fixed"
     },
-    {
-      "profile": "night",
-      "playlist_id": "1TAlNiKHMc41cT0fvkYxTD"
+    "NIGHT_PRE_COMPLINE": {
+      "label": "Night Before Compline",
+      "description": "Fixed episode of Examen placed before Night Prayer/Compline in the night profile.",
+      "kind": "fixed"
+    },
+    "BIBLE_IN_A_YEAR": {
+      "label": "Bible in a Year",
+      "description": "Dynamic selection: finds today's Day N episode and prefers the newest available year.",
+      "kind": "dynamic"
+    },
+    "SAINT_OF_DAY": {
+      "label": "Saint of the Day",
+      "description": "Dynamic selection: latest released Saint of the Day episode.",
+      "kind": "dynamic"
+    },
+    "AUXILIUM": {
+      "label": "Auxilium Christianorum",
+      "description": "Dynamic selection: Auxilium Christianorum episode matching the current weekday.",
+      "kind": "dynamic"
+    },
+    "SUNDAY_FRMIKE": {
+      "label": "Fr. Mike Sunday Homily",
+      "description": "Dynamic selection: most recent Fr. Mike Sunday homily, only included on Sundays.",
+      "kind": "dynamic"
+    },
+    "SUNDAY_BARRON": {
+      "label": "Bp. Barron Sunday Sermon",
+      "description": "Dynamic selection: most recent Bishop Barron Sunday sermon, only included on Sundays.",
+      "kind": "dynamic"
+    },
+    "MORNING": {
+      "label": "Morning Prayer",
+      "description": "Dynamic selection: today's Morning Prayer (STH preferred, Divine Office fallback).",
+      "kind": "dynamic"
+    },
+    "EVENING": {
+      "label": "Evening Prayer",
+      "description": "Dynamic selection: today's Evening Prayer/Vespers (STH preferred, Divine Office fallback).",
+      "kind": "dynamic"
+    },
+    "NIGHT": {
+      "label": "Night Prayer",
+      "description": "Dynamic selection: today's Night Prayer/Compline from Divine Office.",
+      "kind": "dynamic"
+    },
+    "USCCB": {
+      "label": "Daily Mass Readings",
+      "description": "Dynamic selection: latest daily Mass readings episode.",
+      "kind": "dynamic"
+    },
+    "DGE": {
+      "label": "Daily Gospel Exegesis",
+      "description": "Dynamic selection: latest Daily Gospel Exegesis from logical Bible study episode.",
+      "kind": "dynamic"
+    },
+    "TVMASS": {
+      "label": "Daily TV Mass",
+      "description": "Dynamic selection: most recent Daily TV Mass episode.",
+      "kind": "dynamic"
+    },
+    "OFFICE": {
+      "label": "Office of Readings",
+      "description": "Dynamic selection: today's Office of Readings episode from Divine Office.",
+      "kind": "dynamic"
+    },
+    "MIDMORNING": {
+      "label": "Midmorning Prayer",
+      "description": "Dynamic selection: today's Midmorning Prayer episode from Divine Office.",
+      "kind": "dynamic"
+    },
+    "MIDDAY": {
+      "label": "Midday Prayer",
+      "description": "Dynamic selection: today's Midday Prayer episode from Divine Office.",
+      "kind": "dynamic"
+    },
+    "MIDAFTERNOON": {
+      "label": "Midafternoon Prayer",
+      "description": "Dynamic selection: today's Midafternoon Prayer episode from Divine Office.",
+      "kind": "dynamic"
+    },
+    "ROSARY": {
+      "label": "Rosary",
+      "description": "Dynamic selection: rosary episode by weekday mystery (Joyful/Sorrowful/Glorious/Luminous).",
+      "kind": "dynamic"
+    },
+    "FRIDAY_STATIONS": {
+      "label": "Stations of the Cross",
+      "description": "Fixed Stations of the Cross episode that is only added on Fridays.",
+      "kind": "fixed_by_weekday"
     }
-  ],
+  },
   "profiles": {
     "morning": {
-      "enable": {
-        "ANGELUS_SONG": true,
-        "AUXILIUM": true,
-        "SUNDAY_FRMIKE": true,
-        "SUNDAY_BARRON": true,
-        "MORNING": true,
-        "USCCB": false,
-        "DGE": false,
-        "TVMASS": false,
-        "OFFICE": false,
-        "MIDMORNING": false,
-        "MIDDAY": false,
-        "ROSARY": false,
-        "MIDAFTERNOON": false,
-        "ANGELUS_POD": false,
-        "EVENING": false,
-        "NIGHT": false,
-        "FRIDAY_STATIONS": false,
-        "SAINT_OF_DAY": false,
-        "NIGHT_PRE_COMPLINE": false,
-        "BIBLE_IN_A_YEAR": false
-      },
+      "playlist_id": "0sy9eBsySKuCppI0PxXRJN",
       "order": [
         "ANGELUS_SONG",
         "MORNING",
@@ -46,28 +113,7 @@
       ]
     },
     "midday": {
-      "enable": {
-        "ANGELUS_SONG": true,
-        "AUXILIUM": false,
-        "SUNDAY_FRMIKE": false,
-        "SUNDAY_BARRON": false,
-        "MORNING": false,
-        "USCCB": true,
-        "DGE": false,
-        "TVMASS": false,
-        "OFFICE": false,
-        "MIDMORNING": false,
-        "MIDDAY": false,
-        "ROSARY": true,
-        "MIDAFTERNOON": true,
-        "ANGELUS_POD": false,
-        "EVENING": false,
-        "NIGHT": false,
-        "FRIDAY_STATIONS": false,
-        "SAINT_OF_DAY": true,
-        "NIGHT_PRE_COMPLINE": false,
-        "BIBLE_IN_A_YEAR": true
-      },
+      "playlist_id": "4gQAaPAMiezBaDaoqK6sFQ",
       "order": [
         "SAINT_OF_DAY",
         "ROSARY",
@@ -78,32 +124,10 @@
       ]
     },
     "night": {
-      "enable": {
-        "ANGELUS_SONG": true,
-        "AUXILIUM": false,
-        "SUNDAY_FRMIKE": false,
-        "SUNDAY_BARRON": false,
-        "MORNING": false,
-        "USCCB": false,
-        "DGE": false,
-        "TVMASS": false,
-        "OFFICE": false,
-        "MIDMORNING": false,
-        "MIDDAY": false,
-        "ROSARY": false,
-        "MIDAFTERNOON": false,
-        "ANGELUS_POD": false,
-        "EVENING": true,
-        "NIGHT": true,
-        "FRIDAY_STATIONS": false,
-        "SAINT_OF_DAY": false,
-        "NIGHT_PRE_COMPLINE": true,
-        "BIBLE_IN_A_YEAR": false
-      },
+      "playlist_id": "1TAlNiKHMc41cT0fvkYxTD",
       "order": [
         "ANGELUS_SONG",
         "EVENING",
-        "NIGHT_PRE_COMPLINE",
         "NIGHT"
       ]
     }

@@ -16,7 +16,7 @@ jobs:
 
       - name: Read run matrix from config
         id: cfg
-        run: echo "matrix=$(jq -c '.runs' playlist_config.json)" >> "$GITHUB_OUTPUT"
+        run: echo "matrix=$(jq -c '[.profiles | to_entries[] | select(.value.playlist_id != null and .value.playlist_id != \"\") | {profile:.key, playlist_id:.value.playlist_id}]' playlist_config.json)" >> "$GITHUB_OUTPUT"
 
   refresh:
     needs: load-config

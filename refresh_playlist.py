@@ -80,6 +80,9 @@ def load_playlist_config() -> Dict[str, Any]:
     profiles = cfg.get("profiles")
     if not isinstance(profiles, dict) or not profiles:
         raise RuntimeError(f"Invalid config format in {config_path}: missing or empty 'profiles' object.")
+    catalog = cfg.get("catalog")
+    if not isinstance(catalog, dict) or not catalog:
+        raise RuntimeError(f"Invalid config format in {config_path}: missing or empty 'catalog' object.")
     return cfg
 
 
@@ -543,32 +546,25 @@ def build_queue_for_profile(
     weekday: str,
     status: Dict[str, bool],
     profiles_cfg: Dict[str, Any],
+    catalog_cfg: Dict[str, Any],
 ) -> List[str]:
     cfg = profiles_cfg.get(profile_name)
     if not cfg:
         raise RuntimeError(f"Invalid profile '{profile_name}'. Use one of: {', '.join(sorted(profiles_cfg.keys()))}")
 
-    enable = cfg.get("enable", {})
     order = cfg.get("order", [])
+    if not isinstance(order, list) or not order:
+        raise RuntimeError(f"Profile '{profile_name}' must define a non-empty 'order' list.")
 
     queue: List[str] = []
-    resolved: Dict[str, Optional[str]] = {}
 
     for key in order:
-        if not enable.get(key, False):
-            continue
+        key = str(key)
+        if key not in catalog_cfg:
+            raise RuntimeError(f"Profile '{profile_name}' references unknown key '{key}' (missing in catalog).")
         uri = resolve_item_uri(sp, key, weekday, status)
-        resolved[key] = uri
         if uri:
             queue.append(uri)
-
-    if enable.get("FRIDAY_STATIONS", False) and weekday == "Friday":
-        stations_uri = STATIONS_FRIDAY_URI
-        if "ROSARY" in resolved and resolved.get("ROSARY") in queue:
-            idx = queue.index(resolved["ROSARY"]) + 1
-            queue.insert(idx, stations_uri)
-        else:
-            queue.append(stations_uri)
 
     return queue
 
@@ -577,7 +573,7 @@ def main() -> int:
     try:
         cfg = load_playlist_config()
         profiles_cfg = cfg.get("profiles", {})
-        runs_cfg = cfg.get("runs", [])
+        catalog_cfg = cfg.get("catalog", {})
 
         profile = os.getenv(SPOTIFY_PLAYLIST_PROFILE, "morning").strip().lower() or "morning"
         if profile == "day":
@@ -585,18 +581,14 @@ def main() -> int:
             profile = "morning"
 
         playlist_id = os.getenv(SPOTIFY_PLAYLIST_ID, "").strip()
-        if not playlist_id and isinstance(runs_cfg, list):
-            for item in runs_cfg:
-                if not isinstance(item, dict):
-                    continue
-                if str(item.get("profile", "")).strip().lower() == profile:
-                    playlist_id = str(item.get("playlist_id", "")).strip()
-                    if playlist_id:
-                        break
+        if not playlist_id:
+            profile_cfg = profiles_cfg.get(profile)
+            if isinstance(profile_cfg, dict):
+                playlist_id = str(profile_cfg.get("playlist_id", "")).strip()
         if not playlist_id:
             raise RuntimeError(
                 f"Missing required environment variable: {SPOTIFY_PLAYLIST_ID}. "
-                f"Set it, or add playlist_id for profile '{profile}' in playlist_config.json runs[]."
+                f"Set it, or add playlist_id for profile '{profile}' in playlist_config.json profiles."
             )
 
         # Optional compatibility read; not used by default flow.
@@ -607,7 +599,7 @@ def main() -> int:
         status: Dict[str, bool] = {}
 
         removed = clear_streaming_keep_locals(sp, playlist_id)
-        queue = build_queue_for_profile(sp, profile, weekday, status, profiles_cfg)
+        queue = build_queue_for_profile(sp, profile, weekday, status, profiles_cfg, catalog_cfg)
         written = add_items(sp, playlist_id, queue)
 
         print(f"SUMMARY playlist_id={playlist_id} tracks_written={written}")
