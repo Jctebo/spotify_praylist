@@ -6,25 +6,8 @@ on:
     - cron: "0 9 * * *" # daily 03:00 CST / 04:00 CDT
 
 jobs:
-  load-config:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.cfg.outputs.matrix }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Read run matrix from config
-        id: cfg
-        run: echo "matrix=$(jq -c '[.profiles | to_entries[] | select(.value.playlist_id != null and .value.playlist_id != \"\") | {profile:.key, playlist_id:.value.playlist_id}]' playlist_config.json)" >> "$GITHUB_OUTPUT"
-
   refresh:
-    needs: load-config
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(needs.load-config.outputs.matrix) }}
 
     steps:
       - name: Checkout
@@ -44,6 +27,12 @@ jobs:
           SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
           SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
           SPOTIFY_CONFIG_FILE: playlist_config.json
-          SPOTIFY_PLAYLIST_PROFILE: ${{ matrix.profile }}
-          SPOTIFY_PLAYLIST_ID: ${{ matrix.playlist_id }}
-        run: python refresh_playlist.py
+        run: |
+          set -euo pipefail
+          jq -c '.profiles | to_entries[] | select(.value.playlist_id != null and .value.playlist_id != "") | {profile:.key, playlist_id:.value.playlist_id}' playlist_config.json \
+          | while read -r row; do
+              profile="$(echo "$row" | jq -r '.profile')"
+              playlist_id="$(echo "$row" | jq -r '.playlist_id')"
+              echo "Running profile=${profile} playlist_id=${playlist_id}"
+              SPOTIFY_PLAYLIST_PROFILE="$profile" SPOTIFY_PLAYLIST_ID="$playlist_id" python refresh_playlist.py
+            done
