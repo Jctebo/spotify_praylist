@@ -1,4 +1,41 @@
 {
+  "shows": {
+    "DIVINE_OFFICE": "70ydTdzunoqWAsvutFIkHM",
+    "DTH": "4SYYL51uogYDtHxDPznYP1",
+    "STH": "5MvuGtXFIbfej3dz8cKBVp",
+    "BARRON_ROSARY": "0aWJbTYTENolXYpBDSgzcH",
+    "LBS_EXEGESIS": "753FVUsio4Y6GjFvbGpvF0",
+    "DAILY_MASS_READINGS": "3IANujvjklSBVf6ioZd03N",
+    "DAILY_TV_MASS": "2WwFQr9a6BX7YQ4pkoIijp",
+    "FRMIKE_SUNDAY": "1CK5AHgLneCo2sE17UOfdV",
+    "BARRON_SUNDAY": "5G6vtvZBIQMpQ8TLgXLBiK",
+    "SAINT_OF_DAY": "1skJeU3tBmO7ftJ2ugNyYd",
+    "BIBLE_IN_A_YEAR": "4Pppt42NPK2XzKwNIoW7BR"
+  },
+  "fixed": {
+    "ANGELUS_SONG": "spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
+    "ANGELUS_POD": "spotify:episode:2HNK8wLRWHh0mJ9xmJjlUD",
+    "NIGHT_PRE_COMPLINE": "spotify:episode:1I8pCawzp1Wd5pE0NcHmUj",
+    "FRIDAY_STATIONS": "spotify:episode:4rZ8YJKq1iuqiypu3Q5TRm"
+  },
+  "tokens": {
+    "AUXILIUM": "Auxilium Christianorum",
+    "STH_LAUDS": "Lauds",
+    "STH_VESPERS": "Vespers",
+    "DO_MORNING": "Morning Prayer",
+    "DO_OFFICE": "Office of Readings",
+    "DO_MIDMORNING": "Midmorning Prayer",
+    "DO_MIDDAY": "Midday Prayer",
+    "DO_MIDAFTERNOON": "Midafternoon Prayer",
+    "DO_EVENING": [
+      "Evening Prayer",
+      "Vespers"
+    ],
+    "DO_NIGHT_ANY": [
+      "Night Prayer",
+      "Compline"
+    ]
+  },
   "catalog": {
     "ANGELUS_SONG": {
       "label": "Angelus Song",
