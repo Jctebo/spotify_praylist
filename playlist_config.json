@@ -142,9 +142,10 @@
     "morning": {
       "playlist_id": "0sy9eBsySKuCppI0PxXRJN",
       "order": [
-        "ANGELUS_SONG",
+        "ROSARY",
         "MORNING",
-        "AUXILIUM",
+        "ANGELUS_SONG",
+        "BIBLE_IN_A_YEAR",        
         "SUNDAY_FRMIKE",
         "SUNDAY_BARRON"
       ]
@@ -152,11 +153,10 @@
     "midday": {
       "playlist_id": "4gQAaPAMiezBaDaoqK6sFQ",
       "order": [
-        "SAINT_OF_DAY",
-        "ROSARY",
-        "BIBLE_IN_A_YEAR",
-        "MIDAFTERNOON",
         "USCCB",
+        "SAINT_OF_DAY",
+        "AUXILIUM",
+        "MIDAFTERNOON",
         "ANGELUS_SONG"
       ]
     },
