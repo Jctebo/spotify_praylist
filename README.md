@@ -97,6 +97,9 @@ Optional variables/secrets:
 - `NOTION_DATABASE_NAME` (fallback lookup; default `Opus Dei`)
 - `NOTION_TITLE_PROPERTY` (default `Name`)
 - `NOTION_COMPLETED_PROPERTY` (default `Completed`)
+- `NOTION_PLATFORM_PROPERTY` (default `Platform`, used by daily refresh URI sync)
+- `NOTION_PLATFORM_SPOTIFY_VALUE` (default `spotify`, case-insensitive filter)
+- `NOTION_URI_PROPERTY` (default `URI`, used for URI-based completion matching)
 - `SPOTIFY_RECENT_LOOKBACK_HOURS` (default `3`, range `1-24`)
 - `SPOTIFY_NOTION_SYNC_CONFIG` (default `notion_spotify_sync_config.json`)
 

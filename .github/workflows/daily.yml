@@ -27,6 +27,14 @@ jobs:
           SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
           SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
           SPOTIFY_CONFIG_FILE: playlist_config.json
+          SPOTIFY_NOTION_SYNC_CONFIG: notion_spotify_sync_config.json
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          NOTION_DATABASE_NAME: ${{ vars.NOTION_DATABASE_NAME }}
+          NOTION_TITLE_PROPERTY: ${{ vars.NOTION_TITLE_PROPERTY }}
+          NOTION_PLATFORM_PROPERTY: ${{ vars.NOTION_PLATFORM_PROPERTY }}
+          NOTION_PLATFORM_SPOTIFY_VALUE: ${{ vars.NOTION_PLATFORM_SPOTIFY_VALUE }}
+          NOTION_URI_PROPERTY: ${{ vars.NOTION_URI_PROPERTY }}
         run: |
           set -euo pipefail
           jq -c '.profiles | to_entries[] | select(.value.playlist_id != null and .value.playlist_id != "") | {profile:.key, playlist_id:.value.playlist_id}' playlist_config.json \

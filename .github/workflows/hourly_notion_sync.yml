@@ -31,6 +31,7 @@ jobs:
           NOTION_DATABASE_NAME: ${{ vars.NOTION_DATABASE_NAME }}
           NOTION_TITLE_PROPERTY: ${{ vars.NOTION_TITLE_PROPERTY }}
           NOTION_COMPLETED_PROPERTY: ${{ vars.NOTION_COMPLETED_PROPERTY }}
+          NOTION_URI_PROPERTY: ${{ vars.NOTION_URI_PROPERTY }}
           SPOTIFY_NOTION_SYNC_CONFIG: notion_spotify_sync_config.json
           SPOTIFY_RECENT_LOOKBACK_HOURS: ${{ vars.SPOTIFY_RECENT_LOOKBACK_HOURS }}
         run: python sync_notion_completions.py

@@ -13,6 +13,7 @@ from spotipy.exceptions import SpotifyException
 
 TOKEN_URL = "https://accounts.spotify.com/api/token"
 SCOPES_NOTE = "playlist-modify-private playlist-modify-public playlist-read-private"
+NOTION_VERSION = "2022-06-28"
 
 # ===== Environment variables (required) =====
 SPOTIFY_CLIENT_ID = "SPOTIFY_CLIENT_ID"
@@ -26,6 +27,17 @@ SPOTIFY_USER_ID = "SPOTIFY_USER_ID"
 # Optional selector for which playlist profile to build into SPOTIFY_PLAYLIST_ID.
 SPOTIFY_PLAYLIST_PROFILE = "SPOTIFY_PLAYLIST_PROFILE"  # morning|midday|night, default morning
 SPOTIFY_CONFIG_FILE = "SPOTIFY_CONFIG_FILE"  # optional, defaults to playlist_config.json
+SPOTIFY_NOTION_SYNC_CONFIG = "SPOTIFY_NOTION_SYNC_CONFIG"  # optional, defaults to notion_spotify_sync_config.json
+
+# Optional Notion URI sync.
+NOTION_TOKEN = "NOTION_TOKEN"
+NOTION_DATABASE_ID = "NOTION_DATABASE_ID"
+NOTION_DATABASE_NAME = "NOTION_DATABASE_NAME"  # fallback search; defaults to Opus Dei
+NOTION_TITLE_PROPERTY = "NOTION_TITLE_PROPERTY"  # defaults to Name
+NOTION_PLATFORM_PROPERTY = "NOTION_PLATFORM_PROPERTY"  # defaults to Platform
+NOTION_PLATFORM_SPOTIFY_VALUE = "NOTION_PLATFORM_SPOTIFY_VALUE"  # defaults to spotify
+NOTION_URI_PROPERTY = "NOTION_URI_PROPERTY"  # defaults to URI
+NOTION_URI_LOG_LIMIT = "NOTION_URI_LOG_LIMIT"  # defaults to 25
 
 
 MARKETS_TO_TRY = ["US", None, "GB", "CA", "AU"]
@@ -110,6 +122,248 @@ def refresh_access_token(client_id: str, client_secret: str, refresh_token: str)
     if not token:
         raise RuntimeError("Token refresh succeeded but no access_token was returned.")
     return token
+
+
+def notion_headers(token: str) -> Dict[str, str]:
+    return {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "Notion-Version": NOTION_VERSION,
+    }
+
+
+def notion_call(method: str, url: str, token: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    response = requests.request(method, url, headers=notion_headers(token), json=payload, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+    if not isinstance(data, dict):
+        raise RuntimeError("Unexpected Notion API response format.")
+    return data
+
+
+def notion_find_database_id(token: str, database_name: str) -> Optional[str]:
+    body = {"query": database_name, "filter": {"value": "database", "property": "object"}}
+    data = notion_call("POST", "https://api.notion.com/v1/search", token, body)
+    results = data.get("results") or []
+    for item in results:
+        if not isinstance(item, dict):
+            continue
+        title = ""
+        title_parts = item.get("title") or []
+        if isinstance(title_parts, list) and title_parts:
+            title = str((title_parts[0] or {}).get("plain_text", "")).strip()
+        if title.lower() == database_name.lower():
+            db_id = str(item.get("id", "")).strip()
+            if db_id:
+                return db_id
+    for item in results:
+        if not isinstance(item, dict):
+            continue
+        db_id = str(item.get("id", "")).strip()
+        if db_id:
+            return db_id
+    return None
+
+
+def notion_get_all_pages(database_id: str, token: str) -> List[Dict[str, Any]]:
+    pages: List[Dict[str, Any]] = []
+    next_cursor: Optional[str] = None
+    while True:
+        body: Dict[str, Any] = {"page_size": 100}
+        if next_cursor:
+            body["start_cursor"] = next_cursor
+        data = notion_call("POST", f"https://api.notion.com/v1/databases/{database_id}/query", token, body)
+        for result in (data.get("results") or []):
+            if isinstance(result, dict):
+                pages.append(result)
+        if not data.get("has_more"):
+            break
+        next_cursor = str(data.get("next_cursor", "")).strip() or None
+    return pages
+
+
+def normalize_text(text: str) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", text.lower())).strip()
+
+
+def token_set(text: str) -> set:
+    return {tok for tok in normalize_text(text).split(" ") if tok and len(tok) > 2}
+
+
+def page_title(page: Dict[str, Any], title_property: str) -> str:
+    props = page.get("properties") or {}
+    prop = props.get(title_property) or {}
+    title = prop.get("title") or []
+    if not isinstance(title, list):
+        return ""
+    parts: List[str] = []
+    for item in title:
+        if isinstance(item, dict):
+            plain = str(item.get("plain_text", "")).strip()
+            if plain:
+                parts.append(plain)
+    return " ".join(parts).strip()
+
+
+def page_property_text(page: Dict[str, Any], property_name: str) -> str:
+    props = page.get("properties") or {}
+    prop = props.get(property_name) or {}
+    ptype = str(prop.get("type", "")).strip()
+    if ptype == "select":
+        sel = prop.get("select") or {}
+        return str(sel.get("name", "")).strip()
+    if ptype == "multi_select":
+        vals = prop.get("multi_select") or []
+        return " ".join(str(v.get("name", "")).strip() for v in vals if isinstance(v, dict)).strip()
+    if ptype == "rich_text":
+        vals = prop.get("rich_text") or []
+        return " ".join(str(v.get("plain_text", "")).strip() for v in vals if isinstance(v, dict)).strip()
+    if ptype == "title":
+        vals = prop.get("title") or []
+        return " ".join(str(v.get("plain_text", "")).strip() for v in vals if isinstance(v, dict)).strip()
+    if ptype == "url":
+        return str(prop.get("url", "")).strip()
+    return ""
+
+
+def page_uri_value(page: Dict[str, Any], uri_property: str) -> Optional[str]:
+    props = page.get("properties") or {}
+    prop = props.get(uri_property) or {}
+    ptype = str(prop.get("type", "")).strip()
+    if ptype == "rich_text":
+        vals = prop.get("rich_text") or []
+        parts = [str(v.get("plain_text", "")).strip() for v in vals if isinstance(v, dict) and v.get("plain_text")]
+        return " ".join(parts).strip() or None
+    if ptype == "url":
+        value = str(prop.get("url", "")).strip()
+        return value or None
+    return None
+
+
+def notion_update_uri(page_id: str, page: Dict[str, Any], uri_property: str, uri: str, token: str) -> None:
+    props = page.get("properties") or {}
+    prop = props.get(uri_property) or {}
+    ptype = str(prop.get("type", "")).strip()
+    if ptype == "url":
+        body = {"properties": {uri_property: {"url": uri}}}
+    else:
+        body = {"properties": {uri_property: {"rich_text": [{"type": "text", "text": {"content": uri[:2000]}}]}}}
+    notion_call("PATCH", f"https://api.notion.com/v1/pages/{page_id}", token, body)
+
+
+def load_notion_match_terms_by_name() -> Dict[str, List[str]]:
+    config_path = os.getenv(SPOTIFY_NOTION_SYNC_CONFIG, "notion_spotify_sync_config.json").strip()
+    if not config_path or not os.path.exists(config_path):
+        return {}
+    with open(config_path, "r", encoding="utf-8") as fh:
+        payload = json.load(fh)
+    mappings = payload.get("mappings")
+    if not isinstance(mappings, list):
+        return {}
+    out: Dict[str, List[str]] = {}
+    for row in mappings:
+        if not isinstance(row, dict):
+            continue
+        notion_name = normalize_text(str(row.get("notion_name", "")).strip())
+        match_any = row.get("match_any")
+        if not notion_name or not isinstance(match_any, list):
+            continue
+        terms = [normalize_text(str(v)) for v in match_any if normalize_text(str(v))]
+        if terms:
+            out[notion_name] = terms
+    return out
+
+
+def spotify_uri_text_index(sp: spotipy.Spotify, uris: List[str]) -> Dict[str, str]:
+    text_index: Dict[str, str] = {}
+    for uri in uris:
+        if uri in text_index:
+            continue
+        if uri.startswith("spotify:track:"):
+            obj = safe_call(sp.track, uri)
+            if isinstance(obj, dict):
+                name = str(obj.get("name", "")).strip()
+                artists = " ".join(
+                    str(a.get("name", "")).strip() for a in (obj.get("artists") or []) if isinstance(a, dict)
+                ).strip()
+                album = str((obj.get("album") or {}).get("name", "")).strip()
+                text_index[uri] = normalize_text(" ".join([name, artists, album]))
+        elif uri.startswith("spotify:episode:"):
+            obj = safe_call(sp.episode, uri, market="US")
+            if isinstance(obj, dict):
+                name = str(obj.get("name", "")).strip()
+                show = str((obj.get("show") or {}).get("name", "")).strip()
+                text_index[uri] = normalize_text(" ".join([name, show]))
+    return text_index
+
+
+def best_uri_for_notion_title(
+    title: str, uri_texts: Dict[str, str], match_terms_by_name: Dict[str, List[str]]
+) -> Optional[str]:
+    title_norm = normalize_text(title)
+    if not title_norm:
+        return None
+    title_tokens = token_set(title)
+    terms = match_terms_by_name.get(title_norm, [])
+    best_uri = None
+    best_score = 0
+    for uri, text in uri_texts.items():
+        score = 0
+        if title_norm in text:
+            score += 4
+        if terms and any(term in text for term in terms):
+            score += 3
+        if title_tokens:
+            overlap = len(title_tokens.intersection(token_set(text)))
+            score += min(overlap, 3)
+        if score > best_score:
+            best_score = score
+            best_uri = uri
+    return best_uri if best_score >= 3 else None
+
+
+def sync_notion_uris_for_profile(sp: spotipy.Spotify, queue: List[str]) -> Tuple[int, List[Tuple[str, str]]]:
+    token = os.getenv(NOTION_TOKEN, "").strip()
+    if not token:
+        return 0, []
+    database_id = os.getenv(NOTION_DATABASE_ID, "").strip()
+    if not database_id:
+        db_name = os.getenv(NOTION_DATABASE_NAME, "Opus Dei").strip() or "Opus Dei"
+        database_id = notion_find_database_id(token, db_name) or ""
+    if not database_id:
+        raise RuntimeError("Notion database not found. Set NOTION_DATABASE_ID or share database with integration.")
+
+    title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
+    platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
+    platform_value = normalize_text(os.getenv(NOTION_PLATFORM_SPOTIFY_VALUE, "spotify").strip() or "spotify")
+    uri_property = os.getenv(NOTION_URI_PROPERTY, "URI").strip() or "URI"
+
+    pages = notion_get_all_pages(database_id, token)
+    uri_texts = spotify_uri_text_index(sp, queue)
+    match_terms_by_name = load_notion_match_terms_by_name()
+
+    updated = 0
+    updates: List[Tuple[str, str]] = []
+    for page in pages:
+        platform_text = normalize_text(page_property_text(page, platform_property))
+        if platform_value and platform_value not in platform_text:
+            continue
+        title = page_title(page, title_property)
+        if not title:
+            continue
+        matched_uri = best_uri_for_notion_title(title, uri_texts, match_terms_by_name)
+        if not matched_uri:
+            continue
+        existing_uri = page_uri_value(page, uri_property) or ""
+        if existing_uri.strip() == matched_uri:
+            continue
+        page_id = str(page.get("id", "")).strip()
+        if not page_id:
+            continue
+        notion_update_uri(page_id, page, uri_property, matched_uri, token)
+        updated += 1
+        updates.append((title, matched_uri))
+    return updated, updates
 
 
 def sp_client() -> spotipy.Spotify:
@@ -646,9 +900,19 @@ def main() -> int:
             sp, profile, weekday, status, profiles_cfg, catalog_cfg, shows_cfg, fixed_cfg, tokens_cfg
         )
         written = add_items(sp, playlist_id, queue)
+        notion_uri_updates, notion_uri_update_details = sync_notion_uris_for_profile(sp, queue)
 
         print(f"SUMMARY playlist_id={playlist_id} tracks_written={written}")
         print(f"INFO profile={profile} weekday={weekday} removed_streaming_items={removed}")
+        if os.getenv(NOTION_TOKEN, "").strip():
+            print(f"INFO notion_uri_rows_updated={notion_uri_updates}")
+            log_limit = int(os.getenv(NOTION_URI_LOG_LIMIT, "25").strip() or "25")
+            for title, uri in notion_uri_update_details[: max(0, log_limit)]:
+                print(f"INFO notion_uri_mapped title={title} uri={uri}")
+            if len(notion_uri_update_details) > max(0, log_limit):
+                print(
+                    f"INFO notion_uri_mapped_truncated shown={max(0, log_limit)} total={len(notion_uri_update_details)}"
+                )
 
         if written == 0:
             raise RuntimeError("No tracks/episodes resolved for this run.")

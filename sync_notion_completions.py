@@ -5,6 +5,7 @@ import os
 import re
 import sys
 from typing import Any, Dict, List, Optional, Set
+from zoneinfo import ZoneInfo
 
 import requests
 
@@ -20,9 +21,13 @@ NOTION_DATABASE_ID = "NOTION_DATABASE_ID"
 NOTION_DATABASE_NAME = "NOTION_DATABASE_NAME"  # fallback search; defaults to Opus Dei
 NOTION_TITLE_PROPERTY = "NOTION_TITLE_PROPERTY"  # defaults to Name
 NOTION_COMPLETED_PROPERTY = "NOTION_COMPLETED_PROPERTY"  # defaults to Completed
+NOTION_URI_PROPERTY = "NOTION_URI_PROPERTY"  # defaults to URI
 
 SPOTIFY_NOTION_SYNC_CONFIG = "SPOTIFY_NOTION_SYNC_CONFIG"  # defaults to notion_spotify_sync_config.json
 SPOTIFY_RECENT_LOOKBACK_HOURS = "SPOTIFY_RECENT_LOOKBACK_HOURS"  # default 3
+SPOTIFY_SYNC_TIMEZONE = "SPOTIFY_SYNC_TIMEZONE"  # default America/Chicago
+SPOTIFY_CONFIG_FILE = "SPOTIFY_CONFIG_FILE"  # defaults to playlist_config.json
+SPOTIFY_COMPLETION_LOG_LIMIT = "SPOTIFY_COMPLETION_LOG_LIMIT"  # defaults to 25
 
 
 def require_env(name: str) -> str:
@@ -85,6 +90,28 @@ def normalize_text(text: str) -> str:
     return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", text.lower())).strip()
 
 
+def infer_time_of_day_from_name(notion_name: str) -> str:
+    lowered = notion_name.lower()
+    if "(morning)" in lowered:
+        return "morning"
+    if "(midday)" in lowered:
+        return "midday"
+    if "(evening)" in lowered:
+        return "evening"
+    return "any"
+
+
+def current_time_of_day() -> str:
+    tz_name = os.getenv(SPOTIFY_SYNC_TIMEZONE, "America/Chicago").strip() or "America/Chicago"
+    now = datetime.datetime.now(ZoneInfo(tz_name))
+    hour = now.hour
+    if 4 <= hour <= 10:
+        return "morning"
+    if 11 <= hour <= 15:
+        return "midday"
+    return "evening"
+
+
 def load_sync_config() -> List[Dict[str, Any]]:
     config_path = os.getenv(SPOTIFY_NOTION_SYNC_CONFIG, "notion_spotify_sync_config.json").strip()
     with open(config_path, "r", encoding="utf-8") as fh:
@@ -106,7 +133,20 @@ def load_sync_config() -> List[Dict[str, Any]]:
         terms = [term for term in terms if term]
         if not terms:
             continue
-        validated.append({"notion_name": notion_name, "match_any": terms})
+        time_of_day = str(row.get("time_of_day", "")).strip().lower() or infer_time_of_day_from_name(notion_name)
+        if time_of_day not in {"any", "morning", "midday", "evening"}:
+            continue
+        profiles = row.get("profiles")
+        if not isinstance(profiles, list):
+            profiles = ["any"]
+        profile_values = [str(p).strip().lower() for p in profiles if str(p).strip()]
+        if not profile_values:
+            profile_values = ["any"]
+        if any(p not in {"any", "morning", "midday", "night"} for p in profile_values):
+            continue
+        validated.append(
+            {"notion_name": notion_name, "match_any": terms, "time_of_day": time_of_day, "profiles": profile_values}
+        )
 
     if not validated:
         raise RuntimeError("No valid mappings found in sync config.")
@@ -142,12 +182,59 @@ def lookup_notion_database_id(token: str) -> str:
     raise RuntimeError("Could not find Notion database. Set NOTION_DATABASE_ID or check NOTION_DATABASE_NAME + sharing.")
 
 
-def collect_recent_spotify_texts(token: str) -> Set[str]:
+def load_playlist_profile_by_id() -> Dict[str, str]:
+    config_path = os.getenv(SPOTIFY_CONFIG_FILE, "playlist_config.json").strip() or "playlist_config.json"
+    with open(config_path, "r", encoding="utf-8") as fh:
+        payload = json.load(fh)
+    profiles = payload.get("profiles")
+    if not isinstance(profiles, dict):
+        return {}
+    out: Dict[str, str] = {}
+    for profile_name, profile_value in profiles.items():
+        if not isinstance(profile_value, dict):
+            continue
+        playlist_id = str(profile_value.get("playlist_id", "")).strip()
+        if playlist_id:
+            out[playlist_id] = str(profile_name).strip().lower()
+    return out
+
+
+def playlist_id_from_context_uri(context_uri: str) -> str:
+    if not context_uri:
+        return ""
+    match = re.match(r"^spotify:playlist:([A-Za-z0-9]+)$", context_uri.strip())
+    if not match:
+        return ""
+    return match.group(1)
+
+
+def collect_recent_spotify_activity(token: str) -> Dict[str, Set[str]]:
     lookback_hours = int(os.getenv(SPOTIFY_RECENT_LOOKBACK_HOURS, "3").strip() or "3")
     lookback_hours = max(1, min(24, lookback_hours))
     after = int((datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=lookback_hours)).timestamp() * 1000)
 
+    profile_by_playlist = load_playlist_profile_by_id()
+
     seen_texts: Set[str] = set()
+    seen_uris: Set[str] = set()
+    texts_by_profile: Dict[str, Set[str]] = {"morning": set(), "midday": set(), "night": set()}
+    uris_by_profile: Dict[str, Set[str]] = {"morning": set(), "midday": set(), "night": set()}
+
+    def add_text(text: str, profile: str) -> None:
+        normalized = normalize_text(text)
+        if not normalized:
+            return
+        seen_texts.add(normalized)
+        if profile in texts_by_profile:
+            texts_by_profile[profile].add(normalized)
+
+    def add_uri(uri: str, profile: str) -> None:
+        value = str(uri).strip()
+        if not value:
+            return
+        seen_uris.add(value)
+        if profile in uris_by_profile:
+            uris_by_profile[profile].add(value)
 
     recent = spotify_get(
         "https://api.spotify.com/v1/me/player/recently-played",
@@ -157,18 +244,24 @@ def collect_recent_spotify_texts(token: str) -> Set[str]:
     for item in recent.get("items") or []:
         if not isinstance(item, dict):
             continue
+        context = item.get("context")
+        profile = ""
+        if isinstance(context, dict):
+            playlist_id = playlist_id_from_context_uri(str(context.get("uri", "")))
+            profile = profile_by_playlist.get(playlist_id, "")
         track = item.get("track")
         if not isinstance(track, dict):
             continue
+        add_uri(str(track.get("uri", "")).strip(), profile)
         name = str(track.get("name", "")).strip()
         if name:
-            seen_texts.add(normalize_text(name))
+            add_text(name, profile)
         artists = track.get("artists") or []
         artist_names = [str(a.get("name", "")).strip() for a in artists if isinstance(a, dict)]
         if artist_names:
-            seen_texts.add(normalize_text(" ".join(artist_names)))
+            add_text(" ".join(artist_names), profile)
         if name and artist_names:
-            seen_texts.add(normalize_text(f"{name} {' '.join(artist_names)}"))
+            add_text(f"{name} {' '.join(artist_names)}", profile)
 
     # Include currently playing in case user is listening to a podcast episode right now.
     response = requests.get(
@@ -179,20 +272,31 @@ def collect_recent_spotify_texts(token: str) -> Set[str]:
     if response.status_code == 200:
         current = response.json()
         if isinstance(current, dict):
+            profile = ""
+            context = current.get("context")
+            if isinstance(context, dict):
+                playlist_id = playlist_id_from_context_uri(str(context.get("uri", "")))
+                profile = profile_by_playlist.get(playlist_id, "")
             item = current.get("item")
             if isinstance(item, dict):
+                add_uri(str(item.get("uri", "")).strip(), profile)
                 current_name = str(item.get("name", "")).strip()
                 if current_name:
-                    seen_texts.add(normalize_text(current_name))
+                    add_text(current_name, profile)
                 show = item.get("show")
                 if isinstance(show, dict):
                     show_name = str(show.get("name", "")).strip()
                     if show_name:
-                        seen_texts.add(normalize_text(show_name))
+                        add_text(show_name, profile)
                     if current_name and show_name:
-                        seen_texts.add(normalize_text(f"{current_name} {show_name}"))
+                        add_text(f"{current_name} {show_name}", profile)
 
-    return seen_texts
+    out: Dict[str, Set[str]] = {"all_texts": seen_texts, "all_uris": seen_uris}
+    for k, v in texts_by_profile.items():
+        out[f"{k}_texts"] = v
+    for k, v in uris_by_profile.items():
+        out[f"{k}_uris"] = v
+    return out
 
 
 def notion_get_all_pages(database_id: str, token: str) -> List[Dict[str, Any]]:
@@ -236,6 +340,19 @@ def page_checkbox(page: Dict[str, Any], checkbox_property: str) -> Optional[bool
     return bool(prop.get("checkbox"))
 
 
+def page_uri(page: Dict[str, Any], uri_property: str) -> str:
+    props = page.get("properties") or {}
+    prop = props.get(uri_property) or {}
+    ptype = str(prop.get("type", "")).strip()
+    if ptype == "url":
+        return str(prop.get("url", "")).strip()
+    if ptype == "rich_text":
+        vals = prop.get("rich_text") or []
+        parts = [str(v.get("plain_text", "")).strip() for v in vals if isinstance(v, dict) and v.get("plain_text")]
+        return " ".join(parts).strip()
+    return ""
+
+
 def update_page_checkbox(page_id: str, checkbox_property: str, value: bool, token: str) -> None:
     body = {"properties": {checkbox_property: {"checkbox": value}}}
     notion_call("PATCH", f"https://api.notion.com/v1/pages/{page_id}", token, body)
@@ -254,16 +371,33 @@ def main() -> int:
         db_id = lookup_notion_database_id(notion_token)
         title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
         completed_property = os.getenv(NOTION_COMPLETED_PROPERTY, "Completed").strip() or "Completed"
+        uri_property = os.getenv(NOTION_URI_PROPERTY, "URI").strip() or "URI"
 
-        listened_texts = collect_recent_spotify_texts(spotify_token)
+        listened = collect_recent_spotify_activity(spotify_token)
+        listened_texts = listened.get("all_texts", set())
+        listened_uris = listened.get("all_uris", set())
         if not listened_texts:
             print("INFO no_recent_spotify_items_found")
 
         matches: Set[str] = set()
+        now_time_of_day = current_time_of_day()
         for mapping in mappings:
             notion_name = str(mapping["notion_name"])
             terms = mapping["match_any"]
-            for text in listened_texts:
+            mapping_time_of_day = str(mapping.get("time_of_day", "any"))
+            if mapping_time_of_day != "any" and mapping_time_of_day != now_time_of_day:
+                continue
+            mapping_profiles = [str(p) for p in mapping.get("profiles", ["any"])]
+            candidate_texts: Set[str] = set()
+            if "any" in mapping_profiles:
+                candidate_texts = listened_texts
+            else:
+                for profile in mapping_profiles:
+                    candidate_texts |= listened.get(f"{profile}_texts", set())
+                if not candidate_texts:
+                    # Spotify does not always provide playlist context; fall back to all texts.
+                    candidate_texts = listened_texts
+            for text in candidate_texts:
                 if any(term in text for term in terms):
                     matches.add(normalize_text(notion_name))
                     break
@@ -271,12 +405,20 @@ def main() -> int:
         pages = notion_get_all_pages(db_id, notion_token)
         updated = 0
         scanned = 0
+        matched_by_uri = 0
+        updated_by_uri_titles: List[str] = []
+        updated_by_text_titles: List[str] = []
         for page in pages:
             scanned += 1
             title = page_title(page, title_property)
             if not title:
                 continue
-            if normalize_text(title) not in matches:
+            uri_match = False
+            row_uri = page_uri(page, uri_property)
+            if row_uri and row_uri in listened_uris:
+                uri_match = True
+                matched_by_uri += 1
+            elif normalize_text(title) not in matches:
                 continue
             checked = page_checkbox(page, completed_property)
             if checked is None:
@@ -290,11 +432,20 @@ def main() -> int:
                 continue
             update_page_checkbox(page_id, completed_property, True, notion_token)
             updated += 1
+            if uri_match:
+                updated_by_uri_titles.append(title)
+            else:
+                updated_by_text_titles.append(title)
 
         print(
             f"SUMMARY notion_db={db_id} rows_scanned={scanned} rows_marked_completed={updated} "
-            f"matched_targets={len(matches)}"
+            f"matched_targets={len(matches)} matched_by_uri={matched_by_uri}"
         )
+        log_limit = int(os.getenv(SPOTIFY_COMPLETION_LOG_LIMIT, "25").strip() or "25")
+        for title in updated_by_uri_titles[: max(0, log_limit)]:
+            print(f"INFO completion_marked method=uri title={title}")
+        for title in updated_by_text_titles[: max(0, log_limit)]:
+            print(f"INFO completion_marked method=text title={title}")
         return 0
     except requests.HTTPError as exc:
         print(f"ERROR HTTP failure: {exc}", file=sys.stderr)
