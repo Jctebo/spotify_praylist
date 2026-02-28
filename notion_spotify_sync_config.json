@@ -33,6 +33,11 @@
       "profiles": ["morning"]
     },
     {
+      "notion_name": "Morning Prayer (Monthly Podcast)",
+      "match_any": ["morning prayer -", "morning prayer"],
+      "profiles": ["morning"]
+    },
+    {
       "notion_name": "Bible in a Year",
       "match_any": ["bible in a year", "day "],
       "profiles": ["morning"]
