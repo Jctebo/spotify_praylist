@@ -20,10 +20,12 @@ Optional variables:
 ## Files
 - `refresh_playlist.py`: main script (token refresh + playlist update)
 - `sync_notion_completions.py`: hourly sync to mark Notion prayer rows as completed from Spotify listening
+- `reset_notion_completions.py`: daily reset to uncheck all Notion completion checkboxes
 - `notion_spotify_sync_config.json`: mapping rules from Spotify item text -> Notion row name
 - `requirements.txt`: Python dependencies
 - `.github/workflows/daily.yml`: daily + manual GitHub Actions workflow
 - `.github/workflows/hourly_notion_sync.yml`: hourly + manual Notion completion sync workflow
+- `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
 
 ## Local Setup
 1. Create and activate a virtual environment.
@@ -112,6 +114,22 @@ GitHub setup for hourly workflow:
 - `SPOTIFY_RECENT_LOOKBACK_HOURS`
 3. Ensure your Notion integration is connected to the `Opus Dei` database.
 4. Run `.github/workflows/hourly_notion_sync.yml` manually once to validate mappings.
+
+## Daily Notion Reset
+Purpose:
+- unchecks all rows in your Notion `Completed` checkbox column so each day starts fresh
+
+Workflow:
+- `.github/workflows/daily_notion_reset.yml`
+- schedule: `0 10 * * *` (04:00 CST / 05:00 CDT)
+
+Required:
+- `NOTION_TOKEN` secret
+- `NOTION_DATABASE_ID` secret (recommended)
+
+Optional variables:
+- `NOTION_DATABASE_NAME` (fallback lookup; default `Opus Dei`)
+- `NOTION_COMPLETED_PROPERTY` (default `Completed`)
 
 ## Notes
 - Do not commit secrets.

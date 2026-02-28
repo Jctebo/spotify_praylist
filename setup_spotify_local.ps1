@@ -52,6 +52,65 @@ function Read-YesNo {
   }
 }
 
+function Get-QueryParamValue {
+  param(
+    [string]$Url,
+    [string]$ParamName
+  )
+
+  if ([string]::IsNullOrWhiteSpace($Url)) {
+    return ""
+  }
+
+  try {
+    $uri = [Uri]$Url
+    $query = $uri.Query.TrimStart("?")
+    foreach ($pair in $query.Split("&")) {
+      if ([string]::IsNullOrWhiteSpace($pair)) { continue }
+      $parts = $pair.Split("=", 2)
+      $key = [uri]::UnescapeDataString($parts[0])
+      if ($key -eq $ParamName) {
+        if ($parts.Count -gt 1) {
+          return [uri]::UnescapeDataString($parts[1])
+        }
+        return ""
+      }
+    }
+  } catch {
+    # Fall back to regex for non-URL pasted values.
+    if ($Url -match "(?:^|[?&])$ParamName=([^&]+)") {
+      return [uri]::UnescapeDataString($matches[1])
+    }
+  }
+
+  return ""
+}
+
+function Validate-SpotifyInputs {
+  param(
+    [string]$ClientId,
+    [string]$RedirectUri,
+    [string]$Scope
+  )
+
+  if ($ClientId -notmatch "^[a-zA-Z0-9]{32}$") {
+    Write-Host "Warning: SPOTIFY_CLIENT_ID does not look like a standard 32-char Spotify client id." -ForegroundColor Yellow
+  }
+
+  try {
+    $uri = [Uri]$RedirectUri
+    if (-not $uri.IsAbsoluteUri) {
+      throw "Redirect URI is not absolute."
+    }
+  } catch {
+    throw "Redirect URI is invalid: '$RedirectUri'"
+  }
+
+  if ([string]::IsNullOrWhiteSpace($Scope)) {
+    throw "OAuth scope cannot be empty."
+  }
+}
+
 function Get-RefreshToken {
   param(
     [string]$ClientId,
@@ -60,10 +119,12 @@ function Get-RefreshToken {
     [string]$Scope
   )
 
+  Validate-SpotifyInputs -ClientId $ClientId -RedirectUri $RedirectUri -Scope $Scope
   $authUrl = "https://accounts.spotify.com/authorize?client_id=$ClientId&response_type=code&redirect_uri=$([uri]::EscapeDataString($RedirectUri))&scope=$([uri]::EscapeDataString($Scope))&show_dialog=true"
 
   Write-Host ""
   Write-Host "Open this URL, sign in, and approve access:" -ForegroundColor Cyan
+  Write-Host "If Spotify shows 'Something went wrong', verify this exact redirect URI is in your app settings: $RedirectUri" -ForegroundColor Yellow
   Write-Host $authUrl
 
   if (Read-YesNo "Open browser automatically?" $true) {
@@ -72,28 +133,40 @@ function Get-RefreshToken {
 
   Write-Host ""
   Write-Host "After redirect, copy the FULL URL from your browser and paste it below." -ForegroundColor Cyan
+  Write-Host "It must contain '?code=' (example: http://127.0.0.1:8888/callback?code=...)." -ForegroundColor Cyan
   $fullRedirect = Read-Required "Redirected URL"
 
-  if ($fullRedirect -match "[?&]error=([^&]+)") {
-    $oauthError = [uri]::UnescapeDataString($matches[1])
+  $oauthError = Get-QueryParamValue -Url $fullRedirect -ParamName "error"
+  if (-not [string]::IsNullOrWhiteSpace($oauthError)) {
     throw "Spotify authorization returned error: $oauthError"
   }
 
-  if ($fullRedirect -notmatch "[?&]code=([^&]+)") {
-    throw "Could not find 'code=' in redirected URL."
+  $code = Get-QueryParamValue -Url $fullRedirect -ParamName "code"
+  if ([string]::IsNullOrWhiteSpace($code)) {
+    throw "Could not find 'code=' in redirected URL. Paste the full callback URL from browser address bar."
   }
 
-  $code = [uri]::UnescapeDataString($matches[1])
   $basic = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes("$ClientId`:$ClientSecret"))
-
-  $tokenResp = Invoke-RestMethod -Method Post -Uri "https://accounts.spotify.com/api/token" `
-    -Headers @{ Authorization = "Basic $basic" } `
-    -ContentType "application/x-www-form-urlencoded" `
-    -Body @{
-      grant_type   = "authorization_code"
-      code         = $code
-      redirect_uri = $RedirectUri
+  try {
+    $tokenResp = Invoke-RestMethod -Method Post -Uri "https://accounts.spotify.com/api/token" `
+      -Headers @{ Authorization = "Basic $basic" } `
+      -ContentType "application/x-www-form-urlencoded" `
+      -Body @{
+        grant_type   = "authorization_code"
+        code         = $code
+        redirect_uri = $RedirectUri
+      }
+  } catch {
+    $rawResponse = ""
+    if ($_.Exception.Response -and $_.Exception.Response.GetResponseStream()) {
+      $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+      $rawResponse = $reader.ReadToEnd()
     }
+    if (-not [string]::IsNullOrWhiteSpace($rawResponse)) {
+      throw "Token exchange failed. Spotify response: $rawResponse"
+    }
+    throw "Token exchange failed: $($_.Exception.Message)"
+  }
 
   $refreshToken = "$($tokenResp.refresh_token)".Trim()
   if (-not $refreshToken) {
@@ -128,6 +201,10 @@ if (-not [string]::IsNullOrWhiteSpace($refreshToken)) {
 if ([string]::IsNullOrWhiteSpace($refreshToken)) {
   $redirectUri = Read-WithDefault "Redirect URI" "http://127.0.0.1:8888/callback"
   $scope = Read-WithDefault "OAuth scope" "playlist-modify-private playlist-modify-public playlist-read-private user-read-recently-played user-read-currently-playing user-read-playback-state"
+  Write-Host ""
+  Write-Host "OAuth preflight:" -ForegroundColor Cyan
+  Write-Host "- Redirect URI: $redirectUri"
+  Write-Host "- Scope: $scope"
   $refreshToken = Get-RefreshToken -ClientId $clientId -ClientSecret $clientSecret -RedirectUri $redirectUri -Scope $scope
 
   Write-Host ""

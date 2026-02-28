@@ -1,0 +1,30 @@
+name: Daily Notion Completion Reset
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 10 * * *" # daily 04:00 CST / 05:00 CDT
+
+jobs:
+  reset-notion:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Reset Completed checkboxes in Notion
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          NOTION_DATABASE_NAME: ${{ vars.NOTION_DATABASE_NAME }}
+          NOTION_COMPLETED_PROPERTY: ${{ vars.NOTION_COMPLETED_PROPERTY }}
+        run: python reset_notion_completions.py
