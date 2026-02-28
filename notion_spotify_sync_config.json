@@ -38,8 +38,8 @@
       "profiles": ["morning"]
     },
     {
-      "notion_name": "Mass",
-      "match_any": ["daily tv mass"],
+      "notion_name": "Daily Mass Readings",
+      "match_any": ["daily mass reading", "daily mass readings", "daily mass reading podcast", "usccb", "daily tv mass"],
       "profiles": ["midday"]
     },
     {
