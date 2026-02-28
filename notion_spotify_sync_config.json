@@ -53,13 +53,13 @@
       "profiles": ["midday"]
     },
     {
-      "notion_name": "Auxilium Christianorum",
-      "match_any": ["auxilium christianorum", "do the harder thing"],
+      "notion_name": "Auxillium Cristanorum",
+      "match_any": ["auxilium christianorum", "auxillium cristanorum", "do the harder thing"],
       "profiles": ["midday"]
     },
     {
-      "notion_name": "Midafternoon Prayer",
-      "match_any": ["midafternoon prayer"],
+      "notion_name": "Afternoon Prayer (Optional)",
+      "match_any": ["midafternoon prayer", "afternoon prayer"],
       "profiles": ["midday"]
     },
     {
