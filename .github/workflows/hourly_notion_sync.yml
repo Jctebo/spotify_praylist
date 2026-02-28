@@ -1,0 +1,36 @@
+name: Hourly Notion Completion Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "5 * * * *"
+
+jobs:
+  sync-notion:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Sync completed prayers to Notion
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          NOTION_DATABASE_NAME: ${{ vars.NOTION_DATABASE_NAME }}
+          NOTION_TITLE_PROPERTY: ${{ vars.NOTION_TITLE_PROPERTY }}
+          NOTION_COMPLETED_PROPERTY: ${{ vars.NOTION_COMPLETED_PROPERTY }}
+          SPOTIFY_NOTION_SYNC_CONFIG: notion_spotify_sync_config.json
+          SPOTIFY_RECENT_LOOKBACK_HOURS: ${{ vars.SPOTIFY_RECENT_LOOKBACK_HOURS }}
+        run: python sync_notion_completions.py

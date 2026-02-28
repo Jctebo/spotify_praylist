@@ -19,8 +19,11 @@ Optional variables:
 
 ## Files
 - `refresh_playlist.py`: main script (token refresh + playlist update)
+- `sync_notion_completions.py`: hourly sync to mark Notion prayer rows as completed from Spotify listening
+- `notion_spotify_sync_config.json`: mapping rules from Spotify item text -> Notion row name
 - `requirements.txt`: Python dependencies
 - `.github/workflows/daily.yml`: daily + manual GitHub Actions workflow
+- `.github/workflows/hourly_notion_sync.yml`: hourly + manual Notion completion sync workflow
 
 ## Local Setup
 1. Create and activate a virtual environment.
@@ -72,6 +75,43 @@ If you want a non-default profile in Actions, add repository variable `SPOTIFY_P
 Workflow triggers:
 - daily schedule (UTC cron in `.github/workflows/daily.yml`)
 - manual run via `workflow_dispatch`
+
+## Hourly Notion Completion Sync
+Purpose:
+- updates existing rows in your Notion `Opus Dei` database by checking `Completed` when Spotify listening matches configured prayer mappings
+
+How matching works:
+- script reads recent Spotify listening history (default last 3 hours)
+- script reads `notion_spotify_sync_config.json`
+- if any `match_any` term is found in recent Spotify item text, the matching Notion row (`notion_name`) is marked completed
+- script only checks rows; it does not uncheck rows
+
+Required for this script:
+- Spotify token must include `user-read-recently-played` scope
+- `NOTION_TOKEN` secret
+- `NOTION_DATABASE_ID` secret (recommended)
+
+Optional variables/secrets:
+- `NOTION_DATABASE_NAME` (fallback lookup; default `Opus Dei`)
+- `NOTION_TITLE_PROPERTY` (default `Name`)
+- `NOTION_COMPLETED_PROPERTY` (default `Completed`)
+- `SPOTIFY_RECENT_LOOKBACK_HOURS` (default `3`, range `1-24`)
+- `SPOTIFY_NOTION_SYNC_CONFIG` (default `notion_spotify_sync_config.json`)
+
+GitHub setup for hourly workflow:
+1. Add secrets:
+- `SPOTIFY_CLIENT_ID`
+- `SPOTIFY_CLIENT_SECRET`
+- `SPOTIFY_REFRESH_TOKEN`
+- `NOTION_TOKEN`
+- `NOTION_DATABASE_ID` (recommended)
+2. Add optional repository variables:
+- `NOTION_DATABASE_NAME`
+- `NOTION_TITLE_PROPERTY`
+- `NOTION_COMPLETED_PROPERTY`
+- `SPOTIFY_RECENT_LOOKBACK_HOURS`
+3. Ensure your Notion integration is connected to the `Opus Dei` database.
+4. Run `.github/workflows/hourly_notion_sync.yml` manually once to validate mappings.
 
 ## Notes
 - Do not commit secrets.
