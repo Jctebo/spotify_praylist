@@ -7,6 +7,7 @@
     "LBS_EXEGESIS": "753FVUsio4Y6GjFvbGpvF0",
     "DAILY_MASS_READINGS": "3IANujvjklSBVf6ioZd03N",
     "DAILY_TV_MASS": "2WwFQr9a6BX7YQ4pkoIijp",
+    "MORNING_PRAYER_MONTHLY": "3oP4SunSyZhwX7GUWw3HcR",
     "FRMIKE_SUNDAY": "1CK5AHgLneCo2sE17UOfdV",
     "BARRON_SUNDAY": "5G6vtvZBIQMpQ8TLgXLBiK",
     "SAINT_OF_DAY": "1skJeU3tBmO7ftJ2ugNyYd",
@@ -127,6 +128,11 @@
       "description": "Dynamic selection: today's Midafternoon Prayer episode from Divine Office.",
       "kind": "dynamic"
     },
+    "MORNING_PRAYER_MONTHLY": {
+      "label": "Morning Prayer (Monthly Podcast)",
+      "description": "Dynamic selection: finds episode titled 'Morning Prayer - <Current Month> <Current Year>'.",
+      "kind": "dynamic"
+    },
     "ROSARY": {
       "label": "Rosary",
       "description": "Dynamic selection: rosary episode by weekday mystery (Joyful/Sorrowful/Glorious/Luminous).",
@@ -142,6 +148,7 @@
     "morning": {
       "playlist_id": "0sy9eBsySKuCppI0PxXRJN",
       "order": [
+        "MORNING_PRAYER_MONTHLY",
         "ROSARY",
         "MORNING",
         "ANGELUS_SONG",

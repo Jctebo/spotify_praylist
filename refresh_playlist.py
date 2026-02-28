@@ -571,6 +571,40 @@ def do_date_aware(sp: spotipy.Spotify, show_id: str, terms) -> Tuple[Optional[st
     return None, None
 
 
+def monthly_morning_prayer_episode(sp: spotipy.Spotify, show_id: str) -> Tuple[Optional[str], Optional[str]]:
+    now = datetime.datetime.now()
+    month_full = now.strftime("%B")
+    month_abbr = now.strftime("%b")
+    year = now.strftime("%Y")
+    patterns = [
+        rf"\bmorning prayer\s*-\s*{re.escape(month_full)}\s+{re.escape(year)}\b",
+        rf"\bmorning prayer\s*-\s*{re.escape(month_abbr)}\s+{re.escape(year)}\b",
+        rf"\bmorning prayer\b.*\b{re.escape(month_full)}\b.*\b{re.escape(year)}\b",
+        rf"\bmorning prayer\b.*\b{re.escape(month_abbr)}\b.*\b{re.escape(year)}\b",
+    ]
+
+    res = safe_call(sp.show_episodes, show_id, limit=50, market="US")
+    if not isinstance(res, dict):
+        return None, None
+    items = list(res.get("items") or [])
+    if res.get("next"):
+        res2 = safe_call(sp.next, res)
+        if isinstance(res2, dict):
+            items += list(res2.get("items") or [])
+
+    for ep in items:
+        if not isinstance(ep, dict):
+            continue
+        name = str(ep.get("name", "")).strip()
+        if not name:
+            continue
+        if any(re.search(pattern, name, re.IGNORECASE) for pattern in patterns):
+            uri = ep.get("uri")
+            if uri:
+                return uri, name
+    return None, None
+
+
 def day_of_year_1_to_365(now: datetime.datetime) -> int:
     doy = int(now.timetuple().tm_yday)
     return 365 if doy > 365 else doy
@@ -815,6 +849,11 @@ def resolve_item_uri(
             sp, cfg_value(shows_cfg, "DIVINE_OFFICE", "shows"), cfg_token_terms(tokens_cfg, "DO_MIDAFTERNOON")
         )
         status["Midafternoon Prayer"] = bool(uri)
+        return uri
+
+    if key == "MORNING_PRAYER_MONTHLY":
+        uri, _ = monthly_morning_prayer_episode(sp, cfg_value(shows_cfg, "MORNING_PRAYER_MONTHLY", "shows"))
+        status["Morning Prayer (Monthly Podcast)"] = bool(uri)
         return uri
 
     if key == "ROSARY":
