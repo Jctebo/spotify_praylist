@@ -29,6 +29,8 @@ SPOTIFY_SYNC_TIMEZONE = "SPOTIFY_SYNC_TIMEZONE"  # default America/Chicago
 SPOTIFY_CONFIG_FILE = "SPOTIFY_CONFIG_FILE"  # defaults to playlist_config.json
 SPOTIFY_COMPLETION_LOG_LIMIT = "SPOTIFY_COMPLETION_LOG_LIMIT"  # defaults to 25
 SPOTIFY_URI_DEBUG_LOG_LIMIT = "SPOTIFY_URI_DEBUG_LOG_LIMIT"  # defaults to 25
+SPOTIFY_EPISODE_PROBE_ENABLED = "SPOTIFY_EPISODE_PROBE_ENABLED"  # defaults to true
+SPOTIFY_EPISODE_PROBE_MIN_PROGRESS_PCT = "SPOTIFY_EPISODE_PROBE_MIN_PROGRESS_PCT"  # defaults to 0.7
 
 
 def require_env(name: str) -> str:
@@ -68,6 +70,55 @@ def spotify_get(url: str, token: str, params: Optional[Dict[str, Any]] = None) -
     if not isinstance(data, dict):
         raise RuntimeError("Unexpected Spotify API response format.")
     return data
+
+
+def episode_id_from_uri(uri: str) -> str:
+    text = str(uri or "").strip()
+    match = re.match(r"^spotify:episode:([A-Za-z0-9]+)$", text)
+    if not match:
+        return ""
+    return match.group(1)
+
+
+def bool_env(name: str, default: bool) -> bool:
+    raw = os.getenv(name, "").strip().lower()
+    if not raw:
+        return default
+    return raw in {"1", "true", "yes", "y", "on"}
+
+
+def float_env(name: str, default: float) -> float:
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return default
+    try:
+        value = float(raw)
+        return max(0.0, min(1.0, value))
+    except Exception:
+        return default
+
+
+def spotify_episode_probe_status(token: str, uri: str) -> Dict[str, Any]:
+    episode_id = episode_id_from_uri(uri)
+    if not episode_id:
+        return {"ok": False, "reason": "not_episode_uri"}
+    try:
+        data = spotify_get(f"https://api.spotify.com/v1/episodes/{episode_id}", token, {"market": "US"})
+    except requests.HTTPError as exc:
+        return {"ok": False, "reason": f"http_{getattr(exc.response, 'status_code', 'error')}"}
+
+    resume = data.get("resume_point") or {}
+    fully_played = bool(resume.get("fully_played"))
+    progress_ms = int(resume.get("resume_position_ms") or 0)
+    duration_ms = int(data.get("duration_ms") or 0)
+    pct = (progress_ms / duration_ms) if duration_ms > 0 else 0.0
+    return {
+        "ok": True,
+        "fully_played": fully_played,
+        "progress_ms": progress_ms,
+        "duration_ms": duration_ms,
+        "progress_pct": pct,
+    }
 
 
 def notion_headers(token: str) -> Dict[str, str]:
@@ -377,6 +428,8 @@ def main() -> int:
         listened = collect_recent_spotify_activity(spotify_token)
         listened_texts = listened.get("all_texts", set())
         listened_uris = listened.get("all_uris", set())
+        episode_probe_enabled = bool_env(SPOTIFY_EPISODE_PROBE_ENABLED, True)
+        episode_probe_min_pct = float_env(SPOTIFY_EPISODE_PROBE_MIN_PROGRESS_PCT, 0.7)
         if not listened_texts:
             print("INFO no_recent_spotify_items_found")
         print(f"INFO spotify_activity texts={len(listened_texts)} uris={len(listened_uris)}")
@@ -408,12 +461,17 @@ def main() -> int:
         updated = 0
         scanned = 0
         matched_by_uri = 0
+        matched_by_probe = 0
         rows_with_uri = 0
         uri_row_matched_titles: List[str] = []
         uri_row_unmatched_titles: List[str] = []
+        uri_row_probe_matched_titles: List[str] = []
+        uri_row_probe_unmatched_titles: List[str] = []
         uri_row_already_checked_titles: List[str] = []
         updated_by_uri_titles: List[str] = []
+        updated_by_probe_titles: List[str] = []
         updated_by_text_titles: List[str] = []
+        probe_cache: Dict[str, Dict[str, Any]] = {}
         for page in pages:
             scanned += 1
             title = page_title(page, title_property)
@@ -428,9 +486,24 @@ def main() -> int:
                     matched_by_uri += 1
                     uri_row_matched_titles.append(title)
                 else:
-                    uri_row_unmatched_titles.append(title)
-                    # If a row has a URI, require URI match. Do not fall back to text.
-                    continue
+                    probe_match = False
+                    if episode_probe_enabled and episode_id_from_uri(row_uri):
+                        if row_uri not in probe_cache:
+                            probe_cache[row_uri] = spotify_episode_probe_status(spotify_token, row_uri)
+                        probe = probe_cache[row_uri]
+                        if probe.get("ok"):
+                            if bool(probe.get("fully_played")) or float(probe.get("progress_pct", 0.0)) >= episode_probe_min_pct:
+                                probe_match = True
+                    if probe_match:
+                        uri_match = True
+                        matched_by_probe += 1
+                        uri_row_probe_matched_titles.append(title)
+                    else:
+                        uri_row_unmatched_titles.append(title)
+                        if episode_probe_enabled and episode_id_from_uri(row_uri):
+                            uri_row_probe_unmatched_titles.append(title)
+                        # If a row has a URI, require URI/probe match. Do not fall back to text.
+                        continue
             elif normalize_text(title) not in matches:
                 continue
             checked = page_checkbox(page, completed_property)
@@ -448,13 +521,17 @@ def main() -> int:
             update_page_checkbox(page_id, completed_property, True, notion_token)
             updated += 1
             if uri_match:
-                updated_by_uri_titles.append(title)
+                if title in uri_row_probe_matched_titles:
+                    updated_by_probe_titles.append(title)
+                else:
+                    updated_by_uri_titles.append(title)
             else:
                 updated_by_text_titles.append(title)
 
         print(
             f"SUMMARY notion_db={db_id} rows_scanned={scanned} rows_marked_completed={updated} "
-            f"matched_targets={len(matches)} matched_by_uri={matched_by_uri} rows_with_uri={rows_with_uri}"
+            f"matched_targets={len(matches)} matched_by_uri={matched_by_uri} matched_by_probe={matched_by_probe} "
+            f"rows_with_uri={rows_with_uri}"
         )
         log_limit = int(os.getenv(SPOTIFY_COMPLETION_LOG_LIMIT, "25").strip() or "25")
         uri_log_limit = int(os.getenv(SPOTIFY_URI_DEBUG_LOG_LIMIT, "25").strip() or "25")
@@ -466,10 +543,16 @@ def main() -> int:
             print(f"INFO notion_uri_match title={title}")
         for title in uri_row_unmatched_titles[: max(0, uri_log_limit)]:
             print(f"INFO notion_uri_not_played title={title}")
+        for title in uri_row_probe_matched_titles[: max(0, uri_log_limit)]:
+            print(f"INFO notion_uri_probe_match title={title}")
+        for title in uri_row_probe_unmatched_titles[: max(0, uri_log_limit)]:
+            print(f"INFO notion_uri_probe_not_matched title={title}")
         for title in uri_row_already_checked_titles[: max(0, uri_log_limit)]:
             print(f"INFO notion_uri_already_checked title={title}")
         for title in updated_by_uri_titles[: max(0, log_limit)]:
             print(f"INFO completion_marked method=uri title={title}")
+        for title in updated_by_probe_titles[: max(0, log_limit)]:
+            print(f"INFO completion_marked method=episode_probe title={title}")
         for title in updated_by_text_titles[: max(0, log_limit)]:
             print(f"INFO completion_marked method=text title={title}")
         return 0

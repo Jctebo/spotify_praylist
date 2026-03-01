@@ -95,6 +95,7 @@ How matching works:
 
 Required for this script:
 - Spotify token must include `user-read-recently-played` scope
+- For episode resume-point probing, include `user-read-playback-position`
 - `NOTION_TOKEN` secret
 - `NOTION_DATABASE_ID` secret (recommended)
 
@@ -107,6 +108,8 @@ Optional variables/secrets:
 - `NOTION_URI_PROPERTY` (default `URI`, used for URI-based completion matching)
 - `SPOTIFY_RECENT_LOOKBACK_HOURS` (default `3`, range `1-24`)
 - `SPOTIFY_NOTION_SYNC_CONFIG` (default `notion_spotify_sync_config.json`)
+- `SPOTIFY_EPISODE_PROBE_ENABLED` (default `true`)
+- `SPOTIFY_EPISODE_PROBE_MIN_PROGRESS_PCT` (default `0.7`)
 
 GitHub setup for hourly workflow:
 1. Add secrets:
