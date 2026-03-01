@@ -300,6 +300,48 @@ def load_notion_match_terms_by_name() -> Dict[str, List[str]]:
     return out
 
 
+def load_notion_mapping_meta_by_name() -> Dict[str, Dict[str, Any]]:
+    config_path = os.getenv(SPOTIFY_NOTION_SYNC_CONFIG, "notion_spotify_sync_config.json").strip()
+    if not config_path or not os.path.exists(config_path):
+        return {}
+    with open(config_path, "r", encoding="utf-8") as fh:
+        payload = json.load(fh)
+    mappings = payload.get("mappings")
+    if not isinstance(mappings, list):
+        return {}
+    out: Dict[str, Dict[str, Any]] = {}
+    for row in mappings:
+        if not isinstance(row, dict):
+            continue
+        notion_name = normalize_text(str(row.get("notion_name", "")).strip())
+        if not notion_name:
+            continue
+        match_any = row.get("match_any")
+        if not isinstance(match_any, list):
+            match_any = []
+        terms = [normalize_text(str(v)) for v in match_any if normalize_text(str(v))]
+        profiles = row.get("profiles")
+        if not isinstance(profiles, list):
+            profiles = ["any"]
+        profile_values = [normalize_text(str(v)) for v in profiles if normalize_text(str(v))]
+        if not profile_values:
+            profile_values = ["any"]
+        time_of_day = normalize_text(str(row.get("time_of_day", "any")).strip() or "any")
+        if time_of_day not in {"any", "morning", "midday", "evening"}:
+            time_of_day = "any"
+        out[notion_name] = {"terms": terms, "profiles": profile_values, "time_of_day": time_of_day}
+    return out
+
+
+def current_time_of_day_local() -> str:
+    h = local_now().hour
+    if 4 <= h <= 10:
+        return "morning"
+    if 11 <= h <= 15:
+        return "midday"
+    return "evening"
+
+
 def spotify_uri_text_index(sp: spotipy.Spotify, uris: List[str]) -> Dict[str, str]:
     text_index: Dict[str, str] = {}
     for uri in uris:
@@ -348,7 +390,32 @@ def best_uri_for_notion_title(
     return best_uri if best_score >= 3 else None
 
 
-def sync_notion_uris_for_profile(sp: spotipy.Spotify, queue: List[str]) -> Tuple[int, List[Tuple[str, str]]]:
+def uri_candidates_for_notion_title(
+    title: str, uri_texts: Dict[str, str], terms: List[str]
+) -> List[Tuple[str, int]]:
+    title_norm = normalize_text(title)
+    if not title_norm:
+        return []
+    title_tokens = token_set(title)
+    out: List[Tuple[str, int]] = []
+    for uri, text in uri_texts.items():
+        score = 0
+        if title_norm in text:
+            score += 4
+        if terms and any(term in text for term in terms):
+            score += 3
+        if title_tokens:
+            overlap = len(title_tokens.intersection(token_set(text)))
+            score += min(overlap, 3)
+        if score >= 3:
+            out.append((uri, score))
+    out.sort(key=lambda x: x[1], reverse=True)
+    return out
+
+
+def sync_notion_uris_for_profile(
+    sp: spotipy.Spotify, queue: List[str], profile_name: str
+) -> Tuple[int, List[Tuple[str, str]]]:
     token = os.getenv(NOTION_TOKEN, "").strip()
     if not token:
         return 0, []
@@ -367,9 +434,12 @@ def sync_notion_uris_for_profile(sp: spotipy.Spotify, queue: List[str]) -> Tuple
     pages = notion_get_all_pages(database_id, token)
     uri_texts = spotify_uri_text_index(sp, queue)
     match_terms_by_name = load_notion_match_terms_by_name()
+    mapping_meta_by_name = load_notion_mapping_meta_by_name()
+    now_time_of_day = current_time_of_day_local()
 
     updated = 0
     updates: List[Tuple[str, str]] = []
+    candidates: List[Dict[str, Any]] = []
     for page in pages:
         platform_text = normalize_text(page_property_text(page, platform_property))
         if platform_value and platform_value not in platform_text:
@@ -377,18 +447,59 @@ def sync_notion_uris_for_profile(sp: spotipy.Spotify, queue: List[str]) -> Tuple
         title = page_title(page, title_property)
         if not title:
             continue
-        matched_uri = best_uri_for_notion_title(title, uri_texts, match_terms_by_name)
-        if not matched_uri:
-            continue
-        existing_uri = page_uri_value(page, uri_property) or ""
-        if existing_uri.strip() == matched_uri:
+        title_norm = normalize_text(title)
+        mapping_meta = mapping_meta_by_name.get(title_norm)
+        if mapping_meta:
+            mapping_profiles = mapping_meta.get("profiles", ["any"])
+            if "any" not in mapping_profiles and normalize_text(profile_name) not in mapping_profiles:
+                continue
+            mapping_tod = str(mapping_meta.get("time_of_day", "any"))
+            if mapping_tod != "any" and mapping_tod != now_time_of_day:
+                continue
+            terms = list(mapping_meta.get("terms", []))
+        else:
+            terms = match_terms_by_name.get(title_norm, [])
+        row_candidates = uri_candidates_for_notion_title(title, uri_texts, terms)
+        if not row_candidates:
             continue
         page_id = str(page.get("id", "")).strip()
         if not page_id:
             continue
-        notion_update_uri(page_id, page, uri_property, matched_uri, token)
+        existing_uri = page_uri_value(page, uri_property) or ""
+        candidates.append(
+            {
+                "page": page,
+                "page_id": page_id,
+                "title": title,
+                "existing_uri": existing_uri.strip(),
+                "candidates": row_candidates,
+            }
+        )
+
+    # Choose best unique URI per row (avoid same URI assigned to multiple rows).
+    proposals: List[Tuple[int, int, str]] = []
+    for idx, row in enumerate(candidates):
+        for uri, score in row["candidates"]:
+            proposals.append((score, idx, uri))
+    proposals.sort(key=lambda x: x[0], reverse=True)
+
+    assigned_rows = set()
+    assigned_uris = set()
+    chosen: Dict[int, str] = {}
+    for score, idx, uri in proposals:
+        if idx in assigned_rows or uri in assigned_uris:
+            continue
+        assigned_rows.add(idx)
+        assigned_uris.add(uri)
+        chosen[idx] = uri
+
+    for idx, uri in chosen.items():
+        row = candidates[idx]
+        if row["existing_uri"] == uri:
+            continue
+        notion_update_uri(row["page_id"], row["page"], uri_property, uri, token)
         updated += 1
-        updates.append((title, matched_uri))
+        updates.append((row["title"], uri))
     return updated, updates
 
 
@@ -1017,7 +1128,7 @@ def main() -> int:
             sp, profile, weekday, status, profiles_cfg, catalog_cfg, shows_cfg, fixed_cfg, tokens_cfg
         )
         written = add_items(sp, playlist_id, queue)
-        notion_uri_updates, notion_uri_update_details = sync_notion_uris_for_profile(sp, queue)
+        notion_uri_updates, notion_uri_update_details = sync_notion_uris_for_profile(sp, queue, profile)
 
         print(f"SUMMARY playlist_id={playlist_id} tracks_written={written}")
         print(f"INFO profile={profile} weekday={weekday} removed_streaming_items={removed}")

@@ -39,7 +39,7 @@
     },
     {
       "notion_name": "Bible in a Year",
-      "match_any": ["bible in a year", "day "],
+      "match_any": ["bible in a year", "ascension", "fr mike schmitz"],
       "profiles": ["morning"]
     },
     {
