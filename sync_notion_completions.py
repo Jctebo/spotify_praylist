@@ -429,6 +429,8 @@ def main() -> int:
                     uri_row_matched_titles.append(title)
                 else:
                     uri_row_unmatched_titles.append(title)
+                    # If a row has a URI, require URI match. Do not fall back to text.
+                    continue
             elif normalize_text(title) not in matches:
                 continue
             checked = page_checkbox(page, completed_property)
