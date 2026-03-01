@@ -43,6 +43,8 @@ NOTION_URI_LOG_LIMIT = "NOTION_URI_LOG_LIMIT"  # defaults to 25
 MARKETS_TO_TRY = ["US", None, "GB", "CA", "AU"]
 MAX_PAGES = 10
 MAX_BIAY_EPISODES_TO_SCAN = 2500
+DEFAULT_UTC_OFFSET = "-06:00"
+RUNTIME_TZ = datetime.timezone(datetime.timedelta(hours=-6))
 
 
 def require_env(name: str) -> str:
@@ -74,6 +76,30 @@ def load_playlist_config() -> Dict[str, Any]:
     if not isinstance(tokens, dict) or not tokens:
         raise RuntimeError(f"Invalid config format in {config_path}: missing or empty 'tokens' object.")
     return cfg
+
+
+def parse_utc_offset(offset_text: str) -> datetime.timezone:
+    text = (offset_text or "").strip()
+    match = re.fullmatch(r"([+-])(\d{1,2})(?::?(\d{2}))?", text)
+    if not match:
+        raise RuntimeError(f"Invalid utc_offset '{offset_text}'. Use format like -06:00 or +05:30.")
+    sign = -1 if match.group(1) == "-" else 1
+    hours = int(match.group(2))
+    minutes = int(match.group(3) or "0")
+    if hours > 14 or minutes > 59:
+        raise RuntimeError(f"Invalid utc_offset '{offset_text}'.")
+    delta = datetime.timedelta(hours=hours, minutes=minutes) * sign
+    return datetime.timezone(delta)
+
+
+def set_runtime_timezone(cfg: Dict[str, Any]) -> None:
+    global RUNTIME_TZ
+    raw = str(cfg.get("utc_offset", DEFAULT_UTC_OFFSET)).strip() or DEFAULT_UTC_OFFSET
+    RUNTIME_TZ = parse_utc_offset(raw)
+
+
+def local_now() -> datetime.datetime:
+    return datetime.datetime.now(RUNTIME_TZ)
 
 
 def cfg_value(cfg_map: Dict[str, Any], key: str, section: str) -> str:
@@ -515,7 +541,7 @@ def sth_date_prefix(dt: datetime.datetime) -> str:
 
 
 def sth_match_today(sp: spotipy.Spotify, show_id: str, must_contain_tokens: List[str]) -> Tuple[Optional[str], Optional[str]]:
-    prefix = sth_date_prefix(datetime.datetime.now())
+    prefix = sth_date_prefix(local_now())
     res = safe_call(sp.show_episodes, show_id, limit=50, market="US")
     if not isinstance(res, dict):
         return None, None
@@ -551,7 +577,7 @@ def matches_month_day(title: str, dt: datetime.datetime) -> bool:
 
 
 def do_date_aware(sp: spotipy.Spotify, show_id: str, terms) -> Tuple[Optional[str], Optional[str]]:
-    now = datetime.datetime.now()
+    now = local_now()
     yst = now - datetime.timedelta(days=1)
 
     res = safe_call(sp.show_episodes, show_id, limit=50, market="US")
@@ -572,7 +598,7 @@ def do_date_aware(sp: spotipy.Spotify, show_id: str, terms) -> Tuple[Optional[st
 
 
 def monthly_morning_prayer_episode(sp: spotipy.Spotify, show_id: str) -> Tuple[Optional[str], Optional[str]]:
-    now = datetime.datetime.now()
+    now = local_now()
     month_full = now.strftime("%B")
     month_abbr = now.strftime("%b")
     year = now.strftime("%Y")
@@ -640,13 +666,12 @@ def usccb_daily_mass_for_date(
 
 
 def usccb_daily_mass_for_today_window(sp: spotipy.Spotify, show_id: str) -> Tuple[Optional[str], Optional[str]]:
-    now = datetime.datetime.now()
-    # Prefer today's target, then next day, then previous day as safety fallbacks.
-    for dt in (now, now + datetime.timedelta(days=1), now - datetime.timedelta(days=1)):
-        uri, name = usccb_daily_mass_for_date(sp, show_id, dt)
-        if uri:
-            return uri, name
-    return None, None
+    now = local_now()
+    # Prefer today's titled episode; if unavailable, fall back to latest available release.
+    uri, name = usccb_daily_mass_for_date(sp, show_id, now)
+    if uri:
+        return uri, name
+    return latest_by_release_date(sp, show_id)
 
 
 def day_of_year_1_to_365(now: datetime.datetime) -> int:
@@ -655,7 +680,7 @@ def day_of_year_1_to_365(now: datetime.datetime) -> int:
 
 
 def bible_in_a_year_for_today(sp: spotipy.Spotify, show_id: str, status: Dict[str, bool]):
-    n = day_of_year_1_to_365(datetime.datetime.now())
+    n = day_of_year_1_to_365(local_now())
     pattern = re.compile(rf"\bDay\s*0*{n}\b", re.IGNORECASE)
 
     def release_key(release_date: str) -> Tuple[int, int, int]:
@@ -957,6 +982,7 @@ def build_queue_for_profile(
 def main() -> int:
     try:
         cfg = load_playlist_config()
+        set_runtime_timezone(cfg)
         profiles_cfg = cfg.get("profiles", {})
         catalog_cfg = cfg.get("catalog", {})
         shows_cfg = cfg.get("shows", {})
@@ -983,7 +1009,7 @@ def main() -> int:
         _ = os.getenv(SPOTIFY_USER_ID, "")
 
         sp = sp_client()
-        weekday = datetime.datetime.now().strftime("%A")
+        weekday = local_now().strftime("%A")
         status: Dict[str, bool] = {}
 
         removed = clear_streaming_keep_locals(sp, playlist_id)
@@ -995,6 +1021,7 @@ def main() -> int:
 
         print(f"SUMMARY playlist_id={playlist_id} tracks_written={written}")
         print(f"INFO profile={profile} weekday={weekday} removed_streaming_items={removed}")
+        print(f"INFO utc_offset={local_now().strftime('%z')}")
         if os.getenv(NOTION_TOKEN, "").strip():
             print(f"INFO notion_uri_rows_updated={notion_uri_updates}")
             log_limit = int(os.getenv(NOTION_URI_LOG_LIMIT, "25").strip() or "25")

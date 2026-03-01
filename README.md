@@ -27,6 +27,11 @@ Optional variables:
 - `.github/workflows/hourly_notion_sync.yml`: hourly + manual Notion completion sync workflow
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
 
+## Config Timezone
+- `playlist_config.json` supports top-level `utc_offset` (example `-06:00`).
+- `refresh_playlist.py` uses this for all date-based episode selection.
+- Default is CST (`-06:00`) when not set.
+
 ## Local Setup
 1. Create and activate a virtual environment.
 2. Install dependencies:
