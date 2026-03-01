@@ -63,6 +63,16 @@
       "profiles": ["midday"]
     },
     {
+      "notion_name": "Daily Examen for Labor",
+      "match_any": ["daily examen for labor", "examen for labor"],
+      "profiles": ["midday"]
+    },
+    {
+      "notion_name": "Daily Examen for Parents",
+      "match_any": ["daily examen for parents", "examen for parents"],
+      "profiles": ["night"]
+    },
+    {
       "notion_name": "Angelus (Evening)",
       "match_any": ["angelus"],
       "time_of_day": "evening",

@@ -605,6 +605,50 @@ def monthly_morning_prayer_episode(sp: spotipy.Spotify, show_id: str) -> Tuple[O
     return None, None
 
 
+def usccb_daily_mass_for_date(
+    sp: spotipy.Spotify, show_id: str, dt: datetime.datetime
+) -> Tuple[Optional[str], Optional[str]]:
+    month_full = dt.strftime("%B")
+    month_abbr = dt.strftime("%b")
+    day = dt.day
+    year = dt.strftime("%Y")
+    patterns = [
+        rf"\bdaily\s*mass\s*reading\s*podcast\s*for\s*{re.escape(month_full)}\s*{day},?\s*{re.escape(year)}\b",
+        rf"\bdaily\s*mass\s*reading\s*podcast\s*for\s*{re.escape(month_abbr)}\.?\s*{day},?\s*{re.escape(year)}\b",
+    ]
+
+    res = safe_call(sp.show_episodes, show_id, limit=50, market="US")
+    if not isinstance(res, dict):
+        return None, None
+    items = list(res.get("items") or [])
+    if res.get("next"):
+        res2 = safe_call(sp.next, res)
+        if isinstance(res2, dict):
+            items += list(res2.get("items") or [])
+
+    for ep in items:
+        if not isinstance(ep, dict):
+            continue
+        name = str(ep.get("name", "")).strip()
+        if not name:
+            continue
+        if any(re.search(pattern, name, re.IGNORECASE) for pattern in patterns):
+            uri = ep.get("uri")
+            if uri:
+                return uri, name
+    return None, None
+
+
+def usccb_daily_mass_for_today_window(sp: spotipy.Spotify, show_id: str) -> Tuple[Optional[str], Optional[str]]:
+    now = datetime.datetime.now()
+    # Prefer today's target, then next day, then previous day as safety fallbacks.
+    for dt in (now, now + datetime.timedelta(days=1), now - datetime.timedelta(days=1)):
+        uri, name = usccb_daily_mass_for_date(sp, show_id, dt)
+        if uri:
+            return uri, name
+    return None, None
+
+
 def day_of_year_1_to_365(now: datetime.datetime) -> int:
     doy = int(now.timetuple().tm_yday)
     return 365 if doy > 365 else doy
@@ -766,6 +810,14 @@ def resolve_item_uri(
         status["Night Pre-Compline (fixed episode)"] = True
         return cfg_value(fixed_cfg, "NIGHT_PRE_COMPLINE", "fixed")
 
+    if key == "DAILY_EXAMEN_LABOR":
+        status["Daily Examen for Labor"] = True
+        return cfg_value(fixed_cfg, "DAILY_EXAMEN_LABOR", "fixed")
+
+    if key == "DAILY_EXAMEN_PARENTS":
+        status["Daily Examen for Parents"] = True
+        return cfg_value(fixed_cfg, "DAILY_EXAMEN_PARENTS", "fixed")
+
     if key == "BIBLE_IN_A_YEAR":
         uri, _, _ = bible_in_a_year_for_today(sp, cfg_value(shows_cfg, "BIBLE_IN_A_YEAR", "shows"), status)
         return uri
@@ -809,7 +861,7 @@ def resolve_item_uri(
         return uri
 
     if key == "USCCB":
-        uri, _ = latest_by_release_date(sp, cfg_value(shows_cfg, "DAILY_MASS_READINGS", "shows"))
+        uri, _ = usccb_daily_mass_for_today_window(sp, cfg_value(shows_cfg, "DAILY_MASS_READINGS", "shows"))
         status["USCCB Daily Readings"] = bool(uri)
         return uri
 

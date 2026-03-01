@@ -16,6 +16,8 @@
   "fixed": {
     "ANGELUS_SONG": "spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
     "ANGELUS_POD": "spotify:episode:2HNK8wLRWHh0mJ9xmJjlUD",
+    "DAILY_EXAMEN_LABOR": "spotify:episode:6QhBBdf8ZHx4bZu3prT59i",
+    "DAILY_EXAMEN_PARENTS": "spotify:episode:14Fx8ZOSRANeKVGXuYMudc",
     "NIGHT_PRE_COMPLINE": "spotify:episode:1I8pCawzp1Wd5pE0NcHmUj",
     "FRIDAY_STATIONS": "spotify:episode:4rZ8YJKq1iuqiypu3Q5TRm"
   },
@@ -51,6 +53,16 @@
     "NIGHT_PRE_COMPLINE": {
       "label": "Night Before Compline",
       "description": "Fixed episode of Examen placed before Night Prayer/Compline in the night profile.",
+      "kind": "fixed"
+    },
+    "DAILY_EXAMEN_LABOR": {
+      "label": "Daily Examen for Labor",
+      "description": "Fixed midday examen episode focused on labor/work.",
+      "kind": "fixed"
+    },
+    "DAILY_EXAMEN_PARENTS": {
+      "label": "Daily Examen for Parents",
+      "description": "Fixed midday examen episode focused on parenting.",
       "kind": "fixed"
     },
     "BIBLE_IN_A_YEAR": {
@@ -163,14 +175,16 @@
         "USCCB",
         "SAINT_OF_DAY",
         "AUXILIUM",
+        "ANGELUS_SONG",
         "MIDAFTERNOON",
-        "ANGELUS_SONG"
+        "DAILY_EXAMEN_LABOR"
       ]
     },
     "night": {
       "playlist_id": "1TAlNiKHMc41cT0fvkYxTD",
       "order": [
         "ANGELUS_SONG",
+        "DAILY_EXAMEN_PARENTS",
         "EVENING",
         "NIGHT"
       ]
