@@ -28,6 +28,7 @@ SPOTIFY_RECENT_LOOKBACK_HOURS = "SPOTIFY_RECENT_LOOKBACK_HOURS"  # default 3
 SPOTIFY_SYNC_TIMEZONE = "SPOTIFY_SYNC_TIMEZONE"  # default America/Chicago
 SPOTIFY_CONFIG_FILE = "SPOTIFY_CONFIG_FILE"  # defaults to playlist_config.json
 SPOTIFY_COMPLETION_LOG_LIMIT = "SPOTIFY_COMPLETION_LOG_LIMIT"  # defaults to 25
+SPOTIFY_URI_DEBUG_LOG_LIMIT = "SPOTIFY_URI_DEBUG_LOG_LIMIT"  # defaults to 25
 
 
 def require_env(name: str) -> str:
@@ -378,6 +379,7 @@ def main() -> int:
         listened_uris = listened.get("all_uris", set())
         if not listened_texts:
             print("INFO no_recent_spotify_items_found")
+        print(f"INFO spotify_activity texts={len(listened_texts)} uris={len(listened_uris)}")
 
         matches: Set[str] = set()
         now_time_of_day = current_time_of_day()
@@ -406,6 +408,10 @@ def main() -> int:
         updated = 0
         scanned = 0
         matched_by_uri = 0
+        rows_with_uri = 0
+        uri_row_matched_titles: List[str] = []
+        uri_row_unmatched_titles: List[str] = []
+        uri_row_already_checked_titles: List[str] = []
         updated_by_uri_titles: List[str] = []
         updated_by_text_titles: List[str] = []
         for page in pages:
@@ -415,9 +421,14 @@ def main() -> int:
                 continue
             uri_match = False
             row_uri = page_uri(page, uri_property)
-            if row_uri and row_uri in listened_uris:
-                uri_match = True
-                matched_by_uri += 1
+            if row_uri:
+                rows_with_uri += 1
+                if row_uri in listened_uris:
+                    uri_match = True
+                    matched_by_uri += 1
+                    uri_row_matched_titles.append(title)
+                else:
+                    uri_row_unmatched_titles.append(title)
             elif normalize_text(title) not in matches:
                 continue
             checked = page_checkbox(page, completed_property)
@@ -426,6 +437,8 @@ def main() -> int:
                     f"Property '{completed_property}' is missing or not a checkbox in at least one row."
                 )
             if checked:
+                if uri_match:
+                    uri_row_already_checked_titles.append(title)
                 continue
             page_id = str(page.get("id", "")).strip()
             if not page_id:
@@ -439,9 +452,20 @@ def main() -> int:
 
         print(
             f"SUMMARY notion_db={db_id} rows_scanned={scanned} rows_marked_completed={updated} "
-            f"matched_targets={len(matches)} matched_by_uri={matched_by_uri}"
+            f"matched_targets={len(matches)} matched_by_uri={matched_by_uri} rows_with_uri={rows_with_uri}"
         )
         log_limit = int(os.getenv(SPOTIFY_COMPLETION_LOG_LIMIT, "25").strip() or "25")
+        uri_log_limit = int(os.getenv(SPOTIFY_URI_DEBUG_LOG_LIMIT, "25").strip() or "25")
+        for uri in sorted(listened_uris)[: max(0, uri_log_limit)]:
+            print(f"INFO listened_uri uri={uri}")
+        if len(listened_uris) > max(0, uri_log_limit):
+            print(f"INFO listened_uri_truncated shown={max(0, uri_log_limit)} total={len(listened_uris)}")
+        for title in uri_row_matched_titles[: max(0, uri_log_limit)]:
+            print(f"INFO notion_uri_match title={title}")
+        for title in uri_row_unmatched_titles[: max(0, uri_log_limit)]:
+            print(f"INFO notion_uri_not_played title={title}")
+        for title in uri_row_already_checked_titles[: max(0, uri_log_limit)]:
+            print(f"INFO notion_uri_already_checked title={title}")
         for title in updated_by_uri_titles[: max(0, log_limit)]:
             print(f"INFO completion_marked method=uri title={title}")
         for title in updated_by_text_titles[: max(0, log_limit)]:
