@@ -468,6 +468,7 @@ def main() -> int:
         uri_row_probe_matched_titles: List[str] = []
         uri_row_probe_unmatched_titles: List[str] = []
         uri_row_already_checked_titles: List[str] = []
+        probe_debug_rows: List[str] = []
         updated_by_uri_titles: List[str] = []
         updated_by_probe_titles: List[str] = []
         updated_by_text_titles: List[str] = []
@@ -491,6 +492,15 @@ def main() -> int:
                         if row_uri not in probe_cache:
                             probe_cache[row_uri] = spotify_episode_probe_status(spotify_token, row_uri)
                         probe = probe_cache[row_uri]
+                        if probe.get("ok"):
+                            probe_debug_rows.append(
+                                f"title={title} uri={row_uri} fully_played={bool(probe.get('fully_played'))} "
+                                f"progress_pct={float(probe.get('progress_pct', 0.0)):.3f}"
+                            )
+                        else:
+                            probe_debug_rows.append(
+                                f"title={title} uri={row_uri} probe_error={probe.get('reason', 'unknown')}"
+                            )
                         if probe.get("ok"):
                             if bool(probe.get("fully_played")) or float(probe.get("progress_pct", 0.0)) >= episode_probe_min_pct:
                                 probe_match = True
@@ -547,6 +557,8 @@ def main() -> int:
             print(f"INFO notion_uri_probe_match title={title}")
         for title in uri_row_probe_unmatched_titles[: max(0, uri_log_limit)]:
             print(f"INFO notion_uri_probe_not_matched title={title}")
+        for row in probe_debug_rows[: max(0, uri_log_limit)]:
+            print(f"INFO episode_probe {row}")
         for title in uri_row_already_checked_titles[: max(0, uri_log_limit)]:
             print(f"INFO notion_uri_already_checked title={title}")
         for title in updated_by_uri_titles[: max(0, log_limit)]:
