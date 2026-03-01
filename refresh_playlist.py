@@ -36,6 +36,7 @@ NOTION_DATABASE_NAME = "NOTION_DATABASE_NAME"  # fallback search; defaults to Op
 NOTION_TITLE_PROPERTY = "NOTION_TITLE_PROPERTY"  # defaults to Name
 NOTION_PLATFORM_PROPERTY = "NOTION_PLATFORM_PROPERTY"  # defaults to Platform
 NOTION_PLATFORM_SPOTIFY_VALUE = "NOTION_PLATFORM_SPOTIFY_VALUE"  # defaults to spotify
+NOTION_PLATFORM_NOSYNC_VALUE = "NOTION_PLATFORM_NOSYNC_VALUE"  # defaults to spotify-nosync
 NOTION_URI_PROPERTY = "NOTION_URI_PROPERTY"  # defaults to URI
 NOTION_URI_LOG_LIMIT = "NOTION_URI_LOG_LIMIT"  # defaults to 25
 
@@ -429,6 +430,7 @@ def sync_notion_uris_for_profile(
     title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
     platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
     platform_value = normalize_text(os.getenv(NOTION_PLATFORM_SPOTIFY_VALUE, "spotify").strip() or "spotify")
+    nosync_value = normalize_text(os.getenv(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync").strip() or "spotify-nosync")
     uri_property = os.getenv(NOTION_URI_PROPERTY, "URI").strip() or "URI"
 
     pages = notion_get_all_pages(database_id, token)
@@ -442,6 +444,8 @@ def sync_notion_uris_for_profile(
     candidates: List[Dict[str, Any]] = []
     for page in pages:
         platform_text = normalize_text(page_property_text(page, platform_property))
+        if nosync_value and nosync_value in platform_text:
+            continue
         if platform_value and platform_value not in platform_text:
             continue
         title = page_title(page, title_property)

@@ -22,6 +22,8 @@ NOTION_DATABASE_NAME = "NOTION_DATABASE_NAME"  # fallback search; defaults to Op
 NOTION_TITLE_PROPERTY = "NOTION_TITLE_PROPERTY"  # defaults to Name
 NOTION_COMPLETED_PROPERTY = "NOTION_COMPLETED_PROPERTY"  # defaults to Completed
 NOTION_URI_PROPERTY = "NOTION_URI_PROPERTY"  # defaults to URI
+NOTION_PLATFORM_PROPERTY = "NOTION_PLATFORM_PROPERTY"  # defaults to Platform
+NOTION_PLATFORM_NOSYNC_VALUE = "NOTION_PLATFORM_NOSYNC_VALUE"  # defaults to spotify-nosync
 
 SPOTIFY_NOTION_SYNC_CONFIG = "SPOTIFY_NOTION_SYNC_CONFIG"  # defaults to notion_spotify_sync_config.json
 SPOTIFY_RECENT_LOOKBACK_HOURS = "SPOTIFY_RECENT_LOOKBACK_HOURS"  # default 3
@@ -405,6 +407,27 @@ def page_uri(page: Dict[str, Any], uri_property: str) -> str:
     return ""
 
 
+def page_property_text(page: Dict[str, Any], property_name: str) -> str:
+    props = page.get("properties") or {}
+    prop = props.get(property_name) or {}
+    ptype = str(prop.get("type", "")).strip()
+    if ptype == "select":
+        sel = prop.get("select") or {}
+        return str(sel.get("name", "")).strip()
+    if ptype == "multi_select":
+        vals = prop.get("multi_select") or []
+        return " ".join(str(v.get("name", "")).strip() for v in vals if isinstance(v, dict)).strip()
+    if ptype == "rich_text":
+        vals = prop.get("rich_text") or []
+        return " ".join(str(v.get("plain_text", "")).strip() for v in vals if isinstance(v, dict)).strip()
+    if ptype == "title":
+        vals = prop.get("title") or []
+        return " ".join(str(v.get("plain_text", "")).strip() for v in vals if isinstance(v, dict)).strip()
+    if ptype == "url":
+        return str(prop.get("url", "")).strip()
+    return ""
+
+
 def update_page_checkbox(page_id: str, checkbox_property: str, value: bool, token: str) -> None:
     body = {"properties": {checkbox_property: {"checkbox": value}}}
     notion_call("PATCH", f"https://api.notion.com/v1/pages/{page_id}", token, body)
@@ -424,6 +447,8 @@ def main() -> int:
         title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
         completed_property = os.getenv(NOTION_COMPLETED_PROPERTY, "Completed").strip() or "Completed"
         uri_property = os.getenv(NOTION_URI_PROPERTY, "URI").strip() or "URI"
+        platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
+        nosync_value = normalize_text(os.getenv(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync").strip() or "spotify-nosync")
 
         listened = collect_recent_spotify_activity(spotify_token)
         listened_texts = listened.get("all_texts", set())
@@ -460,6 +485,7 @@ def main() -> int:
         pages = notion_get_all_pages(db_id, notion_token)
         updated = 0
         scanned = 0
+        skipped_nosync = 0
         matched_by_uri = 0
         matched_by_probe = 0
         rows_with_uri = 0
@@ -475,6 +501,10 @@ def main() -> int:
         probe_cache: Dict[str, Dict[str, Any]] = {}
         for page in pages:
             scanned += 1
+            platform_text = normalize_text(page_property_text(page, platform_property))
+            if nosync_value and nosync_value in platform_text:
+                skipped_nosync += 1
+                continue
             title = page_title(page, title_property)
             if not title:
                 continue
@@ -541,7 +571,7 @@ def main() -> int:
         print(
             f"SUMMARY notion_db={db_id} rows_scanned={scanned} rows_marked_completed={updated} "
             f"matched_targets={len(matches)} matched_by_uri={matched_by_uri} matched_by_probe={matched_by_probe} "
-            f"rows_with_uri={rows_with_uri}"
+            f"rows_with_uri={rows_with_uri} rows_skipped_nosync={skipped_nosync}"
         )
         log_limit = int(os.getenv(SPOTIFY_COMPLETION_LOG_LIMIT, "25").strip() or "25")
         uri_log_limit = int(os.getenv(SPOTIFY_URI_DEBUG_LOG_LIMIT, "25").strip() or "25")
