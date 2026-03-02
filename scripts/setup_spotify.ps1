@@ -245,9 +245,9 @@ if (Read-YesNo "Save these values for future terminals (CurrentUser env)?" $true
 }
 
 if (Read-YesNo "Run all playlists locally now?" $true) {
-  $runLocalPath = Join-Path $PSScriptRoot "run_local.ps1"
+  $runLocalPath = Join-Path $PSScriptRoot "run_daily_refresh_local.ps1"
   if (-not (Test-Path $runLocalPath)) {
-    throw "run_local.ps1 not found at: $runLocalPath"
+    throw "run_daily_refresh_local.ps1 not found at: $runLocalPath"
   }
 
   & $runLocalPath -ClientId $clientId -ClientSecret $clientSecret -RefreshToken $refreshToken

@@ -26,8 +26,9 @@ jobs:
           SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
           SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
           SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
-          SPOTIFY_CONFIG_FILE: playlist_config.json
-          SPOTIFY_NOTION_SYNC_CONFIG: notion_spotify_sync_config.json
+          JOB_UTC_OFFSET: ${{ vars.JOB_UTC_OFFSET }}
+          SPOTIFY_CONFIG_FILE: config/playlist_config.json
+          SPOTIFY_NOTION_SYNC_CONFIG: config/notion_spotify_sync_config.json
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
           NOTION_DATABASE_NAME: ${{ vars.NOTION_DATABASE_NAME }}
@@ -37,10 +38,10 @@ jobs:
           NOTION_URI_PROPERTY: ${{ vars.NOTION_URI_PROPERTY }}
         run: |
           set -euo pipefail
-          jq -c '.profiles | to_entries[] | select(.value.playlist_id != null and .value.playlist_id != "") | {profile:.key, playlist_id:.value.playlist_id}' playlist_config.json \
+          jq -c '.profiles | to_entries[] | select(.value.playlist_id != null and .value.playlist_id != "") | {profile:.key, playlist_id:.value.playlist_id}' config/playlist_config.json \
           | while read -r row; do
               profile="$(echo "$row" | jq -r '.profile')"
               playlist_id="$(echo "$row" | jq -r '.playlist_id')"
               echo "Running profile=${profile} playlist_id=${playlist_id}"
-              SPOTIFY_PLAYLIST_PROFILE="$profile" SPOTIFY_PLAYLIST_ID="$playlist_id" python refresh_playlist.py
+              SPOTIFY_PLAYLIST_PROFILE="$profile" SPOTIFY_PLAYLIST_ID="$playlist_id" python jobs/playlist/refresh_playlist.py
             done

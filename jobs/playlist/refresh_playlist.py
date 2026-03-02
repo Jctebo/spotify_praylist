@@ -26,8 +26,9 @@ SPOTIFY_USER_ID = "SPOTIFY_USER_ID"
 
 # Optional selector for which playlist profile to build into SPOTIFY_PLAYLIST_ID.
 SPOTIFY_PLAYLIST_PROFILE = "SPOTIFY_PLAYLIST_PROFILE"  # morning|midday|night, default morning
-SPOTIFY_CONFIG_FILE = "SPOTIFY_CONFIG_FILE"  # optional, defaults to playlist_config.json
-SPOTIFY_NOTION_SYNC_CONFIG = "SPOTIFY_NOTION_SYNC_CONFIG"  # optional, defaults to notion_spotify_sync_config.json
+SPOTIFY_CONFIG_FILE = "SPOTIFY_CONFIG_FILE"  # optional, defaults to config/playlist_config.json
+SPOTIFY_NOTION_SYNC_CONFIG = "SPOTIFY_NOTION_SYNC_CONFIG"  # optional, defaults to config/notion_spotify_sync_config.json
+JOB_UTC_OFFSET = "JOB_UTC_OFFSET"  # optional override for runtime offset, e.g. -06:00
 
 # Optional Notion URI sync.
 NOTION_TOKEN = "NOTION_TOKEN"
@@ -45,6 +46,7 @@ MARKETS_TO_TRY = ["US", None, "GB", "CA", "AU"]
 MAX_PAGES = 10
 MAX_BIAY_EPISODES_TO_SCAN = 2500
 DEFAULT_UTC_OFFSET = "-06:00"
+DEPRECATED_TIMESYNC_PLATFORM_VALUE = "spotify timesync"
 RUNTIME_TZ = datetime.timezone(datetime.timedelta(hours=-6))
 
 
@@ -56,7 +58,7 @@ def require_env(name: str) -> str:
 
 
 def load_playlist_config() -> Dict[str, Any]:
-    config_path = os.getenv(SPOTIFY_CONFIG_FILE, "playlist_config.json").strip() or "playlist_config.json"
+    config_path = os.getenv(SPOTIFY_CONFIG_FILE, "config/playlist_config.json").strip() or "config/playlist_config.json"
     with open(config_path, "r", encoding="utf-8") as fh:
         cfg = json.load(fh)
     if not isinstance(cfg, dict):
@@ -95,7 +97,7 @@ def parse_utc_offset(offset_text: str) -> datetime.timezone:
 
 def set_runtime_timezone(cfg: Dict[str, Any]) -> None:
     global RUNTIME_TZ
-    raw = str(cfg.get("utc_offset", DEFAULT_UTC_OFFSET)).strip() or DEFAULT_UTC_OFFSET
+    raw = os.getenv(JOB_UTC_OFFSET, "").strip() or str(cfg.get("utc_offset", DEFAULT_UTC_OFFSET)).strip() or DEFAULT_UTC_OFFSET
     RUNTIME_TZ = parse_utc_offset(raw)
 
 
@@ -279,7 +281,7 @@ def notion_update_uri(page_id: str, page: Dict[str, Any], uri_property: str, uri
 
 
 def load_notion_match_terms_by_name() -> Dict[str, List[str]]:
-    config_path = os.getenv(SPOTIFY_NOTION_SYNC_CONFIG, "notion_spotify_sync_config.json").strip()
+    config_path = os.getenv(SPOTIFY_NOTION_SYNC_CONFIG, "config/notion_spotify_sync_config.json").strip()
     if not config_path or not os.path.exists(config_path):
         return {}
     with open(config_path, "r", encoding="utf-8") as fh:
@@ -302,7 +304,7 @@ def load_notion_match_terms_by_name() -> Dict[str, List[str]]:
 
 
 def load_notion_mapping_meta_by_name() -> Dict[str, Dict[str, Any]]:
-    config_path = os.getenv(SPOTIFY_NOTION_SYNC_CONFIG, "notion_spotify_sync_config.json").strip()
+    config_path = os.getenv(SPOTIFY_NOTION_SYNC_CONFIG, "config/notion_spotify_sync_config.json").strip()
     if not config_path or not os.path.exists(config_path):
         return {}
     with open(config_path, "r", encoding="utf-8") as fh:
@@ -416,10 +418,10 @@ def uri_candidates_for_notion_title(
 
 def sync_notion_uris_for_profile(
     sp: spotipy.Spotify, queue: List[str], profile_name: str
-) -> Tuple[int, List[Tuple[str, str]]]:
+) -> Tuple[int, List[Tuple[str, str]], List[str], List[str]]:
     token = os.getenv(NOTION_TOKEN, "").strip()
     if not token:
-        return 0, []
+        return 0, [], [], []
     database_id = os.getenv(NOTION_DATABASE_ID, "").strip()
     if not database_id:
         db_name = os.getenv(NOTION_DATABASE_NAME, "Opus Dei").strip() or "Opus Dei"
@@ -441,10 +443,14 @@ def sync_notion_uris_for_profile(
 
     updated = 0
     updates: List[Tuple[str, str]] = []
+    unchanged: List[str] = []
+    no_match: List[str] = []
     candidates: List[Dict[str, Any]] = []
     for page in pages:
         platform_text = normalize_text(page_property_text(page, platform_property))
         if nosync_value and nosync_value in platform_text:
+            continue
+        if DEPRECATED_TIMESYNC_PLATFORM_VALUE in platform_text:
             continue
         if platform_value and platform_value not in platform_text:
             continue
@@ -465,6 +471,7 @@ def sync_notion_uris_for_profile(
             terms = match_terms_by_name.get(title_norm, [])
         row_candidates = uri_candidates_for_notion_title(title, uri_texts, terms)
         if not row_candidates:
+            no_match.append(title)
             continue
         page_id = str(page.get("id", "")).strip()
         if not page_id:
@@ -491,7 +498,9 @@ def sync_notion_uris_for_profile(
     assigned_uris = set()
     chosen: Dict[int, str] = {}
     for score, idx, uri in proposals:
-        if idx in assigned_rows or uri in assigned_uris:
+        if idx in assigned_rows:
+            continue
+        if uri in assigned_uris:
             continue
         assigned_rows.add(idx)
         assigned_uris.add(uri)
@@ -499,12 +508,14 @@ def sync_notion_uris_for_profile(
 
     for idx, uri in chosen.items():
         row = candidates[idx]
-        if row["existing_uri"] == uri:
-            continue
-        notion_update_uri(row["page_id"], row["page"], uri_property, uri, token)
-        updated += 1
-        updates.append((row["title"], uri))
-    return updated, updates
+        uri_changed = row["existing_uri"] != uri
+        if uri_changed:
+            notion_update_uri(row["page_id"], row["page"], uri_property, uri, token)
+            updated += 1
+            updates.append((row["title"], uri))
+        else:
+            unchanged.append(row["title"])
+    return updated, updates, unchanged, no_match
 
 
 def sp_client() -> spotipy.Spotify:
@@ -1117,7 +1128,7 @@ def main() -> int:
         if not playlist_id:
             raise RuntimeError(
                 f"Missing required environment variable: {SPOTIFY_PLAYLIST_ID}. "
-                f"Set it, or add playlist_id for profile '{profile}' in playlist_config.json profiles."
+                f"Set it, or add playlist_id for profile '{profile}' in config/playlist_config.json profiles."
             )
 
         # Optional compatibility read; not used by default flow.
@@ -1132,7 +1143,9 @@ def main() -> int:
             sp, profile, weekday, status, profiles_cfg, catalog_cfg, shows_cfg, fixed_cfg, tokens_cfg
         )
         written = add_items(sp, playlist_id, queue)
-        notion_uri_updates, notion_uri_update_details = sync_notion_uris_for_profile(sp, queue, profile)
+        notion_uri_updates, notion_uri_update_details, notion_uri_unchanged, notion_uri_no_match = sync_notion_uris_for_profile(
+            sp, queue, profile
+        )
 
         print(f"SUMMARY playlist_id={playlist_id} tracks_written={written}")
         print(f"INFO profile={profile} weekday={weekday} removed_streaming_items={removed}")
@@ -1142,9 +1155,21 @@ def main() -> int:
             log_limit = int(os.getenv(NOTION_URI_LOG_LIMIT, "25").strip() or "25")
             for title, uri in notion_uri_update_details[: max(0, log_limit)]:
                 print(f"INFO notion_uri_mapped title={title} uri={uri}")
+            for title in notion_uri_unchanged[: max(0, log_limit)]:
+                print(f"INFO notion_uri_unchanged title={title}")
+            for title in notion_uri_no_match[: max(0, log_limit)]:
+                print(f"INFO notion_uri_no_match title={title}")
             if len(notion_uri_update_details) > max(0, log_limit):
                 print(
                     f"INFO notion_uri_mapped_truncated shown={max(0, log_limit)} total={len(notion_uri_update_details)}"
+                )
+            if len(notion_uri_unchanged) > max(0, log_limit):
+                print(
+                    f"INFO notion_uri_unchanged_truncated shown={max(0, log_limit)} total={len(notion_uri_unchanged)}"
+                )
+            if len(notion_uri_no_match) > max(0, log_limit):
+                print(
+                    f"INFO notion_uri_no_match_truncated shown={max(0, log_limit)} total={len(notion_uri_no_match)}"
                 )
 
         if written == 0:

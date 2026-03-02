@@ -27,4 +27,4 @@ jobs:
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
           NOTION_DATABASE_NAME: ${{ vars.NOTION_DATABASE_NAME }}
           NOTION_COMPLETED_PROPERTY: ${{ vars.NOTION_COMPLETED_PROPERTY }}
-        run: python reset_notion_completions.py
+        run: python jobs/notion/reset_notion_completions.py

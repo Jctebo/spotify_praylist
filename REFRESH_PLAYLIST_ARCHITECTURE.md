@@ -1,6 +1,6 @@
 # refresh_playlist.py Architecture
 
-This document explains how `refresh_playlist.py` builds each playlist run from `playlist_config.json`.
+This document explains how `jobs/playlist/refresh_playlist.py` builds each playlist run from `config/playlist_config.json`.
 
 If Mermaid still does not render in your editor, open Markdown preview (not raw editor) and ensure Mermaid support is enabled in your IDE.
 
@@ -8,7 +8,7 @@ If Mermaid still does not render in your editor, open Markdown preview (not raw 
 
 ```mermaid
 flowchart TD
-    A[Start main] --> B[Load playlist_config.json]
+    A[Start main] --> B[Load config/playlist_config.json]
     B --> C[Read profile from SPOTIFY_PLAYLIST_PROFILE]
     C --> D[Resolve playlist_id]
     D --> E[Create Spotify client from refresh token]
@@ -22,9 +22,9 @@ flowchart TD
 
 ```mermaid
 sequenceDiagram
-    participant Runner as run_local.ps1 / GitHub Action
-    participant Script as refresh_playlist.py
-    participant Config as playlist_config.json
+    participant Runner as scripts/run_daily_refresh_local.ps1 / GitHub Action
+    participant Script as jobs/playlist/refresh_playlist.py
+    participant Config as config/playlist_config.json
     participant Spotify as Spotify API
 
     Runner->>Script: Execute with env vars
@@ -44,7 +44,7 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    CFG[playlist_config.json]
+    CFG[config/playlist_config.json]
     SHOWS[shows]
     FIXED[fixed]
     TOKENS[tokens]

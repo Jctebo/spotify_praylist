@@ -26,12 +26,16 @@ jobs:
           SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
           SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
           SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
+          JOB_UTC_OFFSET: ${{ vars.JOB_UTC_OFFSET }}
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
           NOTION_DATABASE_NAME: ${{ vars.NOTION_DATABASE_NAME }}
           NOTION_TITLE_PROPERTY: ${{ vars.NOTION_TITLE_PROPERTY }}
           NOTION_COMPLETED_PROPERTY: ${{ vars.NOTION_COMPLETED_PROPERTY }}
+          NOTION_PLATFORM_PROPERTY: ${{ vars.NOTION_PLATFORM_PROPERTY }}
+          NOTION_PLATFORM_NOSYNC_VALUE: ${{ vars.NOTION_PLATFORM_NOSYNC_VALUE }}
           NOTION_URI_PROPERTY: ${{ vars.NOTION_URI_PROPERTY }}
-          SPOTIFY_NOTION_SYNC_CONFIG: notion_spotify_sync_config.json
+          SPOTIFY_NOTION_SYNC_CONFIG: config/notion_spotify_sync_config.json
+          SPOTIFY_CONFIG_FILE: config/playlist_config.json
           SPOTIFY_RECENT_LOOKBACK_HOURS: ${{ vars.SPOTIFY_RECENT_LOOKBACK_HOURS }}
-        run: python sync_notion_completions.py
+        run: python jobs/notion/sync_notion_completions.py

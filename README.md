@@ -18,18 +18,25 @@ Optional variables:
 - `SPOTIFY_PLAYLIST_PROFILE` (`morning`, `midday`, or `night`; default `morning`)
 
 ## Files
-- `refresh_playlist.py`: main script (token refresh + playlist update)
-- `sync_notion_completions.py`: hourly sync to mark Notion prayer rows as completed from Spotify listening
-- `reset_notion_completions.py`: daily reset to uncheck all Notion completion checkboxes
-- `notion_spotify_sync_config.json`: mapping rules from Spotify item text -> Notion row name
+- `jobs/playlist/refresh_playlist.py`: main script (token refresh + playlist update)
+- `jobs/notion/sync_notion_completions.py`: hourly sync to mark Notion prayer rows as completed from Spotify listening
+- `jobs/notion/reset_notion_completions.py`: daily reset to uncheck all Notion completion checkboxes
+- `config/playlist_config.json`: playlist/profile/show configuration
+- `config/notion_spotify_sync_config.json`: mapping rules from Spotify item text -> Notion row name
+- `scripts/setup_spotify.ps1`: Spotify setup + refresh-token wizard
+- `scripts/setup_notion.ps1`: Notion token/database setup + API validation
+- `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml`
+- `scripts/run_hourly_notion_sync_local.ps1`: local mirror of `.github/workflows/hourly_notion_sync.yml`
+- `scripts/run_daily_notion_reset_local.ps1`: local mirror of `.github/workflows/daily_notion_reset.yml`
 - `requirements.txt`: Python dependencies
 - `.github/workflows/daily.yml`: daily + manual GitHub Actions workflow
 - `.github/workflows/hourly_notion_sync.yml`: hourly + manual Notion completion sync workflow
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
 
 ## Config Timezone
-- `playlist_config.json` supports top-level `utc_offset` (example `-06:00`).
-- `refresh_playlist.py` uses this for all date-based episode selection.
+- `config/playlist_config.json` supports top-level `utc_offset` (example `-06:00`).
+- `JOB_UTC_OFFSET` can override offset at runtime for both daily refresh and hourly sync.
+- `jobs/playlist/refresh_playlist.py` uses this for all date-based episode selection.
 - Default is CST (`-06:00`) when not set.
 
 ## Local Setup
@@ -57,7 +64,7 @@ $env:SPOTIFY_PLAYLIST_PROFILE = "morning"
 4. Run:
 
 ```bash
-python refresh_playlist.py
+python jobs/playlist/refresh_playlist.py
 ```
 
 Expected behavior:
@@ -89,9 +96,10 @@ Purpose:
 
 How matching works:
 - script reads recent Spotify listening history (default last 3 hours)
-- script reads `notion_spotify_sync_config.json`
+- script reads `config/notion_spotify_sync_config.json`
 - if any `match_any` term is found in recent Spotify item text, the matching Notion row (`notion_name`) is marked completed
 - script only checks rows; it does not uncheck rows
+- rows with platform value `Spotify-TimeSync` are currently ignored (feature removed)
 
 Required for this script:
 - Spotify token must include `user-read-recently-played` scope
@@ -105,9 +113,11 @@ Optional variables/secrets:
 - `NOTION_COMPLETED_PROPERTY` (default `Completed`)
 - `NOTION_PLATFORM_PROPERTY` (default `Platform`, used by daily refresh URI sync)
 - `NOTION_PLATFORM_SPOTIFY_VALUE` (default `spotify`, case-insensitive filter)
+- `NOTION_PLATFORM_NOSYNC_VALUE` (default `spotify-nosync`, skip automation)
 - `NOTION_URI_PROPERTY` (default `URI`, used for URI-based completion matching)
 - `SPOTIFY_RECENT_LOOKBACK_HOURS` (default `3`, range `1-24`)
-- `SPOTIFY_NOTION_SYNC_CONFIG` (default `notion_spotify_sync_config.json`)
+- `SPOTIFY_NOTION_SYNC_CONFIG` (default `config/notion_spotify_sync_config.json`)
+- `JOB_UTC_OFFSET` (optional runtime override for local/GitHub job timezone offset, e.g. `-06:00`)
 - `SPOTIFY_EPISODE_PROBE_ENABLED` (default `true`)
 - `SPOTIFY_EPISODE_PROBE_MIN_PROGRESS_PCT` (default `0.7`)
 
@@ -123,6 +133,7 @@ GitHub setup for hourly workflow:
 - `NOTION_TITLE_PROPERTY`
 - `NOTION_COMPLETED_PROPERTY`
 - `SPOTIFY_RECENT_LOOKBACK_HOURS`
+- `JOB_UTC_OFFSET`
 3. Ensure your Notion integration is connected to the `Opus Dei` database.
 4. Run `.github/workflows/hourly_notion_sync.yml` manually once to validate mappings.
 
@@ -141,6 +152,28 @@ Required:
 Optional variables:
 - `NOTION_DATABASE_NAME` (fallback lookup; default `Opus Dei`)
 - `NOTION_COMPLETED_PROPERTY` (default `Completed`)
+
+## Local Job Mirrors
+Run local equivalents of each GitHub Action workflow:
+
+```powershell
+# Daily refresh workflow mirror
+.\scripts\run_daily_refresh_local.ps1
+
+# Hourly notion sync workflow mirror
+.\scripts\run_hourly_notion_sync_local.ps1
+
+# Daily notion reset workflow mirror
+.\scripts\run_daily_notion_reset_local.ps1
+```
+
+## Setup Scripts
+Use setup scripts (separate from `run_*` job mirrors):
+
+```powershell
+.\scripts\setup_spotify.ps1
+.\scripts\setup_notion.ps1
+```
 
 ## Notes
 - Do not commit secrets.

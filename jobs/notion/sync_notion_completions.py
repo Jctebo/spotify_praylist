@@ -5,7 +5,6 @@ import os
 import re
 import sys
 from typing import Any, Dict, List, Optional, Set
-from zoneinfo import ZoneInfo
 
 import requests
 
@@ -25,14 +24,16 @@ NOTION_URI_PROPERTY = "NOTION_URI_PROPERTY"  # defaults to URI
 NOTION_PLATFORM_PROPERTY = "NOTION_PLATFORM_PROPERTY"  # defaults to Platform
 NOTION_PLATFORM_NOSYNC_VALUE = "NOTION_PLATFORM_NOSYNC_VALUE"  # defaults to spotify-nosync
 
-SPOTIFY_NOTION_SYNC_CONFIG = "SPOTIFY_NOTION_SYNC_CONFIG"  # defaults to notion_spotify_sync_config.json
+SPOTIFY_NOTION_SYNC_CONFIG = "SPOTIFY_NOTION_SYNC_CONFIG"  # defaults to config/notion_spotify_sync_config.json
 SPOTIFY_RECENT_LOOKBACK_HOURS = "SPOTIFY_RECENT_LOOKBACK_HOURS"  # default 3
-SPOTIFY_SYNC_TIMEZONE = "SPOTIFY_SYNC_TIMEZONE"  # default America/Chicago
-SPOTIFY_CONFIG_FILE = "SPOTIFY_CONFIG_FILE"  # defaults to playlist_config.json
+JOB_UTC_OFFSET = "JOB_UTC_OFFSET"  # optional override for runtime offset, e.g. -06:00
+SPOTIFY_CONFIG_FILE = "SPOTIFY_CONFIG_FILE"  # defaults to config/playlist_config.json
 SPOTIFY_COMPLETION_LOG_LIMIT = "SPOTIFY_COMPLETION_LOG_LIMIT"  # defaults to 25
 SPOTIFY_URI_DEBUG_LOG_LIMIT = "SPOTIFY_URI_DEBUG_LOG_LIMIT"  # defaults to 25
 SPOTIFY_EPISODE_PROBE_ENABLED = "SPOTIFY_EPISODE_PROBE_ENABLED"  # defaults to true
 SPOTIFY_EPISODE_PROBE_MIN_PROGRESS_PCT = "SPOTIFY_EPISODE_PROBE_MIN_PROGRESS_PCT"  # defaults to 0.7
+DEFAULT_UTC_OFFSET = "-06:00"
+DEPRECATED_TIMESYNC_PLATFORM_VALUE = "spotify timesync"
 
 
 def require_env(name: str) -> str:
@@ -155,9 +156,37 @@ def infer_time_of_day_from_name(notion_name: str) -> str:
     return "any"
 
 
+def parse_utc_offset(offset_text: str) -> datetime.timezone:
+    text = (offset_text or "").strip()
+    match = re.fullmatch(r"([+-])(\d{1,2})(?::?(\d{2}))?", text)
+    if not match:
+        raise RuntimeError(f"Invalid utc offset '{offset_text}'. Use format like -06:00 or +05:30.")
+    sign = -1 if match.group(1) == "-" else 1
+    hours = int(match.group(2))
+    minutes = int(match.group(3) or "0")
+    if hours > 14 or minutes > 59:
+        raise RuntimeError(f"Invalid utc offset '{offset_text}'.")
+    delta = datetime.timedelta(hours=hours, minutes=minutes) * sign
+    return datetime.timezone(delta)
+
+
+def load_utc_offset_from_config() -> str:
+    config_path = os.getenv(SPOTIFY_CONFIG_FILE, "config/playlist_config.json").strip() or "config/playlist_config.json"
+    try:
+        with open(config_path, "r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+        if isinstance(payload, dict):
+            raw = str(payload.get("utc_offset", "")).strip()
+            if raw:
+                return raw
+    except Exception:
+        pass
+    return DEFAULT_UTC_OFFSET
+
+
 def current_time_of_day() -> str:
-    tz_name = os.getenv(SPOTIFY_SYNC_TIMEZONE, "America/Chicago").strip() or "America/Chicago"
-    now = datetime.datetime.now(ZoneInfo(tz_name))
+    raw_offset = os.getenv(JOB_UTC_OFFSET, "").strip() or load_utc_offset_from_config()
+    now = datetime.datetime.now(parse_utc_offset(raw_offset))
     hour = now.hour
     if 4 <= hour <= 10:
         return "morning"
@@ -167,7 +196,7 @@ def current_time_of_day() -> str:
 
 
 def load_sync_config() -> List[Dict[str, Any]]:
-    config_path = os.getenv(SPOTIFY_NOTION_SYNC_CONFIG, "notion_spotify_sync_config.json").strip()
+    config_path = os.getenv(SPOTIFY_NOTION_SYNC_CONFIG, "config/notion_spotify_sync_config.json").strip()
     with open(config_path, "r", encoding="utf-8") as fh:
         payload = json.load(fh)
 
@@ -237,7 +266,7 @@ def lookup_notion_database_id(token: str) -> str:
 
 
 def load_playlist_profile_by_id() -> Dict[str, str]:
-    config_path = os.getenv(SPOTIFY_CONFIG_FILE, "playlist_config.json").strip() or "playlist_config.json"
+    config_path = os.getenv(SPOTIFY_CONFIG_FILE, "config/playlist_config.json").strip() or "config/playlist_config.json"
     with open(config_path, "r", encoding="utf-8") as fh:
         payload = json.load(fh)
     profiles = payload.get("profiles")
@@ -503,6 +532,9 @@ def main() -> int:
             scanned += 1
             platform_text = normalize_text(page_property_text(page, platform_property))
             if nosync_value and nosync_value in platform_text:
+                skipped_nosync += 1
+                continue
+            if DEPRECATED_TIMESYNC_PLATFORM_VALUE in platform_text:
                 skipped_nosync += 1
                 continue
             title = page_title(page, title_property)
