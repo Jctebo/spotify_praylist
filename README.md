@@ -93,6 +93,7 @@ Workflow triggers:
 ## Hourly Notion Completion Sync
 Purpose:
 - updates existing rows in your Notion `Opus Dei` database by checking `Completed` when Spotify listening matches configured prayer mappings
+- quiet-hours guard: hourly sync skips between 11:00 PM and 4:00 AM (job local time from `JOB_UTC_OFFSET` or `config/playlist_config.json` `utc_offset`)
 
 How matching works:
 - script reads recent Spotify listening history (default last 3 hours)

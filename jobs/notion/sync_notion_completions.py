@@ -34,6 +34,8 @@ SPOTIFY_EPISODE_PROBE_ENABLED = "SPOTIFY_EPISODE_PROBE_ENABLED"  # defaults to t
 SPOTIFY_EPISODE_PROBE_MIN_PROGRESS_PCT = "SPOTIFY_EPISODE_PROBE_MIN_PROGRESS_PCT"  # defaults to 0.7
 DEFAULT_UTC_OFFSET = "-06:00"
 DEPRECATED_TIMESYNC_PLATFORM_VALUE = "spotify timesync"
+SYNC_QUIET_START_HOUR = 23  # 11:00 PM local
+SYNC_QUIET_END_HOUR = 4  # 4:00 AM local
 
 
 def require_env(name: str) -> str:
@@ -184,9 +186,21 @@ def load_utc_offset_from_config() -> str:
     return DEFAULT_UTC_OFFSET
 
 
-def current_time_of_day() -> str:
+def local_now_for_job() -> datetime.datetime:
     raw_offset = os.getenv(JOB_UTC_OFFSET, "").strip() or load_utc_offset_from_config()
-    now = datetime.datetime.now(parse_utc_offset(raw_offset))
+    return datetime.datetime.now(parse_utc_offset(raw_offset))
+
+
+def hour_in_quiet_window(hour: int, start_hour: int, end_hour: int) -> bool:
+    if start_hour == end_hour:
+        return True
+    if start_hour < end_hour:
+        return start_hour <= hour < end_hour
+    return hour >= start_hour or hour < end_hour
+
+
+def current_time_of_day() -> str:
+    now = local_now_for_job()
     hour = now.hour
     if 4 <= hour <= 10:
         return "morning"
@@ -464,6 +478,15 @@ def update_page_checkbox(page_id: str, checkbox_property: str, value: bool, toke
 
 def main() -> int:
     try:
+        local_now = local_now_for_job()
+        if hour_in_quiet_window(local_now.hour, SYNC_QUIET_START_HOUR, SYNC_QUIET_END_HOUR):
+            print(
+                f"INFO quiet_hours_skip local_hour={local_now.hour:02d} "
+                f"window={SYNC_QUIET_START_HOUR:02d}:00-{SYNC_QUIET_END_HOUR:02d}:00 "
+                f"utc_offset={local_now.strftime('%z')}"
+            )
+            return 0
+
         spotify_token = refresh_access_token(
             require_env(SPOTIFY_CLIENT_ID),
             require_env(SPOTIFY_CLIENT_SECRET),
