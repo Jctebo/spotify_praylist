@@ -69,7 +69,7 @@ python jobs/playlist/refresh_playlist.py
 
 Expected behavior:
 - refreshes Spotify access token each run
-- clears existing streaming items from the target playlist (local files preserved)
+- replaces the target playlist contents with resolved items from the selected profile
 - writes resolved items from the selected profile
 - prints summary: `playlist_id` and `tracks_written`
 - exits non-zero on error
@@ -104,7 +104,7 @@ How matching works:
 
 Required for this script:
 - Spotify token must include `user-read-recently-played` scope
-- For episode resume-point probing, include `user-read-playback-position`
+- Spotify token should also include `user-read-currently-playing` scope
 - `NOTION_TOKEN` secret
 - `NOTION_DATABASE_ID` secret (recommended)
 
@@ -119,8 +119,6 @@ Optional variables/secrets:
 - `SPOTIFY_RECENT_LOOKBACK_HOURS` (default `3`, range `1-24`)
 - `SPOTIFY_NOTION_SYNC_CONFIG` (default `config/notion_spotify_sync_config.json`)
 - `JOB_UTC_OFFSET` (optional runtime override for local/GitHub job timezone offset, e.g. `-06:00`)
-- `SPOTIFY_EPISODE_PROBE_ENABLED` (default `true`)
-- `SPOTIFY_EPISODE_PROBE_MIN_PROGRESS_PCT` (default `0.7`)
 
 GitHub setup for hourly workflow:
 1. Add secrets:
@@ -167,6 +165,24 @@ Run local equivalents of each GitHub Action workflow:
 # Daily notion reset workflow mirror
 .\scripts\run_daily_notion_reset_local.ps1
 ```
+
+## Local Test Framework
+Run the offline unit test suite (no live Spotify/Notion API calls):
+
+```powershell
+.\scripts\run_local_tests.ps1
+```
+
+Verbose mode:
+
+```powershell
+.\scripts\run_local_tests.ps1 -VerboseOutput
+```
+
+Coverage:
+- `jobs/playlist/refresh_playlist.py` main flow and playlist recreate chunking (`PUT/POST /items`)
+- `jobs/notion/sync_notion_completions.py` main flow, quiet-hours short-circuit, and strict URI row matching
+- `jobs/notion/reset_notion_completions.py` checkbox reset behavior and schema error handling
 
 ## Setup Scripts
 Use setup scripts (separate from `run_*` job mirrors):

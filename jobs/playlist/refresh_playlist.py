@@ -43,7 +43,6 @@ NOTION_URI_LOG_LIMIT = "NOTION_URI_LOG_LIMIT"  # defaults to 25
 
 
 MARKETS_TO_TRY = ["US", None, "GB", "CA", "AU"]
-MAX_PAGES = 10
 MAX_BIAY_EPISODES_TO_SCAN = 2500
 DEFAULT_UTC_OFFSET = "-06:00"
 DEPRECATED_TIMESYNC_PLATFORM_VALUE = "spotify timesync"
@@ -518,19 +517,20 @@ def sync_notion_uris_for_profile(
     return updated, updates, unchanged, no_match
 
 
-def sp_client() -> spotipy.Spotify:
+def sp_client() -> Tuple[spotipy.Spotify, str]:
     client_id = require_env(SPOTIFY_CLIENT_ID)
     client_secret = require_env(SPOTIFY_CLIENT_SECRET)
     refresh_token = require_env(SPOTIFY_REFRESH_TOKEN)
 
     token = refresh_access_token(client_id, client_secret, refresh_token)
-    return spotipy.Spotify(
+    client = spotipy.Spotify(
         auth=token,
         requests_timeout=25,
         retries=3,
         status_forcelist=(429, 500, 502, 503, 504),
         backoff_factor=0.5,
     )
+    return client, token
 
 
 def safe_call(fn, *args, **kwargs):
@@ -551,53 +551,58 @@ def safe_call(fn, *args, **kwargs):
     return None
 
 
-def paged_items(sp: spotipy.Spotify, first_page: dict):
-    pages = 0
-    page = first_page
-    while isinstance(page, dict):
-        for item in (page.get("items") or []):
-            yield item
-        pages += 1
-        if pages >= MAX_PAGES or not page.get("next"):
-            return
-        page = safe_call(sp.next, page)
+def spotify_web_json(
+    method: str,
+    url: str,
+    token: str,
+    payload: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    last_error: Optional[Exception] = None
+    for i in range(5):
+        try:
+            response = requests.request(method, url, headers=headers, json=payload, timeout=30)
+            if response.status_code == 429:
+                wait = int((response.headers or {}).get("Retry-After", "2"))
+                time.sleep(wait)
+                continue
+            if response.status_code in (500, 502, 503, 504):
+                time.sleep(2 * (i + 1))
+                continue
+            response.raise_for_status()
+            if not response.content:
+                return {}
+            data = response.json()
+            if isinstance(data, dict):
+                return data
+            return {}
+        except requests.HTTPError as exc:
+            last_error = exc
+            raise
+        except Exception as exc:
+            last_error = exc
+            time.sleep(1.5 * (i + 1))
+    if last_error:
+        raise RuntimeError(f"Spotify API request failed: {method} {url}") from last_error
+    raise RuntimeError(f"Spotify API request failed: {method} {url}")
 
 
-def clear_streaming_keep_locals(sp: spotipy.Spotify, playlist_id: str) -> int:
-    to_remove: List[str] = []
-    results = safe_call(sp.playlist_items, playlist_id, additional_types=["track", "episode"], limit=100)
-    if not isinstance(results, dict):
-        return 0
-
-    for item in paged_items(sp, results):
-        obj = item.get("track")
-        if not isinstance(obj, dict):
-            continue
-        if obj.get("is_local"):
-            continue
-        uri = obj.get("uri")
-        if uri:
-            to_remove.append(uri)
-
-    seen = set()
-    to_remove = [uri for uri in to_remove if not (uri in seen or seen.add(uri))]
-
-    for idx in range(0, len(to_remove), 100):
-        safe_call(sp.playlist_remove_all_occurrences_of_items, playlist_id, to_remove[idx : idx + 100])
-
-    return len(to_remove)
-
-
-def add_items(sp: spotipy.Spotify, playlist_id: str, uris: List[str]) -> int:
+def recreate_playlist_items(token: str, playlist_id: str, uris: List[str]) -> int:
     filtered = [uri for uri in uris if uri]
-    if not filtered:
-        return 0
-    added = 0
-    for idx in range(0, len(filtered), 100):
+    auth_token = str(token or "").strip()
+    if not auth_token:
+        raise RuntimeError("Missing Spotify access token.")
+
+    endpoint = f"https://api.spotify.com/v1/playlists/{playlist_id}/items"
+    # Replace the playlist with the first 100 items (or empty list to clear).
+    first_batch = filtered[:100]
+    spotify_web_json("PUT", endpoint, auth_token, {"uris": first_batch})
+
+    # Append remaining items in 100-item chunks.
+    for idx in range(100, len(filtered), 100):
         batch = filtered[idx : idx + 100]
-        safe_call(sp.playlist_add_items, playlist_id, batch)
-        added += len(batch)
-    return added
+        spotify_web_json("POST", endpoint, auth_token, {"uris": batch})
+    return len(filtered)
 
 
 def first_episode(sp: spotipy.Spotify, show_id: str, market: Optional[str] = "US") -> Tuple[Optional[str], Optional[str]]:
@@ -1134,21 +1139,22 @@ def main() -> int:
         # Optional compatibility read; not used by default flow.
         _ = os.getenv(SPOTIFY_USER_ID, "")
 
-        sp = sp_client()
+        sp, spotify_token = sp_client()
         weekday = local_now().strftime("%A")
         status: Dict[str, bool] = {}
 
-        removed = clear_streaming_keep_locals(sp, playlist_id)
         queue = build_queue_for_profile(
             sp, profile, weekday, status, profiles_cfg, catalog_cfg, shows_cfg, fixed_cfg, tokens_cfg
         )
-        written = add_items(sp, playlist_id, queue)
+        if not queue:
+            raise RuntimeError("No tracks/episodes resolved for this run.")
+        written = recreate_playlist_items(spotify_token, playlist_id, queue)
         notion_uri_updates, notion_uri_update_details, notion_uri_unchanged, notion_uri_no_match = sync_notion_uris_for_profile(
             sp, queue, profile
         )
 
         print(f"SUMMARY playlist_id={playlist_id} tracks_written={written}")
-        print(f"INFO profile={profile} weekday={weekday} removed_streaming_items={removed}")
+        print(f"INFO profile={profile} weekday={weekday} playlist_recreated=true")
         print(f"INFO utc_offset={local_now().strftime('%z')}")
         if os.getenv(NOTION_TOKEN, "").strip():
             print(f"INFO notion_uri_rows_updated={notion_uri_updates}")
@@ -1171,9 +1177,6 @@ def main() -> int:
                 print(
                     f"INFO notion_uri_no_match_truncated shown={max(0, log_limit)} total={len(notion_uri_no_match)}"
                 )
-
-        if written == 0:
-            raise RuntimeError("No tracks/episodes resolved for this run.")
 
         return 0
     except requests.HTTPError as exc:

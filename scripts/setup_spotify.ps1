@@ -200,7 +200,7 @@ if (-not [string]::IsNullOrWhiteSpace($refreshToken)) {
 
 if ([string]::IsNullOrWhiteSpace($refreshToken)) {
   $redirectUri = Read-WithDefault "Redirect URI" "http://127.0.0.1:8888/callback"
-  $scope = Read-WithDefault "OAuth scope" "playlist-modify-private playlist-modify-public playlist-read-private user-read-recently-played user-read-currently-playing user-read-playback-state user-read-playback-position"
+  $scope = Read-WithDefault "OAuth scope" "playlist-modify-private playlist-modify-public playlist-read-private user-read-recently-played user-read-currently-playing user-read-playback-state"
   Write-Host ""
   Write-Host "OAuth preflight:" -ForegroundColor Cyan
   Write-Host "- Redirect URI: $redirectUri"

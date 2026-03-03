@@ -12,9 +12,9 @@ flowchart TD
     B --> C[Read profile from SPOTIFY_PLAYLIST_PROFILE]
     C --> D[Resolve playlist_id]
     D --> E[Create Spotify client from refresh token]
-    E --> F[Clear existing streaming items from target playlist]
-    F --> G[Build queue from profile.order]
-    G --> H[Add resolved URIs to playlist]
+    E --> F[Build queue from profile.order]
+    F --> G[Replace playlist items with resolved URIs]
+    G --> H[Append overflow batches if needed]
     H --> I[Print summary and exit]
 ```
 
@@ -30,13 +30,13 @@ sequenceDiagram
     Runner->>Script: Execute with env vars
     Script->>Config: load_playlist_config()
     Script->>Spotify: refresh_access_token()
-    Script->>Spotify: playlist_items() + remove items
     loop for each key in profile.order
         Script->>Script: resolve_item_uri(key)
         Script->>Spotify: show_episodes()/next() as needed
         Script->>Script: choose URI or None
     end
-    Script->>Spotify: playlist_add_items(queue)
+    Script->>Spotify: PUT /playlists/{id}/items (first 100)
+    Script->>Spotify: POST /playlists/{id}/items (remaining chunks)
     Script-->>Runner: SUMMARY + INFO logs
 ```
 
@@ -117,7 +117,7 @@ flowchart TD
 
 On success:
 - `SUMMARY playlist_id=<id> tracks_written=<n>`
-- `INFO profile=<name> weekday=<day> removed_streaming_items=<n>`
+- `INFO profile=<name> weekday=<day> playlist_recreated=true`
 - Optional BIAY debug:
   - `INFO biay_day=<n> selected=<episode title>`
 
