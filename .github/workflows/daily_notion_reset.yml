@@ -3,7 +3,7 @@ name: Daily Notion Completion Reset
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 10 * * *" # daily 04:00 CST / 05:00 CDT
+    - cron: "0 7 * * *" # daily 01:00 CST / 02:00 CDT
 
 jobs:
   reset-notion:
