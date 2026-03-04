@@ -116,6 +116,7 @@ Optional variables/secrets:
 - `NOTION_PLATFORM_SPOTIFY_VALUE` (default `spotify`, case-insensitive filter)
 - `NOTION_PLATFORM_NOSYNC_VALUE` (default `spotify-nosync`, skip automation)
 - `NOTION_URI_PROPERTY` (default `URI`, used for URI-based completion matching)
+- `NOTION_URI_STRICT_MATCH` (default `false`; set `true` to require URI-only matches for rows with URI)
 - `SPOTIFY_RECENT_LOOKBACK_HOURS` (default `3`, range `1-24`)
 - `SPOTIFY_NOTION_SYNC_CONFIG` (default `config/notion_spotify_sync_config.json`)
 - `JOB_UTC_OFFSET` (optional runtime override for local/GitHub job timezone offset, e.g. `-06:00`)

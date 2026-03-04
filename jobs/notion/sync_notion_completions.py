@@ -21,6 +21,7 @@ NOTION_DATABASE_NAME = "NOTION_DATABASE_NAME"  # fallback search; defaults to Op
 NOTION_TITLE_PROPERTY = "NOTION_TITLE_PROPERTY"  # defaults to Name
 NOTION_COMPLETED_PROPERTY = "NOTION_COMPLETED_PROPERTY"  # defaults to Completed
 NOTION_URI_PROPERTY = "NOTION_URI_PROPERTY"  # defaults to URI
+NOTION_URI_STRICT_MATCH = "NOTION_URI_STRICT_MATCH"  # defaults to false; set true to require URI-only matches
 NOTION_PLATFORM_PROPERTY = "NOTION_PLATFORM_PROPERTY"  # defaults to Platform
 NOTION_PLATFORM_NOSYNC_VALUE = "NOTION_PLATFORM_NOSYNC_VALUE"  # defaults to spotify-nosync
 
@@ -73,6 +74,13 @@ def spotify_get(url: str, token: str, params: Optional[Dict[str, Any]] = None) -
     if not isinstance(data, dict):
         raise RuntimeError("Unexpected Spotify API response format.")
     return data
+
+
+def bool_env(name: str, default: bool) -> bool:
+    raw = os.getenv(name, "").strip().lower()
+    if not raw:
+        return default
+    return raw in {"1", "true", "yes", "y", "on"}
 
 
 def notion_headers(token: str) -> Dict[str, str]:
@@ -448,6 +456,7 @@ def main() -> int:
         title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
         completed_property = os.getenv(NOTION_COMPLETED_PROPERTY, "Completed").strip() or "Completed"
         uri_property = os.getenv(NOTION_URI_PROPERTY, "URI").strip() or "URI"
+        uri_strict_match = bool_env(NOTION_URI_STRICT_MATCH, False)
         platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
         nosync_value = normalize_text(os.getenv(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync").strip() or "spotify-nosync")
 
@@ -514,8 +523,12 @@ def main() -> int:
                     uri_row_matched_titles.append(title)
                 else:
                     uri_row_unmatched_titles.append(title)
-                    # If a row has a URI, require an exact recent/current URI match.
-                    continue
+                    # Optional strict mode: URI rows must match a listened URI.
+                    if uri_strict_match:
+                        continue
+                    # Default mode: if URI did not match, allow text-based fallback.
+                    if normalize_text(title) not in matches:
+                        continue
             elif normalize_text(title) not in matches:
                 continue
             checked = page_checkbox(page, completed_property)
