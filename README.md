@@ -21,13 +21,16 @@ Optional variables:
 - `jobs/playlist/refresh_playlist.py`: main script (token refresh + playlist update)
 - `jobs/notion/sync_notion_completions.py`: hourly sync to mark Notion prayer rows as completed from Spotify listening
 - `jobs/notion/reset_notion_completions.py`: daily reset to uncheck all Notion completion checkboxes
+- `jobs/novena/generate_daily_novena_prayer.py`: generates a daily novena litany from Romcal saints + OpenAI and writes to Notion
 - `config/playlist_config.json`: playlist/profile/show configuration
 - `config/notion_spotify_sync_config.json`: mapping rules from Spotify item text -> Notion row name
 - `scripts/setup_spotify.ps1`: Spotify setup + refresh-token wizard
 - `scripts/setup_notion.ps1`: Notion token/database setup + API validation
+- `scripts/setup_novena.ps1`: Romcal + OpenAI + Notion setup wizard for daily novena generation
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml`
 - `scripts/run_hourly_notion_sync_local.ps1`: local mirror of `.github/workflows/hourly_notion_sync.yml`
 - `scripts/run_daily_notion_reset_local.ps1`: local mirror of `.github/workflows/daily_notion_reset.yml`
+- `scripts/run_daily_novena_prayer_local.ps1`: local runner for daily novena prayer generation
 - `requirements.txt`: Python dependencies
 - `.github/workflows/daily.yml`: daily + manual GitHub Actions workflow
 - `.github/workflows/hourly_notion_sync.yml`: hourly + manual Notion completion sync workflow
@@ -153,6 +156,37 @@ Optional variables:
 - `NOTION_DATABASE_NAME` (fallback lookup; default `Opus Dei`)
 - `NOTION_COMPLETED_PROPERTY` (default `Completed`)
 
+## Daily Novena Prayer Generation
+Purpose:
+- reads saints from Romcal for today through the next 8 days (9-day window)
+- uses OpenAI API to draft a litany-style novena prayer
+- writes prayer text to the Notion row titled `Daily Novena Prayer`
+
+Script:
+- `jobs/novena/generate_daily_novena_prayer.py`
+
+Required environment variables:
+- `OPENAI_API_KEY`
+- `NOTION_TOKEN`
+- `NOTION_DATABASE_ID` (or set `NOTION_DATABASE_NAME`)
+
+Optional variables:
+- `ROMCAL_CALENDAR` (default `general_roman`)
+- `ROMCAL_LOCALE` (default `en`)
+- `ROMCAL_WINDOW_DAYS` (default `9`, max `30`)
+- `OAI_API_BASE_URL` (default `https://api.openai.com/v1`)
+- `OAI_MODEL` (default `gpt-4.1-mini`)
+- `NOTION_TITLE_PROPERTY` (default `Name`)
+- `NOTION_NOVENA_ROW_TITLE` (default `Daily Novena Prayer`)
+- `NOTION_NOVENA_PROPERTY` (optional rich_text property to store prayer text; if unset/not rich_text, page content is replaced)
+- `JOB_UTC_OFFSET` (default `-06:00`)
+
+Local run:
+
+```powershell
+.\scripts\run_daily_novena_prayer_local.ps1
+```
+
 ## Local Job Mirrors
 Run local equivalents of each GitHub Action workflow:
 
@@ -165,6 +199,9 @@ Run local equivalents of each GitHub Action workflow:
 
 # Daily notion reset workflow mirror
 .\scripts\run_daily_notion_reset_local.ps1
+
+# Daily novena prayer generation
+.\scripts\run_daily_novena_prayer_local.ps1
 ```
 
 ## Local Test Framework
@@ -182,8 +219,9 @@ Verbose mode:
 
 Coverage:
 - `jobs/playlist/refresh_playlist.py` main flow and playlist recreate chunking (`PUT/POST /items`)
-- `jobs/notion/sync_notion_completions.py` main flow, quiet-hours short-circuit, and strict URI row matching
+- `jobs/notion/sync_notion_completions.py` main flow, quiet-hours short-circuit, and URI strict/fallback behavior
 - `jobs/notion/reset_notion_completions.py` checkbox reset behavior and schema error handling
+- `jobs/novena/generate_daily_novena_prayer.py` saint-window selection and Notion write mode behavior
 
 ## Setup Scripts
 Use setup scripts (separate from `run_*` job mirrors):
@@ -191,6 +229,7 @@ Use setup scripts (separate from `run_*` job mirrors):
 ```powershell
 .\scripts\setup_spotify.ps1
 .\scripts\setup_notion.ps1
+.\scripts\setup_novena.ps1
 ```
 
 ## Notes

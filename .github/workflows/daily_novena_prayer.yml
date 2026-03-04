@@ -1,0 +1,39 @@
+name: Daily Novena Prayer
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 9 * * *" # daily 03:00 CST / 04:00 CDT (same as daily.yml)
+
+jobs:
+  generate-novena:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate Daily Novena Prayer
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          OAI_API_BASE_URL: https://api.openai.com/v1
+          OAI_MODEL: gpt-4.1-mini
+          ROMCAL_CALENDAR: general_roman
+          ROMCAL_LOCALE: en
+          ROMCAL_WINDOW_DAYS: "9"
+          JOB_UTC_OFFSET: -06:00
+          NOTION_DATABASE_NAME: Opus Dei
+          NOTION_TITLE_PROPERTY: Name
+          NOTION_NOVENA_ROW_TITLE: Daily Novena Prayer
+          NOTION_NOVENA_PROPERTY: ""
+        run: python jobs/novena/generate_daily_novena_prayer.py
