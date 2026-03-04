@@ -10,6 +10,7 @@ from openai import OpenAI
 from romcal import Romcal, get_bundled_calendar_definitions, get_bundled_resources
 
 NOTION_VERSION = "2022-06-28"
+NOTION_FILE_UPLOAD_VERSION = "2025-09-03"
 DEFAULT_UTC_OFFSET = "-06:00"
 
 ROMCAL_CALENDAR = "ROMCAL_CALENDAR"  # default general_roman
@@ -28,6 +29,15 @@ NOTION_TITLE_PROPERTY = "NOTION_TITLE_PROPERTY"  # default Name
 NOTION_NOVENA_ROW_TITLE = "NOTION_NOVENA_ROW_TITLE"  # default Daily Novena Prayer
 NOTION_NOVENA_PROPERTY = "NOTION_NOVENA_PROPERTY"  # optional rich_text property for prayer text
 
+NOVENA_AUDIO_ENABLED = "NOVENA_AUDIO_ENABLED"  # default false
+NOVENA_AUDIO_MODEL = "NOVENA_AUDIO_MODEL"  # default gpt-4o-mini-tts
+NOVENA_AUDIO_VOICE = "NOVENA_AUDIO_VOICE"  # default alloy
+NOVENA_AUDIO_FORMAT = "NOVENA_AUDIO_FORMAT"  # default mp3
+NOVENA_AUDIO_SPEED = "NOVENA_AUDIO_SPEED"  # default 1.0
+NOVENA_AUDIO_CAPTION = "NOVENA_AUDIO_CAPTION"  # default Daily Novena Prayer (Audio)
+NOVENA_AUDIO_FAIL_OPEN = "NOVENA_AUDIO_FAIL_OPEN"  # default true
+NOVENA_AUDIO_MARKER = "[AUTOGEN_NOVENA_AUDIO]"
+
 
 def require_env(name: str) -> str:
     value = os.getenv(name, "").strip()
@@ -42,6 +52,28 @@ def int_env(name: str, default: int, min_value: int, max_value: int) -> int:
         return default
     try:
         value = int(raw)
+    except Exception:
+        return default
+    return max(min_value, min(max_value, value))
+
+
+def bool_env(name: str, default: bool) -> bool:
+    raw = os.getenv(name, "").strip().lower()
+    if not raw:
+        return default
+    if raw in {"1", "true", "yes", "y", "on"}:
+        return True
+    if raw in {"0", "false", "no", "n", "off"}:
+        return False
+    return default
+
+
+def float_env(name: str, default: float, min_value: float, max_value: float) -> float:
+    raw = os.getenv(name, "").strip()
+    if not raw:
+        return default
+    try:
+        value = float(raw)
     except Exception:
         return default
     return max(min_value, min(max_value, value))
@@ -72,6 +104,13 @@ def notion_headers(token: str) -> Dict[str, str]:
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
         "Notion-Version": NOTION_VERSION,
+    }
+
+
+def notion_file_upload_headers(token: str) -> Dict[str, str]:
+    return {
+        "Authorization": f"Bearer {token}",
+        "Notion-Version": NOTION_FILE_UPLOAD_VERSION,
     }
 
 
@@ -226,6 +265,79 @@ def notion_replace_page_content(page_id: str, text: str, token: str) -> None:
         if block_id:
             notion_archive_block(block_id, token)
     notion_append_children(page_id, prayer_to_paragraph_blocks(text), token)
+
+
+def notion_create_file_upload(filename: str, content_type: str, token: str) -> str:
+    payload = {"filename": filename, "content_type": content_type}
+    response = requests.post(
+        "https://api.notion.com/v1/file_uploads",
+        headers={**notion_file_upload_headers(token), "Content-Type": "application/json"},
+        json=payload,
+        timeout=30,
+    )
+    response.raise_for_status()
+    data = response.json()
+    if not isinstance(data, dict):
+        raise RuntimeError("Unexpected Notion file_upload create response format.")
+    upload_id = str(data.get("id", "")).strip()
+    if not upload_id:
+        raise RuntimeError("Notion file_upload id missing from create response.")
+    return upload_id
+
+
+def notion_send_file_upload(upload_id: str, filename: str, content_type: str, file_bytes: bytes, token: str) -> None:
+    response = requests.post(
+        f"https://api.notion.com/v1/file_uploads/{upload_id}/send",
+        headers=notion_file_upload_headers(token),
+        files={"file": (filename, file_bytes, content_type)},
+        timeout=120,
+    )
+    response.raise_for_status()
+
+
+def audio_block_caption(block: Dict[str, Any]) -> str:
+    audio = block.get("audio") or {}
+    caption = audio.get("caption") or []
+    if not isinstance(caption, list):
+        return ""
+    parts = []
+    for item in caption:
+        if not isinstance(item, dict):
+            continue
+        plain = str(item.get("plain_text", "")).strip()
+        if plain:
+            parts.append(plain)
+    return " ".join(parts).strip()
+
+
+def notion_remove_old_autogen_audio(page_id: str, token: str) -> int:
+    removed = 0
+    for block in notion_list_block_children(page_id, token):
+        if str(block.get("type", "")).strip() != "audio":
+            continue
+        caption = audio_block_caption(block)
+        if NOVENA_AUDIO_MARKER not in caption:
+            continue
+        block_id = str(block.get("id", "")).strip()
+        if not block_id:
+            continue
+        notion_archive_block(block_id, token)
+        removed += 1
+    return removed
+
+
+def notion_append_audio_block(page_id: str, upload_id: str, caption: str, token: str) -> None:
+    full_caption = f"{caption.strip()} {NOVENA_AUDIO_MARKER}".strip()
+    block = {
+        "object": "block",
+        "type": "audio",
+        "audio": {
+            "type": "file_upload",
+            "file_upload": {"id": upload_id},
+            "caption": [{"type": "text", "text": {"content": full_caption}}],
+        },
+    }
+    notion_append_children(page_id, [block], token)
 
 
 def normalize_romcal_calendar(calendar: str) -> str:
@@ -461,6 +573,29 @@ def call_openai_litany(
     return content
 
 
+def generate_openai_audio_bytes(
+    api_key: str,
+    base_url: str,
+    model: str,
+    voice: str,
+    audio_format: str,
+    speed: float,
+    text: str,
+) -> bytes:
+    client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
+    response = client.audio.speech.create(
+        model=model,
+        voice=voice,
+        input=text,
+        response_format=audio_format,
+        speed=speed,
+    )
+    raw = bytes(response.content)
+    if not raw:
+        raise RuntimeError("OpenAI audio generation returned empty content.")
+    return raw
+
+
 def find_target_notion_page(
     pages: Sequence[Dict[str, Any]],
     title_property: str,
@@ -495,6 +630,48 @@ def write_prayer_to_notion_page(page: Dict[str, Any], prayer_text: str, token: s
     return "page_content"
 
 
+def maybe_generate_and_attach_audio(
+    page: Dict[str, Any],
+    prayer_text: str,
+    notion_token: str,
+    openai_key: str,
+    oai_base_url: str,
+) -> str:
+    if not bool_env(NOVENA_AUDIO_ENABLED, default=False):
+        return "disabled"
+
+    page_id = str(page.get("id", "")).strip()
+    if not page_id:
+        raise RuntimeError("Target Notion page has no id.")
+
+    audio_model = os.getenv(NOVENA_AUDIO_MODEL, "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
+    audio_voice = os.getenv(NOVENA_AUDIO_VOICE, "alloy").strip() or "alloy"
+    audio_format = os.getenv(NOVENA_AUDIO_FORMAT, "mp3").strip().lower() or "mp3"
+    if audio_format not in {"mp3", "opus", "aac", "flac", "wav", "pcm"}:
+        raise RuntimeError(f"Invalid {NOVENA_AUDIO_FORMAT} '{audio_format}'.")
+    audio_speed = float_env(NOVENA_AUDIO_SPEED, default=1.0, min_value=0.25, max_value=4.0)
+    caption = os.getenv(NOVENA_AUDIO_CAPTION, "Daily Novena Prayer (Audio)").strip() or "Daily Novena Prayer (Audio)"
+
+    # Ensure one generated audio block per page by removing prior generated block(s).
+    notion_remove_old_autogen_audio(page_id, notion_token)
+
+    audio_bytes = generate_openai_audio_bytes(
+        api_key=openai_key,
+        base_url=oai_base_url,
+        model=audio_model,
+        voice=audio_voice,
+        audio_format=audio_format,
+        speed=audio_speed,
+        text=prayer_text,
+    )
+    filename = f"daily_novena_prayer_{local_today().isoformat()}.{audio_format}"
+    content_type = "audio/mpeg" if audio_format == "mp3" else f"audio/{audio_format}"
+    upload_id = notion_create_file_upload(filename=filename, content_type=content_type, token=notion_token)
+    notion_send_file_upload(upload_id, filename, content_type, audio_bytes, notion_token)
+    notion_append_audio_block(page_id, upload_id, caption, notion_token)
+    return f"attached:{audio_format}:{audio_model}:{audio_voice}"
+
+
 def main() -> int:
     try:
         romcal_calendar = os.getenv(ROMCAL_CALENDAR, "general_roman").strip() or "general_roman"
@@ -523,10 +700,24 @@ def main() -> int:
         pages = notion_get_all_pages(notion_db_id, notion_token)
         target_page = find_target_notion_page(pages, title_property, target_row_title)
         write_mode = write_prayer_to_notion_page(target_page, prayer_text, notion_token)
+        audio_mode = "disabled"
+        try:
+            audio_mode = maybe_generate_and_attach_audio(
+                page=target_page,
+                prayer_text=prayer_text,
+                notion_token=notion_token,
+                openai_key=openai_key,
+                oai_base_url=oai_base_url,
+            )
+        except Exception:
+            if bool_env(NOVENA_AUDIO_FAIL_OPEN, default=True):
+                audio_mode = "error_ignored"
+            else:
+                raise
 
         print(
             f"SUMMARY notion_db={notion_db_id} target_title={target_row_title} "
-            f"saints_count={len(saints)} window_days={window_days} write_mode={write_mode}"
+            f"saints_count={len(saints)} window_days={window_days} write_mode={write_mode} audio_mode={audio_mode}"
         )
         print(
             f"INFO romcal_calendar={romcal_calendar} locale={romcal_locale} "

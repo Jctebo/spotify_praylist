@@ -179,6 +179,13 @@ Optional variables:
 - `NOTION_TITLE_PROPERTY` (default `Name`)
 - `NOTION_NOVENA_ROW_TITLE` (default `Daily Novena Prayer`)
 - `NOTION_NOVENA_PROPERTY` (optional rich_text property to store prayer text; if unset/not rich_text, page content is replaced)
+- `NOVENA_AUDIO_ENABLED` (default `false`; set `true` to generate and embed audio on the same Notion page)
+- `NOVENA_AUDIO_MODEL` (default `gpt-4o-mini-tts`)
+- `NOVENA_AUDIO_VOICE` (default `alloy`)
+- `NOVENA_AUDIO_FORMAT` (default `mp3`)
+- `NOVENA_AUDIO_SPEED` (default `1.0`, range `0.25-4.0`)
+- `NOVENA_AUDIO_CAPTION` (default `Daily Novena Prayer (Audio)`)
+- `NOVENA_AUDIO_FAIL_OPEN` (default `true`; if `true`, text update continues even if audio upload fails)
 - `JOB_UTC_OFFSET` (default `-06:00`)
 
 Local run:
