@@ -22,6 +22,7 @@ Optional variables:
 - `jobs/notion/sync_notion_completions.py`: hourly sync to mark Notion prayer rows as completed from Spotify listening
 - `jobs/notion/reset_notion_completions.py`: daily reset to uncheck all Notion completion checkboxes
 - `jobs/novena/generate_daily_novena_prayer.py`: generates a daily novena litany from Romcal saints + OpenAI and writes to Notion
+- `jobs/novena/generate_devotional_image.py`: generates a saint devotional image from the 9-day Romcal window and writes files to OneDrive folders
 - `config/playlist_config.json`: playlist/profile/show configuration
 - `config/notion_spotify_sync_config.json`: mapping rules from Spotify item text -> Notion row name
 - `scripts/setup_spotify.ps1`: Spotify setup + refresh-token wizard
@@ -31,10 +32,12 @@ Optional variables:
 - `scripts/run_hourly_notion_sync_local.ps1`: local mirror of `.github/workflows/hourly_notion_sync.yml`
 - `scripts/run_daily_notion_reset_local.ps1`: local mirror of `.github/workflows/daily_notion_reset.yml`
 - `scripts/run_daily_novena_prayer_local.ps1`: local runner for daily novena prayer generation
+- `scripts/run_daily_devotional_image_local.ps1`: local runner for saint devotional image generation
 - `requirements.txt`: Python dependencies
 - `.github/workflows/daily.yml`: daily + manual GitHub Actions workflow
 - `.github/workflows/hourly_notion_sync.yml`: hourly + manual Notion completion sync workflow
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
+- `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with Azure login and OneDrive Graph upload
 
 ## Config Timezone
 - `config/playlist_config.json` supports top-level `utc_offset` (example `-06:00`).
@@ -179,6 +182,15 @@ Optional variables:
 - `NOTION_TITLE_PROPERTY` (default `Name`)
 - `NOTION_NOVENA_ROW_TITLE` (default `Daily Novena Prayer`)
 - `NOTION_NOVENA_PROPERTY` (optional rich_text property to store prayer text; if unset/not rich_text, page content is replaced)
+- `NOTION_SAINT_RADAR_ENABLED` (default `false`; when `true`, syncs saints into a Saint Radar database)
+- `NOTION_SAINT_DATABASE_ID` (optional explicit database id)
+- `NOTION_SAINT_DATABASE_NAME` (default `Saint Radar`; searched/created when id not provided)
+- `NOTION_SAINT_PARENT_PAGE_ID` (optional parent page id used when creating the Saint Radar database)
+- `NOTION_SAINT_TITLE_PROPERTY` (default `Name`)
+- `NOTION_SAINT_FEAST_DAY_PROPERTY` (default `Feast Day`)
+- `NOTION_SAINT_CELEBRATION_PROPERTY` (default `Celebration Type`)
+- `NOTION_SAINT_BACKGROUND_PROPERTY` (default `Background`)
+- `NOTION_SAINT_REFRESH_ALL` (default `false`; set `true` to regenerate all existing saint row page bodies/backgrounds)
 - `NOVENA_AUDIO_ENABLED` (default `false`; set `true` to generate and embed audio on the same Notion page)
 - `NOVENA_AUDIO_MODEL` (default `gpt-4o-mini-tts`)
 - `NOVENA_AUDIO_VOICE` (default `alloy`)
@@ -192,6 +204,49 @@ Local run:
 
 ```powershell
 .\scripts\run_daily_novena_prayer_local.ps1
+```
+
+## Daily Devotional Image Generation
+Purpose:
+- selects all unseen saints from the same 9-day Romcal window (or one saint when `DEVOTIONAL_TARGET_DATE` is set)
+- skips saints that already have generated image files by parsing existing filenames
+- generates a high-finish devotional image prompt from saint subject
+- creates an image with OpenAI image generation
+- includes 9-day window metadata in output filename and `.window.txt` companion file
+- writes two layout variants per saint:
+  - portrait variant to `Current Devotion`
+  - widescreen variant to `Devotion Wide`
+- writes the image file into two OneDrive folders:
+  - `OneDrive\Pictures\Samsung Gallery\DCIM\Current Devotion`
+  - `OneDrive\Pictures\Samsung Gallery\DCIM\Devotion Wide`
+- automatically moves completed saint files from `Current Devotion` into a monthly folder at the same level (for example `March Devotion`) once the saint date has passed
+
+Script:
+- `jobs/novena/generate_devotional_image.py`
+
+Required environment variables:
+- `OPENAI_API_KEY`
+
+Optional variables:
+- `OAI_API_BASE_URL` (default `https://api.openai.com/v1`)
+- `ROMCAL_CALENDAR` (default `general_roman`)
+- `ROMCAL_LOCALE` (default `en`)
+- `ROMCAL_WINDOW_DAYS` (default `9`)
+- `DEVOTIONAL_TARGET_DATE` (optional `YYYY-MM-DD` to force saint for a specific date in window)
+- `DEVOTIONAL_ONEDRIVE_DCIM_DIR` (default `%USERPROFILE%\OneDrive\Pictures\Samsung Gallery\DCIM`)
+- `DEVOTIONAL_CURRENT_FOLDER` (default `Current Devotion`)
+- `DEVOTIONAL_WIDE_FOLDER` (default `Devotion Wide`)
+- `DEVOTIONAL_PROMPT_MODEL` (default `gpt-5-mini`)
+- `DEVOTIONAL_IMAGE_MODEL` (default `gpt-image-1`)
+- `DEVOTIONAL_IMAGE_SIZE` (default `1024x1536`, phone portrait)
+- `DEVOTIONAL_IMAGE_SIZE_WIDE` (default `1536x1024`, widescreen)
+- `DEVOTIONAL_IMAGE_QUALITY` (default `high`)
+- `DEVOTIONAL_IMAGE_FORMAT` (default `png`)
+
+Local run:
+
+```powershell
+.\scripts\run_daily_devotional_image_local.ps1
 ```
 
 ## Local Job Mirrors
@@ -210,6 +265,28 @@ Run local equivalents of each GitHub Action workflow:
 # Daily novena prayer generation
 .\scripts\run_daily_novena_prayer_local.ps1
 ```
+
+## Remote Devotional Image Job (Azure + OneDrive)
+Workflow:
+- `.github/workflows/daily_devotional_image_remote.yml`
+
+Purpose:
+- runs the devotional image generator on GitHub Actions
+- authenticates to Azure with OIDC (`azure/login@v2`)
+- uploads generated files to OneDrive via Microsoft Graph under:
+  - `Pictures/Samsung Gallery/DCIM/Current Devotion`
+  - `Pictures/Samsung Gallery/DCIM/Devotion Wide`
+
+Required GitHub Secrets:
+- `OPENAI_API_KEY`
+- `AZURE_CLIENT_ID`
+- `AZURE_TENANT_ID`
+- `AZURE_SUBSCRIPTION_ID`
+- `ONEDRIVE_USER_ID` (user principal name or user id for target OneDrive account)
+
+Azure app setup requirements:
+- Add a federated credential for your GitHub repo/workflow to the Azure app registration.
+- Grant Microsoft Graph application permissions needed for app-only drive writes (for example, Files.ReadWrite.All), then grant admin consent.
 
 ## Local Test Framework
 Run the offline unit test suite (no live Spotify/Notion API calls):

@@ -36,6 +36,14 @@ jobs:
           NOTION_TITLE_PROPERTY: Name
           NOTION_NOVENA_ROW_TITLE: Daily Novena Prayer
           NOTION_NOVENA_PROPERTY: ""
+          NOTION_SAINT_RADAR_ENABLED: "true"
+          NOTION_SAINT_DATABASE_ID: 31a19eee-5051-81a7-bd14-f9f899d1d442
+          NOTION_SAINT_DATABASE_NAME: Saint Radar
+          NOTION_SAINT_TITLE_PROPERTY: Name
+          NOTION_SAINT_FEAST_DAY_PROPERTY: Feast Day
+          NOTION_SAINT_CELEBRATION_PROPERTY: Celebration Type
+          NOTION_SAINT_BACKGROUND_PROPERTY: Background
+          NOTION_SAINT_REFRESH_ALL: "false"
           NOVENA_AUDIO_ENABLED: "true"
           NOVENA_AUDIO_MODEL: gpt-4o-mini-tts
           NOVENA_AUDIO_VOICE: alloy

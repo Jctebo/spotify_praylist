@@ -1,4 +1,5 @@
 import datetime
+import json
 import os
 import re
 import sys
@@ -28,6 +29,15 @@ NOTION_DATABASE_NAME = "NOTION_DATABASE_NAME"  # fallback, default Opus Dei
 NOTION_TITLE_PROPERTY = "NOTION_TITLE_PROPERTY"  # default Name
 NOTION_NOVENA_ROW_TITLE = "NOTION_NOVENA_ROW_TITLE"  # default Daily Novena Prayer
 NOTION_NOVENA_PROPERTY = "NOTION_NOVENA_PROPERTY"  # optional rich_text property for prayer text
+NOTION_SAINT_RADAR_ENABLED = "NOTION_SAINT_RADAR_ENABLED"  # default false
+NOTION_SAINT_DATABASE_ID = "NOTION_SAINT_DATABASE_ID"  # optional explicit saint radar database id
+NOTION_SAINT_DATABASE_NAME = "NOTION_SAINT_DATABASE_NAME"  # default Saint Radar
+NOTION_SAINT_PARENT_PAGE_ID = "NOTION_SAINT_PARENT_PAGE_ID"  # optional explicit parent page id for database creation
+NOTION_SAINT_TITLE_PROPERTY = "NOTION_SAINT_TITLE_PROPERTY"  # default Name
+NOTION_SAINT_FEAST_DAY_PROPERTY = "NOTION_SAINT_FEAST_DAY_PROPERTY"  # default Feast Day
+NOTION_SAINT_CELEBRATION_PROPERTY = "NOTION_SAINT_CELEBRATION_PROPERTY"  # default Celebration Type
+NOTION_SAINT_BACKGROUND_PROPERTY = "NOTION_SAINT_BACKGROUND_PROPERTY"  # default Background
+NOTION_SAINT_REFRESH_ALL = "NOTION_SAINT_REFRESH_ALL"  # default false; true regenerates all saint content each run
 
 NOVENA_AUDIO_ENABLED = "NOVENA_AUDIO_ENABLED"  # default false
 NOVENA_AUDIO_MODEL = "NOVENA_AUDIO_MODEL"  # default gpt-4o-mini-tts
@@ -168,6 +178,46 @@ def notion_get_all_pages(database_id: str, token: str) -> List[Dict[str, Any]]:
     return pages
 
 
+def notion_get_database(database_id: str, token: str) -> Dict[str, Any]:
+    return notion_call("GET", f"https://api.notion.com/v1/databases/{database_id}", token)
+
+
+def notion_find_database_id_by_name(token: str, db_name: str) -> Optional[str]:
+    body = {"query": db_name, "filter": {"value": "database", "property": "object"}}
+    data = notion_call("POST", "https://api.notion.com/v1/search", token, body)
+    results = data.get("results") or []
+    for item in results:
+        if not isinstance(item, dict):
+            continue
+        title_parts = item.get("title") or []
+        title = ""
+        if isinstance(title_parts, list) and title_parts:
+            title = str((title_parts[0] or {}).get("plain_text", "")).strip()
+        if title.lower() == db_name.lower():
+            found = str(item.get("id", "")).strip()
+            if found:
+                return found
+    return None
+
+
+def notion_create_saint_radar_database(parent: Dict[str, Any], token: str, db_name: str) -> str:
+    body = {
+        "parent": parent,
+        "title": [{"type": "text", "text": {"content": db_name}}],
+        "properties": {
+            "Name": {"title": {}},
+            "Feast Day": {"date": {}},
+            "Celebration Type": {"select": {"options": []}},
+            "Background": {"rich_text": {}},
+        },
+    }
+    data = notion_call("POST", "https://api.notion.com/v1/databases", token, body)
+    db_id = str(data.get("id", "")).strip()
+    if not db_id:
+        raise RuntimeError("Failed to create Saint Radar database.")
+    return db_id
+
+
 def page_title(page: Dict[str, Any], title_property: str) -> str:
     props = page.get("properties") or {}
     prop = props.get(title_property) or {}
@@ -176,6 +226,15 @@ def page_title(page: Dict[str, Any], title_property: str) -> str:
         return ""
     parts = [str(v.get("plain_text", "")).strip() for v in vals if isinstance(v, dict)]
     return " ".join(p for p in parts if p).strip()
+
+
+def page_date(page: Dict[str, Any], date_property: str) -> str:
+    props = page.get("properties") or {}
+    prop = props.get(date_property) or {}
+    date_obj = prop.get("date") or {}
+    if not isinstance(date_obj, dict):
+        return ""
+    return str(date_obj.get("start", "")).strip()
 
 
 def split_text_chunks(text: str, max_len: int = 1800) -> List[str]:
@@ -235,6 +294,18 @@ def notion_append_children(parent_id: str, children: Sequence[Dict[str, Any]], t
         notion_call("PATCH", f"https://api.notion.com/v1/blocks/{parent_id}/children", token, {"children": batch})
 
 
+def notion_replace_page_blocks(page_id: str, children: Sequence[Dict[str, Any]], token: str) -> None:
+    existing = notion_list_block_children(page_id, token)
+    for block in existing:
+        block_type = str(block.get("type", "")).strip()
+        if block_type in {"child_page", "child_database"}:
+            continue
+        block_id = str(block.get("id", "")).strip()
+        if block_id:
+            notion_archive_block(block_id, token)
+    notion_append_children(page_id, children, token)
+
+
 def prayer_to_paragraph_blocks(text: str) -> List[Dict[str, Any]]:
     stanzas = [s.strip() for s in re.split(r"\n\s*\n", str(text or "").strip()) if s.strip()]
     blocks: List[Dict[str, Any]] = []
@@ -259,12 +330,7 @@ def prayer_to_paragraph_blocks(text: str) -> List[Dict[str, Any]]:
 
 
 def notion_replace_page_content(page_id: str, text: str, token: str) -> None:
-    children = notion_list_block_children(page_id, token)
-    for block in children:
-        block_id = str(block.get("id", "")).strip()
-        if block_id:
-            notion_archive_block(block_id, token)
-    notion_append_children(page_id, prayer_to_paragraph_blocks(text), token)
+    notion_replace_page_blocks(page_id, prayer_to_paragraph_blocks(text), token)
 
 
 def notion_create_file_upload(filename: str, content_type: str, token: str) -> str:
@@ -347,6 +413,28 @@ def normalize_romcal_calendar(calendar: str) -> str:
         "roman": "general_roman",
     }
     return aliases.get(value, value or "general_roman")
+
+
+def infer_celebration_type(event: Dict[str, Any]) -> str:
+    candidates = [
+        str(event.get("rank_name", "")).strip(),
+        str(event.get("rank", "")).strip(),
+        str(event.get("type", "")).strip(),
+        str(event.get("liturgicalCategory", "")).strip(),
+        str(event.get("category", "")).strip(),
+    ]
+    text = " ".join(x for x in candidates if x).lower()
+    mapping = [
+        ("optional memorial", "Optional Memorial"),
+        ("solemnity", "Solemnity"),
+        ("feast", "Feast"),
+        ("memorial", "Memorial"),
+        ("weekday", "Weekday"),
+    ]
+    for needle, label in mapping:
+        if needle in text:
+            return label
+    return "Celebration"
 
 
 @lru_cache(maxsize=8)
@@ -464,7 +552,11 @@ def collect_saints_window(
             if key in seen:
                 continue
             seen.add(key)
-            row = {"date": dt.isoformat(), "name": name}
+            row = {
+                "date": dt.isoformat(),
+                "name": name,
+                "celebration_type": infer_celebration_type(event),
+            }
             fallback_names.append(row)
             if looks_like_saint(event, name):
                 saints.append(row)
@@ -573,6 +665,219 @@ def call_openai_litany(
     return content
 
 
+def call_openai_saint_background(
+    api_key: str,
+    base_url: str,
+    model: str,
+    saint_name: str,
+    feast_day: str,
+    celebration_type: str,
+) -> str:
+    client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
+    system = (
+        "You are a Catholic devotional writer. Write concise, factual saint summaries for Notion."
+    )
+    user = (
+        f"Saint: {saint_name}\n"
+        f"Feast Day: {feast_day}\n"
+        f"Celebration Type: {celebration_type}\n\n"
+        "Write 3-4 sentences: who the saint was, key witness/virtue, and why the Church remembers them."
+    )
+    try:
+        response = client.responses.create(
+            model=model,
+            input=[
+                {"role": "system", "content": [{"type": "input_text", "text": system}]},
+                {"role": "user", "content": [{"type": "input_text", "text": user}]},
+            ],
+        )
+        text = str(getattr(response, "output_text", "") or "").strip()
+        if text:
+            return text
+    except Exception:
+        pass
+    chat = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+    )
+    choices = getattr(chat, "choices", None) or []
+    if not choices:
+        return f"{saint_name} is commemorated by the Church on {feast_day} as a {celebration_type.lower()}."
+    content = str(getattr(getattr(choices[0], "message", None), "content", "") or "").strip()
+    return content or f"{saint_name} is commemorated by the Church on {feast_day} as a {celebration_type.lower()}."
+
+
+def _extract_first_json_object(text: str) -> str:
+    start = text.find("{")
+    end = text.rfind("}")
+    if start < 0 or end < 0 or end <= start:
+        raise RuntimeError("No JSON object found in model output.")
+    return text[start : end + 1]
+
+
+def call_openai_saint_devotional_content(
+    api_key: str,
+    base_url: str,
+    model: str,
+    saint_name: str,
+    feast_day: str,
+    celebration_type: str,
+) -> Dict[str, Any]:
+    client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
+    system = (
+        "You are a Catholic devotional writer. Return valid JSON only. "
+        "No markdown, no code fences."
+    )
+    user = (
+        f"Saint: {saint_name}\n"
+        f"Feast Day: {feast_day}\n"
+        f"Celebration Type: {celebration_type}\n\n"
+        "Create devotional content JSON with keys:\n"
+        "{\n"
+        '  "feast_overview": "2-4 sentences including feast placement and short who-is-the-saint summary",\n'
+        '  "life_sections": [{"heading":"...", "content":"..."}],\n'
+        '  "opening_prayer": "...",\n'
+        '  "daily_prayers": [\n'
+        '    {"day":1,"theme":"...","intercession":"...","daily_prayer":"..."} ... day 9\n'
+        "  ],\n"
+        '  "closing_prayer": "..."\n'
+        "}\n"
+        "Requirements:\n"
+        "- life_sections can have multiple subsections\n"
+        "- daily themes must connect to saint's life\n"
+        "- include clear daily intercession request in each day\n"
+        "- theological fidelity and devotional tone\n"
+    )
+    text = ""
+    try:
+        response = client.responses.create(
+            model=model,
+            input=[
+                {"role": "system", "content": [{"type": "input_text", "text": system}]},
+                {"role": "user", "content": [{"type": "input_text", "text": user}]},
+            ],
+        )
+        text = str(getattr(response, "output_text", "") or "").strip()
+    except Exception:
+        text = ""
+    if not text:
+        chat = client.chat.completions.create(
+            model=model,
+            messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+        )
+        choices = getattr(chat, "choices", None) or []
+        if choices:
+            text = str(getattr(getattr(choices[0], "message", None), "content", "") or "").strip()
+    if not text:
+        raise RuntimeError("Could not generate saint devotional content.")
+    obj = json.loads(_extract_first_json_object(text))
+    if not isinstance(obj, dict):
+        raise RuntimeError("Invalid devotional JSON format.")
+    return obj
+
+
+def rich_text(content: str) -> List[Dict[str, Any]]:
+    return [{"type": "text", "text": {"content": content}}]
+
+
+def paragraph_block(content: str) -> Dict[str, Any]:
+    return {"object": "block", "type": "paragraph", "paragraph": {"rich_text": rich_text(content)}}
+
+
+def toggle_block(title: str, children: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    return {
+        "object": "block",
+        "type": "toggle",
+        "toggle": {"rich_text": rich_text(title), "children": list(children)},
+    }
+
+
+def to_do_block(content: str, checked: bool = False) -> Dict[str, Any]:
+    return {
+        "object": "block",
+        "type": "to_do",
+        "to_do": {"rich_text": rich_text(content), "checked": checked},
+    }
+
+
+def saint_devotional_blocks(
+    saint_name: str,
+    feast_day: str,
+    celebration_type: str,
+    payload: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    feast_overview = str(payload.get("feast_overview", "")).strip()
+    life_sections = payload.get("life_sections") or []
+    opening_prayer = str(payload.get("opening_prayer", "")).strip()
+    daily_prayers = payload.get("daily_prayers") or []
+    closing_prayer = str(payload.get("closing_prayer", "")).strip()
+
+    feast_date = datetime.date.fromisoformat(feast_day)
+    prep_start = feast_date - datetime.timedelta(days=8)
+
+    blocks: List[Dict[str, Any]] = []
+    overview_children = [paragraph_block(f"Saint: {saint_name}")]
+    overview_children.append(paragraph_block(f"Feast Day: {feast_day} ({celebration_type})"))
+    for chunk in split_text_chunks(feast_overview or f"{saint_name} is commemorated on {feast_day}.", 1800):
+        overview_children.append(paragraph_block(chunk))
+    blocks.append(toggle_block("Feast Placement & Saint Overview", overview_children))
+
+    life_children: List[Dict[str, Any]] = []
+    if isinstance(life_sections, list) and life_sections:
+        for section in life_sections:
+            if not isinstance(section, dict):
+                continue
+            heading = str(section.get("heading", "")).strip() or "Life Section"
+            content = str(section.get("content", "")).strip()
+            section_children: List[Dict[str, Any]] = []
+            for chunk in split_text_chunks(content or f"Life details for {saint_name}.", 1800):
+                section_children.append(paragraph_block(chunk))
+            life_children.append(toggle_block(heading, section_children))
+    else:
+        life_children.append(paragraph_block(f"Life details for {saint_name}."))
+    blocks.append(toggle_block("Life of the Saint", life_children))
+
+    checklist_children: List[Dict[str, Any]] = []
+    for idx in range(9):
+        day_num = idx + 1
+        day_date = prep_start + datetime.timedelta(days=idx)
+        checklist_children.append(to_do_block(f"Day {day_num} - {day_date.strftime('%b %d')}"))
+    blocks.append(toggle_block(f"Novena Checklist (Prep Start: {prep_start.strftime('%b %d')})", checklist_children))
+
+    opening_children = [paragraph_block(chunk) for chunk in split_text_chunks(opening_prayer or "Opening prayer.", 1800)]
+    blocks.append(toggle_block("Opening Prayer", opening_children))
+
+    # Ensure 9 daily toggles, aligned to prep-start day sequence.
+    by_day: Dict[int, Dict[str, Any]] = {}
+    if isinstance(daily_prayers, list):
+        for row in daily_prayers:
+            if isinstance(row, dict):
+                try:
+                    day_n = int(row.get("day", 0))
+                except Exception:
+                    day_n = 0
+                if 1 <= day_n <= 9:
+                    by_day[day_n] = row
+    for day_n in range(1, 10):
+        row = by_day.get(day_n, {})
+        day_date = prep_start + datetime.timedelta(days=day_n - 1)
+        theme = str(row.get("theme", "")).strip() or f"Theme for Day {day_n}"
+        intercession = str(row.get("intercession", "")).strip() or "Intercede for us."
+        daily_prayer = str(row.get("daily_prayer", "")).strip() or "Daily novena prayer."
+        day_children = [
+            paragraph_block(f"Theme: {theme}"),
+            paragraph_block(f"Intercession: {intercession}"),
+            paragraph_block("Personal intention: [Write your intention here]"),
+        ]
+        for chunk in split_text_chunks(daily_prayer, 1800):
+            day_children.append(paragraph_block(chunk))
+        blocks.append(toggle_block(f"Day {day_n} - {day_date.strftime('%b %d')}", day_children))
+
+    closing_children = [paragraph_block(chunk) for chunk in split_text_chunks(closing_prayer or "Closing prayer.", 1800)]
+    blocks.append(toggle_block("Closing Prayer", closing_children))
+    return blocks
+
+
 def generate_openai_audio_bytes(
     api_key: str,
     base_url: str,
@@ -628,6 +933,158 @@ def write_prayer_to_notion_page(page: Dict[str, Any], prayer_text: str, token: s
 
     notion_replace_page_content(page_id, prayer_text, token)
     return "page_content"
+
+
+def notion_create_page(database_id: str, properties: Dict[str, Any], token: str) -> None:
+    body = {"parent": {"database_id": database_id}, "properties": properties}
+    notion_call("POST", "https://api.notion.com/v1/pages", token, body)
+
+
+def notion_update_page_properties(page_id: str, properties: Dict[str, Any], token: str) -> None:
+    notion_call("PATCH", f"https://api.notion.com/v1/pages/{page_id}", token, {"properties": properties})
+
+
+def sync_saint_radar(
+    notion_token: str,
+    default_parent_database_id: str,
+    default_parent_page_id: str,
+    saints: Sequence[Dict[str, str]],
+    openai_key: str,
+    oai_base_url: str,
+    oai_model: str,
+) -> str:
+    if not bool_env(NOTION_SAINT_RADAR_ENABLED, default=False):
+        return "disabled"
+
+    title_prop = os.getenv(NOTION_SAINT_TITLE_PROPERTY, "Name").strip() or "Name"
+    feast_prop = os.getenv(NOTION_SAINT_FEAST_DAY_PROPERTY, "Feast Day").strip() or "Feast Day"
+    type_prop = os.getenv(NOTION_SAINT_CELEBRATION_PROPERTY, "Celebration Type").strip() or "Celebration Type"
+    background_prop = os.getenv(NOTION_SAINT_BACKGROUND_PROPERTY, "Background").strip() or "Background"
+    refresh_all = bool_env(NOTION_SAINT_REFRESH_ALL, default=False)
+    db_name = os.getenv(NOTION_SAINT_DATABASE_NAME, "Saint Radar").strip() or "Saint Radar"
+
+    saint_db_id = os.getenv(NOTION_SAINT_DATABASE_ID, "").strip()
+    created = False
+    if not saint_db_id:
+        saint_db_id = notion_find_database_id_by_name(notion_token, db_name) or ""
+    if not saint_db_id:
+        explicit_parent_page_id = os.getenv(NOTION_SAINT_PARENT_PAGE_ID, "").strip()
+        if explicit_parent_page_id:
+            parent = {"type": "page_id", "page_id": explicit_parent_page_id}
+        else:
+            base_db = notion_get_database(default_parent_database_id, notion_token)
+            parent = base_db.get("parent") or {}
+            ptype = str(parent.get("type", "")).strip()
+            if ptype == "page_id" and str(parent.get("page_id", "")).strip():
+                parent = {"type": "page_id", "page_id": str(parent.get("page_id", "")).strip()}
+            else:
+                if default_parent_page_id:
+                    parent = {"type": "page_id", "page_id": default_parent_page_id}
+                else:
+                    raise RuntimeError(
+                        "Cannot create Saint Radar database: unsupported parent type. "
+                        "Set NOTION_SAINT_PARENT_PAGE_ID explicitly."
+                    )
+        saint_db_id = notion_create_saint_radar_database(parent, notion_token, db_name)
+        created = True
+
+    pages = notion_get_all_pages(saint_db_id, notion_token)
+    existing: Dict[str, Dict[str, Any]] = {}
+    for page in pages:
+        name = page_title(page, title_prop).strip().lower()
+        day = page_date(page, feast_prop).strip()
+        if name and day:
+            existing[f"{day}|{name}"] = page
+
+    upserted = 0
+    regenerated = 0
+    for row in saints:
+        day = str(row.get("date", "")).strip()
+        name = str(row.get("name", "")).strip()
+        celebration = str(row.get("celebration_type", "Celebration")).strip() or "Celebration"
+        if not day or not name:
+            continue
+        key = f"{day}|{name.lower()}"
+        base_props = {
+            title_prop: {"title": [{"type": "text", "text": {"content": name}}]},
+            feast_prop: {"date": {"start": day}},
+            type_prop: {"select": {"name": celebration}},
+        }
+        if key in existing:
+            page_id = str(existing[key].get("id", "")).strip()
+            if page_id:
+                notion_update_page_properties(page_id, base_props, notion_token)
+                if refresh_all:
+                    background = call_openai_saint_background(
+                        api_key=openai_key,
+                        base_url=oai_base_url,
+                        model=oai_model,
+                        saint_name=name,
+                        feast_day=day,
+                        celebration_type=celebration,
+                    )
+                    devotional_payload = call_openai_saint_devotional_content(
+                        api_key=openai_key,
+                        base_url=oai_base_url,
+                        model=oai_model,
+                        saint_name=name,
+                        feast_day=day,
+                        celebration_type=celebration,
+                    )
+                    bg_chunks = split_text_chunks(background, 1800)
+                    notion_update_page_properties(
+                        page_id,
+                        {background_prop: {"rich_text": [{"type": "text", "text": {"content": chunk}} for chunk in bg_chunks]}},
+                        notion_token,
+                    )
+                    notion_replace_page_blocks(
+                        page_id,
+                        saint_devotional_blocks(name, day, celebration, devotional_payload),
+                        notion_token,
+                    )
+                    regenerated += 1
+                upserted += 1
+        else:
+            background = call_openai_saint_background(
+                api_key=openai_key,
+                base_url=oai_base_url,
+                model=oai_model,
+                saint_name=name,
+                feast_day=day,
+                celebration_type=celebration,
+            )
+            devotional_payload = call_openai_saint_devotional_content(
+                api_key=openai_key,
+                base_url=oai_base_url,
+                model=oai_model,
+                saint_name=name,
+                feast_day=day,
+                celebration_type=celebration,
+            )
+            bg_chunks = split_text_chunks(background, 1800)
+            create_props = dict(base_props)
+            create_props[background_prop] = {
+                "rich_text": [{"type": "text", "text": {"content": chunk}} for chunk in bg_chunks]
+            }
+            notion_create_page(saint_db_id, create_props, notion_token)
+            refreshed_pages = notion_get_all_pages(saint_db_id, notion_token)
+            created_page = None
+            for p in refreshed_pages:
+                if page_title(p, title_prop).strip().lower() == name.lower() and page_date(p, feast_prop).strip() == day:
+                    created_page = p
+                    break
+            if created_page:
+                created_page_id = str(created_page.get("id", "")).strip()
+                if created_page_id:
+                    notion_replace_page_blocks(
+                        created_page_id,
+                        saint_devotional_blocks(name, day, celebration, devotional_payload),
+                        notion_token,
+                    )
+                    regenerated += 1
+            upserted += 1
+    mode = "created" if created else "existing"
+    return f"{mode}:{saint_db_id}:upserted={upserted}:regenerated={regenerated}:refresh_all={str(refresh_all).lower()}"
 
 
 def maybe_generate_and_attach_audio(
@@ -700,6 +1157,15 @@ def main() -> int:
         pages = notion_get_all_pages(notion_db_id, notion_token)
         target_page = find_target_notion_page(pages, title_property, target_row_title)
         write_mode = write_prayer_to_notion_page(target_page, prayer_text, notion_token)
+        saint_radar_mode = sync_saint_radar(
+            notion_token=notion_token,
+            default_parent_database_id=notion_db_id,
+            default_parent_page_id=str(target_page.get("id", "")).strip(),
+            saints=saints,
+            openai_key=openai_key,
+            oai_base_url=oai_base_url,
+            oai_model=oai_model,
+        )
         audio_mode = "disabled"
         try:
             audio_mode = maybe_generate_and_attach_audio(
@@ -717,7 +1183,8 @@ def main() -> int:
 
         print(
             f"SUMMARY notion_db={notion_db_id} target_title={target_row_title} "
-            f"saints_count={len(saints)} window_days={window_days} write_mode={write_mode} audio_mode={audio_mode}"
+            f"saints_count={len(saints)} window_days={window_days} write_mode={write_mode} "
+            f"audio_mode={audio_mode} saint_radar_mode={saint_radar_mode}"
         )
         print(
             f"INFO romcal_calendar={romcal_calendar} locale={romcal_locale} "
