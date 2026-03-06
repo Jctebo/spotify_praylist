@@ -27,6 +27,7 @@ NOTION_PLATFORM_NOSYNC_VALUE = "NOTION_PLATFORM_NOSYNC_VALUE"  # defaults to spo
 
 SPOTIFY_NOTION_SYNC_CONFIG = "SPOTIFY_NOTION_SYNC_CONFIG"  # defaults to config/notion_spotify_sync_config.json
 SPOTIFY_RECENT_LOOKBACK_HOURS = "SPOTIFY_RECENT_LOOKBACK_HOURS"  # default 3
+SPOTIFY_RECENT_WINDOW_MODE = "SPOTIFY_RECENT_WINDOW_MODE"  # today|rolling (default today)
 JOB_UTC_OFFSET = "JOB_UTC_OFFSET"  # optional override for runtime offset, e.g. -06:00
 SPOTIFY_CONFIG_FILE = "SPOTIFY_CONFIG_FILE"  # defaults to config/playlist_config.json
 SPOTIFY_COMPLETION_LOG_LIMIT = "SPOTIFY_COMPLETION_LOG_LIMIT"  # defaults to 25
@@ -265,7 +266,16 @@ def playlist_id_from_context_uri(context_uri: str) -> str:
 def collect_recent_spotify_activity(token: str) -> Dict[str, Set[str]]:
     lookback_hours = int(os.getenv(SPOTIFY_RECENT_LOOKBACK_HOURS, "3").strip() or "3")
     lookback_hours = max(1, min(24, lookback_hours))
-    after = int((datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=lookback_hours)).timestamp() * 1000)
+    window_mode = os.getenv(SPOTIFY_RECENT_WINDOW_MODE, "today").strip().lower() or "today"
+    if window_mode not in {"today", "rolling"}:
+        window_mode = "today"
+
+    if window_mode == "today":
+        now_local = local_now_for_job()
+        start_local = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+        after = int(start_local.astimezone(datetime.timezone.utc).timestamp() * 1000)
+    else:
+        after = int((datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=lookback_hours)).timestamp() * 1000)
 
     profile_by_playlist = load_playlist_profile_by_id()
 
@@ -295,9 +305,26 @@ def collect_recent_spotify_activity(token: str) -> Dict[str, Set[str]]:
         token,
         {"limit": 50, "after": after},
     )
-    for item in recent.get("items") or []:
+    items = recent.get("items") or []
+    if not items:
+        # Some accounts/apps return empty for strict `after`; fallback and filter locally.
+        recent = spotify_get(
+            "https://api.spotify.com/v1/me/player/recently-played",
+            token,
+            {"limit": 50},
+        )
+        items = recent.get("items") or []
+    for item in items:
         if not isinstance(item, dict):
             continue
+        played_at_text = str(item.get("played_at", "")).strip()
+        if played_at_text:
+            try:
+                played_at = datetime.datetime.fromisoformat(played_at_text.replace("Z", "+00:00"))
+                if int(played_at.timestamp() * 1000) < after:
+                    continue
+            except Exception:
+                pass
         context = item.get("context")
         profile = ""
         if isinstance(context, dict):

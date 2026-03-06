@@ -124,6 +124,7 @@ Optional variables/secrets:
 - `NOTION_URI_PROPERTY` (default `URI`, used for URI-based completion matching)
 - `NOTION_URI_STRICT_MATCH` (default `false`; set `true` to require URI-only matches for rows with URI)
 - `SPOTIFY_RECENT_LOOKBACK_HOURS` (default `3`, range `1-24`)
+- `SPOTIFY_RECENT_WINDOW_MODE` (default `today`; `today` means midnight-to-now in job timezone, `rolling` uses lookback hours)
 - `SPOTIFY_NOTION_SYNC_CONFIG` (default `config/notion_spotify_sync_config.json`)
 - `JOB_UTC_OFFSET` (optional runtime override for local/GitHub job timezone offset, e.g. `-06:00`)
 

@@ -40,4 +40,5 @@ jobs:
           SPOTIFY_NOTION_SYNC_CONFIG: config/notion_spotify_sync_config.json
           SPOTIFY_CONFIG_FILE: config/playlist_config.json
           SPOTIFY_RECENT_LOOKBACK_HOURS: ${{ vars.SPOTIFY_RECENT_LOOKBACK_HOURS }}
+          SPOTIFY_RECENT_WINDOW_MODE: today
         run: python jobs/notion/sync_notion_completions.py

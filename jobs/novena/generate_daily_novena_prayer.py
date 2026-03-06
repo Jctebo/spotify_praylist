@@ -573,6 +573,44 @@ def format_saints_for_prompt(saints: Sequence[Dict[str, str]]) -> str:
     return "\n".join(rows)
 
 
+def normalize_name_for_match(text: str) -> str:
+    s = str(text or "").lower()
+    s = s.replace("st.", "saint ").replace("st ", "saint ")
+    s = re.sub(r"[^a-z0-9]+", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
+
+
+def extract_saint_like_mentions(text: str) -> List[str]:
+    # Capture phrases starting with Saint/Saints/St. followed by title-cased words.
+    pattern = re.compile(
+        r"\b(?:Saint|Saints|St\.)\s+[A-Z][A-Za-z'`\-]*(?:\s+[A-Z][A-Za-z'`\-]*){0,8}",
+        flags=re.MULTILINE,
+    )
+    return [m.group(0).strip() for m in pattern.finditer(str(text or ""))]
+
+
+def validate_mentions_against_romcal(text: str, saints: Sequence[Dict[str, str]]) -> List[str]:
+    allowed = [normalize_name_for_match(str(row.get("name", ""))) for row in saints]
+    allowed = [x for x in allowed if x]
+    mentions = extract_saint_like_mentions(text)
+    invalid: List[str] = []
+    for m in mentions:
+        nm = normalize_name_for_match(m)
+        if not nm:
+            continue
+        if not any((nm in a) or (a in nm) for a in allowed):
+            invalid.append(m)
+    # de-dup preserve order
+    out: List[str] = []
+    seen = set()
+    for x in invalid:
+        k = x.lower()
+        if k not in seen:
+            seen.add(k)
+            out.append(x)
+    return out
+
+
 def call_openai_litany(
     api_key: str,
     base_url: str,
@@ -630,39 +668,50 @@ def call_openai_litany(
         "- Faithful to Catholic teaching\n"
         "- Suitable for daily prayer\n"
         "- Future saints should be summarized briefly (one sentence each)\n"
+        "- Use only the saint names in the provided Upcoming Saints list.\n"
+        "- Do not add, infer, or mention any saint not explicitly listed.\n"
     )
     client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
 
-    try:
-        response = client.responses.create(
+    last_text = ""
+    for _ in range(2):
+        try:
+            response = client.responses.create(
+                model=model,
+                input=[
+                    {"role": "system", "content": [{"type": "input_text", "text": system_prompt}]},
+                    {"role": "user", "content": [{"type": "input_text", "text": user_prompt}]},
+                ],
+            )
+            text = str(getattr(response, "output_text", "") or "").strip()
+            if text:
+                bad = validate_mentions_against_romcal(text, saints)
+                if not bad:
+                    return text
+                last_text = text
+        except Exception:
+            pass
+
+        chat = client.chat.completions.create(
             model=model,
-            input=[
-                {"role": "system", "content": [{"type": "input_text", "text": system_prompt}]},
-                {"role": "user", "content": [{"type": "input_text", "text": user_prompt}]},
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
             ],
         )
-        text = str(getattr(response, "output_text", "") or "").strip()
-        if text:
-            return text
-    except Exception:
-        # Fall through to chat-completions for compatibility if responses/model isn't available.
-        pass
+        choices = getattr(chat, "choices", None) or []
+        if not choices:
+            continue
+        message = getattr(choices[0], "message", None)
+        content = str(getattr(message, "content", "") or "").strip()
+        if content:
+            bad = validate_mentions_against_romcal(content, saints)
+            if not bad:
+                return content
+            last_text = content
 
-    chat = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-    )
-    choices = getattr(chat, "choices", None) or []
-    if not choices:
-        raise RuntimeError("OpenAI SDK returned no choices.")
-    message = getattr(choices[0], "message", None)
-    content = str(getattr(message, "content", "") or "").strip()
-    if not content:
-        raise RuntimeError("OpenAI SDK returned empty content.")
-    return content
+    bad = validate_mentions_against_romcal(last_text, saints)
+    raise RuntimeError(f"Generated prayer mentioned non-Romcal saints: {', '.join(bad[:5])}")
 
 
 def call_openai_saint_background(
