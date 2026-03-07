@@ -1,0 +1,55 @@
+name: Liturgical Calendar Yearly Sync
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_year:
+        description: "Optional explicit year to populate (YYYY). If set, overrides other range inputs."
+        required: false
+        type: string
+      start_date:
+        description: "Optional start date YYYY-MM-DD (for bootstrap runs)."
+        required: false
+        type: string
+      end_year:
+        description: "Optional inclusive end year YYYY (for bootstrap runs, e.g. 2027)."
+        required: false
+        type: string
+  schedule:
+    - cron: "15 6 1 1 *" # Jan 1, 00:15 CST; populates next year (e.g., 2027 run writes 2028)
+
+jobs:
+  sync-liturgical-calendar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Sync Liturgical Calendar
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          ROMCAL_CALENDAR: general_roman
+          ROMCAL_LOCALE: en
+          JOB_UTC_OFFSET: -06:00
+          NOTION_SAINT_RADAR_ENABLED: "true"
+          NOTION_SAINT_DATABASE_ID: 31a19eee-5051-81a7-bd14-f9f899d1d442
+          NOTION_SAINT_DATABASE_NAME: Liturgical Calendar
+          NOTION_SAINT_TITLE_PROPERTY: Name
+          NOTION_SAINT_FEAST_DAY_PROPERTY: Feast Day
+          NOTION_SAINT_CELEBRATION_PROPERTY: Celebration Rank
+          NOTION_SAINT_PRECEDENCE_PROPERTY: Precedence
+          NOTION_SAINT_BACKGROUND_PROPERTY: Background
+          LITURGICAL_SYNC_TARGET_YEAR: ${{ github.event.inputs.target_year }}
+          LITURGICAL_SYNC_START_DATE: ${{ github.event.inputs.start_date }}
+          LITURGICAL_SYNC_END_YEAR: ${{ github.event.inputs.end_year }}
+        run: python jobs/novena/sync_liturgical_calendar.py

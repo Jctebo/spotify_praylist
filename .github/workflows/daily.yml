@@ -27,21 +27,33 @@ jobs:
           SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
           SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
           JOB_UTC_OFFSET: ${{ vars.JOB_UTC_OFFSET }}
-          SPOTIFY_CONFIG_FILE: config/playlist_config.json
-          SPOTIFY_NOTION_SYNC_CONFIG: config/notion_spotify_sync_config.json
+          SPOTIFY_REFRESH_CONFIG_SOURCE: notion
+          SPOTIFY_ENABLE_URI_AUTOSYNC: "false"
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
           NOTION_DATABASE_NAME: ${{ vars.NOTION_DATABASE_NAME }}
           NOTION_TITLE_PROPERTY: ${{ vars.NOTION_TITLE_PROPERTY }}
           NOTION_PLATFORM_PROPERTY: ${{ vars.NOTION_PLATFORM_PROPERTY }}
           NOTION_PLATFORM_SPOTIFY_VALUE: ${{ vars.NOTION_PLATFORM_SPOTIFY_VALUE }}
+          NOTION_PLATFORM_NOSYNC_VALUE: ${{ vars.NOTION_PLATFORM_NOSYNC_VALUE }}
+          NOTION_QUEUE_PROFILE_PROPERTY: ${{ vars.NOTION_QUEUE_PROFILE_PROPERTY }}
+          NOTION_QUEUE_ORDER_PROPERTY: ${{ vars.NOTION_QUEUE_ORDER_PROPERTY }}
+          NOTION_QUEUE_RESOLVER_PROPERTY: ${{ vars.NOTION_QUEUE_RESOLVER_PROPERTY }}
+          NOTION_QUEUE_FALLBACK_PROPERTY: ${{ vars.NOTION_QUEUE_FALLBACK_PROPERTY }}
+          NOTION_QUEUE_ENABLED_PROPERTY: ${{ vars.NOTION_QUEUE_ENABLED_PROPERTY }}
           NOTION_URI_PROPERTY: ${{ vars.NOTION_URI_PROPERTY }}
+          SPOTIFY_PLAYLIST_ID_MORNING: ${{ vars.SPOTIFY_PLAYLIST_ID_MORNING }}
+          SPOTIFY_PLAYLIST_ID_MIDDAY: ${{ vars.SPOTIFY_PLAYLIST_ID_MIDDAY }}
+          SPOTIFY_PLAYLIST_ID_NIGHT: ${{ vars.SPOTIFY_PLAYLIST_ID_NIGHT }}
         run: |
           set -euo pipefail
-          jq -c '.profiles | to_entries[] | select(.value.playlist_id != null and .value.playlist_id != "") | {profile:.key, playlist_id:.value.playlist_id}' config/playlist_config.json \
-          | while read -r row; do
-              profile="$(echo "$row" | jq -r '.profile')"
-              playlist_id="$(echo "$row" | jq -r '.playlist_id')"
-              echo "Running profile=${profile} playlist_id=${playlist_id}"
-              SPOTIFY_PLAYLIST_PROFILE="$profile" SPOTIFY_PLAYLIST_ID="$playlist_id" python jobs/playlist/refresh_playlist.py
-            done
+          for profile in morning midday night; do
+            var_name="SPOTIFY_PLAYLIST_ID_${profile^^}"
+            playlist_id="${!var_name:-}"
+            if [ -z "$playlist_id" ]; then
+              echo "Skipping profile=${profile}; missing ${var_name}"
+              continue
+            fi
+            echo "Running profile=${profile} playlist_id=${playlist_id}"
+            SPOTIFY_PLAYLIST_PROFILE="$profile" SPOTIFY_PLAYLIST_ID="$playlist_id" python jobs/playlist/refresh_playlist.py
+          done

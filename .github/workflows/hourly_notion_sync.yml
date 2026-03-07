@@ -2,10 +2,6 @@ name: Hourly Notion Completion Sync
 
 on:
   workflow_dispatch:
-  schedule:
-    # Hourly except 11:00 PM-3:59 AM for default CST offset (-06:00).
-    # Script also enforces quiet-hours using JOB_UTC_OFFSET/config utc_offset.
-    - cron: "5 0-4,10-23 * * *"
 
 jobs:
   sync-notion:

@@ -1,4 +1,5 @@
 import datetime
+import html
 import json
 import os
 import re
@@ -29,15 +30,18 @@ NOTION_DATABASE_NAME = "NOTION_DATABASE_NAME"  # fallback, default Opus Dei
 NOTION_TITLE_PROPERTY = "NOTION_TITLE_PROPERTY"  # default Name
 NOTION_NOVENA_ROW_TITLE = "NOTION_NOVENA_ROW_TITLE"  # default Daily Novena Prayer
 NOTION_NOVENA_PROPERTY = "NOTION_NOVENA_PROPERTY"  # optional rich_text property for prayer text
+NOTION_WRITE_DAILY_NOVENA_PAGE = "NOTION_WRITE_DAILY_NOVENA_PAGE"  # default true
 NOTION_SAINT_RADAR_ENABLED = "NOTION_SAINT_RADAR_ENABLED"  # default false
 NOTION_SAINT_DATABASE_ID = "NOTION_SAINT_DATABASE_ID"  # optional explicit saint radar database id
 NOTION_SAINT_DATABASE_NAME = "NOTION_SAINT_DATABASE_NAME"  # default Saint Radar
 NOTION_SAINT_PARENT_PAGE_ID = "NOTION_SAINT_PARENT_PAGE_ID"  # optional explicit parent page id for database creation
 NOTION_SAINT_TITLE_PROPERTY = "NOTION_SAINT_TITLE_PROPERTY"  # default Name
 NOTION_SAINT_FEAST_DAY_PROPERTY = "NOTION_SAINT_FEAST_DAY_PROPERTY"  # default Feast Day
-NOTION_SAINT_CELEBRATION_PROPERTY = "NOTION_SAINT_CELEBRATION_PROPERTY"  # default Celebration Type
+NOTION_SAINT_CELEBRATION_PROPERTY = "NOTION_SAINT_CELEBRATION_PROPERTY"  # default Celebration Rank
+NOTION_SAINT_PRECEDENCE_PROPERTY = "NOTION_SAINT_PRECEDENCE_PROPERTY"  # default Precedence
 NOTION_SAINT_BACKGROUND_PROPERTY = "NOTION_SAINT_BACKGROUND_PROPERTY"  # default Background
 NOTION_SAINT_REFRESH_ALL = "NOTION_SAINT_REFRESH_ALL"  # default false; true regenerates all saint content each run
+NOTION_SAINT_INCLUDE_CALENDAR_DAYS = "NOTION_SAINT_INCLUDE_CALENDAR_DAYS"  # default false
 
 NOVENA_AUDIO_ENABLED = "NOVENA_AUDIO_ENABLED"  # default false
 NOVENA_AUDIO_MODEL = "NOVENA_AUDIO_MODEL"  # default gpt-4o-mini-tts
@@ -47,6 +51,12 @@ NOVENA_AUDIO_SPEED = "NOVENA_AUDIO_SPEED"  # default 1.0
 NOVENA_AUDIO_CAPTION = "NOVENA_AUDIO_CAPTION"  # default Daily Novena Prayer (Audio)
 NOVENA_AUDIO_FAIL_OPEN = "NOVENA_AUDIO_FAIL_OPEN"  # default true
 NOVENA_AUDIO_MARKER = "[AUTOGEN_NOVENA_AUDIO]"
+NOVENA_SECTION_MARKER = "[AUTOGEN_DAILY_ROLLING_NOVENA]"
+USCCB_SECTION_MARKER = "[AUTOGEN_USCCB_READINGS]"
+
+USCCB_READINGS_ENABLED = "USCCB_READINGS_ENABLED"  # default true
+USCCB_READINGS_FAIL_OPEN = "USCCB_READINGS_FAIL_OPEN"  # default true
+USCCB_READINGS_BASE_URL = "USCCB_READINGS_BASE_URL"  # default https://bible.usccb.org/bible/readings
 
 
 def require_env(name: str) -> str:
@@ -207,7 +217,8 @@ def notion_create_saint_radar_database(parent: Dict[str, Any], token: str, db_na
         "properties": {
             "Name": {"title": {}},
             "Feast Day": {"date": {}},
-            "Celebration Type": {"select": {"options": []}},
+            "Celebration Rank": {"select": {"options": []}},
+            "Precedence": {"rich_text": {}},
             "Background": {"rich_text": {}},
         },
     }
@@ -294,6 +305,46 @@ def notion_append_children(parent_id: str, children: Sequence[Dict[str, Any]], t
         notion_call("PATCH", f"https://api.notion.com/v1/blocks/{parent_id}/children", token, {"children": batch})
 
 
+def block_rich_text_plain(block: Dict[str, Any]) -> str:
+    block_type = str(block.get("type", "")).strip()
+    payload = block.get(block_type) or {}
+    rich = payload.get("rich_text") or []
+    if not isinstance(rich, list):
+        return ""
+    parts: List[str] = []
+    for item in rich:
+        if not isinstance(item, dict):
+            continue
+        plain = str(item.get("plain_text", "")).strip()
+        if plain:
+            parts.append(plain)
+    return " ".join(parts).strip()
+
+
+def notion_remove_old_autogen_sections(page_id: str, token: str) -> int:
+    return notion_remove_old_autogen_sections_by_markers(
+        page_id,
+        token,
+        markers=[NOVENA_SECTION_MARKER, USCCB_SECTION_MARKER],
+    )
+
+
+def notion_remove_old_autogen_sections_by_markers(page_id: str, token: str, markers: Sequence[str]) -> int:
+    removed = 0
+    marker_set = [m for m in markers if str(m or "").strip()]
+    if not marker_set:
+        return 0
+    for block in notion_list_block_children(page_id, token):
+        block_id = str(block.get("id", "")).strip()
+        if not block_id:
+            continue
+        title = block_rich_text_plain(block)
+        if any(marker in title for marker in marker_set):
+            notion_archive_block(block_id, token)
+            removed += 1
+    return removed
+
+
 def notion_replace_page_blocks(page_id: str, children: Sequence[Dict[str, Any]], token: str) -> None:
     existing = notion_list_block_children(page_id, token)
     for block in existing:
@@ -329,8 +380,114 @@ def prayer_to_paragraph_blocks(text: str) -> List[Dict[str, Any]]:
     return blocks
 
 
-def notion_replace_page_content(page_id: str, text: str, token: str) -> None:
-    notion_replace_page_blocks(page_id, prayer_to_paragraph_blocks(text), token)
+def _strip_html_tags(text: str) -> str:
+    return re.sub(r"(?is)<[^>]+>", "", text or "")
+
+
+def _clean_html_fragment(text: str) -> str:
+    cleaned = str(text or "")
+    cleaned = re.sub(r"(?is)<br\s*/?>", "\n", cleaned)
+    cleaned = re.sub(r"(?is)</p\s*>", "\n\n", cleaned)
+    cleaned = re.sub(r"(?is)<p[^>]*>", "", cleaned)
+    cleaned = _strip_html_tags(cleaned)
+    cleaned = html.unescape(cleaned).replace("\xa0", " ")
+    cleaned = re.sub(r"\r\n?", "\n", cleaned)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned)
+    lines = [line.rstrip() for line in cleaned.split("\n")]
+    return "\n".join(lines).strip()
+
+
+def usccb_daily_readings_url(day: datetime.date) -> str:
+    slug = day.strftime("%m%d%y")
+    base_url = os.getenv(USCCB_READINGS_BASE_URL, "https://bible.usccb.org/bible/readings").strip()
+    base_url = (base_url or "https://bible.usccb.org/bible/readings").rstrip("/")
+    return f"{base_url}/{slug}.cfm"
+
+
+def fetch_usccb_daily_readings(day: datetime.date) -> Dict[str, Any]:
+    url = usccb_daily_readings_url(day)
+    response = requests.get(url, timeout=30)
+    response.raise_for_status()
+    html_text = response.text
+
+    liturgical_day = ""
+    lectionary = ""
+    header_match = re.search(
+        r"(?is)<div[^>]*class=\"innerblock\"[^>]*>.*?<h2[^>]*>\s*(.*?)\s*</h2>.*?"
+        r"<p>\s*Lectionary:\s*(.*?)\s*</p>.*?</div>",
+        html_text,
+    )
+    if header_match:
+        liturgical_day = _clean_html_fragment(header_match.group(1))
+        lectionary = _clean_html_fragment(header_match.group(2))
+
+    sections: List[Dict[str, str]] = []
+    pattern = re.compile(
+        r'(?is)<div[^>]*class="content-header"[^>]*>.*?<h3[^>]*class="name"[^>]*>\s*(.*?)\s*</h3>.*?'
+        r'<div[^>]*class="address"[^>]*>\s*(.*?)\s*</div>.*?</div>\s*'
+        r'<div[^>]*class="content-body"[^>]*>\s*(.*?)\s*</div>'
+    )
+    for match in pattern.finditer(html_text):
+        title = _clean_html_fragment(match.group(1))
+        reference = _clean_html_fragment(match.group(2))
+        body = _clean_html_fragment(match.group(3))
+        if title and body:
+            sections.append({"title": title, "reference": reference, "text": body})
+
+    if not sections:
+        raise RuntimeError("Could not parse USCCB readings sections from page.")
+
+    return {"url": url, "liturgical_day": liturgical_day, "lectionary": lectionary, "sections": sections}
+
+
+def usccb_readings_blocks(readings: Dict[str, Any]) -> List[Dict[str, Any]]:
+    liturgical_day = str(readings.get("liturgical_day", "")).strip()
+    lectionary = str(readings.get("lectionary", "")).strip()
+    url = str(readings.get("url", "")).strip()
+    sections = readings.get("sections") or []
+
+    intro_children: List[Dict[str, Any]] = []
+    if liturgical_day:
+        intro_children.append(paragraph_block(f"Liturgical Day: {liturgical_day}"))
+    if lectionary:
+        intro_children.append(paragraph_block(f"Lectionary: {lectionary}"))
+    if url:
+        intro_children.append(paragraph_block(f"Source: {url}"))
+    blocks: List[Dict[str, Any]] = [toggle_block(f"USCCB Daily Mass Readings {USCCB_SECTION_MARKER}", intro_children)]
+
+    for section in sections:
+        if not isinstance(section, dict):
+            continue
+        title = str(section.get("title", "")).strip() or "Reading"
+        reference = str(section.get("reference", "")).strip()
+        body_text = str(section.get("text", "")).strip()
+        section_children: List[Dict[str, Any]] = []
+        if reference:
+            section_children.append(paragraph_block(reference))
+        for paragraph in [p.strip() for p in re.split(r"\n\s*\n", body_text) if p.strip()]:
+            for chunk in split_text_chunks(paragraph, 1800):
+                section_children.append(paragraph_block(chunk))
+        if section_children:
+            blocks.append(toggle_block(title, section_children))
+    return blocks
+
+
+def notion_replace_page_content(page_id: str, text: str, token: str, extra_blocks: Optional[Sequence[Dict[str, Any]]] = None) -> None:
+    blocks = prayer_to_paragraph_blocks(text)
+    if extra_blocks:
+        blocks.extend(list(extra_blocks))
+    notion_replace_page_blocks(page_id, blocks, token)
+
+
+def rolling_novena_blocks(prayer_text: str) -> List[Dict[str, Any]]:
+    children: List[Dict[str, Any]] = []
+    stanzas = [s.strip() for s in re.split(r"\n\s*\n", str(prayer_text or "").strip()) if s.strip()]
+    for stanza in stanzas:
+        for chunk in split_text_chunks(stanza, 1800):
+            children.append(paragraph_block(chunk))
+    if not children:
+        children = [paragraph_block("No prayer content generated.")]
+    return [toggle_block(f"Daily Rolling Novena {NOVENA_SECTION_MARKER}", children)]
 
 
 def notion_create_file_upload(filename: str, content_type: str, token: str) -> str:
@@ -415,26 +572,14 @@ def normalize_romcal_calendar(calendar: str) -> str:
     return aliases.get(value, value or "general_roman")
 
 
-def infer_celebration_type(event: Dict[str, Any]) -> str:
-    candidates = [
-        str(event.get("rank_name", "")).strip(),
-        str(event.get("rank", "")).strip(),
-        str(event.get("type", "")).strip(),
-        str(event.get("liturgicalCategory", "")).strip(),
-        str(event.get("category", "")).strip(),
-    ]
-    text = " ".join(x for x in candidates if x).lower()
-    mapping = [
-        ("optional memorial", "Optional Memorial"),
-        ("solemnity", "Solemnity"),
-        ("feast", "Feast"),
-        ("memorial", "Memorial"),
-        ("weekday", "Weekday"),
-    ]
-    for needle, label in mapping:
-        if needle in text:
-            return label
-    return "Celebration"
+def infer_celebration_rank(event: Dict[str, Any]) -> str:
+    # Keep Romcal rank as-is (for example: optional_memorial, memorial, feast, solemnity).
+    return str(event.get("rank_name", "")).strip() or str(event.get("rank", "")).strip() or "unknown"
+
+
+def infer_precedence(event: Dict[str, Any]) -> str:
+    # Keep Romcal precedence key as-is (for example: Precedence.optional_memorial_12).
+    return str(event.get("precedence", "")).strip() or "unknown"
 
 
 @lru_cache(maxsize=8)
@@ -453,6 +598,15 @@ def romcal_year_calendar(calendar: str, locale: str, year: int) -> Dict[str, Lis
     data = romcal.liturgical_calendar(year)
     if not isinstance(data, dict):
         raise RuntimeError("Romcal returned unexpected calendar format.")
+    return data
+
+
+@lru_cache(maxsize=16)
+def romcal_year_mass_calendar(calendar: str, locale: str, year: int) -> Dict[str, List[Any]]:
+    romcal = build_romcal(calendar, locale)
+    data = romcal.mass_calendar(year)
+    if not isinstance(data, dict):
+        raise RuntimeError("Romcal returned unexpected mass calendar format.")
     return data
 
 
@@ -511,21 +665,43 @@ def looks_like_saint(event: Dict[str, Any], name: str) -> bool:
 
 def romcal_fetch_day(calendar: str, locale: str, dt: datetime.date) -> List[Dict[str, Any]]:
     try:
-        cal = romcal_year_calendar(calendar, locale, dt.year)
-        events = cal.get(dt.isoformat(), []) or []
+        mass_cal = romcal_year_mass_calendar(calendar, locale, dt.year)
+        mass_events = mass_cal.get(dt.isoformat(), []) or []
     except Exception as exc:
         raise RuntimeError(
             f"Failed to fetch Romcal data for {dt.isoformat()} (calendar={normalize_romcal_calendar(calendar)}, locale={locale})"
         ) from exc
 
     out: List[Dict[str, Any]] = []
-    for event in events:
-        if hasattr(event, "model_dump"):
-            dumped = event.model_dump()
-            if isinstance(dumped, dict):
-                out.append(dumped)
-        elif isinstance(event, dict):
-            out.append(event)
+    if mass_events:
+        first = mass_events[0]
+        primary = first.model_dump() if hasattr(first, "model_dump") else (dict(first) if isinstance(first, dict) else {})
+        if isinstance(primary, dict) and primary:
+            primary["suppressed"] = False
+            out.append(primary)
+            optionals = primary.get("optional_celebrations") or []
+            if isinstance(optionals, list):
+                for opt in optionals:
+                    if not isinstance(opt, dict):
+                        continue
+                    row = dict(opt)
+                    row["suppressed"] = True
+                    row["date"] = dt.isoformat()
+                    out.append(row)
+    else:
+        # Fallback path if mass_calendar has no row for a date.
+        cal = romcal_year_calendar(calendar, locale, dt.year)
+        events = cal.get(dt.isoformat(), []) or []
+        for event in events:
+            if hasattr(event, "model_dump"):
+                dumped = event.model_dump()
+                if isinstance(dumped, dict):
+                    dumped["suppressed"] = False
+                    out.append(dumped)
+            elif isinstance(event, dict):
+                row = dict(event)
+                row["suppressed"] = False
+                out.append(row)
     return out
 
 
@@ -555,7 +731,9 @@ def collect_saints_window(
             row = {
                 "date": dt.isoformat(),
                 "name": name,
-                "celebration_type": infer_celebration_type(event),
+                "celebration_rank": infer_celebration_rank(event),
+                "precedence": infer_precedence(event),
+                "entry_kind": "saint",
             }
             fallback_names.append(row)
             if looks_like_saint(event, name):
@@ -564,6 +742,52 @@ def collect_saints_window(
     if saints:
         return saints
     return fallback_names
+
+
+def collect_calendar_days_window(
+    calendar: str,
+    locale: str,
+    start_date: datetime.date,
+    days: int,
+) -> List[Dict[str, str]]:
+    rows: List[Dict[str, str]] = []
+    seen = set()
+    for offset in range(days):
+        dt = start_date + datetime.timedelta(days=offset)
+        events = romcal_fetch_day(calendar, locale, dt)
+        if not events:
+            continue
+        primary = None
+        for ev in events:
+            if not isinstance(ev, dict):
+                continue
+            if not bool(ev.get("suppressed")):
+                primary = ev
+                break
+        if primary is None:
+            for ev in events:
+                if isinstance(ev, dict):
+                    primary = ev
+                    break
+        if not isinstance(primary, dict):
+            continue
+        name = celebration_name(primary)
+        if not name:
+            continue
+        key = (dt.isoformat(), name.lower())
+        if key in seen:
+            continue
+        seen.add(key)
+        rows.append(
+            {
+                "date": dt.isoformat(),
+                "name": name,
+                "celebration_rank": infer_celebration_rank(primary),
+                "precedence": infer_precedence(primary),
+                "entry_kind": "calendar_day",
+            }
+        )
+    return rows
 
 
 def format_saints_for_prompt(saints: Sequence[Dict[str, str]]) -> str:
@@ -586,19 +810,68 @@ def extract_saint_like_mentions(text: str) -> List[str]:
         r"\b(?:Saint|Saints|St\.)\s+[A-Z][A-Za-z'`\-]*(?:\s+[A-Z][A-Za-z'`\-]*){0,8}",
         flags=re.MULTILINE,
     )
-    return [m.group(0).strip() for m in pattern.finditer(str(text or ""))]
+    out: List[str] = []
+    for m in pattern.finditer(str(text or "")):
+        phrase = m.group(0).strip()
+        # Ignore generic headings like "Saints" with no actual name content.
+        tokens = re.findall(r"[A-Za-z'`\-]+", phrase)
+        if len(tokens) < 2:
+            continue
+        # Require at least one token after prefix that looks like a person name.
+        tail = tokens[1:]
+        if not any(len(t) >= 3 for t in tail):
+            continue
+        out.append(phrase)
+    return out
 
 
 def validate_mentions_against_romcal(text: str, saints: Sequence[Dict[str, str]]) -> List[str]:
     allowed = [normalize_name_for_match(str(row.get("name", ""))) for row in saints]
     allowed = [x for x in allowed if x]
+    allowed_tokens = set()
+    for a in allowed:
+        for t in a.split():
+            if len(t) >= 3:
+                allowed_tokens.add(t)
     mentions = extract_saint_like_mentions(text)
+    noise_tokens = {
+        "january",
+        "february",
+        "march",
+        "april",
+        "may",
+        "june",
+        "july",
+        "august",
+        "september",
+        "october",
+        "november",
+        "december",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    }
     invalid: List[str] = []
     for m in mentions:
         nm = normalize_name_for_match(m)
         if not nm:
             continue
+        nm_tokens = [t for t in nm.split() if len(t) >= 3]
+        # Drop generic prefix tokens.
+        nm_tokens = [t for t in nm_tokens if t not in {"saint", "saints"}]
+        nm_tokens = [t for t in nm_tokens if t not in noise_tokens]
+        # If nothing meaningful remains, ignore this mention.
+        if not nm_tokens:
+            continue
         if not any((nm in a) or (a in nm) for a in allowed):
+            # Secondary fuzzy check: significant overlap with known saint tokens.
+            overlap = [t for t in nm_tokens if t in allowed_tokens]
+            if len(overlap) >= 2:
+                continue
             invalid.append(m)
     # de-dup preserve order
     out: List[str] = []
@@ -620,6 +893,8 @@ def call_openai_litany(
     end_date: datetime.date,
 ) -> str:
     saint_list = format_saints_for_prompt(saints)
+    allowed_names = [str(row.get("name", "")).strip() for row in saints if str(row.get("name", "")).strip()]
+    allowed_names_text = "\n".join(f"- {name}" for name in allowed_names)
     system_prompt = (
         "ROLE\n"
         "You are a Catholic devotional writer who creates concise daily prayers based on the liturgical calendar."
@@ -663,13 +938,19 @@ def call_openai_litany(
         "6. End with a short section:\n"
         "Reflection\n\n"
         "Include 2-3 brief reflection questions about imitating the saints' virtues.\n\n"
+        "HARD CONSTRAINTS (MUST FOLLOW)\n"
+        "1) Use only saints explicitly listed in Upcoming Saints.\n"
+        "2) Use saint names exactly as written (no substitutions or alternate saints).\n"
+        "3) If no saint in Upcoming Saints matches Current Date, explicitly state that today's focus is preparation "
+        "for upcoming feasts and do not invent a saint for today.\n"
+        "4) Never add extra saint names not in the list.\n\n"
+        "Allowed Saint Names (exact):\n"
+        f"{allowed_names_text}\n\n"
         "STYLE\n"
         "- Concise and devotional\n"
         "- Faithful to Catholic teaching\n"
         "- Suitable for daily prayer\n"
         "- Future saints should be summarized briefly (one sentence each)\n"
-        "- Use only the saint names in the provided Upcoming Saints list.\n"
-        "- Do not add, infer, or mention any saint not explicitly listed.\n"
     )
     client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
 
@@ -967,7 +1248,12 @@ def find_target_notion_page(
     )
 
 
-def write_prayer_to_notion_page(page: Dict[str, Any], prayer_text: str, token: str) -> str:
+def write_prayer_to_notion_page(
+    page: Dict[str, Any],
+    prayer_text: str,
+    token: str,
+    extra_blocks: Optional[Sequence[Dict[str, Any]]] = None,
+) -> str:
     page_id = str(page.get("id", "")).strip()
     if not page_id:
         raise RuntimeError("Target Notion page has no id.")
@@ -978,10 +1264,41 @@ def write_prayer_to_notion_page(page: Dict[str, Any], prayer_text: str, token: s
         ptype = str(prop.get("type", "")).strip()
         if ptype == "rich_text":
             notion_update_rich_text_property(page_id, output_property, prayer_text, token)
+            if extra_blocks:
+                return f"property:{output_property}:body_extra_skipped"
             return f"property:{output_property}"
 
-    notion_replace_page_content(page_id, prayer_text, token)
+    notion_replace_page_content(page_id, prayer_text, token, extra_blocks=extra_blocks)
     return "page_content"
+
+
+def parse_saint_radar_db_id(sync_mode: str) -> str:
+    # Format: "<created|existing>:<db_id>:upserted=...:..."
+    parts = [p.strip() for p in str(sync_mode or "").split(":") if p.strip()]
+    if len(parts) >= 2 and parts[0] in {"created", "existing"}:
+        return parts[1]
+    return ""
+
+
+def find_saint_radar_page(
+    database_id: str,
+    token: str,
+    title_property: str,
+    feast_day_property: str,
+    saint_name: str,
+    feast_day: str,
+) -> Optional[Dict[str, Any]]:
+    pages = notion_get_all_pages(database_id, token)
+    wanted_name = saint_name.strip().lower()
+    wanted_day = feast_day.strip()
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        p_name = page_title(page, title_property).strip().lower()
+        p_day = page_date(page, feast_day_property).strip()
+        if p_name == wanted_name and p_day == wanted_day:
+            return page
+    return None
 
 
 def notion_create_page(database_id: str, properties: Dict[str, Any], token: str) -> None:
@@ -991,6 +1308,41 @@ def notion_create_page(database_id: str, properties: Dict[str, Any], token: str)
 
 def notion_update_page_properties(page_id: str, properties: Dict[str, Any], token: str) -> None:
     notion_call("PATCH", f"https://api.notion.com/v1/pages/{page_id}", token, {"properties": properties})
+
+
+def notion_property_type(database: Dict[str, Any], prop_name: str) -> str:
+    props = database.get("properties") or {}
+    prop = props.get(prop_name) or {}
+    return str(prop.get("type", "")).strip()
+
+
+def normalize_prop_key(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(name or "").lower())
+
+
+def notion_resolve_property_name(database: Dict[str, Any], preferred: str, aliases: Sequence[str]) -> str:
+    props = database.get("properties") or {}
+    if preferred in props:
+        return preferred
+    wanted = {normalize_prop_key(preferred)} | {normalize_prop_key(a) for a in aliases}
+    for key in props.keys():
+        if normalize_prop_key(str(key)) in wanted:
+            return str(key)
+    return preferred
+
+
+def notion_scalar_property_value(prop_type: str, value: str) -> Dict[str, Any]:
+    text = str(value or "").strip()
+    if prop_type == "select":
+        return {"select": {"name": text}} if text else {"select": None}
+    if prop_type == "rich_text":
+        return {"rich_text": [{"type": "text", "text": {"content": text}}]} if text else {"rich_text": []}
+    if prop_type == "title":
+        return {"title": [{"type": "text", "text": {"content": text}}]} if text else {"title": []}
+    if prop_type == "url":
+        return {"url": text}
+    # Fallback to rich_text for unsupported scalar fields.
+    return {"rich_text": [{"type": "text", "text": {"content": text}}]} if text else {"rich_text": []}
 
 
 def sync_saint_radar(
@@ -1007,7 +1359,8 @@ def sync_saint_radar(
 
     title_prop = os.getenv(NOTION_SAINT_TITLE_PROPERTY, "Name").strip() or "Name"
     feast_prop = os.getenv(NOTION_SAINT_FEAST_DAY_PROPERTY, "Feast Day").strip() or "Feast Day"
-    type_prop = os.getenv(NOTION_SAINT_CELEBRATION_PROPERTY, "Celebration Type").strip() or "Celebration Type"
+    rank_prop = os.getenv(NOTION_SAINT_CELEBRATION_PROPERTY, "Celebration Rank").strip() or "Celebration Rank"
+    precedence_prop = os.getenv(NOTION_SAINT_PRECEDENCE_PROPERTY, "Precedence").strip() or "Precedence"
     background_prop = os.getenv(NOTION_SAINT_BACKGROUND_PROPERTY, "Background").strip() or "Background"
     refresh_all = bool_env(NOTION_SAINT_REFRESH_ALL, default=False)
     db_name = os.getenv(NOTION_SAINT_DATABASE_NAME, "Saint Radar").strip() or "Saint Radar"
@@ -1037,6 +1390,16 @@ def sync_saint_radar(
         saint_db_id = notion_create_saint_radar_database(parent, notion_token, db_name)
         created = True
 
+    saint_db = notion_get_database(saint_db_id, notion_token)
+    rank_prop = notion_resolve_property_name(saint_db, rank_prop, ["celebration rank", "celebration type"])
+    precedence_prop = notion_resolve_property_name(
+        saint_db, precedence_prop, ["precedence", "precendence", "rank precedence"]
+    )
+    background_prop = notion_resolve_property_name(saint_db, background_prop, ["background"])
+    rank_prop_type = notion_property_type(saint_db, rank_prop)
+    precedence_prop_type = notion_property_type(saint_db, precedence_prop)
+    background_prop_type = notion_property_type(saint_db, background_prop)
+
     pages = notion_get_all_pages(saint_db_id, notion_token)
     existing: Dict[str, Dict[str, Any]] = {}
     for page in pages:
@@ -1050,27 +1413,32 @@ def sync_saint_radar(
     for row in saints:
         day = str(row.get("date", "")).strip()
         name = str(row.get("name", "")).strip()
-        celebration = str(row.get("celebration_type", "Celebration")).strip() or "Celebration"
+        celebration_rank = str(row.get("celebration_rank", "unknown")).strip() or "unknown"
+        precedence = str(row.get("precedence", "unknown")).strip() or "unknown"
+        entry_kind = str(row.get("entry_kind", "saint")).strip() or "saint"
         if not day or not name:
             continue
         key = f"{day}|{name.lower()}"
         base_props = {
             title_prop: {"title": [{"type": "text", "text": {"content": name}}]},
             feast_prop: {"date": {"start": day}},
-            type_prop: {"select": {"name": celebration}},
         }
+        if rank_prop_type:
+            base_props[rank_prop] = notion_scalar_property_value(rank_prop_type, celebration_rank)
+        if precedence_prop_type:
+            base_props[precedence_prop] = notion_scalar_property_value(precedence_prop_type, precedence)
         if key in existing:
             page_id = str(existing[key].get("id", "")).strip()
             if page_id:
                 notion_update_page_properties(page_id, base_props, notion_token)
-                if refresh_all:
+                if refresh_all and entry_kind == "saint":
                     background = call_openai_saint_background(
                         api_key=openai_key,
                         base_url=oai_base_url,
                         model=oai_model,
                         saint_name=name,
                         feast_day=day,
-                        celebration_type=celebration,
+                        celebration_type=celebration_rank,
                     )
                     devotional_payload = call_openai_saint_devotional_content(
                         api_key=openai_key,
@@ -1078,43 +1446,42 @@ def sync_saint_radar(
                         model=oai_model,
                         saint_name=name,
                         feast_day=day,
-                        celebration_type=celebration,
+                        celebration_type=celebration_rank,
                     )
                     bg_chunks = split_text_chunks(background, 1800)
                     notion_update_page_properties(
                         page_id,
-                        {background_prop: {"rich_text": [{"type": "text", "text": {"content": chunk}} for chunk in bg_chunks]}},
+                        {background_prop: notion_scalar_property_value(background_prop_type or "rich_text", "\n\n".join(bg_chunks))},
                         notion_token,
                     )
                     notion_replace_page_blocks(
                         page_id,
-                        saint_devotional_blocks(name, day, celebration, devotional_payload),
+                        saint_devotional_blocks(name, day, celebration_rank, devotional_payload),
                         notion_token,
                     )
                     regenerated += 1
                 upserted += 1
         else:
-            background = call_openai_saint_background(
-                api_key=openai_key,
-                base_url=oai_base_url,
-                model=oai_model,
-                saint_name=name,
-                feast_day=day,
-                celebration_type=celebration,
-            )
-            devotional_payload = call_openai_saint_devotional_content(
-                api_key=openai_key,
-                base_url=oai_base_url,
-                model=oai_model,
-                saint_name=name,
-                feast_day=day,
-                celebration_type=celebration,
-            )
-            bg_chunks = split_text_chunks(background, 1800)
             create_props = dict(base_props)
-            create_props[background_prop] = {
-                "rich_text": [{"type": "text", "text": {"content": chunk}} for chunk in bg_chunks]
-            }
+            if background_prop_type:
+                if entry_kind == "saint":
+                    background = call_openai_saint_background(
+                        api_key=openai_key,
+                        base_url=oai_base_url,
+                        model=oai_model,
+                        saint_name=name,
+                        feast_day=day,
+                        celebration_type=celebration_rank,
+                    )
+                    bg_chunks = split_text_chunks(background, 1800)
+                    create_props[background_prop] = notion_scalar_property_value(
+                        background_prop_type, "\n\n".join(bg_chunks)
+                    )
+                else:
+                    create_props[background_prop] = notion_scalar_property_value(
+                        background_prop_type,
+                        f"Primary liturgical celebration for {day}: {name}. Rank: {celebration_rank}. Precedence: {precedence}.",
+                    )
             notion_create_page(saint_db_id, create_props, notion_token)
             refreshed_pages = notion_get_all_pages(saint_db_id, notion_token)
             created_page = None
@@ -1124,10 +1491,18 @@ def sync_saint_radar(
                     break
             if created_page:
                 created_page_id = str(created_page.get("id", "")).strip()
-                if created_page_id:
+                if created_page_id and entry_kind == "saint":
+                    devotional_payload = call_openai_saint_devotional_content(
+                        api_key=openai_key,
+                        base_url=oai_base_url,
+                        model=oai_model,
+                        saint_name=name,
+                        feast_day=day,
+                        celebration_type=celebration_rank,
+                    )
                     notion_replace_page_blocks(
                         created_page_id,
-                        saint_devotional_blocks(name, day, celebration, devotional_payload),
+                        saint_devotional_blocks(name, day, celebration_rank, devotional_payload),
                         notion_token,
                     )
                     regenerated += 1
@@ -1192,48 +1567,135 @@ def main() -> int:
         notion_db_id = notion_find_database_id(notion_token)
         title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
         target_row_title = os.getenv(NOTION_NOVENA_ROW_TITLE, "Daily Novena Prayer").strip() or "Daily Novena Prayer"
+        write_daily_novena_page = bool_env(NOTION_WRITE_DAILY_NOVENA_PAGE, default=True)
 
         start_date = local_today()
         end_date = start_date + datetime.timedelta(days=window_days - 1)
         saints = collect_saints_window(romcal_calendar, romcal_locale, start_date, window_days)
         if not saints:
             raise RuntimeError("No celebrations found from Romcal for requested date window.")
+        saint_radar_rows: List[Dict[str, str]] = list(saints)
+        if bool_env(NOTION_SAINT_INCLUDE_CALENDAR_DAYS, default=False):
+            calendar_rows = collect_calendar_days_window(romcal_calendar, romcal_locale, start_date, window_days)
+            merged: Dict[str, Dict[str, str]] = {}
+            for row in saint_radar_rows:
+                key = f"{row.get('date','')}|{str(row.get('name','')).lower()}"
+                merged[key] = row
+            for row in calendar_rows:
+                key = f"{row.get('date','')}|{str(row.get('name','')).lower()}"
+                if key not in merged:
+                    merged[key] = row
+            saint_radar_rows = list(merged.values())
 
-        prayer_text = call_openai_litany(openai_key, oai_base_url, oai_model, saints, start_date, end_date)
-        if not prayer_text.strip():
-            raise RuntimeError("Generated prayer is empty.")
+        prayer_text = ""
+        if write_daily_novena_page:
+            prayer_text = call_openai_litany(openai_key, oai_base_url, oai_model, saints, start_date, end_date)
+            if not prayer_text.strip():
+                raise RuntimeError("Generated prayer is empty.")
 
-        pages = notion_get_all_pages(notion_db_id, notion_token)
-        target_page = find_target_notion_page(pages, title_property, target_row_title)
-        write_mode = write_prayer_to_notion_page(target_page, prayer_text, notion_token)
+        readings_blocks: List[Dict[str, Any]] = []
+        readings_mode = "disabled"
+        if bool_env(USCCB_READINGS_ENABLED, default=True):
+            try:
+                readings = fetch_usccb_daily_readings(start_date)
+                readings_blocks = usccb_readings_blocks(readings)
+                readings_mode = f"attached:{len(readings.get('sections') or [])}"
+            except Exception:
+                if bool_env(USCCB_READINGS_FAIL_OPEN, default=True):
+                    readings_mode = "error_ignored"
+                    readings_blocks = []
+                else:
+                    raise
+
         saint_radar_mode = sync_saint_radar(
             notion_token=notion_token,
             default_parent_database_id=notion_db_id,
-            default_parent_page_id=str(target_page.get("id", "")).strip(),
-            saints=saints,
+            default_parent_page_id="",
+            saints=saint_radar_rows,
             openai_key=openai_key,
             oai_base_url=oai_base_url,
             oai_model=oai_model,
         )
-        audio_mode = "disabled"
-        try:
-            audio_mode = maybe_generate_and_attach_audio(
-                page=target_page,
-                prayer_text=prayer_text,
-                notion_token=notion_token,
-                openai_key=openai_key,
-                oai_base_url=oai_base_url,
+        target_page: Optional[Dict[str, Any]] = None
+        write_mode = "skipped"
+        if write_daily_novena_page:
+            pages = notion_get_all_pages(notion_db_id, notion_token)
+            target_page = find_target_notion_page(pages, title_property, target_row_title)
+            write_mode = write_prayer_to_notion_page(
+                target_page,
+                prayer_text,
+                notion_token,
+                extra_blocks=readings_blocks,
             )
-        except Exception:
-            if bool_env(NOVENA_AUDIO_FAIL_OPEN, default=True):
-                audio_mode = "error_ignored"
+        else:
+            if not bool_env(NOTION_SAINT_RADAR_ENABLED, default=False):
+                raise RuntimeError(
+                    f"{NOTION_WRITE_DAILY_NOVENA_PAGE}=false requires {NOTION_SAINT_RADAR_ENABLED}=true."
+                )
+            saint_db_id = os.getenv(NOTION_SAINT_DATABASE_ID, "").strip() or parse_saint_radar_db_id(saint_radar_mode)
+            if not saint_db_id:
+                raise RuntimeError("Could not resolve Saint Radar database id for daily write target.")
+            saint_title_prop = os.getenv(NOTION_SAINT_TITLE_PROPERTY, "Name").strip() or "Name"
+            saint_day_prop = os.getenv(NOTION_SAINT_FEAST_DAY_PROPERTY, "Feast Day").strip() or "Feast Day"
+            today_iso = start_date.isoformat()
+            todays_all = [r for r in saint_radar_rows if str(r.get("date", "")).strip() == today_iso]
+            todays_calendar = [r for r in todays_all if str(r.get("entry_kind", "")).strip() == "calendar_day"]
+            todays = todays_calendar if todays_calendar else [r for r in todays_all if str(r.get("entry_kind", "")).strip() == "saint"]
+            if not todays:
+                write_mode = "saint_radar_readings_append:skipped:no_today_saints"
+            elif not readings_blocks:
+                write_mode = "saint_radar_readings_append:skipped:no_readings"
             else:
-                raise
+                updated = 0
+                removed_total = 0
+                for row in todays:
+                    chosen_name = str(row.get("name", "")).strip()
+                    chosen_day = str(row.get("date", "")).strip()
+                    target_page = find_saint_radar_page(
+                        database_id=saint_db_id,
+                        token=notion_token,
+                        title_property=saint_title_prop,
+                        feast_day_property=saint_day_prop,
+                        saint_name=chosen_name,
+                        feast_day=chosen_day,
+                    )
+                    if not target_page:
+                        continue
+                    page_id = str(target_page.get("id", "")).strip()
+                    if not page_id:
+                        continue
+                    removed = notion_remove_old_autogen_sections_by_markers(
+                        page_id,
+                        notion_token,
+                        markers=[USCCB_SECTION_MARKER],
+                    )
+                    notion_append_children(page_id, readings_blocks, notion_token)
+                    updated += 1
+                    removed_total += removed
+                write_mode = (
+                    f"saint_radar_readings_append:today={len(todays_all)}:selected={len(todays)}:updated={updated}:"
+                    f"removed={removed_total}:added={len(readings_blocks)}"
+                )
+        audio_mode = "disabled"
+        if target_page and write_daily_novena_page:
+            try:
+                audio_mode = maybe_generate_and_attach_audio(
+                    page=target_page,
+                    prayer_text=prayer_text,
+                    notion_token=notion_token,
+                    openai_key=openai_key,
+                    oai_base_url=oai_base_url,
+                )
+            except Exception:
+                if bool_env(NOVENA_AUDIO_FAIL_OPEN, default=True):
+                    audio_mode = "error_ignored"
+                else:
+                    raise
 
         print(
             f"SUMMARY notion_db={notion_db_id} target_title={target_row_title} "
             f"saints_count={len(saints)} window_days={window_days} write_mode={write_mode} "
-            f"audio_mode={audio_mode} saint_radar_mode={saint_radar_mode}"
+            f"audio_mode={audio_mode} readings_mode={readings_mode} saint_radar_mode={saint_radar_mode}"
         )
         print(
             f"INFO romcal_calendar={romcal_calendar} locale={romcal_locale} "

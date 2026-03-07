@@ -36,13 +36,16 @@ jobs:
           NOTION_TITLE_PROPERTY: Name
           NOTION_NOVENA_ROW_TITLE: Daily Novena Prayer
           NOTION_NOVENA_PROPERTY: ""
+          NOTION_WRITE_DAILY_NOVENA_PAGE: "false"
           NOTION_SAINT_RADAR_ENABLED: "true"
           NOTION_SAINT_DATABASE_ID: 31a19eee-5051-81a7-bd14-f9f899d1d442
-          NOTION_SAINT_DATABASE_NAME: Saint Radar
+          NOTION_SAINT_DATABASE_NAME: Liturgical Calendar
           NOTION_SAINT_TITLE_PROPERTY: Name
           NOTION_SAINT_FEAST_DAY_PROPERTY: Feast Day
-          NOTION_SAINT_CELEBRATION_PROPERTY: Celebration Type
+          NOTION_SAINT_CELEBRATION_PROPERTY: Celebration Rank
+          NOTION_SAINT_PRECEDENCE_PROPERTY: Precedence
           NOTION_SAINT_BACKGROUND_PROPERTY: Background
+          NOTION_SAINT_INCLUDE_CALENDAR_DAYS: "false"
           NOTION_SAINT_REFRESH_ALL: "false"
           NOVENA_AUDIO_ENABLED: "true"
           NOVENA_AUDIO_MODEL: gpt-4o-mini-tts
@@ -51,4 +54,7 @@ jobs:
           NOVENA_AUDIO_SPEED: "1.0"
           NOVENA_AUDIO_CAPTION: Daily Novena Prayer (Audio)
           NOVENA_AUDIO_FAIL_OPEN: "true"
+          USCCB_READINGS_ENABLED: "true"
+          USCCB_READINGS_FAIL_OPEN: "true"
+          USCCB_READINGS_BASE_URL: https://bible.usccb.org/bible/readings
         run: python jobs/novena/generate_daily_novena_prayer.py

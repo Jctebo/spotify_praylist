@@ -33,8 +33,8 @@ if (-not $RefreshToken) { $RefreshToken = Read-Host "SPOTIFY_REFRESH_TOKEN" }
 $env:SPOTIFY_CLIENT_ID = $ClientId
 $env:SPOTIFY_CLIENT_SECRET = $ClientSecret
 $env:SPOTIFY_REFRESH_TOKEN = $RefreshToken
-$env:SPOTIFY_CONFIG_FILE = "config/playlist_config.json"
-$env:SPOTIFY_NOTION_SYNC_CONFIG = "config/notion_spotify_sync_config.json"
+$env:SPOTIFY_REFRESH_CONFIG_SOURCE = "notion"
+$env:SPOTIFY_ENABLE_URI_AUTOSYNC = "false"
 
 if ($NotionToken) { $env:NOTION_TOKEN = $NotionToken }
 if ($NotionDatabaseId) { $env:NOTION_DATABASE_ID = $NotionDatabaseId }
@@ -49,30 +49,26 @@ if (-not $env:NOTION_TOKEN -or -not $env:NOTION_DATABASE_ID) {
   Write-Host "WARNING: NOTION_TOKEN and/or NOTION_DATABASE_ID not set. Notion URI sync will be skipped." -ForegroundColor Yellow
 }
 
-$configPath = Join-Path $PSScriptRoot "..\\config\\playlist_config.json"
-if (-not (Test-Path -Path $configPath)) {
-  throw "Missing config file: $configPath"
-}
-
-$config = Get-Content -Raw -Path $configPath | ConvertFrom-Json
-$jobs = @()
-foreach ($prop in $config.profiles.PSObject.Properties) {
-  $profileName = [string]$prop.Name
-  $playlistId = [string]$prop.Value.playlist_id
-  if (-not [string]::IsNullOrWhiteSpace($playlistId)) {
-    $jobs += @{ profile = $profileName; playlist_id = $playlistId }
-  }
-}
-if ($jobs.Count -eq 0) {
-  throw "No profiles with playlist_id found in $configPath"
-}
+$jobs = @(
+  @{ profile = "morning"; env_name = "SPOTIFY_PLAYLIST_ID_MORNING" },
+  @{ profile = "midday"; env_name = "SPOTIFY_PLAYLIST_ID_MIDDAY" },
+  @{ profile = "night"; env_name = "SPOTIFY_PLAYLIST_ID_NIGHT" }
+)
 
 foreach ($job in $jobs) {
+  $playlistId = [Environment]::GetEnvironmentVariable([string]$job.env_name, "Process")
+  if ([string]::IsNullOrWhiteSpace($playlistId)) {
+    $playlistId = [Environment]::GetEnvironmentVariable([string]$job.env_name, "User")
+  }
+  if ([string]::IsNullOrWhiteSpace($playlistId)) {
+    Write-Host "Skipping profile=$($job.profile). Missing env $($job.env_name)." -ForegroundColor Yellow
+    continue
+  }
   $env:SPOTIFY_PLAYLIST_PROFILE = [string]$job.profile
-  $env:SPOTIFY_PLAYLIST_ID = [string]$job.playlist_id
+  $env:SPOTIFY_PLAYLIST_ID = [string]$playlistId
 
   Write-Host ""
-  Write-Host "Running daily refresh profile=$($job.profile) playlist_id=$($job.playlist_id)"
+  Write-Host "Running daily refresh profile=$($job.profile) playlist_id=$($playlistId)"
   py -3 jobs/playlist/refresh_playlist.py
   if ($LASTEXITCODE -ne 0) {
     throw "jobs/playlist/refresh_playlist.py failed for profile '$($job.profile)'"

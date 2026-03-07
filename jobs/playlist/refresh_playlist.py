@@ -27,7 +27,9 @@ SPOTIFY_USER_ID = "SPOTIFY_USER_ID"
 # Optional selector for which playlist profile to build into SPOTIFY_PLAYLIST_ID.
 SPOTIFY_PLAYLIST_PROFILE = "SPOTIFY_PLAYLIST_PROFILE"  # morning|midday|night, default morning
 SPOTIFY_CONFIG_FILE = "SPOTIFY_CONFIG_FILE"  # optional, defaults to config/playlist_config.json
+SPOTIFY_REFRESH_CONFIG_SOURCE = "SPOTIFY_REFRESH_CONFIG_SOURCE"  # notion|file, default notion
 SPOTIFY_NOTION_SYNC_CONFIG = "SPOTIFY_NOTION_SYNC_CONFIG"  # optional, defaults to config/notion_spotify_sync_config.json
+SPOTIFY_ENABLE_URI_AUTOSYNC = "SPOTIFY_ENABLE_URI_AUTOSYNC"  # default false
 JOB_UTC_OFFSET = "JOB_UTC_OFFSET"  # optional override for runtime offset, e.g. -06:00
 
 # Optional Notion URI sync.
@@ -40,6 +42,11 @@ NOTION_PLATFORM_SPOTIFY_VALUE = "NOTION_PLATFORM_SPOTIFY_VALUE"  # defaults to s
 NOTION_PLATFORM_NOSYNC_VALUE = "NOTION_PLATFORM_NOSYNC_VALUE"  # defaults to spotify-nosync
 NOTION_URI_PROPERTY = "NOTION_URI_PROPERTY"  # defaults to URI
 NOTION_URI_LOG_LIMIT = "NOTION_URI_LOG_LIMIT"  # defaults to 25
+NOTION_QUEUE_PROFILE_PROPERTY = "NOTION_QUEUE_PROFILE_PROPERTY"  # defaults to Playlist Profile
+NOTION_QUEUE_ORDER_PROPERTY = "NOTION_QUEUE_ORDER_PROPERTY"  # defaults to Playlist Order
+NOTION_QUEUE_RESOLVER_PROPERTY = "NOTION_QUEUE_RESOLVER_PROPERTY"  # defaults to Spotify Resolver
+NOTION_QUEUE_FALLBACK_PROPERTY = "NOTION_QUEUE_FALLBACK_PROPERTY"  # defaults to Spotify Fallback Resolver
+NOTION_QUEUE_ENABLED_PROPERTY = "NOTION_QUEUE_ENABLED_PROPERTY"  # defaults to Enabled
 
 
 MARKETS_TO_TRY = ["US", None, "GB", "CA", "AU"]
@@ -48,12 +55,54 @@ DEFAULT_UTC_OFFSET = "-06:00"
 DEPRECATED_TIMESYNC_PLATFORM_VALUE = "spotify timesync"
 RUNTIME_TZ = datetime.timezone(datetime.timedelta(hours=-6))
 
+DEFAULT_SHOWS = {
+    "DIVINE_OFFICE": "70ydTdzunoqWAsvutFIkHM",
+    "DTH": "4SYYL51uogYDtHxDPznYP1",
+    "STH": "5MvuGtXFIbfej3dz8cKBVp",
+    "BARRON_ROSARY": "0aWJbTYTENolXYpBDSgzcH",
+    "LBS_EXEGESIS": "753FVUsio4Y6GjFvbGpvF0",
+    "DAILY_MASS_READINGS": "3IANujvjklSBVf6ioZd03N",
+    "DAILY_TV_MASS": "2WwFQr9a6BX7YQ4pkoIijp",
+    "MORNING_PRAYER_MONTHLY": "3oP4SunSyZhwX7GUWw3HcR",
+    "FRMIKE_SUNDAY": "1CK5AHgLneCo2sE17UOfdV",
+    "BARRON_SUNDAY": "5G6vtvZBIQMpQ8TLgXLBiK",
+    "SAINT_OF_DAY": "1skJeU3tBmO7ftJ2ugNyYd",
+    "BIBLE_IN_A_YEAR": "4Pppt42NPK2XzKwNIoW7BR",
+}
+DEFAULT_FIXED = {
+    "ANGELUS_SONG": "spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
+    "ANGELUS_POD": "spotify:episode:2HNK8wLRWHh0mJ9xmJjlUD",
+    "DAILY_EXAMEN_LABOR": "spotify:episode:6QhBBdf8ZHx4bZu3prT59i",
+    "DAILY_EXAMEN_PARENTS": "spotify:episode:14Fx8ZOSRANeKVGXuYMudc",
+    "NIGHT_PRE_COMPLINE": "spotify:episode:1I8pCawzp1Wd5pE0NcHmUj",
+    "FRIDAY_STATIONS": "spotify:episode:4rZ8YJKq1iuqiypu3Q5TRm",
+}
+DEFAULT_TOKENS: Dict[str, Any] = {
+    "AUXILIUM": "Auxilium Christianorum",
+    "STH_LAUDS": "Lauds",
+    "STH_VESPERS": "Vespers",
+    "DO_MORNING": "Morning Prayer",
+    "DO_OFFICE": "Office of Readings",
+    "DO_MIDMORNING": "Midmorning Prayer",
+    "DO_MIDDAY": "Midday Prayer",
+    "DO_MIDAFTERNOON": "Midafternoon Prayer",
+    "DO_EVENING": ["Evening Prayer", "Vespers"],
+    "DO_NIGHT_ANY": ["Night Prayer", "Compline"],
+}
+
 
 def require_env(name: str) -> str:
     value = os.getenv(name, "").strip()
     if not value:
         raise RuntimeError(f"Missing required environment variable: {name}")
     return value
+
+
+def bool_env(name: str, default: bool) -> bool:
+    raw = os.getenv(name, "").strip().lower()
+    if not raw:
+        return default
+    return raw in {"1", "true", "yes", "y", "on"}
 
 
 def load_playlist_config() -> Dict[str, Any]:
@@ -80,6 +129,18 @@ def load_playlist_config() -> Dict[str, Any]:
     return cfg
 
 
+def load_playlist_config_optional() -> Dict[str, Any]:
+    config_path = os.getenv(SPOTIFY_CONFIG_FILE, "config/playlist_config.json").strip() or "config/playlist_config.json"
+    if not os.path.exists(config_path):
+        return {}
+    try:
+        with open(config_path, "r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+        return payload if isinstance(payload, dict) else {}
+    except Exception:
+        return {}
+
+
 def parse_utc_offset(offset_text: str) -> datetime.timezone:
     text = (offset_text or "").strip()
     match = re.fullmatch(r"([+-])(\d{1,2})(?::?(\d{2}))?", text)
@@ -94,9 +155,10 @@ def parse_utc_offset(offset_text: str) -> datetime.timezone:
     return datetime.timezone(delta)
 
 
-def set_runtime_timezone(cfg: Dict[str, Any]) -> None:
+def set_runtime_timezone(cfg: Optional[Dict[str, Any]] = None) -> None:
     global RUNTIME_TZ
-    raw = os.getenv(JOB_UTC_OFFSET, "").strip() or str(cfg.get("utc_offset", DEFAULT_UTC_OFFSET)).strip() or DEFAULT_UTC_OFFSET
+    cfg_map = cfg if isinstance(cfg, dict) else {}
+    raw = os.getenv(JOB_UTC_OFFSET, "").strip() or str(cfg_map.get("utc_offset", DEFAULT_UTC_OFFSET)).strip() or DEFAULT_UTC_OFFSET
     RUNTIME_TZ = parse_utc_offset(raw)
 
 
@@ -254,6 +316,28 @@ def page_property_text(page: Dict[str, Any], property_name: str) -> str:
     return ""
 
 
+def page_property_number(page: Dict[str, Any], property_name: str) -> Optional[float]:
+    props = page.get("properties") or {}
+    prop = props.get(property_name) or {}
+    ptype = str(prop.get("type", "")).strip()
+    if ptype != "number":
+        return None
+    value = prop.get("number")
+    try:
+        return float(value) if value is not None else None
+    except Exception:
+        return None
+
+
+def page_property_checkbox(page: Dict[str, Any], property_name: str) -> Optional[bool]:
+    props = page.get("properties") or {}
+    prop = props.get(property_name) or {}
+    ptype = str(prop.get("type", "")).strip()
+    if ptype != "checkbox":
+        return None
+    return bool(prop.get("checkbox"))
+
+
 def page_uri_value(page: Dict[str, Any], uri_property: str) -> Optional[str]:
     props = page.get("properties") or {}
     prop = props.get(uri_property) or {}
@@ -277,6 +361,36 @@ def notion_update_uri(page_id: str, page: Dict[str, Any], uri_property: str, uri
     else:
         body = {"properties": {uri_property: {"rich_text": [{"type": "text", "text": {"content": uri[:2000]}}]}}}
     notion_call("PATCH", f"https://api.notion.com/v1/pages/{page_id}", token, body)
+
+
+def normalize_profile_token(text: str) -> str:
+    raw = normalize_text(text)
+    if raw in {"day", "morning"}:
+        return "morning"
+    if raw in {"midday", "noon"}:
+        return "midday"
+    if raw in {"night", "evening"}:
+        return "night"
+    if raw == "any":
+        return "any"
+    return ""
+
+
+def parse_profile_set(text: str) -> List[str]:
+    value = str(text or "")
+    if not value.strip():
+        return []
+    tokens = re.split(r"[,/|;]+|\s{2,}", value)
+    out: List[str] = []
+    for tok in tokens:
+        normalized = normalize_profile_token(tok)
+        if normalized and normalized not in out:
+            out.append(normalized)
+    if not out:
+        normalized = normalize_profile_token(value)
+        if normalized:
+            out.append(normalized)
+    return out
 
 
 def load_notion_match_terms_by_name() -> Dict[str, List[str]]:
@@ -1078,6 +1192,125 @@ def resolve_item_uri(
     return None
 
 
+def resolve_spec_uri(
+    sp: spotipy.Spotify,
+    spec: str,
+    weekday: str,
+    status: Dict[str, bool],
+    shows_cfg: Dict[str, Any],
+    fixed_cfg: Dict[str, Any],
+    tokens_cfg: Dict[str, Any],
+) -> Optional[str]:
+    raw = str(spec or "").strip()
+    if not raw:
+        return None
+    if raw.startswith("spotify:"):
+        status[f"Fixed URI:{raw}"] = True
+        return raw
+    key = re.sub(r"[^A-Za-z0-9]+", "_", raw).strip("_").upper()
+    if not key:
+        return None
+    return resolve_item_uri(sp, key, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
+
+
+def load_resolver_runtime_config(cfg: Dict[str, Any]) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
+    profiles_cfg = cfg.get("profiles") if isinstance(cfg.get("profiles"), dict) else {}
+    shows_cfg = cfg.get("shows") if isinstance(cfg.get("shows"), dict) else DEFAULT_SHOWS
+    fixed_cfg = cfg.get("fixed") if isinstance(cfg.get("fixed"), dict) else DEFAULT_FIXED
+    tokens_cfg = cfg.get("tokens") if isinstance(cfg.get("tokens"), dict) else DEFAULT_TOKENS
+    return profiles_cfg, shows_cfg, fixed_cfg, tokens_cfg
+
+
+def build_queue_for_profile_from_notion(
+    sp: spotipy.Spotify,
+    profile_name: str,
+    weekday: str,
+    status: Dict[str, bool],
+    shows_cfg: Dict[str, Any],
+    fixed_cfg: Dict[str, Any],
+    tokens_cfg: Dict[str, Any],
+) -> List[str]:
+    token = require_env(NOTION_TOKEN)
+    database_id = os.getenv(NOTION_DATABASE_ID, "").strip()
+    if not database_id:
+        db_name = os.getenv(NOTION_DATABASE_NAME, "Opus Dei").strip() or "Opus Dei"
+        database_id = notion_find_database_id(token, db_name) or ""
+    if not database_id:
+        raise RuntimeError("Notion database not found. Set NOTION_DATABASE_ID or share database with integration.")
+
+    title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
+    platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
+    profile_property = os.getenv(NOTION_QUEUE_PROFILE_PROPERTY, "Playlist Profile").strip() or "Playlist Profile"
+    order_property = os.getenv(NOTION_QUEUE_ORDER_PROPERTY, "Playlist Order").strip() or "Playlist Order"
+    resolver_property = os.getenv(NOTION_QUEUE_RESOLVER_PROPERTY, "Spotify Resolver").strip() or "Spotify Resolver"
+    fallback_property = os.getenv(NOTION_QUEUE_FALLBACK_PROPERTY, "Spotify Fallback Resolver").strip() or "Spotify Fallback Resolver"
+    enabled_property = os.getenv(NOTION_QUEUE_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
+    uri_property = os.getenv(NOTION_URI_PROPERTY, "URI").strip() or "URI"
+
+    platform_value = normalize_text(os.getenv(NOTION_PLATFORM_SPOTIFY_VALUE, "spotify").strip() or "spotify")
+    nosync_value = normalize_text(os.getenv(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync").strip() or "spotify-nosync")
+    pages = notion_get_all_pages(database_id, token)
+
+    entries: List[Dict[str, Any]] = []
+    for page in pages:
+        platform_text = normalize_text(page_property_text(page, platform_property))
+        if nosync_value and nosync_value in platform_text:
+            continue
+        if DEPRECATED_TIMESYNC_PLATFORM_VALUE in platform_text:
+            continue
+        if platform_value and platform_value not in platform_text:
+            continue
+
+        enabled = page_property_checkbox(page, enabled_property)
+        if enabled is False:
+            continue
+
+        row_profiles = parse_profile_set(page_property_text(page, profile_property))
+        if not row_profiles:
+            # Fallback: infer from platform text if profile property is missing.
+            row_profiles = [p for p in ("morning", "midday", "night") if p in platform_text]
+        if not row_profiles:
+            row_profiles = ["any"]
+        if "any" not in row_profiles and profile_name not in row_profiles:
+            continue
+
+        title = page_title(page, title_property).strip()
+        resolver = page_property_text(page, resolver_property).strip()
+        fallback = page_property_text(page, fallback_property).strip()
+        direct_uri = (page_uri_value(page, uri_property) or "").strip()
+        order_num = page_property_number(page, order_property)
+        order_value = int(order_num) if order_num is not None else 9999
+        if not resolver and direct_uri.startswith("spotify:"):
+            resolver = direct_uri
+        if not resolver:
+            continue
+        entries.append(
+            {
+                "title": title or resolver,
+                "resolver": resolver,
+                "fallback": fallback,
+                "order": order_value,
+            }
+        )
+
+    entries.sort(key=lambda x: (int(x.get("order", 9999)), str(x.get("title", "")).lower()))
+
+    queue: List[str] = []
+    for row in entries:
+        title = str(row.get("title", "")).strip() or "Untitled"
+        resolver = str(row.get("resolver", "")).strip()
+        fallback = str(row.get("fallback", "")).strip()
+        uri = resolve_spec_uri(sp, resolver, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
+        if not uri and fallback:
+            uri = resolve_spec_uri(sp, fallback, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
+            status[f"Fallback used:{title}"] = bool(uri)
+        if uri:
+            queue.append(uri)
+        else:
+            status[f"Unresolved:{title}"] = False
+    return queue
+
+
 def build_queue_for_profile(
     sp: spotipy.Spotify,
     profile_name: str,
@@ -1112,13 +1345,13 @@ def build_queue_for_profile(
 
 def main() -> int:
     try:
-        cfg = load_playlist_config()
+        source = os.getenv(SPOTIFY_REFRESH_CONFIG_SOURCE, "notion").strip().lower() or "notion"
+        if source not in {"notion", "file"}:
+            source = "notion"
+        cfg = load_playlist_config_optional()
         set_runtime_timezone(cfg)
-        profiles_cfg = cfg.get("profiles", {})
-        catalog_cfg = cfg.get("catalog", {})
-        shows_cfg = cfg.get("shows", {})
-        fixed_cfg = cfg.get("fixed", {})
-        tokens_cfg = cfg.get("tokens", {})
+        profiles_cfg, shows_cfg, fixed_cfg, tokens_cfg = load_resolver_runtime_config(cfg)
+        catalog_cfg = cfg.get("catalog", {}) if isinstance(cfg.get("catalog"), dict) else {}
 
         profile = os.getenv(SPOTIFY_PLAYLIST_PROFILE, "morning").strip().lower() or "morning"
         if profile == "day":
@@ -1127,13 +1360,16 @@ def main() -> int:
 
         playlist_id = os.getenv(SPOTIFY_PLAYLIST_ID, "").strip()
         if not playlist_id:
-            profile_cfg = profiles_cfg.get(profile)
-            if isinstance(profile_cfg, dict):
-                playlist_id = str(profile_cfg.get("playlist_id", "")).strip()
+            playlist_id = os.getenv(f"SPOTIFY_PLAYLIST_ID_{profile.upper()}", "").strip()
+        if not playlist_id:
+            if source == "file":
+                profile_cfg = profiles_cfg.get(profile)
+                if isinstance(profile_cfg, dict):
+                    playlist_id = str(profile_cfg.get("playlist_id", "")).strip()
         if not playlist_id:
             raise RuntimeError(
                 f"Missing required environment variable: {SPOTIFY_PLAYLIST_ID}. "
-                f"Set it, or add playlist_id for profile '{profile}' in config/playlist_config.json profiles."
+                f"Set {SPOTIFY_PLAYLIST_ID} (or SPOTIFY_PLAYLIST_ID_{profile.upper()})."
             )
 
         # Optional compatibility read; not used by default flow.
@@ -1143,20 +1379,36 @@ def main() -> int:
         weekday = local_now().strftime("%A")
         status: Dict[str, bool] = {}
 
-        queue = build_queue_for_profile(
-            sp, profile, weekday, status, profiles_cfg, catalog_cfg, shows_cfg, fixed_cfg, tokens_cfg
-        )
+        if source == "file":
+            if not profiles_cfg or not catalog_cfg:
+                raise RuntimeError("File mode requires config/playlist_config.json with profiles + catalog.")
+            queue = build_queue_for_profile(
+                sp, profile, weekday, status, profiles_cfg, catalog_cfg, shows_cfg, fixed_cfg, tokens_cfg
+            )
+        else:
+            queue = build_queue_for_profile_from_notion(
+                sp, profile, weekday, status, shows_cfg, fixed_cfg, tokens_cfg
+            )
         if not queue:
             raise RuntimeError("No tracks/episodes resolved for this run.")
         written = recreate_playlist_items(spotify_token, playlist_id, queue)
-        notion_uri_updates, notion_uri_update_details, notion_uri_unchanged, notion_uri_no_match = sync_notion_uris_for_profile(
-            sp, queue, profile
-        )
+        notion_uri_updates = 0
+        notion_uri_update_details: List[Tuple[str, str]] = []
+        notion_uri_unchanged: List[str] = []
+        notion_uri_no_match: List[str] = []
+        uri_autosync_enabled = bool_env(SPOTIFY_ENABLE_URI_AUTOSYNC, default=False)
+        if uri_autosync_enabled:
+            notion_uri_updates, notion_uri_update_details, notion_uri_unchanged, notion_uri_no_match = (
+                sync_notion_uris_for_profile(sp, queue, profile)
+            )
 
         print(f"SUMMARY playlist_id={playlist_id} tracks_written={written}")
-        print(f"INFO profile={profile} weekday={weekday} playlist_recreated=true")
+        print(f"INFO profile={profile} weekday={weekday} playlist_recreated=true source={source}")
         print(f"INFO utc_offset={local_now().strftime('%z')}")
-        if os.getenv(NOTION_TOKEN, "").strip():
+        print(f"INFO uri_autosync_enabled={str(uri_autosync_enabled).lower()}")
+        for name, ok in sorted(status.items()):
+            print(f"INFO resolver_status name={name} ok={str(ok).lower()}")
+        if uri_autosync_enabled and os.getenv(NOTION_TOKEN, "").strip():
             print(f"INFO notion_uri_rows_updated={notion_uri_updates}")
             log_limit = int(os.getenv(NOTION_URI_LOG_LIMIT, "25").strip() or "25")
             for title, uri in notion_uri_update_details[: max(0, log_limit)]:
