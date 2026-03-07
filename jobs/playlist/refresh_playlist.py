@@ -1241,7 +1241,7 @@ def build_queue_for_profile_from_notion(
     title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
     platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
     profile_property = os.getenv(NOTION_QUEUE_PROFILE_PROPERTY, "Playlist Profile").strip() or "Playlist Profile"
-    order_property = os.getenv(NOTION_QUEUE_ORDER_PROPERTY, "Playlist Order").strip() or "Playlist Order"
+    order_property = os.getenv(NOTION_QUEUE_ORDER_PROPERTY, "Order").strip() or "Order"
     resolver_property = os.getenv(NOTION_QUEUE_RESOLVER_PROPERTY, "Spotify Resolver").strip() or "Spotify Resolver"
     fallback_property = os.getenv(NOTION_QUEUE_FALLBACK_PROPERTY, "Spotify Fallback Resolver").strip() or "Spotify Fallback Resolver"
     enabled_property = os.getenv(NOTION_QUEUE_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
@@ -1279,6 +1279,10 @@ def build_queue_for_profile_from_notion(
         fallback = page_property_text(page, fallback_property).strip()
         direct_uri = (page_uri_value(page, uri_property) or "").strip()
         order_num = page_property_number(page, order_property)
+        if order_num is None and order_property != "Order":
+            order_num = page_property_number(page, "Order")
+        if order_num is None and order_property != "Playlist Order":
+            order_num = page_property_number(page, "Playlist Order")
         order_value = int(order_num) if order_num is not None else 9999
         if not resolver and direct_uri.startswith("spotify:"):
             resolver = direct_uri

@@ -19,7 +19,8 @@ from jobs.novena.generate_daily_novena_prayer import (
     ROMCAL_CALENDAR,
     ROMCAL_LOCALE,
     ROMCAL_WINDOW_DAYS,
-    collect_saints_window,
+    infer_precedence,
+    romcal_fetch_day,
     int_env,
     local_today,
     require_env,
@@ -40,6 +41,7 @@ DEVOTIONAL_IMAGE_SIZE = "DEVOTIONAL_IMAGE_SIZE"  # default 1024x1536 (phone port
 DEVOTIONAL_IMAGE_SIZE_WIDE = "DEVOTIONAL_IMAGE_SIZE_WIDE"  # default 1536x1024 (widescreen)
 DEVOTIONAL_IMAGE_QUALITY = "DEVOTIONAL_IMAGE_QUALITY"  # default high
 DEVOTIONAL_IMAGE_FORMAT = "DEVOTIONAL_IMAGE_FORMAT"  # default png
+DEVOTIONAL_ALLOWED_RANKS = {"solemnity", "feast", "memorial", "optional_memorial"}
 
 PROMPT_INSTRUCTION = """IMAGE PROMPT GENERATION - HIGH-FINISH MODERN DEVOTIONAL STYLE
 
@@ -124,6 +126,54 @@ def parse_target_date() -> Optional[datetime.date]:
         return datetime.date.fromisoformat(raw)
     except Exception:
         raise RuntimeError(f"Invalid {DEVOTIONAL_TARGET_DATE}='{raw}'. Use YYYY-MM-DD.")
+
+
+def _event_name(event: Dict[str, str]) -> str:
+    for key in ("name", "title", "localName", "commonName", "fullname", "id"):
+        value = str(event.get(key, "")).strip()
+        if value:
+            return value
+    return ""
+
+
+def _normalized_rank(event: Dict[str, str]) -> str:
+    raw = str(event.get("rank_name", "") or event.get("rank", "")).strip().lower()
+    return raw.replace("rank.", "")
+
+
+def collect_image_candidates_window(
+    calendar: str,
+    locale: str,
+    start_date: datetime.date,
+    days: int,
+) -> List[Dict[str, str]]:
+    rows: List[Dict[str, str]] = []
+    seen = set()
+    for offset in range(days):
+        dt = start_date + datetime.timedelta(days=offset)
+        events = romcal_fetch_day(calendar, locale, dt)
+        for event in events:
+            if not isinstance(event, dict):
+                continue
+            rank = _normalized_rank(event)
+            if rank not in DEVOTIONAL_ALLOWED_RANKS:
+                continue
+            name = _event_name(event)
+            if not name:
+                continue
+            key = (dt.isoformat(), name.lower())
+            if key in seen:
+                continue
+            seen.add(key)
+            rows.append(
+                {
+                    "date": dt.isoformat(),
+                    "name": name,
+                    "celebration_rank": rank,
+                    "precedence": infer_precedence(event),
+                }
+            )
+    return rows
 
 
 def select_target_saint(saints: Sequence[Dict[str, str]], today: datetime.date, target: Optional[datetime.date]) -> Dict[str, str]:
@@ -380,7 +430,9 @@ def main() -> int:
         window_start = today
         window_end = window_start + datetime.timedelta(days=window_days - 1)
         target_date = parse_target_date()
-        saints = collect_saints_window(romcal_calendar, romcal_locale, today, window_days)
+        saints = collect_image_candidates_window(romcal_calendar, romcal_locale, today, window_days)
+        if not saints:
+            raise RuntimeError("No eligible celebrations found in the configured window for image generation.")
         output_dirs = resolve_output_dirs()
         current_dir, wide_dir = output_dirs[0], output_dirs[1]
         moved_count = move_current_devotion_completed_saints(output_dirs[0], today)
