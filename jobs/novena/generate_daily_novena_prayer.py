@@ -52,6 +52,10 @@ NOVENA_AUDIO_CAPTION = "NOVENA_AUDIO_CAPTION"  # default Daily Novena Prayer (Au
 NOVENA_AUDIO_FAIL_OPEN = "NOVENA_AUDIO_FAIL_OPEN"  # default true
 NOVENA_AUDIO_MARKER = "[AUTOGEN_NOVENA_AUDIO]"
 NOVENA_SECTION_MARKER = "[AUTOGEN_DAILY_ROLLING_NOVENA]"
+NOVENA_DAY_MODE = "NOVENA_DAY_MODE"  # default true when writing into calendar rows
+NOVENA_TEST_SAINT_NAME = "NOVENA_TEST_SAINT_NAME"  # optional saint name for day-by-day backfill test
+NOVENA_TEST_POPULATE_ALL_DAYS = "NOVENA_TEST_POPULATE_ALL_DAYS"  # default false
+NOVENA_DAY_SECTION_MARKER = "AUTOGEN_NOVENA_DAY"
 USCCB_SECTION_MARKER = "[AUTOGEN_USCCB_READINGS]"
 
 USCCB_READINGS_ENABLED = "USCCB_READINGS_ENABLED"  # default true
@@ -490,6 +494,104 @@ def rolling_novena_blocks(prayer_text: str) -> List[Dict[str, Any]]:
     return [toggle_block(f"Daily Rolling Novena {NOVENA_SECTION_MARKER}", children)]
 
 
+def saint_day_marker(saint_name: str, target_day: datetime.date) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", normalize_name_for_match(saint_name)).strip("-")
+    return f"[{NOVENA_DAY_SECTION_MARKER}:{slug}:{target_day.isoformat()}]"
+
+
+def date_from_iso(text: str) -> datetime.date:
+    return datetime.date.fromisoformat(str(text or "").strip())
+
+
+def saint_novena_day_blocks(
+    saint_name: str,
+    feast_day: str,
+    target_day: datetime.date,
+    day_num: int,
+    background: str,
+    devotional_payload: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    marker = saint_day_marker(saint_name, target_day)
+    feast_date = date_from_iso(feast_day)
+    prep_start = feast_date - datetime.timedelta(days=9)
+    feast_overview = str(devotional_payload.get("feast_overview", "")).strip()
+    opening = str(devotional_payload.get("opening_prayer", "")).strip()
+    closing = str(devotional_payload.get("closing_prayer", "")).strip()
+    daily = devotional_payload.get("daily_prayers") or []
+    by_day: Dict[int, Dict[str, Any]] = {}
+    if isinstance(daily, list):
+        for row in daily:
+            if isinstance(row, dict):
+                try:
+                    dn = int(row.get("day", 0))
+                except Exception:
+                    dn = 0
+                if 1 <= dn <= 9:
+                    by_day[dn] = row
+    row = by_day.get(day_num, {})
+    theme = str(row.get("theme", "")).strip() or f"Day {day_num} theme"
+    intercession = str(row.get("intercession", "")).strip() or "Intercede for us."
+    daily_prayer = str(row.get("daily_prayer", "")).strip() or "Daily novena prayer."
+
+    about_children: List[Dict[str, Any]] = [
+        paragraph_block(f"Saint: {saint_name}"),
+        paragraph_block(f"Feast Day: {feast_day}"),
+        paragraph_block(f"Novena Day: {day_num} of 9 ({target_day.strftime('%b %d')})"),
+        paragraph_block(f"Novena Window: {prep_start.isoformat()} to {(feast_date - datetime.timedelta(days=1)).isoformat()}"),
+    ]
+    for chunk in split_text_chunks(background or feast_overview or f"About {saint_name}.", 1800):
+        about_children.append(paragraph_block(chunk))
+
+    day_children: List[Dict[str, Any]] = [
+        paragraph_block(f"Theme: {theme}"),
+        paragraph_block(f"Intercession: {intercession}"),
+        paragraph_block("Personal intention: [Write your intention here]"),
+    ]
+    for chunk in split_text_chunks(opening or "Opening prayer.", 1800):
+        day_children.append(paragraph_block(chunk))
+    for chunk in split_text_chunks(daily_prayer, 1800):
+        day_children.append(paragraph_block(chunk))
+    for chunk in split_text_chunks(closing or "Closing prayer.", 1800):
+        day_children.append(paragraph_block(chunk))
+
+    top_children = [
+        toggle_block("About the Saint", about_children),
+        toggle_block(f"Day {day_num} Novena Prayer", day_children),
+    ]
+    return [toggle_block(f"Novena - {saint_name} (Day {day_num} of 9) {marker}", top_children)]
+
+
+def saint_novena_day_audio_text(day_num: int, devotional_payload: Dict[str, Any]) -> str:
+    opening = str(devotional_payload.get("opening_prayer", "")).strip()
+    closing = str(devotional_payload.get("closing_prayer", "")).strip()
+    daily = devotional_payload.get("daily_prayers") or []
+    by_day: Dict[int, Dict[str, Any]] = {}
+    if isinstance(daily, list):
+        for row in daily:
+            if isinstance(row, dict):
+                try:
+                    dn = int(row.get("day", 0))
+                except Exception:
+                    dn = 0
+                if 1 <= dn <= 9:
+                    by_day[dn] = row
+    row = by_day.get(day_num, {})
+    theme = str(row.get("theme", "")).strip()
+    intercession = str(row.get("intercession", "")).strip()
+    daily_prayer = str(row.get("daily_prayer", "")).strip() or "Daily novena prayer."
+    parts = [f"Day {day_num} of the novena."]
+    if theme:
+        parts.append(f"Theme: {theme}.")
+    if intercession:
+        parts.append(f"Intercession: {intercession}.")
+    if opening:
+        parts.append(opening)
+    parts.append(daily_prayer)
+    if closing:
+        parts.append(closing)
+    return "\n\n".join(parts)
+
+
 def notion_create_file_upload(filename: str, content_type: str, token: str) -> str:
     payload = {"filename": filename, "content_type": content_type}
     response = requests.post(
@@ -533,13 +635,13 @@ def audio_block_caption(block: Dict[str, Any]) -> str:
     return " ".join(parts).strip()
 
 
-def notion_remove_old_autogen_audio(page_id: str, token: str) -> int:
+def notion_remove_old_autogen_audio(page_id: str, token: str, marker: str = NOVENA_AUDIO_MARKER) -> int:
     removed = 0
     for block in notion_list_block_children(page_id, token):
         if str(block.get("type", "")).strip() != "audio":
             continue
         caption = audio_block_caption(block)
-        if NOVENA_AUDIO_MARKER not in caption:
+        if marker not in caption:
             continue
         block_id = str(block.get("id", "")).strip()
         if not block_id:
@@ -549,8 +651,14 @@ def notion_remove_old_autogen_audio(page_id: str, token: str) -> int:
     return removed
 
 
-def notion_append_audio_block(page_id: str, upload_id: str, caption: str, token: str) -> None:
-    full_caption = f"{caption.strip()} {NOVENA_AUDIO_MARKER}".strip()
+def notion_append_audio_block(
+    page_id: str,
+    upload_id: str,
+    caption: str,
+    token: str,
+    marker: str = NOVENA_AUDIO_MARKER,
+) -> None:
+    full_caption = f"{caption.strip()} {marker}".strip()
     block = {
         "object": "block",
         "type": "audio",
@@ -788,6 +896,37 @@ def collect_calendar_days_window(
             }
         )
     return rows
+
+
+def find_named_saint_feast(
+    calendar: str,
+    locale: str,
+    saint_name_query: str,
+    search_start: datetime.date,
+    search_days: int,
+) -> Optional[Dict[str, str]]:
+    q = normalize_name_for_match(saint_name_query)
+    if not q:
+        return None
+    for offset in range(max(1, search_days)):
+        dt = search_start + datetime.timedelta(days=offset)
+        events = romcal_fetch_day(calendar, locale, dt)
+        for event in events:
+            if not isinstance(event, dict):
+                continue
+            name = celebration_name(event)
+            if not name:
+                continue
+            nn = normalize_name_for_match(name)
+            if q in nn or nn in q:
+                return {
+                    "date": dt.isoformat(),
+                    "name": name,
+                    "celebration_rank": infer_celebration_rank(event),
+                    "precedence": infer_precedence(event),
+                    "entry_kind": "saint",
+                }
+    return None
 
 
 def format_saints_for_prompt(saints: Sequence[Dict[str, str]]) -> str:
@@ -1301,6 +1440,32 @@ def find_saint_radar_page(
     return None
 
 
+def find_calendar_page_for_date(
+    pages: Sequence[Dict[str, Any]],
+    title_property: str,
+    feast_day_property: str,
+    target_day: str,
+    preferred_title: str = "",
+) -> Optional[Dict[str, Any]]:
+    wanted_day = str(target_day or "").strip()
+    wanted_title = str(preferred_title or "").strip().lower()
+    by_day: List[Dict[str, Any]] = []
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        if page_date(page, feast_day_property).strip() == wanted_day:
+            by_day.append(page)
+    if not by_day:
+        return None
+    if wanted_title:
+        for page in by_day:
+            if page_title(page, title_property).strip().lower() == wanted_title:
+                return page
+    # Deterministic fallback if multiple rows share a day.
+    by_day.sort(key=lambda p: str(p.get("created_time", "")))
+    return by_day[0]
+
+
 def notion_create_page(database_id: str, properties: Dict[str, Any], token: str) -> None:
     body = {"parent": {"database_id": database_id}, "properties": properties}
     notion_call("POST", "https://api.notion.com/v1/pages", token, body)
@@ -1575,6 +1740,23 @@ def main() -> int:
         if not saints:
             raise RuntimeError("No celebrations found from Romcal for requested date window.")
         saint_radar_rows: List[Dict[str, str]] = list(saints)
+        test_saint_raw = os.getenv(NOVENA_TEST_SAINT_NAME, "").strip()
+        test_saint = normalize_name_for_match(test_saint_raw)
+        if test_saint and not any(
+            test_saint in normalize_name_for_match(str(s.get("name", "")))
+            or normalize_name_for_match(str(s.get("name", ""))) in test_saint
+            for s in saints
+        ):
+            found = find_named_saint_feast(
+                calendar=romcal_calendar,
+                locale=romcal_locale,
+                saint_name_query=test_saint_raw,
+                search_start=start_date - datetime.timedelta(days=40),
+                search_days=140,
+            )
+            if found:
+                saints.append(found)
+                saint_radar_rows.append(found)
         if bool_env(NOTION_SAINT_INCLUDE_CALENDAR_DAYS, default=False):
             calendar_rows = collect_calendar_days_window(romcal_calendar, romcal_locale, start_date, window_days)
             merged: Dict[str, Dict[str, str]] = {}
@@ -1637,45 +1819,137 @@ def main() -> int:
                 raise RuntimeError("Could not resolve Saint Radar database id for daily write target.")
             saint_title_prop = os.getenv(NOTION_SAINT_TITLE_PROPERTY, "Name").strip() or "Name"
             saint_day_prop = os.getenv(NOTION_SAINT_FEAST_DAY_PROPERTY, "Feast Day").strip() or "Feast Day"
-            today_iso = start_date.isoformat()
-            todays_all = [r for r in saint_radar_rows if str(r.get("date", "")).strip() == today_iso]
-            todays_calendar = [r for r in todays_all if str(r.get("entry_kind", "")).strip() == "calendar_day"]
-            todays = todays_calendar if todays_calendar else [r for r in todays_all if str(r.get("entry_kind", "")).strip() == "saint"]
-            if not todays:
-                write_mode = "saint_radar_readings_append:skipped:no_today_saints"
-            elif not readings_blocks:
-                write_mode = "saint_radar_readings_append:skipped:no_readings"
-            else:
-                updated = 0
-                removed_total = 0
-                for row in todays:
-                    chosen_name = str(row.get("name", "")).strip()
-                    chosen_day = str(row.get("date", "")).strip()
-                    target_page = find_saint_radar_page(
-                        database_id=saint_db_id,
-                        token=notion_token,
-                        title_property=saint_title_prop,
-                        feast_day_property=saint_day_prop,
-                        saint_name=chosen_name,
-                        feast_day=chosen_day,
-                    )
-                    if not target_page:
-                        continue
-                    page_id = str(target_page.get("id", "")).strip()
-                    if not page_id:
-                        continue
-                    removed = notion_remove_old_autogen_sections_by_markers(
-                        page_id,
-                        notion_token,
-                        markers=[USCCB_SECTION_MARKER],
-                    )
-                    notion_append_children(page_id, readings_blocks, notion_token)
-                    updated += 1
-                    removed_total += removed
-                write_mode = (
-                    f"saint_radar_readings_append:today={len(todays_all)}:selected={len(todays)}:updated={updated}:"
-                    f"removed={removed_total}:added={len(readings_blocks)}"
+            pages = notion_get_all_pages(saint_db_id, notion_token)
+            calendar_rows = collect_calendar_days_window(romcal_calendar, romcal_locale, start_date, window_days)
+            calendar_by_date: Dict[str, str] = {str(r.get("date", "")).strip(): str(r.get("name", "")).strip() for r in calendar_rows}
+            day_mode = bool_env(NOVENA_DAY_MODE, default=True)
+            test_backfill = bool_env(NOVENA_TEST_POPULATE_ALL_DAYS, default=False)
+            wrote_sections = 0
+            wrote_audio = 0
+
+            # Keep USCCB daily readings append for today's calendar row.
+            if readings_blocks:
+                today_page = find_calendar_page_for_date(
+                    pages=pages,
+                    title_property=saint_title_prop,
+                    feast_day_property=saint_day_prop,
+                    target_day=start_date.isoformat(),
+                    preferred_title=calendar_by_date.get(start_date.isoformat(), ""),
                 )
+                if today_page:
+                    today_page_id = str(today_page.get("id", "")).strip()
+                    if today_page_id:
+                        notion_remove_old_autogen_sections_by_markers(today_page_id, notion_token, [USCCB_SECTION_MARKER])
+                        notion_append_children(today_page_id, readings_blocks, notion_token)
+
+            if not day_mode:
+                write_mode = "saint_radar_day_mode_disabled"
+            else:
+                for saint in saints:
+                    saint_name = str(saint.get("name", "")).strip()
+                    feast_iso = str(saint.get("date", "")).strip()
+                    if not saint_name or not feast_iso:
+                        continue
+                    feast_date = date_from_iso(feast_iso)
+                    prep_start = feast_date - datetime.timedelta(days=9)
+                    prep_end = feast_date - datetime.timedelta(days=1)
+                    target_days: List[datetime.date] = []
+                    today = start_date
+                    in_window_today = prep_start <= today <= prep_end
+                    saint_matches_test = bool(test_saint) and (
+                        test_saint in normalize_name_for_match(saint_name)
+                        or normalize_name_for_match(saint_name) in test_saint
+                    )
+                    if saint_matches_test and test_backfill:
+                        target_days = [prep_start + datetime.timedelta(days=i) for i in range(9)]
+                    elif in_window_today:
+                        target_days = [today]
+                    if not target_days:
+                        continue
+
+                    devotional_payload = call_openai_saint_devotional_content(
+                        api_key=openai_key,
+                        base_url=oai_base_url,
+                        model=oai_model,
+                        saint_name=saint_name,
+                        feast_day=feast_iso,
+                        celebration_type=str(saint.get("celebration_rank", "unknown")),
+                    )
+                    background = call_openai_saint_background(
+                        api_key=openai_key,
+                        base_url=oai_base_url,
+                        model=oai_model,
+                        saint_name=saint_name,
+                        feast_day=feast_iso,
+                        celebration_type=str(saint.get("celebration_rank", "unknown")),
+                    )
+                    for target_day in target_days:
+                        day_num = (target_day - prep_start).days + 1
+                        if not (1 <= day_num <= 9):
+                            continue
+                        target_iso = target_day.isoformat()
+                        cal_title = calendar_by_date.get(target_iso, "")
+                        cal_page = find_calendar_page_for_date(
+                            pages=pages,
+                            title_property=saint_title_prop,
+                            feast_day_property=saint_day_prop,
+                            target_day=target_iso,
+                            preferred_title=cal_title,
+                        )
+                        if not cal_page:
+                            continue
+                        page_id = str(cal_page.get("id", "")).strip()
+                        if not page_id:
+                            continue
+                        marker = saint_day_marker(saint_name, target_day)
+                        notion_remove_old_autogen_sections_by_markers(page_id, notion_token, [marker])
+                        blocks = saint_novena_day_blocks(
+                            saint_name=saint_name,
+                            feast_day=feast_iso,
+                            target_day=target_day,
+                            day_num=day_num,
+                            background=background,
+                            devotional_payload=devotional_payload,
+                        )
+                        notion_append_children(page_id, blocks, notion_token)
+                        wrote_sections += len(blocks)
+
+                        if bool_env(NOVENA_AUDIO_ENABLED, default=False):
+                            try:
+                                audio_marker = f"{marker}:{NOVENA_AUDIO_MARKER}"
+                                notion_remove_old_autogen_audio(page_id, notion_token, marker=audio_marker)
+                                audio_text = saint_novena_day_audio_text(day_num, devotional_payload)
+                                audio_model = os.getenv(NOVENA_AUDIO_MODEL, "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
+                                audio_voice = os.getenv(NOVENA_AUDIO_VOICE, "alloy").strip() or "alloy"
+                                audio_format = os.getenv(NOVENA_AUDIO_FORMAT, "mp3").strip().lower() or "mp3"
+                                audio_speed = float_env(NOVENA_AUDIO_SPEED, default=1.0, min_value=0.25, max_value=4.0)
+                                audio_bytes = generate_openai_audio_bytes(
+                                    api_key=openai_key,
+                                    base_url=oai_base_url,
+                                    model=audio_model,
+                                    voice=audio_voice,
+                                    audio_format=audio_format,
+                                    speed=audio_speed,
+                                    text=audio_text,
+                                )
+                                filename = (
+                                    f"novena_day_{target_iso}_{re.sub(r'[^a-z0-9]+','-',normalize_name_for_match(saint_name)).strip('-')}.{audio_format}"
+                                )
+                                content_type = "audio/mpeg" if audio_format == "mp3" else f"audio/{audio_format}"
+                                upload_id = notion_create_file_upload(filename=filename, content_type=content_type, token=notion_token)
+                                notion_send_file_upload(upload_id, filename, content_type, audio_bytes, notion_token)
+                                notion_append_audio_block(
+                                    page_id,
+                                    upload_id,
+                                    f"Novena Audio - {saint_name} Day {day_num}",
+                                    notion_token,
+                                    marker=audio_marker,
+                                )
+                                wrote_audio += 1
+                            except Exception:
+                                if not bool_env(NOVENA_AUDIO_FAIL_OPEN, default=True):
+                                    raise
+                write_mode = f"saint_radar_novena_day_by_day:sections={wrote_sections}:audio={wrote_audio}"
         audio_mode = "disabled"
         if target_page and write_daily_novena_page:
             try:
