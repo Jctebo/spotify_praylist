@@ -37,11 +37,15 @@ Optional variables:
 - `scripts/run_daily_notion_reset_local.ps1`: local mirror of `.github/workflows/daily_notion_reset.yml`
 - `scripts/run_daily_novena_prayer_local.ps1`: local runner for daily novena prayer generation
 - `scripts/run_daily_devotional_image_local.ps1`: local runner for saint devotional image generation
+- `scripts/run_daily_devotional_image_onedrive_local.ps1`: local runner that generates devotional images and uploads them to OneDrive via Microsoft Graph
+- `scripts/run_daily_devotional_image_rclone_local.ps1`: local runner that generates devotional images and uploads to OneDrive using rclone
+- `scripts/setup_onedrive_local.ps1`: stores local Azure/OneDrive app settings for local Graph upload runs
+- `scripts/setup_rclone_github.ps1`: wizard to create/validate rclone OneDrive remote and export `RCLONE_CONFIG_B64` for GitHub Actions
 - `requirements.txt`: Python dependencies
 - `.github/workflows/daily.yml`: daily + manual GitHub Actions workflow
 - `.github/workflows/hourly_notion_sync.yml`: manual Notion completion sync workflow
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
-- `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with Azure login and OneDrive Graph upload
+- `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with rclone upload to OneDrive
 - `.github/workflows/liturgical_calendar_yearly_sync.yml`: Jan 1 + manual Liturgical Calendar population
 
 ## Config Timezone
@@ -319,6 +323,34 @@ Local run:
 .\scripts\run_daily_devotional_image_local.ps1
 ```
 
+Local run with rclone upload:
+
+```powershell
+.\scripts\run_daily_devotional_image_rclone_local.ps1
+```
+
+Optional local vars:
+- `RCLONE_REMOTE_NAME` (default `onedrive`)
+- `RCLONE_REMOTE_ROOT` (default `Pictures/Samsung Gallery/DCIM`)
+
+Local run with OneDrive app upload (Graph):
+
+```powershell
+.\scripts\setup_onedrive_local.ps1
+.\scripts\run_daily_devotional_image_onedrive_local.ps1
+```
+
+Local OneDrive upload env (User or Process):
+- `ONEDRIVE_USER_ID` (UPN or GUID target user for OneDrive)
+- `AZURE_TENANT_ID`
+- `AZURE_CLIENT_ID`
+- `AZURE_CLIENT_SECRET` (for service principal login)
+- `DEVOTIONAL_ONEDRIVE_REMOTE_ROOT` (default `Pictures/Samsung Gallery/DCIM`)
+
+Notes:
+- Requires Azure CLI (`az`) installed locally.
+- If service principal vars are missing, runner falls back to current `az login` context.
+
 ## Local Job Mirrors
 Run local equivalents of each GitHub Action workflow:
 
@@ -336,27 +368,29 @@ Run local equivalents of each GitHub Action workflow:
 .\scripts\run_daily_novena_prayer_local.ps1
 ```
 
-## Remote Devotional Image Job (Azure + OneDrive)
+## Remote Devotional Image Job (rclone + OneDrive)
 Workflow:
 - `.github/workflows/daily_devotional_image_remote.yml`
 
 Purpose:
 - runs the devotional image generator on GitHub Actions
-- authenticates to Azure with OIDC (`azure/login@v2`)
-- uploads generated files to OneDrive via Microsoft Graph under:
+- uploads generated files to OneDrive via `rclone` under:
   - `Pictures/Samsung Gallery/DCIM/Current Devotion`
   - `Pictures/Samsung Gallery/DCIM/Devotion Wide`
 
 Required GitHub Secrets:
 - `OPENAI_API_KEY`
-- `AZURE_CLIENT_ID`
-- `AZURE_TENANT_ID`
-- `AZURE_SUBSCRIPTION_ID`
-- `ONEDRIVE_USER_ID` (user principal name or user id for target OneDrive account)
+- `RCLONE_CONFIG_B64` (base64-encoded `rclone.conf` containing your OneDrive remote)
 
-Azure app setup requirements:
-- Add a federated credential for your GitHub repo/workflow to the Azure app registration.
-- Grant Microsoft Graph application permissions needed for app-only drive writes (for example, Files.ReadWrite.All), then grant admin consent.
+Optional GitHub Variables:
+- `RCLONE_REMOTE_NAME` (default `onedrive`)
+- `RCLONE_REMOTE_ROOT` (default `Pictures/Samsung Gallery/DCIM`)
+
+Generate `RCLONE_CONFIG_B64` with wizard:
+
+```powershell
+.\scripts\setup_rclone_github.ps1
+```
 
 ## Local Test Framework
 Run the offline unit test suite (no live Spotify/Notion API calls):

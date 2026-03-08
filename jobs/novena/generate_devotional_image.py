@@ -41,6 +41,7 @@ DEVOTIONAL_IMAGE_SIZE = "DEVOTIONAL_IMAGE_SIZE"  # default 1024x1536 (phone port
 DEVOTIONAL_IMAGE_SIZE_WIDE = "DEVOTIONAL_IMAGE_SIZE_WIDE"  # default 1536x1024 (widescreen)
 DEVOTIONAL_IMAGE_QUALITY = "DEVOTIONAL_IMAGE_QUALITY"  # default high
 DEVOTIONAL_IMAGE_FORMAT = "DEVOTIONAL_IMAGE_FORMAT"  # default png
+DEVOTIONAL_REUSE_ARCHIVE_ENABLED = "DEVOTIONAL_REUSE_ARCHIVE_ENABLED"  # default true
 DEVOTIONAL_ALLOWED_RANKS = {"solemnity", "feast", "memorial", "optional_memorial"}
 
 PROMPT_INSTRUCTION = """IMAGE PROMPT GENERATION - HIGH-FINISH MODERN DEVOTIONAL STYLE
@@ -193,19 +194,35 @@ def select_target_saint(saints: Sequence[Dict[str, str]], today: datetime.date, 
 def saint_key(row: Dict[str, str]) -> str:
     day = str(row.get("date", "")).strip()
     name = str(row.get("name", "")).strip()
-    return f"{day}|{slugify(name)}"
+    try:
+        month_day = datetime.date.fromisoformat(day).strftime("%m-%d")
+    except Exception:
+        month_day = day[5:] if len(day) >= 10 else day
+    return f"{month_day}|{slugify(name)}"
 
 
 def parse_saint_key_from_filename(path: Path) -> Optional[str]:
     name = path.name
+    # Yearless canonical format: saint_md_MM-DD_slug.ext
+    cyc_match = re.search(r"(?:^|_)saint_md_(\d{2}-\d{2})_([a-z0-9_]+)\.(png|jpeg|webp)$", name, flags=re.IGNORECASE)
+    if cyc_match:
+        return f"{cyc_match.group(1)}|{cyc_match.group(2).lower()}"
     # New format: ..._saint_YYYY-MM-DD_slug.ext
-    new_match = re.search(r"_saint_(\d{4}-\d{2}-\d{2})_([a-z0-9_]+)\.(png|jpeg|webp)$", name, flags=re.IGNORECASE)
+    new_match = re.search(r"(?:^|_)saint_(\d{4}-\d{2}-\d{2})_([a-z0-9_]+)\.(png|jpeg|webp)$", name, flags=re.IGNORECASE)
     if new_match:
-        return f"{new_match.group(1)}|{new_match.group(2).lower()}"
+        try:
+            mmdd = datetime.date.fromisoformat(new_match.group(1)).strftime("%m-%d")
+        except Exception:
+            mmdd = new_match.group(1)[5:]
+        return f"{mmdd}|{new_match.group(2).lower()}"
     # Legacy format: YYYY-MM-DD_slug.ext (no saint date marker)
     old_match = re.search(r"^\d{4}-\d{2}-\d{2}_([a-z0-9_]+)\.(png|jpeg|webp)$", name, flags=re.IGNORECASE)
     if old_match:
-        return f"|{old_match.group(1).lower()}"
+        try:
+            mmdd = datetime.date.fromisoformat(name[:10]).strftime("%m-%d")
+        except Exception:
+            mmdd = ""
+        return f"{mmdd}|{old_match.group(1).lower()}"
     return None
 
 
@@ -222,36 +239,37 @@ def existing_generated_saint_keys(output_dirs: Sequence[Path]) -> set[str]:
     return keys
 
 
-def saint_date_from_filename(path: Path) -> Optional[datetime.date]:
-    name = path.name
-    match = re.search(r"_saint_(\d{4}-\d{2}-\d{2})_[a-z0-9_]+\.(png|jpeg|webp)$", name, flags=re.IGNORECASE)
-    if not match:
-        return None
-    try:
-        return datetime.date.fromisoformat(match.group(1))
-    except Exception:
-        return None
+def month_devotion_folder_name(day: datetime.date, source_folder_name: str) -> str:
+    base = day.strftime("%B Devotion")
+    if "wide" in str(source_folder_name or "").lower():
+        return f"{base} Wide"
+    return base
 
 
-def month_devotion_folder_name(day: datetime.date) -> str:
-    return day.strftime("%B Devotion")
-
-
-def move_current_devotion_completed_saints(current_dir: Path, today: datetime.date) -> int:
-    if not current_dir.exists():
+def move_out_of_window_saints(source_dir: Path, active_keys: set[str], today: datetime.date) -> int:
+    if not source_dir.exists():
         return 0
     moved = 0
-    archive_dir = current_dir.parent / month_devotion_folder_name(today)
-    archive_dir.mkdir(parents=True, exist_ok=True)
-
     image_files: List[Path] = []
     for ext in ("*.png", "*.jpeg", "*.webp"):
-        image_files.extend(current_dir.glob(ext))
+        image_files.extend(source_dir.glob(ext))
 
     for image_path in image_files:
-        saint_day = saint_date_from_filename(image_path)
-        if saint_day is None or saint_day >= today:
+        key = parse_saint_key_from_filename(image_path)
+        if not key:
             continue
+        if key in active_keys:
+            continue
+        month_text = key.split("|", 1)[0]
+        try:
+            month_num = int(month_text.split("-", 1)[0])
+            month_num = max(1, min(12, month_num))
+        except Exception:
+            month_num = today.month
+        saint_day = datetime.date(today.year, month_num, 1)
+
+        archive_dir = source_dir.parent / month_devotion_folder_name(saint_day, source_dir.name)
+        archive_dir.mkdir(parents=True, exist_ok=True)
 
         # Move image and any sidecar files with same basename.
         base = image_path.with_suffix("")
@@ -265,6 +283,64 @@ def move_current_devotion_completed_saints(current_dir: Path, today: datetime.da
             shutil.move(str(src), str(dst))
         moved += 1
     return moved
+
+
+def _copy_if_exists(src: Path, dst: Path) -> None:
+    if not src.exists():
+        return
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if dst.exists():
+        dst.unlink()
+    shutil.copy2(str(src), str(dst))
+
+
+def restore_saint_from_archive(
+    saint: Dict[str, str],
+    current_dir: Path,
+    wide_dir: Path,
+    image_format: str,
+) -> bool:
+    key = saint_key(saint)
+    month_text = key.split("|", 1)[0]
+    try:
+        month_num = int(month_text.split("-", 1)[0])
+        month_num = max(1, min(12, month_num))
+    except Exception:
+        return False
+    month_anchor = datetime.date(local_today().year, month_num, 1)
+    portrait_archive = current_dir.parent / month_devotion_folder_name(month_anchor, current_dir.name)
+    wide_archive = wide_dir.parent / month_devotion_folder_name(month_anchor, wide_dir.name)
+    if not portrait_archive.exists() or not wide_archive.exists():
+        return False
+
+    def find_match(folder: Path) -> Optional[Path]:
+        for ext in ("*.png", "*.jpeg", "*.webp"):
+            for image_path in folder.glob(ext):
+                if parse_saint_key_from_filename(image_path) == key:
+                    return image_path
+        return None
+
+    portrait_src = find_match(portrait_archive)
+    wide_src = find_match(wide_archive)
+    if not portrait_src or not wide_src:
+        return False
+
+    # Canonical yearless filename for re-use across years.
+    slug = key.split("|", 1)[1]
+    out_name = f"saint_md_{month_text}_{slug}.{image_format}"
+    portrait_dst = current_dir / out_name
+    wide_dst = wide_dir / out_name
+    _copy_if_exists(portrait_src, portrait_dst)
+    _copy_if_exists(wide_src, wide_dst)
+
+    for src, dst in (
+        (portrait_src.with_suffix(".prompt.txt"), portrait_dst.with_suffix(".prompt.txt")),
+        (portrait_src.with_suffix(".window.txt"), portrait_dst.with_suffix(".window.txt")),
+        (wide_src.with_suffix(".prompt.txt"), wide_dst.with_suffix(".prompt.txt")),
+        (wide_src.with_suffix(".window.txt"), wide_dst.with_suffix(".window.txt")),
+    ):
+        _copy_if_exists(src, dst)
+    return True
 
 
 def pick_next_unseen_saint(
@@ -435,7 +511,10 @@ def main() -> int:
             raise RuntimeError("No eligible celebrations found in the configured window for image generation.")
         output_dirs = resolve_output_dirs()
         current_dir, wide_dir = output_dirs[0], output_dirs[1]
-        moved_count = move_current_devotion_completed_saints(output_dirs[0], today)
+        active_keys = {saint_key(row) for row in saints}
+        moved_count = 0
+        for folder in output_dirs:
+            moved_count += move_out_of_window_saints(folder, active_keys, today)
         generated_keys = existing_generated_saint_keys(output_dirs)
         if target_date:
             targets = [select_target_saint(saints, today, target_date)]
@@ -446,9 +525,20 @@ def main() -> int:
 
         client = OpenAI(api_key=openai_key, base_url=oai_base_url.rstrip("/"))
         total_written = 0
+        total_restored = 0
+        reuse_enabled = str(os.getenv(DEVOTIONAL_REUSE_ARCHIVE_ENABLED, "true")).strip().lower() not in {"0", "false", "no", "off"}
         for target in targets:
             subject = str(target.get("name", "")).strip()
             if not subject:
+                continue
+            target_key = saint_key(target)
+            if target_key in generated_keys:
+                print(f"INFO skip_existing subject={subject} key={target_key}")
+                continue
+            if reuse_enabled and restore_saint_from_archive(target, current_dir, wide_dir, image_format):
+                total_restored += 1
+                generated_keys.add(target_key)
+                print(f"INFO restored_from_archive subject={subject} key={target_key}")
                 continue
             prompt_text = build_image_prompt(
                 client=client,
@@ -484,13 +574,12 @@ def main() -> int:
 
             safe_subject = slugify(subject)
             target_day = str(target.get("date", "")).strip() or today.isoformat()
-            filename = (
-                f"{today.isoformat()}_win_{window_start.isoformat()}_to_{window_end.isoformat()}_"
-                f"saint_{target_day}_{safe_subject}.{image_format}"
-            )
+            month_day = datetime.date.fromisoformat(target_day).strftime("%m-%d")
+            filename = f"saint_md_{month_day}_{safe_subject}.{image_format}"
             written_portrait = write_image_file(image_bytes, current_dir, filename)
             written_wide = write_image_file(image_bytes_wide, wide_dir, filename)
             total_written += 1
+            generated_keys.add(target_key)
 
             prompt_path = written_portrait.with_suffix(".prompt.txt")
             prompt_path.write_text(prompt_text, encoding="utf-8")
@@ -524,7 +613,7 @@ def main() -> int:
             print(f"INFO wrote_window={window_path_wide}")
 
         print(
-            f"SUMMARY saints_in_window={len(saints)} generated_now={total_written} "
+            f"SUMMARY saints_in_window={len(saints)} generated_now={total_written} restored_now={total_restored} "
             f"window_start={window_start.isoformat()} window_end={window_end.isoformat()} moved_to_month_folder={moved_count}"
         )
         return 0

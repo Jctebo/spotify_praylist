@@ -1,4 +1,4 @@
-name: Daily Devotional Image (Remote OneDrive)
+name: Daily Devotional Image (Remote OneDrive via rclone)
 
 on:
   workflow_dispatch:
@@ -6,7 +6,6 @@ on:
     - cron: "15 9 * * *" # daily 03:15 CST / 04:15 CDT
 
 permissions:
-  id-token: write
   contents: read
 
 jobs:
@@ -23,6 +22,8 @@ jobs:
       DEVOTIONAL_IMAGE_SIZE: 1024x1024
       DEVOTIONAL_IMAGE_QUALITY: high
       DEVOTIONAL_IMAGE_FORMAT: png
+      RCLONE_REMOTE_NAME: ${{ vars.RCLONE_REMOTE_NAME }}
+      RCLONE_REMOTE_ROOT: ${{ vars.RCLONE_REMOTE_ROOT }}
 
     steps:
       - name: Checkout
@@ -36,69 +37,53 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Azure login (OIDC)
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-
       - name: Generate devotional image locally on runner
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DEVOTIONAL_ONEDRIVE_DCIM_DIR: ${{ github.workspace }}/onedrive_sync/DCIM
         run: python jobs/novena/generate_devotional_image.py
 
-      - name: Upload files to OneDrive Current Devotion + Devotion Wide
+      - name: Install rclone
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y rclone
+          rclone version
+
+      - name: Configure rclone
         shell: bash
         env:
-          ONEDRIVE_USER_ID: ${{ secrets.ONEDRIVE_USER_ID }}
+          RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RCLONE_CONFIG_B64:-}" ]; then
+            echo "Missing secret RCLONE_CONFIG_B64" >&2
+            exit 1
+          fi
+          mkdir -p "${HOME}/.config/rclone"
+          printf "%s" "${RCLONE_CONFIG_B64}" | base64 -d > "${HOME}/.config/rclone/rclone.conf"
+          chmod 600 "${HOME}/.config/rclone/rclone.conf"
+
+      - name: Upload files to OneDrive with rclone
+        shell: bash
         run: |
           set -euo pipefail
 
           CURRENT_DIR="${GITHUB_WORKSPACE}/onedrive_sync/DCIM/Current Devotion"
           WIDE_DIR="${GITHUB_WORKSPACE}/onedrive_sync/DCIM/Devotion Wide"
+          REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
+          REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Pictures/Samsung Gallery/DCIM}"
 
-          IMAGE_FILE="$(find "$CURRENT_DIR" -maxdepth 1 -type f \( -name '*.png' -o -name '*.jpeg' -o -name '*.webp' \) | head -n 1)"
-          if [ -z "${IMAGE_FILE}" ]; then
-            echo "No image file found in ${CURRENT_DIR}" >&2
+          if ! find "$CURRENT_DIR" -maxdepth 1 -type f | grep -q .; then
+            echo "No files found in ${CURRENT_DIR}" >&2
             exit 1
           fi
-          PROMPT_FILE="${IMAGE_FILE%.*}.prompt.txt"
-          if [ ! -f "${PROMPT_FILE}" ]; then
-            echo "Prompt file not found: ${PROMPT_FILE}" >&2
-            exit 1
-          fi
-
-          ACCESS_TOKEN="$(az account get-access-token --resource-type ms-graph --query accessToken -o tsv)"
-          if [ -z "${ACCESS_TOKEN}" ]; then
-            echo "Failed to obtain Microsoft Graph access token." >&2
+          if ! find "$WIDE_DIR" -maxdepth 1 -type f | grep -q .; then
+            echo "No files found in ${WIDE_DIR}" >&2
             exit 1
           fi
 
-          upload_file() {
-            local local_path="$1"
-            local remote_path="$2"
-            local encoded_path
-            encoded_path="$(python -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe='/'))" "${remote_path}")"
-            curl -fsS -X PUT \
-              -H "Authorization: Bearer ${ACCESS_TOKEN}" \
-              -H "Content-Type: application/octet-stream" \
-              --data-binary @"${local_path}" \
-              "https://graph.microsoft.com/v1.0/users/${ONEDRIVE_USER_ID}/drive/root:/${encoded_path}:/content" >/dev/null
-          }
-
-          IMAGE_NAME="$(basename "${IMAGE_FILE}")"
-          PROMPT_NAME="$(basename "${PROMPT_FILE}")"
-          WIDE_IMAGE_FILE="${WIDE_DIR}/${IMAGE_NAME}"
-
-          if [ ! -f "${WIDE_IMAGE_FILE}" ]; then
-            echo "Expected wide image file not found: ${WIDE_IMAGE_FILE}" >&2
-            exit 1
-          fi
-
-          upload_file "${IMAGE_FILE}" "Pictures/Samsung Gallery/DCIM/Current Devotion/${IMAGE_NAME}"
-          upload_file "${PROMPT_FILE}" "Pictures/Samsung Gallery/DCIM/Current Devotion/${PROMPT_NAME}"
-          upload_file "${WIDE_IMAGE_FILE}" "Pictures/Samsung Gallery/DCIM/Devotion Wide/${IMAGE_NAME}"
-
-          echo "Uploaded image + prompt files to OneDrive."
+          rclone copy "$CURRENT_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Current Devotion/" --progress --transfers 4 --checkers 8
+          rclone copy "$WIDE_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Devotion Wide/" --progress --transfers 4 --checkers 8
+          echo "Uploaded devotional files to OneDrive via rclone."
