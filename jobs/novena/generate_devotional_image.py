@@ -106,16 +106,16 @@ COLOR PALETTE (AUTOMATIC)
 
 ON-IMAGE TEXT (AUTOMATIC)
 - Title (e.g., Mary, Mother of God)
-- Optional short devotional caption or invocation
+- No secondary caption line by default (title-only unless explicitly requested)
 - Typography implied as refined, classical, unobtrusive
-- Keep on-image text very short (title + max one brief invocation line)
+- Keep on-image text short (single title line preferred)
 - Preserve safe text margins: leave at least 18% padding from left/right and 20% from top/bottom
 - Place text in lower third or upper third with clear negative space
 - Never place text touching borders, cropped areas, or bright/high-detail regions
 - Prioritize legibility on phone lock screens
 - Do not place text in the bottom 25% of portrait images (lock screen UI overlap risk)
 - Keep all text inside a centered "safe box" (middle 60% width x middle 50% height)
-- If text safety conflicts with composition, remove caption and keep title only
+- If text safety conflicts with composition, reduce text length further and keep title only
 
 OUTPUT FORMAT (AUTOMATIC)
 Return only one complete image prompt, fully structured and directly usable for image generation.
@@ -582,12 +582,12 @@ def main() -> int:
                     window_start=window_start,
                     window_end=window_end,
                     saints=saints,
-                    layout_hint=(
-                        "Phone portrait devotional wallpaper. Vertical composition (9:16 feel). "
-                        "Reserve a clean centered text-safe zone (middle 60% width x middle 50% height), "
-                        "avoid text in bottom 25%, and keep title short to prevent clipping."
-                    ),
-                )
+                layout_hint=(
+                    "Phone prayer-card composition in portrait 2:3/9:16 style (not square). "
+                    "Dedicate an uncluttered text band in upper-middle area for one short title line only, "
+                    "with generous margins so text cannot be clipped by lock-screen crop."
+                ),
+            )
                 image_bytes = generate_image_bytes(client, image_model, prompt_text, image_size, image_quality, image_format)
                 written_portrait = write_image_file(image_bytes, current_dir, filename)
                 prompt_path = written_portrait.with_suffix(".prompt.txt")
@@ -608,12 +608,12 @@ def main() -> int:
                     window_start=window_start,
                     window_end=window_end,
                     saints=saints,
-                    layout_hint=(
-                        "Widescreen devotional background in native 16:9 composition (not square, not portrait). "
-                        "Frame the scene for full-width landscape use with all text fully inside a centered safe area, "
-                        "keeping at least 15% margin from every edge and avoiding edge-anchored typography."
-                    ),
-                )
+                layout_hint=(
+                    "Widescreen devotional background in native 16:9 composition (not square, not portrait). "
+                    "Frame the scene for full-width landscape use with one short title line only, fully inside a centered safe area, "
+                    "keeping at least 15% margin from every edge and avoiding edge-anchored typography."
+                ),
+            )
                 image_bytes_wide = generate_image_bytes(
                     client, image_model, prompt_text_wide, image_size_wide, image_quality, image_format
                 )
