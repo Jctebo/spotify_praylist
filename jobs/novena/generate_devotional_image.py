@@ -109,10 +109,13 @@ ON-IMAGE TEXT (AUTOMATIC)
 - Optional short devotional caption or invocation
 - Typography implied as refined, classical, unobtrusive
 - Keep on-image text very short (title + max one brief invocation line)
-- Preserve safe text margins: leave at least 12% padding from all edges
+- Preserve safe text margins: leave at least 18% padding from left/right and 20% from top/bottom
 - Place text in lower third or upper third with clear negative space
 - Never place text touching borders, cropped areas, or bright/high-detail regions
 - Prioritize legibility on phone lock screens
+- Do not place text in the bottom 25% of portrait images (lock screen UI overlap risk)
+- Keep all text inside a centered "safe box" (middle 60% width x middle 50% height)
+- If text safety conflicts with composition, remove caption and keep title only
 
 OUTPUT FORMAT (AUTOMATIC)
 Return only one complete image prompt, fully structured and directly usable for image generation.
@@ -551,8 +554,9 @@ def main() -> int:
                 window_end=window_end,
                 saints=saints,
                 layout_hint=(
-                    "Phone portrait devotional wallpaper. Vertical composition (9:16 feel), "
-                    "subject centered with clear negative space for short title text."
+                    "Phone portrait devotional wallpaper. Vertical composition (9:16 feel). "
+                    "Reserve a clean centered text-safe zone (middle 60% width x middle 50% height), "
+                    "avoid text in bottom 25%, and keep title short to prevent clipping."
                 ),
             )
             prompt_text_wide = build_image_prompt(
@@ -564,8 +568,9 @@ def main() -> int:
                 window_end=window_end,
                 saints=saints,
                 layout_hint=(
-                    "Widescreen devotional background. Horizontal composition (16:9 feel), "
-                    "subject framed for landscape displays with text-safe margins."
+                    "Widescreen devotional background in native 16:9 composition (not square, not portrait). "
+                    "Frame the scene for full-width landscape use with all text fully inside a centered safe area, "
+                    "keeping at least 15% margin from every edge and avoiding edge-anchored typography."
                 ),
             )
 
