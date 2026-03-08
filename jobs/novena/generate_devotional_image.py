@@ -519,13 +519,14 @@ def main() -> int:
         if target_date:
             targets = [select_target_saint(saints, today, target_date)]
         else:
-            targets = pick_all_unseen_saints(saints, generated_keys)
+            targets = list(saints)
             if not targets:
-                raise RuntimeError("All saints in the current window already have generated image files.")
+                raise RuntimeError("No saints in active window.")
 
         client = OpenAI(api_key=openai_key, base_url=oai_base_url.rstrip("/"))
         total_written = 0
         total_restored = 0
+        total_skipped_existing = 0
         reuse_enabled = str(os.getenv(DEVOTIONAL_REUSE_ARCHIVE_ENABLED, "true")).strip().lower() not in {"0", "false", "no", "off"}
         for target in targets:
             subject = str(target.get("name", "")).strip()
@@ -534,6 +535,7 @@ def main() -> int:
             target_key = saint_key(target)
             if target_key in generated_keys:
                 print(f"INFO skip_existing subject={subject} key={target_key}")
+                total_skipped_existing += 1
                 continue
             if reuse_enabled and restore_saint_from_archive(target, current_dir, wide_dir, image_format):
                 total_restored += 1
@@ -614,6 +616,7 @@ def main() -> int:
 
         print(
             f"SUMMARY saints_in_window={len(saints)} generated_now={total_written} restored_now={total_restored} "
+            f"skipped_existing={total_skipped_existing} "
             f"window_start={window_start.isoformat()} window_end={window_end.isoformat()} moved_to_month_folder={moved_count}"
         )
         return 0

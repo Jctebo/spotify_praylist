@@ -37,12 +37,6 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Generate devotional image locally on runner
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          DEVOTIONAL_ONEDRIVE_DCIM_DIR: ${{ github.workspace }}/onedrive_sync/DCIM
-        run: python jobs/novena/generate_devotional_image.py
-
       - name: Install rclone
         shell: bash
         run: |
@@ -64,6 +58,21 @@ jobs:
           mkdir -p "${HOME}/.config/rclone"
           printf "%s" "${RCLONE_CONFIG_B64}" | base64 -d > "${HOME}/.config/rclone/rclone.conf"
           chmod 600 "${HOME}/.config/rclone/rclone.conf"
+
+      - name: Validate rclone remote
+        shell: bash
+        run: |
+          set -euo pipefail
+          REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
+          REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Pictures/Samsung Gallery/DCIM}"
+          rclone lsd "${REMOTE_NAME}:" >/dev/null
+          rclone lsd "${REMOTE_NAME}:${REMOTE_ROOT}" >/dev/null || true
+
+      - name: Generate devotional image locally on runner
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEVOTIONAL_ONEDRIVE_DCIM_DIR: ${{ github.workspace }}/onedrive_sync/DCIM
+        run: python jobs/novena/generate_devotional_image.py
 
       - name: Upload files to OneDrive with rclone
         shell: bash
