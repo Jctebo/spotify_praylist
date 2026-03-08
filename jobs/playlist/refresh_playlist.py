@@ -80,6 +80,7 @@ DEFAULT_FIXED = {
 DEFAULT_TOKENS: Dict[str, Any] = {
     "AUXILIUM": "Auxilium Christianorum",
     "STH_LAUDS": "Lauds",
+    "DO_INVITATORY": ["Invitatory", "Invitatory Psalm"],
     "STH_VESPERS": "Vespers",
     "DO_MORNING": "Morning Prayer",
     "DO_OFFICE": "Office of Readings",
@@ -295,9 +296,23 @@ def page_title(page: Dict[str, Any], title_property: str) -> str:
     return " ".join(parts).strip()
 
 
-def page_property_text(page: Dict[str, Any], property_name: str) -> str:
+def page_property_obj(page: Dict[str, Any], property_name: str) -> Dict[str, Any]:
     props = page.get("properties") or {}
-    prop = props.get(property_name) or {}
+    prop = props.get(property_name)
+    if isinstance(prop, dict):
+        return prop
+    # Fallback to case-insensitive match for resilient Notion schema changes.
+    target = str(property_name or "").strip().lower()
+    if not target:
+        return {}
+    for key, value in props.items():
+        if str(key).strip().lower() == target and isinstance(value, dict):
+            return value
+    return {}
+
+
+def page_property_text(page: Dict[str, Any], property_name: str) -> str:
+    prop = page_property_obj(page, property_name)
     ptype = str(prop.get("type", "")).strip()
     if ptype == "select":
         sel = prop.get("select") or {}
@@ -317,21 +332,66 @@ def page_property_text(page: Dict[str, Any], property_name: str) -> str:
 
 
 def page_property_number(page: Dict[str, Any], property_name: str) -> Optional[float]:
-    props = page.get("properties") or {}
-    prop = props.get(property_name) or {}
+    def to_float(value: Any) -> Optional[float]:
+        if value is None:
+            return None
+        if isinstance(value, (int, float)):
+            return float(value)
+        text = str(value).strip()
+        if not text:
+            return None
+        match = re.search(r"[-+]?\d+(?:\.\d+)?", text)
+        if not match:
+            return None
+        try:
+            return float(match.group(0))
+        except Exception:
+            return None
+
+    prop = page_property_obj(page, property_name)
     ptype = str(prop.get("type", "")).strip()
-    if ptype != "number":
-        return None
-    value = prop.get("number")
-    try:
-        return float(value) if value is not None else None
-    except Exception:
-        return None
+    if ptype == "number":
+        return to_float(prop.get("number"))
+    if ptype == "formula":
+        formula = prop.get("formula") or {}
+        ftype = str(formula.get("type", "")).strip()
+        if ftype == "number":
+            return to_float(formula.get("number"))
+        if ftype == "string":
+            return to_float(formula.get("string"))
+    if ptype in {"rich_text", "title"}:
+        values = prop.get(ptype) or []
+        parts = [str(v.get("plain_text", "")).strip() for v in values if isinstance(v, dict)]
+        return to_float(" ".join(p for p in parts if p))
+    if ptype == "select":
+        sel = prop.get("select") or {}
+        return to_float(sel.get("name"))
+    if ptype == "multi_select":
+        values = prop.get("multi_select") or []
+        names = [str(v.get("name", "")).strip() for v in values if isinstance(v, dict)]
+        return to_float(" ".join(n for n in names if n))
+    if ptype == "rollup":
+        roll = prop.get("rollup") or {}
+        rtype = str(roll.get("type", "")).strip()
+        if rtype == "number":
+            return to_float(roll.get("number"))
+        if rtype == "array":
+            arr = roll.get("array") or []
+            nums: List[float] = []
+            for item in arr:
+                if isinstance(item, dict):
+                    item_type = str(item.get("type", "")).strip()
+                    if item_type == "number":
+                        value = to_float(item.get("number"))
+                        if value is not None:
+                            nums.append(value)
+            if nums:
+                return min(nums)
+    return None
 
 
 def page_property_checkbox(page: Dict[str, Any], property_name: str) -> Optional[bool]:
-    props = page.get("properties") or {}
-    prop = props.get(property_name) or {}
+    prop = page_property_obj(page, property_name)
     ptype = str(prop.get("type", "")).strip()
     if ptype != "checkbox":
         return None
@@ -339,8 +399,7 @@ def page_property_checkbox(page: Dict[str, Any], property_name: str) -> Optional
 
 
 def page_uri_value(page: Dict[str, Any], uri_property: str) -> Optional[str]:
-    props = page.get("properties") or {}
-    prop = props.get(uri_property) or {}
+    prop = page_property_obj(page, uri_property)
     ptype = str(prop.get("type", "")).strip()
     if ptype == "rich_text":
         vals = prop.get("rich_text") or []
@@ -353,8 +412,7 @@ def page_uri_value(page: Dict[str, Any], uri_property: str) -> Optional[str]:
 
 
 def notion_update_uri(page_id: str, page: Dict[str, Any], uri_property: str, uri: str, token: str) -> None:
-    props = page.get("properties") or {}
-    prop = props.get(uri_property) or {}
+    prop = page_property_obj(page, uri_property)
     ptype = str(prop.get("type", "")).strip()
     if ptype == "url":
         body = {"properties": {uri_property: {"url": uri}}}
@@ -1122,6 +1180,13 @@ def resolve_item_uri(
         uri, _ = get_morning_prayer(sp, shows_cfg, tokens_cfg, status)
         return uri
 
+    if key == "INVITATORY":
+        uri, _ = do_date_aware(
+            sp, cfg_value(shows_cfg, "DIVINE_OFFICE", "shows"), cfg_token_terms(tokens_cfg, "DO_INVITATORY")
+        )
+        status["Invitatory"] = bool(uri)
+        return uri
+
     if key == "EVENING":
         uri, _ = get_evening_prayer(sp, shows_cfg, tokens_cfg, status)
         return uri
@@ -1283,7 +1348,7 @@ def build_queue_for_profile_from_notion(
             order_num = page_property_number(page, "Order")
         if order_num is None and order_property != "Playlist Order":
             order_num = page_property_number(page, "Playlist Order")
-        order_value = int(order_num) if order_num is not None else 9999
+        order_value = float(order_num) if order_num is not None else 9999.0
         if not resolver and direct_uri.startswith("spotify:"):
             resolver = direct_uri
         if not resolver:
@@ -1297,7 +1362,7 @@ def build_queue_for_profile_from_notion(
             }
         )
 
-    entries.sort(key=lambda x: (int(x.get("order", 9999)), str(x.get("title", "")).lower()))
+    entries.sort(key=lambda x: (float(x.get("order", 9999.0)), str(x.get("title", "")).lower()))
 
     queue: List[str] = []
     for row in entries:

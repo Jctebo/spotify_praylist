@@ -25,6 +25,10 @@
   "tokens": {
     "AUXILIUM": "Auxilium Christianorum",
     "STH_LAUDS": "Lauds",
+    "DO_INVITATORY": [
+      "Invitatory",
+      "Invitatory Psalm"
+    ],
     "STH_VESPERS": "Vespers",
     "DO_MORNING": "Morning Prayer",
     "DO_OFFICE": "Office of Readings",
@@ -94,6 +98,11 @@
     "MORNING": {
       "label": "Morning Prayer",
       "description": "Dynamic selection: today's Morning Prayer (STH preferred, Divine Office fallback).",
+      "kind": "dynamic"
+    },
+    "INVITATORY": {
+      "label": "Invitatory",
+      "description": "Dynamic selection: today's Invitatory from Divine Office.",
       "kind": "dynamic"
     },
     "EVENING": {
