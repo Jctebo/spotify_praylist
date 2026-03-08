@@ -17,6 +17,11 @@ jobs:
       ROMCAL_CALENDAR: general_roman
       ROMCAL_LOCALE: en
       ROMCAL_WINDOW_DAYS: "9"
+      DEVOTIONAL_NOTION_CONFIG_ENABLED: "true"
+      NOTION_DATABASE_NAME: Opus Dei
+      NOTION_IMAGE_STYLE_DATABASE_NAME: Image Styles
+      NOTION_DEVOTIONS_DATABASE_NAME: Devotions
+      NOTION_IMAGE_PIPELINE_DATABASE_NAME: Image Pipeline
       DEVOTIONAL_PROMPT_MODEL: gpt-5-mini
       DEVOTIONAL_IMAGE_MODEL: gpt-image-1
       DEVOTIONAL_IMAGE_SIZE: 1024x1536
@@ -84,7 +89,7 @@ jobs:
           rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Devotion Wide/" "${LOCAL_ROOT}/Devotion Wide/" --create-empty-src-dirs || true
 
           # Pull only month archives that can appear in the active window.
-          MONTHS=$(python -c "import datetime, os; days=int(os.getenv('ROMCAL_WINDOW_DAYS','9')); today=datetime.date.today(); names=sorted({(today+datetime.timedelta(days=i)).strftime('%B') for i in range(days)}); print('\n'.join(names))")
+          MONTHS=$(python -c "import datetime, os; days=int(os.getenv('ROMCAL_WINDOW_DAYS','9')); today=datetime.date.today(); offsets={-1,*range(days)}; names=sorted({(today+datetime.timedelta(days=i)).strftime('%B') for i in offsets}); print('\n'.join(names))")
           while IFS= read -r month; do
             [ -z "$month" ] && continue
             rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/${month} Devotion/" "${LOCAL_ROOT}/${month} Devotion/" --create-empty-src-dirs || true
@@ -94,6 +99,8 @@ jobs:
       - name: Generate devotional image locally on runner
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
           DEVOTIONAL_ONEDRIVE_DCIM_DIR: ${{ github.workspace }}/onedrive_sync/DCIM
         run: python jobs/novena/generate_devotional_image.py
 
@@ -121,7 +128,7 @@ jobs:
           rclone sync "$WIDE_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Devotion Wide/" --progress --transfers 4 --checkers 8
 
           # Mirror relevant month archive folders so local move operations are reflected remotely.
-          MONTHS=$(python -c "import datetime, os; days=int(os.getenv('ROMCAL_WINDOW_DAYS','9')); today=datetime.date.today(); names=sorted({(today+datetime.timedelta(days=i)).strftime('%B') for i in range(days)}); print('\n'.join(names))")
+          MONTHS=$(python -c "import datetime, os; days=int(os.getenv('ROMCAL_WINDOW_DAYS','9')); today=datetime.date.today(); offsets={-1,*range(days)}; names=sorted({(today+datetime.timedelta(days=i)).strftime('%B') for i in offsets}); print('\n'.join(names))")
           while IFS= read -r month; do
             [ -z "$month" ] && continue
             LOCAL_MONTH_DIR="${GITHUB_WORKSPACE}/onedrive_sync/DCIM/${month} Devotion"
