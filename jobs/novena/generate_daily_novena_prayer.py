@@ -519,7 +519,6 @@ def saint_novena_day_blocks(
     feast_day: str,
     target_day: datetime.date,
     day_num: int,
-    background: str,
     devotional_payload: Dict[str, Any],
 ) -> List[Dict[str, Any]]:
     marker = saint_day_marker(saint_name, target_day)
@@ -544,14 +543,33 @@ def saint_novena_day_blocks(
     intercession = str(row.get("intercession", "")).strip() or "Intercede for us."
     daily_prayer = str(row.get("daily_prayer", "")).strip() or "Daily novena prayer."
 
-    about_children: List[Dict[str, Any]] = [
+    placement_children: List[Dict[str, Any]] = [
         paragraph_block(f"Saint: {saint_name}"),
         paragraph_block(f"Feast Day: {feast_day}"),
+        paragraph_block(
+            "Why this feast day: liturgical calendar placement and significance for this saint."
+        ),
+    ]
+    for chunk in split_text_chunks(feast_overview or f"{saint_name} is commemorated on {feast_day}.", 1800):
+        placement_children.append(paragraph_block(chunk))
+
+    life_children: List[Dict[str, Any]] = [
         paragraph_block(f"Novena Day: {day_num} of 9 ({target_day.strftime('%b %d')})"),
         paragraph_block(f"Novena Window: {prep_start.isoformat()} to {(feast_date - datetime.timedelta(days=1)).isoformat()}"),
     ]
-    for chunk in split_text_chunks(background or feast_overview or f"About {saint_name}.", 1800):
-        about_children.append(paragraph_block(chunk))
+    life_sections = devotional_payload.get("life_sections") or []
+    if isinstance(life_sections, list) and life_sections:
+        for section in life_sections:
+            if not isinstance(section, dict):
+                continue
+            heading = str(section.get("heading", "")).strip() or "Life Section"
+            content = str(section.get("content", "")).strip() or f"Life details for {saint_name}."
+            life_children.append(paragraph_block(f"{heading}:"))
+            for chunk in split_text_chunks(content, 1800):
+                life_children.append(paragraph_block(chunk))
+    else:
+        for chunk in split_text_chunks(feast_overview or f"Life details for {saint_name}.", 1800):
+            life_children.append(paragraph_block(chunk))
 
     day_children: List[Dict[str, Any]] = [
         paragraph_block(f"Theme: {theme}"),
@@ -566,7 +584,8 @@ def saint_novena_day_blocks(
         day_children.append(paragraph_block(chunk))
 
     top_children = [
-        toggle_block("About the Saint", about_children),
+        toggle_block("Saint Background & Feast Placement", placement_children),
+        toggle_block("Life of the Saint", life_children),
         toggle_block(f"Day {day_num} Novena Prayer", day_children),
     ]
     return [toggle_block(f"Novena - {saint_name} (Day {day_num} of 9) {marker}", top_children)]
@@ -1309,11 +1328,16 @@ def saint_devotional_blocks(
     prep_start = feast_date - datetime.timedelta(days=8)
 
     blocks: List[Dict[str, Any]] = []
-    overview_children = [paragraph_block(f"Saint: {saint_name}")]
-    overview_children.append(paragraph_block(f"Feast Day: {feast_day} ({celebration_type})"))
+    placement_children: List[Dict[str, Any]] = [
+        paragraph_block(f"Saint: {saint_name}"),
+        paragraph_block(f"Feast Day: {feast_day} ({celebration_type})"),
+        paragraph_block(
+            "Why this feast day: liturgical calendar placement and significance for this saint."
+        ),
+    ]
     for chunk in split_text_chunks(feast_overview or f"{saint_name} is commemorated on {feast_day}.", 1800):
-        overview_children.append(paragraph_block(chunk))
-    blocks.append(toggle_block("Feast Placement & Saint Overview", overview_children))
+        placement_children.append(paragraph_block(chunk))
+    blocks.append(toggle_block("Saint Background & Feast Placement", placement_children))
 
     life_children: List[Dict[str, Any]] = []
     if isinstance(life_sections, list) and life_sections:
@@ -1329,13 +1353,6 @@ def saint_devotional_blocks(
     else:
         life_children.append(paragraph_block(f"Life details for {saint_name}."))
     blocks.append(toggle_block("Life of the Saint", life_children))
-
-    checklist_children: List[Dict[str, Any]] = []
-    for idx in range(9):
-        day_num = idx + 1
-        day_date = prep_start + datetime.timedelta(days=idx)
-        checklist_children.append(to_do_block(f"Day {day_num} - {day_date.strftime('%b %d')}"))
-    blocks.append(toggle_block(f"Novena Checklist (Prep Start: {prep_start.strftime('%b %d')})", checklist_children))
 
     opening_children = [paragraph_block(chunk) for chunk in split_text_chunks(opening_prayer or "Opening prayer.", 1800)]
     blocks.append(toggle_block("Opening Prayer", opening_children))
@@ -1621,14 +1638,6 @@ def sync_saint_radar(
             if page_id:
                 notion_update_page_properties(page_id, base_props, notion_token)
                 if refresh_all and entry_kind == "saint":
-                    background = call_openai_saint_background(
-                        api_key=openai_key,
-                        base_url=oai_base_url,
-                        model=oai_model,
-                        saint_name=name,
-                        feast_day=day,
-                        celebration_type=celebration_rank,
-                    )
                     devotional_payload = call_openai_saint_devotional_content(
                         api_key=openai_key,
                         base_url=oai_base_url,
@@ -1636,12 +1645,6 @@ def sync_saint_radar(
                         saint_name=name,
                         feast_day=day,
                         celebration_type=celebration_rank,
-                    )
-                    bg_chunks = split_text_chunks(background, 1800)
-                    notion_update_page_properties(
-                        page_id,
-                        {background_prop: notion_scalar_property_value(background_prop_type or "rich_text", "\n\n".join(bg_chunks))},
-                        notion_token,
                     )
                     notion_replace_page_blocks(
                         page_id,
@@ -1654,18 +1657,7 @@ def sync_saint_radar(
             create_props = dict(base_props)
             if background_prop_type:
                 if entry_kind == "saint":
-                    background = call_openai_saint_background(
-                        api_key=openai_key,
-                        base_url=oai_base_url,
-                        model=oai_model,
-                        saint_name=name,
-                        feast_day=day,
-                        celebration_type=celebration_rank,
-                    )
-                    bg_chunks = split_text_chunks(background, 1800)
-                    create_props[background_prop] = notion_scalar_property_value(
-                        background_prop_type, "\n\n".join(bg_chunks)
-                    )
+                    create_props[background_prop] = notion_scalar_property_value(background_prop_type, "")
                 else:
                     create_props[background_prop] = notion_scalar_property_value(
                         background_prop_type,
@@ -1945,14 +1937,6 @@ def main() -> int:
                         feast_day=feast_iso,
                         celebration_type=str(saint.get("celebration_rank", "unknown")),
                     )
-                    background = call_openai_saint_background(
-                        api_key=openai_key,
-                        base_url=oai_base_url,
-                        model=oai_model,
-                        saint_name=saint_name,
-                        feast_day=feast_iso,
-                        celebration_type=str(saint.get("celebration_rank", "unknown")),
-                    )
                     for job in target_jobs:
                         page_id = str(job.get("page_id", "")).strip()
                         target_day = job.get("target_day")
@@ -1970,7 +1954,6 @@ def main() -> int:
                             feast_day=feast_iso,
                             target_day=target_day,
                             day_num=day_num,
-                            background=background,
                             devotional_payload=devotional_payload,
                         )
                             notion_append_children(page_id, blocks, notion_token)
