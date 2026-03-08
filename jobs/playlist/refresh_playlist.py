@@ -56,7 +56,7 @@ NOTION_INTENTIONS_DATABASE_NAME = "NOTION_INTENTIONS_DATABASE_NAME"  # default P
 NOTION_INTENTIONS_PETITION_PROPERTY = "NOTION_INTENTIONS_PETITION_PROPERTY"  # default Petition
 NOTION_INTENTIONS_STATUS_PROPERTY = "NOTION_INTENTIONS_STATUS_PROPERTY"  # default Status
 NOTION_INTENTIONS_FREQUENCY_PROPERTY = "NOTION_INTENTIONS_FREQUENCY_PROPERTY"  # default Frequency
-NOTION_INTENTIONS_STATUS_ALLOWED = "NOTION_INTENTIONS_STATUS_ALLOWED"  # default active,open,ongoing
+NOTION_INTENTIONS_STATUS_ALLOWED = "NOTION_INTENTIONS_STATUS_ALLOWED"  # default praying
 
 
 MARKETS_TO_TRY = ["US", None, "GB", "CA", "AU"]
@@ -99,6 +99,11 @@ DEFAULT_TOKENS: Dict[str, Any] = {
     "DO_MIDAFTERNOON": "Midafternoon Prayer",
     "DO_EVENING": ["Evening Prayer", "Vespers"],
     "DO_NIGHT_ANY": ["Night Prayer", "Compline"],
+}
+
+# Allow resolver aliases from Notion rows while keeping canonical internal keys.
+RESOLVER_ALIASES = {
+    "DO_INVITATORY": "INVITATORY",
 }
 
 
@@ -324,6 +329,9 @@ def page_property_obj(page: Dict[str, Any], property_name: str) -> Dict[str, Any
 def page_property_text(page: Dict[str, Any], property_name: str) -> str:
     prop = page_property_obj(page, property_name)
     ptype = str(prop.get("type", "")).strip()
+    if ptype == "status":
+        status = prop.get("status") or {}
+        return str(status.get("name", "")).strip()
     if ptype == "select":
         sel = prop.get("select") or {}
         return str(sel.get("name", "")).strip()
@@ -521,7 +529,7 @@ def distribute_prayer_intentions(profile_name: str) -> Tuple[int, int, int]:
     status_property = os.getenv(NOTION_INTENTIONS_STATUS_PROPERTY, "Status").strip() or "Status"
     frequency_property = os.getenv(NOTION_INTENTIONS_FREQUENCY_PROPERTY, "Frequency").strip() or "Frequency"
     allowed_statuses = parse_csv_values(
-        os.getenv(NOTION_INTENTIONS_STATUS_ALLOWED, "active,open,ongoing").strip() or "active,open,ongoing"
+        os.getenv(NOTION_INTENTIONS_STATUS_ALLOWED, "praying").strip() or "praying"
     )
 
     opus_pages = notion_get_all_pages(opus_db_id, token)
@@ -553,7 +561,7 @@ def distribute_prayer_intentions(profile_name: str) -> Tuple[int, int, int]:
         if status_checkbox is not None:
             if status_checkbox is not True:
                 continue
-        elif allowed_statuses and status_text and status_text not in allowed_statuses:
+        elif allowed_statuses and (not status_text or status_text not in allowed_statuses):
             continue
         freq = page_property_number(page, frequency_property)
         weight = float(freq) if freq is not None else 1.0
@@ -1432,6 +1440,7 @@ def resolve_spec_uri(
     key = re.sub(r"[^A-Za-z0-9]+", "_", raw).strip("_").upper()
     if not key:
         return None
+    key = RESOLVER_ALIASES.get(key, key)
     return resolve_item_uri(sp, key, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
 
 
