@@ -68,6 +68,36 @@ jobs:
           rclone lsd "${REMOTE_NAME}:" >/dev/null
           rclone lsd "${REMOTE_NAME}:${REMOTE_ROOT}" >/dev/null || true
 
+      - name: Prefetch existing devotional files from OneDrive
+        shell: bash
+        run: |
+          set -euo pipefail
+          REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
+          REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Pictures/Samsung Gallery/DCIM}"
+          LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/DCIM"
+
+          mkdir -p "${LOCAL_ROOT}/Current Devotion" "${LOCAL_ROOT}/Devotion Wide"
+
+          # Pull active folders so skip_existing works on ephemeral runners.
+          rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Current Devotion/" "${LOCAL_ROOT}/Current Devotion/" --create-empty-src-dirs || true
+          rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Devotion Wide/" "${LOCAL_ROOT}/Devotion Wide/" --create-empty-src-dirs || true
+
+          # Pull only month archives that can appear in the active window.
+          MONTHS=$(python - <<'PY'
+import datetime
+import os
+days = int(os.getenv("ROMCAL_WINDOW_DAYS", "9"))
+today = datetime.date.today()
+names = sorted({(today + datetime.timedelta(days=i)).strftime("%B") for i in range(days)})
+print("\n".join(names))
+PY
+)
+          while IFS= read -r month; do
+            [ -z "$month" ] && continue
+            rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/${month} Devotion/" "${LOCAL_ROOT}/${month} Devotion/" --create-empty-src-dirs || true
+            rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/${month} Devotion Wide/" "${LOCAL_ROOT}/${month} Devotion Wide/" --create-empty-src-dirs || true
+          done <<< "${MONTHS}"
+
       - name: Generate devotional image locally on runner
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
