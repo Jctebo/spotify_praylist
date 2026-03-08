@@ -127,6 +127,8 @@ def render_ics(rows: List[Dict[str, str]]) -> str:
             f"DTSTART;VALUE=DATE:{day}",
             f"DTEND;VALUE=DATE:{day_end}",
             f"SUMMARY:{ics_escape(name)}",
+            "TRANSP:TRANSPARENT",
+            "X-MICROSOFT-CDO-BUSYSTATUS:FREE",
         ]
         if description:
             event_lines.append(f"DESCRIPTION:{ics_escape(description)}")
