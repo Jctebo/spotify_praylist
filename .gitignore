@@ -28,6 +28,7 @@ htmlcov/
 *.key
 secrets.*
 .cache
+artifacts/
 
 # OS / editor files
 .DS_Store
