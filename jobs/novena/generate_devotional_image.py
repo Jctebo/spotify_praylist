@@ -523,12 +523,32 @@ def page_property_checkbox(page: Dict[str, Any], property_name: str) -> Optional
     return bool(prop.get("checkbox"))
 
 
+def rich_text_fragments(text: str, max_len: int = 1900) -> List[Dict[str, Any]]:
+    cleaned = str(text or "").strip()
+    if not cleaned:
+        return []
+    chunks: List[str] = []
+    remaining = cleaned
+    while remaining:
+        if len(remaining) <= max_len:
+            chunks.append(remaining)
+            break
+        cut = remaining.rfind("\n", 0, max_len + 1)
+        if cut < max_len // 2:
+            cut = remaining.rfind(" ", 0, max_len + 1)
+        if cut < max_len // 2:
+            cut = max_len
+        chunks.append(remaining[:cut].strip())
+        remaining = remaining[cut:].strip()
+    return [{"type": "text", "text": {"content": chunk}} for chunk in chunks if chunk]
+
+
 def scalar_property_payload(prop_type: str, value: str) -> Dict[str, Any]:
     text = str(value or "").strip()
     if prop_type == "title":
-        return {"title": [{"type": "text", "text": {"content": text[:2000]}}]} if text else {"title": []}
+        return {"title": rich_text_fragments(text, max_len=2000)} if text else {"title": []}
     if prop_type == "rich_text":
-        return {"rich_text": [{"type": "text", "text": {"content": text[:2000]}}]} if text else {"rich_text": []}
+        return {"rich_text": rich_text_fragments(text)} if text else {"rich_text": []}
     if prop_type == "select":
         return {"select": {"name": text} if text else None}
     if prop_type == "url":
@@ -545,7 +565,7 @@ def scalar_property_payload(prop_type: str, value: str) -> Dict[str, Any]:
             return {"number": float(text)}
         except Exception:
             return {"number": None}
-    return {"rich_text": [{"type": "text", "text": {"content": text[:2000]}}]} if text else {"rich_text": []}
+    return {"rich_text": rich_text_fragments(text)} if text else {"rich_text": []}
 
 
 def checkbox_property_payload(value: bool) -> Dict[str, Any]:
