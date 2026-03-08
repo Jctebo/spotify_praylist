@@ -2,6 +2,7 @@ import base64
 import datetime
 import json
 import os
+import random
 import re
 import sys
 import time
@@ -47,6 +48,15 @@ NOTION_QUEUE_ORDER_PROPERTY = "NOTION_QUEUE_ORDER_PROPERTY"  # defaults to Playl
 NOTION_QUEUE_RESOLVER_PROPERTY = "NOTION_QUEUE_RESOLVER_PROPERTY"  # defaults to Spotify Resolver
 NOTION_QUEUE_FALLBACK_PROPERTY = "NOTION_QUEUE_FALLBACK_PROPERTY"  # defaults to Spotify Fallback Resolver
 NOTION_QUEUE_ENABLED_PROPERTY = "NOTION_QUEUE_ENABLED_PROPERTY"  # defaults to Enabled
+NOTION_INTENTION_PROPERTY = "NOTION_INTENTION_PROPERTY"  # defaults to Intention
+NOTION_INTENTIONS_ENABLED = "NOTION_INTENTIONS_ENABLED"  # default true
+NOTION_INTENTIONS_RUN_PROFILE = "NOTION_INTENTIONS_RUN_PROFILE"  # default morning
+NOTION_INTENTIONS_DATABASE_ID = "NOTION_INTENTIONS_DATABASE_ID"  # optional explicit Prayer Intentions db id
+NOTION_INTENTIONS_DATABASE_NAME = "NOTION_INTENTIONS_DATABASE_NAME"  # default Prayer Intentions
+NOTION_INTENTIONS_PETITION_PROPERTY = "NOTION_INTENTIONS_PETITION_PROPERTY"  # default Petition
+NOTION_INTENTIONS_STATUS_PROPERTY = "NOTION_INTENTIONS_STATUS_PROPERTY"  # default Status
+NOTION_INTENTIONS_FREQUENCY_PROPERTY = "NOTION_INTENTIONS_FREQUENCY_PROPERTY"  # default Frequency
+NOTION_INTENTIONS_STATUS_ALLOWED = "NOTION_INTENTIONS_STATUS_ALLOWED"  # default active,open,ongoing
 
 
 MARKETS_TO_TRY = ["US", None, "GB", "CA", "AU"]
@@ -419,6 +429,146 @@ def notion_update_uri(page_id: str, page: Dict[str, Any], uri_property: str, uri
     else:
         body = {"properties": {uri_property: {"rich_text": [{"type": "text", "text": {"content": uri[:2000]}}]}}}
     notion_call("PATCH", f"https://api.notion.com/v1/pages/{page_id}", token, body)
+
+
+def notion_update_text_property(page_id: str, page: Dict[str, Any], property_name: str, text: str, token: str) -> bool:
+    prop = page_property_obj(page, property_name)
+    ptype = str(prop.get("type", "")).strip()
+    value = str(text or "").strip()
+    if ptype == "rich_text":
+        body = {
+            "properties": {
+                property_name: {
+                    "rich_text": [{"type": "text", "text": {"content": value[:2000]}}] if value else []
+                }
+            }
+        }
+    elif ptype == "title":
+        body = {
+            "properties": {
+                property_name: {"title": [{"type": "text", "text": {"content": value[:2000]}}] if value else []}
+            }
+        }
+    elif ptype == "select":
+        body = {"properties": {property_name: {"select": {"name": value} if value else None}}}
+    elif ptype == "url":
+        body = {"properties": {property_name: {"url": value if value.startswith("http") else None}}}
+    else:
+        # Unknown property type.
+        return False
+    notion_call("PATCH", f"https://api.notion.com/v1/pages/{page_id}", token, body)
+    return True
+
+
+def parse_csv_values(text: str) -> List[str]:
+    raw = str(text or "").strip()
+    if not raw:
+        return []
+    out: List[str] = []
+    for part in re.split(r"[,;|]+", raw):
+        norm = normalize_text(part)
+        if norm and norm not in out:
+            out.append(norm)
+    return out
+
+
+def weighted_shuffle_indices(weights: List[float], rng: random.Random) -> List[int]:
+    keyed: List[Tuple[float, int]] = []
+    for idx, weight in enumerate(weights):
+        w = max(0.0001, float(weight))
+        key = rng.random() ** (1.0 / w)
+        keyed.append((key, idx))
+    keyed.sort(key=lambda x: x[0], reverse=True)
+    return [idx for _, idx in keyed]
+
+
+def distribute_prayer_intentions(profile_name: str) -> Tuple[int, int, int]:
+    if not bool_env(NOTION_INTENTIONS_ENABLED, default=True):
+        return (0, 0, 0)
+    run_profile = normalize_text(os.getenv(NOTION_INTENTIONS_RUN_PROFILE, "morning").strip() or "morning")
+    if run_profile and normalize_text(profile_name) != run_profile:
+        return (0, 0, 0)
+
+    token = os.getenv(NOTION_TOKEN, "").strip()
+    if not token:
+        return (0, 0, 0)
+
+    opus_db_id = os.getenv(NOTION_DATABASE_ID, "").strip()
+    if not opus_db_id:
+        opus_name = os.getenv(NOTION_DATABASE_NAME, "Opus Dei").strip() or "Opus Dei"
+        opus_db_id = notion_find_database_id(token, opus_name) or ""
+    if not opus_db_id:
+        return (0, 0, 0)
+
+    intentions_db_id = os.getenv(NOTION_INTENTIONS_DATABASE_ID, "").strip()
+    if not intentions_db_id:
+        intentions_name = os.getenv(NOTION_INTENTIONS_DATABASE_NAME, "Prayer Intentions").strip() or "Prayer Intentions"
+        intentions_db_id = notion_find_database_id(token, intentions_name) or ""
+    if not intentions_db_id:
+        return (0, 0, 0)
+
+    platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
+    enabled_property = os.getenv(NOTION_QUEUE_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
+    intention_property = os.getenv(NOTION_INTENTION_PROPERTY, "Intention").strip() or "Intention"
+    title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
+
+    petition_property = os.getenv(NOTION_INTENTIONS_PETITION_PROPERTY, "Petition").strip() or "Petition"
+    status_property = os.getenv(NOTION_INTENTIONS_STATUS_PROPERTY, "Status").strip() or "Status"
+    frequency_property = os.getenv(NOTION_INTENTIONS_FREQUENCY_PROPERTY, "Frequency").strip() or "Frequency"
+    allowed_statuses = parse_csv_values(
+        os.getenv(NOTION_INTENTIONS_STATUS_ALLOWED, "active,open,ongoing").strip() or "active,open,ongoing"
+    )
+
+    opus_pages = notion_get_all_pages(opus_db_id, token)
+    targets: List[Dict[str, Any]] = []
+    for page in opus_pages:
+        enabled = page_property_checkbox(page, enabled_property)
+        if enabled is not True:
+            continue
+        platform = normalize_text(page_property_text(page, platform_property))
+        if "container" in platform:
+            continue
+        page_id = str(page.get("id", "")).strip()
+        if not page_id:
+            continue
+        targets.append({"id": page_id, "page": page, "name": page_title(page, title_property).strip()})
+    if not targets:
+        return (0, 0, 0)
+
+    intention_pages = notion_get_all_pages(intentions_db_id, token)
+    petitions: List[str] = []
+    weights: List[float] = []
+    for page in intention_pages:
+        petition = page_property_text(page, petition_property).strip()
+        if not petition:
+            continue
+        status_checkbox = page_property_checkbox(page, status_property)
+        status_text = normalize_text(page_property_text(page, status_property))
+        if status_checkbox is not None:
+            if status_checkbox is not True:
+                continue
+        elif allowed_statuses and status_text and status_text not in allowed_statuses:
+            continue
+        freq = page_property_number(page, frequency_property)
+        weight = float(freq) if freq is not None else 1.0
+        weight = max(1.0, min(100.0, weight))
+        petitions.append(petition)
+        weights.append(weight)
+    if not petitions:
+        return (len(targets), 0, 0)
+
+    rng = random.Random(int(local_now().strftime("%Y%m%d")))
+    petition_order: List[int] = []
+    assigned = 0
+    for target in targets:
+        if not petition_order:
+            petition_order = weighted_shuffle_indices(weights, rng)
+        idx = petition_order.pop(0)
+        petition_text = petitions[idx]
+        ok = notion_update_text_property(str(target["id"]), target["page"], intention_property, petition_text, token)
+        if ok:
+            assigned += 1
+    return (len(targets), len(petitions), assigned)
 
 
 def normalize_profile_token(text: str) -> str:
@@ -1470,6 +1620,7 @@ def main() -> int:
             notion_uri_updates, notion_uri_update_details, notion_uri_unchanged, notion_uri_no_match = (
                 sync_notion_uris_for_profile(sp, queue, profile)
             )
+        intention_targets, intention_source_count, intention_assigned = distribute_prayer_intentions(profile)
 
         print(f"SUMMARY playlist_id={playlist_id} tracks_written={written}")
         print(f"INFO profile={profile} weekday={weekday} playlist_recreated=true source={source}")
@@ -1498,6 +1649,11 @@ def main() -> int:
                 print(
                     f"INFO notion_uri_no_match_truncated shown={max(0, log_limit)} total={len(notion_uri_no_match)}"
                 )
+        if intention_targets or intention_source_count or intention_assigned:
+            print(
+                "INFO notion_intentions_distributed "
+                f"profile={profile} targets={intention_targets} source_petitions={intention_source_count} assigned={intention_assigned}"
+            )
 
         return 0
     except requests.HTTPError as exc:
