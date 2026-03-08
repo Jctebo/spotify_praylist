@@ -1,0 +1,49 @@
+name: Publish Liturgical ICS
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 9 * * *" # daily 03:30 CST / 04:30 CDT
+
+permissions:
+  contents: write
+
+jobs:
+  publish-ics:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Export liturgical ICS
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_SAINT_DATABASE_ID: ${{ vars.NOTION_SAINT_DATABASE_ID || secrets.NOTION_SAINT_DATABASE_ID }}
+          NOTION_SAINT_DATABASE_NAME: Liturgical Calendar
+          NOTION_SAINT_TITLE_PROPERTY: Name
+          NOTION_SAINT_FEAST_DAY_PROPERTY: Feast Day
+          NOTION_SAINT_CELEBRATION_PROPERTY: Celebration Rank
+          NOTION_SAINT_PRECEDENCE_PROPERTY: Precedence
+          LITURGICAL_ICS_OUTPUT: docs/liturgical.ics
+        run: python jobs/novena/export_liturgical_ics.py
+
+      - name: Commit updated ICS
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/liturgical.ics
+          if git diff --cached --quiet; then
+            echo "No ICS changes to commit."
+            exit 0
+          fi
+          git commit -m "Update liturgical ICS feed"
+          git push
