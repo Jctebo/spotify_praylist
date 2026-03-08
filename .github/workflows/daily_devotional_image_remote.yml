@@ -116,6 +116,19 @@ jobs:
             exit 1
           fi
 
-          rclone copy "$CURRENT_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Current Devotion/" --progress --transfers 4 --checkers 8
-          rclone copy "$WIDE_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Devotion Wide/" --progress --transfers 4 --checkers 8
-          echo "Uploaded devotional files to OneDrive via rclone."
+          # Mirror current folders to remote (overwrite + remove stale files).
+          rclone sync "$CURRENT_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Current Devotion/" --progress --transfers 4 --checkers 8
+          rclone sync "$WIDE_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Devotion Wide/" --progress --transfers 4 --checkers 8
+
+          # Mirror relevant month archive folders so local move operations are reflected remotely.
+          MONTHS=$(python -c "import datetime, os; days=int(os.getenv('ROMCAL_WINDOW_DAYS','9')); today=datetime.date.today(); names=sorted({(today+datetime.timedelta(days=i)).strftime('%B') for i in range(days)}); print('\n'.join(names))")
+          while IFS= read -r month; do
+            [ -z "$month" ] && continue
+            LOCAL_MONTH_DIR="${GITHUB_WORKSPACE}/onedrive_sync/DCIM/${month} Devotion"
+            LOCAL_MONTH_WIDE_DIR="${GITHUB_WORKSPACE}/onedrive_sync/DCIM/${month} Devotion Wide"
+            mkdir -p "$LOCAL_MONTH_DIR" "$LOCAL_MONTH_WIDE_DIR"
+            rclone sync "$LOCAL_MONTH_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/${month} Devotion/" --progress --transfers 4 --checkers 8
+            rclone sync "$LOCAL_MONTH_WIDE_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/${month} Devotion Wide/" --progress --transfers 4 --checkers 8
+          done <<< "${MONTHS}"
+
+          echo "Synced devotional files to OneDrive via rclone."
