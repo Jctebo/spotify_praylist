@@ -118,6 +118,7 @@ def render_ics(rows: List[Dict[str, str]]) -> str:
         if precedence:
             description_parts.append(f"Precedence: {precedence}")
         description = "\n".join(description_parts).strip()
+        description_html = "<br/>".join(ics_escape(x) for x in description_parts if x).strip()
         uid = f"{date_obj.isoformat()}-{slugify(name)}@spotify-praylist"
 
         event_lines = [
@@ -132,6 +133,8 @@ def render_ics(rows: List[Dict[str, str]]) -> str:
         ]
         if description:
             event_lines.append(f"DESCRIPTION:{ics_escape(description)}")
+        if description_html:
+            event_lines.append(f"X-ALT-DESC;FMTTYPE=text/html:{description_html}")
         event_lines.append("END:VEVENT")
 
         for event_line in event_lines:

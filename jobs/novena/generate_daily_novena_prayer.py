@@ -908,36 +908,26 @@ def collect_calendar_days_window(
         events = romcal_fetch_day(calendar, locale, dt)
         if not events:
             continue
-        primary = None
+        # Include all celebrations surfaced by Romcal for the day (primary + suppressed/optional).
         for ev in events:
             if not isinstance(ev, dict):
                 continue
-            if not bool(ev.get("suppressed")):
-                primary = ev
-                break
-        if primary is None:
-            for ev in events:
-                if isinstance(ev, dict):
-                    primary = ev
-                    break
-        if not isinstance(primary, dict):
-            continue
-        name = celebration_name(primary)
-        if not name:
-            continue
-        key = (dt.isoformat(), name.lower())
-        if key in seen:
-            continue
-        seen.add(key)
-        rows.append(
-            {
-                "date": dt.isoformat(),
-                "name": name,
-                "celebration_rank": infer_celebration_rank(primary),
-                "precedence": infer_precedence(primary),
-                "entry_kind": "calendar_day",
-            }
-        )
+            name = celebration_name(ev)
+            if not name:
+                continue
+            key = (dt.isoformat(), name.lower())
+            if key in seen:
+                continue
+            seen.add(key)
+            rows.append(
+                {
+                    "date": dt.isoformat(),
+                    "name": name,
+                    "celebration_rank": infer_celebration_rank(ev),
+                    "precedence": infer_precedence(ev),
+                    "entry_kind": "calendar_day",
+                }
+            )
     return rows
 
 
@@ -1664,29 +1654,31 @@ def sync_saint_radar(
                         f"Primary liturgical celebration for {day}: {name}. Rank: {celebration_rank}. Precedence: {precedence}.",
                     )
             notion_create_page(saint_db_id, create_props, notion_token)
-            refreshed_pages = notion_get_all_pages(saint_db_id, notion_token)
-            created_page = None
-            for p in refreshed_pages:
-                if page_title(p, title_prop).strip().lower() == name.lower() and page_date(p, feast_prop).strip() == day:
-                    created_page = p
-                    break
-            if created_page:
-                created_page_id = str(created_page.get("id", "")).strip()
-                if created_page_id and entry_kind == "saint":
-                    devotional_payload = call_openai_saint_devotional_content(
-                        api_key=openai_key,
-                        base_url=oai_base_url,
-                        model=oai_model,
-                        saint_name=name,
-                        feast_day=day,
-                        celebration_type=celebration_rank,
-                    )
-                    notion_replace_page_blocks(
-                        created_page_id,
-                        saint_devotional_blocks(name, day, celebration_rank, devotional_payload),
-                        notion_token,
-                    )
-                    regenerated += 1
+            if entry_kind == "saint":
+                # Only saint entries need immediate block regeneration lookup.
+                refreshed_pages = notion_get_all_pages(saint_db_id, notion_token)
+                created_page = None
+                for p in refreshed_pages:
+                    if page_title(p, title_prop).strip().lower() == name.lower() and page_date(p, feast_prop).strip() == day:
+                        created_page = p
+                        break
+                if created_page:
+                    created_page_id = str(created_page.get("id", "")).strip()
+                    if created_page_id:
+                        devotional_payload = call_openai_saint_devotional_content(
+                            api_key=openai_key,
+                            base_url=oai_base_url,
+                            model=oai_model,
+                            saint_name=name,
+                            feast_day=day,
+                            celebration_type=celebration_rank,
+                        )
+                        notion_replace_page_blocks(
+                            created_page_id,
+                            saint_devotional_blocks(name, day, celebration_rank, devotional_payload),
+                            notion_token,
+                        )
+                        regenerated += 1
             upserted += 1
     mode = "created" if created else "existing"
     return f"{mode}:{saint_db_id}:upserted={upserted}:regenerated={regenerated}:refresh_all={str(refresh_all).lower()}"
