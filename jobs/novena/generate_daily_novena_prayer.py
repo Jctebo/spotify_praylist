@@ -349,6 +349,17 @@ def notion_remove_old_autogen_sections_by_markers(page_id: str, token: str, mark
     return removed
 
 
+def notion_has_autogen_section_marker(page_id: str, token: str, marker: str) -> bool:
+    needle = str(marker or "").strip()
+    if not needle:
+        return False
+    for block in notion_list_block_children(page_id, token):
+        title = block_rich_text_plain(block)
+        if needle in title:
+            return True
+    return False
+
+
 def notion_replace_page_blocks(page_id: str, children: Sequence[Dict[str, Any]], token: str) -> None:
     existing = notion_list_block_children(page_id, token)
     for block in existing:
@@ -649,6 +660,19 @@ def notion_remove_old_autogen_audio(page_id: str, token: str, marker: str = NOVE
         notion_archive_block(block_id, token)
         removed += 1
     return removed
+
+
+def notion_has_autogen_audio_marker(page_id: str, token: str, marker: str = NOVENA_AUDIO_MARKER) -> bool:
+    needle = str(marker or "").strip()
+    if not needle:
+        return False
+    for block in notion_list_block_children(page_id, token):
+        if str(block.get("type", "")).strip() != "audio":
+            continue
+        caption = audio_block_caption(block)
+        if needle in caption:
+            return True
+    return False
 
 
 def notion_append_audio_block(
@@ -1824,8 +1848,11 @@ def main() -> int:
             calendar_by_date: Dict[str, str] = {str(r.get("date", "")).strip(): str(r.get("name", "")).strip() for r in calendar_rows}
             day_mode = bool_env(NOVENA_DAY_MODE, default=True)
             test_backfill = bool_env(NOVENA_TEST_POPULATE_ALL_DAYS, default=False)
+            force_refresh = bool_env(NOTION_SAINT_REFRESH_ALL, default=False)
+            audio_enabled = bool_env(NOVENA_AUDIO_ENABLED, default=False)
             wrote_sections = 0
             wrote_audio = 0
+            skipped_existing = 0
 
             # Keep USCCB daily readings append for today's calendar row.
             if readings_blocks:
@@ -1867,22 +1894,7 @@ def main() -> int:
                     if not target_days:
                         continue
 
-                    devotional_payload = call_openai_saint_devotional_content(
-                        api_key=openai_key,
-                        base_url=oai_base_url,
-                        model=oai_model,
-                        saint_name=saint_name,
-                        feast_day=feast_iso,
-                        celebration_type=str(saint.get("celebration_rank", "unknown")),
-                    )
-                    background = call_openai_saint_background(
-                        api_key=openai_key,
-                        base_url=oai_base_url,
-                        model=oai_model,
-                        saint_name=saint_name,
-                        feast_day=feast_iso,
-                        celebration_type=str(saint.get("celebration_rank", "unknown")),
-                    )
+                    target_jobs: List[Dict[str, Any]] = []
                     for target_day in target_days:
                         day_num = (target_day - prep_start).days + 1
                         if not (1 <= day_num <= 9):
@@ -1902,8 +1914,58 @@ def main() -> int:
                         if not page_id:
                             continue
                         marker = saint_day_marker(saint_name, target_day)
-                        notion_remove_old_autogen_sections_by_markers(page_id, notion_token, [marker])
-                        blocks = saint_novena_day_blocks(
+                        section_exists = notion_has_autogen_section_marker(page_id, notion_token, marker)
+                        audio_marker = f"{marker}:{NOVENA_AUDIO_MARKER}"
+                        audio_exists = notion_has_autogen_audio_marker(page_id, notion_token, marker=audio_marker) if audio_enabled else True
+
+                        if (not force_refresh) and section_exists and (not audio_enabled or audio_exists):
+                            skipped_existing += 1
+                            continue
+
+                        target_jobs.append(
+                            {
+                                "page_id": page_id,
+                                "target_day": target_day,
+                                "day_num": day_num,
+                                "marker": marker,
+                                "audio_marker": audio_marker,
+                                "needs_section": (not section_exists) or force_refresh,
+                                "needs_audio": audio_enabled and ((not audio_exists) or force_refresh),
+                            }
+                        )
+
+                    if not target_jobs:
+                        continue
+
+                    devotional_payload = call_openai_saint_devotional_content(
+                        api_key=openai_key,
+                        base_url=oai_base_url,
+                        model=oai_model,
+                        saint_name=saint_name,
+                        feast_day=feast_iso,
+                        celebration_type=str(saint.get("celebration_rank", "unknown")),
+                    )
+                    background = call_openai_saint_background(
+                        api_key=openai_key,
+                        base_url=oai_base_url,
+                        model=oai_model,
+                        saint_name=saint_name,
+                        feast_day=feast_iso,
+                        celebration_type=str(saint.get("celebration_rank", "unknown")),
+                    )
+                    for job in target_jobs:
+                        page_id = str(job.get("page_id", "")).strip()
+                        target_day = job.get("target_day")
+                        day_num = int(job.get("day_num", 0))
+                        marker = str(job.get("marker", "")).strip()
+                        audio_marker = str(job.get("audio_marker", "")).strip()
+                        needs_section = bool(job.get("needs_section"))
+                        needs_audio = bool(job.get("needs_audio"))
+                        if not page_id or not isinstance(target_day, datetime.date) or day_num < 1 or not marker:
+                            continue
+                        if needs_section:
+                            notion_remove_old_autogen_sections_by_markers(page_id, notion_token, [marker])
+                            blocks = saint_novena_day_blocks(
                             saint_name=saint_name,
                             feast_day=feast_iso,
                             target_day=target_day,
@@ -1911,13 +1973,13 @@ def main() -> int:
                             background=background,
                             devotional_payload=devotional_payload,
                         )
-                        notion_append_children(page_id, blocks, notion_token)
-                        wrote_sections += len(blocks)
+                            notion_append_children(page_id, blocks, notion_token)
+                            wrote_sections += len(blocks)
 
-                        if bool_env(NOVENA_AUDIO_ENABLED, default=False):
+                        if needs_audio:
                             try:
-                                audio_marker = f"{marker}:{NOVENA_AUDIO_MARKER}"
-                                notion_remove_old_autogen_audio(page_id, notion_token, marker=audio_marker)
+                                if force_refresh:
+                                    notion_remove_old_autogen_audio(page_id, notion_token, marker=audio_marker)
                                 audio_text = saint_novena_day_audio_text(day_num, devotional_payload)
                                 audio_model = os.getenv(NOVENA_AUDIO_MODEL, "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
                                 audio_voice = os.getenv(NOVENA_AUDIO_VOICE, "alloy").strip() or "alloy"
@@ -1949,7 +2011,10 @@ def main() -> int:
                             except Exception:
                                 if not bool_env(NOVENA_AUDIO_FAIL_OPEN, default=True):
                                     raise
-                write_mode = f"saint_radar_novena_day_by_day:sections={wrote_sections}:audio={wrote_audio}"
+                write_mode = (
+                    f"saint_radar_novena_day_by_day:sections={wrote_sections}:audio={wrote_audio}:"
+                    f"skipped_existing={skipped_existing}:force_refresh={str(force_refresh).lower()}"
+                )
         audio_mode = "disabled"
         if target_page and write_daily_novena_page:
             try:
