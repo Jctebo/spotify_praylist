@@ -242,6 +242,16 @@ def existing_generated_saint_keys(output_dirs: Sequence[Path]) -> set[str]:
     return keys
 
 
+def dir_has_saint_key(output_dir: Path, key: str) -> bool:
+    if not output_dir.exists():
+        return False
+    for ext in ("*.png", "*.jpeg", "*.webp"):
+        for file in output_dir.glob(ext):
+            if parse_saint_key_from_filename(file) == key:
+                return True
+    return False
+
+
 def month_devotion_folder_name(day: datetime.date, source_folder_name: str) -> str:
     base = day.strftime("%B Devotion")
     if "wide" in str(source_folder_name or "").lower():
@@ -536,7 +546,9 @@ def main() -> int:
             if not subject:
                 continue
             target_key = saint_key(target)
-            if target_key in generated_keys:
+            has_portrait = dir_has_saint_key(current_dir, target_key)
+            has_wide = dir_has_saint_key(wide_dir, target_key)
+            if has_portrait and has_wide:
                 print(f"INFO skip_existing subject={subject} key={target_key}")
                 total_skipped_existing += 1
                 continue
@@ -545,79 +557,83 @@ def main() -> int:
                 generated_keys.add(target_key)
                 print(f"INFO restored_from_archive subject={subject} key={target_key}")
                 continue
-            prompt_text = build_image_prompt(
-                client=client,
-                model=prompt_model,
-                subject=subject,
-                today=today,
-                window_start=window_start,
-                window_end=window_end,
-                saints=saints,
-                layout_hint=(
-                    "Phone portrait devotional wallpaper. Vertical composition (9:16 feel). "
-                    "Reserve a clean centered text-safe zone (middle 60% width x middle 50% height), "
-                    "avoid text in bottom 25%, and keep title short to prevent clipping."
-                ),
-            )
-            prompt_text_wide = build_image_prompt(
-                client=client,
-                model=prompt_model,
-                subject=subject,
-                today=today,
-                window_start=window_start,
-                window_end=window_end,
-                saints=saints,
-                layout_hint=(
-                    "Widescreen devotional background in native 16:9 composition (not square, not portrait). "
-                    "Frame the scene for full-width landscape use with all text fully inside a centered safe area, "
-                    "keeping at least 15% margin from every edge and avoiding edge-anchored typography."
-                ),
-            )
-
-            image_bytes = generate_image_bytes(client, image_model, prompt_text, image_size, image_quality, image_format)
-            image_bytes_wide = generate_image_bytes(
-                client, image_model, prompt_text_wide, image_size_wide, image_quality, image_format
-            )
 
             safe_subject = slugify(subject)
             target_day = str(target.get("date", "")).strip() or today.isoformat()
             month_day = datetime.date.fromisoformat(target_day).strftime("%m-%d")
             filename = f"saint_md_{month_day}_{safe_subject}.{image_format}"
-            written_portrait = write_image_file(image_bytes, current_dir, filename)
-            written_wide = write_image_file(image_bytes_wide, wide_dir, filename)
-            total_written += 1
-            generated_keys.add(target_key)
-
-            prompt_path = written_portrait.with_suffix(".prompt.txt")
-            prompt_path.write_text(prompt_text, encoding="utf-8")
-            window_path = written_portrait.with_suffix(".window.txt")
-            window_path.write_text(
-                (
-                    f"today={today.isoformat()}\n"
-                    f"window_start={window_start.isoformat()}\n"
-                    f"window_end={window_end.isoformat()}\n"
-                    f"saints_in_window={len(saints)}\n"
-                    f"selected_saint_date={target_day}\n"
-                    f"selected_saint_name={subject}\n\n"
-                    f"{format_saints_window(saints)}\n"
-                ),
-                encoding="utf-8",
+            window_text = (
+                f"today={today.isoformat()}\n"
+                f"window_start={window_start.isoformat()}\n"
+                f"window_end={window_end.isoformat()}\n"
+                f"saints_in_window={len(saints)}\n"
+                f"selected_saint_date={target_day}\n"
+                f"selected_saint_name={subject}\n\n"
+                f"{format_saints_window(saints)}\n"
             )
-            prompt_path_wide = written_wide.with_suffix(".prompt.txt")
-            prompt_path_wide.write_text(prompt_text_wide, encoding="utf-8")
-            window_path_wide = written_wide.with_suffix(".window.txt")
-            window_path_wide.write_text(window_path.read_text(encoding="utf-8"), encoding="utf-8")
 
-            print(
-                f"INFO subject={subject} source_date={target.get('date','')} "
-                f"filename={filename} outputs=2"
-            )
-            print(f"INFO wrote_image={written_portrait}")
-            print(f"INFO wrote_image={written_wide}")
-            print(f"INFO wrote_prompt={prompt_path}")
-            print(f"INFO wrote_window={window_path}")
-            print(f"INFO wrote_prompt={prompt_path_wide}")
-            print(f"INFO wrote_window={window_path_wide}")
+            outputs_written = 0
+            if not has_portrait:
+                prompt_text = build_image_prompt(
+                    client=client,
+                    model=prompt_model,
+                    subject=subject,
+                    today=today,
+                    window_start=window_start,
+                    window_end=window_end,
+                    saints=saints,
+                    layout_hint=(
+                        "Phone portrait devotional wallpaper. Vertical composition (9:16 feel). "
+                        "Reserve a clean centered text-safe zone (middle 60% width x middle 50% height), "
+                        "avoid text in bottom 25%, and keep title short to prevent clipping."
+                    ),
+                )
+                image_bytes = generate_image_bytes(client, image_model, prompt_text, image_size, image_quality, image_format)
+                written_portrait = write_image_file(image_bytes, current_dir, filename)
+                prompt_path = written_portrait.with_suffix(".prompt.txt")
+                prompt_path.write_text(prompt_text, encoding="utf-8")
+                window_path = written_portrait.with_suffix(".window.txt")
+                window_path.write_text(window_text, encoding="utf-8")
+                outputs_written += 1
+                print(f"INFO wrote_image={written_portrait}")
+                print(f"INFO wrote_prompt={prompt_path}")
+                print(f"INFO wrote_window={window_path}")
+
+            if not has_wide:
+                prompt_text_wide = build_image_prompt(
+                    client=client,
+                    model=prompt_model,
+                    subject=subject,
+                    today=today,
+                    window_start=window_start,
+                    window_end=window_end,
+                    saints=saints,
+                    layout_hint=(
+                        "Widescreen devotional background in native 16:9 composition (not square, not portrait). "
+                        "Frame the scene for full-width landscape use with all text fully inside a centered safe area, "
+                        "keeping at least 15% margin from every edge and avoiding edge-anchored typography."
+                    ),
+                )
+                image_bytes_wide = generate_image_bytes(
+                    client, image_model, prompt_text_wide, image_size_wide, image_quality, image_format
+                )
+                written_wide = write_image_file(image_bytes_wide, wide_dir, filename)
+                prompt_path_wide = written_wide.with_suffix(".prompt.txt")
+                prompt_path_wide.write_text(prompt_text_wide, encoding="utf-8")
+                window_path_wide = written_wide.with_suffix(".window.txt")
+                window_path_wide.write_text(window_text, encoding="utf-8")
+                outputs_written += 1
+                print(f"INFO wrote_image={written_wide}")
+                print(f"INFO wrote_prompt={prompt_path_wide}")
+                print(f"INFO wrote_window={window_path_wide}")
+
+            if outputs_written:
+                total_written += outputs_written
+                generated_keys.add(target_key)
+                print(
+                    f"INFO subject={subject} source_date={target.get('date','')} "
+                    f"filename={filename} outputs={outputs_written}"
+                )
 
         print(
             f"SUMMARY saints_in_window={len(saints)} generated_now={total_written} restored_now={total_restored} "
