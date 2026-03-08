@@ -83,15 +83,7 @@ jobs:
           rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Devotion Wide/" "${LOCAL_ROOT}/Devotion Wide/" --create-empty-src-dirs || true
 
           # Pull only month archives that can appear in the active window.
-          MONTHS=$(python - <<'PY'
-import datetime
-import os
-days = int(os.getenv("ROMCAL_WINDOW_DAYS", "9"))
-today = datetime.date.today()
-names = sorted({(today + datetime.timedelta(days=i)).strftime("%B") for i in range(days)})
-print("\n".join(names))
-PY
-)
+          MONTHS=$(python -c "import datetime, os; days=int(os.getenv('ROMCAL_WINDOW_DAYS','9')); today=datetime.date.today(); names=sorted({(today+datetime.timedelta(days=i)).strftime('%B') for i in range(days)}); print('\n'.join(names))")
           while IFS= read -r month; do
             [ -z "$month" ] && continue
             rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/${month} Devotion/" "${LOCAL_ROOT}/${month} Devotion/" --create-empty-src-dirs || true
