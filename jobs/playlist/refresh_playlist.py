@@ -484,13 +484,16 @@ def weighted_shuffle_indices(weights: List[float], rng: random.Random) -> List[i
 
 def distribute_prayer_intentions(profile_name: str) -> Tuple[int, int, int]:
     if not bool_env(NOTION_INTENTIONS_ENABLED, default=True):
+        print("INFO notion_intentions_distributed skipped reason=disabled")
         return (0, 0, 0)
     run_profile = normalize_text(os.getenv(NOTION_INTENTIONS_RUN_PROFILE, "morning").strip() or "morning")
     if run_profile and normalize_text(profile_name) != run_profile:
+        print(f"INFO notion_intentions_distributed skipped reason=profile_mismatch profile={profile_name} run_profile={run_profile}")
         return (0, 0, 0)
 
     token = os.getenv(NOTION_TOKEN, "").strip()
     if not token:
+        print("INFO notion_intentions_distributed skipped reason=missing_notion_token")
         return (0, 0, 0)
 
     opus_db_id = os.getenv(NOTION_DATABASE_ID, "").strip()
@@ -498,6 +501,7 @@ def distribute_prayer_intentions(profile_name: str) -> Tuple[int, int, int]:
         opus_name = os.getenv(NOTION_DATABASE_NAME, "Opus Dei").strip() or "Opus Dei"
         opus_db_id = notion_find_database_id(token, opus_name) or ""
     if not opus_db_id:
+        print("INFO notion_intentions_distributed skipped reason=opus_db_not_found")
         return (0, 0, 0)
 
     intentions_db_id = os.getenv(NOTION_INTENTIONS_DATABASE_ID, "").strip()
@@ -505,6 +509,7 @@ def distribute_prayer_intentions(profile_name: str) -> Tuple[int, int, int]:
         intentions_name = os.getenv(NOTION_INTENTIONS_DATABASE_NAME, "Prayer Intentions").strip() or "Prayer Intentions"
         intentions_db_id = notion_find_database_id(token, intentions_name) or ""
     if not intentions_db_id:
+        print("INFO notion_intentions_distributed skipped reason=intentions_db_not_found")
         return (0, 0, 0)
 
     platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
@@ -533,6 +538,7 @@ def distribute_prayer_intentions(profile_name: str) -> Tuple[int, int, int]:
             continue
         targets.append({"id": page_id, "page": page, "name": page_title(page, title_property).strip()})
     if not targets:
+        print("INFO notion_intentions_distributed skipped reason=no_eligible_targets")
         return (0, 0, 0)
 
     intention_pages = notion_get_all_pages(intentions_db_id, token)
@@ -555,6 +561,7 @@ def distribute_prayer_intentions(profile_name: str) -> Tuple[int, int, int]:
         petitions.append(petition)
         weights.append(weight)
     if not petitions:
+        print("INFO notion_intentions_distributed skipped reason=no_eligible_petitions")
         return (len(targets), 0, 0)
 
     rng = random.Random(int(local_now().strftime("%Y%m%d")))
