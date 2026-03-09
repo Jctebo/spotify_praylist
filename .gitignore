@@ -29,6 +29,8 @@ htmlcov/
 secrets.*
 .cache
 artifacts/
+sync/client/
+sync/public/
 
 # OS / editor files
 .DS_Store

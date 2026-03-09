@@ -1,0 +1,8 @@
+{
+  "source_root": "",
+  "source_base_url": "https://example.com/devotional/DCIM",
+  "target_root": "C:/Users/ExampleUser/Pictures/DevotionalImages",
+  "root_manifest": "devotional_image_library.json",
+  "include_manifests": true,
+  "delete_missing": false
+}

@@ -41,6 +41,10 @@ Optional variables:
 - `scripts/run_daily_devotional_image_rclone_local.ps1`: local runner that generates devotional images and uploads to OneDrive using rclone
 - `scripts/setup_onedrive_local.ps1`: stores local Azure/OneDrive app settings for local Graph upload runs
 - `scripts/setup_rclone_github.ps1`: wizard to create/validate rclone OneDrive remote and export `RCLONE_CONFIG_B64` for GitHub Actions
+- `sync/sync_devotional_images_client.py`: portable client sync script for non-OneDrive consumers
+- `sync/setup_devotional_image_client.ps1`: wizard to create a portable client sync bundle
+- `sync/build_devotional_public_tree.py`: filters the OneDrive-oriented devotional manifest tree into a public current-only export
+- `sync/build_devotional_image_distribution_bundle.ps1`: builds a `sync\public` + `sync\client` distribution folder
 - `requirements.txt`: Python dependencies
 - `.github/workflows/daily.yml`: daily + manual GitHub Actions workflow
 - `.github/workflows/hourly_notion_sync.yml`: manual Notion completion sync workflow
@@ -297,7 +301,7 @@ Purpose:
   - `OneDrive\Pictures\Samsung Gallery\DCIM\Non Current Devotion Wide`
 - automatically moves expired files from `Current` into `Non Current`
 - writes `images_manifest.json` inside each canonical image folder plus a root `devotional_image_library.json`
-- supports non-OneDrive clients by syncing against the generated manifests
+- supports non-OneDrive clients by publishing a filtered public manifest tree with only the current portrait + wide folders
 
 Script:
 - `jobs/novena/generate_devotional_image.py`
@@ -358,9 +362,110 @@ Local OneDrive upload env (User or Process):
 Client sync without OneDrive:
 
 ```powershell
-py -3 .\scripts\sync_devotional_images_client.py `
-  --config .\config\devotional_image_client.example.json
+py -3 .\sync\sync_devotional_images_client.py `
+  --config .\sync\devotional_image_client.example.json
 ```
+
+Interactive setup wizard:
+
+```powershell
+.\sync\setup_devotional_image_client.ps1
+```
+
+The wizard:
+- asks whether the source is `http` or `local`
+- collects the source root or public base URL
+- collects the local target folder
+- collects manifest and cleanup options
+- writes a reusable portable client bundle into `sync\client\`
+- keeps sync/distribution files under the repo root `sync\` folder instead of mixing them with other scripts
+
+Unattended example for HTTP:
+
+```powershell
+.\sync\setup_devotional_image_client.ps1 `
+  -SourceMode http `
+  -SourceBaseUrl "https://example.com/devotional/DCIM" `
+  -TargetRoot "C:\Users\Public\Pictures\DevotionalImages"
+```
+
+Unattended example for a local shared folder:
+
+```powershell
+.\sync\setup_devotional_image_client.ps1 `
+  -SourceMode local `
+  -SourceRoot "\\server\share\devotional\DCIM" `
+  -TargetRoot "C:\Users\Public\Pictures\DevotionalImages"
+```
+
+Build or refresh the root `sync\` folder so it contains both the public HTTP-ready source tree and the portable client bundle:
+
+```powershell
+.\sync\build_devotional_image_distribution_bundle.ps1 `
+  -SourceRoot "$env:USERPROFILE\OneDrive\Pictures\Samsung Gallery\DCIM" `
+  -BundleDir ".\sync" `
+  -PublicBaseUrl "https://example.com/devotional/DCIM" `
+  -ClientTargetRoot "C:\Users\Public\Pictures\DevotionalImages"
+```
+
+That root folder contains:
+- `sync\public\DCIM\...` with:
+  - `Current Devotion`
+  - `Current Devotion Wide`
+  - filtered `devotional_image_library.json`
+- `sync\client\...` with:
+  - `sync_devotional_images_client.py`
+  - `devotional_image_client.json`
+  - `run_devotional_sync.bat`
+  - `run_devotional_sync.ps1`
+
+HTTP source example:
+
+```powershell
+py -3 .\sync\sync_devotional_images_client.py `
+  --config .\sync\devotional_image_client_http.example.json
+```
+
+How the HTTP mode works:
+- publish the filtered public DCIM root over HTTP
+- the public root URL must expose:
+  - `devotional_image_library.json`
+  - `Current Devotion/images_manifest.json`
+  - `Current Devotion Wide/images_manifest.json`
+- every file path listed in those manifests must be reachable at the same relative HTTP path
+- directory listing is not required; only direct file access is required
+
+Expected HTTP layout:
+
+```text
+https://example.com/devotional/DCIM/devotional_image_library.json
+https://example.com/devotional/DCIM/Current%20Devotion/images_manifest.json
+https://example.com/devotional/DCIM/Current%20Devotion/03-01_03-31_dev_st-joseph_mod_realism.png
+https://example.com/devotional/DCIM/Current%20Devotion%20Wide/images_manifest.json
+```
+
+Recommended client config for HTTP:
+- set `source_base_url` to the public DCIM root URL
+- leave `source_root` empty
+- set `target_root` to the local folder where the client should store the synced files
+- set `include_manifests` to `true` if the client should keep local copies of the manifest JSON files
+- set `delete_missing` to `true` only if the client should mirror the remote exactly and delete files that are no longer present upstream
+
+Direct command without a config file:
+
+```powershell
+py -3 .\sync\sync_devotional_images_client.py `
+  --source-base-url "https://example.com/devotional/DCIM" `
+  --target-root "C:\Users\Public\Pictures\DevotionalImages" `
+  --include-manifests
+```
+
+What the client script does:
+- downloads `devotional_image_library.json`
+- reads each folder manifest referenced by the root manifest
+- downloads only files that are missing locally or whose sha256 hash changed
+- optionally deletes local files not present in the manifests when `--delete-missing` is set
+- works with either a local filesystem source (`--source-root`) or a public HTTP source (`--source-base-url`)
 
 Notes:
 - Requires Azure CLI (`az`) installed locally.
@@ -395,6 +500,11 @@ Purpose:
   - `Pictures/Samsung Gallery/DCIM/Current Devotion Wide`
   - `Pictures/Samsung Gallery/DCIM/Non Current Devotion Wide`
   - `Pictures/Samsung Gallery/DCIM/devotional_image_library.json`
+- builds a filtered public export containing only:
+  - `devotional/DCIM/Current Devotion`
+  - `devotional/DCIM/Current Devotion Wide`
+  - `devotional/DCIM/devotional_image_library.json`
+- deploys that filtered export to GitHub Pages for non-OneDrive client sync
 
 Required GitHub Secrets:
 - `OPENAI_API_KEY`
@@ -403,6 +513,11 @@ Required GitHub Secrets:
 Optional GitHub Variables:
 - `RCLONE_REMOTE_NAME` (default `onedrive`)
 - `RCLONE_REMOTE_ROOT` (default `Pictures/Samsung Gallery/DCIM`)
+
+GitHub Pages:
+- this workflow deploys the public devotional export with `actions/deploy-pages`
+- the client sync `source_base_url` should point to:
+  - `https://<github-user>.github.io/<repo>/devotional/DCIM`
 
 Generate `RCLONE_CONFIG_B64` with wizard:
 
