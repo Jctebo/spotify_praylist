@@ -46,8 +46,6 @@ DEFAULT_CURRENT_FOLDER = "Current Devotion"
 DEFAULT_ARCHIVE_FOLDER = "Non Current Devotion"
 DEFAULT_CURRENT_WIDE_FOLDER = "Current Devotion Wide"
 DEFAULT_ARCHIVE_WIDE_FOLDER = "Non Current Devotion Wide"
-LEGACY_CURRENT_WIDE_FOLDER = "Devotion Wide"
-LEGACY_CURRENT_WIDE_FOLDER_ALT = "Wide Current Devotion"
 
 DEVOTIONAL_ONEDRIVE_DCIM_DIR = "DEVOTIONAL_ONEDRIVE_DCIM_DIR"
 DEVOTIONAL_CURRENT_FOLDER = "DEVOTIONAL_CURRENT_FOLDER"
@@ -1031,88 +1029,6 @@ def iso_utc_mtime(path: Path) -> str:
     return timestamp.replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def is_legacy_archive_dir_name(dir_name: str) -> bool:
-    name = str(dir_name or "").strip()
-    if not name:
-        return False
-    if name in {
-        DEFAULT_CURRENT_FOLDER,
-        DEFAULT_ARCHIVE_FOLDER,
-        DEFAULT_CURRENT_WIDE_FOLDER,
-        DEFAULT_ARCHIVE_WIDE_FOLDER,
-        LEGACY_CURRENT_WIDE_FOLDER,
-        LEGACY_CURRENT_WIDE_FOLDER_ALT,
-    }:
-        return False
-    return bool(
-        re.fullmatch(r"[A-Z][a-z]+ Devotion(?: Wide)?", name)
-        or re.fullmatch(r"[A-Z][a-z]+ Wide", name)
-    )
-
-
-def is_legacy_wide_dir_name(dir_name: str) -> bool:
-    name = str(dir_name or "").strip()
-    if not name:
-        return False
-    if "wide" in name.lower():
-        return True
-    return False
-
-
-def move_directory_contents(src_dir: Path, dst_dir: Path) -> int:
-    if not src_dir.exists():
-        return 0
-    try:
-        if src_dir.resolve() == dst_dir.resolve():
-            return 0
-    except Exception:
-        pass
-
-    moved = 0
-    dst_dir.mkdir(parents=True, exist_ok=True)
-    for child in sorted(src_dir.iterdir(), key=lambda item: (item.is_file(), item.name.lower())):
-        dst_path = dst_dir / child.name
-        if child.is_dir():
-            moved += move_directory_contents(child, dst_path)
-            if child.exists():
-                try:
-                    child.rmdir()
-                except OSError:
-                    pass
-            continue
-        move_file_overwrite(child, dst_path)
-        moved += 1
-
-    if src_dir.exists():
-        try:
-            src_dir.rmdir()
-        except OSError:
-            pass
-    return moved
-
-
-def migrate_legacy_storage(storage: StorageDirs) -> int:
-    moved = 0
-    storage.root.mkdir(parents=True, exist_ok=True)
-    for folder in storage.all_dirs():
-        folder.mkdir(parents=True, exist_ok=True)
-
-    for legacy_wide_name in (LEGACY_CURRENT_WIDE_FOLDER, LEGACY_CURRENT_WIDE_FOLDER_ALT):
-        legacy_wide_dir = storage.root / legacy_wide_name
-        if legacy_wide_dir.exists():
-            moved += move_directory_contents(legacy_wide_dir, storage.current_wide)
-
-    for child in sorted(storage.root.iterdir(), key=lambda item: item.name.lower()):
-        if not child.is_dir():
-            continue
-        if not is_legacy_archive_dir_name(child.name):
-            continue
-        target_dir = storage.archive_wide if is_legacy_wide_dir_name(child.name) else storage.archive
-        moved += move_directory_contents(child, target_dir)
-
-    return moved
-
-
 def maybe_migrate_legacy_file(folder: Path, target: RenderTarget) -> bool:
     if target.source != SOURCE_CALENDAR:
         return False
@@ -1515,7 +1431,9 @@ def main() -> int:
         archive_dir = storage.archive
         wide_dir = storage.current_wide
         archive_wide_dir = storage.archive_wide
-        migrated_count = migrate_legacy_storage(storage)
+        storage.root.mkdir(parents=True, exist_ok=True)
+        for folder in storage.all_dirs():
+            folder.mkdir(parents=True, exist_ok=True)
         active_ids = {target_id(t) for t in targets}
 
         moved_count = 0
@@ -1527,8 +1445,8 @@ def main() -> int:
             print(
                 "SUMMARY "
                 f"targets=0 generated_now=0 restored_now=0 skipped_existing=0 moved_to_archive={moved_count} "
-                f"migrated_legacy_files={migrated_count} manifest_images={manifest_images} "
-                f"root_manifest={root_manifest_path.name} config_mode={config_mode}"
+                f"manifest_images={manifest_images} root_manifest={root_manifest_path.name} "
+                f"config_mode={config_mode}"
             )
             return 0
 
@@ -1664,8 +1582,7 @@ def main() -> int:
             "SUMMARY "
             f"targets={len(targets)} generated_now={total_written} restored_now={total_restored} "
             f"skipped_existing={total_skipped_existing} moved_to_archive={moved_count} "
-            f"migrated_legacy_files={migrated_count} manifest_images={manifest_images} "
-            f"root_manifest={root_manifest_path.name} "
+            f"manifest_images={manifest_images} root_manifest={root_manifest_path.name} "
             f"calendar_generated={by_source.get(SOURCE_CALENDAR, 0)} devotion_generated={by_source.get(SOURCE_DEVOTION, 0)} "
             f"config_mode={config_mode}"
         )
