@@ -1518,6 +1518,53 @@ def find_calendar_page_for_date(
     return by_day[0]
 
 
+def list_calendar_pages_for_date(
+    pages: Sequence[Dict[str, Any]],
+    feast_day_property: str,
+    target_day: str,
+) -> List[Dict[str, Any]]:
+    wanted_day = str(target_day or "").strip()
+    if not wanted_day:
+        return []
+    out: List[Dict[str, Any]] = []
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        if page_date(page, feast_day_property).strip() == wanted_day:
+            out.append(page)
+    return out
+
+
+def build_primary_calendar_titles(rows: Sequence[Dict[str, str]]) -> Dict[str, str]:
+    out: Dict[str, str] = {}
+    for row in rows:
+        day = str(row.get("date", "")).strip()
+        name = str(row.get("name", "")).strip()
+        if day and name and day not in out:
+            out[day] = name
+    return out
+
+
+def notion_remove_autogen_markers_from_other_pages_for_day(
+    pages: Sequence[Dict[str, Any]],
+    feast_day_property: str,
+    target_day: str,
+    keep_page_id: str,
+    token: str,
+    section_markers: Sequence[str],
+    audio_markers: Sequence[str],
+) -> None:
+    keep = str(keep_page_id or "").strip()
+    for page in list_calendar_pages_for_date(pages, feast_day_property, target_day):
+        page_id = str(page.get("id", "")).strip()
+        if not page_id or page_id == keep:
+            continue
+        if section_markers:
+            notion_remove_old_autogen_sections_by_markers(page_id, token, section_markers)
+        for marker in audio_markers:
+            notion_remove_old_autogen_audio(page_id, token, marker=marker)
+
+
 def notion_create_page(database_id: str, properties: Dict[str, Any], token: str) -> None:
     body = {"parent": {"database_id": database_id}, "properties": properties}
     notion_call("POST", "https://api.notion.com/v1/pages", token, body)
@@ -1850,7 +1897,7 @@ def main() -> int:
             saint_day_prop = os.getenv(NOTION_SAINT_FEAST_DAY_PROPERTY, "Feast Day").strip() or "Feast Day"
             pages = notion_get_all_pages(saint_db_id, notion_token)
             calendar_rows = collect_calendar_days_window(romcal_calendar, romcal_locale, start_date, window_days)
-            calendar_by_date: Dict[str, str] = {str(r.get("date", "")).strip(): str(r.get("name", "")).strip() for r in calendar_rows}
+            calendar_by_date = build_primary_calendar_titles(calendar_rows)
             day_mode = bool_env(NOVENA_DAY_MODE, default=True)
             test_backfill = bool_env(NOVENA_TEST_POPULATE_ALL_DAYS, default=False)
             force_refresh = bool_env(NOTION_SAINT_REFRESH_ALL, default=False)
@@ -1871,6 +1918,15 @@ def main() -> int:
                 if today_page:
                     today_page_id = str(today_page.get("id", "")).strip()
                     if today_page_id:
+                        notion_remove_autogen_markers_from_other_pages_for_day(
+                            pages=pages,
+                            feast_day_property=saint_day_prop,
+                            target_day=start_date.isoformat(),
+                            keep_page_id=today_page_id,
+                            token=notion_token,
+                            section_markers=[USCCB_SECTION_MARKER],
+                            audio_markers=[],
+                        )
                         notion_remove_old_autogen_sections_by_markers(today_page_id, notion_token, [USCCB_SECTION_MARKER])
                         notion_append_children(today_page_id, readings_blocks, notion_token)
 
@@ -1961,6 +2017,15 @@ def main() -> int:
                         if not page_id or not isinstance(target_day, datetime.date) or day_num < 1 or not marker:
                             continue
                         if needs_section:
+                            notion_remove_autogen_markers_from_other_pages_for_day(
+                                pages=pages,
+                                feast_day_property=saint_day_prop,
+                                target_day=target_day.isoformat(),
+                                keep_page_id=page_id,
+                                token=notion_token,
+                                section_markers=[marker],
+                                audio_markers=[audio_marker] if audio_enabled else [],
+                            )
                             notion_remove_old_autogen_sections_by_markers(page_id, notion_token, [marker])
                             blocks = saint_novena_day_blocks(
                             saint_name=saint_name,
@@ -1974,6 +2039,15 @@ def main() -> int:
 
                         if needs_audio:
                             try:
+                                notion_remove_autogen_markers_from_other_pages_for_day(
+                                    pages=pages,
+                                    feast_day_property=saint_day_prop,
+                                    target_day=target_day.isoformat(),
+                                    keep_page_id=page_id,
+                                    token=notion_token,
+                                    section_markers=[],
+                                    audio_markers=[audio_marker],
+                                )
                                 if force_refresh:
                                     notion_remove_old_autogen_audio(page_id, notion_token, marker=audio_marker)
                                 audio_text = saint_novena_day_audio_text(day_num, devotional_payload)
