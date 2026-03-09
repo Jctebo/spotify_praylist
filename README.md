@@ -287,13 +287,17 @@ Purpose:
 - generates a high-finish devotional image prompt from saint subject
 - creates an image with OpenAI image generation
 - includes 9-day window metadata in output filename and `.window.txt` companion file
-- writes two layout variants per saint:
+- writes two layout variants per subject:
   - portrait variant to `Current Devotion`
-  - widescreen variant to `Devotion Wide`
-- writes the image file into two OneDrive folders:
+  - widescreen variant to `Current Devotion Wide`
+- keeps only four canonical storage folders:
   - `OneDrive\Pictures\Samsung Gallery\DCIM\Current Devotion`
-  - `OneDrive\Pictures\Samsung Gallery\DCIM\Devotion Wide`
-- automatically moves completed saint files from `Current Devotion` into a monthly folder at the same level (for example `March Devotion`) once the saint date has passed
+  - `OneDrive\Pictures\Samsung Gallery\DCIM\Non Current Devotion`
+  - `OneDrive\Pictures\Samsung Gallery\DCIM\Current Devotion Wide`
+  - `OneDrive\Pictures\Samsung Gallery\DCIM\Non Current Devotion Wide`
+- automatically moves expired files from `Current` into `Non Current`
+- writes `images_manifest.json` inside each canonical image folder plus a root `devotional_image_library.json`
+- supports non-OneDrive clients by syncing against the generated manifests
 
 Script:
 - `jobs/novena/generate_devotional_image.py`
@@ -309,7 +313,11 @@ Optional variables:
 - `DEVOTIONAL_TARGET_DATE` (optional `YYYY-MM-DD` to force saint for a specific date in window)
 - `DEVOTIONAL_ONEDRIVE_DCIM_DIR` (default `%USERPROFILE%\OneDrive\Pictures\Samsung Gallery\DCIM`)
 - `DEVOTIONAL_CURRENT_FOLDER` (default `Current Devotion`)
-- `DEVOTIONAL_WIDE_FOLDER` (default `Devotion Wide`)
+- `DEVOTIONAL_ARCHIVE_FOLDER` (default `Non Current Devotion`)
+- `DEVOTIONAL_CURRENT_WIDE_FOLDER` (default `Current Devotion Wide`)
+- `DEVOTIONAL_ARCHIVE_WIDE_FOLDER` (default `Non Current Devotion Wide`)
+- `DEVOTIONAL_MANIFEST_NAME` (default `images_manifest.json`)
+- `DEVOTIONAL_ROOT_MANIFEST_NAME` (default `devotional_image_library.json`)
 - `DEVOTIONAL_PROMPT_MODEL` (default `gpt-5-mini`)
 - `DEVOTIONAL_IMAGE_MODEL` (default `gpt-image-1`)
 - `DEVOTIONAL_IMAGE_SIZE` (default `1024x1536`, phone portrait)
@@ -347,6 +355,13 @@ Local OneDrive upload env (User or Process):
 - `AZURE_CLIENT_SECRET` (for service principal login)
 - `DEVOTIONAL_ONEDRIVE_REMOTE_ROOT` (default `Pictures/Samsung Gallery/DCIM`)
 
+Client sync without OneDrive:
+
+```powershell
+py -3 .\scripts\sync_devotional_images_client.py `
+  --config .\config\devotional_image_client.example.json
+```
+
 Notes:
 - Requires Azure CLI (`az`) installed locally.
 - If service principal vars are missing, runner falls back to current `az login` context.
@@ -376,7 +391,10 @@ Purpose:
 - runs the devotional image generator on GitHub Actions
 - uploads generated files to OneDrive via `rclone` under:
   - `Pictures/Samsung Gallery/DCIM/Current Devotion`
-  - `Pictures/Samsung Gallery/DCIM/Devotion Wide`
+  - `Pictures/Samsung Gallery/DCIM/Non Current Devotion`
+  - `Pictures/Samsung Gallery/DCIM/Current Devotion Wide`
+  - `Pictures/Samsung Gallery/DCIM/Non Current Devotion Wide`
+  - `Pictures/Samsung Gallery/DCIM/devotional_image_library.json`
 
 Required GitHub Secrets:
 - `OPENAI_API_KEY`

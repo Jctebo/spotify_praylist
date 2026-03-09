@@ -83,19 +83,35 @@ jobs:
           REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Pictures/Samsung Gallery/DCIM}"
           LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/DCIM"
 
-          mkdir -p "${LOCAL_ROOT}/Current Devotion" "${LOCAL_ROOT}/Devotion Wide"
+          mkdir -p \
+            "${LOCAL_ROOT}/Current Devotion" \
+            "${LOCAL_ROOT}/Non Current Devotion" \
+            "${LOCAL_ROOT}/Current Devotion Wide" \
+            "${LOCAL_ROOT}/Non Current Devotion Wide"
 
-          # Pull active folders so skip_existing works on ephemeral runners.
+          # Pull canonical folders so skip_existing and archive restore work on ephemeral runners.
           rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Current Devotion/" "${LOCAL_ROOT}/Current Devotion/" --create-empty-src-dirs || true
-          rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Devotion Wide/" "${LOCAL_ROOT}/Devotion Wide/" --create-empty-src-dirs || true
+          rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Non Current Devotion/" "${LOCAL_ROOT}/Non Current Devotion/" --create-empty-src-dirs || true
+          rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Current Devotion Wide/" "${LOCAL_ROOT}/Current Devotion Wide/" --create-empty-src-dirs || true
+          rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Non Current Devotion Wide/" "${LOCAL_ROOT}/Non Current Devotion Wide/" --create-empty-src-dirs || true
+          rclone copyto "${REMOTE_NAME}:${REMOTE_ROOT}/devotional_image_library.json" "${LOCAL_ROOT}/devotional_image_library.json" || true
 
-          # Pull only month archives that can appear in the active window.
-          MONTHS=$(python -c "import datetime, os; days=int(os.getenv('ROMCAL_WINDOW_DAYS','9')); today=datetime.date.today(); offsets={-1,*range(days)}; names=sorted({(today+datetime.timedelta(days=i)).strftime('%B') for i in offsets}); print('\n'.join(names))")
-          while IFS= read -r month; do
-            [ -z "$month" ] && continue
-            rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/${month} Devotion/" "${LOCAL_ROOT}/${month} Devotion/" --create-empty-src-dirs || true
-            rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/${month} Devotion Wide/" "${LOCAL_ROOT}/${month} Devotion Wide/" --create-empty-src-dirs || true
-          done <<< "${MONTHS}"
+          # Pull legacy folders one last time so the generator can migrate them into Non Current.
+          rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Devotion Wide/" "${LOCAL_ROOT}/Devotion Wide/" --create-empty-src-dirs || true
+          rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Wide Current Devotion/" "${LOCAL_ROOT}/Wide Current Devotion/" --create-empty-src-dirs || true
+          LEGACY_DIRS=$(rclone lsf "${REMOTE_NAME}:${REMOTE_ROOT}" --dirs-only || true)
+          while IFS= read -r entry; do
+            dir="${entry%/}"
+            [ -z "$dir" ] && continue
+            case "$dir" in
+              "Current Devotion"|"Non Current Devotion"|"Current Devotion Wide"|"Non Current Devotion Wide"|"Devotion Wide"|"Wide Current Devotion")
+                continue
+                ;;
+            esac
+            if [[ "$dir" =~ ^[A-Z][a-z]+\ Devotion(\ Wide)?$ ]] || [[ "$dir" =~ ^[A-Z][a-z]+\ Wide$ ]]; then
+              rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/${dir}/" "${LOCAL_ROOT}/${dir}/" --create-empty-src-dirs || true
+            fi
+          done <<< "${LEGACY_DIRS}"
 
       - name: Generate devotional image locally on runner
         env:
@@ -110,33 +126,43 @@ jobs:
         run: |
           set -euo pipefail
 
-          CURRENT_DIR="${GITHUB_WORKSPACE}/onedrive_sync/DCIM/Current Devotion"
-          WIDE_DIR="${GITHUB_WORKSPACE}/onedrive_sync/DCIM/Devotion Wide"
+          LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/DCIM"
+          CURRENT_DIR="${LOCAL_ROOT}/Current Devotion"
+          ARCHIVE_DIR="${LOCAL_ROOT}/Non Current Devotion"
+          CURRENT_WIDE_DIR="${LOCAL_ROOT}/Current Devotion Wide"
+          ARCHIVE_WIDE_DIR="${LOCAL_ROOT}/Non Current Devotion Wide"
+          ROOT_MANIFEST="${LOCAL_ROOT}/devotional_image_library.json"
           REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
           REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Pictures/Samsung Gallery/DCIM}"
 
-          if ! find "$CURRENT_DIR" -maxdepth 1 -type f | grep -q .; then
-            echo "No files found in ${CURRENT_DIR}" >&2
-            exit 1
-          fi
-          if ! find "$WIDE_DIR" -maxdepth 1 -type f | grep -q .; then
-            echo "No files found in ${WIDE_DIR}" >&2
-            exit 1
-          fi
+          mkdir -p "$CURRENT_DIR" "$ARCHIVE_DIR" "$CURRENT_WIDE_DIR" "$ARCHIVE_WIDE_DIR"
 
-          # Mirror current folders to remote (overwrite + remove stale files).
+          # Mirror canonical folders to remote (overwrite + remove stale files).
           rclone sync "$CURRENT_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Current Devotion/" --progress --transfers 4 --checkers 8
-          rclone sync "$WIDE_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Devotion Wide/" --progress --transfers 4 --checkers 8
+          rclone sync "$ARCHIVE_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Non Current Devotion/" --progress --transfers 4 --checkers 8
+          rclone sync "$CURRENT_WIDE_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Current Devotion Wide/" --progress --transfers 4 --checkers 8
+          rclone sync "$ARCHIVE_WIDE_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Non Current Devotion Wide/" --progress --transfers 4 --checkers 8
+          if [ -f "$ROOT_MANIFEST" ]; then
+            rclone copyto "$ROOT_MANIFEST" "${REMOTE_NAME}:${REMOTE_ROOT}/devotional_image_library.json" --progress
+          fi
 
-          # Mirror relevant month archive folders so local move operations are reflected remotely.
-          MONTHS=$(python -c "import datetime, os; days=int(os.getenv('ROMCAL_WINDOW_DAYS','9')); today=datetime.date.today(); offsets={-1,*range(days)}; names=sorted({(today+datetime.timedelta(days=i)).strftime('%B') for i in offsets}); print('\n'.join(names))")
-          while IFS= read -r month; do
-            [ -z "$month" ] && continue
-            LOCAL_MONTH_DIR="${GITHUB_WORKSPACE}/onedrive_sync/DCIM/${month} Devotion"
-            LOCAL_MONTH_WIDE_DIR="${GITHUB_WORKSPACE}/onedrive_sync/DCIM/${month} Devotion Wide"
-            mkdir -p "$LOCAL_MONTH_DIR" "$LOCAL_MONTH_WIDE_DIR"
-            rclone sync "$LOCAL_MONTH_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/${month} Devotion/" --progress --transfers 4 --checkers 8
-            rclone sync "$LOCAL_MONTH_WIDE_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/${month} Devotion Wide/" --progress --transfers 4 --checkers 8
-          done <<< "${MONTHS}"
+          # Remove legacy remote folders now that canonical folders are authoritative.
+          LEGACY_DIRS=$(rclone lsf "${REMOTE_NAME}:${REMOTE_ROOT}" --dirs-only || true)
+          while IFS= read -r entry; do
+            dir="${entry%/}"
+            [ -z "$dir" ] && continue
+            case "$dir" in
+              "Current Devotion"|"Non Current Devotion"|"Current Devotion Wide"|"Non Current Devotion Wide")
+                continue
+                ;;
+              "Devotion Wide"|"Wide Current Devotion")
+                rclone purge "${REMOTE_NAME}:${REMOTE_ROOT}/${dir}" || true
+                continue
+                ;;
+            esac
+            if [[ "$dir" =~ ^[A-Z][a-z]+\ Devotion(\ Wide)?$ ]] || [[ "$dir" =~ ^[A-Z][a-z]+\ Wide$ ]]; then
+              rclone purge "${REMOTE_NAME}:${REMOTE_ROOT}/${dir}" || true
+            fi
+          done <<< "${LEGACY_DIRS}"
 
-          echo "Synced devotional files to OneDrive via rclone."
+          echo "Synced devotional files and manifests to OneDrive via rclone."

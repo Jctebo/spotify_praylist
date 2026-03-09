@@ -1,6 +1,8 @@
 import base64
 import calendar
 import datetime
+import hashlib
+import json
 import os
 import re
 import shutil
@@ -41,12 +43,20 @@ from jobs.novena.generate_daily_novena_prayer import (
 
 DEFAULT_DCIM_RELATIVE = r"OneDrive\Pictures\Samsung Gallery\DCIM"
 DEFAULT_CURRENT_FOLDER = "Current Devotion"
-DEFAULT_WIDE_FOLDER = "Devotion Wide"
+DEFAULT_ARCHIVE_FOLDER = "Non Current Devotion"
+DEFAULT_CURRENT_WIDE_FOLDER = "Current Devotion Wide"
+DEFAULT_ARCHIVE_WIDE_FOLDER = "Non Current Devotion Wide"
+LEGACY_CURRENT_WIDE_FOLDER = "Devotion Wide"
+LEGACY_CURRENT_WIDE_FOLDER_ALT = "Wide Current Devotion"
 
 DEVOTIONAL_ONEDRIVE_DCIM_DIR = "DEVOTIONAL_ONEDRIVE_DCIM_DIR"
 DEVOTIONAL_CURRENT_FOLDER = "DEVOTIONAL_CURRENT_FOLDER"
-DEVOTIONAL_WIDE_FOLDER = "DEVOTIONAL_WIDE_FOLDER"
+DEVOTIONAL_ARCHIVE_FOLDER = "DEVOTIONAL_ARCHIVE_FOLDER"
+DEVOTIONAL_CURRENT_WIDE_FOLDER = "DEVOTIONAL_CURRENT_WIDE_FOLDER"
+DEVOTIONAL_ARCHIVE_WIDE_FOLDER = "DEVOTIONAL_ARCHIVE_WIDE_FOLDER"
 DEVOTIONAL_TARGET_DATE = "DEVOTIONAL_TARGET_DATE"  # YYYY-MM-DD
+DEVOTIONAL_MANIFEST_NAME = "DEVOTIONAL_MANIFEST_NAME"  # default images_manifest.json
+DEVOTIONAL_ROOT_MANIFEST_NAME = "DEVOTIONAL_ROOT_MANIFEST_NAME"  # default devotional_image_library.json
 
 DEVOTIONAL_PROMPT_MODEL = "DEVOTIONAL_PROMPT_MODEL"  # default gpt-5-mini
 DEVOTIONAL_IMAGE_MODEL = "DEVOTIONAL_IMAGE_MODEL"  # default gpt-image-1
@@ -85,6 +95,8 @@ DEFAULT_STYLE_ID = "mod_realism"
 SOURCE_CALENDAR = "cal"
 SOURCE_DEVOTION = "dev"
 SUPPORTED_IMAGE_EXTS = ("png", "jpeg", "webp")
+DEFAULT_MANIFEST_NAME = "images_manifest.json"
+DEFAULT_ROOT_MANIFEST_NAME = "devotional_image_library.json"
 
 PROMPT_INSTRUCTION = """IMAGE PROMPT GENERATION - HIGH-FINISH MODERN DEVOTIONAL STYLE
 
@@ -285,6 +297,29 @@ class FileMeta:
         return f"{self.start_mmdd}_{self.end_mmdd}_{self.source}_{self.subject_slug}_{self.style_id}"
 
 
+@dataclass(frozen=True)
+class StorageDirs:
+    root: Path
+    current: Path
+    archive: Path
+    current_wide: Path
+    archive_wide: Path
+
+    def active_dirs(self) -> List[Path]:
+        return [self.current, self.current_wide]
+
+    def all_dirs(self) -> List[Path]:
+        return [self.current, self.archive, self.current_wide, self.archive_wide]
+
+    def manifest_folders(self) -> List[Tuple[str, str, Path]]:
+        return [
+            ("current", "portrait", self.current),
+            ("archive", "portrait", self.archive),
+            ("current", "wide", self.current_wide),
+            ("archive", "wide", self.archive_wide),
+        ]
+
+
 def parse_target_date() -> Optional[datetime.date]:
     raw = os.getenv(DEVOTIONAL_TARGET_DATE, "").strip()
     if not raw:
@@ -395,12 +430,24 @@ def default_dcim_dir() -> Path:
     return Path(user_profile) / Path(DEFAULT_DCIM_RELATIVE)
 
 
-def resolve_output_dirs() -> List[Path]:
+def resolve_output_dirs() -> StorageDirs:
     root_env = os.getenv(DEVOTIONAL_ONEDRIVE_DCIM_DIR, "").strip()
     root = Path(root_env) if root_env else default_dcim_dir()
     current_name = os.getenv(DEVOTIONAL_CURRENT_FOLDER, DEFAULT_CURRENT_FOLDER).strip() or DEFAULT_CURRENT_FOLDER
-    wide_name = os.getenv(DEVOTIONAL_WIDE_FOLDER, DEFAULT_WIDE_FOLDER).strip() or DEFAULT_WIDE_FOLDER
-    return [root / current_name, root / wide_name]
+    archive_name = os.getenv(DEVOTIONAL_ARCHIVE_FOLDER, DEFAULT_ARCHIVE_FOLDER).strip() or DEFAULT_ARCHIVE_FOLDER
+    current_wide_name = (
+        os.getenv(DEVOTIONAL_CURRENT_WIDE_FOLDER, DEFAULT_CURRENT_WIDE_FOLDER).strip() or DEFAULT_CURRENT_WIDE_FOLDER
+    )
+    archive_wide_name = (
+        os.getenv(DEVOTIONAL_ARCHIVE_WIDE_FOLDER, DEFAULT_ARCHIVE_WIDE_FOLDER).strip() or DEFAULT_ARCHIVE_WIDE_FOLDER
+    )
+    return StorageDirs(
+        root=root,
+        current=root / current_name,
+        archive=root / archive_name,
+        current_wide=root / current_wide_name,
+        archive_wide=root / archive_wide_name,
+    )
 
 
 def extract_output_text(response: object) -> str:
@@ -942,13 +989,6 @@ def target_id(target: RenderTarget) -> str:
     return target.base_name
 
 
-def month_devotion_folder_name(day: datetime.date, source_folder_name: str) -> str:
-    base = day.strftime("%B Devotion")
-    if "wide" in str(source_folder_name or "").lower():
-        return f"{base} Wide"
-    return base
-
-
 def find_existing_image_by_base(folder: Path, base_name: str) -> Optional[Path]:
     for ext in SUPPORTED_IMAGE_EXTS:
         path = folder / f"{base_name}.{ext}"
@@ -973,6 +1013,104 @@ def move_sidecars(old_image: Path, new_image: Path) -> None:
             continue
         new_sidecar = new_base.with_suffix(suffix)
         move_file_overwrite(old_sidecar, new_sidecar)
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        while True:
+            chunk = handle.read(1024 * 1024)
+            if not chunk:
+                break
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def iso_utc_mtime(path: Path) -> str:
+    timestamp = datetime.datetime.fromtimestamp(path.stat().st_mtime, tz=datetime.timezone.utc)
+    return timestamp.replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def is_legacy_archive_dir_name(dir_name: str) -> bool:
+    name = str(dir_name or "").strip()
+    if not name:
+        return False
+    if name in {
+        DEFAULT_CURRENT_FOLDER,
+        DEFAULT_ARCHIVE_FOLDER,
+        DEFAULT_CURRENT_WIDE_FOLDER,
+        DEFAULT_ARCHIVE_WIDE_FOLDER,
+        LEGACY_CURRENT_WIDE_FOLDER,
+        LEGACY_CURRENT_WIDE_FOLDER_ALT,
+    }:
+        return False
+    return bool(
+        re.fullmatch(r"[A-Z][a-z]+ Devotion(?: Wide)?", name)
+        or re.fullmatch(r"[A-Z][a-z]+ Wide", name)
+    )
+
+
+def is_legacy_wide_dir_name(dir_name: str) -> bool:
+    name = str(dir_name or "").strip()
+    if not name:
+        return False
+    if "wide" in name.lower():
+        return True
+    return False
+
+
+def move_directory_contents(src_dir: Path, dst_dir: Path) -> int:
+    if not src_dir.exists():
+        return 0
+    try:
+        if src_dir.resolve() == dst_dir.resolve():
+            return 0
+    except Exception:
+        pass
+
+    moved = 0
+    dst_dir.mkdir(parents=True, exist_ok=True)
+    for child in sorted(src_dir.iterdir(), key=lambda item: (item.is_file(), item.name.lower())):
+        dst_path = dst_dir / child.name
+        if child.is_dir():
+            moved += move_directory_contents(child, dst_path)
+            if child.exists():
+                try:
+                    child.rmdir()
+                except OSError:
+                    pass
+            continue
+        move_file_overwrite(child, dst_path)
+        moved += 1
+
+    if src_dir.exists():
+        try:
+            src_dir.rmdir()
+        except OSError:
+            pass
+    return moved
+
+
+def migrate_legacy_storage(storage: StorageDirs) -> int:
+    moved = 0
+    storage.root.mkdir(parents=True, exist_ok=True)
+    for folder in storage.all_dirs():
+        folder.mkdir(parents=True, exist_ok=True)
+
+    for legacy_wide_name in (LEGACY_CURRENT_WIDE_FOLDER, LEGACY_CURRENT_WIDE_FOLDER_ALT):
+        legacy_wide_dir = storage.root / legacy_wide_name
+        if legacy_wide_dir.exists():
+            moved += move_directory_contents(legacy_wide_dir, storage.current_wide)
+
+    for child in sorted(storage.root.iterdir(), key=lambda item: item.name.lower()):
+        if not child.is_dir():
+            continue
+        if not is_legacy_archive_dir_name(child.name):
+            continue
+        target_dir = storage.archive_wide if is_legacy_wide_dir_name(child.name) else storage.archive
+        moved += move_directory_contents(child, target_dir)
+
+    return moved
 
 
 def maybe_migrate_legacy_file(folder: Path, target: RenderTarget) -> bool:
@@ -1003,7 +1141,7 @@ def maybe_migrate_legacy_file(folder: Path, target: RenderTarget) -> bool:
     return False
 
 
-def move_out_of_window_targets(source_dir: Path, active_ids: set[str], today: datetime.date) -> int:
+def move_out_of_window_targets(source_dir: Path, archive_dir: Path, active_ids: set[str]) -> int:
     if not source_dir.exists():
         return 0
     moved = 0
@@ -1017,15 +1155,7 @@ def move_out_of_window_targets(source_dir: Path, active_ids: set[str], today: da
             continue
         if meta.base_name in active_ids:
             continue
-        try:
-            month_num = int(meta.start_mmdd.split("-", 1)[0])
-            month_num = max(1, min(12, month_num))
-        except Exception:
-            month_num = today.month
-        month_anchor = datetime.date(today.year, month_num, 1)
-        archive_dir = source_dir.parent / month_devotion_folder_name(month_anchor, source_dir.name)
         archive_dir.mkdir(parents=True, exist_ok=True)
-
         dst_image = archive_dir / image_path.name
         move_sidecars(image_path, dst_image)
         move_file_overwrite(image_path, dst_image)
@@ -1036,19 +1166,21 @@ def move_out_of_window_targets(source_dir: Path, active_ids: set[str], today: da
 def restore_target_from_archive(
     target: RenderTarget,
     current_dir: Path,
+    archive_dir: Path,
     wide_dir: Path,
+    archive_wide_dir: Path,
 ) -> Tuple[bool, bool]:
-    start_month_anchor = datetime.date(local_today().year, target.start_date.month, 1)
-    portrait_archive = current_dir.parent / month_devotion_folder_name(start_month_anchor, current_dir.name)
-    wide_archive = wide_dir.parent / month_devotion_folder_name(start_month_anchor, wide_dir.name)
-    if not portrait_archive.exists() and not wide_archive.exists():
+    if not archive_dir.exists() and not archive_wide_dir.exists():
         return False, False
 
     restored_portrait = False
     restored_wide = False
 
     if not find_existing_image_by_base(current_dir, target.base_name):
-        src_portrait = find_existing_image_by_base(portrait_archive, target.base_name)
+        src_portrait = find_existing_image_by_base(archive_dir, target.base_name)
+        if not src_portrait:
+            maybe_migrate_legacy_file(archive_dir, target)
+            src_portrait = find_existing_image_by_base(archive_dir, target.base_name)
         if src_portrait and src_portrait.exists():
             dst_portrait = current_dir / src_portrait.name
             move_sidecars(src_portrait, dst_portrait)
@@ -1056,7 +1188,10 @@ def restore_target_from_archive(
             restored_portrait = True
 
     if not find_existing_image_by_base(wide_dir, target.base_name):
-        src_wide = find_existing_image_by_base(wide_archive, target.base_name)
+        src_wide = find_existing_image_by_base(archive_wide_dir, target.base_name)
+        if not src_wide:
+            maybe_migrate_legacy_file(archive_wide_dir, target)
+            src_wide = find_existing_image_by_base(archive_wide_dir, target.base_name)
         if src_wide and src_wide.exists():
             dst_wide = wide_dir / src_wide.name
             move_sidecars(src_wide, dst_wide)
@@ -1064,6 +1199,91 @@ def restore_target_from_archive(
             restored_wide = True
 
     return restored_portrait, restored_wide
+
+
+def file_manifest_record(path: Path, root: Path) -> Dict[str, Any]:
+    return {
+        "name": path.name,
+        "relative_path": path.relative_to(root).as_posix(),
+        "size_bytes": path.stat().st_size,
+        "sha256": sha256_file(path),
+        "modified_utc": iso_utc_mtime(path),
+    }
+
+
+def write_manifests(storage: StorageDirs) -> Tuple[int, Path]:
+    manifest_name = os.getenv(DEVOTIONAL_MANIFEST_NAME, DEFAULT_MANIFEST_NAME).strip() or DEFAULT_MANIFEST_NAME
+    root_manifest_name = (
+        os.getenv(DEVOTIONAL_ROOT_MANIFEST_NAME, DEFAULT_ROOT_MANIFEST_NAME).strip() or DEFAULT_ROOT_MANIFEST_NAME
+    )
+    generated_at = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    folder_summaries: List[Dict[str, Any]] = []
+    total_images = 0
+
+    for state, variant, folder in storage.manifest_folders():
+        folder.mkdir(parents=True, exist_ok=True)
+        items: List[Dict[str, Any]] = []
+        image_files: List[Path] = []
+        for ext in SUPPORTED_IMAGE_EXTS:
+            image_files.extend(sorted(folder.glob(f"*.{ext}")))
+
+        for image_path in sorted(image_files, key=lambda item: item.name.lower()):
+            base_path = image_path.with_suffix("")
+            prompt_path = base_path.with_suffix(".prompt.txt")
+            window_path = base_path.with_suffix(".window.txt")
+            meta = parse_new_file_meta(image_path)
+            item: Dict[str, Any] = {
+                "id": meta.base_name if meta else base_path.name,
+                "base_name": base_path.name,
+                "state": state,
+                "variant": variant,
+                "files": {
+                    "image": file_manifest_record(image_path, storage.root),
+                },
+            }
+            if meta:
+                item["start_mmdd"] = meta.start_mmdd
+                item["end_mmdd"] = meta.end_mmdd
+                item["source"] = meta.source
+                item["subject_slug"] = meta.subject_slug
+                item["style_id"] = meta.style_id
+            if prompt_path.exists():
+                item["files"]["prompt"] = file_manifest_record(prompt_path, storage.root)
+            if window_path.exists():
+                item["files"]["window"] = file_manifest_record(window_path, storage.root)
+            items.append(item)
+
+        folder_manifest = {
+            "generated_at_utc": generated_at,
+            "folder_name": folder.name,
+            "state": state,
+            "variant": variant,
+            "item_count": len(items),
+            "items": items,
+        }
+        manifest_path = folder / manifest_name
+        manifest_path.write_text(json.dumps(folder_manifest, indent=2), encoding="utf-8")
+        total_images += len(items)
+        folder_summaries.append(
+            {
+                "folder_name": folder.name,
+                "state": state,
+                "variant": variant,
+                "manifest_path": manifest_path.relative_to(storage.root).as_posix(),
+                "item_count": len(items),
+            }
+        )
+
+    root_manifest = {
+        "generated_at_utc": generated_at,
+        "root_path": storage.root.name,
+        "folder_count": len(folder_summaries),
+        "image_count": total_images,
+        "folders": folder_summaries,
+    }
+    root_manifest_path = storage.root / root_manifest_name
+    root_manifest_path.write_text(json.dumps(root_manifest, indent=2), encoding="utf-8")
+    return total_images, root_manifest_path
 
 
 def build_image_prompt(
@@ -1290,19 +1510,25 @@ def main() -> int:
             pipelines=pipelines,
         )
 
-        output_dirs = resolve_output_dirs()
-        current_dir, wide_dir = output_dirs[0], output_dirs[1]
+        storage = resolve_output_dirs()
+        current_dir = storage.current
+        archive_dir = storage.archive
+        wide_dir = storage.current_wide
+        archive_wide_dir = storage.archive_wide
+        migrated_count = migrate_legacy_storage(storage)
         active_ids = {target_id(t) for t in targets}
 
         moved_count = 0
-        for folder in output_dirs:
-            moved_count += move_out_of_window_targets(folder, active_ids, today)
+        moved_count += move_out_of_window_targets(current_dir, archive_dir, active_ids)
+        moved_count += move_out_of_window_targets(wide_dir, archive_wide_dir, active_ids)
 
         if not targets:
+            manifest_images, root_manifest_path = write_manifests(storage)
             print(
                 "SUMMARY "
-                f"targets=0 generated_now=0 restored_now=0 skipped_existing=0 moved_to_month_folder={moved_count} "
-                f"config_mode={config_mode}"
+                f"targets=0 generated_now=0 restored_now=0 skipped_existing=0 moved_to_archive={moved_count} "
+                f"migrated_legacy_files={migrated_count} manifest_images={manifest_images} "
+                f"root_manifest={root_manifest_path.name} config_mode={config_mode}"
             )
             return 0
 
@@ -1337,7 +1563,13 @@ def main() -> int:
                 continue
 
             if reuse_enabled:
-                restored_portrait, restored_wide = restore_target_from_archive(target, current_dir, wide_dir)
+                restored_portrait, restored_wide = restore_target_from_archive(
+                    target,
+                    current_dir,
+                    archive_dir,
+                    wide_dir,
+                    archive_wide_dir,
+                )
                 if restored_portrait or restored_wide:
                     total_restored += int(restored_portrait) + int(restored_wide)
                     has_portrait = has_portrait or restored_portrait
@@ -1427,10 +1659,13 @@ def main() -> int:
                     f"base={target.base_name} outputs={outputs_written} style_id={target.style_id}"
                 )
 
+        manifest_images, root_manifest_path = write_manifests(storage)
         print(
             "SUMMARY "
             f"targets={len(targets)} generated_now={total_written} restored_now={total_restored} "
-            f"skipped_existing={total_skipped_existing} moved_to_month_folder={moved_count} "
+            f"skipped_existing={total_skipped_existing} moved_to_archive={moved_count} "
+            f"migrated_legacy_files={migrated_count} manifest_images={manifest_images} "
+            f"root_manifest={root_manifest_path.name} "
             f"calendar_generated={by_source.get(SOURCE_CALENDAR, 0)} devotion_generated={by_source.get(SOURCE_DEVOTION, 0)} "
             f"config_mode={config_mode}"
         )

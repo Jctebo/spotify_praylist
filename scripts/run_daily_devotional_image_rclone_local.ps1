@@ -54,7 +54,10 @@ if ([string]::IsNullOrWhiteSpace($rclonePath)) {
 
 $dcimRoot = Join-Path $env:USERPROFILE "OneDrive\Pictures\Samsung Gallery\DCIM"
 $currentDir = Join-Path $dcimRoot "Current Devotion"
-$wideDir = Join-Path $dcimRoot "Devotion Wide"
+$archiveDir = Join-Path $dcimRoot "Non Current Devotion"
+$currentWideDir = Join-Path $dcimRoot "Current Devotion Wide"
+$archiveWideDir = Join-Path $dcimRoot "Non Current Devotion Wide"
+$rootManifest = Join-Path $dcimRoot "devotional_image_library.json"
 
 if (-not $SkipGenerate) {
   $env:OPENAI_API_KEY = $OpenAiApiKey
@@ -66,14 +69,30 @@ if (-not $SkipGenerate) {
 }
 
 if (-not (Test-Path $currentDir)) { throw "Missing folder: $currentDir" }
-if (-not (Test-Path $wideDir)) { throw "Missing folder: $wideDir" }
+if (-not (Test-Path $archiveDir)) { throw "Missing folder: $archiveDir" }
+if (-not (Test-Path $currentWideDir)) { throw "Missing folder: $currentWideDir" }
+if (-not (Test-Path $archiveWideDir)) { throw "Missing folder: $archiveWideDir" }
 
-Write-Host "Uploading Current Devotion via rclone..."
-& $rclonePath copy "$currentDir/" "${RcloneRemoteName}:${RcloneRemoteRoot}/Current Devotion/" --progress --transfers 4 --checkers 8
-if ($LASTEXITCODE -ne 0) { throw "rclone copy failed for Current Devotion" }
+Write-Host "Syncing Current Devotion via rclone..."
+& $rclonePath sync "$currentDir/" "${RcloneRemoteName}:${RcloneRemoteRoot}/Current Devotion/" --progress --transfers 4 --checkers 8
+if ($LASTEXITCODE -ne 0) { throw "rclone sync failed for Current Devotion" }
 
-Write-Host "Uploading Devotion Wide via rclone..."
-& $rclonePath copy "$wideDir/" "${RcloneRemoteName}:${RcloneRemoteRoot}/Devotion Wide/" --progress --transfers 4 --checkers 8
-if ($LASTEXITCODE -ne 0) { throw "rclone copy failed for Devotion Wide" }
+Write-Host "Syncing Non Current Devotion via rclone..."
+& $rclonePath sync "$archiveDir/" "${RcloneRemoteName}:${RcloneRemoteRoot}/Non Current Devotion/" --progress --transfers 4 --checkers 8
+if ($LASTEXITCODE -ne 0) { throw "rclone sync failed for Non Current Devotion" }
 
-Write-Host "Devotional image local run + rclone upload completed."
+Write-Host "Syncing Current Devotion Wide via rclone..."
+& $rclonePath sync "$currentWideDir/" "${RcloneRemoteName}:${RcloneRemoteRoot}/Current Devotion Wide/" --progress --transfers 4 --checkers 8
+if ($LASTEXITCODE -ne 0) { throw "rclone sync failed for Current Devotion Wide" }
+
+Write-Host "Syncing Non Current Devotion Wide via rclone..."
+& $rclonePath sync "$archiveWideDir/" "${RcloneRemoteName}:${RcloneRemoteRoot}/Non Current Devotion Wide/" --progress --transfers 4 --checkers 8
+if ($LASTEXITCODE -ne 0) { throw "rclone sync failed for Non Current Devotion Wide" }
+
+if (Test-Path $rootManifest) {
+  Write-Host "Uploading devotional_image_library.json via rclone..."
+  & $rclonePath copyto "$rootManifest" "${RcloneRemoteName}:${RcloneRemoteRoot}/devotional_image_library.json" --progress
+  if ($LASTEXITCODE -ne 0) { throw "rclone copyto failed for devotional_image_library.json" }
+}
+
+Write-Host "Devotional image local run + rclone sync completed."

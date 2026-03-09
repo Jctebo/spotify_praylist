@@ -86,7 +86,10 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $currentFolder = Resolve-Path (Join-Path $dcimRoot "Current Devotion")
-$wideFolder = Resolve-Path (Join-Path $dcimRoot "Devotion Wide")
+$archiveFolder = Resolve-Path (Join-Path $dcimRoot "Non Current Devotion")
+$currentWideFolder = Resolve-Path (Join-Path $dcimRoot "Current Devotion Wide")
+$archiveWideFolder = Resolve-Path (Join-Path $dcimRoot "Non Current Devotion Wide")
+$rootManifest = Join-Path $dcimRoot "devotional_image_library.json"
 
 $accessToken = az account get-access-token --resource-type ms-graph --query accessToken -o tsv
 if ([string]::IsNullOrWhiteSpace($accessToken)) {
@@ -101,9 +104,30 @@ Get-ChildItem -Path $currentFolder -File | ForEach-Object {
   Write-Host "Uploaded: $remotePath"
 }
 
-Get-ChildItem -Path $wideFolder -File | ForEach-Object {
-  $remotePath = "$RemoteRoot/Devotion Wide/$($_.Name)"
+Get-ChildItem -Path $archiveFolder -File | ForEach-Object {
+  $remotePath = "$RemoteRoot/Non Current Devotion/$($_.Name)"
   Upload-OneDriveFile -LocalPath $_.FullName -RemotePath $remotePath -AccessToken $accessToken -UserId $OneDriveUserId
+  $uploaded++
+  Write-Host "Uploaded: $remotePath"
+}
+
+Get-ChildItem -Path $currentWideFolder -File | ForEach-Object {
+  $remotePath = "$RemoteRoot/Current Devotion Wide/$($_.Name)"
+  Upload-OneDriveFile -LocalPath $_.FullName -RemotePath $remotePath -AccessToken $accessToken -UserId $OneDriveUserId
+  $uploaded++
+  Write-Host "Uploaded: $remotePath"
+}
+
+Get-ChildItem -Path $archiveWideFolder -File | ForEach-Object {
+  $remotePath = "$RemoteRoot/Non Current Devotion Wide/$($_.Name)"
+  Upload-OneDriveFile -LocalPath $_.FullName -RemotePath $remotePath -AccessToken $accessToken -UserId $OneDriveUserId
+  $uploaded++
+  Write-Host "Uploaded: $remotePath"
+}
+
+if (Test-Path $rootManifest) {
+  $remotePath = "$RemoteRoot/devotional_image_library.json"
+  Upload-OneDriveFile -LocalPath $rootManifest -RemotePath $remotePath -AccessToken $accessToken -UserId $OneDriveUserId
   $uploaded++
   Write-Host "Uploaded: $remotePath"
 }
