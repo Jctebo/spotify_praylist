@@ -57,6 +57,7 @@ NOVENA_TEST_SAINT_NAME = "NOVENA_TEST_SAINT_NAME"  # optional saint name for day
 NOVENA_TEST_POPULATE_ALL_DAYS = "NOVENA_TEST_POPULATE_ALL_DAYS"  # default false
 NOVENA_DAY_SECTION_MARKER = "AUTOGEN_NOVENA_DAY"
 USCCB_SECTION_MARKER = "[AUTOGEN_USCCB_READINGS]"
+NOTION_MAX_BLOCK_CHILDREN = 100
 
 USCCB_READINGS_ENABLED = "USCCB_READINGS_ENABLED"  # default true
 USCCB_READINGS_FAIL_OPEN = "USCCB_READINGS_FAIL_OPEN"  # default true
@@ -866,7 +867,7 @@ def collect_saints_window(
     fallback_names: List[Dict[str, str]] = []
     seen = set()
 
-    for offset in range(days):
+    for offset in range(days + 1):
         dt = start_date + datetime.timedelta(days=offset)
         events = romcal_fetch_day(calendar, locale, dt)
         for event in events:
@@ -903,7 +904,7 @@ def collect_calendar_days_window(
 ) -> List[Dict[str, str]]:
     rows: List[Dict[str, str]] = []
     seen = set()
-    for offset in range(days):
+    for offset in range(days + 1):
         dt = start_date + datetime.timedelta(days=offset)
         events = romcal_fetch_day(calendar, locale, dt)
         if not events:
@@ -1286,11 +1287,31 @@ def paragraph_block(content: str) -> Dict[str, Any]:
     return {"object": "block", "type": "paragraph", "paragraph": {"rich_text": rich_text(content)}}
 
 
+def bounded_toggle_children(title: str, children: Sequence[Dict[str, Any]], depth: int = 1) -> List[Dict[str, Any]]:
+    child_list = list(children)
+    if len(child_list) <= NOTION_MAX_BLOCK_CHILDREN:
+        return child_list
+    head = child_list[: NOTION_MAX_BLOCK_CHILDREN - 1]
+    tail = child_list[NOTION_MAX_BLOCK_CHILDREN - 1 :]
+    suffix = " (continued)" if depth == 1 else f" (continued {depth})"
+    head.append(
+        {
+            "object": "block",
+            "type": "toggle",
+            "toggle": {
+                "rich_text": rich_text(f"{title}{suffix}"),
+                "children": bounded_toggle_children(title, tail, depth + 1),
+            },
+        }
+    )
+    return head
+
+
 def toggle_block(title: str, children: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
     return {
         "object": "block",
         "type": "toggle",
-        "toggle": {"rich_text": rich_text(title), "children": list(children)},
+        "toggle": {"rich_text": rich_text(title), "children": bounded_toggle_children(title, children)},
     }
 
 
@@ -1743,7 +1764,7 @@ def main() -> int:
         write_daily_novena_page = bool_env(NOTION_WRITE_DAILY_NOVENA_PAGE, default=True)
 
         start_date = local_today()
-        end_date = start_date + datetime.timedelta(days=window_days - 1)
+        end_date = start_date + datetime.timedelta(days=window_days)
         saints = collect_saints_window(romcal_calendar, romcal_locale, start_date, window_days)
         if not saints:
             raise RuntimeError("No celebrations found from Romcal for requested date window.")

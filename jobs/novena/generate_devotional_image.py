@@ -349,7 +349,7 @@ def collect_image_candidates_window(
 ) -> List[Dict[str, str]]:
     rows: List[Dict[str, str]] = []
     seen = set()
-    for offset in range(days):
+    for offset in range(days + 1):
         dt = start_date + datetime.timedelta(days=offset)
         events = romcal_fetch_day(calendar_name, locale, dt)
         for event in events:
@@ -1300,7 +1300,7 @@ def build_targets_from_config(
                 feast_day = datetime.date.fromisoformat(feast_iso)
                 if target_date and feast_day != target_date:
                     continue
-                start_day = feast_day - datetime.timedelta(days=days - 1)
+                start_day = feast_day - datetime.timedelta(days=days)
                 end_day = feast_day
                 if today < start_day or today > end_day:
                     continue
