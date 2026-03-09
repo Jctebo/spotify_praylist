@@ -3,7 +3,7 @@ name: Daily Devotional Image (Remote OneDrive via rclone)
 on:
   workflow_dispatch:
   schedule:
-    - cron: "15 9 * * *" # daily 03:15 CST / 04:15 CDT
+    - cron: "15 8 * * *" # daily 02:15 CST / 03:15 CDT
 
 permissions:
   contents: read

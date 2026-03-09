@@ -3,7 +3,7 @@ name: Daily Novena Prayer
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 9 * * *" # daily 03:00 CST / 04:00 CDT (same as daily.yml)
+    - cron: "10 8 * * *" # daily 02:10 CST / 03:10 CDT
 
 jobs:
   generate-novena:
