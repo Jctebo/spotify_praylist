@@ -1,6 +1,6 @@
 {
   "source_root": "",
-  "source_base_url": "https://example.com/devotional/DCIM",
+  "source_base_url": "https://jctebo.github.io/spotify_praylist/devotional/DCIM",
   "target_root": "C:/Users/ExampleUser/Pictures/DevotionalImages",
   "root_manifest": "devotional_image_library.json",
   "include_manifests": true,

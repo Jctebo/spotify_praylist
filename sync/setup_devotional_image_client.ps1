@@ -16,6 +16,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$defaultPublicBaseUrl = "https://jctebo.github.io/spotify_praylist/devotional/DCIM"
 
 function Read-Required([string]$Prompt, [string]$DefaultValue = "") {
   $fullPrompt = if ([string]::IsNullOrWhiteSpace($DefaultValue)) { $Prompt } else { "$Prompt [$DefaultValue]" }
@@ -127,7 +128,7 @@ if ($null -eq $DeleteMissing) {
 
 if ($SourceMode -eq "http") {
   if ([string]::IsNullOrWhiteSpace($SourceBaseUrl)) {
-    $SourceBaseUrl = Read-Required "Public HTTP root URL for the devotional DCIM folder"
+    $SourceBaseUrl = Read-Required "Public HTTP root URL for the devotional DCIM folder" $defaultPublicBaseUrl
   }
   Validate-HttpUrl $SourceBaseUrl
   $SourceRoot = ""

@@ -21,6 +21,7 @@ function Require-Path([string]$PathText, [string]$Label) {
 }
 
 $repoRoot = Resolve-AbsolutePath (Join-Path $PSScriptRoot "..")
+$defaultPublicBaseUrl = "https://jctebo.github.io/spotify_praylist/devotional/DCIM"
 if ([string]::IsNullOrWhiteSpace($SourceRoot)) {
   $SourceRoot = Join-Path $env:USERPROFILE "OneDrive\Pictures\Samsung Gallery\DCIM"
 }
@@ -28,7 +29,7 @@ if ([string]::IsNullOrWhiteSpace($BundleDir)) {
   $BundleDir = Join-Path $repoRoot "sync"
 }
 if ([string]::IsNullOrWhiteSpace($PublicBaseUrl)) {
-  $PublicBaseUrl = "https://example.com/devotional/DCIM"
+  $PublicBaseUrl = $defaultPublicBaseUrl
 }
 if ([string]::IsNullOrWhiteSpace($ClientTargetRoot)) {
   $ClientTargetRoot = "C:\Users\Public\Pictures\DevotionalImages"

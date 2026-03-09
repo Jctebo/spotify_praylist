@@ -385,7 +385,7 @@ Unattended example for HTTP:
 ```powershell
 .\sync\setup_devotional_image_client.ps1 `
   -SourceMode http `
-  -SourceBaseUrl "https://example.com/devotional/DCIM" `
+  -SourceBaseUrl "https://jctebo.github.io/spotify_praylist/devotional/DCIM" `
   -TargetRoot "C:\Users\Public\Pictures\DevotionalImages"
 ```
 
@@ -404,7 +404,7 @@ Build or refresh the root `sync\` folder so it contains both the public HTTP-rea
 .\sync\build_devotional_image_distribution_bundle.ps1 `
   -SourceRoot "$env:USERPROFILE\OneDrive\Pictures\Samsung Gallery\DCIM" `
   -BundleDir ".\sync" `
-  -PublicBaseUrl "https://example.com/devotional/DCIM" `
+  -PublicBaseUrl "https://jctebo.github.io/spotify_praylist/devotional/DCIM" `
   -ClientTargetRoot "C:\Users\Public\Pictures\DevotionalImages"
 ```
 
@@ -438,10 +438,10 @@ How the HTTP mode works:
 Expected HTTP layout:
 
 ```text
-https://example.com/devotional/DCIM/devotional_image_library.json
-https://example.com/devotional/DCIM/Current%20Devotion/images_manifest.json
-https://example.com/devotional/DCIM/Current%20Devotion/03-01_03-31_dev_st-joseph_mod_realism.png
-https://example.com/devotional/DCIM/Current%20Devotion%20Wide/images_manifest.json
+https://jctebo.github.io/spotify_praylist/devotional/DCIM/devotional_image_library.json
+https://jctebo.github.io/spotify_praylist/devotional/DCIM/Current%20Devotion/images_manifest.json
+https://jctebo.github.io/spotify_praylist/devotional/DCIM/Current%20Devotion/03-01_03-31_dev_st-joseph_mod_realism.png
+https://jctebo.github.io/spotify_praylist/devotional/DCIM/Current%20Devotion%20Wide/images_manifest.json
 ```
 
 Recommended client config for HTTP:
@@ -455,7 +455,7 @@ Direct command without a config file:
 
 ```powershell
 py -3 .\sync\sync_devotional_images_client.py `
-  --source-base-url "https://example.com/devotional/DCIM" `
+  --source-base-url "https://jctebo.github.io/spotify_praylist/devotional/DCIM" `
   --target-root "C:\Users\Public\Pictures\DevotionalImages" `
   --include-manifests
 ```
