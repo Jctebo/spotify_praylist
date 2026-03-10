@@ -57,4 +57,5 @@ jobs:
           USCCB_READINGS_ENABLED: "true"
           USCCB_READINGS_FAIL_OPEN: "true"
           USCCB_READINGS_BASE_URL: https://bible.usccb.org/bible/readings
+          USCCB_READINGS_EXTRA_PAGE_IDS: "6c389e7d-5bc6-4e11-b678-5e862f97dd54"
         run: python jobs/novena/generate_daily_novena_prayer.py

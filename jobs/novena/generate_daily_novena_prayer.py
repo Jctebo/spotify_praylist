@@ -62,6 +62,7 @@ NOTION_MAX_BLOCK_CHILDREN = 100
 USCCB_READINGS_ENABLED = "USCCB_READINGS_ENABLED"  # default true
 USCCB_READINGS_FAIL_OPEN = "USCCB_READINGS_FAIL_OPEN"  # default true
 USCCB_READINGS_BASE_URL = "USCCB_READINGS_BASE_URL"  # default https://bible.usccb.org/bible/readings
+USCCB_READINGS_EXTRA_PAGE_IDS = "USCCB_READINGS_EXTRA_PAGE_IDS"  # optional comma/newline-separated page ids
 
 
 def require_env(name: str) -> str:
@@ -91,6 +92,14 @@ def bool_env(name: str, default: bool) -> bool:
     if raw in {"0", "false", "no", "n", "off"}:
         return False
     return default
+
+
+def split_env_list(name: str) -> List[str]:
+    raw = os.getenv(name, "")
+    if not raw:
+        return []
+    parts = re.split(r"[\s,;]+", raw.strip())
+    return [part.strip() for part in parts if part.strip()]
 
 
 def float_env(name: str, default: float, min_value: float, max_value: float) -> float:
@@ -1565,6 +1574,24 @@ def notion_remove_autogen_markers_from_other_pages_for_day(
             notion_remove_old_autogen_audio(page_id, token, marker=marker)
 
 
+def append_usccb_readings_to_extra_pages(
+    page_ids: Sequence[str],
+    readings_blocks: Sequence[Dict[str, Any]],
+    token: str,
+) -> int:
+    wrote = 0
+    seen: set[str] = set()
+    for raw_page_id in page_ids:
+        page_id = str(raw_page_id or "").strip()
+        if not page_id or page_id in seen:
+            continue
+        seen.add(page_id)
+        notion_remove_old_autogen_sections_by_markers(page_id, token, [USCCB_SECTION_MARKER])
+        notion_append_children(page_id, readings_blocks, token)
+        wrote += 1
+    return wrote
+
+
 def notion_create_page(database_id: str, properties: Dict[str, Any], token: str) -> None:
     body = {"parent": {"database_id": database_id}, "properties": properties}
     notion_call("POST", "https://api.notion.com/v1/pages", token, body)
@@ -1853,6 +1880,8 @@ def main() -> int:
 
         readings_blocks: List[Dict[str, Any]] = []
         readings_mode = "disabled"
+        extra_readings_page_ids = split_env_list(USCCB_READINGS_EXTRA_PAGE_IDS)
+        extra_readings_pages_written = 0
         if bool_env(USCCB_READINGS_ENABLED, default=True):
             try:
                 readings = fetch_usccb_daily_readings(start_date)
@@ -1929,6 +1958,17 @@ def main() -> int:
                         )
                         notion_remove_old_autogen_sections_by_markers(today_page_id, notion_token, [USCCB_SECTION_MARKER])
                         notion_append_children(today_page_id, readings_blocks, notion_token)
+                if extra_readings_page_ids:
+                    try:
+                        extra_readings_pages_written = append_usccb_readings_to_extra_pages(
+                            extra_readings_page_ids,
+                            readings_blocks,
+                            notion_token,
+                        )
+                    except Exception:
+                        if not bool_env(USCCB_READINGS_FAIL_OPEN, default=True):
+                            raise
+                        extra_readings_pages_written = 0
 
             if not day_mode:
                 write_mode = "saint_radar_day_mode_disabled"
@@ -2085,6 +2125,8 @@ def main() -> int:
                     f"saint_radar_novena_day_by_day:sections={wrote_sections}:audio={wrote_audio}:"
                     f"skipped_existing={skipped_existing}:force_refresh={str(force_refresh).lower()}"
                 )
+        if readings_mode.startswith("attached:") and extra_readings_pages_written:
+            readings_mode = f"{readings_mode}:extra_pages={extra_readings_pages_written}"
         audio_mode = "disabled"
         if target_page and write_daily_novena_page:
             try:
