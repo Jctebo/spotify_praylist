@@ -243,6 +243,128 @@ class TestRefreshJob(unittest.TestCase):
             ],
         )
 
+    def test_notion_sync_playlist_novena_link_adds_bookmark_block(self):
+        appended = []
+
+        def fake_append(parent_id, children, token, position="end"):
+            appended.append((parent_id, children, token, position))
+
+        with patch.object(self.mod, "notion_list_block_children", return_value=[]), patch.object(
+            self.mod, "notion_append_children", side_effect=fake_append
+        ):
+            changed = self.mod.notion_sync_playlist_novena_link(
+                "playlist_page_1",
+                "novena_page_1",
+                "https://www.notion.so/novena_page_1",
+                "notion_token",
+            )
+
+        self.assertTrue(changed)
+        self.assertEqual(
+            appended,
+            [
+                (
+                    "playlist_page_1",
+                    [
+                        {
+                            "object": "block",
+                            "type": "bookmark",
+                            "bookmark": {"url": "https://www.notion.so/novena_page_1"},
+                        }
+                    ],
+                    "notion_token",
+                    "start",
+                )
+            ],
+        )
+
+    def test_notion_sync_playlist_novena_link_replaces_legacy_link_to_page(self):
+        appended = []
+
+        def fake_append(parent_id, children, token, position="end"):
+            appended.append((parent_id, children, token, position))
+
+        existing_blocks = [
+            {
+                "id": "legacy_link_1",
+                "type": "link_to_page",
+                "link_to_page": {"type": "page_id", "page_id": "novena_page_1"},
+            }
+        ]
+
+        with patch.object(self.mod, "notion_list_block_children", return_value=existing_blocks), patch.object(
+            self.mod, "notion_append_children", side_effect=fake_append
+        ), patch.object(self.mod, "notion_archive_block") as archive_mock:
+            changed = self.mod.notion_sync_playlist_novena_link(
+                "playlist_page_1",
+                "novena_page_1",
+                "https://www.notion.so/novena_page_1",
+                "notion_token",
+            )
+
+        self.assertTrue(changed)
+        archive_mock.assert_called_once_with("legacy_link_1", "notion_token")
+        self.assertEqual(
+            appended,
+            [
+                (
+                    "playlist_page_1",
+                    [
+                        {
+                            "object": "block",
+                            "type": "bookmark",
+                            "bookmark": {"url": "https://www.notion.so/novena_page_1"},
+                        }
+                    ],
+                    "notion_token",
+                    "start",
+                )
+            ],
+        )
+
+    def test_sync_notion_playlist_novena_links_updates_enabled_playlist_pages(self):
+        env = {
+            "NOTION_TOKEN": "notion_token",
+            "NOTION_PLAYLISTS_DATABASE_ID": "playlists_db_1",
+        }
+        playlist_pages = [
+            {
+                "id": "playlist_page_1",
+                "properties": {
+                    "Name": _title_prop("Morning"),
+                    "Enabled": _checkbox_prop(True),
+                },
+            },
+            {
+                "id": "playlist_page_2",
+                "properties": {
+                    "Name": _title_prop("Night"),
+                    "Enabled": _checkbox_prop(False),
+                },
+            },
+        ]
+
+        with temp_env(env):
+            with patch.object(
+                self.mod,
+                "find_playlist_novena_page",
+                return_value={"id": "novena_page_1", "url": "https://www.notion.so/novena_page_1"},
+            ), patch.object(
+                self.mod, "notion_get_all_pages", return_value=playlist_pages
+            ), patch.object(
+                self.mod, "notion_sync_playlist_novena_link", return_value=True
+            ) as sync_mock:
+                updated, names = self.mod.sync_notion_playlist_novena_links("notion_token")
+
+        self.assertEqual(updated, 1)
+        self.assertEqual(names, ["Morning"])
+        sync_mock.assert_called_once_with(
+            "playlist_page_1",
+            "novena_page_1",
+            "https://www.notion.so/novena_page_1",
+            "notion_token",
+        )
+
     def test_sync_notion_spotify_bookmarks_updates_only_spotify_rows(self):
         env = {
             "NOTION_TOKEN": "notion_token",
@@ -359,6 +481,8 @@ class TestRefreshJob(unittest.TestCase):
             ), patch.object(
                 self.mod, "recreate_playlist_items", side_effect=fake_recreate
             ), patch.object(
+                self.mod, "sync_notion_playlist_novena_links", return_value=(0, [])
+            ), patch.object(
                 self.mod, "sync_notion_uris_for_playlist", return_value=(0, [], [], [])
             ), patch.object(
                 self.mod, "sync_notion_spotify_bookmarks", return_value=(0, 0, [], [])
@@ -397,6 +521,8 @@ class TestRefreshJob(unittest.TestCase):
             ), patch.object(
                 self.mod, "recreate_playlist_items", return_value=1
             ) as recreate_mock, patch.object(
+                self.mod, "sync_notion_playlist_novena_links", return_value=(0, [])
+            ), patch.object(
                 self.mod, "sync_notion_uris_for_playlist", return_value=(0, [], [], [])
             ), patch.object(
                 self.mod, "sync_notion_spotify_bookmarks", return_value=(0, 0, [], [])

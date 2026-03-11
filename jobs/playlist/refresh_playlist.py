@@ -48,6 +48,8 @@ NOTION_URI_PROPERTY = "NOTION_URI_PROPERTY"  # defaults to URI
 NOTION_URI_LOG_LIMIT = "NOTION_URI_LOG_LIMIT"  # defaults to 25
 NOTION_SPOTIFY_BOOKMARKS_ENABLED = "NOTION_SPOTIFY_BOOKMARKS_ENABLED"  # default true
 NOTION_SPOTIFY_EMBEDS_ENABLED = "NOTION_SPOTIFY_EMBEDS_ENABLED"  # default true
+NOTION_PLAYLIST_NOVENA_LINKS_ENABLED = "NOTION_PLAYLIST_NOVENA_LINKS_ENABLED"  # default true
+NOTION_PLAYLIST_NOVENA_ROW_TITLE = "NOTION_PLAYLIST_NOVENA_ROW_TITLE"  # optional explicit novena row title
 NOTION_PLAYLISTS_TITLE_PROPERTY = "NOTION_PLAYLISTS_TITLE_PROPERTY"  # defaults to Name
 NOTION_PLAYLISTS_ID_PROPERTY = "NOTION_PLAYLISTS_ID_PROPERTY"  # defaults to Spotify Playlist ID
 NOTION_PLAYLISTS_ENABLED_PROPERTY = "NOTION_PLAYLISTS_ENABLED_PROPERTY"  # defaults to Enabled
@@ -75,6 +77,11 @@ DEFAULT_UTC_OFFSET = "-06:00"
 DEPRECATED_TIMESYNC_PLATFORM_VALUE = "spotify timesync"
 RUNTIME_TZ = datetime.timezone(datetime.timedelta(hours=-6))
 SPOTIFY_BOOKMARK_BASE_URL = "https://open.spotify.com"
+DEFAULT_PLAYLIST_NOVENA_TITLES = (
+    "Daily Novenas from Liturgical Calendar",
+    "Daily Novenas from Liturgical Cakendar",
+    "Daily Novena Prayer",
+)
 
 DEFAULT_SHOWS = {
     "DIVINE_OFFICE": "70ydTdzunoqWAsvutFIkHM",
@@ -136,6 +143,10 @@ def notion_spotify_bookmarks_enabled() -> bool:
     if os.getenv(NOTION_SPOTIFY_BOOKMARKS_ENABLED, "").strip():
         return bool_env(NOTION_SPOTIFY_BOOKMARKS_ENABLED, default=True)
     return bool_env(NOTION_SPOTIFY_EMBEDS_ENABLED, default=True)
+
+
+def notion_playlist_novena_links_enabled() -> bool:
+    return bool_env(NOTION_PLAYLIST_NOVENA_LINKS_ENABLED, default=True)
 
 
 def load_playlist_config() -> Dict[str, Any]:
@@ -338,6 +349,21 @@ def notion_append_children(
     if position == "start":
         body["position"] = {"type": "start"}
     notion_call("PATCH", f"https://api.notion.com/v1/blocks/{parent_id}/children", token, body)
+
+
+def block_bookmark_url(block: Dict[str, Any]) -> str:
+    if str(block.get("type", "")).strip() != "bookmark":
+        return ""
+    return str((block.get("bookmark") or {}).get("url", "")).strip()
+
+
+def block_link_to_page_id(block: Dict[str, Any]) -> str:
+    if str(block.get("type", "")).strip() != "link_to_page":
+        return ""
+    payload = block.get("link_to_page") or {}
+    if str(payload.get("type", "")).strip() != "page_id":
+        return ""
+    return str(payload.get("page_id", "")).strip()
 
 
 def normalize_text(text: str) -> str:
@@ -657,6 +683,117 @@ def resolve_notion_playlist_property_name() -> str:
     if legacy:
         return legacy
     return "Playlist"
+
+
+def notion_playlist_novena_titles() -> List[str]:
+    explicit = os.getenv(NOTION_PLAYLIST_NOVENA_ROW_TITLE, "").strip()
+    titles = [explicit] if explicit else []
+    titles.extend(DEFAULT_PLAYLIST_NOVENA_TITLES)
+    out: List[str] = []
+    seen = set()
+    for title in titles:
+        norm = normalize_text(title)
+        if norm and norm not in seen:
+            seen.add(norm)
+            out.append(title)
+    return out
+
+
+def find_playlist_novena_page(token: str) -> Optional[Dict[str, Any]]:
+    database_id = os.getenv(NOTION_DATABASE_ID, "").strip()
+    if not database_id:
+        db_name = os.getenv(NOTION_DATABASE_NAME, "Opus Dei").strip() or "Opus Dei"
+        database_id = notion_find_database_id(token, db_name) or ""
+    if not database_id:
+        return None
+    title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
+    pages = notion_get_all_pages(database_id, token)
+    wanted = {normalize_text(title) for title in notion_playlist_novena_titles()}
+    for page in pages:
+        title = page_title(page, title_property).strip()
+        if normalize_text(title) in wanted:
+            return page
+    return None
+
+
+def notion_sync_playlist_novena_link(
+    playlist_page_id: str,
+    target_page_id: str,
+    target_page_url: str,
+    token: str,
+) -> bool:
+    blocks = notion_list_block_children(playlist_page_id, token)
+    matching_block_ids: List[str] = []
+    first_is_target_bookmark = False
+    for idx, block in enumerate(blocks):
+        link_page_id = block_link_to_page_id(block)
+        bookmark_url = block_bookmark_url(block)
+        matches_target = bool(
+            (target_page_id and link_page_id == target_page_id)
+            or (target_page_url and bookmark_url.strip() == target_page_url.strip())
+        )
+        if idx == 0 and target_page_url and bookmark_url.strip() == target_page_url.strip():
+            first_is_target_bookmark = True
+        if matches_target:
+            block_id = str(block.get("id", "")).strip()
+            if block_id:
+                matching_block_ids.append(block_id)
+
+    if len(matching_block_ids) == 1 and first_is_target_bookmark:
+        return False
+
+    for block_id in matching_block_ids:
+        notion_archive_block(block_id, token)
+    notion_append_children(
+        playlist_page_id,
+        [
+            {
+                "object": "block",
+                "type": "bookmark",
+                "bookmark": {"url": target_page_url},
+            }
+        ],
+        token,
+        position="start",
+    )
+    return True
+
+
+def sync_notion_playlist_novena_links(token: str) -> Tuple[int, List[str]]:
+    if not notion_playlist_novena_links_enabled():
+        return 0, []
+
+    target_page = find_playlist_novena_page(token)
+    if not target_page:
+        return 0, []
+    target_page_id = str(target_page.get("id", "")).strip()
+    target_page_url = str(target_page.get("url", "")).strip()
+    if not target_page_id:
+        return 0, []
+
+    database_id = os.getenv(NOTION_PLAYLISTS_DATABASE_ID, "").strip()
+    if not database_id:
+        db_name = os.getenv(NOTION_PLAYLISTS_DATABASE_NAME, "Spotify Playlists").strip() or "Spotify Playlists"
+        database_id = notion_find_database_id(token, db_name) or ""
+    if not database_id:
+        return 0, []
+
+    title_property = os.getenv(NOTION_PLAYLISTS_TITLE_PROPERTY, "Name").strip() or "Name"
+    enabled_property = os.getenv(NOTION_PLAYLISTS_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
+    updated = 0
+    updated_names: List[str] = []
+    for row in notion_get_all_pages(database_id, token):
+        enabled = page_property_checkbox(row, enabled_property)
+        if enabled is False:
+            continue
+        page_id = str(row.get("id", "")).strip()
+        if not page_id:
+            continue
+        playlist_name = page_title(row, title_property).strip() or page_property_text(row, title_property).strip() or page_id
+        if notion_sync_playlist_novena_link(page_id, target_page_id, target_page_url, token):
+            updated += 1
+            updated_names.append(playlist_name)
+    return updated, updated_names
 
 
 def load_notion_playlists(token: str, playlist_filter: str = "") -> List[Dict[str, str]]:
@@ -1913,11 +2050,14 @@ def main() -> int:
         weekday = local_now().strftime("%A")
         uri_autosync_enabled = bool_env(SPOTIFY_ENABLE_URI_AUTOSYNC, default=False)
         notion_spotify_bookmarks_enabled_flag = notion_spotify_bookmarks_enabled()
+        notion_playlist_novena_links_enabled_flag = notion_playlist_novena_links_enabled()
         runs: List[Dict[str, Any]] = []
         bookmark_updates = 0
         bookmark_removed = 0
         bookmark_update_details: List[Tuple[str, str]] = []
         bookmark_unresolved: List[str] = []
+        novena_link_updates = 0
+        novena_link_update_names: List[str] = []
 
         if source == "file":
             profile = os.getenv(SPOTIFY_PLAYLIST_PROFILE, "morning").strip().lower() or "morning"
@@ -1955,6 +2095,8 @@ def main() -> int:
             )
         else:
             notion_token = require_env(NOTION_TOKEN)
+            if notion_playlist_novena_links_enabled_flag:
+                novena_link_updates, novena_link_update_names = sync_notion_playlist_novena_links(notion_token)
             playlist_filter = os.getenv(SPOTIFY_PLAYLIST_NAME, "").strip()
             runs = []
             for target in load_notion_playlists(notion_token, playlist_filter):
@@ -2004,6 +2146,7 @@ def main() -> int:
             print(f"INFO utc_offset={local_now().strftime('%z')}")
             print(f"INFO uri_autosync_enabled={str(uri_autosync_enabled).lower()}")
             print(f"INFO notion_spotify_bookmarks_enabled={str(notion_spotify_bookmarks_enabled_flag).lower()}")
+            print(f"INFO notion_playlist_novena_links_enabled={str(notion_playlist_novena_links_enabled_flag).lower()}")
             for name, ok in sorted(status.items()):
                 print(f"INFO resolver_status playlist={playlist_name} name={name} ok={str(ok).lower()}")
             if uri_autosync_enabled and os.getenv(NOTION_TOKEN, "").strip():
@@ -2053,6 +2196,16 @@ def main() -> int:
                 print(
                     "INFO notion_spotify_bookmark_unresolved_truncated "
                     f"shown={max(0, log_limit)} total={len(bookmark_unresolved)}"
+                )
+        if source == "notion" and notion_playlist_novena_links_enabled_flag and os.getenv(NOTION_TOKEN, "").strip():
+            print(f"INFO notion_playlist_novena_links_updated count={novena_link_updates}")
+            log_limit = int(os.getenv(NOTION_URI_LOG_LIMIT, "25").strip() or "25")
+            for playlist_name in novena_link_update_names[: max(0, log_limit)]:
+                print(f"INFO notion_playlist_novena_link_synced playlist={playlist_name}")
+            if len(novena_link_update_names) > max(0, log_limit):
+                print(
+                    "INFO notion_playlist_novena_link_synced_truncated "
+                    f"shown={max(0, log_limit)} total={len(novena_link_update_names)}"
                 )
 
         return 0
