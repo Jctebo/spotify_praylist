@@ -2,6 +2,7 @@ import base64
 import calendar
 import datetime
 import hashlib
+import io
 import json
 import os
 import re
@@ -12,6 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from openai import OpenAI
+from PIL import Image, ImageDraw, ImageFont
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
@@ -156,18 +158,13 @@ COLOR PALETTE (AUTOMATIC)
 - Sorrowful Mysteries -> purple with restrained crimson accents
 - Ordinary Time / teaching saints -> green, parchment, warm neutrals
 
-ON-IMAGE TEXT (AUTOMATIC)
-- Title (e.g., Mary, Mother of God)
-- No secondary caption line by default (title-only unless explicitly requested)
-- Typography implied as refined, classical, unobtrusive
-- Keep on-image text short (single title line preferred)
-- Preserve safe text margins: leave at least 18% padding from left/right and 20% from top/bottom
-- Place text in lower third or upper third with clear negative space
-- Never place text touching borders, cropped areas, or bright/high-detail regions
+TEXT TREATMENT (AUTOMATIC)
+- Reserve clean negative space for a later title overlay
+- Do not render letters, words, captions, or typography into the artwork itself unless explicitly requested
+- Keep one clear title-safe area in the upper third or lower third
+- Preserve safe margins: leave at least 18% padding from left/right and 20% from top/bottom
+- Never place important visual detail where a short title line would need to sit
 - Prioritize legibility on phone lock screens
-- Do not place text in the bottom 25% of portrait images (lock screen UI overlap risk)
-- Keep all text inside a centered safe box (middle 60% width x middle 50% height)
-- If text safety conflicts with composition, reduce text length further and keep title only
 
 OUTPUT FORMAT (AUTOMATIC)
 Return only one complete image prompt, fully structured and directly usable for image generation.
@@ -1260,11 +1257,174 @@ def generate_image_bytes(
     return base64.b64decode(b64)
 
 
+def _font_candidates() -> List[Path]:
+    candidates = [
+        Path(r"C:\Windows\Fonts\georgiab.ttf"),
+        Path(r"C:\Windows\Fonts\georgia.ttf"),
+        Path(r"C:\Windows\Fonts\timesbd.ttf"),
+        Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
+        Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
+        Path("/Library/Fonts/Georgia Bold.ttf"),
+        Path("/Library/Fonts/Times New Roman Bold.ttf"),
+    ]
+    return [path for path in candidates if path.exists()]
+
+
+def _load_title_font(size: int) -> ImageFont.ImageFont:
+    for path in _font_candidates():
+        try:
+            return ImageFont.truetype(str(path), size=size)
+        except Exception:
+            continue
+    return ImageFont.load_default()
+
+
+def _wrap_text(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont, max_width: int) -> List[str]:
+    words = [word for word in re.split(r"\s+", str(text or "").strip()) if word]
+    if not words:
+        return []
+    lines: List[str] = []
+    current = words[0]
+    for word in words[1:]:
+        trial = f"{current} {word}".strip()
+        bbox = draw.textbbox((0, 0), trial, font=font)
+        if (bbox[2] - bbox[0]) <= max_width:
+            current = trial
+        else:
+            lines.append(current)
+            current = word
+    lines.append(current)
+    return lines
+
+
+def apply_portrait_title_overlay(image_bytes: bytes, title: str, image_format: str) -> bytes:
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
+    width, height = image.size
+    draw = ImageDraw.Draw(image)
+
+    safe_width = int(width * 0.62)
+    safe_height = int(height * 0.22)
+    safe_left = (width - safe_width) // 2
+    safe_top = int(height * 0.14)
+    min_font = max(24, int(height * 0.026))
+    max_font = max(min_font, int(height * 0.07))
+    line_spacing = max(8, int(height * 0.012))
+
+    best_font = _load_title_font(min_font)
+    best_lines = [title.strip()] if str(title or "").strip() else []
+    for size in range(max_font, min_font - 1, -2):
+        font = _load_title_font(size)
+        lines = _wrap_text(draw, title, font, safe_width)
+        if not lines or len(lines) > 3:
+            continue
+        bbox = draw.multiline_textbbox((0, 0), "\n".join(lines), font=font, spacing=line_spacing, align="center")
+        if (bbox[2] - bbox[0]) <= safe_width and (bbox[3] - bbox[1]) <= safe_height:
+            best_font = font
+            best_lines = lines
+            break
+
+    if not best_lines:
+        return image_bytes
+
+    text = "\n".join(best_lines)
+    bbox = draw.multiline_textbbox((0, 0), text, font=best_font, spacing=line_spacing, align="center")
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+    x = (width - text_width) / 2
+    y = safe_top + (safe_height - text_height) / 2
+    pad_x = int(width * 0.035)
+    pad_y = int(height * 0.02)
+
+    overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
+    overlay_draw = ImageDraw.Draw(overlay)
+    overlay_draw.rounded_rectangle(
+        (
+            x - pad_x,
+            y - pad_y,
+            x + text_width + pad_x,
+            y + text_height + pad_y,
+        ),
+        radius=max(18, int(width * 0.025)),
+        fill=(18, 14, 10, 120),
+    )
+    overlay_draw.multiline_text(
+        (x, y),
+        text,
+        font=best_font,
+        fill=(247, 242, 232, 255),
+        align="center",
+        spacing=line_spacing,
+        stroke_width=max(1, int(height * 0.0025)),
+        stroke_fill=(22, 18, 14, 180),
+    )
+    image = Image.alpha_composite(image, overlay)
+
+    out = io.BytesIO()
+    save_format = "JPEG" if image_format.lower() in {"jpg", "jpeg"} else image_format.upper()
+    save_image = image.convert("RGB") if save_format == "JPEG" else image
+    save_image.save(out, format=save_format)
+    return out.getvalue()
+
+
 def write_image_file(image_bytes: bytes, output_dir: Path, filename: str) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
     out_path = output_dir / filename
     out_path.write_bytes(image_bytes)
     return out_path
+
+
+def overlay_title_for_subject(subject: str) -> str:
+    text = re.sub(r"\s+", " ", str(subject or "").strip())
+    if not text:
+        return ""
+    if "," in text and re.match(r"^(saint|st\.?)\s+", text, flags=re.IGNORECASE):
+        text = text.split(",", 1)[0].strip()
+    return text
+
+
+def canonical_subject_key(subject_slug: str) -> str:
+    slug = re.sub(r"^(saint|st)-", "", str(subject_slug or "").strip().lower())
+    slug = re.sub(r"-+", "-", slug).strip("-")
+    return slug
+
+
+def targets_overlap_subject(a: RenderTarget, b: RenderTarget) -> bool:
+    a_key = canonical_subject_key(a.subject_slug)
+    b_key = canonical_subject_key(b.subject_slug)
+    if not a_key or not b_key:
+        return False
+    if a_key == b_key:
+        return True
+    shorter, longer = (a_key, b_key) if len(a_key) <= len(b_key) else (b_key, a_key)
+    shorter_tokens = [token for token in shorter.split("-") if token]
+    if len(shorter_tokens) > 2:
+        return False
+    return longer.startswith(f"{shorter}-")
+
+
+def render_target_priority(target: RenderTarget) -> Tuple[int, int, int, str]:
+    source_rank = 0 if target.source == SOURCE_CALENDAR else 1
+    window_span = (target.end_date - target.start_date).days
+    return (source_rank, window_span, len(canonical_subject_key(target.subject_slug)), target.subject_slug)
+
+
+def dedupe_render_targets(targets: Sequence[RenderTarget]) -> List[RenderTarget]:
+    selected: List[RenderTarget] = []
+    for target in sorted(targets, key=render_target_priority):
+        replaced = False
+        for idx, existing in enumerate(selected):
+            if not targets_overlap_subject(target, existing):
+                continue
+            if render_target_priority(target) < render_target_priority(existing):
+                selected[idx] = target
+            replaced = True
+            break
+        if not replaced:
+            selected.append(target)
+    return sorted(
+        selected,
+        key=lambda t: (t.start_date.isoformat(), t.end_date.isoformat(), t.source, t.subject_slug, t.style_id),
+    )
 
 
 def build_targets_from_config(
@@ -1369,7 +1529,9 @@ def build_targets_from_config(
                 seen.add(tid)
                 targets.append(target)
 
-    return sorted(targets, key=lambda t: (t.start_date.isoformat(), t.end_date.isoformat(), t.source, t.subject_slug, t.style_id))
+    return dedupe_render_targets(
+        sorted(targets, key=lambda t: (t.start_date.isoformat(), t.end_date.isoformat(), t.source, t.subject_slug, t.style_id))
+    )
 
 
 def main() -> int:
@@ -1522,11 +1684,17 @@ def main() -> int:
                     today=today,
                     layout_hint=(
                         "Phone prayer-card composition in portrait 2:3/9:16 style (not square). "
-                        "Dedicate an uncluttered text band in upper-middle area for one short title line only, "
-                        "with generous margins so text cannot be clipped by lock-screen crop."
+                        "Reserve an uncluttered title-safe band in the upper-middle area, "
+                        "but do not paint any lettering into the artwork itself. "
+                        "Leave generous margins so a later title overlay cannot be clipped by lock-screen crop."
                     ),
                 )
                 image_bytes = generate_image_bytes(client, image_model, prompt_text, image_size, image_quality, image_format)
+                image_bytes = apply_portrait_title_overlay(
+                    image_bytes,
+                    overlay_title_for_subject(target.subject),
+                    image_format,
+                )
                 written_portrait = write_image_file(image_bytes, current_dir, filename)
                 prompt_path = written_portrait.with_suffix(".prompt.txt")
                 prompt_path.write_text(prompt_text, encoding="utf-8")
@@ -1547,8 +1715,7 @@ def main() -> int:
                     today=today,
                     layout_hint=(
                         "Widescreen devotional background in native 16:9 composition (not square, not portrait). "
-                        "Frame the scene for full-width landscape use with one short title line only, fully inside a centered safe area, "
-                        "keeping at least 15% margin from every edge and avoiding edge-anchored typography."
+                        "Frame the scene for full-width landscape use with strong negative space and no text or typography rendered into the artwork."
                     ),
                 )
                 image_bytes_wide = generate_image_bytes(
