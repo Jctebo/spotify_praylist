@@ -3,90 +3,90 @@
     {
       "notion_name": "Morning Offering",
       "match_any": ["morning offering"],
-      "profiles": ["morning"]
+      "playlists": ["Morning"]
     },
     {
       "notion_name": "Morning Prayer",
       "match_any": ["morning prayer"],
-      "profiles": ["morning"]
+      "playlists": ["Morning"]
     },
     {
       "notion_name": "Daily Rosary",
       "match_any": ["rosary", "joyful mysteries", "sorrowful mysteries", "glorious mysteries", "luminous mysteries"],
-      "profiles": ["morning"]
+      "playlists": ["Morning"]
     },
     {
       "notion_name": "Angelus (Morning)",
       "match_any": ["angelus"],
       "time_of_day": "morning",
-      "profiles": ["morning"]
+      "playlists": ["Morning"]
     },
     {
       "notion_name": "Angelus (Midday)",
       "match_any": ["angelus"],
       "time_of_day": "midday",
-      "profiles": ["midday"]
+      "playlists": ["Midday"]
     },
     {
       "notion_name": "Morning Prayer - Liturgy of the Hour",
       "match_any": ["lauds", "morning prayer of the liturgy", "sing the hours"],
-      "profiles": ["morning"]
+      "playlists": ["Morning"]
     },
     {
       "notion_name": "Morning Prayer (Monthly Podcast)",
       "match_any": ["morning prayer -", "morning prayer"],
-      "profiles": ["morning"]
+      "playlists": ["Morning"]
     },
     {
       "notion_name": "Bible in a Year",
       "match_any": ["bible in a year", "ascension", "fr mike schmitz"],
-      "profiles": ["morning"]
+      "playlists": ["Morning"]
     },
     {
       "notion_name": "Daily Mass Readings",
       "match_any": ["daily mass reading", "daily mass readings", "daily mass reading podcast", "usccb", "daily tv mass"],
-      "profiles": ["midday"]
+      "playlists": ["Midday"]
     },
     {
       "notion_name": "Saint of the Day",
       "match_any": ["saint of the day", "st."],
-      "profiles": ["midday"]
+      "playlists": ["Midday"]
     },
     {
       "notion_name": "Auxillium Cristanorum",
       "match_any": ["auxilium christianorum", "auxillium cristanorum", "do the harder thing"],
-      "profiles": ["midday"]
+      "playlists": ["Midday"]
     },
     {
       "notion_name": "Afternoon Prayer (Optional)",
       "match_any": ["midafternoon prayer", "afternoon prayer"],
-      "profiles": ["midday"]
+      "playlists": ["Midday"]
     },
     {
       "notion_name": "Daily Examen for Labor",
       "match_any": ["daily examen for labor", "examen for labor"],
-      "profiles": ["midday"]
+      "playlists": ["Midday"]
     },
     {
       "notion_name": "Daily Examen for Parents",
       "match_any": ["daily examen for parents", "examen for parents"],
-      "profiles": ["night"]
+      "playlists": ["Night"]
     },
     {
       "notion_name": "Angelus (Evening)",
       "match_any": ["angelus"],
       "time_of_day": "evening",
-      "profiles": ["night"]
+      "playlists": ["Night"]
     },
     {
       "notion_name": "Evening Prayer",
       "match_any": ["evening prayer", "vespers"],
-      "profiles": ["night"]
+      "playlists": ["Night"]
     },
     {
       "notion_name": "Night Prayer (Optional)",
       "match_any": ["night prayer", "compline"],
-      "profiles": ["night"]
+      "playlists": ["Night"]
     }
   ]
 }

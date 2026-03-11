@@ -14,11 +14,9 @@ Required variables:
 
 Optional variables:
 - `SPOTIFY_USER_ID` (compatibility only)
-- `SPOTIFY_PLAYLIST_PROFILE` (`morning`, `midday`, or `night`; default `morning`)
-- `SPOTIFY_PLAYLIST_ID` (single-run override), or profile-specific:
-  - `SPOTIFY_PLAYLIST_ID_MORNING`
-  - `SPOTIFY_PLAYLIST_ID_MIDDAY`
-  - `SPOTIFY_PLAYLIST_ID_NIGHT`
+- `SPOTIFY_PLAYLIST_NAME` (Notion mode only; optional single-playlist filter)
+- `SPOTIFY_PLAYLIST_ID` (optional single-playlist target override)
+- `SPOTIFY_PLAYLIST_PROFILE` (legacy file-mode selector; default `morning`)
 
 ## Files
 - `jobs/playlist/refresh_playlist.py`: main script (token refresh + playlist update)
@@ -31,6 +29,7 @@ Optional variables:
 - `config/notion_spotify_sync_config.json`: mapping rules from Spotify item text -> Notion row name
 - `scripts/setup_spotify.ps1`: Spotify setup + refresh-token wizard
 - `scripts/setup_notion.ps1`: Notion token/database setup + API validation
+- `scripts/setup_notion_playlists.ps1`: creates/populates the Notion playlists database and backfills the main `Playlist` field
 - `scripts/setup_novena.ps1`: Romcal + OpenAI + Notion setup wizard for daily novena generation
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml`
 - `scripts/run_hourly_notion_sync_local.ps1`: local mirror of `.github/workflows/hourly_notion_sync.yml`
@@ -74,12 +73,14 @@ PowerShell example:
 $env:SPOTIFY_CLIENT_ID = "..."
 $env:SPOTIFY_CLIENT_SECRET = "..."
 $env:SPOTIFY_REFRESH_TOKEN = "..."
-$env:SPOTIFY_PLAYLIST_ID_MORNING = "..."
-$env:SPOTIFY_PLAYLIST_ID_MIDDAY = "..."
-$env:SPOTIFY_PLAYLIST_ID_NIGHT = "..."
+$env:NOTION_TOKEN = "..."
+$env:NOTION_DATABASE_ID = "..."
+$env:NOTION_PLAYLISTS_DATABASE_ID = "..."
+# Optional single-playlist run:
+$env:SPOTIFY_PLAYLIST_NAME = "Morning"
 # Optional:
 $env:SPOTIFY_USER_ID = "..."
-$env:SPOTIFY_PLAYLIST_PROFILE = "morning"
+$env:JOB_UTC_OFFSET = "-06:00"
 ```
 
 4. Run:
@@ -90,10 +91,11 @@ python jobs/playlist/refresh_playlist.py
 
 Expected behavior:
 - refreshes Spotify access token each run
-- reads Opus Dei rows for selected profile and order
+- reads enabled rows from your Notion playlists database
+- reads Opus Dei rows for each playlist and order
 - supports row-level resolver + fallback (for Morning/Evening LOTH dual-podcast logic)
-- replaces the target playlist contents with resolved items from the selected profile
-- prints summary: `playlist_id` and `tracks_written`
+- replaces each target playlist contents with resolved items from the flat Notion list
+- prints one summary per playlist: `playlist`, `playlist_id`, and `tracks_written`
 - exits non-zero on error
 
 ## GitHub Actions Setup
@@ -103,10 +105,11 @@ Expected behavior:
 - `SPOTIFY_CLIENT_ID`
 - `SPOTIFY_CLIENT_SECRET`
 - `SPOTIFY_REFRESH_TOKEN`
-- `SPOTIFY_PLAYLIST_ID`
+- `NOTION_TOKEN`
+- `NOTION_DATABASE_ID` (recommended)
+- `NOTION_PLAYLISTS_DATABASE_ID` (recommended)
 - `SPOTIFY_USER_ID` (optional)
-
-If you want a non-default profile in Actions, add repository variable `SPOTIFY_PLAYLIST_PROFILE` (or hardcode in workflow env).
+- `SPOTIFY_PLAYLIST_ID` (optional single-playlist override only)
 
 Workflow triggers:
 - daily schedule (UTC cron in `.github/workflows/daily.yml`)
@@ -118,21 +121,35 @@ Daily refresh now uses Opus Dei rows as the queue source (`SPOTIFY_REFRESH_CONFI
 Recommended Opus Dei columns:
 - `Name` (title)
 - `Platform` (must include your Spotify value, default `spotify`; rows with `spotify-nosync` are skipped)
-- `Playlist Profile` (`morning`, `midday`, `night`, or `any`)
+- `Playlist` (text, select, multi-select, or comma-separated text matching a playlist table row name)
+- `Category` (optional devotional grouping; ignored by Spotify playlist building)
 - `Playlist Order` (number; lower runs earlier)
 - `Spotify Resolver` (resolver key like `MORNING`, `EVENING`, `USCCB`, `ROSARY`, etc., or direct `spotify:...` URI)
 - `Spotify Fallback Resolver` (optional; second resolver if primary fails)
 - `Enabled` (checkbox; unchecked rows are skipped)
 - `URI` (optional direct URI; used as fixed source when resolver is blank)
 
+Recommended Spotify Playlists columns:
+- `Name` (title)
+- `Spotify Playlist ID` (raw playlist id, `spotify:playlist:...`, or Spotify playlist URL)
+- `Enabled` (checkbox; unchecked playlists are skipped)
+
 Key edge-case support:
 - Morning/Evening Liturgy of the Hours two-podcast backup is handled by resolver logic (`MORNING` and `EVENING` already include STH primary + Divine Office fallback).
 - Additional explicit backup can be set per row with `Spotify Fallback Resolver`.
+- Non-Spotify rows can stay in the same flat list; the refresh job only builds playlists from rows whose `Platform` contains your Spotify value.
 
 Queue-related environment variables:
 - `SPOTIFY_REFRESH_CONFIG_SOURCE` (default `notion`; set `file` for legacy JSON mode)
+- `SPOTIFY_PLAYLIST_NAME` (optional single-playlist filter in Notion mode)
 - `SPOTIFY_ENABLE_URI_AUTOSYNC` (default `false`; keeps automatic URI mapping off)
-- `NOTION_QUEUE_PROFILE_PROPERTY` (default `Playlist Profile`)
+- `NOTION_PLAYLISTS_DATABASE_ID` (recommended)
+- `NOTION_PLAYLISTS_DATABASE_NAME` (fallback lookup; default `Spotify Playlists`)
+- `NOTION_PLAYLISTS_TITLE_PROPERTY` (default `Name`)
+- `NOTION_PLAYLISTS_ID_PROPERTY` (default `Spotify Playlist ID`)
+- `NOTION_PLAYLISTS_ENABLED_PROPERTY` (default `Enabled`)
+- `NOTION_QUEUE_PLAYLIST_PROPERTY` (default `Playlist`)
+- `NOTION_QUEUE_PROFILE_PROPERTY` (legacy alias fallback for older schemas)
 - `NOTION_QUEUE_ORDER_PROPERTY` (default `Playlist Order`)
 - `NOTION_QUEUE_RESOLVER_PROPERTY` (default `Spotify Resolver`)
 - `NOTION_QUEUE_FALLBACK_PROPERTY` (default `Spotify Fallback Resolver`)
@@ -147,6 +164,7 @@ How matching works:
 - script reads recent Spotify listening history (default last 3 hours)
 - script reads `config/notion_spotify_sync_config.json`
 - if any `match_any` term is found in recent Spotify item text, the matching Notion row (`notion_name`) is marked completed
+- mapping rows can use `playlists` (preferred) or legacy `profiles` to scope matching
 - script only checks rows; it does not uncheck rows
 - rows with platform value `Spotify-TimeSync` are currently ignored (feature removed)
 
@@ -550,6 +568,7 @@ Use setup scripts (separate from `run_*` job mirrors):
 ```powershell
 .\scripts\setup_spotify.ps1
 .\scripts\setup_notion.ps1
+.\scripts\setup_notion_playlists.ps1
 .\scripts\setup_novena.ps1
 ```
 

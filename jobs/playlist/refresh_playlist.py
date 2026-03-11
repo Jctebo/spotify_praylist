@@ -21,12 +21,13 @@ SPOTIFY_CLIENT_ID = "SPOTIFY_CLIENT_ID"
 SPOTIFY_CLIENT_SECRET = "SPOTIFY_CLIENT_SECRET"
 SPOTIFY_REFRESH_TOKEN = "SPOTIFY_REFRESH_TOKEN"
 SPOTIFY_PLAYLIST_ID = "SPOTIFY_PLAYLIST_ID"
+SPOTIFY_PLAYLIST_NAME = "SPOTIFY_PLAYLIST_NAME"  # notion mode optional single-playlist filter
 
 # Optional environment variable; only used for compatibility with existing setups.
 SPOTIFY_USER_ID = "SPOTIFY_USER_ID"
 
-# Optional selector for which playlist profile to build into SPOTIFY_PLAYLIST_ID.
-SPOTIFY_PLAYLIST_PROFILE = "SPOTIFY_PLAYLIST_PROFILE"  # morning|midday|night, default morning
+# Optional selector for legacy file-mode profile config.
+SPOTIFY_PLAYLIST_PROFILE = "SPOTIFY_PLAYLIST_PROFILE"  # file mode only; default morning
 SPOTIFY_CONFIG_FILE = "SPOTIFY_CONFIG_FILE"  # optional, defaults to config/playlist_config.json
 SPOTIFY_REFRESH_CONFIG_SOURCE = "SPOTIFY_REFRESH_CONFIG_SOURCE"  # notion|file, default notion
 SPOTIFY_NOTION_SYNC_CONFIG = "SPOTIFY_NOTION_SYNC_CONFIG"  # optional, defaults to config/notion_spotify_sync_config.json
@@ -37,13 +38,19 @@ JOB_UTC_OFFSET = "JOB_UTC_OFFSET"  # optional override for runtime offset, e.g. 
 NOTION_TOKEN = "NOTION_TOKEN"
 NOTION_DATABASE_ID = "NOTION_DATABASE_ID"
 NOTION_DATABASE_NAME = "NOTION_DATABASE_NAME"  # fallback search; defaults to Opus Dei
+NOTION_PLAYLISTS_DATABASE_ID = "NOTION_PLAYLISTS_DATABASE_ID"  # optional explicit Spotify Playlists db id
+NOTION_PLAYLISTS_DATABASE_NAME = "NOTION_PLAYLISTS_DATABASE_NAME"  # defaults to Spotify Playlists
 NOTION_TITLE_PROPERTY = "NOTION_TITLE_PROPERTY"  # defaults to Name
 NOTION_PLATFORM_PROPERTY = "NOTION_PLATFORM_PROPERTY"  # defaults to Platform
 NOTION_PLATFORM_SPOTIFY_VALUE = "NOTION_PLATFORM_SPOTIFY_VALUE"  # defaults to spotify
 NOTION_PLATFORM_NOSYNC_VALUE = "NOTION_PLATFORM_NOSYNC_VALUE"  # defaults to spotify-nosync
 NOTION_URI_PROPERTY = "NOTION_URI_PROPERTY"  # defaults to URI
 NOTION_URI_LOG_LIMIT = "NOTION_URI_LOG_LIMIT"  # defaults to 25
-NOTION_QUEUE_PROFILE_PROPERTY = "NOTION_QUEUE_PROFILE_PROPERTY"  # defaults to Playlist Profile
+NOTION_PLAYLISTS_TITLE_PROPERTY = "NOTION_PLAYLISTS_TITLE_PROPERTY"  # defaults to Name
+NOTION_PLAYLISTS_ID_PROPERTY = "NOTION_PLAYLISTS_ID_PROPERTY"  # defaults to Spotify Playlist ID
+NOTION_PLAYLISTS_ENABLED_PROPERTY = "NOTION_PLAYLISTS_ENABLED_PROPERTY"  # defaults to Enabled
+NOTION_QUEUE_PLAYLIST_PROPERTY = "NOTION_QUEUE_PLAYLIST_PROPERTY"  # defaults to Playlist
+NOTION_QUEUE_PROFILE_PROPERTY = "NOTION_QUEUE_PROFILE_PROPERTY"  # legacy alias for Playlist field
 NOTION_QUEUE_ORDER_PROPERTY = "NOTION_QUEUE_ORDER_PROPERTY"  # defaults to Playlist Order
 NOTION_QUEUE_RESOLVER_PROPERTY = "NOTION_QUEUE_RESOLVER_PROPERTY"  # defaults to Spotify Resolver
 NOTION_QUEUE_FALLBACK_PROPERTY = "NOTION_QUEUE_FALLBACK_PROPERTY"  # defaults to Spotify Fallback Resolver
@@ -51,6 +58,7 @@ NOTION_QUEUE_ENABLED_PROPERTY = "NOTION_QUEUE_ENABLED_PROPERTY"  # defaults to E
 NOTION_INTENTION_PROPERTY = "NOTION_INTENTION_PROPERTY"  # defaults to Intention
 NOTION_INTENTIONS_ENABLED = "NOTION_INTENTIONS_ENABLED"  # default true
 NOTION_INTENTIONS_RUN_PROFILE = "NOTION_INTENTIONS_RUN_PROFILE"  # default morning
+NOTION_INTENTIONS_RUN_PLAYLIST = "NOTION_INTENTIONS_RUN_PLAYLIST"  # optional playlist-name selector
 NOTION_INTENTIONS_DATABASE_ID = "NOTION_INTENTIONS_DATABASE_ID"  # optional explicit Prayer Intentions db id
 NOTION_INTENTIONS_DATABASE_NAME = "NOTION_INTENTIONS_DATABASE_NAME"  # default Prayer Intentions
 NOTION_INTENTIONS_PETITION_PROPERTY = "NOTION_INTENTIONS_PETITION_PROPERTY"  # default Petition
@@ -349,6 +357,28 @@ def page_property_text(page: Dict[str, Any], property_name: str) -> str:
     return ""
 
 
+def page_property_values(page: Dict[str, Any], property_name: str) -> List[str]:
+    prop = page_property_obj(page, property_name)
+    ptype = str(prop.get("type", "")).strip()
+    if ptype == "status":
+        status = str((prop.get("status") or {}).get("name", "")).strip()
+        return [status] if status else []
+    if ptype == "select":
+        value = str((prop.get("select") or {}).get("name", "")).strip()
+        return [value] if value else []
+    if ptype == "multi_select":
+        values = [str(v.get("name", "")).strip() for v in (prop.get("multi_select") or []) if isinstance(v, dict)]
+        return [value for value in values if value]
+    if ptype in {"rich_text", "title"}:
+        values = prop.get(ptype) or []
+        joined = " ".join(str(v.get("plain_text", "")).strip() for v in values if isinstance(v, dict)).strip()
+        return [joined] if joined else []
+    if ptype == "url":
+        value = str(prop.get("url", "")).strip()
+        return [value] if value else []
+    return []
+
+
 def page_property_number(page: Dict[str, Any], property_name: str) -> Optional[float]:
     def to_float(value: Any) -> Optional[float]:
         if value is None:
@@ -429,6 +459,19 @@ def page_uri_value(page: Dict[str, Any], uri_property: str) -> Optional[str]:
     return None
 
 
+def normalize_spotify_playlist_id(value: str) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    match = re.fullmatch(r"spotify:playlist:([A-Za-z0-9]+)", raw, flags=re.IGNORECASE)
+    if match:
+        return match.group(1)
+    match = re.search(r"open\.spotify\.com/playlist/([A-Za-z0-9]+)(?:[/?].*)?$", raw, flags=re.IGNORECASE)
+    if match:
+        return match.group(1)
+    return raw
+
+
 def notion_update_uri(page_id: str, page: Dict[str, Any], uri_property: str, uri: str, token: str) -> None:
     prop = page_property_obj(page, uri_property)
     ptype = str(prop.get("type", "")).strip()
@@ -480,6 +523,67 @@ def parse_csv_values(text: str) -> List[str]:
     return out
 
 
+def page_property_normalized_values(page: Dict[str, Any], property_name: str) -> List[str]:
+    out: List[str] = []
+    for value in page_property_values(page, property_name):
+        for norm in parse_csv_values(value):
+            if norm and norm not in out:
+                out.append(norm)
+    return out
+
+
+def resolve_notion_playlist_property_name() -> str:
+    explicit = os.getenv(NOTION_QUEUE_PLAYLIST_PROPERTY, "").strip()
+    if explicit:
+        return explicit
+    legacy = os.getenv(NOTION_QUEUE_PROFILE_PROPERTY, "").strip()
+    if legacy:
+        return legacy
+    return "Playlist"
+
+
+def load_notion_playlists(token: str, playlist_filter: str = "") -> List[Dict[str, str]]:
+    database_id = os.getenv(NOTION_PLAYLISTS_DATABASE_ID, "").strip()
+    if not database_id:
+        db_name = os.getenv(NOTION_PLAYLISTS_DATABASE_NAME, "Spotify Playlists").strip() or "Spotify Playlists"
+        database_id = notion_find_database_id(token, db_name) or ""
+    if not database_id:
+        raise RuntimeError(
+            "Notion playlists database not found. Set NOTION_PLAYLISTS_DATABASE_ID or share the playlists database with the integration."
+        )
+
+    title_property = os.getenv(NOTION_PLAYLISTS_TITLE_PROPERTY, "Name").strip() or "Name"
+    playlist_id_property = os.getenv(NOTION_PLAYLISTS_ID_PROPERTY, "Spotify Playlist ID").strip() or "Spotify Playlist ID"
+    enabled_property = os.getenv(NOTION_PLAYLISTS_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
+    playlist_filter_norm = normalize_text(playlist_filter)
+
+    rows = notion_get_all_pages(database_id, token)
+    out: List[Dict[str, str]] = []
+    seen_names = set()
+    for row in rows:
+        enabled = page_property_checkbox(row, enabled_property)
+        if enabled is False:
+            continue
+        playlist_name = page_title(row, title_property).strip() or page_property_text(row, title_property).strip()
+        if not playlist_name:
+            continue
+        playlist_name_norm = normalize_text(playlist_name)
+        if playlist_filter_norm and playlist_name_norm != playlist_filter_norm:
+            continue
+        if playlist_name_norm in seen_names:
+            raise RuntimeError(f"Duplicate enabled playlist row for '{playlist_name}'.")
+        raw_id = (page_uri_value(row, playlist_id_property) or page_property_text(row, playlist_id_property) or "").strip()
+        playlist_id = normalize_spotify_playlist_id(raw_id)
+        if not playlist_id:
+            raise RuntimeError(f"Enabled playlist '{playlist_name}' is missing '{playlist_id_property}'.")
+        seen_names.add(playlist_name_norm)
+        out.append({"name": playlist_name, "playlist_id": playlist_id})
+    out.sort(key=lambda row: normalize_text(row["name"]))
+    if playlist_filter_norm and not out:
+        raise RuntimeError(f"No enabled playlist named '{playlist_filter}' found in the Notion playlists database.")
+    return out
+
+
 def weighted_shuffle_indices(weights: List[float], rng: random.Random) -> List[int]:
     keyed: List[Tuple[float, int]] = []
     for idx, weight in enumerate(weights):
@@ -490,13 +594,19 @@ def weighted_shuffle_indices(weights: List[float], rng: random.Random) -> List[i
     return [idx for _, idx in keyed]
 
 
-def distribute_prayer_intentions(profile_name: str) -> Tuple[int, int, int]:
+def distribute_prayer_intentions(playlist_name: str) -> Tuple[int, int, int]:
     if not bool_env(NOTION_INTENTIONS_ENABLED, default=True):
         print("INFO notion_intentions_distributed skipped reason=disabled")
         return (0, 0, 0)
-    run_profile = normalize_text(os.getenv(NOTION_INTENTIONS_RUN_PROFILE, "morning").strip() or "morning")
-    if run_profile and normalize_text(profile_name) != run_profile:
-        print(f"INFO notion_intentions_distributed skipped reason=profile_mismatch profile={profile_name} run_profile={run_profile}")
+    run_playlist = normalize_text(os.getenv(NOTION_INTENTIONS_RUN_PLAYLIST, "").strip())
+    if not run_playlist:
+        legacy_value = os.environ.get(NOTION_INTENTIONS_RUN_PROFILE, "")
+        run_playlist = normalize_text(legacy_value.strip() or "morning")
+    if run_playlist and normalize_text(playlist_name) != run_playlist:
+        print(
+            "INFO notion_intentions_distributed skipped "
+            f"reason=playlist_mismatch playlist={playlist_name} run_playlist={run_playlist}"
+        )
         return (0, 0, 0)
 
     token = os.getenv(NOTION_TOKEN, "").strip()
@@ -659,16 +769,18 @@ def load_notion_mapping_meta_by_name() -> Dict[str, Dict[str, Any]]:
         if not isinstance(match_any, list):
             match_any = []
         terms = [normalize_text(str(v)) for v in match_any if normalize_text(str(v))]
-        profiles = row.get("profiles")
-        if not isinstance(profiles, list):
-            profiles = ["any"]
-        profile_values = [normalize_text(str(v)) for v in profiles if normalize_text(str(v))]
-        if not profile_values:
-            profile_values = ["any"]
+        playlists = row.get("playlists")
+        if not isinstance(playlists, list):
+            playlists = row.get("profiles")
+        if not isinstance(playlists, list):
+            playlists = ["any"]
+        playlist_values = [normalize_text(str(v)) for v in playlists if normalize_text(str(v))]
+        if not playlist_values:
+            playlist_values = ["any"]
         time_of_day = normalize_text(str(row.get("time_of_day", "any")).strip() or "any")
         if time_of_day not in {"any", "morning", "midday", "evening"}:
             time_of_day = "any"
-        out[notion_name] = {"terms": terms, "profiles": profile_values, "time_of_day": time_of_day}
+        out[notion_name] = {"terms": terms, "playlists": playlist_values, "time_of_day": time_of_day}
     return out
 
 
@@ -752,8 +864,8 @@ def uri_candidates_for_notion_title(
     return out
 
 
-def sync_notion_uris_for_profile(
-    sp: spotipy.Spotify, queue: List[str], profile_name: str
+def sync_notion_uris_for_playlist(
+    sp: spotipy.Spotify, queue: List[str], playlist_name: str
 ) -> Tuple[int, List[Tuple[str, str]], List[str], List[str]]:
     token = os.getenv(NOTION_TOKEN, "").strip()
     if not token:
@@ -796,8 +908,8 @@ def sync_notion_uris_for_profile(
         title_norm = normalize_text(title)
         mapping_meta = mapping_meta_by_name.get(title_norm)
         if mapping_meta:
-            mapping_profiles = mapping_meta.get("profiles", ["any"])
-            if "any" not in mapping_profiles and normalize_text(profile_name) not in mapping_profiles:
+            mapping_playlists = mapping_meta.get("playlists", ["any"])
+            if "any" not in mapping_playlists and normalize_text(playlist_name) not in mapping_playlists:
                 continue
             mapping_tod = str(mapping_meta.get("time_of_day", "any"))
             if mapping_tod != "any" and mapping_tod != now_time_of_day:
@@ -852,6 +964,12 @@ def sync_notion_uris_for_profile(
         else:
             unchanged.append(row["title"])
     return updated, updates, unchanged, no_match
+
+
+def sync_notion_uris_for_profile(
+    sp: spotipy.Spotify, queue: List[str], profile_name: str
+) -> Tuple[int, List[Tuple[str, str]], List[str], List[str]]:
+    return sync_notion_uris_for_playlist(sp, queue, profile_name)
 
 
 def sp_client() -> Tuple[spotipy.Spotify, str]:
@@ -1452,9 +1570,9 @@ def load_resolver_runtime_config(cfg: Dict[str, Any]) -> Tuple[Dict[str, Any], D
     return profiles_cfg, shows_cfg, fixed_cfg, tokens_cfg
 
 
-def build_queue_for_profile_from_notion(
+def build_queue_for_playlist_from_notion(
     sp: spotipy.Spotify,
-    profile_name: str,
+    playlist_name: str,
     weekday: str,
     status: Dict[str, bool],
     shows_cfg: Dict[str, Any],
@@ -1471,8 +1589,8 @@ def build_queue_for_profile_from_notion(
 
     title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
     platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
-    profile_property = os.getenv(NOTION_QUEUE_PROFILE_PROPERTY, "Playlist Profile").strip() or "Playlist Profile"
-    order_property = os.getenv(NOTION_QUEUE_ORDER_PROPERTY, "Order").strip() or "Order"
+    playlist_property = resolve_notion_playlist_property_name()
+    order_property = os.getenv(NOTION_QUEUE_ORDER_PROPERTY, "Playlist Order").strip() or "Playlist Order"
     resolver_property = os.getenv(NOTION_QUEUE_RESOLVER_PROPERTY, "Spotify Resolver").strip() or "Spotify Resolver"
     fallback_property = os.getenv(NOTION_QUEUE_FALLBACK_PROPERTY, "Spotify Fallback Resolver").strip() or "Spotify Fallback Resolver"
     enabled_property = os.getenv(NOTION_QUEUE_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
@@ -1483,6 +1601,7 @@ def build_queue_for_profile_from_notion(
     pages = notion_get_all_pages(database_id, token)
 
     entries: List[Dict[str, Any]] = []
+    playlist_name_norm = normalize_text(playlist_name)
     for page in pages:
         platform_text = normalize_text(page_property_text(page, platform_property))
         if nosync_value and nosync_value in platform_text:
@@ -1496,13 +1615,8 @@ def build_queue_for_profile_from_notion(
         if enabled is False:
             continue
 
-        row_profiles = parse_profile_set(page_property_text(page, profile_property))
-        if not row_profiles:
-            # Fallback: infer from platform text if profile property is missing.
-            row_profiles = [p for p in ("morning", "midday", "night") if p in platform_text]
-        if not row_profiles:
-            row_profiles = ["any"]
-        if "any" not in row_profiles and profile_name not in row_profiles:
+        row_playlists = page_property_normalized_values(page, playlist_property)
+        if not row_playlists or playlist_name_norm not in row_playlists:
             continue
 
         title = page_title(page, title_property).strip()
@@ -1544,6 +1658,18 @@ def build_queue_for_profile_from_notion(
         else:
             status[f"Unresolved:{title}"] = False
     return queue
+
+
+def build_queue_for_profile_from_notion(
+    sp: spotipy.Spotify,
+    profile_name: str,
+    weekday: str,
+    status: Dict[str, bool],
+    shows_cfg: Dict[str, Any],
+    fixed_cfg: Dict[str, Any],
+    tokens_cfg: Dict[str, Any],
+) -> List[str]:
+    return build_queue_for_playlist_from_notion(sp, profile_name, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
 
 
 def build_queue_for_profile(
@@ -1588,88 +1714,123 @@ def main() -> int:
         profiles_cfg, shows_cfg, fixed_cfg, tokens_cfg = load_resolver_runtime_config(cfg)
         catalog_cfg = cfg.get("catalog", {}) if isinstance(cfg.get("catalog"), dict) else {}
 
-        profile = os.getenv(SPOTIFY_PLAYLIST_PROFILE, "morning").strip().lower() or "morning"
-        if profile == "day":
-            # Backward compatibility for older env values.
-            profile = "morning"
-
-        playlist_id = os.getenv(SPOTIFY_PLAYLIST_ID, "").strip()
-        if not playlist_id:
-            playlist_id = os.getenv(f"SPOTIFY_PLAYLIST_ID_{profile.upper()}", "").strip()
-        if not playlist_id:
-            if source == "file":
-                profile_cfg = profiles_cfg.get(profile)
-                if isinstance(profile_cfg, dict):
-                    playlist_id = str(profile_cfg.get("playlist_id", "")).strip()
-        if not playlist_id:
-            raise RuntimeError(
-                f"Missing required environment variable: {SPOTIFY_PLAYLIST_ID}. "
-                f"Set {SPOTIFY_PLAYLIST_ID} (or SPOTIFY_PLAYLIST_ID_{profile.upper()})."
-            )
-
         # Optional compatibility read; not used by default flow.
         _ = os.getenv(SPOTIFY_USER_ID, "")
 
         sp, spotify_token = sp_client()
         weekday = local_now().strftime("%A")
-        status: Dict[str, bool] = {}
+        uri_autosync_enabled = bool_env(SPOTIFY_ENABLE_URI_AUTOSYNC, default=False)
+        runs: List[Dict[str, Any]] = []
 
         if source == "file":
+            profile = os.getenv(SPOTIFY_PLAYLIST_PROFILE, "morning").strip().lower() or "morning"
+            if profile == "day":
+                # Backward compatibility for older env values.
+                profile = "morning"
+
+            playlist_id = os.getenv(SPOTIFY_PLAYLIST_ID, "").strip()
+            if not playlist_id:
+                playlist_id = os.getenv(f"SPOTIFY_PLAYLIST_ID_{profile.upper()}", "").strip()
+            if not playlist_id:
+                profile_cfg = profiles_cfg.get(profile)
+                if isinstance(profile_cfg, dict):
+                    playlist_id = str(profile_cfg.get("playlist_id", "")).strip()
+            if not playlist_id:
+                raise RuntimeError(
+                    f"Missing required environment variable: {SPOTIFY_PLAYLIST_ID}. "
+                    f"Set {SPOTIFY_PLAYLIST_ID} (or SPOTIFY_PLAYLIST_ID_{profile.upper()})."
+                )
             if not profiles_cfg or not catalog_cfg:
                 raise RuntimeError("File mode requires config/playlist_config.json with profiles + catalog.")
+            status: Dict[str, bool] = {}
             queue = build_queue_for_profile(
                 sp, profile, weekday, status, profiles_cfg, catalog_cfg, shows_cfg, fixed_cfg, tokens_cfg
             )
+            if not queue:
+                raise RuntimeError("No tracks/episodes resolved for this run.")
+            runs.append(
+                {
+                    "name": profile,
+                    "playlist_id": normalize_spotify_playlist_id(playlist_id) or playlist_id,
+                    "queue": queue,
+                    "status": status,
+                }
+            )
         else:
-            queue = build_queue_for_profile_from_notion(
-                sp, profile, weekday, status, shows_cfg, fixed_cfg, tokens_cfg
-            )
-        if not queue:
-            raise RuntimeError("No tracks/episodes resolved for this run.")
-        written = recreate_playlist_items(spotify_token, playlist_id, queue)
-        notion_uri_updates = 0
-        notion_uri_update_details: List[Tuple[str, str]] = []
-        notion_uri_unchanged: List[str] = []
-        notion_uri_no_match: List[str] = []
-        uri_autosync_enabled = bool_env(SPOTIFY_ENABLE_URI_AUTOSYNC, default=False)
-        if uri_autosync_enabled:
-            notion_uri_updates, notion_uri_update_details, notion_uri_unchanged, notion_uri_no_match = (
-                sync_notion_uris_for_profile(sp, queue, profile)
-            )
-        intention_targets, intention_source_count, intention_assigned = distribute_prayer_intentions(profile)
+            notion_token = require_env(NOTION_TOKEN)
+            playlist_filter = os.getenv(SPOTIFY_PLAYLIST_NAME, "").strip()
+            runs = []
+            for target in load_notion_playlists(notion_token, playlist_filter):
+                status = {}
+                queue = build_queue_for_playlist_from_notion(
+                    sp, target["name"], weekday, status, shows_cfg, fixed_cfg, tokens_cfg
+                )
+                if not queue:
+                    raise RuntimeError(f"No tracks/episodes resolved for playlist '{target['name']}'.")
+                runs.append({"name": target["name"], "playlist_id": target["playlist_id"], "queue": queue, "status": status})
+            override_playlist_id = normalize_spotify_playlist_id(os.getenv(SPOTIFY_PLAYLIST_ID, "").strip())
+            if override_playlist_id:
+                if len(runs) != 1:
+                    raise RuntimeError(
+                        f"{SPOTIFY_PLAYLIST_ID} override requires exactly one target playlist. "
+                        f"Set {SPOTIFY_PLAYLIST_NAME} to a single playlist name."
+                    )
+                runs[0]["playlist_id"] = override_playlist_id
+            if not runs:
+                raise RuntimeError("No enabled playlists found in the Notion playlists database.")
 
-        print(f"SUMMARY playlist_id={playlist_id} tracks_written={written}")
-        print(f"INFO profile={profile} weekday={weekday} playlist_recreated=true source={source}")
-        print(f"INFO utc_offset={local_now().strftime('%z')}")
-        print(f"INFO uri_autosync_enabled={str(uri_autosync_enabled).lower()}")
-        for name, ok in sorted(status.items()):
-            print(f"INFO resolver_status name={name} ok={str(ok).lower()}")
-        if uri_autosync_enabled and os.getenv(NOTION_TOKEN, "").strip():
-            print(f"INFO notion_uri_rows_updated={notion_uri_updates}")
-            log_limit = int(os.getenv(NOTION_URI_LOG_LIMIT, "25").strip() or "25")
-            for title, uri in notion_uri_update_details[: max(0, log_limit)]:
-                print(f"INFO notion_uri_mapped title={title} uri={uri}")
-            for title in notion_uri_unchanged[: max(0, log_limit)]:
-                print(f"INFO notion_uri_unchanged title={title}")
-            for title in notion_uri_no_match[: max(0, log_limit)]:
-                print(f"INFO notion_uri_no_match title={title}")
-            if len(notion_uri_update_details) > max(0, log_limit):
-                print(
-                    f"INFO notion_uri_mapped_truncated shown={max(0, log_limit)} total={len(notion_uri_update_details)}"
+        for run in runs:
+            playlist_name = str(run["name"])
+            playlist_id = str(run["playlist_id"])
+            queue = list(run["queue"])
+            status = dict(run["status"])
+
+            written = recreate_playlist_items(spotify_token, playlist_id, queue)
+            notion_uri_updates = 0
+            notion_uri_update_details: List[Tuple[str, str]] = []
+            notion_uri_unchanged: List[str] = []
+            notion_uri_no_match: List[str] = []
+            if uri_autosync_enabled:
+                notion_uri_updates, notion_uri_update_details, notion_uri_unchanged, notion_uri_no_match = (
+                    sync_notion_uris_for_playlist(sp, queue, playlist_name)
                 )
-            if len(notion_uri_unchanged) > max(0, log_limit):
+            intention_targets, intention_source_count, intention_assigned = distribute_prayer_intentions(playlist_name)
+
+            print(f"SUMMARY playlist={playlist_name} playlist_id={playlist_id} tracks_written={written}")
+            print(f"INFO playlist={playlist_name} weekday={weekday} playlist_recreated=true source={source}")
+            print(f"INFO utc_offset={local_now().strftime('%z')}")
+            print(f"INFO uri_autosync_enabled={str(uri_autosync_enabled).lower()}")
+            for name, ok in sorted(status.items()):
+                print(f"INFO resolver_status playlist={playlist_name} name={name} ok={str(ok).lower()}")
+            if uri_autosync_enabled and os.getenv(NOTION_TOKEN, "").strip():
+                print(f"INFO notion_uri_rows_updated playlist={playlist_name} count={notion_uri_updates}")
+                log_limit = int(os.getenv(NOTION_URI_LOG_LIMIT, "25").strip() or "25")
+                for title, uri in notion_uri_update_details[: max(0, log_limit)]:
+                    print(f"INFO notion_uri_mapped playlist={playlist_name} title={title} uri={uri}")
+                for title in notion_uri_unchanged[: max(0, log_limit)]:
+                    print(f"INFO notion_uri_unchanged playlist={playlist_name} title={title}")
+                for title in notion_uri_no_match[: max(0, log_limit)]:
+                    print(f"INFO notion_uri_no_match playlist={playlist_name} title={title}")
+                if len(notion_uri_update_details) > max(0, log_limit):
+                    print(
+                        "INFO notion_uri_mapped_truncated "
+                        f"playlist={playlist_name} shown={max(0, log_limit)} total={len(notion_uri_update_details)}"
+                    )
+                if len(notion_uri_unchanged) > max(0, log_limit):
+                    print(
+                        "INFO notion_uri_unchanged_truncated "
+                        f"playlist={playlist_name} shown={max(0, log_limit)} total={len(notion_uri_unchanged)}"
+                    )
+                if len(notion_uri_no_match) > max(0, log_limit):
+                    print(
+                        "INFO notion_uri_no_match_truncated "
+                        f"playlist={playlist_name} shown={max(0, log_limit)} total={len(notion_uri_no_match)}"
+                    )
+            if intention_targets or intention_source_count or intention_assigned:
                 print(
-                    f"INFO notion_uri_unchanged_truncated shown={max(0, log_limit)} total={len(notion_uri_unchanged)}"
+                    "INFO notion_intentions_distributed "
+                    f"playlist={playlist_name} targets={intention_targets} source_petitions={intention_source_count} assigned={intention_assigned}"
                 )
-            if len(notion_uri_no_match) > max(0, log_limit):
-                print(
-                    f"INFO notion_uri_no_match_truncated shown={max(0, log_limit)} total={len(notion_uri_no_match)}"
-                )
-        if intention_targets or intention_source_count or intention_assigned:
-            print(
-                "INFO notion_intentions_distributed "
-                f"profile={profile} targets={intention_targets} source_petitions={intention_source_count} assigned={intention_assigned}"
-            )
 
         return 0
     except requests.HTTPError as exc:
