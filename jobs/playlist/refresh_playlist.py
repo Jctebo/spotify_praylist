@@ -46,6 +46,7 @@ NOTION_PLATFORM_SPOTIFY_VALUE = "NOTION_PLATFORM_SPOTIFY_VALUE"  # defaults to s
 NOTION_PLATFORM_NOSYNC_VALUE = "NOTION_PLATFORM_NOSYNC_VALUE"  # defaults to spotify-nosync
 NOTION_URI_PROPERTY = "NOTION_URI_PROPERTY"  # defaults to URI
 NOTION_URI_LOG_LIMIT = "NOTION_URI_LOG_LIMIT"  # defaults to 25
+NOTION_SPOTIFY_BOOKMARKS_ENABLED = "NOTION_SPOTIFY_BOOKMARKS_ENABLED"  # default true
 NOTION_SPOTIFY_EMBEDS_ENABLED = "NOTION_SPOTIFY_EMBEDS_ENABLED"  # default true
 NOTION_PLAYLISTS_TITLE_PROPERTY = "NOTION_PLAYLISTS_TITLE_PROPERTY"  # defaults to Name
 NOTION_PLAYLISTS_ID_PROPERTY = "NOTION_PLAYLISTS_ID_PROPERTY"  # defaults to Spotify Playlist ID
@@ -73,7 +74,7 @@ MAX_BIAY_EPISODES_TO_SCAN = 2500
 DEFAULT_UTC_OFFSET = "-06:00"
 DEPRECATED_TIMESYNC_PLATFORM_VALUE = "spotify timesync"
 RUNTIME_TZ = datetime.timezone(datetime.timedelta(hours=-6))
-SPOTIFY_EMBED_BASE_URL = "https://open.spotify.com/embed"
+SPOTIFY_BOOKMARK_BASE_URL = "https://open.spotify.com"
 
 DEFAULT_SHOWS = {
     "DIVINE_OFFICE": "70ydTdzunoqWAsvutFIkHM",
@@ -129,6 +130,12 @@ def bool_env(name: str, default: bool) -> bool:
     if not raw:
         return default
     return raw in {"1", "true", "yes", "y", "on"}
+
+
+def notion_spotify_bookmarks_enabled() -> bool:
+    if os.getenv(NOTION_SPOTIFY_BOOKMARKS_ENABLED, "").strip():
+        return bool_env(NOTION_SPOTIFY_BOOKMARKS_ENABLED, default=True)
+    return bool_env(NOTION_SPOTIFY_EMBEDS_ENABLED, default=True)
 
 
 def load_playlist_config() -> Dict[str, Any]:
@@ -509,64 +516,77 @@ def normalize_spotify_playlist_id(value: str) -> str:
     return raw
 
 
-def spotify_value_to_embed_url(value: str) -> Optional[str]:
+def spotify_value_to_bookmark_url(value: str) -> Optional[str]:
     raw = str(value or "").strip()
     if not raw:
         return None
     match = re.fullmatch(r"spotify:([a-z]+):([A-Za-z0-9]+)", raw, flags=re.IGNORECASE)
     if match:
-        return f"{SPOTIFY_EMBED_BASE_URL}/{match.group(1).lower()}/{match.group(2)}"
+        return f"{SPOTIFY_BOOKMARK_BASE_URL}/{match.group(1).lower()}/{match.group(2)}"
     match = re.search(
         r"open\.spotify\.com/(?:embed/)?([a-z]+)/([A-Za-z0-9]+)(?:[/?].*)?$",
         raw,
         flags=re.IGNORECASE,
     )
     if match:
-        return f"{SPOTIFY_EMBED_BASE_URL}/{match.group(1).lower()}/{match.group(2)}"
+        return f"{SPOTIFY_BOOKMARK_BASE_URL}/{match.group(1).lower()}/{match.group(2)}"
     return None
 
 
-def block_embed_url(block: Dict[str, Any]) -> str:
-    if str(block.get("type", "")).strip() != "embed":
-        return ""
-    return str((block.get("embed") or {}).get("url", "")).strip()
+def spotify_value_to_embed_url(value: str) -> Optional[str]:
+    return spotify_value_to_bookmark_url(value)
 
 
-def notion_sync_spotify_embed(page_id: str, embed_url: Optional[str], token: str) -> Tuple[bool, bool]:
-    desired_url = spotify_value_to_embed_url(embed_url or "") or ""
+def block_spotify_link_url(block: Dict[str, Any]) -> str:
+    block_type = str(block.get("type", "")).strip()
+    if block_type == "bookmark":
+        return str((block.get("bookmark") or {}).get("url", "")).strip()
+    if block_type == "embed":
+        return str((block.get("embed") or {}).get("url", "")).strip()
+    return ""
+
+
+def notion_sync_spotify_bookmark(page_id: str, bookmark_url: Optional[str], token: str) -> Tuple[bool, bool]:
+    desired_url = spotify_value_to_bookmark_url(bookmark_url or "") or ""
     blocks = notion_list_block_children(page_id, token)
 
-    spotify_embed_ids: List[str] = []
+    spotify_link_ids: List[str] = []
+    first_block_type = ""
     first_block_url = ""
     for idx, block in enumerate(blocks):
-        url = spotify_value_to_embed_url(block_embed_url(block) or "") or ""
+        url = spotify_value_to_bookmark_url(block_spotify_link_url(block) or "") or ""
         if idx == 0:
+            first_block_type = str(block.get("type", "")).strip()
             first_block_url = url
         if not url:
             continue
         block_id = str(block.get("id", "")).strip()
         if block_id:
-            spotify_embed_ids.append(block_id)
+            spotify_link_ids.append(block_id)
 
     if not desired_url:
         removed = False
-        for block_id in spotify_embed_ids:
+        for block_id in spotify_link_ids:
             notion_archive_block(block_id, token)
             removed = True
         return False, removed
 
-    if len(spotify_embed_ids) == 1 and first_block_url == desired_url:
+    if len(spotify_link_ids) == 1 and first_block_type == "bookmark" and first_block_url == desired_url:
         return False, False
 
-    for block_id in spotify_embed_ids:
+    for block_id in spotify_link_ids:
         notion_archive_block(block_id, token)
     notion_append_children(
         page_id,
-        [{"object": "block", "type": "embed", "embed": {"url": desired_url}}],
+        [{"object": "block", "type": "bookmark", "bookmark": {"url": desired_url}}],
         token,
         position="start",
     )
     return True, False
+
+
+def notion_sync_spotify_embed(page_id: str, embed_url: Optional[str], token: str) -> Tuple[bool, bool]:
+    return notion_sync_spotify_bookmark(page_id, embed_url, token)
 
 
 def notion_update_uri(page_id: str, page: Dict[str, Any], uri_property: str, uri: str, token: str) -> None:
@@ -1069,14 +1089,14 @@ def sync_notion_uris_for_profile(
     return sync_notion_uris_for_playlist(sp, queue, profile_name)
 
 
-def sync_notion_spotify_embeds(
+def sync_notion_spotify_bookmarks(
     sp: spotipy.Spotify,
     weekday: str,
     shows_cfg: Dict[str, Any],
     fixed_cfg: Dict[str, Any],
     tokens_cfg: Dict[str, Any],
 ) -> Tuple[int, int, List[Tuple[str, str]], List[str]]:
-    if not bool_env(NOTION_SPOTIFY_EMBEDS_ENABLED, default=True):
+    if not notion_spotify_bookmarks_enabled():
         return 0, 0, [], []
 
     token = os.getenv(NOTION_TOKEN, "").strip()
@@ -1124,20 +1144,30 @@ def sync_notion_spotify_embeds(
             resolved_uri = resolve_spec_uri(sp, resolver, weekday, {}, shows_cfg, fixed_cfg, tokens_cfg) or ""
         if not resolved_uri and fallback:
             resolved_uri = resolve_spec_uri(sp, fallback, weekday, {}, shows_cfg, fixed_cfg, tokens_cfg) or ""
-        if not resolved_uri and spotify_value_to_embed_url(direct_uri):
+        if not resolved_uri and spotify_value_to_bookmark_url(direct_uri):
             resolved_uri = direct_uri
 
-        did_update, did_remove = notion_sync_spotify_embed(page_id, resolved_uri, token)
-        embed_url = spotify_value_to_embed_url(resolved_uri or "")
-        if did_update and embed_url:
+        did_update, did_remove = notion_sync_spotify_bookmark(page_id, resolved_uri, token)
+        bookmark_url = spotify_value_to_bookmark_url(resolved_uri or "")
+        if did_update and bookmark_url:
             updated += 1
-            updates.append((title, embed_url))
+            updates.append((title, bookmark_url))
         elif did_remove:
             removed += 1
-        elif not embed_url:
+        elif not bookmark_url:
             unresolved.append(title)
 
     return updated, removed, updates, unresolved
+
+
+def sync_notion_spotify_embeds(
+    sp: spotipy.Spotify,
+    weekday: str,
+    shows_cfg: Dict[str, Any],
+    fixed_cfg: Dict[str, Any],
+    tokens_cfg: Dict[str, Any],
+) -> Tuple[int, int, List[Tuple[str, str]], List[str]]:
+    return sync_notion_spotify_bookmarks(sp, weekday, shows_cfg, fixed_cfg, tokens_cfg)
 
 
 def sp_client() -> Tuple[spotipy.Spotify, str]:
@@ -1888,12 +1918,12 @@ def main() -> int:
         sp, spotify_token = sp_client()
         weekday = local_now().strftime("%A")
         uri_autosync_enabled = bool_env(SPOTIFY_ENABLE_URI_AUTOSYNC, default=False)
-        notion_spotify_embeds_enabled = bool_env(NOTION_SPOTIFY_EMBEDS_ENABLED, default=True)
+        notion_spotify_bookmarks_enabled_flag = notion_spotify_bookmarks_enabled()
         runs: List[Dict[str, Any]] = []
-        embed_updates = 0
-        embed_removed = 0
-        embed_update_details: List[Tuple[str, str]] = []
-        embed_unresolved: List[str] = []
+        bookmark_updates = 0
+        bookmark_removed = 0
+        bookmark_update_details: List[Tuple[str, str]] = []
+        bookmark_unresolved: List[str] = []
 
         if source == "file":
             profile = os.getenv(SPOTIFY_PLAYLIST_PROFILE, "morning").strip().lower() or "morning"
@@ -1951,9 +1981,11 @@ def main() -> int:
                 runs[0]["playlist_id"] = override_playlist_id
             if not runs:
                 raise RuntimeError("No enabled playlists found in the Notion playlists database.")
-            if notion_spotify_embeds_enabled:
-                embed_updates, embed_removed, embed_update_details, embed_unresolved = sync_notion_spotify_embeds(
-                    sp, weekday, shows_cfg, fixed_cfg, tokens_cfg
+            if notion_spotify_bookmarks_enabled_flag:
+                bookmark_updates, bookmark_removed, bookmark_update_details, bookmark_unresolved = (
+                    sync_notion_spotify_bookmarks(
+                        sp, weekday, shows_cfg, fixed_cfg, tokens_cfg
+                    )
                 )
 
         for run in runs:
@@ -1977,7 +2009,7 @@ def main() -> int:
             print(f"INFO playlist={playlist_name} weekday={weekday} playlist_recreated=true source={source}")
             print(f"INFO utc_offset={local_now().strftime('%z')}")
             print(f"INFO uri_autosync_enabled={str(uri_autosync_enabled).lower()}")
-            print(f"INFO notion_spotify_embeds_enabled={str(notion_spotify_embeds_enabled).lower()}")
+            print(f"INFO notion_spotify_bookmarks_enabled={str(notion_spotify_bookmarks_enabled_flag).lower()}")
             for name, ok in sorted(status.items()):
                 print(f"INFO resolver_status playlist={playlist_name} name={name} ok={str(ok).lower()}")
             if uri_autosync_enabled and os.getenv(NOTION_TOKEN, "").strip():
@@ -2010,23 +2042,23 @@ def main() -> int:
                     f"playlist={playlist_name} targets={intention_targets} source_petitions={intention_source_count} assigned={intention_assigned}"
                 )
 
-        if source == "notion" and notion_spotify_embeds_enabled and os.getenv(NOTION_TOKEN, "").strip():
-            print(f"INFO notion_spotify_embed_rows_updated count={embed_updates}")
-            print(f"INFO notion_spotify_embed_rows_removed count={embed_removed}")
+        if source == "notion" and notion_spotify_bookmarks_enabled_flag and os.getenv(NOTION_TOKEN, "").strip():
+            print(f"INFO notion_spotify_bookmark_rows_updated count={bookmark_updates}")
+            print(f"INFO notion_spotify_bookmark_rows_removed count={bookmark_removed}")
             log_limit = int(os.getenv(NOTION_URI_LOG_LIMIT, "25").strip() or "25")
-            for title, embed_url in embed_update_details[: max(0, log_limit)]:
-                print(f"INFO notion_spotify_embed_synced title={title} url={embed_url}")
-            for title in embed_unresolved[: max(0, log_limit)]:
-                print(f"INFO notion_spotify_embed_unresolved title={title}")
-            if len(embed_update_details) > max(0, log_limit):
+            for title, bookmark_url in bookmark_update_details[: max(0, log_limit)]:
+                print(f"INFO notion_spotify_bookmark_synced title={title} url={bookmark_url}")
+            for title in bookmark_unresolved[: max(0, log_limit)]:
+                print(f"INFO notion_spotify_bookmark_unresolved title={title}")
+            if len(bookmark_update_details) > max(0, log_limit):
                 print(
-                    "INFO notion_spotify_embed_synced_truncated "
-                    f"shown={max(0, log_limit)} total={len(embed_update_details)}"
+                    "INFO notion_spotify_bookmark_synced_truncated "
+                    f"shown={max(0, log_limit)} total={len(bookmark_update_details)}"
                 )
-            if len(embed_unresolved) > max(0, log_limit):
+            if len(bookmark_unresolved) > max(0, log_limit):
                 print(
-                    "INFO notion_spotify_embed_unresolved_truncated "
-                    f"shown={max(0, log_limit)} total={len(embed_unresolved)}"
+                    "INFO notion_spotify_bookmark_unresolved_truncated "
+                    f"shown={max(0, log_limit)} total={len(bookmark_unresolved)}"
                 )
 
         return 0
