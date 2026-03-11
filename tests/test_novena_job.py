@@ -17,6 +17,89 @@ class TestNovenaJob(unittest.TestCase):
     def setUp(self):
         self.mod = load_module("jobs/novena/generate_daily_novena_prayer.py")
 
+    def test_find_target_notion_page_accepts_alias_titles(self):
+        pages = [
+            {
+                "id": "page_1",
+                "properties": {
+                    "Name": _title_prop("Daily Novenas from Liturgical Calendar"),
+                },
+            }
+        ]
+
+        page = self.mod.find_target_notion_page(
+            pages,
+            "Name",
+            ["Daily Novena Prayer", "Daily Novenas from Liturgical Calendar"],
+        )
+
+        self.assertEqual(page["id"], "page_1")
+
+    def test_mirror_calendar_page_to_novena_page_clones_toggle_and_audio(self):
+        source_blocks = [
+            {
+                "id": "toggle_1",
+                "type": "toggle",
+                "toggle": {
+                    "rich_text": [{"plain_text": "Novena - Saint Patrick", "type": "text", "text": {"content": "Novena - Saint Patrick"}}],
+                    "color": "default",
+                },
+            },
+            {
+                "id": "audio_1",
+                "type": "audio",
+                "audio": {
+                    "type": "file",
+                    "file": {"url": "https://example.com/novena.mp3"},
+                    "caption": [{"plain_text": "Novena Audio", "type": "text", "text": {"content": "Novena Audio"}}],
+                },
+            },
+        ]
+        toggle_children = [
+            {
+                "id": "paragraph_1",
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [{"plain_text": "Prayer text", "type": "text", "text": {"content": "Prayer text"}}],
+                    "color": "default",
+                },
+            }
+        ]
+
+        def fake_list_block_children(block_id, _token):
+            if block_id == "source_page":
+                return source_blocks
+            if block_id == "toggle_1":
+                return toggle_children
+            return []
+
+        with patch.object(self.mod, "notion_list_block_children", side_effect=fake_list_block_children), patch.object(
+            self.mod, "notion_download_bytes", return_value=(b"audio-bytes", "audio/mpeg")
+        ), patch.object(
+            self.mod, "notion_create_file_upload", return_value="upload_1"
+        ), patch.object(
+            self.mod, "notion_send_file_upload"
+        ) as send_mock, patch.object(
+            self.mod, "notion_replace_page_blocks"
+        ) as replace_mock:
+            mode = self.mod.mirror_calendar_page_to_novena_page(
+                {"id": "target_page"},
+                {"id": "source_page"},
+                "token",
+            )
+
+        self.assertEqual(mode, "mirrored:2")
+        send_mock.assert_called_once()
+        replace_mock.assert_called_once()
+        target_page_id = replace_mock.call_args.args[0]
+        children = replace_mock.call_args.args[1]
+        self.assertEqual(target_page_id, "target_page")
+        self.assertEqual(children[0]["type"], "toggle")
+        self.assertEqual(children[0]["toggle"]["children"][0]["type"], "paragraph")
+        self.assertEqual(children[1]["type"], "audio")
+        self.assertEqual(children[1]["audio"]["type"], "file_upload")
+        self.assertEqual(children[1]["audio"]["file_upload"]["id"], "upload_1")
+
     def test_collect_saints_window_prefers_marked_saints(self):
         start = datetime.date(2026, 3, 3)
         day_data = {
@@ -49,7 +132,7 @@ class TestNovenaJob(unittest.TestCase):
             return [{"name": "Tuesday of Lent", "type": "weekday"}]
 
         with patch.object(self.mod, "romcal_fetch_day", side_effect=fake_fetch):
-            saints = self.mod.collect_saints_window("general_roman", "en", start, 1)
+            saints = self.mod.collect_saints_window("general_roman", "en", start, 0)
         self.assertEqual(len(saints), 1)
         self.assertEqual(saints[0]["name"], "Tuesday of Lent")
 

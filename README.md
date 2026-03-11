@@ -229,7 +229,7 @@ Optional variables:
 Purpose:
 - reads saints from Romcal for today through the next 8 days (9-day window)
 - uses OpenAI API to draft a litany-style novena prayer
-- writes prayer text to the Notion row titled `Daily Novena Prayer`
+- writes prayer text or mirrored daily liturgical content to the Notion row titled `Daily Novenas from Liturgical Calendar`
 
 Script:
 - `jobs/novena/generate_daily_novena_prayer.py`
@@ -246,9 +246,9 @@ Optional variables:
 - `OAI_API_BASE_URL` (default `https://api.openai.com/v1`)
 - `OAI_MODEL` (default `gpt-4.1-mini`)
 - `NOTION_TITLE_PROPERTY` (default `Name`)
-- `NOTION_NOVENA_ROW_TITLE` (default `Daily Novena Prayer`)
+- `NOTION_NOVENA_ROW_TITLE` (default `Daily Novenas from Liturgical Calendar`)
 - `NOTION_NOVENA_PROPERTY` (optional rich_text property to store prayer text; if unset/not rich_text, page content is replaced)
-- `NOTION_WRITE_DAILY_NOVENA_PAGE` (default `true`; set `false` to stop writing the `Daily Novena Prayer` page and write into today's Saint Radar row page instead)
+- `NOTION_WRITE_DAILY_NOVENA_PAGE` (default `true`; set `false` to mirror today's Liturgical Calendar entry into `Daily Novenas from Liturgical Calendar` while still writing day-by-day sections into today's Saint Radar row page)
 - `NOTION_SAINT_RADAR_ENABLED` (default `false`; when `true`, syncs saints into a Saint Radar database)
 - `NOTION_SAINT_DATABASE_ID` (optional explicit database id)
 - `NOTION_SAINT_DATABASE_NAME` (default `Saint Radar`; searched/created when id not provided)

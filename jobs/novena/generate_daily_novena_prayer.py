@@ -1,11 +1,14 @@
 import datetime
 import html
 import json
+import mimetypes
 import os
 import re
 import sys
+from copy import deepcopy
 from functools import lru_cache
 from typing import Any, Dict, List, Optional, Sequence
+from urllib.parse import unquote, urlparse
 
 import requests
 from openai import OpenAI
@@ -14,6 +17,10 @@ from romcal import Romcal, get_bundled_calendar_definitions, get_bundled_resourc
 NOTION_VERSION = "2022-06-28"
 NOTION_FILE_UPLOAD_VERSION = "2025-09-03"
 DEFAULT_UTC_OFFSET = "-06:00"
+DEFAULT_NOVENA_ROW_TITLES = (
+    "Daily Novenas from Liturgical Calendar",
+    "Daily Novena Prayer",
+)
 
 ROMCAL_CALENDAR = "ROMCAL_CALENDAR"  # default general_roman
 ROMCAL_LOCALE = "ROMCAL_LOCALE"  # default en
@@ -28,7 +35,7 @@ NOTION_TOKEN = "NOTION_TOKEN"
 NOTION_DATABASE_ID = "NOTION_DATABASE_ID"
 NOTION_DATABASE_NAME = "NOTION_DATABASE_NAME"  # fallback, default Opus Dei
 NOTION_TITLE_PROPERTY = "NOTION_TITLE_PROPERTY"  # default Name
-NOTION_NOVENA_ROW_TITLE = "NOTION_NOVENA_ROW_TITLE"  # default Daily Novena Prayer
+NOTION_NOVENA_ROW_TITLE = "NOTION_NOVENA_ROW_TITLE"  # default Daily Novenas from Liturgical Calendar
 NOTION_NOVENA_PROPERTY = "NOTION_NOVENA_PROPERTY"  # optional rich_text property for prayer text
 NOTION_WRITE_DAILY_NOVENA_PAGE = "NOTION_WRITE_DAILY_NOVENA_PAGE"  # default true
 NOTION_SAINT_RADAR_ENABLED = "NOTION_SAINT_RADAR_ENABLED"  # default false
@@ -658,6 +665,39 @@ def notion_send_file_upload(upload_id: str, filename: str, content_type: str, fi
         timeout=120,
     )
     response.raise_for_status()
+
+
+def notion_download_bytes(url: str) -> tuple[bytes, str]:
+    response = requests.get(url, timeout=120)
+    response.raise_for_status()
+    raw = bytes(response.content)
+    if not raw:
+        raise RuntimeError("Notion source file download returned empty content.")
+    return raw, str(response.headers.get("Content-Type", "")).strip()
+
+
+def infer_filename_from_url(url: str, fallback_stem: str, content_type: str) -> str:
+    path = unquote(urlparse(url).path or "").strip()
+    filename = os.path.basename(path)
+    if filename and "." in filename:
+        return filename
+    ext = mimetypes.guess_extension(content_type or "") or ""
+    if ext == ".jpe":
+        ext = ".jpg"
+    return f"{fallback_stem}{ext}"
+
+
+def notion_novena_row_titles(explicit_title: str) -> List[str]:
+    titles = [explicit_title] if explicit_title else []
+    titles.extend(DEFAULT_NOVENA_ROW_TITLES)
+    out: List[str] = []
+    seen = set()
+    for title in titles:
+        norm = str(title or "").strip().lower()
+        if norm and norm not in seen:
+            seen.add(norm)
+            out.append(str(title).strip())
+    return out
 
 
 def audio_block_caption(block: Dict[str, Any]) -> str:
@@ -1434,18 +1474,106 @@ def generate_openai_audio_bytes(
 def find_target_notion_page(
     pages: Sequence[Dict[str, Any]],
     title_property: str,
-    target_title: str,
+    target_title: str | Sequence[str],
 ) -> Dict[str, Any]:
-    target_norm = target_title.strip().lower()
+    if isinstance(target_title, str):
+        candidates = [target_title]
+    else:
+        candidates = [str(title or "").strip() for title in target_title if str(title or "").strip()]
+    wanted = {title.lower() for title in candidates}
     for page in pages:
         if not isinstance(page, dict):
             continue
         title = page_title(page, title_property).strip().lower()
-        if title == target_norm:
+        if title in wanted:
             return page
     raise RuntimeError(
-        f"Could not find Notion page titled '{target_title}' using title property '{title_property}'."
+        f"Could not find Notion page titled one of {candidates!r} using title property '{title_property}'."
     )
+
+
+def notion_clone_block_tree(block: Dict[str, Any], token: str) -> Optional[Dict[str, Any]]:
+    block_type = str(block.get("type", "")).strip()
+    payload = block.get(block_type) or {}
+    if block_type in {
+        "paragraph",
+        "heading_1",
+        "heading_2",
+        "heading_3",
+        "bulleted_list_item",
+        "numbered_list_item",
+        "to_do",
+        "toggle",
+        "quote",
+        "divider",
+        "callout",
+        "bookmark",
+        "embed",
+    }:
+        cloned_payload = deepcopy(payload)
+        if block_type == "toggle":
+            children: List[Dict[str, Any]] = []
+            for child in notion_list_block_children(str(block.get("id", "")).strip(), token):
+                cloned_child = notion_clone_block_tree(child, token)
+                if cloned_child:
+                    children.append(cloned_child)
+            if children:
+                cloned_payload["children"] = children
+        return {"object": "block", "type": block_type, block_type: cloned_payload}
+
+    if block_type == "audio":
+        audio = payload if isinstance(payload, dict) else {}
+        caption = deepcopy(audio.get("caption") or [])
+        audio_type = str(audio.get("type", "")).strip()
+        if audio_type == "external":
+            url = str((audio.get("external") or {}).get("url", "")).strip()
+            if not url:
+                return None
+            return {
+                "object": "block",
+                "type": "audio",
+                "audio": {"type": "external", "external": {"url": url}, "caption": caption},
+            }
+        if audio_type == "file":
+            url = str((audio.get("file") or {}).get("url", "")).strip()
+            if not url:
+                return None
+            file_bytes, content_type = notion_download_bytes(url)
+            filename = infer_filename_from_url(
+                url,
+                fallback_stem=f"notion_audio_{str(block.get('id', '')).strip() or 'mirror'}",
+                content_type=content_type,
+            )
+            upload_id = notion_create_file_upload(filename, content_type or "application/octet-stream", token)
+            notion_send_file_upload(upload_id, filename, content_type or "application/octet-stream", file_bytes, token)
+            return {
+                "object": "block",
+                "type": "audio",
+                "audio": {"type": "file_upload", "file_upload": {"id": upload_id}, "caption": caption},
+            }
+    return None
+
+
+def mirror_calendar_page_to_novena_page(
+    target_page: Dict[str, Any],
+    source_page: Dict[str, Any],
+    token: str,
+) -> str:
+    target_page_id = str(target_page.get("id", "")).strip()
+    source_page_id = str(source_page.get("id", "")).strip()
+    if not target_page_id:
+        raise RuntimeError("Target novena page has no id.")
+    if not source_page_id:
+        raise RuntimeError("Source calendar page has no id.")
+
+    children: List[Dict[str, Any]] = []
+    for block in notion_list_block_children(source_page_id, token):
+        cloned = notion_clone_block_tree(block, token)
+        if cloned:
+            children.append(cloned)
+
+    notion_replace_page_blocks(target_page_id, children, token)
+    return f"mirrored:{len(children)}"
 
 
 def write_prayer_to_notion_page(
@@ -1834,7 +1962,10 @@ def main() -> int:
         notion_token = require_env(NOTION_TOKEN)
         notion_db_id = notion_find_database_id(notion_token)
         title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
-        target_row_title = os.getenv(NOTION_NOVENA_ROW_TITLE, "Daily Novena Prayer").strip() or "Daily Novena Prayer"
+        target_row_title = (
+            os.getenv(NOTION_NOVENA_ROW_TITLE, "Daily Novenas from Liturgical Calendar").strip()
+            or "Daily Novenas from Liturgical Calendar"
+        )
         write_daily_novena_page = bool_env(NOTION_WRITE_DAILY_NOVENA_PAGE, default=True)
 
         start_date = local_today()
@@ -1903,11 +2034,21 @@ def main() -> int:
             oai_base_url=oai_base_url,
             oai_model=oai_model,
         )
+        main_pages = notion_get_all_pages(notion_db_id, notion_token)
         target_page: Optional[Dict[str, Any]] = None
+        try:
+            target_page = find_target_notion_page(
+                main_pages,
+                title_property,
+                notion_novena_row_titles(target_row_title),
+            )
+        except RuntimeError:
+            if write_daily_novena_page:
+                raise
+            target_page = None
         write_mode = "skipped"
+        mirror_mode = "skipped"
         if write_daily_novena_page:
-            pages = notion_get_all_pages(notion_db_id, notion_token)
-            target_page = find_target_notion_page(pages, title_property, target_row_title)
             write_mode = write_prayer_to_notion_page(
                 target_page,
                 prayer_text,
@@ -1934,6 +2075,7 @@ def main() -> int:
             wrote_sections = 0
             wrote_audio = 0
             skipped_existing = 0
+            today_page: Optional[Dict[str, Any]] = None
 
             # Keep USCCB daily readings append for today's calendar row.
             if readings_blocks:
@@ -2125,6 +2267,19 @@ def main() -> int:
                     f"saint_radar_novena_day_by_day:sections={wrote_sections}:audio={wrote_audio}:"
                     f"skipped_existing={skipped_existing}:force_refresh={str(force_refresh).lower()}"
                 )
+            if target_page:
+                if not today_page:
+                    today_page = find_calendar_page_for_date(
+                        pages=pages,
+                        title_property=saint_title_prop,
+                        feast_day_property=saint_day_prop,
+                        target_day=start_date.isoformat(),
+                        preferred_title=calendar_by_date.get(start_date.isoformat(), ""),
+                    )
+                if today_page:
+                    mirror_mode = mirror_calendar_page_to_novena_page(target_page, today_page, notion_token)
+                else:
+                    mirror_mode = "calendar_page_missing"
         if readings_mode.startswith("attached:") and extra_readings_pages_written:
             readings_mode = f"{readings_mode}:extra_pages={extra_readings_pages_written}"
         audio_mode = "disabled"
@@ -2146,7 +2301,8 @@ def main() -> int:
         print(
             f"SUMMARY notion_db={notion_db_id} target_title={target_row_title} "
             f"saints_count={len(saints)} window_days={window_days} write_mode={write_mode} "
-            f"audio_mode={audio_mode} readings_mode={readings_mode} saint_radar_mode={saint_radar_mode}"
+            f"mirror_mode={mirror_mode} audio_mode={audio_mode} readings_mode={readings_mode} "
+            f"saint_radar_mode={saint_radar_mode}"
         )
         print(
             f"INFO romcal_calendar={romcal_calendar} locale={romcal_locale} "

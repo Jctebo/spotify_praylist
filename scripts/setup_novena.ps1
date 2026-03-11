@@ -174,7 +174,7 @@ $notionTitleProp = if ($env:NOTION_TITLE_PROPERTY) {
 $notionRowTitle = if ($env:NOTION_NOVENA_ROW_TITLE) {
   Read-WithDefault "NOTION_NOVENA_ROW_TITLE" $env:NOTION_NOVENA_ROW_TITLE
 } else {
-  Read-WithDefault "NOTION_NOVENA_ROW_TITLE" "Daily Novena Prayer"
+  Read-WithDefault "NOTION_NOVENA_ROW_TITLE" "Daily Novenas from Liturgical Calendar"
 }
 
 $notionPrayerProp = if ($env:NOTION_NOVENA_PROPERTY) {

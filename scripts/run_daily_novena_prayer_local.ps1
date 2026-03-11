@@ -27,7 +27,7 @@ if (-not $JobUtcOffset) { $JobUtcOffset = $env:JOB_UTC_OFFSET }
 if (-not $OpenAiApiKey) { $OpenAiApiKey = Read-Host "OPENAI_API_KEY" }
 if (-not $NotionToken) { $NotionToken = Read-Host "NOTION_TOKEN" }
 if (-not $NotionDatabaseId) { $NotionDatabaseId = Read-Host "NOTION_DATABASE_ID" }
-if (-not $NotionNovenaRowTitle) { $NotionNovenaRowTitle = "Daily Novena Prayer" }
+if (-not $NotionNovenaRowTitle) { $NotionNovenaRowTitle = "Daily Novenas from Liturgical Calendar" }
 
 $env:OPENAI_API_KEY = $OpenAiApiKey
 $env:NOTION_TOKEN = $NotionToken
