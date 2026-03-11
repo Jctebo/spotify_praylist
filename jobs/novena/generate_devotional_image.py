@@ -48,12 +48,14 @@ DEFAULT_CURRENT_FOLDER = "Current Devotion"
 DEFAULT_ARCHIVE_FOLDER = "Non Current Devotion"
 DEFAULT_CURRENT_WIDE_FOLDER = "Current Devotion Wide"
 DEFAULT_ARCHIVE_WIDE_FOLDER = "Non Current Devotion Wide"
+DEFAULT_METADATA_ARCHIVE_FOLDER = "Devotional Metadata Archive"
 
 DEVOTIONAL_ONEDRIVE_DCIM_DIR = "DEVOTIONAL_ONEDRIVE_DCIM_DIR"
 DEVOTIONAL_CURRENT_FOLDER = "DEVOTIONAL_CURRENT_FOLDER"
 DEVOTIONAL_ARCHIVE_FOLDER = "DEVOTIONAL_ARCHIVE_FOLDER"
 DEVOTIONAL_CURRENT_WIDE_FOLDER = "DEVOTIONAL_CURRENT_WIDE_FOLDER"
 DEVOTIONAL_ARCHIVE_WIDE_FOLDER = "DEVOTIONAL_ARCHIVE_WIDE_FOLDER"
+DEVOTIONAL_METADATA_ARCHIVE_FOLDER = "DEVOTIONAL_METADATA_ARCHIVE_FOLDER"
 DEVOTIONAL_TARGET_DATE = "DEVOTIONAL_TARGET_DATE"  # YYYY-MM-DD
 DEVOTIONAL_MANIFEST_NAME = "DEVOTIONAL_MANIFEST_NAME"  # default images_manifest.json
 DEVOTIONAL_ROOT_MANIFEST_NAME = "DEVOTIONAL_ROOT_MANIFEST_NAME"  # default devotional_image_library.json
@@ -97,6 +99,7 @@ SOURCE_DEVOTION = "dev"
 SUPPORTED_IMAGE_EXTS = ("png", "jpeg", "webp")
 DEFAULT_MANIFEST_NAME = "images_manifest.json"
 DEFAULT_ROOT_MANIFEST_NAME = "devotional_image_library.json"
+SIDECAR_SUFFIXES = (".prompt.txt", ".window.txt")
 
 PROMPT_INSTRUCTION = """IMAGE PROMPT GENERATION - HIGH-FINISH MODERN DEVOTIONAL STYLE
 
@@ -309,12 +312,13 @@ class StorageDirs:
     archive: Path
     current_wide: Path
     archive_wide: Path
+    metadata_archive: Path
 
     def active_dirs(self) -> List[Path]:
         return [self.current, self.current_wide]
 
     def all_dirs(self) -> List[Path]:
-        return [self.current, self.archive, self.current_wide, self.archive_wide]
+        return [self.current, self.archive, self.current_wide, self.archive_wide, self.metadata_archive]
 
     def manifest_folders(self) -> List[Tuple[str, str, Path]]:
         return [
@@ -446,12 +450,17 @@ def resolve_output_dirs() -> StorageDirs:
     archive_wide_name = (
         os.getenv(DEVOTIONAL_ARCHIVE_WIDE_FOLDER, DEFAULT_ARCHIVE_WIDE_FOLDER).strip() or DEFAULT_ARCHIVE_WIDE_FOLDER
     )
+    metadata_archive_name = (
+        os.getenv(DEVOTIONAL_METADATA_ARCHIVE_FOLDER, DEFAULT_METADATA_ARCHIVE_FOLDER).strip()
+        or DEFAULT_METADATA_ARCHIVE_FOLDER
+    )
     return StorageDirs(
         root=root,
         current=root / current_name,
         archive=root / archive_name,
         current_wide=root / current_wide_name,
         archive_wide=root / archive_wide_name,
+        metadata_archive=root / metadata_archive_name,
     )
 
 
@@ -1009,15 +1018,50 @@ def move_file_overwrite(src: Path, dst: Path) -> None:
     shutil.move(str(src), str(dst))
 
 
-def move_sidecars(old_image: Path, new_image: Path) -> None:
-    old_base = old_image.with_suffix("")
-    new_base = new_image.with_suffix("")
-    for suffix in (".prompt.txt", ".window.txt"):
-        old_sidecar = old_base.with_suffix(suffix)
-        if not old_sidecar.exists():
+def image_variant_for_path(image_path: Path) -> str:
+    return "wide" if "wide" in image_path.parent.name.lower() else "portrait"
+
+
+def sidecar_archive_path(storage: StorageDirs, image_path: Path, suffix: str) -> Path:
+    return storage.metadata_archive / f"{image_path.stem}.{image_variant_for_path(image_path)}{suffix}"
+
+
+def write_archived_sidecar(storage: StorageDirs, image_path: Path, suffix: str, content: str) -> Path:
+    path = sidecar_archive_path(storage, image_path, suffix)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+    return path
+
+
+def migrate_legacy_sidecars(storage: StorageDirs, image_path: Path) -> None:
+    for suffix in SIDECAR_SUFFIXES:
+        legacy_sidecar = image_path.with_suffix(suffix)
+        if not legacy_sidecar.exists():
             continue
-        new_sidecar = new_base.with_suffix(suffix)
-        move_file_overwrite(old_sidecar, new_sidecar)
+        move_file_overwrite(legacy_sidecar, sidecar_archive_path(storage, image_path, suffix))
+
+
+def migrate_all_legacy_sidecars(storage: StorageDirs) -> None:
+    for _state, _variant, folder in storage.manifest_folders():
+        if not folder.exists():
+            continue
+        image_files: List[Path] = []
+        for ext in SUPPORTED_IMAGE_EXTS:
+            image_files.extend(folder.glob(f"*.{ext}"))
+        for image_path in image_files:
+            migrate_legacy_sidecars(storage, image_path)
+
+
+def move_sidecars(storage: StorageDirs, old_image: Path, new_image: Path) -> None:
+    for suffix in SIDECAR_SUFFIXES:
+        legacy_sidecar = old_image.with_suffix(suffix)
+        new_sidecar = sidecar_archive_path(storage, new_image, suffix)
+        if legacy_sidecar.exists():
+            move_file_overwrite(legacy_sidecar, new_sidecar)
+            continue
+        old_sidecar = sidecar_archive_path(storage, old_image, suffix)
+        if old_sidecar.exists() and old_sidecar != new_sidecar:
+            move_file_overwrite(old_sidecar, new_sidecar)
 
 
 def sha256_file(path: Path) -> str:
@@ -1036,7 +1080,7 @@ def iso_utc_mtime(path: Path) -> str:
     return timestamp.replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 
-def maybe_migrate_legacy_file(folder: Path, target: RenderTarget) -> bool:
+def maybe_migrate_legacy_file(storage: StorageDirs, folder: Path, target: RenderTarget) -> bool:
     if target.source != SOURCE_CALENDAR:
         return False
 
@@ -1057,14 +1101,14 @@ def maybe_migrate_legacy_file(folder: Path, target: RenderTarget) -> bool:
         if not candidate.exists():
             continue
         new_path = folder / f"{target.base_name}{candidate.suffix.lower()}"
-        move_sidecars(candidate, new_path)
+        move_sidecars(storage, candidate, new_path)
         move_file_overwrite(candidate, new_path)
         print(f"INFO migrated_legacy_image old={candidate.name} new={new_path.name}")
         return True
     return False
 
 
-def move_out_of_window_targets(source_dir: Path, archive_dir: Path, active_ids: set[str]) -> int:
+def move_out_of_window_targets(storage: StorageDirs, source_dir: Path, archive_dir: Path, active_ids: set[str]) -> int:
     if not source_dir.exists():
         return 0
     moved = 0
@@ -1080,13 +1124,14 @@ def move_out_of_window_targets(source_dir: Path, archive_dir: Path, active_ids: 
             continue
         archive_dir.mkdir(parents=True, exist_ok=True)
         dst_image = archive_dir / image_path.name
-        move_sidecars(image_path, dst_image)
+        move_sidecars(storage, image_path, dst_image)
         move_file_overwrite(image_path, dst_image)
         moved += 1
     return moved
 
 
 def restore_target_from_archive(
+    storage: StorageDirs,
     target: RenderTarget,
     current_dir: Path,
     archive_dir: Path,
@@ -1102,22 +1147,22 @@ def restore_target_from_archive(
     if not find_existing_image_by_base(current_dir, target.base_name):
         src_portrait = find_existing_image_by_base(archive_dir, target.base_name)
         if not src_portrait:
-            maybe_migrate_legacy_file(archive_dir, target)
+            maybe_migrate_legacy_file(storage, archive_dir, target)
             src_portrait = find_existing_image_by_base(archive_dir, target.base_name)
         if src_portrait and src_portrait.exists():
             dst_portrait = current_dir / src_portrait.name
-            move_sidecars(src_portrait, dst_portrait)
+            move_sidecars(storage, src_portrait, dst_portrait)
             move_file_overwrite(src_portrait, dst_portrait)
             restored_portrait = True
 
     if not find_existing_image_by_base(wide_dir, target.base_name):
         src_wide = find_existing_image_by_base(archive_wide_dir, target.base_name)
         if not src_wide:
-            maybe_migrate_legacy_file(archive_wide_dir, target)
+            maybe_migrate_legacy_file(storage, archive_wide_dir, target)
             src_wide = find_existing_image_by_base(archive_wide_dir, target.base_name)
         if src_wide and src_wide.exists():
             dst_wide = wide_dir / src_wide.name
-            move_sidecars(src_wide, dst_wide)
+            move_sidecars(storage, src_wide, dst_wide)
             move_file_overwrite(src_wide, dst_wide)
             restored_wide = True
 
@@ -1151,13 +1196,11 @@ def write_manifests(storage: StorageDirs) -> Tuple[int, Path]:
             image_files.extend(sorted(folder.glob(f"*.{ext}")))
 
         for image_path in sorted(image_files, key=lambda item: item.name.lower()):
-            base_path = image_path.with_suffix("")
-            prompt_path = base_path.with_suffix(".prompt.txt")
-            window_path = base_path.with_suffix(".window.txt")
+            migrate_legacy_sidecars(storage, image_path)
             meta = parse_new_file_meta(image_path)
             item: Dict[str, Any] = {
-                "id": meta.base_name if meta else base_path.name,
-                "base_name": base_path.name,
+                "id": meta.base_name if meta else image_path.stem,
+                "base_name": image_path.stem,
                 "state": state,
                 "variant": variant,
                 "files": {
@@ -1170,10 +1213,6 @@ def write_manifests(storage: StorageDirs) -> Tuple[int, Path]:
                 item["source"] = meta.source
                 item["subject_slug"] = meta.subject_slug
                 item["style_id"] = meta.style_id
-            if prompt_path.exists():
-                item["files"]["prompt"] = file_manifest_record(prompt_path, storage.root)
-            if window_path.exists():
-                item["files"]["window"] = file_manifest_record(window_path, storage.root)
             items.append(item)
 
         folder_manifest = {
@@ -1687,11 +1726,12 @@ def main() -> int:
         storage.root.mkdir(parents=True, exist_ok=True)
         for folder in storage.all_dirs():
             folder.mkdir(parents=True, exist_ok=True)
+        migrate_all_legacy_sidecars(storage)
         active_ids = {target_id(t) for t in targets}
 
         moved_count = 0
-        moved_count += move_out_of_window_targets(current_dir, archive_dir, active_ids)
-        moved_count += move_out_of_window_targets(wide_dir, archive_wide_dir, active_ids)
+        moved_count += move_out_of_window_targets(storage, current_dir, archive_dir, active_ids)
+        moved_count += move_out_of_window_targets(storage, wide_dir, archive_wide_dir, active_ids)
 
         if not targets:
             manifest_images, root_manifest_path = write_manifests(storage)
@@ -1717,8 +1757,8 @@ def main() -> int:
         by_source: Dict[str, int] = {SOURCE_CALENDAR: 0, SOURCE_DEVOTION: 0}
 
         for target in targets:
-            maybe_migrate_legacy_file(current_dir, target)
-            maybe_migrate_legacy_file(wide_dir, target)
+            maybe_migrate_legacy_file(storage, current_dir, target)
+            maybe_migrate_legacy_file(storage, wide_dir, target)
 
             existing_portrait = find_existing_image_by_base(current_dir, target.base_name)
             existing_wide = find_existing_image_by_base(wide_dir, target.base_name)
@@ -1735,6 +1775,7 @@ def main() -> int:
 
             if reuse_enabled:
                 restored_portrait, restored_wide = restore_target_from_archive(
+                    storage,
                     target,
                     current_dir,
                     archive_dir,
@@ -1787,10 +1828,8 @@ def main() -> int:
                     image_format,
                 )
                 written_portrait = write_image_file(image_bytes, current_dir, filename)
-                prompt_path = written_portrait.with_suffix(".prompt.txt")
-                prompt_path.write_text(prompt_text, encoding="utf-8")
-                window_path = written_portrait.with_suffix(".window.txt")
-                window_path.write_text(window_text, encoding="utf-8")
+                prompt_path = write_archived_sidecar(storage, written_portrait, ".prompt.txt", prompt_text)
+                window_path = write_archived_sidecar(storage, written_portrait, ".window.txt", window_text)
                 outputs_written += 1
                 total_written += 1
                 by_source[target.source] = by_source.get(target.source, 0) + 1
@@ -1818,10 +1857,8 @@ def main() -> int:
                     image_format=image_format,
                 )
                 written_wide = write_image_file(image_bytes_wide, wide_dir, filename)
-                prompt_path_wide = written_wide.with_suffix(".prompt.txt")
-                prompt_path_wide.write_text(prompt_text_wide, encoding="utf-8")
-                window_path_wide = written_wide.with_suffix(".window.txt")
-                window_path_wide.write_text(window_text, encoding="utf-8")
+                prompt_path_wide = write_archived_sidecar(storage, written_wide, ".prompt.txt", prompt_text_wide)
+                window_path_wide = write_archived_sidecar(storage, written_wide, ".window.txt", window_text)
                 outputs_written += 1
                 total_written += 1
                 by_source[target.source] = by_source.get(target.source, 0) + 1

@@ -57,6 +57,7 @@ $currentDir = Join-Path $dcimRoot "Current Devotion"
 $archiveDir = Join-Path $dcimRoot "Non Current Devotion"
 $currentWideDir = Join-Path $dcimRoot "Current Devotion Wide"
 $archiveWideDir = Join-Path $dcimRoot "Non Current Devotion Wide"
+$metadataArchiveDir = Join-Path $dcimRoot "Devotional Metadata Archive"
 $rootManifest = Join-Path $dcimRoot "devotional_image_library.json"
 
 if (-not $SkipGenerate) {
@@ -72,6 +73,7 @@ if (-not (Test-Path $currentDir)) { throw "Missing folder: $currentDir" }
 if (-not (Test-Path $archiveDir)) { throw "Missing folder: $archiveDir" }
 if (-not (Test-Path $currentWideDir)) { throw "Missing folder: $currentWideDir" }
 if (-not (Test-Path $archiveWideDir)) { throw "Missing folder: $archiveWideDir" }
+if (-not (Test-Path $metadataArchiveDir)) { throw "Missing folder: $metadataArchiveDir" }
 
 Write-Host "Syncing Current Devotion via rclone..."
 & $rclonePath sync "$currentDir/" "${RcloneRemoteName}:${RcloneRemoteRoot}/Current Devotion/" --progress --transfers 4 --checkers 8
@@ -88,6 +90,10 @@ if ($LASTEXITCODE -ne 0) { throw "rclone sync failed for Current Devotion Wide" 
 Write-Host "Syncing Non Current Devotion Wide via rclone..."
 & $rclonePath sync "$archiveWideDir/" "${RcloneRemoteName}:${RcloneRemoteRoot}/Non Current Devotion Wide/" --progress --transfers 4 --checkers 8
 if ($LASTEXITCODE -ne 0) { throw "rclone sync failed for Non Current Devotion Wide" }
+
+Write-Host "Syncing Devotional Metadata Archive via rclone..."
+& $rclonePath sync "$metadataArchiveDir/" "${RcloneRemoteName}:${RcloneRemoteRoot}/Devotional Metadata Archive/" --progress --transfers 4 --checkers 8
+if ($LASTEXITCODE -ne 0) { throw "rclone sync failed for Devotional Metadata Archive" }
 
 if (Test-Path $rootManifest) {
   Write-Host "Uploading devotional_image_library.json via rclone..."

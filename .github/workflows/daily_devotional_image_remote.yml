@@ -92,13 +92,15 @@ jobs:
             "${LOCAL_ROOT}/Current Devotion" \
             "${LOCAL_ROOT}/Non Current Devotion" \
             "${LOCAL_ROOT}/Current Devotion Wide" \
-            "${LOCAL_ROOT}/Non Current Devotion Wide"
+            "${LOCAL_ROOT}/Non Current Devotion Wide" \
+            "${LOCAL_ROOT}/Devotional Metadata Archive"
 
           # Pull canonical folders so skip_existing and archive restore work on ephemeral runners.
           rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Current Devotion/" "${LOCAL_ROOT}/Current Devotion/" --create-empty-src-dirs || true
           rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Non Current Devotion/" "${LOCAL_ROOT}/Non Current Devotion/" --create-empty-src-dirs || true
           rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Current Devotion Wide/" "${LOCAL_ROOT}/Current Devotion Wide/" --create-empty-src-dirs || true
           rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Non Current Devotion Wide/" "${LOCAL_ROOT}/Non Current Devotion Wide/" --create-empty-src-dirs || true
+          rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Devotional Metadata Archive/" "${LOCAL_ROOT}/Devotional Metadata Archive/" --create-empty-src-dirs || true
           rclone copyto "${REMOTE_NAME}:${REMOTE_ROOT}/devotional_image_library.json" "${LOCAL_ROOT}/devotional_image_library.json" || true
 
       - name: Generate devotional image locally on runner
@@ -119,17 +121,20 @@ jobs:
           ARCHIVE_DIR="${LOCAL_ROOT}/Non Current Devotion"
           CURRENT_WIDE_DIR="${LOCAL_ROOT}/Current Devotion Wide"
           ARCHIVE_WIDE_DIR="${LOCAL_ROOT}/Non Current Devotion Wide"
+          METADATA_ARCHIVE_DIR="${LOCAL_ROOT}/Devotional Metadata Archive"
           ROOT_MANIFEST="${LOCAL_ROOT}/devotional_image_library.json"
           REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
           REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Pictures/Samsung Gallery/DCIM}"
 
           mkdir -p "$CURRENT_DIR" "$ARCHIVE_DIR" "$CURRENT_WIDE_DIR" "$ARCHIVE_WIDE_DIR"
+          mkdir -p "$METADATA_ARCHIVE_DIR"
 
           # Mirror canonical folders to remote (overwrite + remove stale files).
           rclone sync "$CURRENT_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Current Devotion/" --progress --transfers 4 --checkers 8
           rclone sync "$ARCHIVE_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Non Current Devotion/" --progress --transfers 4 --checkers 8
           rclone sync "$CURRENT_WIDE_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Current Devotion Wide/" --progress --transfers 4 --checkers 8
           rclone sync "$ARCHIVE_WIDE_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Non Current Devotion Wide/" --progress --transfers 4 --checkers 8
+          rclone sync "$METADATA_ARCHIVE_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/Devotional Metadata Archive/" --progress --transfers 4 --checkers 8
           if [ -f "$ROOT_MANIFEST" ]; then
             rclone copyto "$ROOT_MANIFEST" "${REMOTE_NAME}:${REMOTE_ROOT}/devotional_image_library.json" --progress
           fi

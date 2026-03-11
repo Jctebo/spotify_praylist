@@ -1,6 +1,9 @@
 import io
+import json
 import datetime
+import tempfile
 import unittest
+from pathlib import Path
 
 from PIL import Image
 
@@ -10,6 +13,16 @@ from tests.test_helpers import load_module
 class TestDevotionalImageJob(unittest.TestCase):
     def setUp(self):
         self.mod = load_module("jobs/novena/generate_devotional_image.py")
+
+    def make_storage(self, root: Path):
+        return self.mod.StorageDirs(
+            root=root,
+            current=root / "Current Devotion",
+            archive=root / "Non Current Devotion",
+            current_wide=root / "Current Devotion Wide",
+            archive_wide=root / "Non Current Devotion Wide",
+            metadata_archive=root / "Devotional Metadata Archive",
+        )
 
     def test_apply_portrait_title_overlay_draws_text_without_resizing(self):
         image = Image.new("RGB", (1024, 1536), color=(32, 48, 64))
@@ -96,6 +109,47 @@ class TestDevotionalImageJob(unittest.TestCase):
         self.assertIsNotNone(placement)
         candidate, _font, _lines, _bbox = placement
         self.assertEqual(candidate.name, "top_right")
+
+    def test_migrate_legacy_sidecars_moves_prompt_and_window_into_metadata_archive(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            storage = self.make_storage(root)
+            storage.current.mkdir(parents=True)
+            storage.metadata_archive.mkdir(parents=True)
+            image_path = storage.current / "03-10_03-19_cal_saint-joseph_mod_realism.png"
+            image_path.write_bytes(b"img")
+            image_path.with_suffix(".prompt.txt").write_text("prompt body", encoding="utf-8")
+            image_path.with_suffix(".window.txt").write_text("window body", encoding="utf-8")
+
+            self.mod.migrate_legacy_sidecars(storage, image_path)
+
+            self.assertFalse(image_path.with_suffix(".prompt.txt").exists())
+            self.assertFalse(image_path.with_suffix(".window.txt").exists())
+            self.assertEqual(
+                self.mod.sidecar_archive_path(storage, image_path, ".prompt.txt").read_text(encoding="utf-8"),
+                "prompt body",
+            )
+            self.assertEqual(
+                self.mod.sidecar_archive_path(storage, image_path, ".window.txt").read_text(encoding="utf-8"),
+                "window body",
+            )
+
+    def test_write_manifests_excludes_archived_sidecars_from_public_file_listing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            storage = self.make_storage(root)
+            for folder in storage.all_dirs():
+                folder.mkdir(parents=True, exist_ok=True)
+            image_path = storage.current / "03-10_03-19_cal_saint-joseph_mod_realism.png"
+            image_path.write_bytes(b"img")
+            self.mod.write_archived_sidecar(storage, image_path, ".prompt.txt", "prompt body")
+            self.mod.write_archived_sidecar(storage, image_path, ".window.txt", "window body")
+
+            self.mod.write_manifests(storage)
+
+            manifest = json.loads((storage.current / "images_manifest.json").read_text(encoding="utf-8"))
+            files = manifest["items"][0]["files"]
+            self.assertEqual(set(files.keys()), {"image"})
 
 
 if __name__ == "__main__":

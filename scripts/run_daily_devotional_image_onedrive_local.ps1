@@ -89,6 +89,7 @@ $currentFolder = Resolve-Path (Join-Path $dcimRoot "Current Devotion")
 $archiveFolder = Resolve-Path (Join-Path $dcimRoot "Non Current Devotion")
 $currentWideFolder = Resolve-Path (Join-Path $dcimRoot "Current Devotion Wide")
 $archiveWideFolder = Resolve-Path (Join-Path $dcimRoot "Non Current Devotion Wide")
+$metadataArchiveFolder = Resolve-Path (Join-Path $dcimRoot "Devotional Metadata Archive")
 $rootManifest = Join-Path $dcimRoot "devotional_image_library.json"
 
 $accessToken = az account get-access-token --resource-type ms-graph --query accessToken -o tsv
@@ -120,6 +121,13 @@ Get-ChildItem -Path $currentWideFolder -File | ForEach-Object {
 
 Get-ChildItem -Path $archiveWideFolder -File | ForEach-Object {
   $remotePath = "$RemoteRoot/Non Current Devotion Wide/$($_.Name)"
+  Upload-OneDriveFile -LocalPath $_.FullName -RemotePath $remotePath -AccessToken $accessToken -UserId $OneDriveUserId
+  $uploaded++
+  Write-Host "Uploaded: $remotePath"
+}
+
+Get-ChildItem -Path $metadataArchiveFolder -File | ForEach-Object {
+  $remotePath = "$RemoteRoot/Devotional Metadata Archive/$($_.Name)"
   Upload-OneDriveFile -LocalPath $_.FullName -RemotePath $remotePath -AccessToken $accessToken -UserId $OneDriveUserId
   $uploaded++
   Write-Host "Uploaded: $remotePath"
