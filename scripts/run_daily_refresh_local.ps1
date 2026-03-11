@@ -15,6 +15,7 @@ param(
   [string]$NotionPlaylistsEnabledProperty,
   [string]$NotionQueuePlaylistProperty,
   [string]$NotionUriProperty,
+  [string]$NotionSpotifyEmbedsEnabled,
   [string]$SpotifyPlaylistName,
   [string]$JobUtcOffset
 )
@@ -37,6 +38,7 @@ if (-not $NotionPlaylistsIdProperty) { $NotionPlaylistsIdProperty = $env:NOTION_
 if (-not $NotionPlaylistsEnabledProperty) { $NotionPlaylistsEnabledProperty = $env:NOTION_PLAYLISTS_ENABLED_PROPERTY }
 if (-not $NotionQueuePlaylistProperty) { $NotionQueuePlaylistProperty = $env:NOTION_QUEUE_PLAYLIST_PROPERTY }
 if (-not $NotionUriProperty) { $NotionUriProperty = $env:NOTION_URI_PROPERTY }
+if (-not $NotionSpotifyEmbedsEnabled) { $NotionSpotifyEmbedsEnabled = $env:NOTION_SPOTIFY_EMBEDS_ENABLED }
 if (-not $SpotifyPlaylistName) { $SpotifyPlaylistName = $env:SPOTIFY_PLAYLIST_NAME }
 if (-not $JobUtcOffset) { $JobUtcOffset = $env:JOB_UTC_OFFSET }
 
@@ -63,6 +65,7 @@ if ($NotionPlaylistsIdProperty) { $env:NOTION_PLAYLISTS_ID_PROPERTY = $NotionPla
 if ($NotionPlaylistsEnabledProperty) { $env:NOTION_PLAYLISTS_ENABLED_PROPERTY = $NotionPlaylistsEnabledProperty }
 if ($NotionQueuePlaylistProperty) { $env:NOTION_QUEUE_PLAYLIST_PROPERTY = $NotionQueuePlaylistProperty }
 if ($NotionUriProperty) { $env:NOTION_URI_PROPERTY = $NotionUriProperty }
+if ($NotionSpotifyEmbedsEnabled) { $env:NOTION_SPOTIFY_EMBEDS_ENABLED = $NotionSpotifyEmbedsEnabled }
 if ($SpotifyPlaylistName) { $env:SPOTIFY_PLAYLIST_NAME = $SpotifyPlaylistName }
 if ($JobUtcOffset) { $env:JOB_UTC_OFFSET = $JobUtcOffset }
 

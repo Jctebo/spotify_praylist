@@ -157,6 +157,107 @@ class TestRefreshJob(unittest.TestCase):
 
         self.assertEqual(queue, ["spotify:episode:morning"])
 
+    def test_spotify_value_to_embed_url_normalizes_supported_inputs(self):
+        self.assertEqual(
+            self.mod.spotify_value_to_embed_url("spotify:episode:abc123"),
+            "https://open.spotify.com/embed/episode/abc123",
+        )
+        self.assertEqual(
+            self.mod.spotify_value_to_embed_url("https://open.spotify.com/track/xyz789?si=test"),
+            "https://open.spotify.com/embed/track/xyz789",
+        )
+        self.assertEqual(
+            self.mod.spotify_value_to_embed_url("https://open.spotify.com/embed/episode/def456"),
+            "https://open.spotify.com/embed/episode/def456",
+        )
+        self.assertIsNone(self.mod.spotify_value_to_embed_url("not spotify"))
+
+    def test_notion_sync_spotify_embed_replaces_existing_spotify_embed(self):
+        blocks = [
+            {"id": "block_existing", "type": "embed", "embed": {"url": "https://open.spotify.com/embed/episode/old1"}},
+            {"id": "block_para", "type": "paragraph", "paragraph": {"rich_text": []}},
+        ]
+        archived = []
+        appended = []
+
+        def fake_append(parent_id, children, token, position="end"):
+            appended.append((parent_id, children, token, position))
+
+        with patch.object(self.mod, "notion_list_block_children", return_value=blocks), patch.object(
+            self.mod, "notion_archive_block", side_effect=lambda block_id, token: archived.append((block_id, token))
+        ), patch.object(self.mod, "notion_append_children", side_effect=fake_append):
+            updated, removed = self.mod.notion_sync_spotify_embed(
+                "page_1", "spotify:episode:new2", "notion_token"
+            )
+
+        self.assertTrue(updated)
+        self.assertFalse(removed)
+        self.assertEqual(archived, [("block_existing", "notion_token")])
+        self.assertEqual(len(appended), 1)
+        self.assertEqual(appended[0][0], "page_1")
+        self.assertEqual(appended[0][2], "notion_token")
+        self.assertEqual(appended[0][3], "start")
+        self.assertEqual(
+            appended[0][1],
+            [
+                {
+                    "object": "block",
+                    "type": "embed",
+                    "embed": {"url": "https://open.spotify.com/embed/episode/new2"},
+                }
+            ],
+        )
+
+    def test_sync_notion_spotify_embeds_updates_only_spotify_rows(self):
+        env = {
+            "NOTION_TOKEN": "notion_token",
+            "NOTION_DATABASE_ID": "db_1",
+        }
+        pages = [
+            {
+                "id": "page_spotify",
+                "properties": {
+                    "Name": _title_prop("Spotify Morning Prayer"),
+                    "Platform": _select_prop("spotify"),
+                    "Spotify Resolver": _rich_text_prop("MORNING"),
+                    "Spotify Fallback Resolver": _rich_text_prop(""),
+                    "URI": _rich_text_prop(""),
+                },
+            },
+            {
+                "id": "page_hallow",
+                "properties": {
+                    "Name": _title_prop("Hallow Rosary"),
+                    "Platform": _select_prop("hallow"),
+                    "Spotify Resolver": _rich_text_prop("HALLOW"),
+                    "Spotify Fallback Resolver": _rich_text_prop(""),
+                    "URI": _rich_text_prop(""),
+                },
+            },
+        ]
+        synced = []
+
+        def fake_sync(page_id, embed_url, token):
+            synced.append((page_id, embed_url, token))
+            return True, False
+
+        with temp_env(env):
+            with patch.object(self.mod, "notion_get_all_pages", return_value=pages), patch.object(
+                self.mod, "resolve_spec_uri", return_value="spotify:episode:morning123"
+            ), patch.object(self.mod, "notion_sync_spotify_embed", side_effect=fake_sync):
+                updated, removed, details, unresolved = self.mod.sync_notion_spotify_embeds(
+                    object(), "Wednesday", {}, {}, {}
+                )
+
+        self.assertEqual(updated, 1)
+        self.assertEqual(removed, 0)
+        self.assertEqual(
+            details,
+            [("Spotify Morning Prayer", "https://open.spotify.com/embed/episode/morning123")],
+        )
+        self.assertEqual(unresolved, [])
+        self.assertEqual(synced, [("page_spotify", "spotify:episode:morning123", "notion_token")])
+
     def test_main_notion_refreshes_all_enabled_playlists(self):
         env = {
             "SPOTIFY_CLIENT_ID": "cid",
@@ -194,6 +295,8 @@ class TestRefreshJob(unittest.TestCase):
             ), patch.object(
                 self.mod, "sync_notion_uris_for_playlist", return_value=(0, [], [], [])
             ), patch.object(
+                self.mod, "sync_notion_spotify_embeds", return_value=(0, 0, [], [])
+            ), patch.object(
                 self.mod, "distribute_prayer_intentions", return_value=(0, 0, 0)
             ):
                 rc = self.mod.main()
@@ -229,6 +332,8 @@ class TestRefreshJob(unittest.TestCase):
                 self.mod, "recreate_playlist_items", return_value=1
             ) as recreate_mock, patch.object(
                 self.mod, "sync_notion_uris_for_playlist", return_value=(0, [], [], [])
+            ), patch.object(
+                self.mod, "sync_notion_spotify_embeds", return_value=(0, 0, [], [])
             ), patch.object(
                 self.mod, "distribute_prayer_intentions", return_value=(0, 0, 0)
             ):

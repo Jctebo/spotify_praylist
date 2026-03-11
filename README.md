@@ -78,6 +78,8 @@ $env:NOTION_DATABASE_ID = "..."
 $env:NOTION_PLAYLISTS_DATABASE_ID = "..."
 # Optional single-playlist run:
 $env:SPOTIFY_PLAYLIST_NAME = "Morning"
+# Optional: disable Notion page embed sync
+$env:NOTION_SPOTIFY_EMBEDS_ENABLED = "false"
 # Optional:
 $env:SPOTIFY_USER_ID = "..."
 $env:JOB_UTC_OFFSET = "-06:00"
@@ -95,6 +97,7 @@ Expected behavior:
 - reads Opus Dei rows for each playlist and order
 - supports row-level resolver + fallback (for Morning/Evening LOTH dual-podcast logic)
 - replaces each target playlist contents with resolved items from the flat Notion list
+- keeps a Spotify embed block at the top of each Spotify row page when the current row resolves to a Spotify item
 - prints one summary per playlist: `playlist`, `playlist_id`, and `tracks_written`
 - exits non-zero on error
 
@@ -143,6 +146,7 @@ Queue-related environment variables:
 - `SPOTIFY_REFRESH_CONFIG_SOURCE` (default `notion`; set `file` for legacy JSON mode)
 - `SPOTIFY_PLAYLIST_NAME` (optional single-playlist filter in Notion mode)
 - `SPOTIFY_ENABLE_URI_AUTOSYNC` (default `false`; keeps automatic URI mapping off)
+- `NOTION_SPOTIFY_EMBEDS_ENABLED` (default `true`; inserts/refreshes a Spotify embed block at the top of Spotify row pages)
 - `NOTION_PLAYLISTS_DATABASE_ID` (recommended)
 - `NOTION_PLAYLISTS_DATABASE_NAME` (fallback lookup; default `Spotify Playlists`)
 - `NOTION_PLAYLISTS_TITLE_PROPERTY` (default `Name`)

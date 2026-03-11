@@ -46,6 +46,7 @@ NOTION_PLATFORM_SPOTIFY_VALUE = "NOTION_PLATFORM_SPOTIFY_VALUE"  # defaults to s
 NOTION_PLATFORM_NOSYNC_VALUE = "NOTION_PLATFORM_NOSYNC_VALUE"  # defaults to spotify-nosync
 NOTION_URI_PROPERTY = "NOTION_URI_PROPERTY"  # defaults to URI
 NOTION_URI_LOG_LIMIT = "NOTION_URI_LOG_LIMIT"  # defaults to 25
+NOTION_SPOTIFY_EMBEDS_ENABLED = "NOTION_SPOTIFY_EMBEDS_ENABLED"  # default true
 NOTION_PLAYLISTS_TITLE_PROPERTY = "NOTION_PLAYLISTS_TITLE_PROPERTY"  # defaults to Name
 NOTION_PLAYLISTS_ID_PROPERTY = "NOTION_PLAYLISTS_ID_PROPERTY"  # defaults to Spotify Playlist ID
 NOTION_PLAYLISTS_ENABLED_PROPERTY = "NOTION_PLAYLISTS_ENABLED_PROPERTY"  # defaults to Enabled
@@ -72,6 +73,7 @@ MAX_BIAY_EPISODES_TO_SCAN = 2500
 DEFAULT_UTC_OFFSET = "-06:00"
 DEPRECATED_TIMESYNC_PLATFORM_VALUE = "spotify timesync"
 RUNTIME_TZ = datetime.timezone(datetime.timedelta(hours=-6))
+SPOTIFY_EMBED_BASE_URL = "https://open.spotify.com/embed"
 
 DEFAULT_SHOWS = {
     "DIVINE_OFFICE": "70ydTdzunoqWAsvutFIkHM",
@@ -296,6 +298,41 @@ def notion_get_all_pages(database_id: str, token: str) -> List[Dict[str, Any]]:
     return pages
 
 
+def notion_list_block_children(block_id: str, token: str) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    next_cursor: Optional[str] = None
+    while True:
+        params = "page_size=100"
+        if next_cursor:
+            params += f"&start_cursor={next_cursor}"
+        data = notion_call("GET", f"https://api.notion.com/v1/blocks/{block_id}/children?{params}", token)
+        for row in data.get("results") or []:
+            if isinstance(row, dict):
+                out.append(row)
+        if not data.get("has_more"):
+            break
+        next_cursor = str(data.get("next_cursor", "")).strip() or None
+    return out
+
+
+def notion_archive_block(block_id: str, token: str) -> None:
+    notion_call("PATCH", f"https://api.notion.com/v1/blocks/{block_id}", token, {"archived": True})
+
+
+def notion_append_children(
+    parent_id: str,
+    children: List[Dict[str, Any]],
+    token: str,
+    position: str = "end",
+) -> None:
+    if not children:
+        return
+    body: Dict[str, Any] = {"children": list(children)}
+    if position == "start":
+        body["position"] = {"type": "start"}
+    notion_call("PATCH", f"https://api.notion.com/v1/blocks/{parent_id}/children", token, body)
+
+
 def normalize_text(text: str) -> str:
     return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", text.lower())).strip()
 
@@ -470,6 +507,66 @@ def normalize_spotify_playlist_id(value: str) -> str:
     if match:
         return match.group(1)
     return raw
+
+
+def spotify_value_to_embed_url(value: str) -> Optional[str]:
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    match = re.fullmatch(r"spotify:([a-z]+):([A-Za-z0-9]+)", raw, flags=re.IGNORECASE)
+    if match:
+        return f"{SPOTIFY_EMBED_BASE_URL}/{match.group(1).lower()}/{match.group(2)}"
+    match = re.search(
+        r"open\.spotify\.com/(?:embed/)?([a-z]+)/([A-Za-z0-9]+)(?:[/?].*)?$",
+        raw,
+        flags=re.IGNORECASE,
+    )
+    if match:
+        return f"{SPOTIFY_EMBED_BASE_URL}/{match.group(1).lower()}/{match.group(2)}"
+    return None
+
+
+def block_embed_url(block: Dict[str, Any]) -> str:
+    if str(block.get("type", "")).strip() != "embed":
+        return ""
+    return str((block.get("embed") or {}).get("url", "")).strip()
+
+
+def notion_sync_spotify_embed(page_id: str, embed_url: Optional[str], token: str) -> Tuple[bool, bool]:
+    desired_url = spotify_value_to_embed_url(embed_url or "") or ""
+    blocks = notion_list_block_children(page_id, token)
+
+    spotify_embed_ids: List[str] = []
+    first_block_url = ""
+    for idx, block in enumerate(blocks):
+        url = spotify_value_to_embed_url(block_embed_url(block) or "") or ""
+        if idx == 0:
+            first_block_url = url
+        if not url:
+            continue
+        block_id = str(block.get("id", "")).strip()
+        if block_id:
+            spotify_embed_ids.append(block_id)
+
+    if not desired_url:
+        removed = False
+        for block_id in spotify_embed_ids:
+            notion_archive_block(block_id, token)
+            removed = True
+        return False, removed
+
+    if len(spotify_embed_ids) == 1 and first_block_url == desired_url:
+        return False, False
+
+    for block_id in spotify_embed_ids:
+        notion_archive_block(block_id, token)
+    notion_append_children(
+        page_id,
+        [{"object": "block", "type": "embed", "embed": {"url": desired_url}}],
+        token,
+        position="start",
+    )
+    return True, False
 
 
 def notion_update_uri(page_id: str, page: Dict[str, Any], uri_property: str, uri: str, token: str) -> None:
@@ -970,6 +1067,77 @@ def sync_notion_uris_for_profile(
     sp: spotipy.Spotify, queue: List[str], profile_name: str
 ) -> Tuple[int, List[Tuple[str, str]], List[str], List[str]]:
     return sync_notion_uris_for_playlist(sp, queue, profile_name)
+
+
+def sync_notion_spotify_embeds(
+    sp: spotipy.Spotify,
+    weekday: str,
+    shows_cfg: Dict[str, Any],
+    fixed_cfg: Dict[str, Any],
+    tokens_cfg: Dict[str, Any],
+) -> Tuple[int, int, List[Tuple[str, str]], List[str]]:
+    if not bool_env(NOTION_SPOTIFY_EMBEDS_ENABLED, default=True):
+        return 0, 0, [], []
+
+    token = os.getenv(NOTION_TOKEN, "").strip()
+    if not token:
+        return 0, 0, [], []
+    database_id = os.getenv(NOTION_DATABASE_ID, "").strip()
+    if not database_id:
+        db_name = os.getenv(NOTION_DATABASE_NAME, "Opus Dei").strip() or "Opus Dei"
+        database_id = notion_find_database_id(token, db_name) or ""
+    if not database_id:
+        raise RuntimeError("Notion database not found. Set NOTION_DATABASE_ID or share database with integration.")
+
+    title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
+    platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
+    resolver_property = os.getenv(NOTION_QUEUE_RESOLVER_PROPERTY, "Spotify Resolver").strip() or "Spotify Resolver"
+    fallback_property = os.getenv(NOTION_QUEUE_FALLBACK_PROPERTY, "Spotify Fallback Resolver").strip() or "Spotify Fallback Resolver"
+    uri_property = os.getenv(NOTION_URI_PROPERTY, "URI").strip() or "URI"
+    platform_value = normalize_text(os.getenv(NOTION_PLATFORM_SPOTIFY_VALUE, "spotify").strip() or "spotify")
+    nosync_value = normalize_text(os.getenv(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync").strip() or "spotify-nosync")
+
+    updated = 0
+    removed = 0
+    updates: List[Tuple[str, str]] = []
+    unresolved: List[str] = []
+    pages = notion_get_all_pages(database_id, token)
+
+    for page in pages:
+        platform_text = normalize_text(page_property_text(page, platform_property))
+        if nosync_value and nosync_value in platform_text:
+            continue
+        if DEPRECATED_TIMESYNC_PLATFORM_VALUE in platform_text:
+            continue
+        if platform_value and platform_value not in platform_text:
+            continue
+        page_id = str(page.get("id", "")).strip()
+        if not page_id:
+            continue
+        title = page_title(page, title_property).strip() or "Untitled"
+        resolver = page_property_text(page, resolver_property).strip()
+        fallback = page_property_text(page, fallback_property).strip()
+        direct_uri = (page_uri_value(page, uri_property) or "").strip()
+
+        resolved_uri = ""
+        if resolver:
+            resolved_uri = resolve_spec_uri(sp, resolver, weekday, {}, shows_cfg, fixed_cfg, tokens_cfg) or ""
+        if not resolved_uri and fallback:
+            resolved_uri = resolve_spec_uri(sp, fallback, weekday, {}, shows_cfg, fixed_cfg, tokens_cfg) or ""
+        if not resolved_uri and spotify_value_to_embed_url(direct_uri):
+            resolved_uri = direct_uri
+
+        did_update, did_remove = notion_sync_spotify_embed(page_id, resolved_uri, token)
+        embed_url = spotify_value_to_embed_url(resolved_uri or "")
+        if did_update and embed_url:
+            updated += 1
+            updates.append((title, embed_url))
+        elif did_remove:
+            removed += 1
+        elif not embed_url:
+            unresolved.append(title)
+
+    return updated, removed, updates, unresolved
 
 
 def sp_client() -> Tuple[spotipy.Spotify, str]:
@@ -1720,7 +1888,12 @@ def main() -> int:
         sp, spotify_token = sp_client()
         weekday = local_now().strftime("%A")
         uri_autosync_enabled = bool_env(SPOTIFY_ENABLE_URI_AUTOSYNC, default=False)
+        notion_spotify_embeds_enabled = bool_env(NOTION_SPOTIFY_EMBEDS_ENABLED, default=True)
         runs: List[Dict[str, Any]] = []
+        embed_updates = 0
+        embed_removed = 0
+        embed_update_details: List[Tuple[str, str]] = []
+        embed_unresolved: List[str] = []
 
         if source == "file":
             profile = os.getenv(SPOTIFY_PLAYLIST_PROFILE, "morning").strip().lower() or "morning"
@@ -1778,6 +1951,10 @@ def main() -> int:
                 runs[0]["playlist_id"] = override_playlist_id
             if not runs:
                 raise RuntimeError("No enabled playlists found in the Notion playlists database.")
+            if notion_spotify_embeds_enabled:
+                embed_updates, embed_removed, embed_update_details, embed_unresolved = sync_notion_spotify_embeds(
+                    sp, weekday, shows_cfg, fixed_cfg, tokens_cfg
+                )
 
         for run in runs:
             playlist_name = str(run["name"])
@@ -1800,6 +1977,7 @@ def main() -> int:
             print(f"INFO playlist={playlist_name} weekday={weekday} playlist_recreated=true source={source}")
             print(f"INFO utc_offset={local_now().strftime('%z')}")
             print(f"INFO uri_autosync_enabled={str(uri_autosync_enabled).lower()}")
+            print(f"INFO notion_spotify_embeds_enabled={str(notion_spotify_embeds_enabled).lower()}")
             for name, ok in sorted(status.items()):
                 print(f"INFO resolver_status playlist={playlist_name} name={name} ok={str(ok).lower()}")
             if uri_autosync_enabled and os.getenv(NOTION_TOKEN, "").strip():
@@ -1830,6 +2008,25 @@ def main() -> int:
                 print(
                     "INFO notion_intentions_distributed "
                     f"playlist={playlist_name} targets={intention_targets} source_petitions={intention_source_count} assigned={intention_assigned}"
+                )
+
+        if source == "notion" and notion_spotify_embeds_enabled and os.getenv(NOTION_TOKEN, "").strip():
+            print(f"INFO notion_spotify_embed_rows_updated count={embed_updates}")
+            print(f"INFO notion_spotify_embed_rows_removed count={embed_removed}")
+            log_limit = int(os.getenv(NOTION_URI_LOG_LIMIT, "25").strip() or "25")
+            for title, embed_url in embed_update_details[: max(0, log_limit)]:
+                print(f"INFO notion_spotify_embed_synced title={title} url={embed_url}")
+            for title in embed_unresolved[: max(0, log_limit)]:
+                print(f"INFO notion_spotify_embed_unresolved title={title}")
+            if len(embed_update_details) > max(0, log_limit):
+                print(
+                    "INFO notion_spotify_embed_synced_truncated "
+                    f"shown={max(0, log_limit)} total={len(embed_update_details)}"
+                )
+            if len(embed_unresolved) > max(0, log_limit):
+                print(
+                    "INFO notion_spotify_embed_unresolved_truncated "
+                    f"shown={max(0, log_limit)} total={len(embed_unresolved)}"
                 )
 
         return 0
