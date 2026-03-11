@@ -293,6 +293,37 @@ class TestRefreshJob(unittest.TestCase):
         self.assertEqual(unresolved, [])
         self.assertEqual(synced, [("page_spotify", "spotify:episode:morning123", "notion_token")])
 
+    def test_sunday_homily_resolvers_use_latest_available_episode_on_weekdays(self):
+        status = {}
+
+        def fake_latest(sp, show_id):
+            return (f"spotify:episode:{show_id}", f"Latest {show_id}")
+
+        with patch.object(self.mod, "latest_by_release_date", side_effect=fake_latest):
+            fr_uri = self.mod.resolve_item_uri(
+                object(),
+                "SUNDAY_FRMIKE",
+                "Wednesday",
+                status,
+                {"FRMIKE_SUNDAY": "fr_show", "BARRON_SUNDAY": "barron_show"},
+                {},
+                {},
+            )
+            barron_uri = self.mod.resolve_item_uri(
+                object(),
+                "SUNDAY_BARRON",
+                "Wednesday",
+                status,
+                {"FRMIKE_SUNDAY": "fr_show", "BARRON_SUNDAY": "barron_show"},
+                {},
+                {},
+            )
+
+        self.assertEqual(fr_uri, "spotify:episode:fr_show")
+        self.assertEqual(barron_uri, "spotify:episode:barron_show")
+        self.assertTrue(status["Fr. Mike Sunday Homily"])
+        self.assertTrue(status["Bp. Barron Sunday Sermon"])
+
     def test_main_notion_refreshes_all_enabled_playlists(self):
         env = {
             "SPOTIFY_CLIENT_ID": "cid",

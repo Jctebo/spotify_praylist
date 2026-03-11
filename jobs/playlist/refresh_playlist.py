@@ -1642,18 +1642,12 @@ def resolve_item_uri(
         return uri
 
     if key == "SUNDAY_FRMIKE":
-        if weekday != "Sunday":
-            status["Fr. Mike Sunday Homily"] = False
-            return None
-        uri, _ = first_episode(sp, cfg_value(shows_cfg, "FRMIKE_SUNDAY", "shows"))
+        uri, _ = latest_by_release_date(sp, cfg_value(shows_cfg, "FRMIKE_SUNDAY", "shows"))
         status["Fr. Mike Sunday Homily"] = bool(uri)
         return uri
 
     if key == "SUNDAY_BARRON":
-        if weekday != "Sunday":
-            status["Bp. Barron Sunday Sermon"] = False
-            return None
-        uri, _ = first_episode(sp, cfg_value(shows_cfg, "BARRON_SUNDAY", "shows"))
+        uri, _ = latest_by_release_date(sp, cfg_value(shows_cfg, "BARRON_SUNDAY", "shows"))
         status["Bp. Barron Sunday Sermon"] = bool(uri)
         return uri
 
