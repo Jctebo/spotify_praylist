@@ -55,6 +55,48 @@ class TestDevotionalImageJob(unittest.TestCase):
         self.assertEqual(deduped[0].source, self.mod.SOURCE_CALENDAR)
         self.assertEqual(deduped[0].subject_slug, "saint-joseph-spouse-of-the-blessed-virgin-mary")
 
+    def test_select_title_placement_prefers_upper_side_box_on_uniform_portrait(self):
+        image = Image.new("RGBA", (1024, 1536), color=(64, 64, 64, 255))
+        draw = self.mod.ImageDraw.Draw(image)
+        min_font = max(24, int(image.size[1] * 0.026))
+        max_font = max(min_font, int(image.size[1] * 0.07))
+        line_spacing = max(8, int(image.size[1] * 0.012))
+
+        placement = self.mod._select_title_placement(image, draw, "Saint Joseph", min_font, max_font, line_spacing)
+
+        self.assertIsNotNone(placement)
+        candidate, _font, _lines, _bbox = placement
+        self.assertEqual(candidate.name, "top_left")
+
+    def test_select_title_placement_avoids_busy_side_and_chooses_clear_upper_box(self):
+        image = Image.new("RGBA", (1024, 1536), color=(72, 72, 72, 255))
+        candidates = {candidate.name: candidate for candidate in self.mod._title_box_candidates(*image.size)}
+        noisy_names = {"top_left", "bottom_left", "bottom_right", "bottom_center", "top_center"}
+        pixels = image.load()
+
+        for name in noisy_names:
+            candidate = candidates[name]
+            for y in range(candidate.top, min(image.size[1], candidate.top + candidate.height), 12):
+                for x in range(candidate.left, min(image.size[0], candidate.left + candidate.width), 12):
+                    color = (220, 180, 96, 255) if ((x + y) // 12) % 2 == 0 else (24, 24, 24, 255)
+                    for dy in range(12):
+                        for dx in range(12):
+                            px = x + dx
+                            py = y + dy
+                            if px < image.size[0] and py < image.size[1]:
+                                pixels[px, py] = color
+
+        draw = self.mod.ImageDraw.Draw(image)
+        min_font = max(24, int(image.size[1] * 0.026))
+        max_font = max(min_font, int(image.size[1] * 0.07))
+        line_spacing = max(8, int(image.size[1] * 0.012))
+
+        placement = self.mod._select_title_placement(image, draw, "Saint Joseph", min_font, max_font, line_spacing)
+
+        self.assertIsNotNone(placement)
+        candidate, _font, _lines, _bbox = placement
+        self.assertEqual(candidate.name, "top_right")
+
 
 if __name__ == "__main__":
     unittest.main()

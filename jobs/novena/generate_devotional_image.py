@@ -259,6 +259,16 @@ class PipelineConfig:
 
 
 @dataclass(frozen=True)
+class TitlePlacementCandidate:
+    name: str
+    left: int
+    top: int
+    width: int
+    height: int
+    preference_penalty: float = 0.0
+
+
+@dataclass(frozen=True)
 class RenderTarget:
     source: str
     subject: str
@@ -1297,41 +1307,122 @@ def _wrap_text(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont, 
     return lines
 
 
+def _region_activity(image: Image.Image, box: Tuple[int, int, int, int]) -> float:
+    crop = image.crop(box).convert("L").resize((64, 64))
+    width, height = crop.size
+    pixels = crop.tobytes()
+    if not pixels:
+        return 0.0
+    total = 0
+    for y in range(height):
+        row = y * width
+        for x in range(width):
+            idx = row + x
+            val = pixels[idx]
+            if x + 1 < width:
+                total += abs(val - pixels[idx + 1])
+            if y + 1 < height:
+                total += abs(val - pixels[idx + width])
+    return total / float(len(pixels))
+
+
+def _fit_title_to_box(
+    draw: ImageDraw.ImageDraw,
+    title: str,
+    box_width: int,
+    box_height: int,
+    min_font: int,
+    max_font: int,
+    line_spacing: int,
+) -> Optional[Tuple[ImageFont.ImageFont, List[str], Tuple[int, int, int, int]]]:
+    for size in range(max_font, min_font - 1, -2):
+        font = _load_title_font(size)
+        lines = _wrap_text(draw, title, font, box_width)
+        if not lines or len(lines) > 3:
+            continue
+        bbox = draw.multiline_textbbox((0, 0), "\n".join(lines), font=font, spacing=line_spacing, align="center")
+        if (bbox[2] - bbox[0]) <= box_width and (bbox[3] - bbox[1]) <= box_height:
+            return font, lines, bbox
+    return None
+
+
+def _title_box_candidates(width: int, height: int) -> List[TitlePlacementCandidate]:
+    return [
+        TitlePlacementCandidate("top_left", int(width * 0.05), int(height * 0.06), int(width * 0.38), int(height * 0.18), 0.0),
+        TitlePlacementCandidate("top_right", int(width * 0.57), int(height * 0.06), int(width * 0.38), int(height * 0.18), 0.0),
+        TitlePlacementCandidate(
+            "bottom_left", int(width * 0.05), int(height * 0.60), int(width * 0.38), int(height * 0.18), 4.0
+        ),
+        TitlePlacementCandidate(
+            "bottom_right", int(width * 0.57), int(height * 0.60), int(width * 0.38), int(height * 0.18), 4.0
+        ),
+        TitlePlacementCandidate(
+            "bottom_center", int(width * 0.18), int(height * 0.62), int(width * 0.64), int(height * 0.16), 8.0
+        ),
+        TitlePlacementCandidate("top_center", int(width * 0.18), int(height * 0.04), int(width * 0.64), int(height * 0.16), 22.0),
+    ]
+
+
+def _select_title_placement(
+    image: Image.Image,
+    draw: ImageDraw.ImageDraw,
+    title: str,
+    min_font: int,
+    max_font: int,
+    line_spacing: int,
+) -> Optional[Tuple[TitlePlacementCandidate, ImageFont.ImageFont, List[str], Tuple[int, int, int, int]]]:
+    width, height = image.size
+    scored: List[
+        Tuple[
+            float,
+            float,
+            float,
+            TitlePlacementCandidate,
+            ImageFont.ImageFont,
+            List[str],
+            Tuple[int, int, int, int],
+        ]
+    ] = []
+    for candidate in _title_box_candidates(width, height):
+        right = min(width, candidate.left + candidate.width)
+        bottom = min(height, candidate.top + candidate.height)
+        box_width = max(1, right - candidate.left)
+        box_height = max(1, bottom - candidate.top)
+        fit = _fit_title_to_box(draw, title, box_width, box_height, min_font, max_font, line_spacing)
+        if not fit:
+            continue
+        font, lines, bbox = fit
+        activity = _region_activity(image, (candidate.left, candidate.top, right, bottom))
+        score = activity + candidate.preference_penalty
+        scored.append((score, activity, candidate.preference_penalty, candidate, font, lines, bbox))
+    if not scored:
+        return None
+    scored.sort(key=lambda item: (item[0], item[1], item[2], item[3].top, item[3].left))
+    _score, _activity, _penalty, candidate, font, lines, bbox = scored[0]
+    return candidate, font, lines, bbox
+
+
 def apply_portrait_title_overlay(image_bytes: bytes, title: str, image_format: str) -> bytes:
     image = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
     width, height = image.size
     draw = ImageDraw.Draw(image)
 
-    safe_width = int(width * 0.62)
-    safe_height = int(height * 0.22)
-    safe_left = (width - safe_width) // 2
-    safe_top = int(height * 0.14)
     min_font = max(24, int(height * 0.026))
     max_font = max(min_font, int(height * 0.07))
     line_spacing = max(8, int(height * 0.012))
 
-    best_font = _load_title_font(min_font)
-    best_lines = [title.strip()] if str(title or "").strip() else []
-    for size in range(max_font, min_font - 1, -2):
-        font = _load_title_font(size)
-        lines = _wrap_text(draw, title, font, safe_width)
-        if not lines or len(lines) > 3:
-            continue
-        bbox = draw.multiline_textbbox((0, 0), "\n".join(lines), font=font, spacing=line_spacing, align="center")
-        if (bbox[2] - bbox[0]) <= safe_width and (bbox[3] - bbox[1]) <= safe_height:
-            best_font = font
-            best_lines = lines
-            break
-
-    if not best_lines:
+    placement = _select_title_placement(image, draw, title, min_font, max_font, line_spacing)
+    if not placement:
         return image_bytes
 
+    candidate, best_font, best_lines, bbox = placement
     text = "\n".join(best_lines)
-    bbox = draw.multiline_textbbox((0, 0), text, font=best_font, spacing=line_spacing, align="center")
     text_width = bbox[2] - bbox[0]
     text_height = bbox[3] - bbox[1]
-    x = (width - text_width) / 2
-    y = safe_top + (safe_height - text_height) / 2
+    box_width = min(width, candidate.left + candidate.width) - candidate.left
+    box_height = min(height, candidate.top + candidate.height) - candidate.top
+    x = candidate.left + (box_width - text_width) / 2
+    y = candidate.top + (box_height - text_height) / 2
     pad_x = int(width * 0.035)
     pad_y = int(height * 0.02)
 
