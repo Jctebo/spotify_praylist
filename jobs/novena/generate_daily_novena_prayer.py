@@ -1568,12 +1568,16 @@ def mirror_calendar_page_to_novena_page(
 
     children: List[Dict[str, Any]] = []
     for block in notion_list_block_children(source_page_id, token):
+        title = block_rich_text_plain(block)
+        caption = audio_block_caption(block)
+        if NOVENA_DAY_SECTION_MARKER not in title and NOVENA_DAY_SECTION_MARKER not in caption:
+            continue
         cloned = notion_clone_block_tree(block, token)
         if cloned:
             children.append(cloned)
 
     notion_replace_page_blocks(target_page_id, children, token)
-    return f"mirrored:{len(children)}"
+    return f"mirrored_novena:{len(children)}"
 
 
 def write_prayer_to_notion_page(
@@ -1714,8 +1718,14 @@ def append_usccb_readings_to_extra_pages(
         if not page_id or page_id in seen:
             continue
         seen.add(page_id)
-        notion_remove_old_autogen_sections_by_markers(page_id, token, [USCCB_SECTION_MARKER])
-        notion_append_children(page_id, readings_blocks, token)
+        preserved: List[Dict[str, Any]] = []
+        for block in notion_list_block_children(page_id, token):
+            if str(block.get("type", "")).strip() not in {"bookmark", "embed"}:
+                continue
+            cloned = notion_clone_block_tree(block, token)
+            if cloned:
+                preserved.append(cloned)
+        notion_replace_page_blocks(page_id, preserved + list(readings_blocks), token)
         wrote += 1
     return wrote
 

@@ -35,13 +35,25 @@ class TestNovenaJob(unittest.TestCase):
 
         self.assertEqual(page["id"], "page_1")
 
-    def test_mirror_calendar_page_to_novena_page_clones_toggle_and_audio(self):
+    def test_mirror_calendar_page_to_novena_page_clones_only_novena_toggle_and_audio(self):
         source_blocks = [
+            {
+                "id": "toggle_reading_1",
+                "type": "toggle",
+                "toggle": {
+                    "rich_text": [{"plain_text": "Reading 1", "type": "text", "text": {"content": "Reading 1"}}],
+                    "color": "default",
+                },
+            },
             {
                 "id": "toggle_1",
                 "type": "toggle",
                 "toggle": {
-                    "rich_text": [{"plain_text": "Novena - Saint Patrick", "type": "text", "text": {"content": "Novena - Saint Patrick"}}],
+                    "rich_text": [{
+                        "plain_text": "Novena - Saint Patrick [AUTOGEN_NOVENA_DAY:saint-patrick:2026-03-11]",
+                        "type": "text",
+                        "text": {"content": "Novena - Saint Patrick [AUTOGEN_NOVENA_DAY:saint-patrick:2026-03-11]"},
+                    }],
                     "color": "default",
                 },
             },
@@ -51,7 +63,11 @@ class TestNovenaJob(unittest.TestCase):
                 "audio": {
                     "type": "file",
                     "file": {"url": "https://example.com/novena.mp3"},
-                    "caption": [{"plain_text": "Novena Audio", "type": "text", "text": {"content": "Novena Audio"}}],
+                    "caption": [{
+                        "plain_text": "Novena Audio [AUTOGEN_NOVENA_DAY:saint-patrick:2026-03-11]",
+                        "type": "text",
+                        "text": {"content": "Novena Audio [AUTOGEN_NOVENA_DAY:saint-patrick:2026-03-11]"},
+                    }],
                 },
             },
         ]
@@ -88,7 +104,7 @@ class TestNovenaJob(unittest.TestCase):
                 "token",
             )
 
-        self.assertEqual(mode, "mirrored:2")
+        self.assertEqual(mode, "mirrored_novena:2")
         send_mock.assert_called_once()
         replace_mock.assert_called_once()
         target_page_id = replace_mock.call_args.args[0]
@@ -99,6 +115,46 @@ class TestNovenaJob(unittest.TestCase):
         self.assertEqual(children[1]["type"], "audio")
         self.assertEqual(children[1]["audio"]["type"], "file_upload")
         self.assertEqual(children[1]["audio"]["file_upload"]["id"], "upload_1")
+
+    def test_append_usccb_readings_to_extra_pages_replaces_content_preserving_bookmarks(self):
+        existing_blocks = [
+            {
+                "id": "bookmark_1",
+                "type": "bookmark",
+                "bookmark": {"url": "https://open.spotify.com/episode/abc123"},
+            },
+            {
+                "id": "old_toggle_1",
+                "type": "toggle",
+                "toggle": {
+                    "rich_text": [{"plain_text": "Reading 1", "type": "text", "text": {"content": "Reading 1"}}],
+                    "color": "default",
+                },
+            },
+        ]
+        readings_blocks = [
+            {
+                "object": "block",
+                "type": "toggle",
+                "toggle": {
+                    "rich_text": [{"plain_text": "USCCB Daily Mass Readings [AUTOGEN_USCCB_READINGS]", "type": "text", "text": {"content": "USCCB Daily Mass Readings [AUTOGEN_USCCB_READINGS]"}}],
+                    "color": "default",
+                },
+            }
+        ]
+
+        with patch.object(self.mod, "notion_list_block_children", return_value=existing_blocks), patch.object(
+            self.mod, "notion_replace_page_blocks"
+        ) as replace_mock:
+            wrote = self.mod.append_usccb_readings_to_extra_pages(["page_1"], readings_blocks, "token")
+
+        self.assertEqual(wrote, 1)
+        replace_mock.assert_called_once()
+        page_id = replace_mock.call_args.args[0]
+        children = replace_mock.call_args.args[1]
+        self.assertEqual(page_id, "page_1")
+        self.assertEqual(children[0]["type"], "bookmark")
+        self.assertEqual(children[1]["type"], "toggle")
 
     def test_collect_saints_window_prefers_marked_saints(self):
         start = datetime.date(2026, 3, 3)
