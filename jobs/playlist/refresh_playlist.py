@@ -2022,6 +2022,10 @@ def build_queue_for_playlist_from_notion(
 
     entries.sort(key=lambda x: (float(x.get("order", 9999.0)), str(x.get("title", "")).lower()))
 
+    if not entries:
+        status["__no_eligible_rows__"] = True
+        return []
+
     queue: List[str] = []
     for row in entries:
         title = str(row.get("title", "")).strip() or "Untitled"
@@ -2162,6 +2166,12 @@ def main() -> int:
                     sp, target["name"], weekday, status, shows_cfg, fixed_cfg, tokens_cfg
                 )
                 if not queue:
+                    if status.get("__no_eligible_rows__"):
+                        print(
+                            "INFO notion_playlist_skipped "
+                            f"playlist={target['name']} reason=no_enabled_source_rows weekday={weekday}"
+                        )
+                        continue
                     raise RuntimeError(f"No tracks/episodes resolved for playlist '{target['name']}'.")
                 runs.append({"name": target["name"], "playlist_id": target["playlist_id"], "queue": queue, "status": status})
             override_playlist_id = normalize_spotify_playlist_id(os.getenv(SPOTIFY_PLAYLIST_ID, "").strip())

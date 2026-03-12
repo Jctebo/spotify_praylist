@@ -589,6 +589,55 @@ class TestRefreshJob(unittest.TestCase):
         load_playlists_mock.assert_called_once_with("notion_token", "Commute")
         recreate_mock.assert_called_once_with("token_123", "override123", ["spotify:track:111"])
 
+    def test_main_notion_skips_playlist_with_no_enabled_source_rows(self):
+        env = {
+            "SPOTIFY_CLIENT_ID": "cid",
+            "SPOTIFY_CLIENT_SECRET": "secret",
+            "SPOTIFY_REFRESH_TOKEN": "refresh",
+            "SPOTIFY_REFRESH_CONFIG_SOURCE": "notion",
+            "NOTION_TOKEN": "notion_token",
+        }
+        recreate_calls = []
+
+        def fake_build(sp, playlist_name, weekday, status, shows_cfg, fixed_cfg, tokens_cfg):
+            if playlist_name == "Sunday":
+                status["__no_eligible_rows__"] = True
+                return []
+            return ["spotify:track:111"]
+
+        def fake_recreate(token, playlist_id, queue):
+            recreate_calls.append((token, playlist_id, list(queue)))
+            return len(queue)
+
+        with temp_env(env):
+            with patch.object(self.mod, "load_playlist_config_optional", return_value=self.cfg), patch.object(
+                self.mod, "set_runtime_timezone"
+            ), patch.object(self.mod, "sp_client", return_value=(object(), "token_123")), patch.object(
+                self.mod, "sync_notion_sunday_item_enablement", return_value=(2, [], ["Fr. Mike Sunday Homily"])
+            ), patch.object(
+                self.mod, "load_notion_playlists",
+                return_value=[
+                    {"name": "Morning", "playlist_id": "playlist_morning"},
+                    {"name": "Sunday", "playlist_id": "playlist_sunday"},
+                ],
+            ), patch.object(
+                self.mod, "build_queue_for_playlist_from_notion", side_effect=fake_build
+            ), patch.object(
+                self.mod, "recreate_playlist_items", side_effect=fake_recreate
+            ), patch.object(
+                self.mod, "sync_notion_playlist_novena_links", return_value=(0, [])
+            ), patch.object(
+                self.mod, "sync_notion_uris_for_playlist", return_value=(0, [], [], [])
+            ), patch.object(
+                self.mod, "sync_notion_spotify_bookmarks", return_value=(0, 0, [], [])
+            ), patch.object(
+                self.mod, "distribute_prayer_intentions", return_value=(0, 0, 0)
+            ):
+                rc = self.mod.main()
+
+        self.assertEqual(rc, 0)
+        self.assertEqual(recreate_calls, [("token_123", "playlist_morning", ["spotify:track:111"])])
+
 
 if __name__ == "__main__":
     unittest.main()
