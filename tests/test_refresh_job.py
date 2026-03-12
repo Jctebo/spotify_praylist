@@ -358,12 +358,77 @@ class TestRefreshJob(unittest.TestCase):
 
         self.assertEqual(updated, 1)
         self.assertEqual(names, ["Morning"])
-        sync_mock.assert_called_once_with(
-            "playlist_page_1",
-            "novena_page_1",
-            "https://www.notion.so/novena_page_1",
-            "notion_token",
-        )
+
+    def test_sync_notion_sunday_playlist_enablement_disables_sunday_row_on_weekday(self):
+        env = {
+            "NOTION_PLAYLISTS_DATABASE_ID": "playlists_db_1",
+        }
+        playlist_pages = [
+            {
+                "id": "page_sunday",
+                "properties": {
+                    "Name": _title_prop("Sunday"),
+                    "Enabled": _checkbox_prop(True),
+                },
+            },
+            {
+                "id": "page_morning",
+                "properties": {
+                    "Name": _title_prop("Morning"),
+                    "Enabled": _checkbox_prop(True),
+                },
+            },
+        ]
+        updates = []
+
+        with temp_env(env):
+            with patch.object(self.mod, "notion_get_all_pages", return_value=playlist_pages), patch.object(
+                self.mod,
+                "notion_update_checkbox_property",
+                side_effect=lambda page_id, property_name, value, token: updates.append(
+                    (page_id, property_name, value, token)
+                ),
+            ):
+                updated, enabled_names, disabled_names = self.mod.sync_notion_sunday_playlist_enablement(
+                    "notion_token", "Wednesday"
+                )
+
+        self.assertEqual(updated, 1)
+        self.assertEqual(enabled_names, [])
+        self.assertEqual(disabled_names, ["Sunday"])
+        self.assertEqual(updates, [("page_sunday", "Enabled", False, "notion_token")])
+
+    def test_sync_notion_sunday_playlist_enablement_enables_sunday_row_on_sunday(self):
+        env = {
+            "NOTION_PLAYLISTS_DATABASE_ID": "playlists_db_1",
+        }
+        playlist_pages = [
+            {
+                "id": "page_sunday",
+                "properties": {
+                    "Name": _title_prop("Sunday"),
+                    "Enabled": _checkbox_prop(False),
+                },
+            }
+        ]
+        updates = []
+
+        with temp_env(env):
+            with patch.object(self.mod, "notion_get_all_pages", return_value=playlist_pages), patch.object(
+                self.mod,
+                "notion_update_checkbox_property",
+                side_effect=lambda page_id, property_name, value, token: updates.append(
+                    (page_id, property_name, value, token)
+                ),
+            ):
+                updated, enabled_names, disabled_names = self.mod.sync_notion_sunday_playlist_enablement(
+                    "notion_token", "Sunday"
+                )
+
+        self.assertEqual(updated, 1)
+        self.assertEqual(enabled_names, ["Sunday"])
+        self.assertEqual(disabled_names, [])
+        self.assertEqual(updates, [("page_sunday", "Enabled", True, "notion_token")])
 
     def test_sync_notion_spotify_bookmarks_updates_only_spotify_rows(self):
         env = {
@@ -471,6 +536,8 @@ class TestRefreshJob(unittest.TestCase):
             with patch.object(self.mod, "load_playlist_config_optional", return_value=self.cfg), patch.object(
                 self.mod, "set_runtime_timezone"
             ), patch.object(self.mod, "sp_client", return_value=(object(), "token_123")), patch.object(
+                self.mod, "sync_notion_sunday_playlist_enablement", return_value=(0, [], [])
+            ) as sunday_toggle_mock, patch.object(
                 self.mod, "load_notion_playlists",
                 return_value=[
                     {"name": "Morning", "playlist_id": "playlist_morning"},
@@ -499,6 +566,7 @@ class TestRefreshJob(unittest.TestCase):
                 ("token_123", "playlist_commute", ["spotify:episode:222", "spotify:episode:333"]),
             ],
         )
+        sunday_toggle_mock.assert_called_once_with("notion_token", "Wednesday")
 
     def test_main_notion_single_playlist_filter_uses_override_id(self):
         env = {
@@ -515,6 +583,8 @@ class TestRefreshJob(unittest.TestCase):
             with patch.object(self.mod, "load_playlist_config_optional", return_value=self.cfg), patch.object(
                 self.mod, "set_runtime_timezone"
             ), patch.object(self.mod, "sp_client", return_value=(object(), "token_123")), patch.object(
+                self.mod, "sync_notion_sunday_playlist_enablement", return_value=(0, [], [])
+            ), patch.object(
                 self.mod, "load_notion_playlists", return_value=[{"name": "Commute", "playlist_id": "playlist_commute"}]
             ) as load_playlists_mock, patch.object(
                 self.mod, "build_queue_for_playlist_from_notion", return_value=["spotify:track:111"]

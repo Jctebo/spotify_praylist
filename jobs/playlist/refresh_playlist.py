@@ -53,6 +53,8 @@ NOTION_PLAYLIST_NOVENA_ROW_TITLE = "NOTION_PLAYLIST_NOVENA_ROW_TITLE"  # optiona
 NOTION_PLAYLISTS_TITLE_PROPERTY = "NOTION_PLAYLISTS_TITLE_PROPERTY"  # defaults to Name
 NOTION_PLAYLISTS_ID_PROPERTY = "NOTION_PLAYLISTS_ID_PROPERTY"  # defaults to Spotify Playlist ID
 NOTION_PLAYLISTS_ENABLED_PROPERTY = "NOTION_PLAYLISTS_ENABLED_PROPERTY"  # defaults to Enabled
+NOTION_PLAYLISTS_SUNDAY_AUTOTOGGLE_ENABLED = "NOTION_PLAYLISTS_SUNDAY_AUTOTOGGLE_ENABLED"  # default true
+NOTION_PLAYLISTS_SUNDAY_MATCH = "NOTION_PLAYLISTS_SUNDAY_MATCH"  # default sunday
 NOTION_QUEUE_PLAYLIST_PROPERTY = "NOTION_QUEUE_PLAYLIST_PROPERTY"  # defaults to Playlist
 NOTION_QUEUE_PROFILE_PROPERTY = "NOTION_QUEUE_PROFILE_PROPERTY"  # legacy alias for Playlist field
 NOTION_QUEUE_ORDER_PROPERTY = "NOTION_QUEUE_ORDER_PROPERTY"  # defaults to Playlist Order
@@ -654,6 +656,11 @@ def notion_update_text_property(page_id: str, page: Dict[str, Any], property_nam
     return True
 
 
+def notion_update_checkbox_property(page_id: str, property_name: str, value: bool, token: str) -> None:
+    body = {"properties": {property_name: {"checkbox": bool(value)}}}
+    notion_call("PATCH", f"https://api.notion.com/v1/pages/{page_id}", token, body)
+
+
 def parse_csv_values(text: str) -> List[str]:
     raw = str(text or "").strip()
     if not raw:
@@ -683,6 +690,48 @@ def resolve_notion_playlist_property_name() -> str:
     if legacy:
         return legacy
     return "Playlist"
+
+
+def sync_notion_sunday_playlist_enablement(token: str, weekday: str) -> Tuple[int, List[str], List[str]]:
+    if not bool_env(NOTION_PLAYLISTS_SUNDAY_AUTOTOGGLE_ENABLED, default=True):
+        return 0, [], []
+
+    database_id = os.getenv(NOTION_PLAYLISTS_DATABASE_ID, "").strip()
+    if not database_id:
+        db_name = os.getenv(NOTION_PLAYLISTS_DATABASE_NAME, "Spotify Playlists").strip() or "Spotify Playlists"
+        database_id = notion_find_database_id(token, db_name) or ""
+    if not database_id:
+        return 0, [], []
+
+    title_property = os.getenv(NOTION_PLAYLISTS_TITLE_PROPERTY, "Name").strip() or "Name"
+    enabled_property = os.getenv(NOTION_PLAYLISTS_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
+    sunday_match = normalize_text(os.getenv(NOTION_PLAYLISTS_SUNDAY_MATCH, "sunday").strip() or "sunday")
+    sunday_tokens = {token for token in sunday_match.split(" ") if token} or {"sunday"}
+    enable_sunday = normalize_text(weekday) == "sunday"
+
+    updated = 0
+    enabled_names: List[str] = []
+    disabled_names: List[str] = []
+    for row in notion_get_all_pages(database_id, token):
+        page_id = str(row.get("id", "")).strip()
+        if not page_id:
+            continue
+        playlist_name = page_title(row, title_property).strip() or page_property_text(row, title_property).strip()
+        if not playlist_name:
+            continue
+        playlist_tokens = {token for token in normalize_text(playlist_name).split(" ") if token}
+        if not (playlist_tokens & sunday_tokens):
+            continue
+        current_enabled = page_property_checkbox(row, enabled_property)
+        if current_enabled is not None and current_enabled == enable_sunday:
+            continue
+        notion_update_checkbox_property(page_id, enabled_property, enable_sunday, token)
+        updated += 1
+        if enable_sunday:
+            enabled_names.append(playlist_name)
+        else:
+            disabled_names.append(playlist_name)
+    return updated, enabled_names, disabled_names
 
 
 def notion_playlist_novena_titles() -> List[str]:
@@ -2058,6 +2107,9 @@ def main() -> int:
         bookmark_unresolved: List[str] = []
         novena_link_updates = 0
         novena_link_update_names: List[str] = []
+        sunday_playlist_updates = 0
+        sunday_playlists_enabled: List[str] = []
+        sunday_playlists_disabled: List[str] = []
 
         if source == "file":
             profile = os.getenv(SPOTIFY_PLAYLIST_PROFILE, "morning").strip().lower() or "morning"
@@ -2095,6 +2147,11 @@ def main() -> int:
             )
         else:
             notion_token = require_env(NOTION_TOKEN)
+            (
+                sunday_playlist_updates,
+                sunday_playlists_enabled,
+                sunday_playlists_disabled,
+            ) = sync_notion_sunday_playlist_enablement(notion_token, weekday)
             if notion_playlist_novena_links_enabled_flag:
                 novena_link_updates, novena_link_update_names = sync_notion_playlist_novena_links(notion_token)
             playlist_filter = os.getenv(SPOTIFY_PLAYLIST_NAME, "").strip()
@@ -2123,6 +2180,11 @@ def main() -> int:
                         sp, weekday, shows_cfg, fixed_cfg, tokens_cfg
                     )
                 )
+            print(f"INFO notion_sunday_playlists_updated count={sunday_playlist_updates} weekday={weekday}")
+            for name in sunday_playlists_enabled:
+                print(f"INFO notion_sunday_playlist_enabled name={name}")
+            for name in sunday_playlists_disabled:
+                print(f"INFO notion_sunday_playlist_disabled name={name}")
 
         for run in runs:
             playlist_name = str(run["name"])
