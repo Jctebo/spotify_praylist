@@ -5,6 +5,7 @@ import mimetypes
 import os
 import re
 import sys
+import time
 from copy import deepcopy
 from functools import lru_cache
 from typing import Any, Dict, List, Optional, Sequence
@@ -16,6 +17,9 @@ from romcal import Romcal, get_bundled_calendar_definitions, get_bundled_resourc
 
 NOTION_VERSION = "2022-06-28"
 NOTION_FILE_UPLOAD_VERSION = "2025-09-03"
+NOTION_REQUEST_TIMEOUT_SECONDS = 30
+NOTION_MAX_ATTEMPTS = 5
+NOTION_RETRYABLE_STATUSES = {408, 409, 429, 500, 502, 503, 504}
 DEFAULT_UTC_OFFSET = "-06:00"
 DEFAULT_NOVENA_ROW_TITLES = (
     "Daily Novenas from Liturgical Calendar",
@@ -155,13 +159,51 @@ def notion_file_upload_headers(token: str) -> Dict[str, str]:
     }
 
 
+def notion_should_retry(exc: requests.exceptions.RequestException) -> bool:
+    if isinstance(exc, (requests.exceptions.Timeout, requests.exceptions.ConnectionError)):
+        return True
+    if isinstance(exc, requests.exceptions.HTTPError):
+        response = exc.response
+        return bool(response is not None and response.status_code in NOTION_RETRYABLE_STATUSES)
+    return False
+
+
+def notion_retry_delay_seconds(exc: requests.exceptions.RequestException, attempt: int) -> float:
+    if isinstance(exc, requests.exceptions.HTTPError) and exc.response is not None:
+        retry_after = str(exc.response.headers.get("Retry-After", "")).strip()
+        if retry_after:
+            try:
+                return max(0.0, float(retry_after))
+            except ValueError:
+                pass
+    return min(30.0, float(2 ** max(attempt - 1, 0)))
+
+
 def notion_call(method: str, url: str, token: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    response = requests.request(method, url, headers=notion_headers(token), json=payload, timeout=30)
-    response.raise_for_status()
-    data = response.json()
-    if not isinstance(data, dict):
-        raise RuntimeError("Unexpected Notion API response format.")
-    return data
+    for attempt in range(1, NOTION_MAX_ATTEMPTS + 1):
+        try:
+            response = requests.request(
+                method,
+                url,
+                headers=notion_headers(token),
+                json=payload,
+                timeout=NOTION_REQUEST_TIMEOUT_SECONDS,
+            )
+            response.raise_for_status()
+            data = response.json()
+            if not isinstance(data, dict):
+                raise RuntimeError("Unexpected Notion API response format.")
+            return data
+        except requests.exceptions.RequestException as exc:
+            if attempt >= NOTION_MAX_ATTEMPTS or not notion_should_retry(exc):
+                raise
+            delay = notion_retry_delay_seconds(exc, attempt)
+            print(
+                f"WARN notion_retry attempt={attempt} delay={delay:.1f}s method={method} url={url}",
+                file=sys.stderr,
+            )
+            time.sleep(delay)
+    raise RuntimeError("Notion request retry loop exited unexpectedly.")
 
 
 def notion_find_database_id(token: str) -> str:

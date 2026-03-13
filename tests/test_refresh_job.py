@@ -1,5 +1,7 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
+import requests
 
 from tests.test_helpers import load_module, temp_env
 
@@ -254,6 +256,22 @@ class TestRefreshJob(unittest.TestCase):
         )
         self.assertEqual(archived, [])
         self.assertEqual(appended, [])
+
+    def test_notion_call_retries_timeout(self):
+        success_response = Mock()
+        success_response.raise_for_status.return_value = None
+        success_response.json.return_value = {"results": []}
+
+        with patch.object(
+            self.mod.requests,
+            "request",
+            side_effect=[requests.exceptions.Timeout("timed out"), success_response],
+        ) as request_mock, patch.object(self.mod.time, "sleep") as sleep_mock:
+            data = self.mod.notion_call("GET", "https://api.notion.com/v1/pages/page_1", "token")
+
+        self.assertEqual(data, {"results": []})
+        self.assertEqual(request_mock.call_count, 2)
+        sleep_mock.assert_called_once_with(1.0)
 
     def test_notion_sync_spotify_bookmark_replaces_legacy_embed_even_when_url_matches(self):
         blocks = [
