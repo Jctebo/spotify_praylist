@@ -114,7 +114,7 @@ class TestRefreshJob(unittest.TestCase):
                     "Name": _title_prop("Spotify Morning Prayer"),
                     "Platform": _select_prop("spotify"),
                     "Playlist": _rich_text_prop("Morning"),
-                    "Playlist Order": _number_prop(2),
+                    "Order": _number_prop(2),
                     "Spotify Resolver": _rich_text_prop("MORNING"),
                     "Enabled": _checkbox_prop(True),
                     "URI": _rich_text_prop(""),
@@ -125,7 +125,7 @@ class TestRefreshJob(unittest.TestCase):
                     "Name": _title_prop("Hallow Rosary"),
                     "Platform": _select_prop("hallow"),
                     "Playlist": _rich_text_prop("Morning"),
-                    "Playlist Order": _number_prop(1),
+                    "Order": _number_prop(1),
                     "Spotify Resolver": _rich_text_prop("HALLOW"),
                     "Enabled": _checkbox_prop(True),
                     "URI": _rich_text_prop(""),
@@ -136,7 +136,7 @@ class TestRefreshJob(unittest.TestCase):
                     "Name": _title_prop("Commute Prayer"),
                     "Platform": _select_prop("spotify"),
                     "Playlist": _rich_text_prop("Commute"),
-                    "Playlist Order": _number_prop(1),
+                    "Order": _number_prop(1),
                     "Spotify Resolver": _rich_text_prop("COMMUTE"),
                     "Enabled": _checkbox_prop(True),
                     "URI": _rich_text_prop(""),
@@ -157,6 +157,49 @@ class TestRefreshJob(unittest.TestCase):
 
         self.assertEqual(queue, ["spotify:episode:morning"])
 
+    def test_build_queue_for_playlist_from_notion_uses_order_field_only(self):
+        env = {
+            "NOTION_TOKEN": "notion_token",
+            "NOTION_DATABASE_ID": "db_1",
+        }
+        pages = [
+            {
+                "properties": {
+                    "Name": _title_prop("Legacy First"),
+                    "Platform": _select_prop("spotify"),
+                    "Playlist": _rich_text_prop("Morning"),
+                    "Order": _number_prop(1.01),
+                    "Spotify Resolver": _rich_text_prop("LEGACY_FIRST"),
+                    "Enabled": _checkbox_prop(True),
+                    "URI": _rich_text_prop(""),
+                }
+            },
+            {
+                "properties": {
+                    "Name": _title_prop("Explicit Second"),
+                    "Platform": _select_prop("spotify"),
+                    "Playlist": _rich_text_prop("Morning"),
+                    "Order": _number_prop(2.0),
+                    "Spotify Resolver": _rich_text_prop("EXPLICIT_SECOND"),
+                    "Enabled": _checkbox_prop(True),
+                    "URI": _rich_text_prop(""),
+                }
+            },
+        ]
+
+        def fake_resolve(sp, resolver, weekday, status, shows_cfg, fixed_cfg, tokens_cfg):
+            return f"spotify:episode:{resolver.lower()}"
+
+        with temp_env(env):
+            with patch.object(self.mod, "notion_get_all_pages", return_value=pages), patch.object(
+                self.mod, "resolve_spec_uri", side_effect=fake_resolve
+            ):
+                queue = self.mod.build_queue_for_playlist_from_notion(
+                    object(), "Morning", "Wednesday", {}, {}, {}, {}
+                )
+
+        self.assertEqual(queue, ["spotify:episode:legacy_first", "spotify:episode:explicit_second"])
+
     def test_spotify_value_to_bookmark_url_normalizes_supported_inputs(self):
         self.assertEqual(
             self.mod.spotify_value_to_bookmark_url("spotify:episode:abc123"),
@@ -164,27 +207,40 @@ class TestRefreshJob(unittest.TestCase):
         )
         self.assertEqual(
             self.mod.spotify_value_to_bookmark_url("https://open.spotify.com/track/xyz789?si=test"),
-            "https://open.spotify.com/track/xyz789",
+            "https://open.spotify.com/track/xyz789?si=test",
         )
         self.assertEqual(
-            self.mod.spotify_value_to_bookmark_url("https://open.spotify.com/embed/episode/def456"),
-            "https://open.spotify.com/episode/def456",
+            self.mod.spotify_value_to_bookmark_url("https://open.spotify.com/embed/episode/def456?si=share1"),
+            "https://open.spotify.com/episode/def456?si=share1",
         )
         self.assertIsNone(self.mod.spotify_value_to_bookmark_url("not spotify"))
 
+    def test_spotify_value_to_bookmark_compare_url_strips_share_query(self):
+        self.assertEqual(
+            self.mod.spotify_value_to_bookmark_compare_url("https://open.spotify.com/track/xyz789?si=test"),
+            "https://open.spotify.com/track/xyz789",
+        )
+        self.assertEqual(
+            self.mod.spotify_value_to_bookmark_compare_url("https://open.spotify.com/embed/episode/def456?si=share1"),
+            "https://open.spotify.com/episode/def456",
+        )
+
     def test_notion_sync_spotify_bookmark_replaces_existing_spotify_link_block(self):
         blocks = [
-            {"id": "block_existing", "type": "embed", "embed": {"url": "https://open.spotify.com/embed/episode/old1"}},
+            {"id": "block_existing", "type": "bookmark", "bookmark": {"url": "https://open.spotify.com/episode/old1"}},
             {"id": "block_para", "type": "paragraph", "paragraph": {"rich_text": []}},
         ]
         archived = []
         appended = []
+        patched = []
 
-        def fake_append(parent_id, children, token, position="end"):
-            appended.append((parent_id, children, token, position))
+        def fake_append(parent_id, children, token, position="end", after=""):
+            appended.append((parent_id, children, token, position, after))
 
         with patch.object(self.mod, "notion_list_block_children", return_value=blocks), patch.object(
             self.mod, "notion_archive_block", side_effect=lambda block_id, token: archived.append((block_id, token))
+        ), patch.object(
+            self.mod, "notion_update_bookmark_block", side_effect=lambda block_id, url, token, caption="": patched.append((block_id, url, token, caption))
         ), patch.object(self.mod, "notion_append_children", side_effect=fake_append):
             updated, removed = self.mod.notion_sync_spotify_bookmark(
                 "page_1", "spotify:episode:new2", "notion_token"
@@ -192,21 +248,12 @@ class TestRefreshJob(unittest.TestCase):
 
         self.assertTrue(updated)
         self.assertFalse(removed)
-        self.assertEqual(archived, [("block_existing", "notion_token")])
-        self.assertEqual(len(appended), 1)
-        self.assertEqual(appended[0][0], "page_1")
-        self.assertEqual(appended[0][2], "notion_token")
-        self.assertEqual(appended[0][3], "start")
         self.assertEqual(
-            appended[0][1],
-            [
-                {
-                    "object": "block",
-                    "type": "bookmark",
-                    "bookmark": {"url": "https://open.spotify.com/episode/new2"},
-                }
-            ],
+            patched,
+            [("block_existing", "https://open.spotify.com/episode/new2", "notion_token", "")],
         )
+        self.assertEqual(archived, [])
+        self.assertEqual(appended, [])
 
     def test_notion_sync_spotify_bookmark_replaces_legacy_embed_even_when_url_matches(self):
         blocks = [
@@ -218,12 +265,15 @@ class TestRefreshJob(unittest.TestCase):
         ]
         archived = []
         appended = []
+        patched = []
 
-        def fake_append(parent_id, children, token, position="end"):
-            appended.append((parent_id, children, token, position))
+        def fake_append(parent_id, children, token, position="end", after=""):
+            appended.append((parent_id, children, token, position, after))
 
         with patch.object(self.mod, "notion_list_block_children", return_value=blocks), patch.object(
             self.mod, "notion_archive_block", side_effect=lambda block_id, token: archived.append((block_id, token))
+        ), patch.object(
+            self.mod, "notion_update_bookmark_block", side_effect=lambda block_id, url, token, caption="": patched.append((block_id, url, token, caption))
         ), patch.object(self.mod, "notion_append_children", side_effect=fake_append):
             updated, removed = self.mod.notion_sync_spotify_bookmark(
                 "page_1", "spotify:episode:same1", "notion_token"
@@ -242,12 +292,143 @@ class TestRefreshJob(unittest.TestCase):
                 }
             ],
         )
+        self.assertEqual(patched, [])
+
+    def test_notion_sync_spotify_bookmark_preserves_existing_share_url_and_caption(self):
+        blocks = [
+            {
+                "id": "block_existing",
+                "type": "bookmark",
+                "bookmark": {"url": "https://open.spotify.com/episode/same1?si=share123", "caption": []},
+            }
+        ]
+        archived = []
+        appended = []
+        patched = []
+
+        def fake_append(parent_id, children, token, position="end", after=""):
+            appended.append((parent_id, children, token, position, after))
+
+        with patch.object(self.mod, "notion_list_block_children", return_value=blocks), patch.object(
+            self.mod, "notion_archive_block", side_effect=lambda block_id, token: archived.append((block_id, token))
+        ), patch.object(
+            self.mod, "notion_update_bookmark_block", side_effect=lambda block_id, url, token, caption="": patched.append((block_id, url, token, caption))
+        ), patch.object(self.mod, "notion_append_children", side_effect=fake_append):
+            updated, removed = self.mod.notion_sync_spotify_bookmark(
+                "page_1", "spotify:episode:same1", "notion_token", "Resolved Episode Title"
+            )
+
+        self.assertTrue(updated)
+        self.assertFalse(removed)
+        self.assertEqual(archived, [])
+        self.assertEqual(appended, [])
+        self.assertEqual(
+            patched,
+            [
+                (
+                    "block_existing",
+                    "https://open.spotify.com/episode/same1?si=share123",
+                    "notion_token",
+                    "Resolved Episode Title",
+                )
+            ],
+        )
+
+    def test_notion_sync_spotify_bookmark_updates_non_top_bookmark_in_place(self):
+        blocks = [
+            {"id": "intro_block", "type": "paragraph", "paragraph": {"rich_text": []}},
+            {
+                "id": "block_existing",
+                "type": "bookmark",
+                "bookmark": {"url": "https://open.spotify.com/episode/old1", "caption": []},
+            },
+        ]
+        archived = []
+        appended = []
+        patched = []
+
+        with patch.object(self.mod, "notion_list_block_children", return_value=blocks), patch.object(
+            self.mod, "notion_archive_block", side_effect=lambda block_id, token: archived.append((block_id, token))
+        ), patch.object(
+            self.mod, "notion_update_bookmark_block", side_effect=lambda block_id, url, token, caption="": patched.append((block_id, url, token, caption))
+        ), patch.object(self.mod, "notion_append_children", side_effect=lambda *args, **kwargs: appended.append((args, kwargs))):
+            updated, removed = self.mod.notion_sync_spotify_bookmark(
+                "page_1", "spotify:episode:new2", "notion_token", "New Title"
+            )
+
+        self.assertTrue(updated)
+        self.assertFalse(removed)
+        self.assertEqual(
+            patched,
+            [("block_existing", "https://open.spotify.com/episode/new2", "notion_token", "New Title")],
+        )
+        self.assertEqual(archived, [])
+        self.assertEqual(appended, [])
+
+    def test_notion_sync_spotify_bookmark_adds_playlist_block_under_primary(self):
+        blocks = [
+            {
+                "id": "block_existing",
+                "type": "bookmark",
+                "bookmark": {"url": "https://open.spotify.com/episode/old1", "caption": []},
+            }
+        ]
+        archived = []
+        patched = []
+        appended = []
+
+        def fake_append(parent_id, children, token, position="end", after=""):
+            appended.append((parent_id, children, token, position, after))
+            return {"results": [{"id": "playlist_block_new"}]}
+
+        with patch.object(self.mod, "notion_list_block_children", return_value=blocks), patch.object(
+            self.mod, "notion_archive_block", side_effect=lambda block_id, token: archived.append((block_id, token))
+        ), patch.object(
+            self.mod, "notion_update_bookmark_block", side_effect=lambda block_id, url, token, caption="": patched.append((block_id, url, token, caption))
+        ), patch.object(self.mod, "notion_append_children", side_effect=fake_append):
+            updated, removed = self.mod.notion_sync_spotify_bookmark(
+                "page_1",
+                "spotify:episode:new2",
+                "notion_token",
+                "Track Title",
+                playlist_url="https://open.spotify.com/playlist/playlist123",
+                playlist_caption="Morning",
+            )
+
+        self.assertTrue(updated)
+        self.assertFalse(removed)
+        self.assertEqual(
+            patched,
+            [("block_existing", "https://open.spotify.com/episode/new2", "notion_token", "Track Title")],
+        )
+        self.assertEqual(archived, [])
+        self.assertEqual(
+            appended,
+            [
+                (
+                    "page_1",
+                    [
+                        {
+                            "object": "block",
+                            "type": "bookmark",
+                            "bookmark": {
+                                "url": "https://open.spotify.com/playlist/playlist123",
+                                "caption": [{"type": "text", "text": {"content": "Morning"}}],
+                            },
+                        }
+                    ],
+                    "notion_token",
+                    "end",
+                    "block_existing",
+                )
+            ],
+        )
 
     def test_notion_sync_playlist_novena_link_adds_bookmark_block(self):
         appended = []
 
-        def fake_append(parent_id, children, token, position="end"):
-            appended.append((parent_id, children, token, position))
+        def fake_append(parent_id, children, token, position="end", after=""):
+            appended.append((parent_id, children, token, position, after))
 
         with patch.object(self.mod, "notion_list_block_children", return_value=[]), patch.object(
             self.mod, "notion_append_children", side_effect=fake_append
@@ -274,6 +455,7 @@ class TestRefreshJob(unittest.TestCase):
                     ],
                     "notion_token",
                     "start",
+                    "",
                 )
             ],
         )
@@ -281,8 +463,8 @@ class TestRefreshJob(unittest.TestCase):
     def test_notion_sync_playlist_novena_link_replaces_legacy_link_to_page(self):
         appended = []
 
-        def fake_append(parent_id, children, token, position="end"):
-            appended.append((parent_id, children, token, position))
+        def fake_append(parent_id, children, token, position="end", after=""):
+            appended.append((parent_id, children, token, position, after))
 
         existing_blocks = [
             {
@@ -318,6 +500,7 @@ class TestRefreshJob(unittest.TestCase):
                     ],
                     "notion_token",
                     "start",
+                    "",
                 )
             ],
         )
@@ -425,6 +608,7 @@ class TestRefreshJob(unittest.TestCase):
                 "properties": {
                     "Name": _title_prop("Spotify Morning Prayer"),
                     "Platform": _select_prop("spotify"),
+                    "Playlist": _rich_text_prop("Morning"),
                     "Spotify Resolver": _rich_text_prop("MORNING"),
                     "Spotify Fallback Resolver": _rich_text_prop(""),
                     "URI": _rich_text_prop(""),
@@ -435,6 +619,7 @@ class TestRefreshJob(unittest.TestCase):
                 "properties": {
                     "Name": _title_prop("Hallow Rosary"),
                     "Platform": _select_prop("hallow"),
+                    "Playlist": _rich_text_prop("Morning"),
                     "Spotify Resolver": _rich_text_prop("HALLOW"),
                     "Spotify Fallback Resolver": _rich_text_prop(""),
                     "URI": _rich_text_prop(""),
@@ -443,13 +628,17 @@ class TestRefreshJob(unittest.TestCase):
         ]
         synced = []
 
-        def fake_sync(page_id, embed_url, token):
-            synced.append((page_id, embed_url, token))
+        def fake_sync(page_id, embed_url, token, caption="", playlist_url="", playlist_caption=""):
+            synced.append((page_id, embed_url, token, caption, playlist_url, playlist_caption))
             return True, False
 
         with temp_env(env):
             with patch.object(self.mod, "notion_get_all_pages", return_value=pages), patch.object(
+                self.mod, "load_notion_playlists", return_value=[{"name": "Morning", "playlist_id": "playlist_morning"}]
+            ), patch.object(
                 self.mod, "resolve_spec_uri", return_value="spotify:episode:morning123"
+            ), patch.object(
+                self.mod, "spotify_bookmark_caption", return_value="Resolved Morning Episode"
             ), patch.object(self.mod, "notion_sync_spotify_bookmark", side_effect=fake_sync):
                 updated, removed, details, unresolved = self.mod.sync_notion_spotify_bookmarks(
                     object(), "Wednesday", {}, {}, {}
@@ -462,7 +651,19 @@ class TestRefreshJob(unittest.TestCase):
             [("Spotify Morning Prayer", "https://open.spotify.com/episode/morning123")],
         )
         self.assertEqual(unresolved, [])
-        self.assertEqual(synced, [("page_spotify", "spotify:episode:morning123", "notion_token")])
+        self.assertEqual(
+            synced,
+            [
+                (
+                    "page_spotify",
+                    "https://open.spotify.com/episode/morning123",
+                    "notion_token",
+                    "Resolved Morning Episode",
+                    "https://open.spotify.com/playlist/playlist_morning",
+                    "Morning",
+                )
+            ],
+        )
 
     def test_sunday_homily_resolvers_use_latest_available_episode_on_weekdays(self):
         status = {}
@@ -550,7 +751,7 @@ class TestRefreshJob(unittest.TestCase):
                 ("token_123", "playlist_commute", ["spotify:episode:222", "spotify:episode:333"]),
             ],
         )
-        sunday_item_toggle_mock.assert_called_once_with("notion_token", "Wednesday")
+        sunday_item_toggle_mock.assert_called_once_with("notion_token", self.mod.local_now().strftime("%A"))
 
     def test_main_notion_single_playlist_filter_uses_override_id(self):
         env = {

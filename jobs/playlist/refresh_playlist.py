@@ -7,6 +7,7 @@ import re
 import sys
 import time
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import urlsplit, urlunsplit
 
 import requests
 import spotipy
@@ -56,7 +57,7 @@ NOTION_PLAYLISTS_ENABLED_PROPERTY = "NOTION_PLAYLISTS_ENABLED_PROPERTY"  # defau
 NOTION_PLAYLISTS_SUNDAY_MATCH = "NOTION_PLAYLISTS_SUNDAY_MATCH"  # default sunday
 NOTION_QUEUE_PLAYLIST_PROPERTY = "NOTION_QUEUE_PLAYLIST_PROPERTY"  # defaults to Playlist
 NOTION_QUEUE_PROFILE_PROPERTY = "NOTION_QUEUE_PROFILE_PROPERTY"  # legacy alias for Playlist field
-NOTION_QUEUE_ORDER_PROPERTY = "NOTION_QUEUE_ORDER_PROPERTY"  # defaults to Playlist Order
+NOTION_QUEUE_ORDER_PROPERTY = "NOTION_QUEUE_ORDER_PROPERTY"  # defaults to Order
 NOTION_QUEUE_RESOLVER_PROPERTY = "NOTION_QUEUE_RESOLVER_PROPERTY"  # defaults to Spotify Resolver
 NOTION_QUEUE_FALLBACK_PROPERTY = "NOTION_QUEUE_FALLBACK_PROPERTY"  # defaults to Spotify Fallback Resolver
 NOTION_QUEUE_ENABLED_PROPERTY = "NOTION_QUEUE_ENABLED_PROPERTY"  # defaults to Enabled
@@ -343,19 +344,68 @@ def notion_append_children(
     children: List[Dict[str, Any]],
     token: str,
     position: str = "end",
-) -> None:
+    after: str = "",
+) -> Dict[str, Any]:
     if not children:
-        return
+        return {}
     body: Dict[str, Any] = {"children": list(children)}
-    if position == "start":
+    if after:
+        body["after"] = str(after).strip()
+    elif position == "start":
         body["position"] = {"type": "start"}
-    notion_call("PATCH", f"https://api.notion.com/v1/blocks/{parent_id}/children", token, body)
+    return notion_call("PATCH", f"https://api.notion.com/v1/blocks/{parent_id}/children", token, body)
+
+
+def notion_update_bookmark_block(block_id: str, url: str, token: str, caption: str = "") -> None:
+    bookmark_payload: Dict[str, Any] = {"url": str(url or "").strip()}
+    value = str(caption or "").strip()[:2000]
+    bookmark_payload["caption"] = [{"type": "text", "text": {"content": value}}] if value else []
+    notion_call("PATCH", f"https://api.notion.com/v1/blocks/{block_id}", token, {"bookmark": bookmark_payload})
+
+
+def notion_bookmark_block_payload(url: str, caption: str = "") -> Dict[str, Any]:
+    bookmark_payload: Dict[str, Any] = {"url": str(url or "").strip()}
+    value = str(caption or "").strip()[:2000]
+    if value:
+        bookmark_payload["caption"] = [{"type": "text", "text": {"content": value}}]
+    return {"object": "block", "type": "bookmark", "bookmark": bookmark_payload}
+
+
+def notion_append_bookmark_block(
+    parent_id: str,
+    url: str,
+    token: str,
+    caption: str = "",
+    position: str = "end",
+    after: str = "",
+) -> str:
+    response = notion_append_children(
+        parent_id,
+        [notion_bookmark_block_payload(url, caption)],
+        token,
+        position=position,
+        after=after,
+    )
+    results = response.get("results") if isinstance(response, dict) else []
+    if isinstance(results, list) and results:
+        first = results[0]
+        if isinstance(first, dict):
+            return str(first.get("id", "")).strip()
+    return ""
 
 
 def block_bookmark_url(block: Dict[str, Any]) -> str:
     if str(block.get("type", "")).strip() != "bookmark":
         return ""
     return str((block.get("bookmark") or {}).get("url", "")).strip()
+
+
+def block_bookmark_caption(block: Dict[str, Any]) -> str:
+    if str(block.get("type", "")).strip() != "bookmark":
+        return ""
+    vals = (block.get("bookmark") or {}).get("caption") or []
+    parts = [str(v.get("plain_text", "")).strip() for v in vals if isinstance(v, dict) and v.get("plain_text")]
+    return " ".join(parts).strip()
 
 
 def block_link_to_page_id(block: Dict[str, Any]) -> str:
@@ -543,21 +593,75 @@ def normalize_spotify_playlist_id(value: str) -> str:
     return raw
 
 
-def spotify_value_to_bookmark_url(value: str) -> Optional[str]:
+def spotify_value_to_bookmark_parts(value: str) -> Optional[Tuple[str, str, str]]:
     raw = str(value or "").strip()
     if not raw:
         return None
     match = re.fullmatch(r"spotify:([a-z]+):([A-Za-z0-9]+)", raw, flags=re.IGNORECASE)
     if match:
-        return f"{SPOTIFY_BOOKMARK_BASE_URL}/{match.group(1).lower()}/{match.group(2)}"
-    match = re.search(
-        r"open\.spotify\.com/(?:embed/)?([a-z]+)/([A-Za-z0-9]+)(?:[/?].*)?$",
-        raw,
-        flags=re.IGNORECASE,
-    )
-    if match:
-        return f"{SPOTIFY_BOOKMARK_BASE_URL}/{match.group(1).lower()}/{match.group(2)}"
-    return None
+        return match.group(1).lower(), match.group(2), ""
+    try:
+        parsed = urlsplit(raw)
+    except Exception:
+        return None
+    host = str(parsed.netloc or "").strip().lower()
+    if host not in {"open.spotify.com", "play.spotify.com"}:
+        return None
+    parts = [part for part in str(parsed.path or "").split("/") if part]
+    if len(parts) >= 3 and str(parts[0]).strip().lower() == "embed":
+        parts = parts[1:]
+    if len(parts) < 2:
+        return None
+    kind = str(parts[0]).strip().lower()
+    spotify_id = str(parts[1]).strip()
+    if not re.fullmatch(r"[a-z]+", kind) or not re.fullmatch(r"[A-Za-z0-9]+", spotify_id):
+        return None
+    return kind, spotify_id, str(parsed.query or "")
+
+
+def spotify_value_to_bookmark_url(value: str) -> Optional[str]:
+    parts = spotify_value_to_bookmark_parts(value)
+    if not parts:
+        return None
+    kind, spotify_id, query = parts
+    if query:
+        return urlunsplit(("https", "open.spotify.com", f"/{kind}/{spotify_id}", query, ""))
+    return f"{SPOTIFY_BOOKMARK_BASE_URL}/{kind}/{spotify_id}"
+
+
+def spotify_value_to_bookmark_compare_url(value: str) -> Optional[str]:
+    parts = spotify_value_to_bookmark_parts(value)
+    if not parts:
+        return None
+    kind, spotify_id, _ = parts
+    return f"{SPOTIFY_BOOKMARK_BASE_URL}/{kind}/{spotify_id}"
+
+
+def spotify_bookmark_caption(sp: spotipy.Spotify, value: str, fallback: str = "") -> str:
+    parts = spotify_value_to_bookmark_parts(value)
+    if not parts:
+        return str(fallback or "").strip()[:2000]
+    kind, spotify_id, _ = parts
+
+    payload: Optional[Dict[str, Any]] = None
+    if kind == "episode":
+        payload = safe_call(sp.episode, spotify_id)
+    elif kind == "track":
+        payload = safe_call(sp.track, spotify_id)
+    elif kind == "show":
+        payload = safe_call(sp.show, spotify_id)
+    elif kind == "album":
+        payload = safe_call(sp.album, spotify_id)
+    elif kind == "artist":
+        payload = safe_call(sp.artist, spotify_id)
+    elif kind == "playlist":
+        payload = safe_call(sp.playlist, spotify_id, fields="name")
+
+    if isinstance(payload, dict):
+        name = str(payload.get("name", "")).strip()
+        if name:
+            return name[:2000]
+    return str(fallback or "").strip()[:2000]
 
 
 def spotify_value_to_embed_url(value: str) -> Optional[str]:
@@ -573,43 +677,119 @@ def block_spotify_link_url(block: Dict[str, Any]) -> str:
     return ""
 
 
-def notion_sync_spotify_bookmark(page_id: str, bookmark_url: Optional[str], token: str) -> Tuple[bool, bool]:
+def notion_sync_spotify_bookmark(
+    page_id: str,
+    bookmark_url: Optional[str],
+    token: str,
+    caption: str = "",
+    playlist_url: str = "",
+    playlist_caption: str = "",
+) -> Tuple[bool, bool]:
     desired_url = spotify_value_to_bookmark_url(bookmark_url or "") or ""
+    desired_compare_url = spotify_value_to_bookmark_compare_url(bookmark_url or "") or ""
+    desired_caption = str(caption or "").strip()[:2000]
+    desired_playlist_url = spotify_value_to_bookmark_url(playlist_url or "") or ""
+    desired_playlist_compare_url = spotify_value_to_bookmark_compare_url(playlist_url or "") or ""
+    desired_playlist_caption = str(playlist_caption or "").strip()[:2000]
+    if desired_playlist_compare_url and desired_playlist_compare_url == desired_compare_url:
+        desired_playlist_url = ""
+        desired_playlist_compare_url = ""
+        desired_playlist_caption = ""
     blocks = notion_list_block_children(page_id, token)
 
-    spotify_link_ids: List[str] = []
-    first_block_type = ""
-    first_block_url = ""
-    for idx, block in enumerate(blocks):
-        url = spotify_value_to_bookmark_url(block_spotify_link_url(block) or "") or ""
-        if idx == 0:
-            first_block_type = str(block.get("type", "")).strip()
-            first_block_url = url
-        if not url:
+    spotify_blocks: List[Dict[str, str]] = []
+    for block in blocks:
+        raw_url = block_spotify_link_url(block) or ""
+        parts = spotify_value_to_bookmark_parts(raw_url)
+        compare_url = spotify_value_to_bookmark_compare_url(raw_url) or ""
+        if not compare_url or not parts:
             continue
         block_id = str(block.get("id", "")).strip()
         if block_id:
-            spotify_link_ids.append(block_id)
+            spotify_blocks.append(
+                {
+                    "id": block_id,
+                    "type": str(block.get("type", "")).strip(),
+                    "url": str(raw_url).strip(),
+                    "compare_url": compare_url,
+                    "caption": block_bookmark_caption(block),
+                    "slot": "playlist" if parts[0] == "playlist" else "primary",
+                }
+            )
 
-    if not desired_url:
-        removed = False
-        for block_id in spotify_link_ids:
-            notion_archive_block(block_id, token)
-            removed = True
-        return False, removed
+    primary_blocks = [block for block in spotify_blocks if block.get("slot") == "primary"]
+    playlist_blocks = [block for block in spotify_blocks if block.get("slot") == "playlist"]
 
-    if len(spotify_link_ids) == 1 and first_block_type == "bookmark" and first_block_url == desired_url:
-        return False, False
+    def sync_slot(
+        existing_blocks: List[Dict[str, str]],
+        desired_slot_url: str,
+        desired_slot_compare_url: str,
+        desired_slot_caption: str,
+        *,
+        position: str = "end",
+        after: str = "",
+    ) -> Tuple[bool, bool, str]:
+        if not desired_slot_url:
+            removed = False
+            for block in existing_blocks:
+                notion_archive_block(block["id"], token)
+                removed = True
+            return False, removed, ""
 
-    for block_id in spotify_link_ids:
-        notion_archive_block(block_id, token)
-    notion_append_children(
-        page_id,
-        [{"object": "block", "type": "bookmark", "bookmark": {"url": desired_url}}],
-        token,
+        primary = existing_blocks[0] if existing_blocks else {}
+        primary_type = primary.get("type", "")
+        primary_url = primary.get("url", "")
+        primary_compare_url = primary.get("compare_url", "")
+        primary_caption = primary.get("caption", "")
+
+        final_slot_url = desired_slot_url
+        if primary_type == "bookmark" and primary_compare_url == desired_slot_compare_url:
+            # Keep an existing richer Spotify share URL when it resolves to the same item.
+            final_slot_url = primary_url or desired_slot_url
+
+        if (
+            len(existing_blocks) == 1
+            and primary_type == "bookmark"
+            and primary_compare_url == desired_slot_compare_url
+            and primary_caption == desired_slot_caption
+            and primary_url == final_slot_url
+        ):
+            return False, False, primary.get("id", "")
+
+        if primary_type == "bookmark" and primary.get("id", ""):
+            notion_update_bookmark_block(primary["id"], final_slot_url, token, desired_slot_caption)
+            for extra_block in existing_blocks[1:]:
+                notion_archive_block(extra_block["id"], token)
+            return True, False, primary["id"]
+
+        for block in existing_blocks:
+            notion_archive_block(block["id"], token)
+        block_id = notion_append_bookmark_block(
+            page_id,
+            final_slot_url,
+            token,
+            desired_slot_caption,
+            position=position,
+            after=after,
+        )
+        return True, False, block_id
+
+    primary_changed, primary_removed, primary_block_id = sync_slot(
+        primary_blocks,
+        desired_url,
+        desired_compare_url,
+        desired_caption,
         position="start",
     )
-    return True, False
+    playlist_changed, playlist_removed, _ = sync_slot(
+        playlist_blocks,
+        desired_playlist_url if desired_url else "",
+        desired_playlist_compare_url if desired_url else "",
+        desired_playlist_caption,
+        position="start" if not primary_block_id else "end",
+        after=primary_block_id,
+    )
+    return primary_changed or playlist_changed, primary_removed or playlist_removed
 
 
 def notion_sync_spotify_embed(page_id: str, embed_url: Optional[str], token: str) -> Tuple[bool, bool]:
@@ -1297,6 +1477,7 @@ def sync_notion_spotify_bookmarks(
 
     title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
     platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
+    playlist_property = resolve_notion_playlist_property_name()
     resolver_property = os.getenv(NOTION_QUEUE_RESOLVER_PROPERTY, "Spotify Resolver").strip() or "Spotify Resolver"
     fallback_property = os.getenv(NOTION_QUEUE_FALLBACK_PROPERTY, "Spotify Fallback Resolver").strip() or "Spotify Fallback Resolver"
     uri_property = os.getenv(NOTION_URI_PROPERTY, "URI").strip() or "URI"
@@ -1308,6 +1489,17 @@ def sync_notion_spotify_bookmarks(
     updates: List[Tuple[str, str]] = []
     unresolved: List[str] = []
     pages = notion_get_all_pages(database_id, token)
+    bookmark_meta_cache: Dict[str, Tuple[Optional[str], str]] = {}
+    playlist_url_by_name: Dict[str, str] = {}
+    playlist_label_by_name: Dict[str, str] = {}
+    for playlist_row in load_notion_playlists(token):
+        playlist_name = str(playlist_row.get("name", "")).strip()
+        playlist_id = normalize_spotify_playlist_id(str(playlist_row.get("playlist_id", "")).strip())
+        playlist_key = normalize_text(playlist_name)
+        if not playlist_key or not playlist_id:
+            continue
+        playlist_url_by_name[playlist_key] = f"{SPOTIFY_BOOKMARK_BASE_URL}/playlist/{playlist_id}"
+        playlist_label_by_name[playlist_key] = playlist_name
 
     for page in pages:
         platform_text = normalize_text(page_property_text(page, platform_property))
@@ -1321,6 +1513,7 @@ def sync_notion_spotify_bookmarks(
         if not page_id:
             continue
         title = page_title(page, title_property).strip() or "Untitled"
+        playlist_name = page_property_text(page, playlist_property).strip()
         resolver = page_property_text(page, resolver_property).strip()
         fallback = page_property_text(page, fallback_property).strip()
         direct_uri = (page_uri_value(page, uri_property) or "").strip()
@@ -1333,8 +1526,25 @@ def sync_notion_spotify_bookmarks(
         if not resolved_uri and spotify_value_to_bookmark_url(direct_uri):
             resolved_uri = direct_uri
 
-        did_update, did_remove = notion_sync_spotify_bookmark(page_id, resolved_uri, token)
-        bookmark_url = spotify_value_to_bookmark_url(resolved_uri or "")
+        cache_key = str(resolved_uri or "").strip()
+        if cache_key in bookmark_meta_cache:
+            bookmark_url, bookmark_caption = bookmark_meta_cache[cache_key]
+        else:
+            bookmark_url = spotify_value_to_bookmark_url(cache_key)
+            bookmark_caption = spotify_bookmark_caption(sp, cache_key, fallback=title) if bookmark_url else ""
+            bookmark_meta_cache[cache_key] = (bookmark_url, bookmark_caption)
+
+        playlist_key = normalize_text(playlist_name)
+        playlist_url = playlist_url_by_name.get(playlist_key, "")
+        playlist_caption = playlist_label_by_name.get(playlist_key, playlist_name)
+        did_update, did_remove = notion_sync_spotify_bookmark(
+            page_id,
+            bookmark_url,
+            token,
+            bookmark_caption,
+            playlist_url=playlist_url,
+            playlist_caption=playlist_caption,
+        )
         if did_update and bookmark_url:
             updated += 1
             updates.append((title, bookmark_url))
@@ -1968,7 +2178,7 @@ def build_queue_for_playlist_from_notion(
     title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
     platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
     playlist_property = resolve_notion_playlist_property_name()
-    order_property = os.getenv(NOTION_QUEUE_ORDER_PROPERTY, "Playlist Order").strip() or "Playlist Order"
+    order_property = os.getenv(NOTION_QUEUE_ORDER_PROPERTY, "Order").strip() or "Order"
     resolver_property = os.getenv(NOTION_QUEUE_RESOLVER_PROPERTY, "Spotify Resolver").strip() or "Spotify Resolver"
     fallback_property = os.getenv(NOTION_QUEUE_FALLBACK_PROPERTY, "Spotify Fallback Resolver").strip() or "Spotify Fallback Resolver"
     enabled_property = os.getenv(NOTION_QUEUE_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
@@ -2002,10 +2212,6 @@ def build_queue_for_playlist_from_notion(
         fallback = page_property_text(page, fallback_property).strip()
         direct_uri = (page_uri_value(page, uri_property) or "").strip()
         order_num = page_property_number(page, order_property)
-        if order_num is None and order_property != "Order":
-            order_num = page_property_number(page, "Order")
-        if order_num is None and order_property != "Playlist Order":
-            order_num = page_property_number(page, "Playlist Order")
         order_value = float(order_num) if order_num is not None else 9999.0
         if not resolver and direct_uri.startswith("spotify:"):
             resolver = direct_uri
