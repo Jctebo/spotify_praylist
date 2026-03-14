@@ -1536,6 +1536,38 @@ def prayer_intentions_database_id(token: str) -> str:
     )
 
 
+def page_primary_title_text(page: Dict[str, Any]) -> str:
+    props = page.get("properties") or {}
+    for key, prop in props.items():
+        if str((prop or {}).get("type", "")).strip() != "title":
+            continue
+        value = page_property_text(page, str(key))
+        if value:
+            return value
+    return ""
+
+
+def abbreviate_intention_label(text: str, max_len: int = 48) -> str:
+    value = normalize_whitespace(text)
+    if len(value) <= max_len:
+        return value
+    clipped = value[: max(1, max_len - 3)].rstrip()
+    if " " in clipped:
+        clipped = clipped.rsplit(" ", 1)[0].rstrip()
+    return f"{clipped}..."
+
+
+def intention_entry_label(page: Dict[str, Any], petition: str) -> str:
+    title = page_primary_title_text(page)
+    if title:
+        return abbreviate_intention_label(title)
+    prayer_need = page_property_text(page, "Prayer Need").strip()
+    if prayer_need:
+        return abbreviate_intention_label(prayer_need)
+    first_clause = re.split(r"(?<=[.!?])\s+|,\s+", normalize_whitespace(petition), maxsplit=1)[0].strip()
+    return abbreviate_intention_label(first_clause or petition)
+
+
 def weighted_shuffle_indices(weights: Sequence[float], rng: random.Random) -> List[int]:
     keyed: List[tuple[float, int]] = []
     for idx, weight in enumerate(weights):
@@ -1546,20 +1578,20 @@ def weighted_shuffle_indices(weights: Sequence[float], rng: random.Random) -> Li
     return [idx for _, idx in keyed]
 
 
-def load_prayer_intention_petitions(token: str, *, count: int = 5) -> List[str]:
+def load_prayer_intention_entries(token: str, *, count: int = 5) -> List[Dict[str, str]]:
     db_id = prayer_intentions_database_id(token)
     if not db_id:
         return []
     cache_key = f"{db_id}|{shared.local_today().isoformat()}|{int(count)}"
     cached = _INTENTION_LIBRARY_CACHE.get(cache_key)
     if isinstance(cached, list) and cached:
-        return list(cached)
+        return deepcopy(cached)
     petition_property = os.getenv(NOTION_INTENTIONS_PETITION_PROPERTY, "Petition").strip() or "Petition"
     status_property = os.getenv(NOTION_INTENTIONS_STATUS_PROPERTY, "Status").strip() or "Status"
     frequency_property = os.getenv(NOTION_INTENTIONS_FREQUENCY_PROPERTY, "Frequency").strip() or "Frequency"
     allowed_statuses = parse_normalized_values(os.getenv(NOTION_INTENTIONS_STATUS_ALLOWED, "praying").strip() or "praying")
     pages = shared.notion_get_all_pages(db_id, token)
-    petitions: List[str] = []
+    entries: List[Dict[str, str]] = []
     weights: List[float] = []
     for page in pages:
         petition = page_property_text(page, petition_property).strip()
@@ -1579,15 +1611,28 @@ def load_prayer_intention_petitions(token: str, *, count: int = 5) -> List[str]:
             if allowed_statuses and status_text not in allowed_statuses:
                 continue
         weight = max(1.0, min(100.0, page_property_number(page, frequency_property, default=1.0)))
-        petitions.append(petition)
+        entries.append(
+            {
+                "petition": petition,
+                "label": intention_entry_label(page, petition),
+            }
+        )
         weights.append(weight)
-    if not petitions:
+    if not entries:
         return []
     rng = random.Random(int(shared.local_today().strftime("%Y%m%d")))
     order = weighted_shuffle_indices(weights, rng)
-    selected = [petitions[idx] for idx in order[: max(1, int(count))]]
-    _INTENTION_LIBRARY_CACHE[cache_key] = list(selected)
+    selected = [entries[idx] for idx in order[: max(1, int(count))]]
+    if selected and len(selected) < count:
+        original = list(selected)
+        while len(selected) < count:
+            selected.append(deepcopy(original[min(len(selected), len(original) - 1)]))
+    _INTENTION_LIBRARY_CACHE[cache_key] = deepcopy(selected)
     return selected
+
+
+def load_prayer_intention_petitions(token: str, *, count: int = 5) -> List[str]:
+    return [str(item.get("petition", "")).strip() for item in load_prayer_intention_entries(token, count=count) if str(item.get("petition", "")).strip()]
 
 
 def rosary_mystery_metadata(fragments_map: Dict[str, Dict[str, Any]], mystery_set: str, decade_number: int) -> Dict[str, str]:
@@ -1626,9 +1671,14 @@ def build_rosary_dynamic_plan(
         config.get("weekday_map", {}),
     )
     intention_property = str(config.get("intention_property", DEFAULT_ROSARY_INTENTION_PROPERTY)).strip() or DEFAULT_ROSARY_INTENTION_PROPERTY
-    intentions = load_prayer_intention_petitions(notion_token, count=5) if str(notion_token or "").strip() else []
+    intention_entries = load_prayer_intention_entries(notion_token, count=5) if str(notion_token or "").strip() else []
+    intentions = [str(item.get("petition", "")).strip() for item in intention_entries if str(item.get("petition", "")).strip()]
     if not intentions:
         intentions = split_rosary_intentions(page_property_text(page, intention_property), count=5)
+    elif str(notion_token or "").strip():
+        short_lines = "\n".join(str(item.get("label", "")).strip() for item in intention_entries if str(item.get("label", "")).strip())
+        if short_lines:
+            maybe_update_page_text_property(page, intention_property, short_lines, notion_token)
     if not intentions:
         raise RuntimeError(f"Rosary row is missing intentions in '{intention_property}'.")
     meditation_key = str(config.get("meditation_fragment_key", DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY)).strip() or DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY

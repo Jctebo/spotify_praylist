@@ -519,6 +519,7 @@ class TestPageAudioJob(unittest.TestCase):
         pages = [
             {
                 "properties": {
+                    "Person Name": _title_prop("Family in the Church"),
                     "Petition": _rich_text_prop("For peace."),
                     "Status": {"type": "status", "status": {"name": "Praying"}},
                     "Frequency": {"type": "number", "number": 5},
@@ -540,7 +541,30 @@ class TestPageAudioJob(unittest.TestCase):
         ):
             petitions = self.mod.load_prayer_intention_petitions("token", count=5)
 
-        self.assertEqual(petitions, ["For peace."])
+        self.assertEqual(petitions, ["For peace.", "For peace.", "For peace.", "For peace.", "For peace."])
+
+    def test_load_prayer_intention_entries_returns_short_labels(self):
+        pages = [
+            {
+                "properties": {
+                    "Person Name": _title_prop("Family in the Church"),
+                    "Prayer Need": _rich_text_prop("All my Family members to return to full participation in the Holy Catholic Church"),
+                    "Petition": _rich_text_prop("For all my family members to return to the Church."),
+                    "Status": {"type": "status", "status": {"name": "Praying"}},
+                    "Frequency": {"type": "number", "number": 5},
+                }
+            }
+        ]
+
+        with patch.object(self.mod, "prayer_intentions_database_id", return_value="db_1"), patch.object(
+            self.mod.shared, "notion_get_all_pages", return_value=pages
+        ), patch.object(
+            self.mod.shared, "local_today", return_value=datetime.date(2026, 3, 16)
+        ):
+            entries = self.mod.load_prayer_intention_entries("token", count=5)
+
+        self.assertEqual(entries[0]["petition"], "For all my family members to return to the Church.")
+        self.assertEqual(entries[0]["label"], "Family in the Church")
 
     def test_build_rosary_dynamic_plan_reuses_repeated_prayers(self):
         page = {
@@ -632,7 +656,15 @@ class TestPageAudioJob(unittest.TestCase):
         }
 
         with patch.object(self.mod.shared, "local_today", return_value=datetime.date(2026, 3, 16)), patch.object(
-            self.mod, "load_prayer_intention_petitions", return_value=["Library One", "Library Two", "Library Three", "Library Four", "Library Five"]
+            self.mod, "load_prayer_intention_entries", return_value=[
+                {"petition": "Library One", "label": "One"},
+                {"petition": "Library Two", "label": "Two"},
+                {"petition": "Library Three", "label": "Three"},
+                {"petition": "Library Four", "label": "Four"},
+                {"petition": "Library Five", "label": "Five"},
+            ]
+        ), patch.object(
+            self.mod, "maybe_update_page_text_property"
         ):
             plan = self.mod.build_rosary_dynamic_plan(page=page, config=config, base_url="https://api.openai.com/v1", notion_token="token")
 
