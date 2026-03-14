@@ -267,6 +267,9 @@ Optional variables:
 - `NOVENA_AUDIO_SPEED` (default `1.0`, range `0.25-4.0`)
 - `NOVENA_AUDIO_CAPTION` (default `Daily Novena Prayer (Audio)`)
 - `NOVENA_AUDIO_FAIL_OPEN` (default `true`; if `true`, text update continues even if audio upload fails)
+- audio is cached by a render hash derived from `NOVENA_AUDIO_*`, `OAI_API_BASE_URL`, and the final spoken text; existing Notion audio is reused when that hash matches
+- `NOTION_AUDIO_RENDER_HASH_PROPERTY` (optional; default `Render Hash`; if that property exists on the page, the render hash is written there after a fresh audio render)
+- `NOTION_AUDIO_SAVED_PROPERTY` (optional; default `Audio Saved`; if that property exists on the page, the job writes the fresh render timestamp there)
 - `USCCB_READINGS_ENABLED` (default `true`; appends USCCB daily Mass readings as Notion toggles at page bottom)
 - `USCCB_READINGS_FAIL_OPEN` (default `true`; if `true`, prayer update continues when readings fetch/parse fails)
 - `USCCB_READINGS_BASE_URL` (default `https://bible.usccb.org/bible/readings`)

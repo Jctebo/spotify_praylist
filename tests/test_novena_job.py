@@ -236,6 +236,102 @@ class TestNovenaJob(unittest.TestCase):
         self.assertEqual(request_mock.call_count, 2)
         sleep_mock.assert_called_once_with(1.0)
 
+    def test_maybe_generate_and_attach_audio_uses_cached_render_hash(self):
+        page = {"id": "page_1", "properties": {}}
+        env = {
+            "NOVENA_AUDIO_ENABLED": "true",
+            "NOVENA_AUDIO_MODEL": "gpt-4o-mini-tts",
+            "NOVENA_AUDIO_VOICE": "alloy",
+            "NOVENA_AUDIO_FORMAT": "mp3",
+            "NOVENA_AUDIO_SPEED": "1.0",
+        }
+        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        render_hash = self.mod.compute_audio_render_hash("Daily prayer text", "https://api.openai.com/v1", settings)
+        blocks = [
+            {
+                "id": "audio_1",
+                "type": "audio",
+                "audio": {
+                    "caption": [
+                        {
+                            "plain_text": (
+                                f"Daily Novena Prayer (Audio) {self.mod.NOVENA_AUDIO_MARKER} "
+                                f"{self.mod.render_hash_marker(render_hash)}"
+                            )
+                        }
+                    ]
+                },
+            }
+        ]
+
+        with temp_env(env):
+            with patch.object(self.mod, "notion_list_block_children", return_value=blocks), patch.object(
+                self.mod, "generate_openai_audio_bytes"
+            ) as generate_mock, patch.object(
+                self.mod, "notion_remove_old_autogen_audio"
+            ) as remove_mock, patch.object(
+                self.mod, "notion_create_file_upload"
+            ) as create_mock, patch.object(
+                self.mod, "notion_send_file_upload"
+            ) as send_mock, patch.object(
+                self.mod, "notion_append_audio_block"
+            ) as append_mock:
+                mode = self.mod.maybe_generate_and_attach_audio(
+                    page,
+                    "Daily prayer text",
+                    "notion_token",
+                    "openai_key",
+                    "https://api.openai.com/v1",
+                )
+
+        self.assertEqual(mode, f"cached:mp3:gpt-4o-mini-tts:alloy:hash={render_hash}")
+        generate_mock.assert_not_called()
+        remove_mock.assert_not_called()
+        create_mock.assert_not_called()
+        send_mock.assert_not_called()
+        append_mock.assert_not_called()
+
+    def test_maybe_generate_and_attach_audio_writes_render_hash_marker(self):
+        page = {"id": "page_1", "properties": {}}
+        env = {
+            "NOVENA_AUDIO_ENABLED": "true",
+            "NOVENA_AUDIO_MODEL": "gpt-4o-mini-tts",
+            "NOVENA_AUDIO_VOICE": "alloy",
+            "NOVENA_AUDIO_FORMAT": "mp3",
+            "NOVENA_AUDIO_SPEED": "1.0",
+            "NOVENA_AUDIO_CAPTION": "Daily Novena Prayer (Audio)",
+        }
+        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        expected_hash = self.mod.compute_audio_render_hash("Daily prayer text", "https://api.openai.com/v1", settings)
+
+        with temp_env(env):
+            with patch.object(self.mod, "notion_list_block_children", return_value=[]), patch.object(
+                self.mod, "generate_openai_audio_bytes", return_value=b"audio-bytes"
+            ), patch.object(
+                self.mod, "notion_create_file_upload", return_value="upload_1"
+            ), patch.object(
+                self.mod, "notion_send_file_upload"
+            ), patch.object(
+                self.mod, "notion_remove_old_autogen_audio"
+            ) as remove_mock, patch.object(
+                self.mod, "notion_append_audio_block"
+            ) as append_mock, patch.object(
+                self.mod, "notion_update_audio_render_metadata"
+            ) as meta_mock:
+                mode = self.mod.maybe_generate_and_attach_audio(
+                    page,
+                    "Daily prayer text",
+                    "notion_token",
+                    "openai_key",
+                    "https://api.openai.com/v1",
+                )
+
+        self.assertEqual(mode, f"attached:mp3:gpt-4o-mini-tts:alloy:hash={expected_hash}")
+        remove_mock.assert_called_once_with("page_1", "notion_token")
+        append_mock.assert_called_once()
+        self.assertIn(self.mod.render_hash_marker(expected_hash), append_mock.call_args.args[2])
+        meta_mock.assert_called_once_with(page, expected_hash, "notion_token")
+
     def test_main_happy_path(self):
         env = {
             "OPENAI_API_KEY": "key",

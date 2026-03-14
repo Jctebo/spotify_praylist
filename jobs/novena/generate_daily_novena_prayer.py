@@ -1,4 +1,5 @@
 import datetime
+import hashlib
 import html
 import json
 import mimetypes
@@ -53,6 +54,8 @@ NOTION_SAINT_PRECEDENCE_PROPERTY = "NOTION_SAINT_PRECEDENCE_PROPERTY"  # default
 NOTION_SAINT_BACKGROUND_PROPERTY = "NOTION_SAINT_BACKGROUND_PROPERTY"  # default Background
 NOTION_SAINT_REFRESH_ALL = "NOTION_SAINT_REFRESH_ALL"  # default false; true regenerates all saint content each run
 NOTION_SAINT_INCLUDE_CALENDAR_DAYS = "NOTION_SAINT_INCLUDE_CALENDAR_DAYS"  # default false
+NOTION_AUDIO_RENDER_HASH_PROPERTY = "NOTION_AUDIO_RENDER_HASH_PROPERTY"  # optional, default Render Hash
+NOTION_AUDIO_SAVED_PROPERTY = "NOTION_AUDIO_SAVED_PROPERTY"  # optional, default Audio Saved
 
 NOVENA_AUDIO_ENABLED = "NOVENA_AUDIO_ENABLED"  # default false
 NOVENA_AUDIO_MODEL = "NOVENA_AUDIO_MODEL"  # default gpt-4o-mini-tts
@@ -62,6 +65,7 @@ NOVENA_AUDIO_SPEED = "NOVENA_AUDIO_SPEED"  # default 1.0
 NOVENA_AUDIO_CAPTION = "NOVENA_AUDIO_CAPTION"  # default Daily Novena Prayer (Audio)
 NOVENA_AUDIO_FAIL_OPEN = "NOVENA_AUDIO_FAIL_OPEN"  # default true
 NOVENA_AUDIO_MARKER = "[AUTOGEN_NOVENA_AUDIO]"
+NOVENA_AUDIO_HASH_MARKER_PREFIX = "[AUTOGEN_NOVENA_AUDIO_HASH:"
 NOVENA_SECTION_MARKER = "[AUTOGEN_DAILY_ROLLING_NOVENA]"
 NOVENA_DAY_MODE = "NOVENA_DAY_MODE"  # default true when writing into calendar rows
 NOVENA_TEST_SAINT_NAME = "NOVENA_TEST_SAINT_NAME"  # optional saint name for day-by-day backfill test
@@ -742,6 +746,15 @@ def notion_novena_row_titles(explicit_title: str) -> List[str]:
     return out
 
 
+def render_hash_marker(render_hash: str) -> str:
+    return f"{NOVENA_AUDIO_HASH_MARKER_PREFIX}{str(render_hash or '').strip()}]"
+
+
+def extract_render_hash(text: str) -> str:
+    match = re.search(r"\[AUTOGEN_NOVENA_AUDIO_HASH:([0-9a-f]{8,64})\]", str(text or "").strip(), re.IGNORECASE)
+    return str(match.group(1)).lower() if match else ""
+
+
 def audio_block_caption(block: Dict[str, Any]) -> str:
     audio = block.get("audio") or {}
     caption = audio.get("caption") or []
@@ -786,6 +799,22 @@ def notion_has_autogen_audio_marker(page_id: str, token: str, marker: str = NOVE
     return False
 
 
+def notion_get_autogen_audio_render_hash(page_id: str, token: str, marker: str = NOVENA_AUDIO_MARKER) -> str:
+    needle = str(marker or "").strip()
+    if not needle:
+        return ""
+    for block in notion_list_block_children(page_id, token):
+        if str(block.get("type", "")).strip() != "audio":
+            continue
+        caption = audio_block_caption(block)
+        if needle not in caption:
+            continue
+        render_hash = extract_render_hash(caption)
+        if render_hash:
+            return render_hash
+    return ""
+
+
 def notion_append_audio_block(
     page_id: str,
     upload_id: str,
@@ -804,6 +833,38 @@ def notion_append_audio_block(
         },
     }
     notion_append_children(page_id, [block], token)
+
+
+def novena_audio_settings() -> Dict[str, Any]:
+    audio_model = os.getenv(NOVENA_AUDIO_MODEL, "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
+    audio_voice = os.getenv(NOVENA_AUDIO_VOICE, "alloy").strip() or "alloy"
+    audio_format = os.getenv(NOVENA_AUDIO_FORMAT, "mp3").strip().lower() or "mp3"
+    if audio_format not in {"mp3", "opus", "aac", "flac", "wav", "pcm"}:
+        raise RuntimeError(f"Invalid {NOVENA_AUDIO_FORMAT} '{audio_format}'.")
+    audio_speed = float_env(NOVENA_AUDIO_SPEED, default=1.0, min_value=0.25, max_value=4.0)
+    return {
+        "model": audio_model,
+        "voice": audio_voice,
+        "format": audio_format,
+        "speed": audio_speed,
+    }
+
+
+def audio_content_type(audio_format: str) -> str:
+    return "audio/mpeg" if audio_format == "mp3" else f"audio/{audio_format}"
+
+
+def compute_audio_render_hash(text: str, base_url: str, settings: Dict[str, Any]) -> str:
+    payload = {
+        "base_url": str(base_url or "").rstrip("/"),
+        "format": str(settings.get("format", "")).strip().lower(),
+        "model": str(settings.get("model", "")).strip(),
+        "speed": float(settings.get("speed", 1.0)),
+        "text": str(text or "").strip(),
+        "voice": str(settings.get("voice", "")).strip(),
+    }
+    raw = json.dumps(payload, sort_keys=True, ensure_ascii=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()[:16]
 
 
 def normalize_romcal_calendar(calendar: str) -> str:
@@ -1816,6 +1877,51 @@ def notion_scalar_property_value(prop_type: str, value: str) -> Dict[str, Any]:
     return {"rich_text": [{"type": "text", "text": {"content": text}}]} if text else {"rich_text": []}
 
 
+def notion_page_property_type(page: Dict[str, Any], prop_name: str) -> str:
+    props = page.get("properties") or {}
+    prop = props.get(prop_name) or {}
+    return str(prop.get("type", "")).strip()
+
+
+def notion_update_scalar_page_property_if_present(page: Dict[str, Any], prop_name: str, value: str, token: str) -> bool:
+    page_id = str(page.get("id", "")).strip()
+    prop_type = notion_page_property_type(page, prop_name)
+    if not page_id or prop_type not in {"select", "rich_text", "title", "url"}:
+        return False
+    notion_update_page_properties(page_id, {prop_name: notion_scalar_property_value(prop_type, value)}, token)
+    return True
+
+
+def notion_update_audio_saved_property_if_present(page: Dict[str, Any], prop_name: str, token: str) -> bool:
+    page_id = str(page.get("id", "")).strip()
+    prop_type = notion_page_property_type(page, prop_name)
+    if not page_id or not prop_type:
+        return False
+    if prop_type == "date":
+        notion_update_page_properties(
+            page_id,
+            {prop_name: {"date": {"start": local_now().replace(microsecond=0).isoformat()}}},
+            token,
+        )
+        return True
+    if prop_type == "checkbox":
+        notion_update_page_properties(page_id, {prop_name: {"checkbox": True}}, token)
+        return True
+    return notion_update_scalar_page_property_if_present(
+        page,
+        prop_name,
+        local_now().replace(microsecond=0).isoformat(),
+        token,
+    )
+
+
+def notion_update_audio_render_metadata(page: Dict[str, Any], render_hash: str, token: str) -> None:
+    render_hash_prop = os.getenv(NOTION_AUDIO_RENDER_HASH_PROPERTY, "Render Hash").strip() or "Render Hash"
+    audio_saved_prop = os.getenv(NOTION_AUDIO_SAVED_PROPERTY, "Audio Saved").strip() or "Audio Saved"
+    notion_update_scalar_page_property_if_present(page, render_hash_prop, render_hash, token)
+    notion_update_audio_saved_property_if_present(page, audio_saved_prop, token)
+
+
 def sync_saint_radar(
     notion_token: str,
     default_parent_database_id: str,
@@ -1973,13 +2079,14 @@ def maybe_generate_and_attach_audio(
     if not page_id:
         raise RuntimeError("Target Notion page has no id.")
 
-    audio_model = os.getenv(NOVENA_AUDIO_MODEL, "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
-    audio_voice = os.getenv(NOVENA_AUDIO_VOICE, "alloy").strip() or "alloy"
-    audio_format = os.getenv(NOVENA_AUDIO_FORMAT, "mp3").strip().lower() or "mp3"
-    if audio_format not in {"mp3", "opus", "aac", "flac", "wav", "pcm"}:
-        raise RuntimeError(f"Invalid {NOVENA_AUDIO_FORMAT} '{audio_format}'.")
-    audio_speed = float_env(NOVENA_AUDIO_SPEED, default=1.0, min_value=0.25, max_value=4.0)
+    settings = novena_audio_settings()
     caption = os.getenv(NOVENA_AUDIO_CAPTION, "Daily Novena Prayer (Audio)").strip() or "Daily Novena Prayer (Audio)"
+    render_hash = compute_audio_render_hash(prayer_text, oai_base_url, settings)
+    current_hash = notion_get_autogen_audio_render_hash(page_id, notion_token)
+    if current_hash == render_hash:
+        return (
+            f"cached:{settings['format']}:{settings['model']}:{settings['voice']}:hash={render_hash}"
+        )
 
     # Ensure one generated audio block per page by removing prior generated block(s).
     notion_remove_old_autogen_audio(page_id, notion_token)
@@ -1987,18 +2094,19 @@ def maybe_generate_and_attach_audio(
     audio_bytes = generate_openai_audio_bytes(
         api_key=openai_key,
         base_url=oai_base_url,
-        model=audio_model,
-        voice=audio_voice,
-        audio_format=audio_format,
-        speed=audio_speed,
+        model=str(settings["model"]),
+        voice=str(settings["voice"]),
+        audio_format=str(settings["format"]),
+        speed=float(settings["speed"]),
         text=prayer_text,
     )
-    filename = f"daily_novena_prayer_{local_today().isoformat()}.{audio_format}"
-    content_type = "audio/mpeg" if audio_format == "mp3" else f"audio/{audio_format}"
+    filename = f"daily_novena_prayer_{local_today().isoformat()}.{settings['format']}"
+    content_type = audio_content_type(str(settings["format"]))
     upload_id = notion_create_file_upload(filename=filename, content_type=content_type, token=notion_token)
     notion_send_file_upload(upload_id, filename, content_type, audio_bytes, notion_token)
-    notion_append_audio_block(page_id, upload_id, caption, notion_token)
-    return f"attached:{audio_format}:{audio_model}:{audio_voice}"
+    notion_append_audio_block(page_id, upload_id, f"{caption} {render_hash_marker(render_hash)}", notion_token)
+    notion_update_audio_render_metadata(page, render_hash, notion_token)
+    return f"attached:{settings['format']}:{settings['model']}:{settings['voice']}:hash={render_hash}"
 
 
 def main() -> int:
@@ -2211,21 +2319,19 @@ def main() -> int:
                         marker = saint_day_marker(saint_name, target_day)
                         section_exists = notion_has_autogen_section_marker(page_id, notion_token, marker)
                         audio_marker = f"{marker}:{NOVENA_AUDIO_MARKER}"
-                        audio_exists = notion_has_autogen_audio_marker(page_id, notion_token, marker=audio_marker) if audio_enabled else True
-
-                        if (not force_refresh) and section_exists and (not audio_enabled or audio_exists):
+                        if (not force_refresh) and section_exists and not audio_enabled:
                             skipped_existing += 1
                             continue
 
                         target_jobs.append(
                             {
+                                "page": cal_page,
                                 "page_id": page_id,
                                 "target_day": target_day,
                                 "day_num": day_num,
                                 "marker": marker,
                                 "audio_marker": audio_marker,
                                 "needs_section": (not section_exists) or force_refresh,
-                                "needs_audio": audio_enabled and ((not audio_exists) or force_refresh),
                             }
                         )
 
@@ -2241,14 +2347,32 @@ def main() -> int:
                         celebration_type=str(saint.get("celebration_rank", "unknown")),
                     )
                     for job in target_jobs:
+                        page = job.get("page") if isinstance(job.get("page"), dict) else {}
                         page_id = str(job.get("page_id", "")).strip()
                         target_day = job.get("target_day")
                         day_num = int(job.get("day_num", 0))
                         marker = str(job.get("marker", "")).strip()
                         audio_marker = str(job.get("audio_marker", "")).strip()
                         needs_section = bool(job.get("needs_section"))
-                        needs_audio = bool(job.get("needs_audio"))
                         if not page_id or not isinstance(target_day, datetime.date) or day_num < 1 or not marker:
+                            continue
+                        audio_text = ""
+                        current_audio_hash = ""
+                        render_hash = ""
+                        settings: Dict[str, Any] = {}
+                        needs_audio = False
+                        if audio_enabled:
+                            audio_text = saint_novena_day_audio_text(day_num, devotional_payload)
+                            settings = novena_audio_settings()
+                            render_hash = compute_audio_render_hash(audio_text, oai_base_url, settings)
+                            current_audio_hash = notion_get_autogen_audio_render_hash(
+                                page_id,
+                                notion_token,
+                                marker=audio_marker,
+                            )
+                            needs_audio = force_refresh or (current_audio_hash != render_hash)
+                        if not needs_section and not needs_audio:
+                            skipped_existing += 1
                             continue
                         if needs_section:
                             notion_remove_autogen_markers_from_other_pages_for_day(
@@ -2262,12 +2386,12 @@ def main() -> int:
                             )
                             notion_remove_old_autogen_sections_by_markers(page_id, notion_token, [marker])
                             blocks = saint_novena_day_blocks(
-                            saint_name=saint_name,
-                            feast_day=feast_iso,
-                            target_day=target_day,
-                            day_num=day_num,
-                            devotional_payload=devotional_payload,
-                        )
+                                saint_name=saint_name,
+                                feast_day=feast_iso,
+                                target_day=target_day,
+                                day_num=day_num,
+                                devotional_payload=devotional_payload,
+                            )
                             notion_append_children(page_id, blocks, notion_token)
                             wrote_sections += len(blocks)
 
@@ -2284,33 +2408,32 @@ def main() -> int:
                                 )
                                 if force_refresh:
                                     notion_remove_old_autogen_audio(page_id, notion_token, marker=audio_marker)
-                                audio_text = saint_novena_day_audio_text(day_num, devotional_payload)
-                                audio_model = os.getenv(NOVENA_AUDIO_MODEL, "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
-                                audio_voice = os.getenv(NOVENA_AUDIO_VOICE, "alloy").strip() or "alloy"
-                                audio_format = os.getenv(NOVENA_AUDIO_FORMAT, "mp3").strip().lower() or "mp3"
-                                audio_speed = float_env(NOVENA_AUDIO_SPEED, default=1.0, min_value=0.25, max_value=4.0)
+                                if (not force_refresh) and current_audio_hash != render_hash:
+                                    notion_remove_old_autogen_audio(page_id, notion_token, marker=audio_marker)
                                 audio_bytes = generate_openai_audio_bytes(
                                     api_key=openai_key,
                                     base_url=oai_base_url,
-                                    model=audio_model,
-                                    voice=audio_voice,
-                                    audio_format=audio_format,
-                                    speed=audio_speed,
+                                    model=str(settings["model"]),
+                                    voice=str(settings["voice"]),
+                                    audio_format=str(settings["format"]),
+                                    speed=float(settings["speed"]),
                                     text=audio_text,
                                 )
                                 filename = (
-                                    f"novena_day_{target_iso}_{re.sub(r'[^a-z0-9]+','-',normalize_name_for_match(saint_name)).strip('-')}.{audio_format}"
+                                    f"novena_day_{target_day.isoformat()}_{re.sub(r'[^a-z0-9]+','-',normalize_name_for_match(saint_name)).strip('-')}.{settings['format']}"
                                 )
-                                content_type = "audio/mpeg" if audio_format == "mp3" else f"audio/{audio_format}"
+                                content_type = audio_content_type(str(settings["format"]))
                                 upload_id = notion_create_file_upload(filename=filename, content_type=content_type, token=notion_token)
                                 notion_send_file_upload(upload_id, filename, content_type, audio_bytes, notion_token)
                                 notion_append_audio_block(
                                     page_id,
                                     upload_id,
-                                    f"Novena Audio - {saint_name} Day {day_num}",
+                                    f"Novena Audio - {saint_name} Day {day_num} {render_hash_marker(render_hash)}",
                                     notion_token,
                                     marker=audio_marker,
                                 )
+                                if page:
+                                    notion_update_audio_render_metadata(page, render_hash, notion_token)
                                 wrote_audio += 1
                             except Exception:
                                 if not bool_env(NOVENA_AUDIO_FAIL_OPEN, default=True):
