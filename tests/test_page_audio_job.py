@@ -265,7 +265,7 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(plan.fragments[1].source_url, "https://example.com/invitatory.mp3")
         self.assertEqual(plan.text_property, "Description")
         self.assertEqual(plan.text_target, "page_content")
-        self.assertEqual([block["type"] for block in plan.content_blocks], ["paragraph", "paragraph"])
+        self.assertEqual([block["type"] for block in plan.content_blocks], ["toggle"])
 
     def test_build_page_intention_fragment_reuses_cached_audio(self):
         page = {
@@ -331,7 +331,7 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertEqual(plan.fragments, [])
         self.assertEqual(plan.text_target, "page_content")
-        self.assertEqual([block["type"] for block in plan.content_blocks], ["paragraph", "paragraph"])
+        self.assertEqual([block["type"] for block in plan.content_blocks], ["toggle"])
 
     def test_apply_page_text_plan_syncs_text_only_builder(self):
         page = {"id": "page_1", "properties": {"Name": _title_prop("Night Prayer (Optional)")}}
@@ -380,8 +380,54 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertEqual(
             self.mod.desired_block_signature(blocks),
-            [("paragraph", "Ribbon Placement: Invitatory")],
+            [("paragraph", "Ribbon Placement: Invitatory", tuple())],
         )
+
+    def test_divine_office_content_blocks_builds_toggles(self):
+        html = (
+            "<p><span style=\"color: #ff0000;\">Ribbon Placement:</span><br />"
+            "Liturgy of the Hours Vol. II:<br />Antiphon: 1043</p>"
+            "<p>Lord, open my lips.<br />And my mouth will proclaim your praise.</p>"
+            "<p><span style=\"color: #ff0000;\">HYMN</span></p>"
+            "<p>O God, come to my assistance.</p>"
+            "<p><span style=\"color: #ff0000;\">Psalm 24</span></p>"
+            "<p>The Lord's is the earth and its fullness.</p>"
+        )
+
+        blocks = self.mod.divine_office_content_blocks_from_html(html)
+
+        self.assertEqual([block["type"] for block in blocks], ["toggle", "toggle", "toggle", "toggle"])
+        self.assertEqual(blocks[0]["toggle"]["rich_text"][0]["text"]["content"], "Ribbon Placement")
+        self.assertEqual(blocks[1]["toggle"]["rich_text"][0]["text"]["content"], "Opening")
+        self.assertEqual(blocks[2]["toggle"]["rich_text"][0]["text"]["content"], "Hymn")
+        self.assertEqual(blocks[3]["toggle"]["rich_text"][0]["text"]["content"], "Psalm 24")
+
+    def test_build_rss_audio_plan_uses_page_content_for_divine_office_feed(self):
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Evening Prayer"), "Intention": _rich_text_prop("For peace.")}}
+        config = {
+            "builder": "rss_audio_v1",
+            "rss_feed_url": "https://divineoffice.org/feed/",
+            "rss_match_strategy": "fixed_title",
+            "rss_match_text": "Evening Prayer",
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "intention_property": "Intention",
+            "intention_prefix": "For today's intention:",
+        }
+
+        with patch.object(
+            self.mod,
+            "fetch_rss_feed_entry",
+            return_value={
+                "title": "Mar 14, Evening Prayer",
+                "audio_url": "https://example.com/evening.mp3",
+                "content_html": "<p><span style='color:#ff0000;'>HYMN</span></p><p>Evening hymn.</p>",
+                "date": "2026-03-14",
+            },
+        ):
+            plan = self.mod.build_rss_audio_plan(page, config, "https://api.openai.com/v1")
+
+        self.assertEqual(plan.text_target, "page_content")
+        self.assertEqual([block["type"] for block in plan.content_blocks], ["toggle"])
 
     def test_build_morning_prayer_fragments_reuses_daily_novena_audio(self):
         page = {

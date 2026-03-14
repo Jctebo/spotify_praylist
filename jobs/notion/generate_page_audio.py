@@ -1495,47 +1495,181 @@ def plain_text_paragraphs_from_html(raw_html: str) -> List[str]:
     return paragraphs
 
 
+def notion_rich_text_chunks(text: str) -> List[Dict[str, Any]]:
+    value = normalize_whitespace(text)
+    if not value:
+        return []
+    return [{"type": "text", "text": {"content": chunk}} for chunk in shared.split_text_chunks(value, 1900)]
+
+
+def notion_paragraph_block(text: str) -> Dict[str, Any]:
+    return {"object": "block", "type": "paragraph", "paragraph": {"rich_text": notion_rich_text_chunks(text)}}
+
+
 def paragraphs_to_notion_blocks(paragraphs: Sequence[str]) -> List[Dict[str, Any]]:
     blocks: List[Dict[str, Any]] = []
     for paragraph in paragraphs:
         text = normalize_whitespace(paragraph)
         if not text:
             continue
-        rich_text = [{"type": "text", "text": {"content": chunk}} for chunk in shared.split_text_chunks(text, 1900)]
-        blocks.append({"object": "block", "type": "paragraph", "paragraph": {"rich_text": rich_text}})
+        blocks.append(notion_paragraph_block(text))
     return blocks
 
 
-def desired_block_signature(blocks: Sequence[Dict[str, Any]]) -> List[tuple[str, str]]:
-    out: List[tuple[str, str]] = []
+DIVINE_OFFICE_EXACT_HEADERS = {
+    "HYMN": "Hymn",
+    "PSALMODY": "Psalmody",
+    "READING": "Reading",
+    "SHORT READING": "Reading",
+    "RESPONSORY": "Responsory",
+    "INTERCESSIONS": "Intercessions",
+    "CONCLUDING PRAYER": "Concluding Prayer",
+    "CONCLUSION": "Conclusion",
+    "BLESSING AND DISMISSAL": "Blessing and Dismissal",
+    "GOSPEL CANTICLE": "Gospel Canticle",
+    "CANTICLE OF ZECHARIAH": "Canticle of Zechariah",
+    "CANTICLE OF MARY": "Canticle of Mary",
+    "EXAMINATION OF CONSCIENCE": "Examination of Conscience",
+}
+
+
+def strip_divine_office_nonprayer_html(raw_html: str) -> str:
+    value = str(raw_html or "").strip()
+    if not value:
+        return ""
+    value = re.sub(r'(?is)<div\b[^>]*class=["\'][^"\']*table-container[^"\']*["\'][^>]*>.*?</div>', "", value)
+    value = re.sub(r"(?is)<table\b[^>]*>.*?</table>", "", value)
+    return value
+
+
+def looks_like_divine_office_title(paragraph: str) -> bool:
+    value = normalize_whitespace(paragraph)
+    if not value:
+        return False
+    lowered = value.lower()
+    return bool(
+        re.search(r"\b(invitatory|morning prayer|midmorning prayer|midday prayer|midafternoon prayer|afternoon prayer|evening prayer|night prayer)\b", lowered)
+        and re.search(r"\bfor\b", lowered)
+    )
+
+
+def divine_office_section_header(paragraph: str) -> tuple[str, str]:
+    value = normalize_whitespace(paragraph)
+    if not value:
+        return "", ""
+    if value.startswith("Ribbon Placement:"):
+        remainder = normalize_whitespace(re.sub(r"^Ribbon Placement:\s*", "", value))
+        return "Ribbon Placement", remainder
+    exact = DIVINE_OFFICE_EXACT_HEADERS.get(value.upper())
+    if exact:
+        return exact, ""
+    if re.fullmatch(r"(Psalm|Canticle)\s+.+", value, flags=re.IGNORECASE):
+        return value, ""
+    if re.fullmatch(r"Ant\.\s*\d+.*", value, flags=re.IGNORECASE):
+        return value, ""
+    return "", ""
+
+
+def divine_office_content_blocks_from_html(raw_html: str) -> List[Dict[str, Any]]:
+    paragraphs = plain_text_paragraphs_from_html(strip_divine_office_nonprayer_html(raw_html))
+    sections: List[tuple[str, List[str]]] = []
+    current_title = ""
+    current_body: List[str] = []
+
+    def flush() -> None:
+        nonlocal current_title, current_body
+        body = [normalize_whitespace(part) for part in current_body if normalize_whitespace(part)]
+        title = normalize_whitespace(current_title)
+        if not title and not body:
+            current_body = []
+            return
+        if not title:
+            title = "Prayer Text"
+        sections.append((title, body))
+        current_title = ""
+        current_body = []
+
+    for paragraph in paragraphs:
+        text = normalize_whitespace(paragraph)
+        if not text:
+            continue
+        if looks_like_divine_office_title(text):
+            if not current_title:
+                current_title = "Opening"
+            current_body.append(text)
+            continue
+        header, remainder = divine_office_section_header(text)
+        if header:
+            flush()
+            current_title = header
+            if remainder:
+                current_body.append(remainder)
+            continue
+        if current_title == "Ribbon Placement" and re.match(
+            r"^(Lord, open my lips|God, come to my assistance|O God, come to my assistance|Examine your conscience)\b",
+            text,
+            flags=re.IGNORECASE,
+        ):
+            flush()
+            current_title = "Opening"
+        if not current_title:
+            current_title = "Opening"
+        current_body.append(text)
+    flush()
+
+    blocks: List[Dict[str, Any]] = []
+    for title, body in sections:
+        child_blocks = [notion_paragraph_block(part) for part in body if normalize_whitespace(part)]
+        toggle_payload: Dict[str, Any] = {"rich_text": notion_rich_text_chunks(title)}
+        if child_blocks:
+            toggle_payload["children"] = child_blocks
+        blocks.append({"object": "block", "type": "toggle", "toggle": toggle_payload})
+    return blocks
+
+
+def block_rich_text_signature(rich: Any) -> str:
+    if not isinstance(rich, list):
+        return ""
+    parts: List[str] = []
+    for item in rich:
+        if not isinstance(item, dict):
+            continue
+        plain = str(item.get("plain_text", "")).strip()
+        if plain:
+            parts.append(plain)
+            continue
+        text_payload = item.get("text") or {}
+        content = str(text_payload.get("content", "")).strip()
+        if content:
+            parts.append(content)
+    return normalize_whitespace(" ".join(parts))
+
+
+def desired_block_signature(blocks: Sequence[Dict[str, Any]]) -> List[tuple[str, str, tuple[Any, ...]]]:
+    out: List[tuple[str, str, tuple[Any, ...]]] = []
     for block in blocks:
         block_type = str(block.get("type", "")).strip()
         payload = block.get(block_type) or {}
-        rich = payload.get("rich_text") or []
-        text = ""
-        if isinstance(rich, list):
-            parts: List[str] = []
-            for item in rich:
-                if not isinstance(item, dict):
-                    continue
-                plain = str(item.get("plain_text", "")).strip()
-                if plain:
-                    parts.append(plain)
-                    continue
-                text_payload = item.get("text") or {}
-                content = str(text_payload.get("content", "")).strip()
-                if content:
-                    parts.append(content)
-            text = " ".join(parts).strip()
-        out.append((block_type, normalize_whitespace(text)))
+        text = block_rich_text_signature(payload.get("rich_text") or [])
+        children = payload.get("children") or []
+        child_signature = tuple(desired_block_signature(children)) if isinstance(children, list) and children else tuple()
+        out.append((block_type, text, child_signature))
     return out
 
 
-def existing_content_signature(blocks: Sequence[Dict[str, Any]]) -> List[tuple[str, str]]:
-    out: List[tuple[str, str]] = []
+def existing_content_signature(
+    blocks: Sequence[Dict[str, Any]],
+    token: str,
+) -> List[tuple[str, str, tuple[Any, ...]]]:
+    out: List[tuple[str, str, tuple[Any, ...]]] = []
     for block in blocks:
         block_type = str(block.get("type", "")).strip()
-        out.append((block_type, normalize_whitespace(shared.block_rich_text_plain(block))))
+        text = normalize_whitespace(shared.block_rich_text_plain(block))
+        child_signature: tuple[Any, ...] = tuple()
+        block_id = str(block.get("id", "")).strip()
+        if block_id and bool(block.get("has_children")):
+            child_signature = tuple(existing_content_signature(page_audio_cached_blocks(block_id, token), token))
+        out.append((block_type, text, child_signature))
     return out
 
 
@@ -1549,7 +1683,7 @@ def sync_page_content_blocks(page_id: str, token: str, desired_blocks: Sequence[
             preserved.append(block)
         else:
             removable.append(block)
-    if existing_content_signature(removable) == desired_block_signature(desired_blocks):
+    if existing_content_signature(removable, token) == desired_block_signature(desired_blocks):
         return False
     for block in removable:
         block_id = str(block.get("id", "")).strip()
@@ -1916,33 +2050,33 @@ def build_divine_office_invitatory_plan(
             source_url=feed_entry["audio_url"],
         )
     )
-    paragraphs = plain_text_paragraphs_from_html(feed_entry.get("content_html", ""))
+    content_blocks = divine_office_content_blocks_from_html(feed_entry.get("content_html", ""))
     return PageAudioPlan(
         fragments=fragments,
         synced_text="",
         text_property=str(config.get("text_property", DEFAULT_RSS_TEXT_PROPERTY)).strip() or DEFAULT_RSS_TEXT_PROPERTY,
         text_target="page_content",
-        content_blocks=paragraphs_to_notion_blocks(paragraphs),
+        content_blocks=content_blocks,
     )
 
 
 def build_divine_office_night_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
     feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=DIVINE_OFFICE_FEED_URL, match_text="Night Prayer")
-    paragraphs = plain_text_paragraphs_from_html(feed_entry.get("content_html", ""))
+    content_blocks = divine_office_content_blocks_from_html(feed_entry.get("content_html", ""))
     return PageAudioPlan(
         fragments=[],
         text_target="page_content",
-        content_blocks=paragraphs_to_notion_blocks(paragraphs),
+        content_blocks=content_blocks,
     )
 
 
 def build_divine_office_morning_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
     entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=DIVINE_OFFICE_FEED_URL, match_text="Morning Prayer")
-    paragraphs = plain_text_paragraphs_from_html(entry.get("content_html", ""))
+    content_blocks = divine_office_content_blocks_from_html(entry.get("content_html", ""))
     return PageAudioPlan(
         fragments=[],
         text_target="page_content",
-        content_blocks=paragraphs_to_notion_blocks(paragraphs),
+        content_blocks=content_blocks,
     )
 
 
@@ -1992,6 +2126,12 @@ def build_rss_audio_plan(
     )
     paragraphs = plain_text_paragraphs_from_html(feed_entry.get("content_html", ""))
     text_property = str(config.get("text_property", "")).strip()
+    if "divineoffice.org" in feed_url.lower():
+        return PageAudioPlan(
+            fragments=fragments,
+            text_target="page_content",
+            content_blocks=divine_office_content_blocks_from_html(feed_entry.get("content_html", "")),
+        )
     return PageAudioPlan(
         fragments=fragments,
         synced_text="\n\n".join(paragraphs),
