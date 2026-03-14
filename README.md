@@ -270,7 +270,12 @@ Optional variables:
 - `NOVENA_AUDIO_SPEED` (default `1.0`, range `0.25-4.0`)
 - `NOVENA_AUDIO_CAPTION` (default `Daily Novena Prayer (Audio)`)
 - `NOVENA_AUDIO_FAIL_OPEN` (default `true`; if `true`, text update continues even if audio upload fails)
-- audio is cached by a render hash derived from `NOVENA_AUDIO_*`, `OAI_API_BASE_URL`, `OAI_MODEL`, and the stable novena/saint-day identity inputs for that render; existing Notion audio is reused when that hash matches
+- `NOVENA_AUDIO_LIBRARY_DIR` (optional; when set, saint novena audio is prebuilt into a visible library folder with readable `day-01...day-09` filenames and JSON sidecars)
+- saint-day novenas now cache two layers:
+- prompt payload JSON once per saint/feast window
+- the full 9-day audio set once per saint/feast window
+- each day the job uploads the prebuilt file for that day into Notion instead of regenerating TTS inline
+- saint-day render hashes now include the actual fragment text, so a text change invalidates the cached file cleanly
 - `NOTION_AUDIO_RENDER_HASH_PROPERTY` (optional; default `Render Hash`; if that property exists on the page, the render hash is written there after a fresh audio render)
 - `NOTION_AUDIO_SAVED_PROPERTY` (optional; default `Audio Saved`; if that property exists on the page, the job writes the fresh render timestamp there)
 - `USCCB_READINGS_ENABLED` (default `true`; appends USCCB daily Mass readings as Notion toggles at page bottom)
@@ -300,6 +305,7 @@ Current config:
 - `MORNING_PRAYER_OUTPUT` in your Notion `Audio Outputs` database
 - target row: `Morning Prayer`
 - source fragments: `Audio Fragments` rows like `Morning Offering`, `Daily Consecration`, and `Intercessory Litany`
+- each fragment can use either `Spoken Text` or an LLM `Prompt` plus optional `Prompt Model`
 - special fragment: monthly intention from the Pope's Worldwide Prayer Network English yearly PDF feed, cached on disk only
 - special fragment: `Daily Novenas from Liturgical Calendar` audio blocks reused directly as source fragments
 - `DIVINE_OFFICE_INVITATORY_OUTPUT` in `Audio Outputs`
@@ -351,6 +357,16 @@ Environment variables:
 - `PAGE_AUDIO_CONFIG_KEY` (optional single-config filter)
 - `PAGE_AUDIO_ROW_TITLE` (optional single-row filter)
 - `PAGE_AUDIO_FAIL_OPEN` (default `false`)
+
+Audio fragment row shape:
+- `Name`
+- `Fragment Key`
+- `Spoken Text` for fixed text fragments
+- `Prompt` for LLM-backed fragments
+- `Prompt Model` optional; defaults to `OAI_MODEL` or `gpt-4.1-mini`
+- `Collection`
+- `Enabled`
+- optional `Start Date` and `End Date`
 
 Local run:
 

@@ -9,6 +9,7 @@ import sys
 import time
 from copy import deepcopy
 from functools import lru_cache
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 from urllib.parse import unquote, urlparse
 
@@ -58,6 +59,7 @@ NOTION_AUDIO_RENDER_HASH_PROPERTY = "NOTION_AUDIO_RENDER_HASH_PROPERTY"  # optio
 NOTION_AUDIO_SAVED_PROPERTY = "NOTION_AUDIO_SAVED_PROPERTY"  # optional, default Audio Saved
 
 NOVENA_AUDIO_ENABLED = "NOVENA_AUDIO_ENABLED"  # default false
+NOVENA_AUDIO_LIBRARY_DIR = "NOVENA_AUDIO_LIBRARY_DIR"
 NOVENA_AUDIO_MODEL = "NOVENA_AUDIO_MODEL"  # default gpt-4o-mini-tts
 NOVENA_AUDIO_VOICE = "NOVENA_AUDIO_VOICE"  # default alloy
 NOVENA_AUDIO_FORMAT = "NOVENA_AUDIO_FORMAT"  # default mp3
@@ -67,7 +69,8 @@ NOVENA_AUDIO_FAIL_OPEN = "NOVENA_AUDIO_FAIL_OPEN"  # default true
 NOVENA_AUDIO_MARKER = "[AUTOGEN_NOVENA_AUDIO]"
 NOVENA_AUDIO_HASH_MARKER_PREFIX = "[AUTOGEN_NOVENA_AUDIO_HASH:"
 DAILY_NOVENA_AUDIO_RENDER_VERSION = "daily_novena_audio_v1"
-SAINT_NOVENA_AUDIO_RENDER_VERSION = "saint_novena_audio_v1"
+SAINT_NOVENA_AUDIO_RENDER_VERSION = "saint_novena_audio_v2"
+SAINT_NOVENA_PAYLOAD_RENDER_VERSION = "saint_novena_payload_v1"
 NOVENA_SECTION_MARKER = "[AUTOGEN_DAILY_ROLLING_NOVENA]"
 NOVENA_DAY_MODE = "NOVENA_DAY_MODE"  # default true when writing into calendar rows
 NOVENA_TEST_SAINT_NAME = "NOVENA_TEST_SAINT_NAME"  # optional saint name for day-by-day backfill test
@@ -75,6 +78,9 @@ NOVENA_TEST_POPULATE_ALL_DAYS = "NOVENA_TEST_POPULATE_ALL_DAYS"  # default false
 NOVENA_DAY_SECTION_MARKER = "AUTOGEN_NOVENA_DAY"
 USCCB_SECTION_MARKER = "[AUTOGEN_USCCB_READINGS]"
 NOTION_MAX_BLOCK_CHILDREN = 100
+DEFAULT_NOVENA_AUDIO_LIBRARY_RELATIVE = r"OneDrive\Pictures\Samsung Gallery\DCIM\Novena Audio Library"
+DEFAULT_NOVENA_AUDIO_LIBRARY_FALLBACK = ".cache/novena_audio_library"
+ROOT = Path(__file__).resolve().parents[2]
 
 USCCB_READINGS_ENABLED = "USCCB_READINGS_ENABLED"  # default true
 USCCB_READINGS_FAIL_OPEN = "USCCB_READINGS_FAIL_OPEN"  # default true
@@ -128,6 +134,25 @@ def float_env(name: str, default: float, min_value: float, max_value: float) -> 
     except Exception:
         return default
     return max(min_value, min(max_value, value))
+
+
+def slugify_kebab(text: str) -> str:
+    value = re.sub(r"[^a-z0-9]+", "-", str(text or "").strip().lower()).strip("-")
+    return value or "item"
+
+
+def default_novena_audio_library_dir() -> Path:
+    user_profile = os.getenv("USERPROFILE", "").strip()
+    if user_profile:
+        return Path(user_profile) / Path(DEFAULT_NOVENA_AUDIO_LIBRARY_RELATIVE)
+    return ROOT / DEFAULT_NOVENA_AUDIO_LIBRARY_FALLBACK
+
+
+def novena_audio_library_dir() -> Path:
+    raw = os.getenv(NOVENA_AUDIO_LIBRARY_DIR, "").strip()
+    root = Path(raw) if raw else default_novena_audio_library_dir()
+    root.mkdir(parents=True, exist_ok=True)
+    return root
 
 
 def parse_utc_offset(offset_text: str) -> datetime.timezone:
@@ -689,17 +714,67 @@ def saint_novena_day_audio_text(day_num: int, devotional_payload: Dict[str, Any]
     theme = str(row.get("theme", "")).strip()
     intercession = str(row.get("intercession", "")).strip()
     daily_prayer = str(row.get("daily_prayer", "")).strip() or "Daily novena prayer."
-    parts = [f"Day {day_num} of the novena."]
-    if theme:
-        parts.append(f"Theme: {theme}.")
-    if intercession:
-        parts.append(f"Intercession: {intercession}.")
-    if opening:
-        parts.append(opening)
-    parts.append(daily_prayer)
-    if closing:
-        parts.append(closing)
+    parts = [
+        row["text"]
+        for row in saint_novena_day_audio_fragments(
+            day_num=day_num,
+            opening=opening,
+            closing=closing,
+            theme=theme,
+            intercession=intercession,
+            daily_prayer=daily_prayer,
+        )
+        if str(row.get("text", "")).strip()
+    ]
     return "\n\n".join(parts)
+
+
+def saint_novena_day_audio_fragments(
+    day_num: int,
+    opening: str,
+    closing: str,
+    theme: str,
+    intercession: str,
+    daily_prayer: str,
+) -> List[Dict[str, str]]:
+    fragments: List[Dict[str, str]] = [
+        {"key": "day_intro", "label": "Day Intro", "text": f"Day {day_num} of the novena."},
+    ]
+    if theme:
+        fragments.append({"key": "theme", "label": "Theme", "text": f"Theme: {theme}."})
+    if intercession:
+        fragments.append({"key": "intercession", "label": "Intercession", "text": f"Intercession: {intercession}."})
+    if opening:
+        fragments.append({"key": "opening_prayer", "label": "Opening Prayer", "text": opening})
+    fragments.append({"key": "daily_prayer", "label": "Daily Prayer", "text": daily_prayer or "Daily novena prayer."})
+    if closing:
+        fragments.append({"key": "closing_prayer", "label": "Closing Prayer", "text": closing})
+    return fragments
+
+
+def saint_novena_fragments_for_day(day_num: int, devotional_payload: Dict[str, Any]) -> List[Dict[str, str]]:
+    opening = str(devotional_payload.get("opening_prayer", "")).strip()
+    closing = str(devotional_payload.get("closing_prayer", "")).strip()
+    daily = devotional_payload.get("daily_prayers") or []
+    by_day: Dict[int, Dict[str, Any]] = {}
+    if isinstance(daily, list):
+        for row in daily:
+            if isinstance(row, dict):
+                try:
+                    dn = int(row.get("day", 0))
+                except Exception:
+                    dn = 0
+                if 1 <= dn <= 9:
+                    by_day[dn] = row
+    row = by_day.get(day_num, {})
+    return saint_novena_day_audio_fragments(
+        day_num=day_num,
+        opening=opening,
+        closing=closing,
+        theme=str(row.get("theme", "")).strip(),
+        intercession=str(row.get("intercession", "")).strip(),
+        daily_prayer=str(row.get("daily_prayer", "")).strip() or "Daily novena prayer.",
+    )
 
 
 def notion_create_file_upload(filename: str, content_type: str, token: str) -> str:
@@ -737,6 +812,139 @@ def notion_download_bytes(url: str) -> tuple[bytes, str]:
     if not raw:
         raise RuntimeError("Notion source file download returned empty content.")
     return raw, str(response.headers.get("Content-Type", "")).strip()
+
+
+def ensure_saint_devotional_payload_cache(
+    *,
+    library_root: Path,
+    saint_name: str,
+    feast_day: str,
+    celebration_type: str,
+    api_key: str,
+    base_url: str,
+    model: str,
+) -> tuple[Dict[str, Any], str, Path]:
+    payload_hash = compute_saint_novena_payload_render_hash(base_url, model, saint_name, feast_day, celebration_type)
+    cache_path = saint_novena_payload_path(library_root, saint_name, feast_day)
+    cached = json_read(cache_path)
+    if cached and str(cached.get("render_hash", "")).strip() == payload_hash and isinstance(cached.get("payload"), dict):
+        return dict(cached.get("payload") or {}), "cached", cache_path
+    payload = call_openai_saint_devotional_content(
+        api_key=api_key,
+        base_url=base_url,
+        model=model,
+        saint_name=saint_name,
+        feast_day=feast_day,
+        celebration_type=celebration_type,
+    )
+    json_write(
+        cache_path,
+        {
+            "render_hash": payload_hash,
+            "generated_at": iso_utc_now(),
+            "saint_name": saint_name,
+            "feast_day": feast_day,
+            "celebration_type": celebration_type,
+            "model": model,
+            "base_url": str(base_url or "").rstrip("/"),
+            "payload": payload,
+        },
+    )
+    return payload, "generated", cache_path
+
+
+def ensure_saint_novena_audio_library(
+    *,
+    saint_name: str,
+    feast_day: str,
+    celebration_type: str,
+    devotional_payload: Dict[str, Any],
+    settings: Dict[str, Any],
+    api_key: str,
+    base_url: str,
+    oai_model: str,
+) -> Dict[int, Dict[str, Any]]:
+    library_root = novena_audio_library_dir()
+    feast_date = date_from_iso(feast_day)
+    prep_start = feast_date - datetime.timedelta(days=9)
+    results: Dict[int, Dict[str, Any]] = {}
+    for day_num in range(1, 10):
+        target_day = prep_start + datetime.timedelta(days=day_num - 1)
+        fragments = saint_novena_fragments_for_day(day_num, devotional_payload)
+        audio_text = "\n\n".join(str(row.get("text", "")).strip() for row in fragments if str(row.get("text", "")).strip())
+        render_hash = compute_saint_day_audio_render_hash(
+            base_url=base_url,
+            settings=settings,
+            saint_name=saint_name,
+            feast_day=feast_day,
+            celebration_type=celebration_type,
+            day_num=day_num,
+            oai_model=oai_model,
+            fragments=fragments,
+            full_text=audio_text,
+        )
+        audio_path, meta_path = saint_novena_day_audio_paths(
+            library_root,
+            saint_name,
+            feast_day,
+            day_num,
+            target_day,
+            str(settings.get("format", "mp3")),
+        )
+        cached_meta = json_read(meta_path)
+        if audio_path.exists() and cached_meta and str(cached_meta.get("render_hash", "")).strip() == render_hash:
+            results[day_num] = {
+                "mode": "cached",
+                "render_hash": render_hash,
+                "audio_text": audio_text,
+                "fragments": fragments,
+                "audio_path": audio_path,
+                "meta_path": meta_path,
+                "target_day": target_day,
+            }
+            continue
+
+        audio_bytes = generate_openai_audio_bytes(
+            api_key=api_key,
+            base_url=base_url,
+            model=str(settings["model"]),
+            voice=str(settings["voice"]),
+            audio_format=str(settings["format"]),
+            speed=float(settings["speed"]),
+            text=audio_text,
+        )
+        audio_path.parent.mkdir(parents=True, exist_ok=True)
+        audio_path.write_bytes(audio_bytes)
+        json_write(
+            meta_path,
+            {
+                "generated_at": iso_utc_now(),
+                "saint_name": saint_name,
+                "feast_day": feast_day,
+                "celebration_type": celebration_type,
+                "day_num": day_num,
+                "target_day": target_day.isoformat(),
+                "render_hash": render_hash,
+                "audio_format": str(settings.get("format", "")).strip(),
+                "tts_model": str(settings.get("model", "")).strip(),
+                "tts_voice": str(settings.get("voice", "")).strip(),
+                "tts_speed": float(settings.get("speed", 1.0)),
+                "text_model": str(oai_model or "").strip(),
+                "audio_file": audio_path.name,
+                "fragments": fragments,
+                "full_text": audio_text,
+            },
+        )
+        results[day_num] = {
+            "mode": "generated",
+            "render_hash": render_hash,
+            "audio_text": audio_text,
+            "fragments": fragments,
+            "audio_path": audio_path,
+            "meta_path": meta_path,
+            "target_day": target_day,
+        }
+    return results
 
 
 def infer_filename_from_url(url: str, fallback_stem: str, content_type: str) -> str:
@@ -925,6 +1133,8 @@ def compute_saint_day_audio_render_hash(
     celebration_type: str,
     day_num: int,
     oai_model: str,
+    fragments: Optional[Sequence[Dict[str, Any]]] = None,
+    full_text: str = "",
 ) -> str:
     payload = {
         "type": SAINT_NOVENA_AUDIO_RENDER_VERSION,
@@ -938,8 +1148,77 @@ def compute_saint_day_audio_render_hash(
         "feast_day": str(feast_day or "").strip(),
         "celebration_type": str(celebration_type or "").strip(),
         "day_num": int(day_num),
+        "full_text": str(full_text or "").strip(),
+        "fragments": [
+            {
+                "key": str((row or {}).get("key", "")).strip(),
+                "label": str((row or {}).get("label", "")).strip(),
+                "text": str((row or {}).get("text", "")).strip(),
+            }
+            for row in (fragments or [])
+            if isinstance(row, dict)
+        ],
     }
     return compute_render_hash(payload)
+
+
+def compute_saint_novena_payload_render_hash(
+    base_url: str,
+    model: str,
+    saint_name: str,
+    feast_day: str,
+    celebration_type: str,
+) -> str:
+    payload = {
+        "type": SAINT_NOVENA_PAYLOAD_RENDER_VERSION,
+        "base_url": str(base_url or "").rstrip("/"),
+        "text_model": str(model or "").strip(),
+        "saint_name": str(saint_name or "").strip(),
+        "feast_day": str(feast_day or "").strip(),
+        "celebration_type": str(celebration_type or "").strip(),
+    }
+    return compute_render_hash(payload)
+
+
+def iso_utc_now() -> str:
+    return datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def json_read(path: Path) -> Optional[Dict[str, Any]]:
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def json_write(path: Path, payload: Dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, ensure_ascii=True), encoding="utf-8")
+
+
+def saint_novena_library_folder(root: Path, saint_name: str, feast_day: str) -> Path:
+    return root / f"{str(feast_day or '').strip()}_{slugify_kebab(saint_name)}"
+
+
+def saint_novena_payload_path(root: Path, saint_name: str, feast_day: str) -> Path:
+    folder = saint_novena_library_folder(root, saint_name, feast_day)
+    return folder / f"{str(feast_day or '').strip()}_{slugify_kebab(saint_name)}_payload.json"
+
+
+def saint_novena_day_audio_paths(
+    root: Path,
+    saint_name: str,
+    feast_day: str,
+    day_num: int,
+    target_day: datetime.date,
+    audio_format: str,
+) -> tuple[Path, Path]:
+    folder = saint_novena_library_folder(root, saint_name, feast_day)
+    base = f"day-{int(day_num):02d}_{target_day.isoformat()}_{slugify_kebab(saint_name)}"
+    return folder / f"{base}.{audio_format}", folder / f"{base}.json"
 
 
 def normalize_romcal_calendar(calendar: str) -> str:
@@ -2318,9 +2597,14 @@ def main() -> int:
             test_backfill = bool_env(NOVENA_TEST_POPULATE_ALL_DAYS, default=False)
             force_refresh = bool_env(NOTION_SAINT_REFRESH_ALL, default=False)
             audio_enabled = bool_env(NOVENA_AUDIO_ENABLED, default=False)
+            audio_settings = novena_audio_settings() if audio_enabled else {}
             wrote_sections = 0
             wrote_audio = 0
             skipped_existing = 0
+            payload_cached = 0
+            payload_generated = 0
+            library_cached = 0
+            library_generated = 0
             today_page: Optional[Dict[str, Any]] = None
 
             # Keep USCCB daily readings append for today's calendar row.
@@ -2424,14 +2708,37 @@ def main() -> int:
                     if not target_jobs:
                         continue
 
-                    devotional_payload = call_openai_saint_devotional_content(
+                    celebration_type = str(saint.get("celebration_rank", "unknown"))
+                    devotional_payload, payload_mode, _payload_path = ensure_saint_devotional_payload_cache(
+                        library_root=novena_audio_library_dir(),
+                        saint_name=saint_name,
+                        feast_day=feast_iso,
+                        celebration_type=celebration_type,
                         api_key=openai_key,
                         base_url=oai_base_url,
                         model=oai_model,
-                        saint_name=saint_name,
-                        feast_day=feast_iso,
-                        celebration_type=str(saint.get("celebration_rank", "unknown")),
                     )
+                    if payload_mode == "generated":
+                        payload_generated += 1
+                    else:
+                        payload_cached += 1
+                    library_audio: Dict[int, Dict[str, Any]] = {}
+                    if audio_enabled:
+                        library_audio = ensure_saint_novena_audio_library(
+                            saint_name=saint_name,
+                            feast_day=feast_iso,
+                            celebration_type=celebration_type,
+                            devotional_payload=devotional_payload,
+                            settings=audio_settings,
+                            api_key=openai_key,
+                            base_url=oai_base_url,
+                            oai_model=oai_model,
+                        )
+                        for day_payload in library_audio.values():
+                            if str(day_payload.get("mode", "")).strip() == "generated":
+                                library_generated += 1
+                            else:
+                                library_cached += 1
                     for job in target_jobs:
                         page = job.get("page") if isinstance(job.get("page"), dict) else {}
                         page_id = str(job.get("page_id", "")).strip()
@@ -2445,26 +2752,21 @@ def main() -> int:
                         audio_text = ""
                         current_audio_hash = ""
                         render_hash = ""
-                        settings: Dict[str, Any] = {}
+                        audio_path: Optional[Path] = None
                         needs_audio = False
                         if audio_enabled:
-                            audio_text = saint_novena_day_audio_text(day_num, devotional_payload)
-                            settings = novena_audio_settings()
-                            render_hash = compute_saint_day_audio_render_hash(
-                                base_url=oai_base_url,
-                                settings=settings,
-                                saint_name=saint_name,
-                                feast_day=feast_iso,
-                                celebration_type=str(saint.get("celebration_rank", "unknown")),
-                                day_num=day_num,
-                                oai_model=oai_model,
-                            )
+                            audio_info = library_audio.get(day_num) or {}
+                            audio_text = str(audio_info.get("audio_text", "")).strip()
+                            render_hash = str(audio_info.get("render_hash", "")).strip()
+                            audio_path = audio_info.get("audio_path") if isinstance(audio_info.get("audio_path"), Path) else None
                             current_audio_hash = notion_get_autogen_audio_render_hash(
                                 page_id,
                                 notion_token,
                                 marker=audio_marker,
                             )
-                            needs_audio = force_refresh or (current_audio_hash != render_hash)
+                            needs_audio = bool(render_hash and audio_path and audio_path.exists()) and (
+                                force_refresh or (current_audio_hash != render_hash)
+                            )
                         if not needs_section and not needs_audio:
                             skipped_existing += 1
                             continue
@@ -2504,19 +2806,13 @@ def main() -> int:
                                     notion_remove_old_autogen_audio(page_id, notion_token, marker=audio_marker)
                                 if (not force_refresh) and current_audio_hash != render_hash:
                                     notion_remove_old_autogen_audio(page_id, notion_token, marker=audio_marker)
-                                audio_bytes = generate_openai_audio_bytes(
-                                    api_key=openai_key,
-                                    base_url=oai_base_url,
-                                    model=str(settings["model"]),
-                                    voice=str(settings["voice"]),
-                                    audio_format=str(settings["format"]),
-                                    speed=float(settings["speed"]),
-                                    text=audio_text,
-                                )
-                                filename = (
-                                    f"novena_day_{target_day.isoformat()}_{re.sub(r'[^a-z0-9]+','-',normalize_name_for_match(saint_name)).strip('-')}.{settings['format']}"
-                                )
-                                content_type = audio_content_type(str(settings["format"]))
+                                if not audio_path or not audio_path.exists():
+                                    raise RuntimeError(
+                                        f"Missing cached novena audio file for {saint_name} day {day_num}."
+                                    )
+                                audio_bytes = audio_path.read_bytes()
+                                filename = audio_path.name
+                                content_type = audio_content_type(str(audio_settings["format"]))
                                 upload_id = notion_create_file_upload(filename=filename, content_type=content_type, token=notion_token)
                                 notion_send_file_upload(upload_id, filename, content_type, audio_bytes, notion_token)
                                 notion_append_audio_block(
@@ -2534,6 +2830,8 @@ def main() -> int:
                                     raise
                 write_mode = (
                     f"saint_radar_novena_day_by_day:sections={wrote_sections}:audio={wrote_audio}:"
+                    f"payload_cached={payload_cached}:payload_generated={payload_generated}:"
+                    f"library_cached={library_cached}:library_generated={library_generated}:"
                     f"skipped_existing={skipped_existing}:force_refresh={str(force_refresh).lower()}"
                 )
             if target_page:

@@ -19,6 +19,7 @@ import xml.etree.ElementTree as ET
 
 import imageio_ffmpeg
 import requests
+from openai import OpenAI
 from pypdf import PdfReader
 
 
@@ -33,6 +34,7 @@ JOB_UTC_OFFSET = "JOB_UTC_OFFSET"
 
 OPENAI_API_KEY = "OPENAI_API_KEY"
 OAI_API_BASE_URL = "OAI_API_BASE_URL"
+OAI_MODEL = "OAI_MODEL"
 NOTION_TOKEN = "NOTION_TOKEN"
 
 NOTION_AUDIO_PLATFORM_VALUE = "NOTION_AUDIO_PLATFORM_VALUE"
@@ -67,6 +69,7 @@ DEFAULT_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY = "Auto Audio Resolver 2"
 PAGE_AUDIO_MARKER = "[AUTOGEN_PAGE_AUDIO]"
 PAGE_AUDIO_HASH_MARKER_PREFIX = "[AUTOGEN_PAGE_AUDIO_HASH:"
 PAGE_AUDIO_RENDER_VERSION = "page_audio_v1"
+PAGE_AUDIO_PROMPT_RENDER_VERSION = "page_audio_prompt_v1"
 DEFAULT_SILENCE_MS = 450
 DEFAULT_DAILY_NOVENA_PAGE_TITLE = "Daily Novenas from Liturgical Calendar"
 MORNING_PRAYER_BUILDER = "morning_prayer_v1"
@@ -121,6 +124,8 @@ PAGE_AUDIO_CONFIG_INTENTION_PREFIX_PROPERTY = "Intention Prefix"
 AUDIO_FRAGMENT_TITLE_PROPERTY = "Name"
 AUDIO_FRAGMENT_KEY_PROPERTY = "Fragment Key"
 AUDIO_FRAGMENT_TEXT_PROPERTY = "Spoken Text"
+AUDIO_FRAGMENT_PROMPT_PROPERTY = "Prompt"
+AUDIO_FRAGMENT_PROMPT_MODEL_PROPERTY = "Prompt Model"
 AUDIO_FRAGMENT_ENABLED_PROPERTY = "Enabled"
 AUDIO_FRAGMENT_START_DATE_PROPERTY = "Start Date"
 AUDIO_FRAGMENT_END_DATE_PROPERTY = "End Date"
@@ -170,6 +175,8 @@ class PageAudioFragment:
     label: str
     hash_value: str
     text: str = ""
+    prompt: str = ""
+    prompt_model: str = ""
     source_url: str = ""
     content_type: str = ""
     cache_path: str = ""
@@ -621,17 +628,27 @@ def audio_fragment_from_notion_page(
     title = shared.page_title(page, AUDIO_FRAGMENT_TITLE_PROPERTY).strip()
     key = page_property_text(page, AUDIO_FRAGMENT_KEY_PROPERTY).strip() or slugify(title)
     text = normalize_whitespace(page_property_text(page, AUDIO_FRAGMENT_TEXT_PROPERTY))
-    if not key or not text:
+    prompt = normalize_whitespace(page_property_text(page, AUDIO_FRAGMENT_PROMPT_PROPERTY))
+    if not key or (not text and not prompt):
         return None
     collection = page_property_text(page, AUDIO_FRAGMENT_COLLECTION_PROPERTY).strip() or AUDIO_FRAGMENT_DEFAULT_COLLECTION
-    return key, {
+    payload = {
         "key": key,
         "label": title or key,
-        "text": text,
         "collection": collection,
         "order": page_property_number(page, AUDIO_FRAGMENT_ORDER_PROPERTY, default=0.0),
         "notes": page_property_text(page, AUDIO_FRAGMENT_NOTES_PROPERTY).strip(),
     }
+    if text:
+        payload["text"] = text
+    if prompt and not text:
+        payload["prompt"] = prompt
+        payload["prompt_model"] = (
+            page_property_text(page, AUDIO_FRAGMENT_PROMPT_MODEL_PROPERTY).strip()
+            or os.getenv(OAI_MODEL, "").strip()
+            or "gpt-4.1-mini"
+        )
+    return key, payload
 
 
 def load_audio_fragments_from_notion(token: str) -> Dict[str, Any]:
@@ -978,6 +995,158 @@ def stable_text_fragment(
     )
 
 
+def render_fragment_prompt_template(prompt: str, page: Optional[Dict[str, Any]], target_date: datetime.date) -> str:
+    title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
+    page_title = shared.page_title(page or {}, title_property).strip() if isinstance(page, dict) else ""
+    replacements = {
+        "{today}": target_date.strftime("%B %d, %Y"),
+        "{today_iso}": target_date.isoformat(),
+        "{month}": target_date.strftime("%B"),
+        "{year}": str(target_date.year),
+        "{page_title}": page_title,
+    }
+    value = str(prompt or "")
+    for needle, replacement in replacements.items():
+        value = value.replace(needle, replacement)
+    return normalize_whitespace(value)
+
+
+def prompt_fragment_hash(prompt_text: str, prompt_model: str) -> str:
+    payload = {
+        "type": PAGE_AUDIO_PROMPT_RENDER_VERSION,
+        "prompt": normalize_whitespace(prompt_text),
+        "prompt_model": str(prompt_model or "").strip(),
+    }
+    return shared.compute_render_hash(payload)
+
+
+def prompt_text_cache_paths(cache_root: Path, collection: str, key: str) -> Path:
+    directory = cache_root / "prompt_text" / slugify(collection)
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory / f"{slugify(key)}.json"
+
+
+def load_prompt_text_cache(cache_root: Path, collection: str, key: str, prompt_hash: str) -> str:
+    path = prompt_text_cache_paths(cache_root, collection, key)
+    if not path.exists():
+        return ""
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return ""
+    cached_hash = str(payload.get("prompt_hash", "")).strip().lower()
+    if cached_hash != str(prompt_hash or "").strip().lower():
+        return ""
+    return normalize_whitespace(str(payload.get("text", "")).strip())
+
+
+def save_prompt_text_cache(
+    cache_root: Path,
+    collection: str,
+    key: str,
+    *,
+    prompt_hash: str,
+    prompt: str,
+    prompt_model: str,
+    text: str,
+) -> None:
+    path = prompt_text_cache_paths(cache_root, collection, key)
+    payload = {
+        "prompt_hash": str(prompt_hash or "").strip(),
+        "prompt": normalize_whitespace(prompt),
+        "prompt_model": str(prompt_model or "").strip(),
+        "text": normalize_whitespace(text),
+    }
+    path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def call_openai_fragment_prompt(
+    api_key: str,
+    base_url: str,
+    model: str,
+    prompt: str,
+) -> str:
+    client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
+    system = "Return plain text only. No markdown, no commentary, no surrounding quotes."
+    user = str(prompt or "").strip()
+    try:
+        response = client.responses.create(
+            model=model,
+            temperature=0,
+            input=[
+                {"role": "system", "content": [{"type": "input_text", "text": system}]},
+                {"role": "user", "content": [{"type": "input_text", "text": user}]},
+            ],
+        )
+        text = normalize_whitespace(str(getattr(response, "output_text", "") or "").strip())
+        if text:
+            return text
+    except Exception:
+        pass
+    chat = client.chat.completions.create(
+        model=model,
+        temperature=0,
+        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
+    )
+    choices = getattr(chat, "choices", None) or []
+    if not choices:
+        raise RuntimeError("Prompt fragment generation returned no choices.")
+    content = normalize_whitespace(str(getattr(getattr(choices[0], "message", None), "content", "") or "").strip())
+    if not content:
+        raise RuntimeError("Prompt fragment generation returned empty text.")
+    return content
+
+
+def stable_prompt_fragment(
+    *,
+    cache_root: Path,
+    collection: str,
+    key: str,
+    label: str,
+    prompt: str,
+    prompt_model: str,
+    settings: Dict[str, Any],
+    base_url: str,
+) -> PageAudioFragment:
+    rendered_prompt = normalize_whitespace(prompt)
+    if not rendered_prompt:
+        raise RuntimeError(f"Prompt fragment '{label}' rendered empty prompt text.")
+    hash_value = prompt_fragment_hash(rendered_prompt, prompt_model)
+    reusable = load_library_audio_fragment(
+        cache_root=cache_root,
+        collection=collection,
+        key=key,
+        label=label,
+        hash_value=hash_value,
+        audio_format=str(settings["format"]),
+    )
+    if reusable is not None:
+        reusable.fragment_key = key
+        reusable.collection = collection
+        reusable.prompt = rendered_prompt
+        reusable.prompt_model = prompt_model
+        return reusable
+    audio_path, meta_path = page_audio_library_fragment_paths(
+        cache_root,
+        collection,
+        key,
+        str(settings["format"]),
+    )
+    cached_text = load_prompt_text_cache(cache_root, collection, key, hash_value)
+    return PageAudioFragment(
+        kind="prompt",
+        label=label,
+        hash_value=hash_value,
+        text=cached_text,
+        prompt=rendered_prompt,
+        prompt_model=prompt_model,
+        persist_path=str(audio_path),
+        persist_meta_path=str(meta_path),
+        fragment_key=key,
+        collection=collection,
+    )
+
+
 def build_page_intention_fragment(
     page: Dict[str, Any],
     *,
@@ -1061,6 +1230,7 @@ def resolve_output_sequence_fragment(
     *,
     fragments_map: Dict[str, Dict[str, Any]],
     settings: Dict[str, Any],
+    page: Dict[str, Any],
     pages: Sequence[Dict[str, Any]],
     title_property: str,
     config: Dict[str, Any],
@@ -1083,13 +1253,32 @@ def resolve_output_sequence_fragment(
     spec = fragments_map.get(value)
     if not isinstance(spec, dict):
         raise RuntimeError(f"Unknown audio fragment '{value}'.")
+    collection = str(spec.get("collection", AUDIO_FRAGMENT_DEFAULT_COLLECTION)).strip() or AUDIO_FRAGMENT_DEFAULT_COLLECTION
+    key = str(spec.get("key", value)).strip() or value
+    label = str(spec.get("label", value)).strip() or value
+    text = str(spec.get("text", "")).strip()
+    prompt = str(spec.get("prompt", "")).strip()
+    if prompt and not text:
+        prompt_model = str(spec.get("prompt_model", "")).strip() or os.getenv(OAI_MODEL, "").strip() or "gpt-4.1-mini"
+        return [
+            stable_prompt_fragment(
+                cache_root=cache_root,
+                collection=collection,
+                key=key,
+                label=label,
+                prompt=render_fragment_prompt_template(prompt, page, shared.local_today()),
+                prompt_model=prompt_model,
+                settings=settings,
+                base_url=base_url,
+            )
+        ]
     return [
         stable_text_fragment(
             cache_root=cache_root,
-            collection=str(spec.get("collection", AUDIO_FRAGMENT_DEFAULT_COLLECTION)).strip() or AUDIO_FRAGMENT_DEFAULT_COLLECTION,
-            key=str(spec.get("key", value)).strip() or value,
-            label=str(spec.get("label", value)).strip() or value,
-            text=str(spec.get("text", "")).strip(),
+            collection=collection,
+            key=key,
+            label=label,
+            text=text,
             settings=settings,
             base_url=base_url,
         )
@@ -1097,6 +1286,7 @@ def resolve_output_sequence_fragment(
 
 
 def build_fragment_output_plan(
+    page: Dict[str, Any],
     pages: Sequence[Dict[str, Any]],
     title_property: str,
     config: Dict[str, Any],
@@ -1117,6 +1307,7 @@ def build_fragment_output_plan(
                 str(entry or "").strip(),
                 fragments_map=fragments_map,
                 settings=settings,
+                page=page,
                 pages=pages,
                 title_property=title_property,
                 config=config,
@@ -1556,6 +1747,8 @@ def load_library_audio_fragment(
             hash_value=hash_value,
             cache_path=str(audio_path),
             text=normalize_whitespace(str(payload.get("text", "")).strip()),
+            prompt=normalize_whitespace(str(payload.get("prompt", "")).strip()),
+            prompt_model=str(payload.get("prompt_model", "")).strip(),
             fragment_key=str(payload.get("fragment_key", "")).strip() or key,
             collection=str(payload.get("collection", "")).strip() or collection,
         )
@@ -1585,6 +1778,8 @@ def persist_library_audio_fragment(
         "voice": str(settings.get("voice", "")),
         "speed": float(settings.get("speed", 1.0)),
         "text": normalize_whitespace(fragment.text),
+        "prompt": normalize_whitespace(fragment.prompt),
+        "prompt_model": str(fragment.prompt_model or "").strip(),
         "fragment_key": str(fragment.fragment_key or "").strip(),
         "collection": str(fragment.collection or "").strip(),
     }
@@ -1697,6 +1892,45 @@ def ensure_tts_fragment_audio(
     if cache_path.exists():
         persist_library_audio_fragment(fragment, cache_path, settings)
         return cache_path
+    audio_bytes = shared.generate_openai_audio_bytes(
+        api_key=openai_key,
+        base_url=base_url,
+        model=str(settings["model"]),
+        voice=str(settings["voice"]),
+        audio_format=str(settings["format"]),
+        speed=float(settings["speed"]),
+        text=fragment.text,
+    )
+    cache_path.write_bytes(audio_bytes)
+    persist_library_audio_fragment(fragment, cache_path, settings)
+    return cache_path
+
+
+def ensure_prompt_fragment_audio(
+    fragment: PageAudioFragment,
+    settings: Dict[str, Any],
+    cache_root: Path,
+    openai_key: str,
+    base_url: str,
+) -> Path:
+    cache_path = page_audio_cache_path(cache_root, "tts", fragment.hash_value, str(settings["format"]))
+    if not fragment.text:
+        fragment.text = load_prompt_text_cache(cache_root, fragment.collection, fragment.fragment_key or fragment.label, fragment.hash_value)
+    if cache_path.exists():
+        persist_library_audio_fragment(fragment, cache_path, settings)
+        return cache_path
+    if not fragment.text:
+        prompt_model = str(fragment.prompt_model or "").strip() or os.getenv(OAI_MODEL, "").strip() or "gpt-4.1-mini"
+        fragment.text = call_openai_fragment_prompt(openai_key, base_url, prompt_model, fragment.prompt)
+        save_prompt_text_cache(
+            cache_root,
+            fragment.collection or AUDIO_FRAGMENT_DEFAULT_COLLECTION,
+            fragment.fragment_key or fragment.label,
+            prompt_hash=fragment.hash_value,
+            prompt=fragment.prompt,
+            prompt_model=prompt_model,
+            text=fragment.text,
+        )
     audio_bytes = shared.generate_openai_audio_bytes(
         api_key=openai_key,
         base_url=base_url,
@@ -1824,6 +2058,8 @@ def build_assembled_audio(
     for fragment in fragments:
         if fragment.kind == "tts":
             path = ensure_tts_fragment_audio(fragment, settings, cache_root, openai_key, base_url)
+        elif fragment.kind == "prompt":
+            path = ensure_prompt_fragment_audio(fragment, settings, cache_root, openai_key, base_url)
         elif fragment.kind == "source_audio":
             path = ensure_source_audio_fragment(fragment, cache_root)
         else:
@@ -2021,6 +2257,7 @@ def build_page_audio_plan(
         return build_rss_audio_plan(page=page, config=config, base_url=base_url)
     if builder == AUDIO_FRAGMENTS_BUILDER:
         return build_fragment_output_plan(
+            page=page,
             pages=pages,
             title_property=title_property,
             config=config,

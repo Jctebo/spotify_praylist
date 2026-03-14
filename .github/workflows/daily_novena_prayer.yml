@@ -21,6 +21,35 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Install rclone
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rclone
+          rclone version
+
+      - name: Configure rclone
+        env:
+          RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG_B64 }}
+        run: |
+          if [ -z "${RCLONE_CONFIG_B64}" ]; then
+            echo "Missing RCLONE_CONFIG_B64 secret."
+            exit 1
+          fi
+          mkdir -p "${HOME}/.config/rclone"
+          printf "%s" "${RCLONE_CONFIG_B64}" | base64 -d > "${HOME}/.config/rclone/rclone.conf"
+          chmod 600 "${HOME}/.config/rclone/rclone.conf"
+
+      - name: Prefetch Novena Audio Library from OneDrive
+        env:
+          RCLONE_REMOTE_NAME: ${{ vars.RCLONE_REMOTE_NAME }}
+          DEVOTIONAL_ONEDRIVE_REMOTE_ROOT: ${{ vars.DEVOTIONAL_ONEDRIVE_REMOTE_ROOT }}
+        run: |
+          REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
+          REMOTE_ROOT="${DEVOTIONAL_ONEDRIVE_REMOTE_ROOT:-Pictures/Samsung Gallery/DCIM}"
+          LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/DCIM/Novena Audio Library"
+          mkdir -p "${LOCAL_ROOT}"
+          rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Novena Audio Library/" "${LOCAL_ROOT}/" --create-empty-src-dirs || true
+
       - name: Restore Page Audio Cache
         uses: actions/cache@v5
         with:
@@ -62,6 +91,7 @@ jobs:
           NOVENA_AUDIO_SPEED: "1.0"
           NOVENA_AUDIO_CAPTION: Daily Novena Prayer (Audio)
           NOVENA_AUDIO_FAIL_OPEN: "true"
+          NOVENA_AUDIO_LIBRARY_DIR: ${{ github.workspace }}/onedrive_sync/DCIM/Novena Audio Library
           NOTION_AUDIO_RENDER_HASH_PROPERTY: Render Hash
           NOTION_AUDIO_SAVED_PROPERTY: Audio Saved
           USCCB_READINGS_ENABLED: "true"
@@ -69,6 +99,17 @@ jobs:
           USCCB_READINGS_BASE_URL: https://bible.usccb.org/bible/readings
           USCCB_READINGS_EXTRA_PAGE_IDS: "6c389e7d-5bc6-4e11-b678-5e862f97dd54"
         run: python jobs/novena/generate_daily_novena_prayer.py
+
+      - name: Upload Novena Audio Library to OneDrive
+        env:
+          RCLONE_REMOTE_NAME: ${{ vars.RCLONE_REMOTE_NAME }}
+          DEVOTIONAL_ONEDRIVE_REMOTE_ROOT: ${{ vars.DEVOTIONAL_ONEDRIVE_REMOTE_ROOT }}
+        run: |
+          REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
+          REMOTE_ROOT="${DEVOTIONAL_ONEDRIVE_REMOTE_ROOT:-Pictures/Samsung Gallery/DCIM}"
+          LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/DCIM/Novena Audio Library"
+          mkdir -p "${LOCAL_ROOT}"
+          rclone sync "${LOCAL_ROOT}/" "${REMOTE_NAME}:${REMOTE_ROOT}/Novena Audio Library/" --progress --transfers 4 --checkers 8
 
       - name: Generate Auto Page Audio
         env:

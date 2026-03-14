@@ -26,7 +26,8 @@ param(
   [string]$NovenaAudioFormat,
   [string]$NovenaAudioSpeed,
   [string]$NovenaAudioCaption,
-  [string]$NovenaAudioFailOpen
+  [string]$NovenaAudioFailOpen,
+  [string]$NovenaAudioLibraryDir
 )
 
 $ErrorActionPreference = "Stop"
@@ -59,6 +60,7 @@ if (-not $NovenaAudioFormat) { $NovenaAudioFormat = $env:NOVENA_AUDIO_FORMAT }
 if (-not $NovenaAudioSpeed) { $NovenaAudioSpeed = $env:NOVENA_AUDIO_SPEED }
 if (-not $NovenaAudioCaption) { $NovenaAudioCaption = $env:NOVENA_AUDIO_CAPTION }
 if (-not $NovenaAudioFailOpen) { $NovenaAudioFailOpen = $env:NOVENA_AUDIO_FAIL_OPEN }
+if (-not $NovenaAudioLibraryDir) { $NovenaAudioLibraryDir = $env:NOVENA_AUDIO_LIBRARY_DIR }
 
 if (-not $OpenAiApiKey) { $OpenAiApiKey = Read-Host "OPENAI_API_KEY" }
 if (-not $NotionToken) { $NotionToken = Read-Host "NOTION_TOKEN" }
@@ -94,6 +96,7 @@ if ($NovenaAudioFormat) { $env:NOVENA_AUDIO_FORMAT = $NovenaAudioFormat }
 if ($NovenaAudioSpeed) { $env:NOVENA_AUDIO_SPEED = $NovenaAudioSpeed }
 if ($NovenaAudioCaption) { $env:NOVENA_AUDIO_CAPTION = $NovenaAudioCaption }
 if ($NovenaAudioFailOpen) { $env:NOVENA_AUDIO_FAIL_OPEN = $NovenaAudioFailOpen }
+if ($NovenaAudioLibraryDir) { $env:NOVENA_AUDIO_LIBRARY_DIR = $NovenaAudioLibraryDir }
 
 Write-Host "Generating Daily Novena Prayer locally..."
 py -3 jobs/novena/generate_daily_novena_prayer.py

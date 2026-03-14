@@ -489,7 +489,33 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertEqual(sorted(payload["fragments"].keys()), ["morning-offering"])
 
+    def test_load_audio_fragments_from_notion_supports_prompt_rows(self):
+        env = {"NOTION_AUDIO_FRAGMENTS_DATABASE_ID": "fragments_db_1", "OAI_MODEL": "gpt-4.1-mini"}
+        pages = [
+            {
+                "id": "frag_1",
+                "properties": {
+                    "Name": _title_prop("Daily Exhortation"),
+                    "Fragment Key": _rich_text_prop("daily-exhortation"),
+                    "Prompt": _rich_text_prop("Write a one-sentence exhortation for {page_title}."),
+                    "Prompt Model": _rich_text_prop("gpt-4.1-mini"),
+                    "Enabled": _checkbox_prop(True),
+                    "Collection": _rich_text_prop("morning_prayer"),
+                },
+            }
+        ]
+
+        with temp_env(env), patch.object(self.mod.shared, "notion_get_all_pages", return_value=pages), patch.object(
+            self.mod.shared, "local_today", return_value=datetime.date(2026, 3, 14)
+        ):
+            payload = self.mod.load_audio_fragments_from_notion("token")
+
+        fragment = payload["fragments"]["daily-exhortation"]
+        self.assertEqual(fragment["prompt"], "Write a one-sentence exhortation for {page_title}.")
+        self.assertEqual(fragment["prompt_model"], "gpt-4.1-mini")
+
     def test_build_fragment_output_plan_supports_special_fragments(self):
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
         novena_page = {
             "id": "page_2",
             "properties": {"Name": _title_prop("Daily Novenas from Liturgical Calendar")},
@@ -534,6 +560,7 @@ class TestPageAudioJob(unittest.TestCase):
                 self.mod, "fetch_monthly_intention", return_value={"title": "For peace", "month": "March", "spoken_text": "For the Holy Father's monthly intention: for peace."}
             ):
                 plan = self.mod.build_fragment_output_plan(
+                    page=page,
                     pages=[novena_page],
                     title_property="Name",
                     config=config,
@@ -545,6 +572,72 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(plan.fragments[0].fragment_key, "morning-offering")
         self.assertEqual(plan.fragments[1].collection, "monthly_intention")
         self.assertEqual(plan.fragments[2].source_url, "https://example.com/novena_1.mp3")
+
+    def test_build_fragment_output_plan_supports_prompt_fragments(self):
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
+        config = {
+            "builder": "audio_fragments_v1",
+            "audio_caption": "Morning Prayer (Audio)",
+            "silence_ms": 450,
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "fragments": {
+                "daily-exhortation": {
+                    "key": "daily-exhortation",
+                    "label": "Daily Exhortation",
+                    "prompt": "Write one sentence for {page_title} in {month}.",
+                    "prompt_model": "gpt-4.1-mini",
+                    "collection": "morning_prayer",
+                }
+            },
+            "fragment_sequence": ["daily-exhortation"],
+        }
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with temp_env({"PAGE_AUDIO_CACHE_DIR": tmp_dir}):
+                plan = self.mod.build_fragment_output_plan(
+                    page=page,
+                    pages=[page],
+                    title_property="Name",
+                    config=config,
+                    token="token",
+                    base_url="https://api.openai.com/v1",
+                )
+
+        self.assertEqual([fragment.kind for fragment in plan.fragments], ["prompt"])
+        self.assertIn("Morning Prayer", plan.fragments[0].prompt)
+        self.assertEqual(plan.fragments[0].prompt_model, "gpt-4.1-mini")
+
+    def test_ensure_prompt_fragment_audio_persists_prompt_text_cache(self):
+        fragment = self.mod.PageAudioFragment(
+            kind="prompt",
+            label="Daily Exhortation",
+            hash_value="prompt1234abcd5678",
+            prompt="Write one sentence.",
+            prompt_model="gpt-4.1-mini",
+            fragment_key="daily-exhortation",
+            collection="morning_prayer",
+        )
+        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with temp_env({"PAGE_AUDIO_CACHE_DIR": tmp_dir}), patch.object(
+                self.mod, "call_openai_fragment_prompt", return_value="Generated exhortation."
+            ), patch.object(
+                self.mod.shared, "generate_openai_audio_bytes", return_value=b"audio-bytes"
+            ):
+                out = self.mod.ensure_prompt_fragment_audio(
+                    fragment,
+                    settings,
+                    self.mod.page_audio_cache_dir(),
+                    "openai-key",
+                    "https://api.openai.com/v1",
+                )
+                cache_path = self.mod.prompt_text_cache_paths(self.mod.page_audio_cache_dir(), "morning_prayer", "daily-exhortation")
+                self.assertTrue(Path(out).exists())
+                payload = json.loads(cache_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["text"], "Generated exhortation.")
+        self.assertEqual(payload["prompt_model"], "gpt-4.1-mini")
 
     def test_load_page_audio_config_merges_audio_outputs(self):
         env = {

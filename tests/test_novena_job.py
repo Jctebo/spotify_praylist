@@ -1,4 +1,5 @@
 import datetime
+import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
@@ -355,6 +356,86 @@ class TestNovenaJob(unittest.TestCase):
         append_mock.assert_called_once()
         self.assertIn(self.mod.render_hash_marker(expected_hash), append_mock.call_args.args[2])
         meta_mock.assert_called_once_with(page, expected_hash, "notion_token")
+
+    def test_ensure_saint_devotional_payload_cache_reuses_cached_payload(self):
+        payload = {
+            "opening_prayer": "Opening prayer.",
+            "daily_prayers": [{"day": day_num, "daily_prayer": f"Prayer {day_num}"} for day_num in range(1, 10)],
+            "closing_prayer": "Closing prayer.",
+        }
+        with tempfile.TemporaryDirectory() as tmpdir, temp_env({"NOVENA_AUDIO_LIBRARY_DIR": tmpdir}):
+            with patch.object(self.mod, "call_openai_saint_devotional_content", return_value=payload) as call_mock:
+                first_payload, first_mode, first_path = self.mod.ensure_saint_devotional_payload_cache(
+                    library_root=self.mod.novena_audio_library_dir(),
+                    saint_name="Saint Agnes",
+                    feast_day="2026-03-12",
+                    celebration_type="memorial",
+                    api_key="key",
+                    base_url="https://api.openai.com/v1",
+                    model="gpt-4.1-mini",
+                )
+                second_payload, second_mode, second_path = self.mod.ensure_saint_devotional_payload_cache(
+                    library_root=self.mod.novena_audio_library_dir(),
+                    saint_name="Saint Agnes",
+                    feast_day="2026-03-12",
+                    celebration_type="memorial",
+                    api_key="key",
+                    base_url="https://api.openai.com/v1",
+                    model="gpt-4.1-mini",
+                )
+                path_exists = first_path.exists()
+                call_count = call_mock.call_count
+
+        self.assertEqual(first_mode, "generated")
+        self.assertEqual(second_mode, "cached")
+        self.assertEqual(first_payload, payload)
+        self.assertEqual(second_payload, payload)
+        self.assertEqual(first_path, second_path)
+        self.assertTrue(path_exists)
+        self.assertEqual(call_count, 1)
+
+    def test_ensure_saint_novena_audio_library_reuses_readable_filenames(self):
+        payload = {
+            "opening_prayer": "Opening prayer.",
+            "daily_prayers": [
+                {"day": day_num, "theme": f"Theme {day_num}", "intercession": f"Intercession {day_num}", "daily_prayer": f"Prayer {day_num}"}
+                for day_num in range(1, 10)
+            ],
+            "closing_prayer": "Closing prayer.",
+        }
+        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        with tempfile.TemporaryDirectory() as tmpdir, temp_env({"NOVENA_AUDIO_LIBRARY_DIR": tmpdir}):
+            with patch.object(self.mod, "generate_openai_audio_bytes", return_value=b"audio") as generate_mock:
+                first = self.mod.ensure_saint_novena_audio_library(
+                    saint_name="Saint Agnes",
+                    feast_day="2026-03-12",
+                    celebration_type="memorial",
+                    devotional_payload=payload,
+                    settings=settings,
+                    api_key="key",
+                    base_url="https://api.openai.com/v1",
+                    oai_model="gpt-4.1-mini",
+                )
+                second = self.mod.ensure_saint_novena_audio_library(
+                    saint_name="Saint Agnes",
+                    feast_day="2026-03-12",
+                    celebration_type="memorial",
+                    devotional_payload=payload,
+                    settings=settings,
+                    api_key="key",
+                    base_url="https://api.openai.com/v1",
+                    oai_model="gpt-4.1-mini",
+                )
+                audio_exists = first[1]["audio_path"].exists()
+                meta_exists = first[1]["meta_path"].exists()
+                call_count = generate_mock.call_count
+
+        self.assertEqual(call_count, 9)
+        self.assertEqual(first[1]["mode"], "generated")
+        self.assertEqual(second[1]["mode"], "cached")
+        self.assertTrue(str(first[1]["audio_path"]).endswith("day-01_2026-03-03_saint-agnes.mp3"))
+        self.assertTrue(audio_exists)
+        self.assertTrue(meta_exists)
 
     def test_main_happy_path(self):
         env = {
