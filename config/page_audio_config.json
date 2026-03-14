@@ -68,6 +68,23 @@
       "intention_property": "Intention",
       "intention_prefix": "For today's intention:"
     },
+    "DAILY_EXAMEN_PAGE_AUDIO": {
+      "label": "Daily Examen Audio",
+      "builder": "rss_audio_v1",
+      "audio_caption": "Daily Examen (Audio)",
+      "silence_ms": 450,
+      "tts": {
+        "model": "gpt-4o-mini-tts",
+        "voice": "alloy",
+        "format": "mp3",
+        "speed": 1.0
+      },
+      "rss_feed_url": "https://feeds.blubrry.com/feeds/thedaughtersproject.xml",
+      "rss_match_strategy": "fixed_title",
+      "rss_match_text": "Memento Mori Daily Examen",
+      "intention_property": "Intention",
+      "intention_prefix": "For today's intention:"
+    },
     "DIVINE_OFFICE_NIGHT_TEXT": {
       "label": "Divine Office Night Prayer Text",
       "builder": "divine_office_night_text_v1"

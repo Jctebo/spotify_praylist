@@ -73,6 +73,11 @@
       "playlists": ["Night"]
     },
     {
+      "notion_name": "Daily Examen",
+      "match_any": ["memento mori daily examen", "memento mori examen"],
+      "playlists": ["Night"]
+    },
+    {
       "notion_name": "Angelus (Evening)",
       "match_any": ["angelus"],
       "time_of_day": "evening",
