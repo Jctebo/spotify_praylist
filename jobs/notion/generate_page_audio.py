@@ -91,6 +91,9 @@ DEFAULT_INTENTION_PREFIX = "For today's intention:"
 HTTP_RETRYABLE_STATUSES = {408, 409, 425, 429, 500, 502, 503, 504}
 HTTP_MAX_ATTEMPTS = 4
 PAGE_AUDIO_HTTP_USER_AGENT = "Mozilla/5.0 (compatible; spotify-praylist/1.0; +https://github.com/Jctebo/spotify_praylist)"
+
+_RSS_FEED_ENTRIES_CACHE: Dict[str, List[Dict[str, Any]]] = {}
+_PAGE_AUDIO_BLOCKS_CACHE: Dict[str, List[Dict[str, Any]]] = {}
 MONTH_NAMES = (
     "JANUARY",
     "FEBRUARY",
@@ -881,6 +884,25 @@ def page_audio_http_get(url: str, *, params: Optional[Dict[str, Any]] = None, ti
             )
             time.sleep(delay)
     raise RuntimeError("HTTP retry loop exited unexpectedly.")
+
+
+def cached_rss_feed_entries_key(feed_url: str, target_year: int) -> str:
+    return f"{str(feed_url or '').strip()}|{int(target_year)}"
+
+
+def page_audio_cached_blocks(page_id: str, token: str, *, refresh: bool = False) -> List[Dict[str, Any]]:
+    key = str(page_id or "").strip()
+    if not key:
+        return []
+    if refresh or key not in _PAGE_AUDIO_BLOCKS_CACHE:
+        _PAGE_AUDIO_BLOCKS_CACHE[key] = shared.notion_list_block_children(key, token)
+    return list(_PAGE_AUDIO_BLOCKS_CACHE.get(key) or [])
+
+
+def invalidate_page_audio_cached_blocks(page_id: str) -> None:
+    key = str(page_id or "").strip()
+    if key:
+        _PAGE_AUDIO_BLOCKS_CACHE.pop(key, None)
 
 
 def tts_settings_from_config(config: Dict[str, Any]) -> Dict[str, Any]:
@@ -1799,18 +1821,22 @@ def fetch_rss_feed_entry(
     match_strategy: str = RSS_MATCH_CONTAINS_WITH_DATE,
     match_map: Optional[Dict[str, str]] = None,
 ) -> Dict[str, Any]:
-    response = page_audio_http_get(feed_url, timeout=30)
-    root = ET.fromstring(response.content)
-    channel = root.find("channel")
-    if channel is None:
-        raise RuntimeError(f"Invalid RSS feed at {feed_url}.")
-    entries = [
-        entry
-        for entry in (rss_item_to_entry(item, feed_url, target_date) for item in channel.findall("item"))
-        if isinstance(entry, dict)
-    ]
-    if not entries:
-        raise RuntimeError(f"No RSS audio entries found in {feed_url}.")
+    cache_key = cached_rss_feed_entries_key(feed_url, target_date.year)
+    entries = _RSS_FEED_ENTRIES_CACHE.get(cache_key)
+    if entries is None:
+        response = page_audio_http_get(feed_url, timeout=30)
+        root = ET.fromstring(response.content)
+        channel = root.find("channel")
+        if channel is None:
+            raise RuntimeError(f"Invalid RSS feed at {feed_url}.")
+        entries = [
+            entry
+            for entry in (rss_item_to_entry(item, feed_url, target_date) for item in channel.findall("item"))
+            if isinstance(entry, dict)
+        ]
+        if not entries:
+            raise RuntimeError(f"No RSS audio entries found in {feed_url}.")
+        _RSS_FEED_ENTRIES_CACHE[cache_key] = list(entries)
 
     strategy = normalize_flag_value(match_strategy) or normalize_flag_value(RSS_MATCH_CONTAINS_WITH_DATE)
     rendered_match_text = render_feed_match_text(match_text, target_date)
@@ -2159,7 +2185,7 @@ def persist_library_audio_fragment(
 
 
 def page_audio_current_render_hash(page_id: str, token: str) -> str:
-    for block in shared.notion_list_block_children(page_id, token):
+    for block in page_audio_cached_blocks(page_id, token):
         if str(block.get("type", "")).strip() != "audio":
             continue
         caption = shared.audio_block_caption(block)
@@ -2172,7 +2198,7 @@ def page_audio_current_render_hash(page_id: str, token: str) -> str:
 
 
 def page_audio_is_positioned_near_top(page_id: str, token: str) -> bool:
-    blocks = shared.notion_list_block_children(page_id, token)
+    blocks = page_audio_cached_blocks(page_id, token)
     for idx, block in enumerate(blocks):
         if str(block.get("type", "")).strip() != "audio":
             continue
@@ -2185,7 +2211,7 @@ def page_audio_is_positioned_near_top(page_id: str, token: str) -> bool:
 
 def page_audio_remove_old_blocks(page_id: str, token: str) -> int:
     removed = 0
-    for block in shared.notion_list_block_children(page_id, token):
+    for block in page_audio_cached_blocks(page_id, token):
         if str(block.get("type", "")).strip() != "audio":
             continue
         caption = shared.audio_block_caption(block)
@@ -2196,12 +2222,14 @@ def page_audio_remove_old_blocks(page_id: str, token: str) -> int:
             continue
         shared.notion_archive_block(block_id, token)
         removed += 1
+    if removed:
+        invalidate_page_audio_cached_blocks(page_id)
     return removed
 
 
 def page_audio_remove_blank_placeholders(page_id: str, token: str) -> int:
     removed = 0
-    for block in shared.notion_list_block_children(page_id, token):
+    for block in page_audio_cached_blocks(page_id, token):
         if str(block.get("type", "")).strip() != "audio":
             continue
         caption = shared.audio_block_caption(block)
@@ -2213,6 +2241,8 @@ def page_audio_remove_blank_placeholders(page_id: str, token: str) -> int:
             continue
         shared.notion_archive_block(block_id, token)
         removed += 1
+    if removed:
+        invalidate_page_audio_cached_blocks(page_id)
     return removed
 
 
@@ -2228,6 +2258,7 @@ def page_audio_append_block(page_id: str, upload_id: str, caption: str, token: s
         },
     }
     shared.notion_append_children(page_id, [block], token, position=position)
+    invalidate_page_audio_cached_blocks(page_id)
 
 
 def ffmpeg_audio_codec(audio_format: str) -> str:
@@ -2819,6 +2850,7 @@ def main() -> int:
         processed = 0
         for page in candidates:
             title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip()
+            page_started = time.perf_counter()
             auto_text_enabled = page_has_platform_value(page, platform_property, "auto-text")
             auto_audio_enabled = page_has_platform_value(page, platform_property, "auto-audio")
             text_key, audio_keys = resolve_page_sync_keys(
@@ -2896,7 +2928,8 @@ def main() -> int:
                     cached += 1
                 config_bits = [bit for bit in [f"text={text_key}" if text_key else "", f"audio={chosen_audio_key}" if chosen_audio_key else ""] if bit]
                 config_summary = " ".join(config_bits).strip()
-                print(f"page_audio title={title} {config_summary} mode={mode}".strip())
+                elapsed = time.perf_counter() - page_started
+                print(f"page_audio title={title} {config_summary} mode={mode} duration_s={elapsed:.1f}".strip())
             except Exception as exc:
                 failed += 1
                 print(f"page_audio_error title={title} error={exc}", file=sys.stderr)

@@ -30,6 +30,8 @@ def _date_prop(start, end=""):
 class TestPageAudioJob(unittest.TestCase):
     def setUp(self):
         self.mod = load_module("jobs/notion/generate_page_audio.py")
+        self.mod._RSS_FEED_ENTRIES_CACHE.clear()
+        self.mod._PAGE_AUDIO_BLOCKS_CACHE.clear()
 
     def test_fetch_divine_office_feed_entry_ignores_future_entry(self):
         xml = """<?xml version="1.0" encoding="UTF-8"?>
@@ -190,6 +192,45 @@ class TestPageAudioJob(unittest.TestCase):
             )
 
         self.assertEqual(entry["audio_url"], "https://example.com/angelus.mp3")
+
+    def test_fetch_rss_feed_entry_reuses_cached_feed_parse(self):
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <item>
+      <title>Angelus Podcast - Saturday</title>
+      <link>https://example.com/angelus-sat</link>
+      <enclosure url="https://example.com/angelus-sat.mp3" type="audio/mpeg" />
+    </item>
+    <item>
+      <title>Angelus Podcast - Sunday</title>
+      <link>https://example.com/angelus-sun</link>
+      <enclosure url="https://example.com/angelus-sun.mp3" type="audio/mpeg" />
+    </item>
+  </channel>
+</rss>"""
+
+        class FakeResponse:
+            def __init__(self, content):
+                self.content = content.encode("utf-8")
+
+        with patch.object(self.mod, "page_audio_http_get", return_value=FakeResponse(xml)) as http_mock:
+            first = self.mod.fetch_rss_feed_entry(
+                datetime.date(2026, 3, 14),
+                feed_url="https://example.com/angelus.xml",
+                match_strategy="fixed_title",
+                match_text="Saturday",
+            )
+            second = self.mod.fetch_rss_feed_entry(
+                datetime.date(2026, 3, 14),
+                feed_url="https://example.com/angelus.xml",
+                match_strategy="fixed_title",
+                match_text="Sunday",
+            )
+
+        self.assertEqual(http_mock.call_count, 1)
+        self.assertEqual(first["audio_url"], "https://example.com/angelus-sat.mp3")
+        self.assertEqual(second["audio_url"], "https://example.com/angelus-sun.mp3")
 
     def test_build_divine_office_invitatory_plan_prepends_intention(self):
         page = {
