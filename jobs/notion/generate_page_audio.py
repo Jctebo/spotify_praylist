@@ -978,6 +978,31 @@ def stable_text_fragment(
     )
 
 
+def build_page_intention_fragment(
+    page: Dict[str, Any],
+    *,
+    settings: Dict[str, Any],
+    base_url: str,
+    intention_property: str,
+    intention_prefix: str,
+) -> Optional[PageAudioFragment]:
+    intention_text = page_property_text(page, intention_property).strip()
+    if not intention_text:
+        return None
+    title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
+    page_key = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip() or "page"
+    spoken = normalize_whitespace(f"{intention_prefix} {intention_text}")
+    return stable_text_fragment(
+        cache_root=page_audio_cache_dir(),
+        collection="daily_intentions",
+        key=page_key,
+        label=f"Daily Intention - {page_key}",
+        text=spoken,
+        settings=settings,
+        base_url=base_url,
+    )
+
+
 def audio_block_source_url(block: Dict[str, Any]) -> str:
     audio = block.get("audio") or {}
     audio_type = str(audio.get("type", "")).strip()
@@ -1347,16 +1372,20 @@ def build_divine_office_invitatory_plan(
     settings = tts_settings_from_config(config)
     intention_property = str(config.get("intention_property", DEFAULT_INTENTION_PROPERTY)).strip() or DEFAULT_INTENTION_PROPERTY
     intention_prefix = str(config.get("intention_prefix", DEFAULT_INTENTION_PREFIX)).strip() or DEFAULT_INTENTION_PREFIX
-    intention_text = page_property_text(page, intention_property).strip()
     feed_url = str(config.get("rss_feed_url", DIVINE_OFFICE_FEED_URL)).strip() or DIVINE_OFFICE_FEED_URL
     match_text = str(config.get("rss_match_text", "Invitatory")).strip() or "Invitatory"
     feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=feed_url, match_text=match_text)
 
     fragments: List[PageAudioFragment] = []
-    if intention_text:
-        spoken = normalize_whitespace(f"{intention_prefix} {intention_text}")
-        intention_hash = shared.compute_audio_render_hash(spoken, base_url, settings)
-        fragments.append(PageAudioFragment(kind="tts", label="Daily Intention", hash_value=intention_hash, text=spoken))
+    intention_fragment = build_page_intention_fragment(
+        page,
+        settings=settings,
+        base_url=base_url,
+        intention_property=intention_property,
+        intention_prefix=intention_prefix,
+    )
+    if intention_fragment is not None:
+        fragments.append(intention_fragment)
 
     audio_hash = hashlib.sha256(
         f"{feed_entry['title']}|{feed_entry['audio_url']}|{feed_entry['date']}".encode("utf-8")
@@ -1416,11 +1445,15 @@ def build_rss_audio_plan(
     fragments: List[PageAudioFragment] = []
     intention_property = str(config.get("intention_property", DEFAULT_INTENTION_PROPERTY)).strip() or DEFAULT_INTENTION_PROPERTY
     intention_prefix = str(config.get("intention_prefix", DEFAULT_INTENTION_PREFIX)).strip() or DEFAULT_INTENTION_PREFIX
-    intention_text = page_property_text(page, intention_property).strip()
-    if intention_text:
-        spoken = normalize_whitespace(f"{intention_prefix} {intention_text}")
-        intention_hash = shared.compute_audio_render_hash(spoken, base_url, settings)
-        fragments.append(PageAudioFragment(kind="tts", label="Daily Intention", hash_value=intention_hash, text=spoken))
+    intention_fragment = build_page_intention_fragment(
+        page,
+        settings=settings,
+        base_url=base_url,
+        intention_property=intention_property,
+        intention_prefix=intention_prefix,
+    )
+    if intention_fragment is not None:
+        fragments.append(intention_fragment)
 
     audio_hash = hashlib.sha256(
         f"{feed_entry['title']}|{feed_entry['audio_url']}|{feed_entry['date']}".encode("utf-8")

@@ -103,6 +103,55 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(plan.text_target, "page_content")
         self.assertEqual([block["type"] for block in plan.content_blocks], ["paragraph", "paragraph"])
 
+    def test_build_page_intention_fragment_reuses_cached_audio(self):
+        page = {
+            "id": "page_1",
+            "properties": {
+                "Name": _title_prop("Divine Office Invitatory"),
+                "Intention": _rich_text_prop("For peace in my family."),
+            },
+        }
+        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with temp_env({"PAGE_AUDIO_CACHE_DIR": tmp_dir}):
+                first = self.mod.build_page_intention_fragment(
+                    page,
+                    settings=settings,
+                    base_url="https://api.openai.com/v1",
+                    intention_property="Intention",
+                    intention_prefix="For today's intention:",
+                )
+                self.assertIsNotNone(first)
+                audio_path, meta_path = self.mod.page_audio_library_fragment_paths(
+                    self.mod.page_audio_cache_dir(),
+                    "daily_intentions",
+                    "Divine Office Invitatory",
+                    "mp3",
+                )
+                audio_path.write_bytes(b"existing")
+                meta_path.write_text(
+                    json.dumps(
+                        {
+                            "hash_value": first.hash_value,
+                            "text": first.text,
+                            "fragment_key": "Divine Office Invitatory",
+                            "collection": "daily_intentions",
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+                second = self.mod.build_page_intention_fragment(
+                    page,
+                    settings=settings,
+                    base_url="https://api.openai.com/v1",
+                    intention_property="Intention",
+                    intention_prefix="For today's intention:",
+                )
+
+        self.assertEqual(first.kind, "tts")
+        self.assertEqual(second.kind, "source_audio")
+        self.assertTrue(second.cache_path.endswith(".mp3"))
+
     def test_build_divine_office_morning_text_plan_uses_page_content(self):
         config = {"builder": "divine_office_morning_text_v1"}
 

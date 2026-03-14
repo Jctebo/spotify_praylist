@@ -305,6 +305,7 @@ Current config:
 - `DIVINE_OFFICE_INVITATORY_OUTPUT` in `Audio Outputs`
 - wraps `DIVINE_OFFICE_INVITATORY_PAGE_AUDIO` from `Page Audio Configuration`
 - target row: `Divine Office Invitatory`
+- prepended daily intention is cached on disk in the fragment cache
 - source audio: official DivineOffice.org RSS enclosure for the matching day
 - source text: synced into the page body
 - `DIVINE_OFFICE_NIGHT_TEXT`
@@ -316,6 +317,7 @@ Current config:
 - `SING_THE_HOURS_MORNING_OUTPUT` in `Audio Outputs`
 - wraps `SING_THE_HOURS_MORNING_PAGE_AUDIO` from `Page Audio Configuration`
 - target row: `Morning Prayer - Liturgy of the Hours (Spotify)`
+- prepended daily intention is cached on disk in the fragment cache
 - source audio: public Sing the Hours RSS enclosure for the matching day's `Lauds`
 - `DIVINE_OFFICE_MORNING_OUTPUT` in `Audio Outputs`
 - wraps `DIVINE_OFFICE_MORNING_PAGE_AUDIO` from `Page Audio Configuration`
