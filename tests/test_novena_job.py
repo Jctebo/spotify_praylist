@@ -20,6 +20,18 @@ class TestNovenaJob(unittest.TestCase):
     def setUp(self):
         self.mod = load_module("jobs/novena/generate_daily_novena_prayer.py")
 
+    def test_notion_archive_block_ignores_already_archived_error(self):
+        response = Mock()
+        response.status_code = 400
+        response.json.return_value = {
+            "message": "Can't edit block that is archived. You must unarchive the block before editing."
+        }
+        error = requests.HTTPError("bad request")
+        error.response = response
+
+        with patch.object(self.mod, "notion_call", side_effect=error):
+            self.mod.notion_archive_block("block_1", "token")
+
     def test_find_target_notion_page_accepts_alias_titles(self):
         pages = [
             {

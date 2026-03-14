@@ -388,7 +388,19 @@ def notion_list_block_children(block_id: str, token: str) -> List[Dict[str, Any]
 
 
 def notion_archive_block(block_id: str, token: str) -> None:
-    notion_call("PATCH", f"https://api.notion.com/v1/blocks/{block_id}", token, {"archived": True})
+    try:
+        notion_call("PATCH", f"https://api.notion.com/v1/blocks/{block_id}", token, {"archived": True})
+    except requests.HTTPError as exc:
+        response = exc.response
+        if response is not None and response.status_code == 400:
+            try:
+                payload = response.json()
+            except Exception:
+                payload = {}
+            message = str((payload or {}).get("message", "")).strip().lower()
+            if "block that is archived" in message:
+                return
+        raise
 
 
 def notion_append_children(
