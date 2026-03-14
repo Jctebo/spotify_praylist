@@ -3,3 +3,5 @@ requests
 romcal==4.0.0b6
 openai
 pillow
+pypdf
+imageio-ffmpeg

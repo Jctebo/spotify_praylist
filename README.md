@@ -284,6 +284,40 @@ Local run:
 .\scripts\run_daily_novena_prayer_local.ps1
 ```
 
+## Auto Page Audio
+Purpose:
+- reads `Opus Dei` rows whose `Platform` contains `auto-audio`
+- uses the row resolver field as a config key into [page_audio_config.json](c:/Users/jcteb/Code/spotify_praylist/config/page_audio_config.json)
+- builds a single Notion audio block from reusable page fragments instead of regenerating the whole page every run
+- caches generated fragment audio under `.cache/page_audio`
+
+Current config:
+- `MORNING_PRAYER_PAGE_AUDIO` in [page_audio_config.json](c:/Users/jcteb/Code/spotify_praylist/config/page_audio_config.json)
+- target row: `Morning Prayer`
+- source placeholder: monthly intention from the Pope's Worldwide Prayer Network English yearly PDF feed
+- source placeholder: `Daily Novenas from Liturgical Calendar` audio blocks reused directly as source fragments
+
+Recommended Opus Dei row shape:
+- `Platform = auto-audio`
+- `Spotify Resolver = MORNING_PRAYER_PAGE_AUDIO`
+- `Enabled = true`
+
+Environment variables:
+- `NOTION_AUDIO_PLATFORM_VALUE` (default `auto-audio`)
+- `NOTION_AUDIO_RESOLVER_PROPERTY` (default `Spotify Resolver`)
+- `NOTION_AUDIO_ENABLED_PROPERTY` (default `Enabled`)
+- `PAGE_AUDIO_CONFIG_FILE` (default `config/page_audio_config.json`)
+- `PAGE_AUDIO_CACHE_DIR` (default `.cache/page_audio`)
+- `PAGE_AUDIO_CONFIG_KEY` (optional single-config filter)
+- `PAGE_AUDIO_ROW_TITLE` (optional single-row filter)
+- `PAGE_AUDIO_FAIL_OPEN` (default `false`)
+
+Local run:
+
+```powershell
+.\scripts\run_page_audio_local.ps1
+```
+
 ## Liturgical Calendar Yearly Sync
 Purpose:
 - populates your `Liturgical Calendar` Notion database from Romcal calendar-day entries

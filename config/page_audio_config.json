@@ -1,0 +1,21 @@
+{
+  "configs": {
+    "MORNING_PRAYER_PAGE_AUDIO": {
+      "label": "Morning Prayer Page Audio",
+      "builder": "morning_prayer_v1",
+      "audio_caption": "Morning Prayer (Audio)",
+      "silence_ms": 450,
+      "tts": {
+        "model": "gpt-4o-mini-tts",
+        "voice": "alloy",
+        "format": "mp3",
+        "speed": 1.0
+      },
+      "monthly_intention": {
+        "provider": "popes_prayer_network_pdf",
+        "language": "en"
+      },
+      "daily_novena_page_title": "Daily Novenas from Liturgical Calendar"
+    }
+  }
+}
