@@ -36,6 +36,9 @@ NOTION_TOKEN = "NOTION_TOKEN"
 NOTION_AUDIO_PLATFORM_VALUE = "NOTION_AUDIO_PLATFORM_VALUE"
 NOTION_AUDIO_CONFIG_PROPERTY = "NOTION_AUDIO_CONFIG_PROPERTY"
 NOTION_AUDIO_RESOLVER_PROPERTY = "NOTION_AUDIO_RESOLVER_PROPERTY"
+NOTION_TEXT_RESOLVER_PROPERTY = "NOTION_TEXT_RESOLVER_PROPERTY"
+NOTION_AUTO_AUDIO_RESOLVER_PRIMARY_PROPERTY = "NOTION_AUTO_AUDIO_RESOLVER_PRIMARY_PROPERTY"
+NOTION_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY = "NOTION_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY"
 NOTION_AUDIO_ENABLED_PROPERTY = "NOTION_AUDIO_ENABLED_PROPERTY"
 NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID = "NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID"
 NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME = "NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME"
@@ -50,6 +53,9 @@ DEFAULT_PAGE_AUDIO_CACHE_DIR = ".cache/page_audio"
 DEFAULT_PAGE_AUDIO_CONFIG_DATABASE_NAME = "Page Audio Configuration"
 DEFAULT_AUTO_AUDIO_PLATFORM_VALUE = "auto-audio,auto-text"
 DEFAULT_AUDIO_CONFIG_PROPERTY = "Audio Configuration"
+DEFAULT_TEXT_RESOLVER_PROPERTY = "Text Resolver"
+DEFAULT_AUTO_AUDIO_RESOLVER_PRIMARY_PROPERTY = "Auto Audio Resolver 1"
+DEFAULT_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY = "Auto Audio Resolver 2"
 PAGE_AUDIO_MARKER = "[AUTOGEN_PAGE_AUDIO]"
 PAGE_AUDIO_HASH_MARKER_PREFIX = "[AUTOGEN_PAGE_AUDIO_HASH:"
 PAGE_AUDIO_RENDER_VERSION = "page_audio_v1"
@@ -59,6 +65,7 @@ MORNING_PRAYER_BUILDER = "morning_prayer_v1"
 DIVINE_OFFICE_INVITATORY_BUILDER = "divine_office_invitatory_v1"
 DIVINE_OFFICE_NIGHT_TEXT_BUILDER = "divine_office_night_text_v1"
 DIVINE_OFFICE_MORNING_TEXT_BUILDER = "divine_office_morning_text_v1"
+RSS_AUDIO_BUILDER = "rss_audio_v1"
 POPES_PRAYER_MEDIA_API_URL = "https://www.popesprayer.va/wp-json/wp/v2/media"
 DIVINE_OFFICE_FEED_URL = "https://divineoffice.org/feed/"
 DEFAULT_RSS_TEXT_PROPERTY = "Description"
@@ -186,6 +193,25 @@ def page_property_text(page: Dict[str, Any], prop_name: str) -> str:
     return ""
 
 
+def page_property_values(page: Dict[str, Any], prop_name: str) -> List[str]:
+    props = page.get("properties") or {}
+    prop = props.get(prop_name) or {}
+    ptype = str(prop.get("type", "")).strip()
+    if ptype == "select":
+        value = str((prop.get("select") or {}).get("name", "")).strip()
+        return [value] if value else []
+    if ptype == "multi_select":
+        values = [str(item.get("name", "")).strip() for item in (prop.get("multi_select") or []) if isinstance(item, dict)]
+        return [value for value in values if value]
+    if ptype in {"title", "rich_text"}:
+        value = page_property_text(page, prop_name)
+        return [value] if value else []
+    if ptype == "formula":
+        value = page_property_text(page, prop_name)
+        return [value] if value else []
+    return []
+
+
 def page_property_checkbox(page: Dict[str, Any], prop_name: str, default: bool = False) -> bool:
     props = page.get("properties") or {}
     prop = props.get(prop_name) or {}
@@ -195,6 +221,46 @@ def page_property_checkbox(page: Dict[str, Any], prop_name: str, default: bool =
     if not value:
         return default
     return value in {"1", "true", "yes", "y", "on"}
+
+
+def normalize_flag_value(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", str(text or "").lower()).strip()
+
+
+def parse_normalized_values(text: str) -> List[str]:
+    raw = str(text or "").strip()
+    if not raw:
+        return []
+    out: List[str] = []
+    for part in re.split(r"[,;|\n]+", raw):
+        norm = normalize_flag_value(part)
+        if norm and norm not in out:
+            out.append(norm)
+    if not out:
+        norm = normalize_flag_value(raw)
+        if norm:
+            out.append(norm)
+    return out
+
+
+def page_property_normalized_values(page: Dict[str, Any], prop_name: str) -> List[str]:
+    out: List[str] = []
+    for value in page_property_values(page, prop_name):
+        for norm in parse_normalized_values(value):
+            if norm and norm not in out:
+                out.append(norm)
+    return out
+
+
+def page_has_platform_value(page: Dict[str, Any], prop_name: str, wanted_value: str) -> bool:
+    wanted = normalize_flag_value(wanted_value)
+    if not wanted:
+        return False
+    values = page_property_normalized_values(page, prop_name)
+    if wanted in values:
+        return True
+    raw = normalize_flag_value(page_property_text(page, prop_name))
+    return bool(raw) and wanted in raw
 
 
 def normalize_whitespace(text: str) -> str:
@@ -411,20 +477,10 @@ def list_audio_candidate_pages(
     title_property: str,
     platform_property: str,
     platform_value: str,
-    config_property: str,
-    resolver_property: str,
     enabled_property: str,
-    config_key_filter: str,
     row_title_filter: str,
 ) -> List[Dict[str, Any]]:
-    wanted_platforms = [
-        value.strip().lower()
-        for value in str(platform_value or "").split(",")
-        if value.strip()
-    ]
-    if not wanted_platforms:
-        wanted_platforms = [DEFAULT_AUTO_AUDIO_PLATFORM_VALUE]
-    wanted_key = str(config_key_filter or "").strip().lower()
+    wanted_platforms = parse_normalized_values(platform_value) or parse_normalized_values(DEFAULT_AUTO_AUDIO_PLATFORM_VALUE)
     wanted_title = str(row_title_filter or "").strip().lower()
     out: List[Dict[str, Any]] = []
     for page in pages:
@@ -435,23 +491,36 @@ def list_audio_candidate_pages(
             continue
         if not page_property_checkbox(page, enabled_property, default=False):
             continue
-        platform = page_property_text(page, platform_property).lower()
-        if not any(value in platform for value in wanted_platforms):
-            continue
-        config_key = page_audio_config_key_from_page(page, config_property, resolver_property)
-        if not config_key:
-            continue
-        if wanted_key and config_key.lower() != wanted_key:
+        if not any(page_has_platform_value(page, platform_property, value) for value in wanted_platforms):
             continue
         out.append(page)
     return out
 
 
-def page_audio_config_key_from_page(page: Dict[str, Any], config_property: str, resolver_property: str) -> str:
-    primary = page_property_text(page, config_property).strip()
+def page_text_config_key_from_page(
+    page: Dict[str, Any],
+    text_resolver_property: str,
+    legacy_config_property: str,
+) -> str:
+    primary = page_property_text(page, text_resolver_property).strip()
     if primary:
         return primary
-    return page_property_text(page, resolver_property).strip()
+    return page_property_text(page, legacy_config_property).strip()
+
+
+def page_auto_audio_config_keys_from_page(
+    page: Dict[str, Any],
+    primary_property: str,
+    secondary_property: str,
+    legacy_config_property: str,
+    legacy_resolver_property: str,
+) -> List[str]:
+    out: List[str] = []
+    for prop_name in (primary_property, secondary_property, legacy_config_property, legacy_resolver_property):
+        value = page_property_text(page, prop_name).strip()
+        if value and value not in out:
+            out.append(value)
+    return out
 
 
 def find_page_by_title(pages: Sequence[Dict[str, Any]], title_property: str, wanted_title: str) -> Dict[str, Any]:
@@ -707,17 +776,28 @@ def sync_page_content_blocks(page_id: str, token: str, desired_blocks: Sequence[
 def divine_office_title_date(title: str, target_year: int) -> Optional[datetime.date]:
     value = str(title or "").strip()
     match = re.match(r"^([A-Za-z]{3,9})\s+(\d{1,2}),", value)
-    if not match:
+    if match:
+        month_token = match.group(1).strip()
+        day = int(match.group(2))
+        for fmt in ("%b", "%B"):
+            try:
+                month = datetime.datetime.strptime(month_token, fmt).month
+                return datetime.date(target_year, month, day)
+            except ValueError:
+                continue
+    numeric_match = re.match(r"^(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b", value)
+    if not numeric_match:
         return None
-    month_token = match.group(1).strip()
-    day = int(match.group(2))
-    for fmt in ("%b", "%B"):
-        try:
-            month = datetime.datetime.strptime(month_token, fmt).month
-            return datetime.date(target_year, month, day)
-        except ValueError:
-            continue
-    return None
+    month = int(numeric_match.group(1))
+    day = int(numeric_match.group(2))
+    year_token = numeric_match.group(3)
+    year = int(year_token)
+    if len(year_token) == 2:
+        year += 2000
+    try:
+        return datetime.date(year, month, day)
+    except ValueError:
+        return None
 
 
 def fetch_divine_office_feed_entry(
@@ -827,6 +907,49 @@ def build_divine_office_morning_text_plan(config: Dict[str, Any]) -> PageAudioPl
         fragments=[],
         text_target="page_content",
         content_blocks=paragraphs_to_notion_blocks(paragraphs),
+    )
+
+
+def build_rss_audio_plan(
+    page: Dict[str, Any],
+    config: Dict[str, Any],
+    base_url: str,
+) -> PageAudioPlan:
+    settings = tts_settings_from_config(config)
+    feed_url = str(config.get("rss_feed_url", "")).strip()
+    if not feed_url:
+        raise RuntimeError("rss_audio_v1 requires 'rss_feed_url'.")
+    match_text = str(config.get("rss_match_text", "")).strip()
+    if not match_text:
+        raise RuntimeError("rss_audio_v1 requires 'rss_match_text'.")
+    feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=feed_url, match_text=match_text)
+
+    fragments: List[PageAudioFragment] = []
+    intention_property = str(config.get("intention_property", DEFAULT_INTENTION_PROPERTY)).strip() or DEFAULT_INTENTION_PROPERTY
+    intention_prefix = str(config.get("intention_prefix", DEFAULT_INTENTION_PREFIX)).strip() or DEFAULT_INTENTION_PREFIX
+    intention_text = page_property_text(page, intention_property).strip()
+    if intention_text:
+        spoken = normalize_whitespace(f"{intention_prefix} {intention_text}")
+        intention_hash = shared.compute_audio_render_hash(spoken, base_url, settings)
+        fragments.append(PageAudioFragment(kind="tts", label="Daily Intention", hash_value=intention_hash, text=spoken))
+
+    audio_hash = hashlib.sha256(
+        f"{feed_entry['title']}|{feed_entry['audio_url']}|{feed_entry['date']}".encode("utf-8")
+    ).hexdigest()[:16]
+    fragments.append(
+        PageAudioFragment(
+            kind="source_audio",
+            label=feed_entry["title"],
+            hash_value=audio_hash,
+            source_url=feed_entry["audio_url"],
+        )
+    )
+    paragraphs = plain_text_paragraphs_from_html(feed_entry.get("content_html", ""))
+    return PageAudioPlan(
+        fragments=fragments,
+        text_target="page_content",
+        content_blocks=paragraphs_to_notion_blocks(paragraphs),
+        text_property=str(config.get("text_property", DEFAULT_RSS_TEXT_PROPERTY)).strip() or DEFAULT_RSS_TEXT_PROPERTY,
     )
 
 
@@ -1240,33 +1363,32 @@ def maybe_update_page_text_property(
     token: str,
     *,
     allow_empty: bool = False,
-) -> None:
+) -> bool:
     prop_name = str(property_name or "").strip()
     value = normalize_whitespace(text)
     if not prop_name or (not value and not allow_empty):
-        return
+        return False
     current = normalize_whitespace(page_property_text(page, prop_name))
     if current == value:
-        return
+        return False
     page_id = str(page.get("id", "")).strip()
     if not page_id:
         raise RuntimeError("Target page has no id.")
     shared.notion_update_rich_text_property(page_id, prop_name, value, token)
+    return True
 
 
-def render_page_audio_for_config(
+def build_page_audio_plan(
     page: Dict[str, Any],
     pages: Sequence[Dict[str, Any]],
     title_property: str,
-    config_key: str,
     config: Dict[str, Any],
     notion_token: str,
-    openai_key: str,
     base_url: str,
-) -> str:
+) -> PageAudioPlan:
     builder = str(config.get("builder", "")).strip() or MORNING_PRAYER_BUILDER
     if builder == MORNING_PRAYER_BUILDER:
-        plan = PageAudioPlan(
+        return PageAudioPlan(
             fragments=build_morning_prayer_fragments(
                 page=page,
                 pages=pages,
@@ -1276,25 +1398,53 @@ def render_page_audio_for_config(
                 base_url=base_url,
             )
         )
-    elif builder == DIVINE_OFFICE_INVITATORY_BUILDER:
-        plan = build_divine_office_invitatory_plan(page=page, config=config, base_url=base_url)
-    elif builder == DIVINE_OFFICE_NIGHT_TEXT_BUILDER:
-        plan = build_divine_office_night_text_plan(config=config)
-    elif builder == DIVINE_OFFICE_MORNING_TEXT_BUILDER:
-        plan = build_divine_office_morning_text_plan(config=config)
-    else:
-        raise RuntimeError(f"Unsupported page audio builder '{builder}'.")
-    fragments = plan.fragments
+    if builder == DIVINE_OFFICE_INVITATORY_BUILDER:
+        return build_divine_office_invitatory_plan(page=page, config=config, base_url=base_url)
+    if builder == DIVINE_OFFICE_NIGHT_TEXT_BUILDER:
+        return build_divine_office_night_text_plan(config=config)
+    if builder == DIVINE_OFFICE_MORNING_TEXT_BUILDER:
+        return build_divine_office_morning_text_plan(config=config)
+    if builder == RSS_AUDIO_BUILDER:
+        return build_rss_audio_plan(page=page, config=config, base_url=base_url)
+    raise RuntimeError(f"Unsupported page audio builder '{builder}'.")
+
+
+def apply_page_text_plan(
+    page: Dict[str, Any],
+    plan: PageAudioPlan,
+    notion_token: str,
+) -> str:
     page_id = str(page.get("id", "")).strip()
+    if not page_id:
+        raise RuntimeError("Target page has no id.")
     content_changed = False
     if plan.text_target == "page_content":
         content_changed = sync_page_content_blocks(page_id, notion_token, plan.content_blocks)
         if plan.text_property:
             maybe_update_page_text_property(page, plan.text_property, "", notion_token, allow_empty=True)
-    else:
-        maybe_update_page_text_property(page, plan.text_property, plan.synced_text, notion_token)
+    elif plan.text_property:
+        content_changed = maybe_update_page_text_property(page, plan.text_property, plan.synced_text, notion_token)
+    return "text_updated" if content_changed else "text_cached"
+
+
+def render_page_audio_for_config(
+    page: Dict[str, Any],
+    config_key: str,
+    config: Dict[str, Any],
+    plan: PageAudioPlan,
+    title_property: str,
+    notion_token: str,
+    openai_key: str,
+    base_url: str,
+    *,
+    apply_text: bool = False,
+) -> str:
+    fragments = plan.fragments
+    page_id = str(page.get("id", "")).strip()
+    if apply_text:
+        apply_page_text_plan(page, plan, notion_token)
     if not fragments:
-        return "text_updated" if content_changed else "text_cached"
+        raise RuntimeError(f"Auto-audio config '{config_key}' did not produce any audio fragments.")
 
     render_hash = compute_page_render_hash(config_key, config, fragments)
     current_hash = page_audio_current_render_hash(page_id, notion_token)
@@ -1315,6 +1465,49 @@ def render_page_audio_for_config(
     return f"attached:{settings['format']}:{settings['model']}:{settings['voice']}:hash={render_hash}"
 
 
+def config_key_if_defined(config_map: Dict[str, Any], *keys: str) -> str:
+    for key in keys:
+        value = str(key or "").strip()
+        if value and isinstance(config_map.get(value), dict):
+            return value
+    return ""
+
+
+def resolve_page_sync_keys(
+    page: Dict[str, Any],
+    config_map: Dict[str, Any],
+    *,
+    text_resolver_property: str,
+    auto_audio_primary_property: str,
+    auto_audio_secondary_property: str,
+    legacy_config_property: str,
+    legacy_resolver_property: str,
+    auto_text_enabled: bool,
+    auto_audio_enabled: bool,
+) -> tuple[str, List[str]]:
+    text_key = ""
+    if auto_text_enabled:
+        text_key = config_key_if_defined(
+            config_map,
+            page_text_config_key_from_page(page, text_resolver_property, legacy_config_property),
+            page_property_text(page, legacy_resolver_property).strip(),
+        )
+
+    audio_keys: List[str] = []
+    if auto_audio_enabled:
+        for key in page_auto_audio_config_keys_from_page(
+            page,
+            auto_audio_primary_property,
+            auto_audio_secondary_property,
+            legacy_config_property,
+            legacy_resolver_property,
+        ):
+            resolved = config_key_if_defined(config_map, key)
+            if resolved and resolved not in audio_keys:
+                audio_keys.append(resolved)
+    return text_key, audio_keys
+
+
 def main() -> int:
     try:
         openai_key = shared.require_env(OPENAI_API_KEY)
@@ -1324,9 +1517,18 @@ def main() -> int:
         platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
         platform_value = os.getenv(NOTION_AUDIO_PLATFORM_VALUE, DEFAULT_AUTO_AUDIO_PLATFORM_VALUE).strip() or DEFAULT_AUTO_AUDIO_PLATFORM_VALUE
         config_property = os.getenv(NOTION_AUDIO_CONFIG_PROPERTY, DEFAULT_AUDIO_CONFIG_PROPERTY).strip() or DEFAULT_AUDIO_CONFIG_PROPERTY
-        resolver_property = os.getenv(NOTION_AUDIO_RESOLVER_PROPERTY, "Spotify Resolver").strip() or "Spotify Resolver"
+        legacy_resolver_property = os.getenv(NOTION_AUDIO_RESOLVER_PROPERTY, "Spotify Resolver").strip() or "Spotify Resolver"
+        text_resolver_property = os.getenv(NOTION_TEXT_RESOLVER_PROPERTY, DEFAULT_TEXT_RESOLVER_PROPERTY).strip() or DEFAULT_TEXT_RESOLVER_PROPERTY
+        auto_audio_primary_property = (
+            os.getenv(NOTION_AUTO_AUDIO_RESOLVER_PRIMARY_PROPERTY, DEFAULT_AUTO_AUDIO_RESOLVER_PRIMARY_PROPERTY).strip()
+            or DEFAULT_AUTO_AUDIO_RESOLVER_PRIMARY_PROPERTY
+        )
+        auto_audio_secondary_property = (
+            os.getenv(NOTION_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY, DEFAULT_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY).strip()
+            or DEFAULT_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY
+        )
         enabled_property = os.getenv(NOTION_AUDIO_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
-        config_key_filter = os.getenv(PAGE_AUDIO_CONFIG_KEY, "").strip()
+        config_key_filter = str(os.getenv(PAGE_AUDIO_CONFIG_KEY, "")).strip()
         row_title_filter = os.getenv(PAGE_AUDIO_ROW_TITLE, "").strip()
         fail_open = shared.bool_env(PAGE_AUDIO_FAIL_OPEN, default=False)
         notion_db_id = shared.notion_find_database_id(notion_token)
@@ -1339,10 +1541,7 @@ def main() -> int:
             title_property=title_property,
             platform_property=platform_property,
             platform_value=platform_value,
-            config_property=config_property,
-            resolver_property=resolver_property,
             enabled_property=enabled_property,
-            config_key_filter=config_key_filter,
             row_title_filter=row_title_filter,
         )
 
@@ -1353,34 +1552,93 @@ def main() -> int:
         attached = 0
         cached = 0
         failed = 0
+        processed = 0
         for page in candidates:
             title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip()
-            config_key = page_audio_config_key_from_page(page, config_property, resolver_property)
-            config = config_map.get(config_key)
-            if not isinstance(config, dict):
-                raise RuntimeError(f"Missing page audio config '{config_key}' for '{title}'.")
+            auto_text_enabled = page_has_platform_value(page, platform_property, "auto-text")
+            auto_audio_enabled = page_has_platform_value(page, platform_property, "auto-audio")
+            text_key, audio_keys = resolve_page_sync_keys(
+                page,
+                config_map,
+                text_resolver_property=text_resolver_property,
+                auto_audio_primary_property=auto_audio_primary_property,
+                auto_audio_secondary_property=auto_audio_secondary_property,
+                legacy_config_property=config_property,
+                legacy_resolver_property=legacy_resolver_property,
+                auto_text_enabled=auto_text_enabled,
+                auto_audio_enabled=auto_audio_enabled,
+            )
+            if config_key_filter:
+                wanted = config_key_if_defined(config_map, config_key_filter)
+                if not wanted:
+                    raise RuntimeError(f"Unknown page audio config '{config_key_filter}'.")
+                if text_key != wanted and wanted not in audio_keys:
+                    continue
+            if not text_key and not audio_keys:
+                raise RuntimeError(f"No page-sync resolver configured for '{title}'.")
+            processed += 1
             try:
-                mode = render_page_audio_for_config(
-                    page=page,
-                    pages=pages,
-                    title_property=title_property,
-                    config_key=config_key,
-                    config=config,
-                    notion_token=notion_token,
-                    openai_key=openai_key,
-                    base_url=base_url,
-                )
-                if mode.startswith("attached:"):
+                text_mode = ""
+                if text_key:
+                    text_plan = build_page_audio_plan(
+                        page=page,
+                        pages=pages,
+                        title_property=title_property,
+                        config=config_map[text_key],
+                        notion_token=notion_token,
+                        base_url=base_url,
+                    )
+                    text_mode = apply_page_text_plan(page, text_plan, notion_token)
+
+                audio_mode = ""
+                chosen_audio_key = ""
+                audio_errors: List[str] = []
+                for index, audio_key in enumerate(audio_keys):
+                    chosen_audio_key = audio_key
+                    audio_config = config_map[audio_key]
+                    audio_plan = build_page_audio_plan(
+                        page=page,
+                        pages=pages,
+                        title_property=title_property,
+                        config=audio_config,
+                        notion_token=notion_token,
+                        base_url=base_url,
+                    )
+                    try:
+                        audio_mode = render_page_audio_for_config(
+                            page=page,
+                            config_key=audio_key,
+                            config=audio_config,
+                            plan=audio_plan,
+                            title_property=title_property,
+                            notion_token=notion_token,
+                            openai_key=openai_key,
+                            base_url=base_url,
+                            apply_text=not bool(text_key) and index == 0,
+                        )
+                        break
+                    except Exception as exc:
+                        audio_errors.append(f"{audio_key}: {exc}")
+                        audio_mode = ""
+                        chosen_audio_key = ""
+                if auto_audio_enabled and audio_keys and not audio_mode:
+                    raise RuntimeError("; ".join(audio_errors) if audio_errors else "Auto-audio failed.")
+
+                mode_parts = [part for part in [text_mode, audio_mode] if part]
+                mode = " | ".join(mode_parts) if mode_parts else "noop"
+                if audio_mode.startswith("attached:"):
                     attached += 1
-                if mode.startswith("cached:"):
+                if audio_mode.startswith("cached:"):
                     cached += 1
-                print(f"page_audio title={title} config={config_key} mode={mode}")
+                config_bits = [bit for bit in [f"text={text_key}" if text_key else "", f"audio={chosen_audio_key}" if chosen_audio_key else ""] if bit]
+                config_summary = " ".join(config_bits).strip()
+                print(f"page_audio title={title} {config_summary} mode={mode}".strip())
             except Exception as exc:
                 failed += 1
-                print(f"page_audio_error title={title} config={config_key} error={exc}", file=sys.stderr)
+                print(f"page_audio_error title={title} error={exc}", file=sys.stderr)
                 if not fail_open:
                     raise
-        print(f"page_audio_rows={len(candidates)} attached={attached} cached={cached} failed={failed}")
+        print(f"page_audio_rows={processed} attached={attached} cached={cached} failed={failed}")
         return 0 if failed == 0 or fail_open else 1
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

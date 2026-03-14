@@ -127,6 +127,8 @@ DEFAULT_TOKENS: Dict[str, Any] = {
 # Allow resolver aliases from Notion rows while keeping canonical internal keys.
 RESOLVER_ALIASES = {
     "DO_INVITATORY": "INVITATORY",
+    "SING_THE_HOURS_MORNING": "STH_MORNING",
+    "DIVINE_OFFICE_MORNING": "DO_MORNING",
 }
 
 
@@ -902,6 +904,25 @@ def page_property_normalized_values(page: Dict[str, Any], property_name: str) ->
     return out
 
 
+def env_normalized_values(name: str, default: str) -> List[str]:
+    raw = os.getenv(name, default).strip() or default
+    values = parse_csv_values(raw)
+    return values or parse_csv_values(default)
+
+
+def page_has_any_normalized_value(page: Dict[str, Any], property_name: str, wanted_values: List[str]) -> bool:
+    if not wanted_values:
+        return False
+    values = set(page_property_normalized_values(page, property_name))
+    raw = normalize_text(page_property_text(page, property_name))
+    for wanted in wanted_values:
+        if wanted in values:
+            return True
+        if raw and wanted in raw:
+            return True
+    return False
+
+
 def resolve_notion_playlist_property_name() -> str:
     explicit = os.getenv(NOTION_QUEUE_PLAYLIST_PROPERTY, "").strip()
     if explicit:
@@ -1403,8 +1424,8 @@ def sync_notion_uris_for_playlist(
 
     title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
     platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
-    platform_value = normalize_text(os.getenv(NOTION_PLATFORM_SPOTIFY_VALUE, "spotify").strip() or "spotify")
-    nosync_value = normalize_text(os.getenv(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync").strip() or "spotify-nosync")
+    platform_values = env_normalized_values(NOTION_PLATFORM_SPOTIFY_VALUE, "spotify")
+    nosync_values = env_normalized_values(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync")
     uri_property = os.getenv(NOTION_URI_PROPERTY, "URI").strip() or "URI"
 
     pages = notion_get_all_pages(database_id, token)
@@ -1420,11 +1441,11 @@ def sync_notion_uris_for_playlist(
     candidates: List[Dict[str, Any]] = []
     for page in pages:
         platform_text = normalize_text(page_property_text(page, platform_property))
-        if nosync_value and nosync_value in platform_text:
+        if page_has_any_normalized_value(page, platform_property, nosync_values):
             continue
         if DEPRECATED_TIMESYNC_PLATFORM_VALUE in platform_text:
             continue
-        if platform_value and platform_value not in platform_text:
+        if not page_has_any_normalized_value(page, platform_property, platform_values):
             continue
         title = page_title(page, title_property)
         if not title:
@@ -1522,8 +1543,8 @@ def sync_notion_spotify_bookmarks(
     resolver_property = os.getenv(NOTION_QUEUE_RESOLVER_PROPERTY, "Spotify Resolver").strip() or "Spotify Resolver"
     fallback_property = os.getenv(NOTION_QUEUE_FALLBACK_PROPERTY, "Spotify Fallback Resolver").strip() or "Spotify Fallback Resolver"
     uri_property = os.getenv(NOTION_URI_PROPERTY, "URI").strip() or "URI"
-    platform_value = normalize_text(os.getenv(NOTION_PLATFORM_SPOTIFY_VALUE, "spotify").strip() or "spotify")
-    nosync_value = normalize_text(os.getenv(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync").strip() or "spotify-nosync")
+    platform_values = env_normalized_values(NOTION_PLATFORM_SPOTIFY_VALUE, "spotify")
+    nosync_values = env_normalized_values(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync")
 
     updated = 0
     removed = 0
@@ -1544,11 +1565,11 @@ def sync_notion_spotify_bookmarks(
 
     for page in pages:
         platform_text = normalize_text(page_property_text(page, platform_property))
-        if nosync_value and nosync_value in platform_text:
+        if page_has_any_normalized_value(page, platform_property, nosync_values):
             continue
         if DEPRECATED_TIMESYNC_PLATFORM_VALUE in platform_text:
             continue
-        if platform_value and platform_value not in platform_text:
+        if not page_has_any_normalized_value(page, platform_property, platform_values):
             continue
         page_id = str(page.get("id", "")).strip()
         if not page_id:
@@ -2092,6 +2113,18 @@ def resolve_item_uri(
         uri, _ = get_morning_prayer(sp, shows_cfg, tokens_cfg, status)
         return uri
 
+    if key == "STH_MORNING":
+        uri, _ = sth_match_today(sp, cfg_value(shows_cfg, "STH", "shows"), list(cfg_token_terms(tokens_cfg, "STH_LAUDS")))
+        status["Morning Prayer (STH)"] = bool(uri)
+        return uri
+
+    if key == "DO_MORNING":
+        uri, _ = do_date_aware(
+            sp, cfg_value(shows_cfg, "DIVINE_OFFICE", "shows"), cfg_token_terms(tokens_cfg, "DO_MORNING")
+        )
+        status["Morning Prayer (DO)"] = bool(uri)
+        return uri
+
     if key == "INVITATORY":
         uri, _ = do_date_aware(
             sp, cfg_value(shows_cfg, "DIVINE_OFFICE", "shows"), cfg_token_terms(tokens_cfg, "DO_INVITATORY")
@@ -2225,19 +2258,19 @@ def build_queue_for_playlist_from_notion(
     enabled_property = os.getenv(NOTION_QUEUE_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
     uri_property = os.getenv(NOTION_URI_PROPERTY, "URI").strip() or "URI"
 
-    platform_value = normalize_text(os.getenv(NOTION_PLATFORM_SPOTIFY_VALUE, "spotify").strip() or "spotify")
-    nosync_value = normalize_text(os.getenv(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync").strip() or "spotify-nosync")
+    platform_values = env_normalized_values(NOTION_PLATFORM_SPOTIFY_VALUE, "spotify")
+    nosync_values = env_normalized_values(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync")
     pages = notion_get_all_pages(database_id, token)
 
     entries: List[Dict[str, Any]] = []
     playlist_name_norm = normalize_text(playlist_name)
     for page in pages:
         platform_text = normalize_text(page_property_text(page, platform_property))
-        if nosync_value and nosync_value in platform_text:
+        if page_has_any_normalized_value(page, platform_property, nosync_values):
             continue
         if DEPRECATED_TIMESYNC_PLATFORM_VALUE in platform_text:
             continue
-        if platform_value and platform_value not in platform_text:
+        if not page_has_any_normalized_value(page, platform_property, platform_values):
             continue
 
         enabled = page_property_checkbox(page, enabled_property)

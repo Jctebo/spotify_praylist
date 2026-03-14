@@ -287,8 +287,9 @@ Local run:
 ## Auto Page Audio
 Purpose:
 - reads `Opus Dei` rows whose `Platform` contains `auto-audio` or `auto-text`
-- uses the row `Audio Configuration` property as the config key into a Notion `Page Audio Configuration` database
-- falls back to the legacy resolver field if `Audio Configuration` is blank
+- resolves page text from `Text Resolver`
+- resolves page audio from `Auto Audio Resolver 1` and optionally `Auto Audio Resolver 2`
+- falls back to the legacy `Audio Configuration` field and then the legacy resolver field when the new properties are blank
 - builds a Notion audio block for `auto-audio` rows and syncs page body content for feed-backed rows
 - caches generated fragment audio under `.cache/page_audio`
 
@@ -307,17 +308,28 @@ Current config:
 - `DIVINE_OFFICE_MORNING_TEXT`
 - target row: `Morning Prayer - Liturgy of the Hours (Spotify)`
 - source text: official DivineOffice.org `Morning Prayer` RSS body synced into the page body
+- `SING_THE_HOURS_MORNING_PAGE_AUDIO`
+- target row: `Morning Prayer - Liturgy of the Hours (Spotify)`
+- source audio: public Sing the Hours RSS enclosure for the matching day's `Lauds`
+- `DIVINE_OFFICE_MORNING_PAGE_AUDIO`
+- target row: `Morning Prayer - Liturgy of the Hours (Spotify)`
+- source audio fallback: official DivineOffice.org RSS enclosure for the matching day's `Morning Prayer`
 - fallback file source remains available in [page_audio_config.json](c:/Users/jcteb/Code/spotify_praylist/config/page_audio_config.json) if the Notion config database is unavailable
 
 Recommended Opus Dei row shape:
-- `Platform = auto-audio` or `Platform = auto-text`
-- `Audio Configuration = MORNING_PRAYER_PAGE_AUDIO`
+- `Platform = Spotify, auto-text, auto-audio` for rows that should do all three
+- `Spotify Resolver` and `Spotify Fallback Resolver` for playlist/bookmark resolution
+- `Text Resolver` for page-body text sync
+- `Auto Audio Resolver 1` and `Auto Audio Resolver 2` for generated audio with fallback
 - `Enabled = true`
 
 Environment variables:
 - `NOTION_AUDIO_PLATFORM_VALUE` (default `auto-audio,auto-text`)
 - `NOTION_AUDIO_CONFIG_PROPERTY` (default `Audio Configuration`)
 - `NOTION_AUDIO_RESOLVER_PROPERTY` (default `Spotify Resolver`)
+- `NOTION_TEXT_RESOLVER_PROPERTY` (default `Text Resolver`)
+- `NOTION_AUTO_AUDIO_RESOLVER_PRIMARY_PROPERTY` (default `Auto Audio Resolver 1`)
+- `NOTION_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY` (default `Auto Audio Resolver 2`)
 - `NOTION_AUDIO_ENABLED_PROPERTY` (default `Enabled`)
 - `NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID` (recommended)
 - `NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME` (fallback lookup; default `Page Audio Configuration`)

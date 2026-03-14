@@ -51,6 +51,13 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(entry["audio_url"], "https://example.com/sat.mp3")
         self.assertIn("Lord, open my lips.", entry["text"])
 
+    def test_divine_office_title_date_supports_sing_the_hours_numeric_format(self):
+        parsed = self.mod.divine_office_title_date(
+            "3.14.26 Lauds, Saturday Morning Prayer of the Liturgy of the Hours",
+            2026,
+        )
+        self.assertEqual(parsed, datetime.date(2026, 3, 14))
+
     def test_build_divine_office_invitatory_plan_prepends_intention(self):
         page = {
             "id": "page_1",
@@ -103,9 +110,8 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(plan.text_target, "page_content")
         self.assertEqual([block["type"] for block in plan.content_blocks], ["paragraph", "paragraph"])
 
-    def test_render_page_audio_for_config_syncs_text_only_builder(self):
+    def test_apply_page_text_plan_syncs_text_only_builder(self):
         page = {"id": "page_1", "properties": {"Name": _title_prop("Night Prayer (Optional)")}}
-        config = {"builder": "divine_office_night_text_v1"}
         plan = self.mod.PageAudioPlan(
             fragments=[],
             text_target="page_content",
@@ -118,19 +124,8 @@ class TestPageAudioJob(unittest.TestCase):
             ],
         )
 
-        with patch.object(self.mod, "build_divine_office_night_text_plan", return_value=plan), patch.object(
-            self.mod, "sync_page_content_blocks", return_value=True
-        ) as sync_mock:
-            mode = self.mod.render_page_audio_for_config(
-                page=page,
-                pages=[page],
-                title_property="Name",
-                config_key="DIVINE_OFFICE_NIGHT_TEXT",
-                config=config,
-                notion_token="token",
-                openai_key="openai",
-                base_url="https://api.openai.com/v1",
-            )
+        with patch.object(self.mod, "sync_page_content_blocks", return_value=True) as sync_mock:
+            mode = self.mod.apply_page_text_plan(page, plan, "token")
 
         self.assertEqual(mode, "text_updated")
         sync_mock.assert_called_once()
@@ -300,20 +295,21 @@ class TestPageAudioJob(unittest.TestCase):
             "audio_caption": "Morning Prayer (Audio)",
             "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
         }
-        fragments = [self.mod.PageAudioFragment(kind="tts", label="Morning Offering", hash_value="hash_1", text="Morning Offering.")]
-        render_hash = self.mod.compute_page_render_hash("MORNING_PRAYER_PAGE_AUDIO", config, fragments)
+        plan = self.mod.PageAudioPlan(
+            fragments=[self.mod.PageAudioFragment(kind="tts", label="Morning Offering", hash_value="hash_1", text="Morning Offering.")]
+        )
+        render_hash = self.mod.compute_page_render_hash("MORNING_PRAYER_PAGE_AUDIO", config, plan.fragments)
 
-        with patch.object(self.mod, "build_morning_prayer_fragments", return_value=fragments), patch.object(
-            self.mod, "page_audio_current_render_hash", return_value=render_hash
+        with patch.object(self.mod, "page_audio_current_render_hash", return_value=render_hash
         ), patch.object(
             self.mod, "page_audio_is_positioned_near_top", return_value=True
         ), patch.object(self.mod, "build_assembled_audio") as assemble_mock:
             mode = self.mod.render_page_audio_for_config(
                 page=page,
-                pages=[page],
-                title_property="Name",
                 config_key="MORNING_PRAYER_PAGE_AUDIO",
                 config=config,
+                plan=plan,
+                title_property="Name",
                 notion_token="token",
                 openai_key="openai",
                 base_url="https://api.openai.com/v1",
@@ -370,7 +366,7 @@ class TestPageAudioJob(unittest.TestCase):
                 "properties": {
                     "Name": _title_prop("Morning Prayer"),
                     "Platform": _rich_text_prop("auto-audio"),
-                    "Spotify Resolver": _rich_text_prop("MORNING_PRAYER_PAGE_AUDIO"),
+                    "Auto Audio Resolver 1": _rich_text_prop("MORNING_PRAYER_PAGE_AUDIO"),
                     "Enabled": _checkbox_prop(True),
                 },
             },
@@ -385,11 +381,16 @@ class TestPageAudioJob(unittest.TestCase):
             },
         ]
 
+        plan = self.mod.PageAudioPlan(
+            fragments=[self.mod.PageAudioFragment(kind="tts", label="Morning Offering", hash_value="hash_1", text="Morning Offering.")]
+        )
         with temp_env(env):
             with patch.object(self.mod, "load_page_audio_config", return_value={"configs": {"MORNING_PRAYER_PAGE_AUDIO": {"builder": "morning_prayer_v1", "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}}}}), patch.object(
                 self.mod.shared, "notion_find_database_id", return_value="db_1"
             ), patch.object(
                 self.mod.shared, "notion_get_all_pages", return_value=pages
+            ), patch.object(
+                self.mod, "build_page_audio_plan", return_value=plan
             ), patch.object(
                 self.mod, "render_page_audio_for_config", return_value="cached:mp3:gpt-4o-mini-tts:alloy:hash=abcd1234"
             ) as render_mock:
@@ -432,6 +433,10 @@ class TestPageAudioJob(unittest.TestCase):
             ), patch.object(
                 self.mod.shared, "notion_get_all_pages", return_value=pages
             ), patch.object(
+                self.mod, "build_page_audio_plan", return_value=self.mod.PageAudioPlan(
+                    fragments=[self.mod.PageAudioFragment(kind="source_audio", label="Invitatory", hash_value="hash_1", source_url="https://example.com/audio.mp3")]
+                )
+            ), patch.object(
                 self.mod, "render_page_audio_for_config", return_value="cached:mp3:gpt-4o-mini-tts:alloy:hash=abcd1234"
             ) as render_mock:
                 rc = self.mod.main()
@@ -452,7 +457,7 @@ class TestPageAudioJob(unittest.TestCase):
                 "properties": {
                     "Name": _title_prop("Night Prayer (Optional)"),
                     "Platform": _rich_text_prop("Spotify, auto-text"),
-                    "Audio Configuration": _rich_text_prop("DIVINE_OFFICE_NIGHT_TEXT"),
+                    "Text Resolver": _rich_text_prop("DIVINE_OFFICE_NIGHT_TEXT"),
                     "Enabled": _checkbox_prop(True),
                 },
             }
@@ -471,12 +476,90 @@ class TestPageAudioJob(unittest.TestCase):
             ), patch.object(
                 self.mod.shared, "notion_get_all_pages", return_value=pages
             ), patch.object(
-                self.mod, "render_page_audio_for_config", return_value="text_cached"
+                self.mod, "build_page_audio_plan", return_value=self.mod.PageAudioPlan(fragments=[], text_target="page_content", content_blocks=[])
+            ), patch.object(
+                self.mod, "apply_page_text_plan", return_value="text_cached"
+            ) as text_mock:
+                rc = self.mod.main()
+
+        self.assertEqual(rc, 0)
+        text_mock.assert_called_once()
+
+    def test_resolve_page_sync_keys_supports_text_and_audio_together(self):
+        page = {
+            "id": "page_1",
+            "properties": {
+                "Name": _title_prop("Morning Prayer - Liturgy of the Hours (Spotify)"),
+                "Platform": _rich_text_prop("Spotify, auto-text, auto-audio"),
+                "Text Resolver": _rich_text_prop("DIVINE_OFFICE_MORNING_TEXT"),
+                "Auto Audio Resolver 1": _rich_text_prop("SING_THE_HOURS_MORNING_PAGE_AUDIO"),
+                "Auto Audio Resolver 2": _rich_text_prop("DIVINE_OFFICE_MORNING_PAGE_AUDIO"),
+            },
+        }
+        config_map = {
+            "DIVINE_OFFICE_MORNING_TEXT": {"builder": "divine_office_morning_text_v1"},
+            "SING_THE_HOURS_MORNING_PAGE_AUDIO": {"builder": "rss_audio_v1"},
+            "DIVINE_OFFICE_MORNING_PAGE_AUDIO": {"builder": "rss_audio_v1"},
+        }
+
+        text_key, audio_keys = self.mod.resolve_page_sync_keys(
+            page,
+            config_map,
+            text_resolver_property="Text Resolver",
+            auto_audio_primary_property="Auto Audio Resolver 1",
+            auto_audio_secondary_property="Auto Audio Resolver 2",
+            legacy_config_property="Audio Configuration",
+            legacy_resolver_property="Spotify Resolver",
+            auto_text_enabled=True,
+            auto_audio_enabled=True,
+        )
+
+        self.assertEqual(text_key, "DIVINE_OFFICE_MORNING_TEXT")
+        self.assertEqual(audio_keys, ["SING_THE_HOURS_MORNING_PAGE_AUDIO", "DIVINE_OFFICE_MORNING_PAGE_AUDIO"])
+
+    def test_main_falls_back_to_second_auto_audio_resolver(self):
+        env = {
+            "OPENAI_API_KEY": "key",
+            "NOTION_TOKEN": "notion_token",
+            "NOTION_DATABASE_ID": "db_1",
+            "NOTION_AUDIO_PLATFORM_VALUE": "auto-audio",
+        }
+        pages = [
+            {
+                "id": "page_1",
+                "properties": {
+                    "Name": _title_prop("Morning Prayer - Liturgy of the Hours (Spotify)"),
+                    "Platform": _rich_text_prop("Spotify, auto-audio"),
+                    "Auto Audio Resolver 1": _rich_text_prop("PRIMARY_AUDIO"),
+                    "Auto Audio Resolver 2": _rich_text_prop("FALLBACK_AUDIO"),
+                    "Enabled": _checkbox_prop(True),
+                },
+            }
+        ]
+        config_payload = {
+            "configs": {
+                "PRIMARY_AUDIO": {"builder": "rss_audio_v1", "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}},
+                "FALLBACK_AUDIO": {"builder": "rss_audio_v1", "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}},
+            }
+        }
+        plan = self.mod.PageAudioPlan(
+            fragments=[self.mod.PageAudioFragment(kind="source_audio", label="Prayer", hash_value="hash_1", source_url="https://example.com/prayer.mp3")]
+        )
+
+        with temp_env(env):
+            with patch.object(self.mod, "load_page_audio_config", return_value=config_payload), patch.object(
+                self.mod.shared, "notion_find_database_id", return_value="db_1"
+            ), patch.object(
+                self.mod.shared, "notion_get_all_pages", return_value=pages
+            ), patch.object(
+                self.mod, "build_page_audio_plan", return_value=plan
+            ), patch.object(
+                self.mod, "render_page_audio_for_config", side_effect=[RuntimeError("primary failed"), "cached:mp3:gpt-4o-mini-tts:alloy:hash=abcd1234"]
             ) as render_mock:
                 rc = self.mod.main()
 
         self.assertEqual(rc, 0)
-        render_mock.assert_called_once()
+        self.assertEqual(render_mock.call_count, 2)
 
 
 if __name__ == "__main__":
