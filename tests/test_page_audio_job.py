@@ -515,6 +515,33 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(config["builder"], "rosary_dynamic_v1")
         self.assertEqual(config["weekday_map"], "{\"Monday\":\"Joyful Mysteries\"}")
 
+    def test_load_prayer_intention_petitions_supports_status_property(self):
+        pages = [
+            {
+                "properties": {
+                    "Petition": _rich_text_prop("For peace."),
+                    "Status": {"type": "status", "status": {"name": "Praying"}},
+                    "Frequency": {"type": "number", "number": 5},
+                }
+            },
+            {
+                "properties": {
+                    "Petition": _rich_text_prop("For a resolved need."),
+                    "Status": {"type": "status", "status": {"name": "Resolved"}},
+                    "Frequency": {"type": "number", "number": 50},
+                }
+            },
+        ]
+
+        with patch.object(self.mod, "prayer_intentions_database_id", return_value="db_1"), patch.object(
+            self.mod.shared, "notion_get_all_pages", return_value=pages
+        ), patch.object(
+            self.mod.shared, "local_today", return_value=datetime.date(2026, 3, 16)
+        ):
+            petitions = self.mod.load_prayer_intention_petitions("token", count=5)
+
+        self.assertEqual(petitions, ["For peace."])
+
     def test_build_rosary_dynamic_plan_reuses_repeated_prayers(self):
         page = {
             "id": "page_1",
@@ -563,6 +590,55 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(len(hail_marys), 53)
         self.assertEqual(len(meditations), 5)
         self.assertTrue(all(fragment.kind == "prompt" for fragment in meditations))
+
+    def test_build_rosary_dynamic_plan_prefers_intention_library(self):
+        page = {
+            "id": "page_1",
+            "properties": {
+                "Name": _title_prop("Rosary with Intentions"),
+                "Intention": _rich_text_prop("Fallback intention only."),
+            },
+        }
+        fragments_map = {
+            "rosary-sign-of-cross": {"key": "rosary-sign-of-cross", "label": "Sign of the Cross", "text": "In the name of the Father.", "collection": "rosary"},
+            "rosary-apostles-creed": {"key": "rosary-apostles-creed", "label": "Apostles' Creed", "text": "I believe in God.", "collection": "rosary"},
+            "rosary-our-father": {"key": "rosary-our-father", "label": "Our Father", "text": "Our Father.", "collection": "rosary"},
+            "rosary-hail-mary": {"key": "rosary-hail-mary", "label": "Hail Mary", "text": "Hail Mary.", "collection": "rosary"},
+            "rosary-glory-be": {"key": "rosary-glory-be", "label": "Glory Be", "text": "Glory be.", "collection": "rosary"},
+            "rosary-fatima-prayer": {"key": "rosary-fatima-prayer", "label": "Fatima Prayer", "text": "O my Jesus.", "collection": "rosary"},
+            "rosary-hail-holy-queen": {"key": "rosary-hail-holy-queen", "label": "Hail Holy Queen", "text": "Hail, Holy Queen.", "collection": "rosary"},
+            "rosary-closing-prayer": {"key": "rosary-closing-prayer", "label": "Closing Prayer", "text": "Let us pray.", "collection": "rosary"},
+            "rosary-decade-meditation-template": {
+                "key": "rosary-decade-meditation-template",
+                "label": "Rosary Meditation",
+                "prompt": "Tie {intention} to {mystery_title} and {fruit}.",
+                "prompt_model": "gpt-4.1-mini",
+                "collection": "rosary",
+            },
+        }
+        for idx, title in enumerate(["Annunciation", "Visitation", "Nativity", "Presentation", "Finding in the Temple"], start=1):
+            fragments_map[f"rosary-joyful-{idx}"] = {
+                "key": f"rosary-joyful-{idx}",
+                "label": title,
+                "text": title,
+                "collection": "rosary",
+                "notes": json.dumps({"title": title, "fruit": "Humility"}),
+            }
+        config = {
+            "builder": "rosary_dynamic_v1",
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "fragments": fragments_map,
+            "weekday_map": "{\"Monday\":\"Joyful Mysteries\"}",
+        }
+
+        with patch.object(self.mod.shared, "local_today", return_value=datetime.date(2026, 3, 16)), patch.object(
+            self.mod, "load_prayer_intention_petitions", return_value=["Library One", "Library Two", "Library Three", "Library Four", "Library Five"]
+        ):
+            plan = self.mod.build_rosary_dynamic_plan(page=page, config=config, base_url="https://api.openai.com/v1", notion_token="token")
+
+        meditations = [fragment for fragment in plan.fragments if fragment.fragment_key.startswith("rosary-decade-meditation-")]
+        self.assertIn("Library One", meditations[0].prompt)
+        self.assertNotIn("Fallback intention only.", meditations[0].prompt)
 
     def test_build_rss_audio_plan_uses_page_content_for_divine_office_feed(self):
         page = {"id": "page_1", "properties": {"Name": _title_prop("Evening Prayer"), "Intention": _rich_text_prop("For peace.")}}

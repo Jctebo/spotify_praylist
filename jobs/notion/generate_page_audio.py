@@ -5,6 +5,7 @@ import importlib.util
 import io
 import json
 import os
+import random
 import re
 import shutil
 import subprocess
@@ -90,6 +91,12 @@ DIVINE_OFFICE_FEED_URL = "https://divineoffice.org/feed/"
 DEFAULT_RSS_TEXT_PROPERTY = "Description"
 DEFAULT_INTENTION_PROPERTY = "Intention"
 DEFAULT_INTENTION_PREFIX = "For today's intention:"
+NOTION_INTENTIONS_DATABASE_ID = "NOTION_INTENTIONS_DATABASE_ID"
+NOTION_INTENTIONS_DATABASE_NAME = "NOTION_INTENTIONS_DATABASE_NAME"
+NOTION_INTENTIONS_PETITION_PROPERTY = "NOTION_INTENTIONS_PETITION_PROPERTY"
+NOTION_INTENTIONS_STATUS_PROPERTY = "NOTION_INTENTIONS_STATUS_PROPERTY"
+NOTION_INTENTIONS_FREQUENCY_PROPERTY = "NOTION_INTENTIONS_FREQUENCY_PROPERTY"
+NOTION_INTENTIONS_STATUS_ALLOWED = "NOTION_INTENTIONS_STATUS_ALLOWED"
 HTTP_RETRYABLE_STATUSES = {408, 409, 425, 429, 500, 502, 503, 504}
 HTTP_MAX_ATTEMPTS = 4
 PAGE_AUDIO_HTTP_USER_AGENT = "Mozilla/5.0 (compatible; spotify-praylist/1.0; +https://github.com/Jctebo/spotify_praylist)"
@@ -99,6 +106,7 @@ _RSS_FEED_ENTRIES_CACHE: Dict[str, List[Dict[str, Any]]] = {}
 _PAGE_AUDIO_BLOCKS_CACHE: Dict[str, List[Dict[str, Any]]] = {}
 _AUXILIUM_SECTIONS_CACHE: Dict[str, Dict[str, List[str]]] = {}
 _AUDIO_FRAGMENTS_CACHE: Dict[str, Dict[str, Dict[str, Any]]] = {}
+_INTENTION_LIBRARY_CACHE: Dict[str, List[str]] = {}
 MONTH_NAMES = (
     "JANUARY",
     "FEBRUARY",
@@ -1519,6 +1527,69 @@ def rosary_mystery_fragment_key(mystery_set: str, decade_number: int) -> str:
     return f"rosary-{mystery_set}-{int(decade_number)}"
 
 
+def prayer_intentions_database_id(token: str) -> str:
+    return notion_database_id_by_env_or_name(
+        token,
+        NOTION_INTENTIONS_DATABASE_ID,
+        NOTION_INTENTIONS_DATABASE_NAME,
+        "Prayer Intentions",
+    )
+
+
+def weighted_shuffle_indices(weights: Sequence[float], rng: random.Random) -> List[int]:
+    keyed: List[tuple[float, int]] = []
+    for idx, weight in enumerate(weights):
+        w = max(0.0001, float(weight))
+        key = rng.random() ** (1.0 / w)
+        keyed.append((key, idx))
+    keyed.sort(key=lambda item: item[0], reverse=True)
+    return [idx for _, idx in keyed]
+
+
+def load_prayer_intention_petitions(token: str, *, count: int = 5) -> List[str]:
+    db_id = prayer_intentions_database_id(token)
+    if not db_id:
+        return []
+    cache_key = f"{db_id}|{shared.local_today().isoformat()}|{int(count)}"
+    cached = _INTENTION_LIBRARY_CACHE.get(cache_key)
+    if isinstance(cached, list) and cached:
+        return list(cached)
+    petition_property = os.getenv(NOTION_INTENTIONS_PETITION_PROPERTY, "Petition").strip() or "Petition"
+    status_property = os.getenv(NOTION_INTENTIONS_STATUS_PROPERTY, "Status").strip() or "Status"
+    frequency_property = os.getenv(NOTION_INTENTIONS_FREQUENCY_PROPERTY, "Frequency").strip() or "Frequency"
+    allowed_statuses = parse_normalized_values(os.getenv(NOTION_INTENTIONS_STATUS_ALLOWED, "praying").strip() or "praying")
+    pages = shared.notion_get_all_pages(db_id, token)
+    petitions: List[str] = []
+    weights: List[float] = []
+    for page in pages:
+        petition = page_property_text(page, petition_property).strip()
+        if not petition:
+            continue
+        status_prop = ((page.get("properties") or {}).get(status_property) or {})
+        status_type = str(status_prop.get("type", "")).strip()
+        if status_type == "checkbox":
+            if not bool(status_prop.get("checkbox")):
+                continue
+        elif status_type == "status":
+            status_text = normalize_flag_value(str((status_prop.get("status") or {}).get("name", "")).strip())
+            if allowed_statuses and status_text not in allowed_statuses:
+                continue
+        else:
+            status_text = normalize_flag_value(page_property_text(page, status_property))
+            if allowed_statuses and status_text not in allowed_statuses:
+                continue
+        weight = max(1.0, min(100.0, page_property_number(page, frequency_property, default=1.0)))
+        petitions.append(petition)
+        weights.append(weight)
+    if not petitions:
+        return []
+    rng = random.Random(int(shared.local_today().strftime("%Y%m%d")))
+    order = weighted_shuffle_indices(weights, rng)
+    selected = [petitions[idx] for idx in order[: max(1, int(count))]]
+    _INTENTION_LIBRARY_CACHE[cache_key] = list(selected)
+    return selected
+
+
 def rosary_mystery_metadata(fragments_map: Dict[str, Dict[str, Any]], mystery_set: str, decade_number: int) -> Dict[str, str]:
     key = rosary_mystery_fragment_key(mystery_set, decade_number)
     spec = fragments_map.get(key)
@@ -1543,6 +1614,7 @@ def build_rosary_dynamic_plan(
     config: Dict[str, Any],
     *,
     base_url: str,
+    notion_token: str = "",
 ) -> PageAudioPlan:
     settings = tts_settings_from_config(config)
     fragments_map = config.get("fragments") or {}
@@ -1554,7 +1626,9 @@ def build_rosary_dynamic_plan(
         config.get("weekday_map", {}),
     )
     intention_property = str(config.get("intention_property", DEFAULT_ROSARY_INTENTION_PROPERTY)).strip() or DEFAULT_ROSARY_INTENTION_PROPERTY
-    intentions = split_rosary_intentions(page_property_text(page, intention_property), count=5)
+    intentions = load_prayer_intention_petitions(notion_token, count=5) if str(notion_token or "").strip() else []
+    if not intentions:
+        intentions = split_rosary_intentions(page_property_text(page, intention_property), count=5)
     if not intentions:
         raise RuntimeError(f"Rosary row is missing intentions in '{intention_property}'.")
     meditation_key = str(config.get("meditation_fragment_key", DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY)).strip() or DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY
@@ -3214,7 +3288,7 @@ def build_page_audio_plan(
             base_url=base_url,
         )
     if builder == ROSARY_DYNAMIC_BUILDER:
-        return build_rosary_dynamic_plan(page=page, config=config, base_url=base_url)
+        return build_rosary_dynamic_plan(page=page, config=config, base_url=base_url, notion_token=notion_token)
     raise RuntimeError(f"Unsupported page audio builder '{builder}'.")
 
 

@@ -400,6 +400,7 @@ Audio output row shape:
 Rosary output mode:
 - `Output Mode = rosary`
 - `Weekday Map` is a JSON object like `{"Monday":"The Joyful Mysteries", ...}`
+- rosary decade intentions are pulled from the Notion `Prayer Intentions` library when available, with the row's `Intention` field used only as fallback
 - fixed prayers like `Hail Mary`, `Our Father`, and `Glory Be` should be separate `Audio Fragments` rows so their TTS audio is cached once and reused many times
 - each mystery announcement should be its own fragment row
 - `rosary-decade-meditation-template` is an LLM-backed prompt fragment that gets rendered once per decade using the page's numbered `Intention` lines
