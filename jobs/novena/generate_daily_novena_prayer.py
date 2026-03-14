@@ -366,10 +366,17 @@ def notion_archive_block(block_id: str, token: str) -> None:
     notion_call("PATCH", f"https://api.notion.com/v1/blocks/{block_id}", token, {"archived": True})
 
 
-def notion_append_children(parent_id: str, children: Sequence[Dict[str, Any]], token: str, after: str = "") -> None:
+def notion_append_children(
+    parent_id: str,
+    children: Sequence[Dict[str, Any]],
+    token: str,
+    position: str = "end",
+    after: str = "",
+) -> None:
     if not children:
         return
     insert_after = str(after or "").strip()
+    insert_position = str(position or "end").strip().lower() or "end"
     if insert_after and len(children) > 100:
         raise RuntimeError("notion_append_children with 'after' supports at most 100 children per call.")
     for idx in range(0, len(children), 100):
@@ -377,6 +384,8 @@ def notion_append_children(parent_id: str, children: Sequence[Dict[str, Any]], t
         payload: Dict[str, Any] = {"children": batch}
         if insert_after and idx == 0:
             payload["after"] = insert_after
+        elif insert_position == "start" and idx == 0:
+            payload["position"] = {"type": "start"}
         notion_call("PATCH", f"https://api.notion.com/v1/blocks/{parent_id}/children", token, payload)
 
 

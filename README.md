@@ -286,10 +286,10 @@ Local run:
 
 ## Auto Page Audio
 Purpose:
-- reads `Opus Dei` rows whose `Platform` contains `auto-audio`
+- reads `Opus Dei` rows whose `Platform` contains `auto-audio` or `auto-text`
 - uses the row `Audio Configuration` property as the config key into a Notion `Page Audio Configuration` database
 - falls back to the legacy resolver field if `Audio Configuration` is blank
-- builds a single Notion audio block from reusable page fragments instead of regenerating the whole page every run
+- builds a Notion audio block for `auto-audio` rows and syncs page body content for feed-backed rows
 - caches generated fragment audio under `.cache/page_audio`
 
 Current config:
@@ -300,16 +300,22 @@ Current config:
 - `DIVINE_OFFICE_INVITATORY_PAGE_AUDIO`
 - target row: `Divine Office Invitatory`
 - source audio: official DivineOffice.org RSS enclosure for the matching day
-- source text: synced into the row `Description` property when available
+- source text: synced into the page body
+- `DIVINE_OFFICE_NIGHT_TEXT`
+- target row: `Night Prayer (Optional)`
+- source text: official DivineOffice.org RSS body synced into the page body
+- `DIVINE_OFFICE_MORNING_TEXT`
+- target row: `Morning Prayer - Liturgy of the Hours (Spotify)`
+- source text: official DivineOffice.org `Morning Prayer` RSS body synced into the page body
 - fallback file source remains available in [page_audio_config.json](c:/Users/jcteb/Code/spotify_praylist/config/page_audio_config.json) if the Notion config database is unavailable
 
 Recommended Opus Dei row shape:
-- `Platform = auto-audio`
+- `Platform = auto-audio` or `Platform = auto-text`
 - `Audio Configuration = MORNING_PRAYER_PAGE_AUDIO`
 - `Enabled = true`
 
 Environment variables:
-- `NOTION_AUDIO_PLATFORM_VALUE` (default `auto-audio`)
+- `NOTION_AUDIO_PLATFORM_VALUE` (default `auto-audio,auto-text`)
 - `NOTION_AUDIO_CONFIG_PROPERTY` (default `Audio Configuration`)
 - `NOTION_AUDIO_RESOLVER_PROPERTY` (default `Spotify Resolver`)
 - `NOTION_AUDIO_ENABLED_PROPERTY` (default `Enabled`)

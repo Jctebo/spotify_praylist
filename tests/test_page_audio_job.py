@@ -72,7 +72,7 @@ class TestPageAudioJob(unittest.TestCase):
             return_value={
                 "title": "Mar 14, Invitatory for Saturday of the 3rd week of Lent",
                 "audio_url": "https://example.com/invitatory.mp3",
-                "text": "Lord, open my lips.\n\nAnd my mouth will proclaim your praise.",
+                "content_html": "<p>Lord, open my lips.</p><p>And my mouth will proclaim your praise.</p>",
                 "date": "2026-03-14",
             },
         ):
@@ -83,7 +83,57 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertIn("For peace in my family.", plan.fragments[0].text)
         self.assertEqual(plan.fragments[1].source_url, "https://example.com/invitatory.mp3")
         self.assertEqual(plan.text_property, "Description")
-        self.assertIn("Lord, open my lips.", plan.synced_text)
+        self.assertEqual(plan.text_target, "page_content")
+        self.assertEqual([block["type"] for block in plan.content_blocks], ["paragraph", "paragraph"])
+
+    def test_build_divine_office_morning_text_plan_uses_page_content(self):
+        config = {"builder": "divine_office_morning_text_v1"}
+
+        with patch.object(
+            self.mod,
+            "fetch_divine_office_feed_entry",
+            return_value={
+                "title": "Mar 14, Morning Prayer for Saturday of the 3rd week of Lent",
+                "content_html": "<p>God, come to my assistance.</p><p>Lord, make haste to help me.</p>",
+            },
+        ):
+            plan = self.mod.build_divine_office_morning_text_plan(config)
+
+        self.assertEqual(plan.fragments, [])
+        self.assertEqual(plan.text_target, "page_content")
+        self.assertEqual([block["type"] for block in plan.content_blocks], ["paragraph", "paragraph"])
+
+    def test_render_page_audio_for_config_syncs_text_only_builder(self):
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Night Prayer (Optional)")}}
+        config = {"builder": "divine_office_night_text_v1"}
+        plan = self.mod.PageAudioPlan(
+            fragments=[],
+            text_target="page_content",
+            content_blocks=[
+                {
+                    "object": "block",
+                    "type": "paragraph",
+                    "paragraph": {"rich_text": [{"type": "text", "text": {"content": "Night prayer text."}}]},
+                }
+            ],
+        )
+
+        with patch.object(self.mod, "build_divine_office_night_text_plan", return_value=plan), patch.object(
+            self.mod, "sync_page_content_blocks", return_value=True
+        ) as sync_mock:
+            mode = self.mod.render_page_audio_for_config(
+                page=page,
+                pages=[page],
+                title_property="Name",
+                config_key="DIVINE_OFFICE_NIGHT_TEXT",
+                config=config,
+                notion_token="token",
+                openai_key="openai",
+                base_url="https://api.openai.com/v1",
+            )
+
+        self.assertEqual(mode, "text_updated")
+        sync_mock.assert_called_once()
 
     def test_parse_monthly_intention_section_builds_spoken_text(self):
         parsed = self.mod.parse_monthly_intention_section(
@@ -383,6 +433,45 @@ class TestPageAudioJob(unittest.TestCase):
                 self.mod.shared, "notion_get_all_pages", return_value=pages
             ), patch.object(
                 self.mod, "render_page_audio_for_config", return_value="cached:mp3:gpt-4o-mini-tts:alloy:hash=abcd1234"
+            ) as render_mock:
+                rc = self.mod.main()
+
+        self.assertEqual(rc, 0)
+        render_mock.assert_called_once()
+
+    def test_main_matches_auto_text_rows(self):
+        env = {
+            "OPENAI_API_KEY": "key",
+            "NOTION_TOKEN": "notion_token",
+            "NOTION_DATABASE_ID": "db_1",
+            "NOTION_AUDIO_PLATFORM_VALUE": "auto-audio,auto-text",
+        }
+        pages = [
+            {
+                "id": "page_1",
+                "properties": {
+                    "Name": _title_prop("Night Prayer (Optional)"),
+                    "Platform": _rich_text_prop("Spotify, auto-text"),
+                    "Audio Configuration": _rich_text_prop("DIVINE_OFFICE_NIGHT_TEXT"),
+                    "Enabled": _checkbox_prop(True),
+                },
+            }
+        ]
+        config_payload = {
+            "configs": {
+                "DIVINE_OFFICE_NIGHT_TEXT": {
+                    "builder": "divine_office_night_text_v1",
+                }
+            }
+        }
+
+        with temp_env(env):
+            with patch.object(self.mod, "load_page_audio_config", return_value=config_payload), patch.object(
+                self.mod.shared, "notion_find_database_id", return_value="db_1"
+            ), patch.object(
+                self.mod.shared, "notion_get_all_pages", return_value=pages
+            ), patch.object(
+                self.mod, "render_page_audio_for_config", return_value="text_cached"
             ) as render_mock:
                 rc = self.mod.main()
 

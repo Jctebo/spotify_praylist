@@ -33,6 +33,14 @@
       "rss_match_text": "Invitatory",
       "intention_property": "Intention",
       "intention_prefix": "For today's intention:"
+    },
+    "DIVINE_OFFICE_NIGHT_TEXT": {
+      "label": "Divine Office Night Prayer Text",
+      "builder": "divine_office_night_text_v1"
+    },
+    "DIVINE_OFFICE_MORNING_TEXT": {
+      "label": "Divine Office Morning Prayer Text",
+      "builder": "divine_office_morning_text_v1"
     }
   }
 }

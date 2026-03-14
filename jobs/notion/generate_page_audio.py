@@ -10,7 +10,7 @@ import subprocess
 import sys
 import tempfile
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
 import xml.etree.ElementTree as ET
@@ -48,7 +48,7 @@ PAGE_AUDIO_FAIL_OPEN = "PAGE_AUDIO_FAIL_OPEN"
 DEFAULT_PAGE_AUDIO_CONFIG_FILE = "config/page_audio_config.json"
 DEFAULT_PAGE_AUDIO_CACHE_DIR = ".cache/page_audio"
 DEFAULT_PAGE_AUDIO_CONFIG_DATABASE_NAME = "Page Audio Configuration"
-DEFAULT_AUTO_AUDIO_PLATFORM_VALUE = "auto-audio"
+DEFAULT_AUTO_AUDIO_PLATFORM_VALUE = "auto-audio,auto-text"
 DEFAULT_AUDIO_CONFIG_PROPERTY = "Audio Configuration"
 PAGE_AUDIO_MARKER = "[AUTOGEN_PAGE_AUDIO]"
 PAGE_AUDIO_HASH_MARKER_PREFIX = "[AUTOGEN_PAGE_AUDIO_HASH:"
@@ -57,6 +57,8 @@ DEFAULT_SILENCE_MS = 450
 DEFAULT_DAILY_NOVENA_PAGE_TITLE = "Daily Novenas from Liturgical Calendar"
 MORNING_PRAYER_BUILDER = "morning_prayer_v1"
 DIVINE_OFFICE_INVITATORY_BUILDER = "divine_office_invitatory_v1"
+DIVINE_OFFICE_NIGHT_TEXT_BUILDER = "divine_office_night_text_v1"
+DIVINE_OFFICE_MORNING_TEXT_BUILDER = "divine_office_morning_text_v1"
 POPES_PRAYER_MEDIA_API_URL = "https://www.popesprayer.va/wp-json/wp/v2/media"
 DIVINE_OFFICE_FEED_URL = "https://divineoffice.org/feed/"
 DEFAULT_RSS_TEXT_PROPERTY = "Description"
@@ -130,6 +132,8 @@ class PageAudioPlan:
     fragments: List[PageAudioFragment]
     synced_text: str = ""
     text_property: str = ""
+    text_target: str = ""
+    content_blocks: List[Dict[str, Any]] = field(default_factory=list)
 
 
 def slugify(text: str) -> str:
@@ -413,7 +417,13 @@ def list_audio_candidate_pages(
     config_key_filter: str,
     row_title_filter: str,
 ) -> List[Dict[str, Any]]:
-    wanted_platform = str(platform_value or "").strip().lower()
+    wanted_platforms = [
+        value.strip().lower()
+        for value in str(platform_value or "").split(",")
+        if value.strip()
+    ]
+    if not wanted_platforms:
+        wanted_platforms = [DEFAULT_AUTO_AUDIO_PLATFORM_VALUE]
     wanted_key = str(config_key_filter or "").strip().lower()
     wanted_title = str(row_title_filter or "").strip().lower()
     out: List[Dict[str, Any]] = []
@@ -426,7 +436,7 @@ def list_audio_candidate_pages(
         if not page_property_checkbox(page, enabled_property, default=False):
             continue
         platform = page_property_text(page, platform_property).lower()
-        if wanted_platform not in platform:
+        if not any(value in platform for value in wanted_platforms):
             continue
         config_key = page_audio_config_key_from_page(page, config_property, resolver_property)
         if not config_key:
@@ -637,6 +647,63 @@ def plain_text_paragraphs_from_html(raw_html: str) -> List[str]:
     return paragraphs
 
 
+def paragraphs_to_notion_blocks(paragraphs: Sequence[str]) -> List[Dict[str, Any]]:
+    blocks: List[Dict[str, Any]] = []
+    for paragraph in paragraphs:
+        text = normalize_whitespace(paragraph)
+        if not text:
+            continue
+        rich_text = [{"type": "text", "text": {"content": chunk}} for chunk in shared.split_text_chunks(text, 1900)]
+        blocks.append({"object": "block", "type": "paragraph", "paragraph": {"rich_text": rich_text}})
+    return blocks
+
+
+def desired_block_signature(blocks: Sequence[Dict[str, Any]]) -> List[tuple[str, str]]:
+    out: List[tuple[str, str]] = []
+    for block in blocks:
+        block_type = str(block.get("type", "")).strip()
+        payload = block.get(block_type) or {}
+        rich = payload.get("rich_text") or []
+        text = ""
+        if isinstance(rich, list):
+            text = " ".join(str(item.get("plain_text", "")).strip() for item in rich if isinstance(item, dict)).strip()
+        out.append((block_type, normalize_whitespace(text)))
+    return out
+
+
+def existing_content_signature(blocks: Sequence[Dict[str, Any]]) -> List[tuple[str, str]]:
+    out: List[tuple[str, str]] = []
+    for block in blocks:
+        block_type = str(block.get("type", "")).strip()
+        out.append((block_type, normalize_whitespace(shared.block_rich_text_plain(block))))
+    return out
+
+
+def sync_page_content_blocks(page_id: str, token: str, desired_blocks: Sequence[Dict[str, Any]]) -> bool:
+    existing = shared.notion_list_block_children(page_id, token)
+    preserved: List[Dict[str, Any]] = []
+    removable: List[Dict[str, Any]] = []
+    for block in existing:
+        block_type = str(block.get("type", "")).strip()
+        if block_type in {"bookmark", "audio"}:
+            preserved.append(block)
+        else:
+            removable.append(block)
+    if existing_content_signature(removable) == desired_block_signature(desired_blocks):
+        return False
+    for block in removable:
+        block_id = str(block.get("id", "")).strip()
+        if block_id:
+            shared.notion_archive_block(block_id, token)
+    if not desired_blocks:
+        return bool(removable)
+    if preserved:
+        shared.notion_append_children(page_id, list(desired_blocks), token, position="end")
+    else:
+        shared.notion_append_children(page_id, list(desired_blocks), token, position="start")
+    return True
+
+
 def divine_office_title_date(title: str, target_year: int) -> Optional[datetime.date]:
     value = str(title or "").strip()
     match = re.match(r"^([A-Za-z]{3,9})\s+(\d{1,2}),", value)
@@ -733,10 +800,33 @@ def build_divine_office_invitatory_plan(
             source_url=feed_entry["audio_url"],
         )
     )
+    paragraphs = plain_text_paragraphs_from_html(feed_entry.get("content_html", ""))
     return PageAudioPlan(
         fragments=fragments,
-        synced_text=str(feed_entry.get("text", "")).strip(),
+        synced_text="",
         text_property=str(config.get("text_property", DEFAULT_RSS_TEXT_PROPERTY)).strip() or DEFAULT_RSS_TEXT_PROPERTY,
+        text_target="page_content",
+        content_blocks=paragraphs_to_notion_blocks(paragraphs),
+    )
+
+
+def build_divine_office_night_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
+    feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=DIVINE_OFFICE_FEED_URL, match_text="Night Prayer")
+    paragraphs = plain_text_paragraphs_from_html(feed_entry.get("content_html", ""))
+    return PageAudioPlan(
+        fragments=[],
+        text_target="page_content",
+        content_blocks=paragraphs_to_notion_blocks(paragraphs),
+    )
+
+
+def build_divine_office_morning_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
+    entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=DIVINE_OFFICE_FEED_URL, match_text="Morning Prayer")
+    paragraphs = plain_text_paragraphs_from_html(entry.get("content_html", ""))
+    return PageAudioPlan(
+        fragments=[],
+        text_target="page_content",
+        content_blocks=paragraphs_to_notion_blocks(paragraphs),
     )
 
 
@@ -780,30 +870,6 @@ def page_audio_current_render_hash(page_id: str, token: str) -> str:
     return ""
 
 
-def page_audio_block_ids(page_id: str, token: str) -> List[str]:
-    out: List[str] = []
-    for block in shared.notion_list_block_children(page_id, token):
-        if str(block.get("type", "")).strip() != "audio":
-            continue
-        caption = shared.audio_block_caption(block)
-        if PAGE_AUDIO_MARKER not in caption:
-            continue
-        block_id = str(block.get("id", "")).strip()
-        if block_id:
-            out.append(block_id)
-    return out
-
-
-def page_audio_insert_after_block_id(page_id: str, token: str) -> str:
-    last_bookmark = ""
-    for block in shared.notion_list_block_children(page_id, token):
-        block_type = str(block.get("type", "")).strip()
-        if block_type != "bookmark":
-            break
-        last_bookmark = str(block.get("id", "")).strip() or last_bookmark
-    return last_bookmark
-
-
 def page_audio_is_positioned_near_top(page_id: str, token: str) -> bool:
     blocks = shared.notion_list_block_children(page_id, token)
     for idx, block in enumerate(blocks):
@@ -814,19 +880,6 @@ def page_audio_is_positioned_near_top(page_id: str, token: str) -> bool:
             continue
         return idx == 0
     return False
-
-
-def page_audio_top_block_id(page_id: str, token: str) -> str:
-    blocks = shared.notion_list_block_children(page_id, token)
-    if not blocks:
-        return ""
-    block = blocks[0]
-    if str(block.get("type", "")).strip() != "audio":
-        return ""
-    caption = shared.audio_block_caption(block)
-    if PAGE_AUDIO_MARKER not in caption:
-        return ""
-    return str(block.get("id", "")).strip()
 
 
 def page_audio_remove_old_blocks(page_id: str, token: str) -> int:
@@ -862,7 +915,7 @@ def page_audio_remove_blank_placeholders(page_id: str, token: str) -> int:
     return removed
 
 
-def page_audio_append_block(page_id: str, upload_id: str, caption: str, token: str, after: str = "") -> None:
+def page_audio_append_block(page_id: str, upload_id: str, caption: str, token: str, position: str = "start") -> None:
     full_caption = f"{str(caption or '').strip()} {PAGE_AUDIO_MARKER}".strip()
     block = {
         "object": "block",
@@ -873,7 +926,7 @@ def page_audio_append_block(page_id: str, upload_id: str, caption: str, token: s
             "caption": [{"type": "text", "text": {"content": full_caption}}],
         },
     }
-    shared.notion_append_children(page_id, [block], token, after=after)
+    shared.notion_append_children(page_id, [block], token, position=position)
 
 
 def ffmpeg_audio_codec(audio_format: str) -> str:
@@ -1180,10 +1233,17 @@ def fetch_monthly_intention(target_date: datetime.date) -> Dict[str, str]:
     return result
 
 
-def maybe_update_page_text_property(page: Dict[str, Any], property_name: str, text: str, token: str) -> None:
+def maybe_update_page_text_property(
+    page: Dict[str, Any],
+    property_name: str,
+    text: str,
+    token: str,
+    *,
+    allow_empty: bool = False,
+) -> None:
     prop_name = str(property_name or "").strip()
     value = normalize_whitespace(text)
-    if not prop_name or not value:
+    if not prop_name or (not value and not allow_empty):
         return
     current = normalize_whitespace(page_property_text(page, prop_name))
     if current == value:
@@ -1218,34 +1278,39 @@ def render_page_audio_for_config(
         )
     elif builder == DIVINE_OFFICE_INVITATORY_BUILDER:
         plan = build_divine_office_invitatory_plan(page=page, config=config, base_url=base_url)
+    elif builder == DIVINE_OFFICE_NIGHT_TEXT_BUILDER:
+        plan = build_divine_office_night_text_plan(config=config)
+    elif builder == DIVINE_OFFICE_MORNING_TEXT_BUILDER:
+        plan = build_divine_office_morning_text_plan(config=config)
     else:
         raise RuntimeError(f"Unsupported page audio builder '{builder}'.")
     fragments = plan.fragments
-    render_hash = compute_page_render_hash(config_key, config, fragments)
     page_id = str(page.get("id", "")).strip()
+    content_changed = False
+    if plan.text_target == "page_content":
+        content_changed = sync_page_content_blocks(page_id, notion_token, plan.content_blocks)
+        if plan.text_property:
+            maybe_update_page_text_property(page, plan.text_property, "", notion_token, allow_empty=True)
+    else:
+        maybe_update_page_text_property(page, plan.text_property, plan.synced_text, notion_token)
+    if not fragments:
+        return "text_updated" if content_changed else "text_cached"
+
+    render_hash = compute_page_render_hash(config_key, config, fragments)
     current_hash = page_audio_current_render_hash(page_id, notion_token)
     settings = tts_settings_from_config(config)
-    maybe_update_page_text_property(page, plan.text_property, plan.synced_text, notion_token)
     if current_hash == render_hash and page_audio_is_positioned_near_top(page_id, notion_token):
         return f"cached:{settings['format']}:{settings['model']}:{settings['voice']}:hash={render_hash}"
 
     audio_bytes = build_assembled_audio(fragments, config, openai_key, base_url)
-    existing_audio_ids = page_audio_block_ids(page_id, notion_token)
-    top_audio_id = page_audio_top_block_id(page_id, notion_token)
-    if not top_audio_id:
-        page_audio_remove_old_blocks(page_id, notion_token)
-        existing_audio_ids = []
+    page_audio_remove_old_blocks(page_id, notion_token)
     page_audio_remove_blank_placeholders(page_id, notion_token)
     filename = f"{slugify(shared.page_title(page, title_property))}_{shared.local_today().isoformat()}.{settings['format']}"
     content_type = shared.audio_content_type(str(settings["format"]))
     upload_id = shared.notion_create_file_upload(filename=filename, content_type=content_type, token=notion_token)
     shared.notion_send_file_upload(upload_id, filename, content_type, audio_bytes, notion_token)
     caption = str(config.get("audio_caption", "Page Audio")).strip() or "Page Audio"
-    insert_after = top_audio_id or page_audio_insert_after_block_id(page_id, notion_token)
-    page_audio_append_block(page_id, upload_id, f"{caption} {page_audio_hash_marker(render_hash)}", notion_token, after=insert_after)
-    for old_block_id in existing_audio_ids:
-        if old_block_id:
-            shared.notion_archive_block(old_block_id, notion_token)
+    page_audio_append_block(page_id, upload_id, f"{caption} {page_audio_hash_marker(render_hash)}", notion_token, position="start")
     shared.notion_update_audio_render_metadata(page, render_hash, notion_token)
     return f"attached:{settings['format']}:{settings['model']}:{settings['voice']}:hash={render_hash}"
 
