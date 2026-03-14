@@ -91,6 +91,7 @@ DEFAULT_INTENTION_PREFIX = "For today's intention:"
 HTTP_RETRYABLE_STATUSES = {408, 409, 425, 429, 500, 502, 503, 504}
 HTTP_MAX_ATTEMPTS = 4
 PAGE_AUDIO_HTTP_USER_AGENT = "Mozilla/5.0 (compatible; spotify-praylist/1.0; +https://github.com/Jctebo/spotify_praylist)"
+PAGE_AUDIO_HTTP_ACCEPT = "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8"
 
 _RSS_FEED_ENTRIES_CACHE: Dict[str, List[Dict[str, Any]]] = {}
 _PAGE_AUDIO_BLOCKS_CACHE: Dict[str, List[Dict[str, Any]]] = {}
@@ -870,7 +871,10 @@ def page_audio_http_get(url: str, *, params: Optional[Dict[str, Any]] = None, ti
                 url,
                 params=params,
                 timeout=timeout,
-                headers={"User-Agent": PAGE_AUDIO_HTTP_USER_AGENT},
+                headers={
+                    "User-Agent": PAGE_AUDIO_HTTP_USER_AGENT,
+                    "Accept": PAGE_AUDIO_HTTP_ACCEPT,
+                },
             )
             response.raise_for_status()
             return response
