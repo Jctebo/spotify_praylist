@@ -634,7 +634,7 @@ def assemble_audio_with_ffmpeg(fragment_paths: Sequence[Path], target_format: st
     with tempfile.TemporaryDirectory(dir=tmp_dir) as temp_dir:
         concat_path = Path(temp_dir) / "inputs.txt"
         output_path = Path(temp_dir) / f"assembled.{target_format}"
-        concat_lines = [f"file '{str(path).replace('\\', '/')}'" for path in ordered_paths]
+        concat_lines = [f"file '{path.as_posix()}'" for path in ordered_paths]
         concat_path.write_text("\n".join(concat_lines), encoding="utf-8")
         run_ffmpeg(
             [
