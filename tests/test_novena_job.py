@@ -246,7 +246,15 @@ class TestNovenaJob(unittest.TestCase):
             "NOVENA_AUDIO_SPEED": "1.0",
         }
         settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
-        render_hash = self.mod.compute_audio_render_hash("Daily prayer text", "https://api.openai.com/v1", settings)
+        saints = [{"date": "2026-03-03", "name": "Saint Agnes"}]
+        render_hash = self.mod.compute_daily_novena_audio_render_hash(
+            "https://api.openai.com/v1",
+            settings,
+            saints,
+            datetime.date(2026, 3, 3),
+            datetime.date(2026, 3, 12),
+            "gpt-4.1-mini",
+        )
         blocks = [
             {
                 "id": "audio_1",
@@ -282,6 +290,10 @@ class TestNovenaJob(unittest.TestCase):
                     "notion_token",
                     "openai_key",
                     "https://api.openai.com/v1",
+                    "gpt-4.1-mini",
+                    saints,
+                    datetime.date(2026, 3, 3),
+                    datetime.date(2026, 3, 12),
                 )
 
         self.assertEqual(mode, f"cached:mp3:gpt-4o-mini-tts:alloy:hash={render_hash}")
@@ -302,7 +314,15 @@ class TestNovenaJob(unittest.TestCase):
             "NOVENA_AUDIO_CAPTION": "Daily Novena Prayer (Audio)",
         }
         settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
-        expected_hash = self.mod.compute_audio_render_hash("Daily prayer text", "https://api.openai.com/v1", settings)
+        saints = [{"date": "2026-03-03", "name": "Saint Agnes"}]
+        expected_hash = self.mod.compute_daily_novena_audio_render_hash(
+            "https://api.openai.com/v1",
+            settings,
+            saints,
+            datetime.date(2026, 3, 3),
+            datetime.date(2026, 3, 12),
+            "gpt-4.1-mini",
+        )
 
         with temp_env(env):
             with patch.object(self.mod, "notion_list_block_children", return_value=[]), patch.object(
@@ -324,6 +344,10 @@ class TestNovenaJob(unittest.TestCase):
                     "notion_token",
                     "openai_key",
                     "https://api.openai.com/v1",
+                    "gpt-4.1-mini",
+                    saints,
+                    datetime.date(2026, 3, 3),
+                    datetime.date(2026, 3, 12),
                 )
 
         self.assertEqual(mode, f"attached:mp3:gpt-4o-mini-tts:alloy:hash={expected_hash}")

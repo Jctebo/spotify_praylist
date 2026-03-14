@@ -66,6 +66,8 @@ NOVENA_AUDIO_CAPTION = "NOVENA_AUDIO_CAPTION"  # default Daily Novena Prayer (Au
 NOVENA_AUDIO_FAIL_OPEN = "NOVENA_AUDIO_FAIL_OPEN"  # default true
 NOVENA_AUDIO_MARKER = "[AUTOGEN_NOVENA_AUDIO]"
 NOVENA_AUDIO_HASH_MARKER_PREFIX = "[AUTOGEN_NOVENA_AUDIO_HASH:"
+DAILY_NOVENA_AUDIO_RENDER_VERSION = "daily_novena_audio_v1"
+SAINT_NOVENA_AUDIO_RENDER_VERSION = "saint_novena_audio_v1"
 NOVENA_SECTION_MARKER = "[AUTOGEN_DAILY_ROLLING_NOVENA]"
 NOVENA_DAY_MODE = "NOVENA_DAY_MODE"  # default true when writing into calendar rows
 NOVENA_TEST_SAINT_NAME = "NOVENA_TEST_SAINT_NAME"  # optional saint name for day-by-day backfill test
@@ -854,6 +856,11 @@ def audio_content_type(audio_format: str) -> str:
     return "audio/mpeg" if audio_format == "mp3" else f"audio/{audio_format}"
 
 
+def compute_render_hash(payload: Dict[str, Any]) -> str:
+    raw = json.dumps(payload, sort_keys=True, ensure_ascii=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()[:16]
+
+
 def compute_audio_render_hash(text: str, base_url: str, settings: Dict[str, Any]) -> str:
     payload = {
         "base_url": str(base_url or "").rstrip("/"),
@@ -863,8 +870,61 @@ def compute_audio_render_hash(text: str, base_url: str, settings: Dict[str, Any]
         "text": str(text or "").strip(),
         "voice": str(settings.get("voice", "")).strip(),
     }
-    raw = json.dumps(payload, sort_keys=True, ensure_ascii=True, separators=(",", ":")).encode("utf-8")
-    return hashlib.sha256(raw).hexdigest()[:16]
+    return compute_render_hash(payload)
+
+
+def compute_daily_novena_audio_render_hash(
+    base_url: str,
+    settings: Dict[str, Any],
+    saints: Sequence[Dict[str, str]],
+    start_date: datetime.date,
+    end_date: datetime.date,
+    oai_model: str,
+) -> str:
+    payload = {
+        "type": DAILY_NOVENA_AUDIO_RENDER_VERSION,
+        "base_url": str(base_url or "").rstrip("/"),
+        "tts_model": str(settings.get("model", "")).strip(),
+        "tts_voice": str(settings.get("voice", "")).strip(),
+        "tts_format": str(settings.get("format", "")).strip().lower(),
+        "tts_speed": float(settings.get("speed", 1.0)),
+        "text_model": str(oai_model or "").strip(),
+        "window_start": start_date.isoformat(),
+        "window_end": end_date.isoformat(),
+        "saints": [
+            {
+                "date": str(row.get("date", "")).strip(),
+                "name": str(row.get("name", "")).strip(),
+            }
+            for row in saints
+        ],
+    }
+    return compute_render_hash(payload)
+
+
+def compute_saint_day_audio_render_hash(
+    base_url: str,
+    settings: Dict[str, Any],
+    saint_name: str,
+    feast_day: str,
+    celebration_type: str,
+    day_num: int,
+    oai_model: str,
+) -> str:
+    payload = {
+        "type": SAINT_NOVENA_AUDIO_RENDER_VERSION,
+        "base_url": str(base_url or "").rstrip("/"),
+        "tts_model": str(settings.get("model", "")).strip(),
+        "tts_voice": str(settings.get("voice", "")).strip(),
+        "tts_format": str(settings.get("format", "")).strip().lower(),
+        "tts_speed": float(settings.get("speed", 1.0)),
+        "text_model": str(oai_model or "").strip(),
+        "saint_name": str(saint_name or "").strip(),
+        "feast_day": str(feast_day or "").strip(),
+        "celebration_type": str(celebration_type or "").strip(),
+        "day_num": int(day_num),
+    }
+    return compute_render_hash(payload)
 
 
 def normalize_romcal_calendar(calendar: str) -> str:
@@ -2071,6 +2131,10 @@ def maybe_generate_and_attach_audio(
     notion_token: str,
     openai_key: str,
     oai_base_url: str,
+    oai_model: str,
+    saints: Sequence[Dict[str, str]],
+    start_date: datetime.date,
+    end_date: datetime.date,
 ) -> str:
     if not bool_env(NOVENA_AUDIO_ENABLED, default=False):
         return "disabled"
@@ -2081,7 +2145,14 @@ def maybe_generate_and_attach_audio(
 
     settings = novena_audio_settings()
     caption = os.getenv(NOVENA_AUDIO_CAPTION, "Daily Novena Prayer (Audio)").strip() or "Daily Novena Prayer (Audio)"
-    render_hash = compute_audio_render_hash(prayer_text, oai_base_url, settings)
+    render_hash = compute_daily_novena_audio_render_hash(
+        base_url=oai_base_url,
+        settings=settings,
+        saints=saints,
+        start_date=start_date,
+        end_date=end_date,
+        oai_model=oai_model,
+    )
     current_hash = notion_get_autogen_audio_render_hash(page_id, notion_token)
     if current_hash == render_hash:
         return (
@@ -2364,7 +2435,15 @@ def main() -> int:
                         if audio_enabled:
                             audio_text = saint_novena_day_audio_text(day_num, devotional_payload)
                             settings = novena_audio_settings()
-                            render_hash = compute_audio_render_hash(audio_text, oai_base_url, settings)
+                            render_hash = compute_saint_day_audio_render_hash(
+                                base_url=oai_base_url,
+                                settings=settings,
+                                saint_name=saint_name,
+                                feast_day=feast_iso,
+                                celebration_type=str(saint.get("celebration_rank", "unknown")),
+                                day_num=day_num,
+                                oai_model=oai_model,
+                            )
                             current_audio_hash = notion_get_autogen_audio_render_hash(
                                 page_id,
                                 notion_token,
@@ -2466,6 +2545,10 @@ def main() -> int:
                     notion_token=notion_token,
                     openai_key=openai_key,
                     oai_base_url=oai_base_url,
+                    oai_model=oai_model,
+                    saints=saints,
+                    start_date=start_date,
+                    end_date=end_date,
                 )
             except Exception:
                 if bool_env(NOVENA_AUDIO_FAIL_OPEN, default=True):
