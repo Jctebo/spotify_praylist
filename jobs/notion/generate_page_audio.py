@@ -8,6 +8,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
@@ -49,6 +50,8 @@ DEFAULT_SILENCE_MS = 450
 DEFAULT_DAILY_NOVENA_PAGE_TITLE = "Daily Novenas from Liturgical Calendar"
 MORNING_PRAYER_BUILDER = "morning_prayer_v1"
 POPES_PRAYER_MEDIA_API_URL = "https://www.popesprayer.va/wp-json/wp/v2/media"
+HTTP_RETRYABLE_STATUSES = {408, 409, 425, 429, 500, 502, 503, 504}
+HTTP_MAX_ATTEMPTS = 4
 MONTH_NAMES = (
     "JANUARY",
     "FEBRUARY",
@@ -200,6 +203,44 @@ def page_audio_cache_dir() -> Path:
     path = ROOT / value
     path.mkdir(parents=True, exist_ok=True)
     return path
+
+
+def page_audio_http_should_retry(exc: requests.exceptions.RequestException) -> bool:
+    if isinstance(exc, (requests.exceptions.Timeout, requests.exceptions.ConnectionError)):
+        return True
+    if isinstance(exc, requests.exceptions.HTTPError):
+        response = exc.response
+        return bool(response is not None and response.status_code in HTTP_RETRYABLE_STATUSES)
+    return False
+
+
+def page_audio_http_retry_delay(exc: requests.exceptions.RequestException, attempt: int) -> float:
+    if isinstance(exc, requests.exceptions.HTTPError) and exc.response is not None:
+        retry_after = str(exc.response.headers.get("Retry-After", "")).strip()
+        if retry_after:
+            try:
+                return max(0.0, float(retry_after))
+            except ValueError:
+                pass
+    return min(20.0, float(2 ** max(attempt - 1, 0)))
+
+
+def page_audio_http_get(url: str, *, params: Optional[Dict[str, Any]] = None, timeout: int = 30) -> requests.Response:
+    for attempt in range(1, HTTP_MAX_ATTEMPTS + 1):
+        try:
+            response = requests.get(url, params=params, timeout=timeout)
+            response.raise_for_status()
+            return response
+        except requests.exceptions.RequestException as exc:
+            if attempt >= HTTP_MAX_ATTEMPTS or not page_audio_http_should_retry(exc):
+                raise
+            delay = page_audio_http_retry_delay(exc, attempt)
+            print(
+                f"WARN page_audio_http_retry attempt={attempt} delay={delay:.1f}s url={url}",
+                file=sys.stderr,
+            )
+            time.sleep(delay)
+    raise RuntimeError("HTTP retry loop exited unexpectedly.")
 
 
 def tts_settings_from_config(config: Dict[str, Any]) -> Dict[str, Any]:
@@ -683,13 +724,18 @@ def build_assembled_audio(
     return assemble_audio_with_ffmpeg(fragment_paths, str(settings["format"]), silence_ms, cache_root)
 
 
+def monthly_intention_cache_path(year: int) -> Path:
+    cache_dir = page_audio_cache_dir() / "monthly_intentions"
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    return cache_dir / f"{year}.json"
+
+
 def fetch_media_candidates(search_term: str) -> List[Dict[str, Any]]:
-    response = requests.get(
+    response = page_audio_http_get(
         POPES_PRAYER_MEDIA_API_URL,
         params={"search": search_term, "per_page": 100},
         timeout=30,
     )
-    response.raise_for_status()
     payload = response.json()
     return payload if isinstance(payload, list) else []
 
@@ -784,17 +830,33 @@ def parse_monthly_intention_section(month_name: str, section: str) -> Dict[str, 
 def fetch_monthly_intention(target_date: datetime.date) -> Dict[str, str]:
     year = int(target_date.year)
     month_name = MONTH_NAMES[target_date.month - 1]
+    cache_path = monthly_intention_cache_path(year)
+    cached_payload: Dict[str, Any] = {}
+    if cache_path.exists():
+        try:
+            cached_payload = json.loads(cache_path.read_text(encoding="utf-8"))
+        except Exception:
+            cached_payload = {}
+    if isinstance(cached_payload, dict):
+        cached_months = cached_payload.get("months") or {}
+        cached_month = cached_months.get(month_name)
+        if isinstance(cached_month, dict) and str(cached_month.get("spoken_text", "")).strip():
+            return cached_month
+
     pdf_url = popes_prayer_pdf_url_for_year(year, language="en")
-    response = requests.get(pdf_url, timeout=60)
-    response.raise_for_status()
+    response = page_audio_http_get(pdf_url, timeout=60)
     reader = PdfReader(io.BytesIO(response.content))
     extracted = "\n".join((page.extract_text() or "") for page in reader.pages)
     sections = extract_month_sections_from_pdf_text(extracted)
-    section = sections.get(month_name, "")
-    if not section:
+    months_payload: Dict[str, Dict[str, str]] = {}
+    for parsed_month, section in sections.items():
+        parsed = parse_monthly_intention_section(parsed_month, section)
+        parsed["source_url"] = pdf_url
+        months_payload[parsed_month] = parsed
+    cache_path.write_text(json.dumps({"source_url": pdf_url, "months": months_payload}, indent=2), encoding="utf-8")
+    result = months_payload.get(month_name)
+    if not isinstance(result, dict) or not str(result.get("spoken_text", "")).strip():
         raise RuntimeError(f"Could not parse {month_name.title()} intention from {pdf_url}.")
-    result = parse_monthly_intention_section(month_name, section)
-    result["source_url"] = pdf_url
     return result
 
 
