@@ -1514,7 +1514,19 @@ def desired_block_signature(blocks: Sequence[Dict[str, Any]]) -> List[tuple[str,
         rich = payload.get("rich_text") or []
         text = ""
         if isinstance(rich, list):
-            text = " ".join(str(item.get("plain_text", "")).strip() for item in rich if isinstance(item, dict)).strip()
+            parts: List[str] = []
+            for item in rich:
+                if not isinstance(item, dict):
+                    continue
+                plain = str(item.get("plain_text", "")).strip()
+                if plain:
+                    parts.append(plain)
+                    continue
+                text_payload = item.get("text") or {}
+                content = str(text_payload.get("content", "")).strip()
+                if content:
+                    parts.append(content)
+            text = " ".join(parts).strip()
         out.append((block_type, normalize_whitespace(text)))
     return out
 

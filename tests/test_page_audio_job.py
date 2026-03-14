@@ -364,6 +364,25 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertIn("For the Holy Father's monthly intention:", parsed["spoken_text"])
         self.assertIn("that nations move toward dialogue instead of violence.", parsed["spoken_text"])
 
+    def test_desired_block_signature_reads_text_content_when_plain_text_missing(self):
+        blocks = [
+            {
+                "object": "block",
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [
+                        {"type": "text", "text": {"content": "Ribbon Placement:"}},
+                        {"type": "text", "text": {"content": " Invitatory"}},
+                    ]
+                },
+            }
+        ]
+
+        self.assertEqual(
+            self.mod.desired_block_signature(blocks),
+            [("paragraph", "Ribbon Placement: Invitatory")],
+        )
+
     def test_build_morning_prayer_fragments_reuses_daily_novena_audio(self):
         page = {
             "id": "page_1",
