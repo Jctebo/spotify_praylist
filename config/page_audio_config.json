@@ -92,6 +92,11 @@
     "DIVINE_OFFICE_MORNING_TEXT": {
       "label": "Divine Office Morning Prayer Text",
       "builder": "divine_office_morning_text_v1"
+    },
+    "AUXILIUM_DAILY_TEXT": {
+      "label": "Auxilium Christianorum Daily Text",
+      "builder": "auxilium_daily_text_v1",
+      "rss_feed_url": "https://auxiliumchristianorum.org/wp-content/uploads/2018/04/dailyprayerspriests.pdf"
     }
   }
 }

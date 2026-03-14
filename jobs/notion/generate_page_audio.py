@@ -81,6 +81,7 @@ MORNING_PRAYER_BUILDER = "morning_prayer_v1"
 DIVINE_OFFICE_INVITATORY_BUILDER = "divine_office_invitatory_v1"
 DIVINE_OFFICE_NIGHT_TEXT_BUILDER = "divine_office_night_text_v1"
 DIVINE_OFFICE_MORNING_TEXT_BUILDER = "divine_office_morning_text_v1"
+AUXILIUM_DAILY_TEXT_BUILDER = "auxilium_daily_text_v1"
 RSS_AUDIO_BUILDER = "rss_audio_v1"
 AUDIO_FRAGMENTS_BUILDER = "audio_fragments_v1"
 POPES_PRAYER_MEDIA_API_URL = "https://www.popesprayer.va/wp-json/wp/v2/media"
@@ -95,6 +96,7 @@ PAGE_AUDIO_HTTP_ACCEPT = "application/rss+xml, application/xml, text/xml;q=0.9, 
 
 _RSS_FEED_ENTRIES_CACHE: Dict[str, List[Dict[str, Any]]] = {}
 _PAGE_AUDIO_BLOCKS_CACHE: Dict[str, List[Dict[str, Any]]] = {}
+_AUXILIUM_SECTIONS_CACHE: Dict[str, Dict[str, List[str]]] = {}
 MONTH_NAMES = (
     "JANUARY",
     "FEBRUARY",
@@ -1627,6 +1629,112 @@ def divine_office_content_blocks_from_html(raw_html: str) -> List[Dict[str, Any]
     return blocks
 
 
+AUXILIUM_SECTION_MARKERS: Sequence[tuple[str, str]] = (
+    ("Every Day", "Prayers to be said every day:"),
+    ("Sunday", "On Sundays:"),
+    ("Monday", "On Mondays:"),
+    ("Tuesday", "On Tuesdays:"),
+    ("Wednesday", "On Wednesdays:"),
+    ("Thursday", "On Thursdays:"),
+    ("Friday", "On Fridays:"),
+    ("Saturday", "On Saturdays:"),
+    ("Conclusion", "Conclusion for Every Day"),
+)
+
+
+def clean_pdf_extracted_text(text: str) -> str:
+    lines: List[str] = []
+    for raw_line in str(text or "").replace("\r", "").splitlines():
+        line = raw_line.strip()
+        if not line:
+            lines.append("")
+            continue
+        if re.fullmatch(r"\d+", line):
+            continue
+        lines.append(raw_line)
+    return "\n".join(lines)
+
+
+def auxilium_section_paragraphs(text: str) -> List[str]:
+    paragraphs: List[str] = []
+    current_parts: List[str] = []
+    for raw_line in clean_pdf_extracted_text(text).splitlines():
+        line = normalize_whitespace(raw_line)
+        if not line:
+            if current_parts:
+                paragraphs.append(normalize_whitespace(" ".join(current_parts)))
+                current_parts = []
+            continue
+        if line.lower().startswith("litany of "):
+            if current_parts:
+                paragraphs.append(normalize_whitespace(" ".join(current_parts)))
+                current_parts = []
+            paragraphs.append(line)
+            continue
+        current_parts.append(line)
+        if re.search(r"[.!?:]$", line):
+            paragraphs.append(normalize_whitespace(" ".join(current_parts)))
+            current_parts = []
+    if current_parts:
+        paragraphs.append(normalize_whitespace(" ".join(current_parts)))
+    return [paragraph for paragraph in paragraphs if paragraph]
+
+
+def extract_auxilium_sections_from_pdf_text(text: str) -> Dict[str, List[str]]:
+    cleaned = clean_pdf_extracted_text(text)
+    matches: List[tuple[int, int, str]] = []
+    for title, marker in AUXILIUM_SECTION_MARKERS:
+        match = re.search(re.escape(marker), cleaned, flags=re.IGNORECASE)
+        if not match:
+            continue
+        matches.append((match.start(), match.end(), title))
+    matches.sort()
+    sections: Dict[str, List[str]] = {}
+    for index, (_, end_pos, title) in enumerate(matches):
+        next_start = matches[index + 1][0] if index + 1 < len(matches) else len(cleaned)
+        body = cleaned[end_pos:next_start].strip()
+        paragraphs = auxilium_section_paragraphs(body)
+        if paragraphs:
+            sections[title] = paragraphs
+    return sections
+
+
+def fetch_auxilium_sections(pdf_url: str) -> Dict[str, List[str]]:
+    url = str(pdf_url or "").strip()
+    if not url:
+        raise RuntimeError("Auxilium text builder requires a PDF source URL.")
+    cached = _AUXILIUM_SECTIONS_CACHE.get(url)
+    if isinstance(cached, dict) and cached:
+        return cached
+    response = page_audio_http_get(url, timeout=60)
+    reader = PdfReader(io.BytesIO(response.content))
+    extracted = "\n".join((page.extract_text() or "") for page in reader.pages)
+    sections = extract_auxilium_sections_from_pdf_text(extracted)
+    if not sections:
+        raise RuntimeError(f"Could not parse Auxilium prayer sections from {url}.")
+    _AUXILIUM_SECTIONS_CACHE[url] = sections
+    return sections
+
+
+def auxilium_daily_content_blocks(target_date: datetime.date, pdf_url: str) -> List[Dict[str, Any]]:
+    sections = fetch_auxilium_sections(pdf_url)
+    weekday_title = target_date.strftime("%A")
+    ordered_titles = ["Every Day", weekday_title, "Conclusion"]
+    blocks: List[Dict[str, Any]] = []
+    for title in ordered_titles:
+        paragraphs = sections.get(title) or []
+        if not paragraphs:
+            continue
+        child_blocks = [notion_paragraph_block(paragraph) for paragraph in paragraphs if normalize_whitespace(paragraph)]
+        toggle_payload: Dict[str, Any] = {"rich_text": notion_rich_text_chunks(title)}
+        if child_blocks:
+            toggle_payload["children"] = child_blocks
+        blocks.append({"object": "block", "type": "toggle", "toggle": toggle_payload})
+    if not blocks:
+        raise RuntimeError(f"No Auxilium prayer content found for {weekday_title}.")
+    return blocks
+
+
 def block_rich_text_signature(rich: Any) -> str:
     if not isinstance(rich, list):
         return ""
@@ -2077,6 +2185,17 @@ def build_divine_office_morning_text_plan(config: Dict[str, Any]) -> PageAudioPl
         fragments=[],
         text_target="page_content",
         content_blocks=content_blocks,
+    )
+
+
+def build_auxilium_daily_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
+    pdf_url = str(config.get("rss_feed_url", "")).strip()
+    if not pdf_url:
+        raise RuntimeError("auxilium_daily_text_v1 requires 'rss_feed_url' to point at the source PDF.")
+    return PageAudioPlan(
+        fragments=[],
+        text_target="page_content",
+        content_blocks=auxilium_daily_content_blocks(shared.local_today(), pdf_url),
     )
 
 
@@ -2820,6 +2939,8 @@ def build_page_audio_plan(
         return build_divine_office_night_text_plan(config=config)
     if builder == DIVINE_OFFICE_MORNING_TEXT_BUILDER:
         return build_divine_office_morning_text_plan(config=config)
+    if builder == AUXILIUM_DAILY_TEXT_BUILDER:
+        return build_auxilium_daily_text_plan(config=config)
     if builder == RSS_AUDIO_BUILDER:
         return build_rss_audio_plan(page=page, config=config, base_url=base_url)
     if builder == AUDIO_FRAGMENTS_BUILDER:

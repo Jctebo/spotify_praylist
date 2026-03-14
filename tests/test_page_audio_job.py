@@ -32,6 +32,7 @@ class TestPageAudioJob(unittest.TestCase):
         self.mod = load_module("jobs/notion/generate_page_audio.py")
         self.mod._RSS_FEED_ENTRIES_CACHE.clear()
         self.mod._PAGE_AUDIO_BLOCKS_CACHE.clear()
+        self.mod._AUXILIUM_SECTIONS_CACHE.clear()
 
     def test_fetch_divine_office_feed_entry_ignores_future_entry(self):
         xml = """<?xml version="1.0" encoding="UTF-8"?>
@@ -401,6 +402,60 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(blocks[1]["toggle"]["rich_text"][0]["text"]["content"], "Opening")
         self.assertEqual(blocks[2]["toggle"]["rich_text"][0]["text"]["content"], "Hymn")
         self.assertEqual(blocks[3]["toggle"]["rich_text"][0]["text"]["content"], "Psalm 24")
+
+    def test_extract_auxilium_sections_from_pdf_text(self):
+        text = (
+            "Daily Prayers Offered for the Members of the Auxilium Christianorum\n"
+            "Prayers to be said every day:\n"
+            "V. Our help is in the name of the Lord.\n"
+            "R. Who made heaven and earth.\n"
+            "Most gracious Virgin Mary,\n"
+            "protect us from the vengeance of the evil one. Amen.\n"
+            "On Fridays:\n"
+            "Litany of Humility\n"
+            "O Jesus, meek and humble of heart, hear me.\n"
+            "From the desire of being esteemed, deliver me, Jesus.\n"
+            "On Saturdays:\n"
+            "O God and Father of our Lord Jesus Christ,\n"
+            "help us against Satan. Amen.\n"
+            "Conclusion for Every Day\n"
+            "August Queen of the Heavens,\n"
+            "send thy holy legions. Amen.\n"
+        )
+
+        sections = self.mod.extract_auxilium_sections_from_pdf_text(text)
+
+        self.assertEqual(
+            sections["Every Day"][:3],
+            [
+                "V. Our help is in the name of the Lord.",
+                "R. Who made heaven and earth.",
+                "Most gracious Virgin Mary, protect us from the vengeance of the evil one. Amen.",
+            ],
+        )
+        self.assertEqual(sections["Friday"][0], "Litany of Humility")
+        self.assertEqual(sections["Friday"][1], "O Jesus, meek and humble of heart, hear me.")
+        self.assertEqual(sections["Saturday"][0], "O God and Father of our Lord Jesus Christ, help us against Satan. Amen.")
+        self.assertEqual(sections["Conclusion"][0], "August Queen of the Heavens, send thy holy legions. Amen.")
+
+    def test_build_auxilium_daily_text_plan_uses_today_section(self):
+        config = {
+            "builder": "auxilium_daily_text_v1",
+            "rss_feed_url": "https://example.com/auxilium.pdf",
+        }
+        fake_sections = {
+            "Every Day": ["Daily prayer."],
+            "Saturday": ["Saturday prayer."],
+            "Conclusion": ["Daily conclusion."],
+        }
+
+        with patch.object(self.mod, "fetch_auxilium_sections", return_value=fake_sections), patch.object(
+            self.mod.shared, "local_today", return_value=datetime.date(2026, 3, 14)
+        ):
+            plan = self.mod.build_auxilium_daily_text_plan(config)
+
+        self.assertEqual(plan.text_target, "page_content")
+        self.assertEqual([block["toggle"]["rich_text"][0]["text"]["content"] for block in plan.content_blocks], ["Every Day", "Saturday", "Conclusion"])
 
     def test_build_rss_audio_plan_uses_page_content_for_divine_office_feed(self):
         page = {"id": "page_1", "properties": {"Name": _title_prop("Evening Prayer"), "Intention": _rich_text_prop("For peace.")}}

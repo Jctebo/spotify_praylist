@@ -351,6 +351,8 @@ Recommended Opus Dei row shape:
 - `Auto Audio Resolver 1` and `Auto Audio Resolver 2` for generated audio with fallback
 - `Enabled = true`
 
+Text resolvers can be RSS-backed or PDF-backed. For PDF-backed builders like `AUXILIUM_DAILY_TEXT`, set the `Feed URL` field in `Page Audio Configuration` to the source PDF URL; the job will parse and write today’s section into the page body.
+
 Environment variables:
 - `NOTION_AUDIO_PLATFORM_VALUE` (default `auto-audio,auto-text`)
 - `NOTION_AUDIO_CONFIG_PROPERTY` (default `Audio Configuration`)
