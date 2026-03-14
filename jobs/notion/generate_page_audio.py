@@ -84,6 +84,7 @@ DIVINE_OFFICE_MORNING_TEXT_BUILDER = "divine_office_morning_text_v1"
 AUXILIUM_DAILY_TEXT_BUILDER = "auxilium_daily_text_v1"
 RSS_AUDIO_BUILDER = "rss_audio_v1"
 AUDIO_FRAGMENTS_BUILDER = "audio_fragments_v1"
+ROSARY_DYNAMIC_BUILDER = "rosary_dynamic_v1"
 POPES_PRAYER_MEDIA_API_URL = "https://www.popesprayer.va/wp-json/wp/v2/media"
 DIVINE_OFFICE_FEED_URL = "https://divineoffice.org/feed/"
 DEFAULT_RSS_TEXT_PROPERTY = "Description"
@@ -97,6 +98,7 @@ PAGE_AUDIO_HTTP_ACCEPT = "application/rss+xml, application/xml, text/xml;q=0.9, 
 _RSS_FEED_ENTRIES_CACHE: Dict[str, List[Dict[str, Any]]] = {}
 _PAGE_AUDIO_BLOCKS_CACHE: Dict[str, List[Dict[str, Any]]] = {}
 _AUXILIUM_SECTIONS_CACHE: Dict[str, Dict[str, List[str]]] = {}
+_AUDIO_FRAGMENTS_CACHE: Dict[str, Dict[str, Dict[str, Any]]] = {}
 MONTH_NAMES = (
     "JANUARY",
     "FEBRUARY",
@@ -158,6 +160,7 @@ AUDIO_OUTPUT_AUDIO_CAPTION_PROPERTY = "Audio Caption"
 AUDIO_OUTPUT_FRAGMENT_SEQUENCE_PROPERTY = "Fragment Sequence"
 AUDIO_OUTPUT_CONFIG_KEY_PROPERTY = "Config Key"
 AUDIO_OUTPUT_FOLDER_PROPERTY = "Output Folder"
+AUDIO_OUTPUT_WEEKDAY_MAP_PROPERTY = "Weekday Map"
 AUDIO_OUTPUT_TTS_MODEL_PROPERTY = "TTS Model"
 AUDIO_OUTPUT_TTS_VOICE_PROPERTY = "TTS Voice"
 AUDIO_OUTPUT_TTS_FORMAT_PROPERTY = "TTS Format"
@@ -167,6 +170,7 @@ AUDIO_OUTPUT_ENABLED_PROPERTY = "Enabled"
 AUDIO_OUTPUT_NOTES_PROPERTY = "Notes"
 AUDIO_OUTPUT_MODE_FRAGMENTS = "fragments"
 AUDIO_OUTPUT_MODE_CONFIG = "config"
+AUDIO_OUTPUT_MODE_ROSARY = "rosary"
 SPECIAL_DAILY_NOVENA_AUDIO = "SPECIAL:daily_novena_audio"
 SPECIAL_MONTHLY_INTENTION = "SPECIAL:monthly_intention"
 RSS_MATCH_CONTAINS_WITH_DATE = "contains_with_date"
@@ -174,6 +178,18 @@ RSS_MATCH_DAY_OF_YEAR = "day_of_year"
 RSS_MATCH_MONTH_DAY = "month_day"
 RSS_MATCH_WEEKDAY_MAP = "weekday_map"
 RSS_MATCH_FIXED_TITLE = "fixed_title"
+DEFAULT_ROSARY_INTENTION_PROPERTY = "Intention"
+DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY = "rosary-decade-meditation-template"
+ROSARY_MYSTERY_KEYS = ("joyful", "sorrowful", "glorious", "luminous")
+DEFAULT_ROSARY_WEEKDAY_MAP = {
+    "monday": "joyful",
+    "tuesday": "sorrowful",
+    "wednesday": "glorious",
+    "thursday": "luminous",
+    "friday": "sorrowful",
+    "saturday": "joyful",
+    "sunday": "glorious",
+}
 
 
 def load_shared_module():
@@ -687,6 +703,10 @@ def load_audio_fragments_from_notion(token: str) -> Dict[str, Any]:
     database_id = notion_audio_fragments_database_id(token)
     if not database_id:
         return {}
+    cache_key = f"{database_id}|{shared.local_today().isoformat()}"
+    cached = _AUDIO_FRAGMENTS_CACHE.get(cache_key)
+    if isinstance(cached, dict) and cached:
+        return {"fragments": deepcopy(cached)}
     pages = shared.notion_get_all_pages(database_id, token)
     fragments: Dict[str, Dict[str, Any]] = {}
     for page in pages:
@@ -697,6 +717,8 @@ def load_audio_fragments_from_notion(token: str) -> Dict[str, Any]:
             continue
         key, fragment = parsed
         fragments[key] = fragment
+    if fragments:
+        _AUDIO_FRAGMENTS_CACHE[cache_key] = deepcopy(fragments)
     return {"fragments": fragments} if fragments else {}
 
 
@@ -742,6 +764,9 @@ def audio_output_common_overrides(page: Dict[str, Any]) -> Dict[str, Any]:
     output_folder = page_property_text(page, AUDIO_OUTPUT_FOLDER_PROPERTY).strip()
     if output_folder:
         overrides["output_folder"] = output_folder
+    weekday_map = page_property_text(page, AUDIO_OUTPUT_WEEKDAY_MAP_PROPERTY).strip()
+    if weekday_map:
+        overrides["rss_match_map"] = weekday_map
     notes = page_property_text(page, AUDIO_OUTPUT_NOTES_PROPERTY).strip()
     if notes:
         overrides["notes"] = notes
@@ -784,6 +809,23 @@ def audio_output_config_from_notion_page(
         config = apply_audio_output_overrides(source_config, overrides)
         config["source_config_key"] = source_key
         return key, config
+    if mode == AUDIO_OUTPUT_MODE_ROSARY:
+        default_config = {
+            "builder": ROSARY_DYNAMIC_BUILDER,
+            "audio_caption": f"{shared.page_title(page, AUDIO_OUTPUT_TITLE_PROPERTY).strip() or key} (Audio)",
+            "silence_ms": DEFAULT_SILENCE_MS,
+            "tts": {
+                "model": "gpt-4o-mini-tts",
+                "voice": "alloy",
+                "format": "mp3",
+                "speed": 1.0,
+            },
+            "fragments": fragments,
+            "weekday_map": page_property_text(page, AUDIO_OUTPUT_WEEKDAY_MAP_PROPERTY).strip(),
+            "target_row": page_property_text(page, AUDIO_OUTPUT_TARGET_ROW_PROPERTY).strip(),
+            "notes": page_property_text(page, AUDIO_OUTPUT_NOTES_PROPERTY).strip(),
+        }
+        return key, apply_audio_output_overrides(default_config, overrides)
     if mode != AUDIO_OUTPUT_MODE_FRAGMENTS:
         return None
     sequence = parse_fragment_sequence(page_property_text(page, AUDIO_OUTPUT_FRAGMENT_SEQUENCE_PROPERTY))
@@ -1071,7 +1113,12 @@ def stable_text_fragment(
     )
 
 
-def render_fragment_prompt_template(prompt: str, page: Optional[Dict[str, Any]], target_date: datetime.date) -> str:
+def render_fragment_prompt_template(
+    prompt: str,
+    page: Optional[Dict[str, Any]],
+    target_date: datetime.date,
+    extra_replacements: Optional[Dict[str, Any]] = None,
+) -> str:
     title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
     page_title = shared.page_title(page or {}, title_property).strip() if isinstance(page, dict) else ""
     replacements = {
@@ -1081,6 +1128,9 @@ def render_fragment_prompt_template(prompt: str, page: Optional[Dict[str, Any]],
         "{year}": str(target_date.year),
         "{page_title}": page_title,
     }
+    if isinstance(extra_replacements, dict):
+        for key, value in extra_replacements.items():
+            replacements[str(key)] = str(value)
     value = str(prompt or "")
     for needle, replacement in replacements.items():
         value = value.replace(needle, replacement)
@@ -1301,6 +1351,48 @@ def build_daily_novena_audio_fragments(
     return out
 
 
+def build_named_audio_fragment(
+    key: str,
+    *,
+    fragments_map: Dict[str, Dict[str, Any]],
+    settings: Dict[str, Any],
+    page: Dict[str, Any],
+    base_url: str,
+    prompt_context: Optional[Dict[str, Any]] = None,
+    key_override: str = "",
+    label_override: str = "",
+) -> PageAudioFragment:
+    spec = fragments_map.get(key)
+    if not isinstance(spec, dict):
+        raise RuntimeError(f"Unknown audio fragment '{key}'.")
+    collection = str(spec.get("collection", AUDIO_FRAGMENT_DEFAULT_COLLECTION)).strip() or AUDIO_FRAGMENT_DEFAULT_COLLECTION
+    fragment_key = str(key_override or spec.get("key", key)).strip() or key
+    label = str(label_override or spec.get("label", key)).strip() or key
+    text = str(spec.get("text", "")).strip()
+    prompt = str(spec.get("prompt", "")).strip()
+    if prompt and not text:
+        prompt_model = str(spec.get("prompt_model", "")).strip() or os.getenv(OAI_MODEL, "").strip() or "gpt-4.1-mini"
+        return stable_prompt_fragment(
+            cache_root=page_audio_cache_dir(),
+            collection=collection,
+            key=fragment_key,
+            label=label,
+            prompt=render_fragment_prompt_template(prompt, page, shared.local_today(), extra_replacements=prompt_context),
+            prompt_model=prompt_model,
+            settings=settings,
+            base_url=base_url,
+        )
+    return stable_text_fragment(
+        cache_root=page_audio_cache_dir(),
+        collection=collection,
+        key=fragment_key,
+        label=label,
+        text=text,
+        settings=settings,
+        base_url=base_url,
+    )
+
+
 def resolve_output_sequence_fragment(
     sequence_key: str,
     *,
@@ -1313,7 +1405,6 @@ def resolve_output_sequence_fragment(
     token: str,
     base_url: str,
 ) -> List[PageAudioFragment]:
-    cache_root = page_audio_cache_dir()
     value = str(sequence_key or "").strip()
     if not value:
         return []
@@ -1326,36 +1417,12 @@ def resolve_output_sequence_fragment(
     if value.upper() == SPECIAL_MONTHLY_INTENTION.upper():
         monthly_intention = fetch_monthly_intention(shared.local_today())
         return [build_monthly_intention_fragment(monthly_intention, settings, base_url)]
-    spec = fragments_map.get(value)
-    if not isinstance(spec, dict):
-        raise RuntimeError(f"Unknown audio fragment '{value}'.")
-    collection = str(spec.get("collection", AUDIO_FRAGMENT_DEFAULT_COLLECTION)).strip() or AUDIO_FRAGMENT_DEFAULT_COLLECTION
-    key = str(spec.get("key", value)).strip() or value
-    label = str(spec.get("label", value)).strip() or value
-    text = str(spec.get("text", "")).strip()
-    prompt = str(spec.get("prompt", "")).strip()
-    if prompt and not text:
-        prompt_model = str(spec.get("prompt_model", "")).strip() or os.getenv(OAI_MODEL, "").strip() or "gpt-4.1-mini"
-        return [
-            stable_prompt_fragment(
-                cache_root=cache_root,
-                collection=collection,
-                key=key,
-                label=label,
-                prompt=render_fragment_prompt_template(prompt, page, shared.local_today()),
-                prompt_model=prompt_model,
-                settings=settings,
-                base_url=base_url,
-            )
-        ]
     return [
-        stable_text_fragment(
-            cache_root=cache_root,
-            collection=collection,
-            key=key,
-            label=label,
-            text=text,
+        build_named_audio_fragment(
+            value,
+            fragments_map=fragments_map,
             settings=settings,
+            page=page,
             base_url=base_url,
         )
     ]
@@ -1393,6 +1460,160 @@ def build_fragment_output_plan(
         )
     if not fragments:
         raise RuntimeError("Audio output did not produce any fragments.")
+    return PageAudioPlan(fragments=fragments)
+
+
+def parse_weekday_mapping(raw: Any) -> Dict[str, str]:
+    parsed = rss_match_map_values(raw)
+    mapping: Dict[str, str] = {}
+    for weekday, mystery_value in parsed.items():
+        normalized = normalize_rosary_mystery_value(mystery_value)
+        if normalized:
+            mapping[weekday] = normalized
+    return mapping
+
+
+def normalize_rosary_mystery_value(value: str) -> str:
+    text = normalize_flag_value(value)
+    if not text:
+        return ""
+    if "joyful" in text:
+        return "joyful"
+    if "sorrowful" in text or "sorrow" in text:
+        return "sorrowful"
+    if "glorious" in text or "glory" in text:
+        return "glorious"
+    if "luminous" in text or "light" in text:
+        return "luminous"
+    return ""
+
+
+def choose_rosary_mystery_set(target_date: datetime.date, raw_map: Any) -> str:
+    mapping = dict(DEFAULT_ROSARY_WEEKDAY_MAP)
+    mapping.update(parse_weekday_mapping(raw_map))
+    key = normalize_flag_value(target_date.strftime("%A"))
+    mystery_set = normalize_rosary_mystery_value(mapping.get(key, ""))
+    if not mystery_set:
+        raise RuntimeError(f"No rosary mystery mapping configured for {target_date.strftime('%A')}.")
+    return mystery_set
+
+
+def split_rosary_intentions(text: str, count: int = 5) -> List[str]:
+    value = str(text or "").replace("\r", "").strip()
+    if not value:
+        return []
+    normalized = re.sub(r"\n\s*(?:[-*]|\d+[.)])\s*", "\n", value)
+    normalized = normalized.replace("||", "\n")
+    parts = [normalize_whitespace(part) for part in re.split(r"\n{1,}|;{2,}", normalized) if normalize_whitespace(part)]
+    if not parts:
+        return []
+    if len(parts) >= count:
+        return parts[:count]
+    out = list(parts)
+    while len(out) < count:
+        out.append(parts[min(len(out), len(parts) - 1)])
+    return out
+
+
+def rosary_mystery_fragment_key(mystery_set: str, decade_number: int) -> str:
+    return f"rosary-{mystery_set}-{int(decade_number)}"
+
+
+def rosary_mystery_metadata(fragments_map: Dict[str, Dict[str, Any]], mystery_set: str, decade_number: int) -> Dict[str, str]:
+    key = rosary_mystery_fragment_key(mystery_set, decade_number)
+    spec = fragments_map.get(key)
+    if not isinstance(spec, dict):
+        raise RuntimeError(f"Missing rosary mystery fragment '{key}'.")
+    notes = str(spec.get("notes", "")).strip()
+    metadata: Dict[str, str] = {}
+    if notes:
+        try:
+            payload = json.loads(notes)
+            if isinstance(payload, dict):
+                metadata = {str(k): str(v).strip() for k, v in payload.items() if str(v).strip()}
+        except Exception:
+            metadata = {}
+    title = metadata.get("title") or str(spec.get("label", "")).strip() or key
+    fruit = metadata.get("fruit", "")
+    return {"key": key, "title": title, "fruit": fruit}
+
+
+def build_rosary_dynamic_plan(
+    page: Dict[str, Any],
+    config: Dict[str, Any],
+    *,
+    base_url: str,
+) -> PageAudioPlan:
+    settings = tts_settings_from_config(config)
+    fragments_map = config.get("fragments") or {}
+    if not isinstance(fragments_map, dict) or not fragments_map:
+        raise RuntimeError("Rosary output requires loaded audio fragments.")
+    target_date = shared.local_today()
+    mystery_set = normalize_rosary_mystery_value(str(config.get("mystery_set", "")).strip()) or choose_rosary_mystery_set(
+        target_date,
+        config.get("weekday_map", {}),
+    )
+    intention_property = str(config.get("intention_property", DEFAULT_ROSARY_INTENTION_PROPERTY)).strip() or DEFAULT_ROSARY_INTENTION_PROPERTY
+    intentions = split_rosary_intentions(page_property_text(page, intention_property), count=5)
+    if not intentions:
+        raise RuntimeError(f"Rosary row is missing intentions in '{intention_property}'.")
+    meditation_key = str(config.get("meditation_fragment_key", DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY)).strip() or DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY
+
+    fragments: List[PageAudioFragment] = []
+    intro_sequence = [
+        "rosary-sign-of-cross",
+        "rosary-apostles-creed",
+        "rosary-our-father",
+        "rosary-hail-mary",
+        "rosary-hail-mary",
+        "rosary-hail-mary",
+        "rosary-glory-be",
+    ]
+    closing_sequence = [
+        "rosary-hail-holy-queen",
+        "rosary-closing-prayer",
+        "rosary-sign-of-cross",
+    ]
+    for key in intro_sequence:
+        fragments.append(build_named_audio_fragment(key, fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
+
+    for decade_number in range(1, 6):
+        mystery = rosary_mystery_metadata(fragments_map, mystery_set, decade_number)
+        fragments.append(
+            build_named_audio_fragment(
+                mystery["key"],
+                fragments_map=fragments_map,
+                settings=settings,
+                page=page,
+                base_url=base_url,
+            )
+        )
+        fragments.append(
+            build_named_audio_fragment(
+                meditation_key,
+                fragments_map=fragments_map,
+                settings=settings,
+                page=page,
+                base_url=base_url,
+                prompt_context={
+                    "{mystery_set}": mystery_set.title(),
+                    "{mystery_title}": mystery["title"],
+                    "{fruit}": mystery["fruit"],
+                    "{intention}": intentions[decade_number - 1],
+                    "{decade_number}": str(decade_number),
+                },
+                key_override=f"rosary-decade-meditation-{mystery_set}-{decade_number}",
+                label_override=f"Rosary Meditation {decade_number}",
+            )
+        )
+        fragments.append(build_named_audio_fragment("rosary-our-father", fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
+        for _ in range(10):
+            fragments.append(build_named_audio_fragment("rosary-hail-mary", fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
+        fragments.append(build_named_audio_fragment("rosary-glory-be", fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
+        fragments.append(build_named_audio_fragment("rosary-fatima-prayer", fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
+
+    for key in closing_sequence:
+        fragments.append(build_named_audio_fragment(key, fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
     return PageAudioPlan(fragments=fragments)
 
 
@@ -1641,6 +1862,18 @@ AUXILIUM_SECTION_MARKERS: Sequence[tuple[str, str]] = (
     ("Conclusion", "Conclusion for Every Day"),
 )
 
+AUXILIUM_FRAGMENT_KEYS: Dict[str, str] = {
+    "Every Day": "auxilium-every-day",
+    "Sunday": "auxilium-sunday",
+    "Monday": "auxilium-monday",
+    "Tuesday": "auxilium-tuesday",
+    "Wednesday": "auxilium-wednesday",
+    "Thursday": "auxilium-thursday",
+    "Friday": "auxilium-friday",
+    "Saturday": "auxilium-saturday",
+    "Conclusion": "auxilium-conclusion",
+}
+
 
 def clean_pdf_extracted_text(text: str) -> str:
     lines: List[str] = []
@@ -1716,8 +1949,36 @@ def fetch_auxilium_sections(pdf_url: str) -> Dict[str, List[str]]:
     return sections
 
 
-def auxilium_daily_content_blocks(target_date: datetime.date, pdf_url: str) -> List[Dict[str, Any]]:
-    sections = fetch_auxilium_sections(pdf_url)
+def auxilium_sections_from_fragment_map(fragments_map: Dict[str, Dict[str, Any]]) -> Dict[str, List[str]]:
+    out: Dict[str, List[str]] = {}
+    for title, key in AUXILIUM_FRAGMENT_KEYS.items():
+        fragment = fragments_map.get(key)
+        if not isinstance(fragment, dict):
+            continue
+        text = normalize_whitespace(str(fragment.get("text", "")).strip())
+        if not text:
+            continue
+        paragraphs = auxilium_section_paragraphs(text)
+        if paragraphs:
+            out[title] = paragraphs
+    return out
+
+
+def auxilium_daily_content_blocks(
+    target_date: datetime.date,
+    pdf_url: str,
+    *,
+    notion_token: str = "",
+) -> List[Dict[str, Any]]:
+    sections: Dict[str, List[str]] = {}
+    token = str(notion_token or "").strip()
+    if token:
+        fragments_payload = load_audio_fragments_from_notion(token)
+        fragment_map = fragments_payload.get("fragments") or {}
+        if isinstance(fragment_map, dict) and fragment_map:
+            sections = auxilium_sections_from_fragment_map(fragment_map)
+    if not sections:
+        sections = fetch_auxilium_sections(pdf_url)
     weekday_title = target_date.strftime("%A")
     ordered_titles = ["Every Day", weekday_title, "Conclusion"]
     blocks: List[Dict[str, Any]] = []
@@ -2188,14 +2449,14 @@ def build_divine_office_morning_text_plan(config: Dict[str, Any]) -> PageAudioPl
     )
 
 
-def build_auxilium_daily_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
+def build_auxilium_daily_text_plan(config: Dict[str, Any], notion_token: str = "") -> PageAudioPlan:
     pdf_url = str(config.get("rss_feed_url", "")).strip()
     if not pdf_url:
         raise RuntimeError("auxilium_daily_text_v1 requires 'rss_feed_url' to point at the source PDF.")
     return PageAudioPlan(
         fragments=[],
         text_target="page_content",
-        content_blocks=auxilium_daily_content_blocks(shared.local_today(), pdf_url),
+        content_blocks=auxilium_daily_content_blocks(shared.local_today(), pdf_url, notion_token=notion_token),
     )
 
 
@@ -2940,7 +3201,7 @@ def build_page_audio_plan(
     if builder == DIVINE_OFFICE_MORNING_TEXT_BUILDER:
         return build_divine_office_morning_text_plan(config=config)
     if builder == AUXILIUM_DAILY_TEXT_BUILDER:
-        return build_auxilium_daily_text_plan(config=config)
+        return build_auxilium_daily_text_plan(config=config, notion_token=notion_token)
     if builder == RSS_AUDIO_BUILDER:
         return build_rss_audio_plan(page=page, config=config, base_url=base_url)
     if builder == AUDIO_FRAGMENTS_BUILDER:
@@ -2952,6 +3213,8 @@ def build_page_audio_plan(
             token=notion_token,
             base_url=base_url,
         )
+    if builder == ROSARY_DYNAMIC_BUILDER:
+        return build_rosary_dynamic_plan(page=page, config=config, base_url=base_url)
     raise RuntimeError(f"Unsupported page audio builder '{builder}'.")
 
 

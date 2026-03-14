@@ -297,6 +297,7 @@ Purpose:
 - supports Notion `Audio Outputs` rows in two modes:
 - `fragments` for named `Audio Fragments` plus special cache-only fragments
 - `config` for composite wrappers around source configs like Divine Office and Sing the Hours
+- `rosary` for the dynamic fragment-based rosary builder with weekday mystery mapping
 - falls back to the legacy `Audio Configuration` field and then the legacy resolver field when the new properties are blank
 - builds a Notion audio block for `auto-audio` rows and syncs page body content for feed-backed rows
 - caches generated fragment audio under `.cache/page_audio`
@@ -342,6 +343,7 @@ Current config:
 - `DIVINE_OFFICE_AFTERNOON_OUTPUT`
 - `DIVINE_OFFICE_EVENING_OUTPUT`
 - `DIVINE_OFFICE_NIGHT_OUTPUT`
+- `ROSARY_INTENTIONS_OUTPUT`
 - fallback file source remains available in [page_audio_config.json](c:/Users/jcteb/Code/spotify_praylist/config/page_audio_config.json) if the Notion config database is unavailable
 
 Recommended Opus Dei row shape:
@@ -392,7 +394,15 @@ Audio output row shape:
 - `Target Row`
 - `Audio Caption`
 - `Output Folder` to route exported daily files into the correct OneDrive subfolder
+- `Weekday Map` for outputs that vary by weekday, like the fragment-based rosary
 - `Enabled`
+
+Rosary output mode:
+- `Output Mode = rosary`
+- `Weekday Map` is a JSON object like `{"Monday":"The Joyful Mysteries", ...}`
+- fixed prayers like `Hail Mary`, `Our Father`, and `Glory Be` should be separate `Audio Fragments` rows so their TTS audio is cached once and reused many times
+- each mystery announcement should be its own fragment row
+- `rosary-decade-meditation-template` is an LLM-backed prompt fragment that gets rendered once per decade using the page's numbered `Intention` lines
 
 Local run:
 
