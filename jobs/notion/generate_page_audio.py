@@ -54,10 +54,14 @@ PAGE_AUDIO_CONFIG_KEY = "PAGE_AUDIO_CONFIG_KEY"
 PAGE_AUDIO_ROW_TITLE = "PAGE_AUDIO_ROW_TITLE"
 PAGE_AUDIO_CONFIG_FILE = "PAGE_AUDIO_CONFIG_FILE"
 PAGE_AUDIO_CACHE_DIR = "PAGE_AUDIO_CACHE_DIR"
+PAGE_AUDIO_LIBRARY_DIR = "PAGE_AUDIO_LIBRARY_DIR"
+PAGE_AUDIO_LIBRARY_GROUP_PROPERTY = "PAGE_AUDIO_LIBRARY_GROUP_PROPERTY"
 PAGE_AUDIO_FAIL_OPEN = "PAGE_AUDIO_FAIL_OPEN"
 
 DEFAULT_PAGE_AUDIO_CONFIG_FILE = "config/page_audio_config.json"
 DEFAULT_PAGE_AUDIO_CACHE_DIR = ".cache/page_audio"
+DEFAULT_PAGE_AUDIO_LIBRARY_RELATIVE = r"OneDrive\Pictures\Samsung Gallery\DCIM\Playlist Audio"
+DEFAULT_PAGE_AUDIO_LIBRARY_FALLBACK = ".cache/page_audio_library"
 DEFAULT_PAGE_AUDIO_CONFIG_DATABASE_NAME = "Page Audio Configuration"
 DEFAULT_AUDIO_FRAGMENTS_DATABASE_NAME = "Audio Fragments"
 DEFAULT_AUDIO_OUTPUTS_DATABASE_NAME = "Audio Outputs"
@@ -66,6 +70,7 @@ DEFAULT_AUDIO_CONFIG_PROPERTY = "Audio Configuration"
 DEFAULT_TEXT_RESOLVER_PROPERTY = "Text Resolver"
 DEFAULT_AUTO_AUDIO_RESOLVER_PRIMARY_PROPERTY = "Auto Audio Resolver 1"
 DEFAULT_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY = "Auto Audio Resolver 2"
+DEFAULT_PAGE_AUDIO_LIBRARY_GROUP_PROPERTY = "Playlist"
 PAGE_AUDIO_MARKER = "[AUTOGEN_PAGE_AUDIO]"
 PAGE_AUDIO_HASH_MARKER_PREFIX = "[AUTOGEN_PAGE_AUDIO_HASH:"
 PAGE_AUDIO_RENDER_VERSION = "page_audio_v1"
@@ -85,6 +90,7 @@ DEFAULT_INTENTION_PROPERTY = "Intention"
 DEFAULT_INTENTION_PREFIX = "For today's intention:"
 HTTP_RETRYABLE_STATUSES = {408, 409, 425, 429, 500, 502, 503, 504}
 HTTP_MAX_ATTEMPTS = 4
+PAGE_AUDIO_HTTP_USER_AGENT = "Mozilla/5.0 (compatible; spotify-praylist/1.0; +https://github.com/Jctebo/spotify_praylist)"
 MONTH_NAMES = (
     "JANUARY",
     "FEBRUARY",
@@ -118,6 +124,8 @@ PAGE_AUDIO_CONFIG_DAILY_NOVENA_TITLE_PROPERTY = "Daily Novena Page Title"
 PAGE_AUDIO_CONFIG_TEXT_PROPERTY = "Text Property"
 PAGE_AUDIO_CONFIG_FEED_URL_PROPERTY = "Feed URL"
 PAGE_AUDIO_CONFIG_FEED_MATCH_TEXT_PROPERTY = "Feed Match Text"
+PAGE_AUDIO_CONFIG_FEED_MATCH_STRATEGY_PROPERTY = "Feed Match Strategy"
+PAGE_AUDIO_CONFIG_FEED_MATCH_MAP_PROPERTY = "Feed Match Map"
 PAGE_AUDIO_CONFIG_INTENTION_PROPERTY = "Intention Property"
 PAGE_AUDIO_CONFIG_INTENTION_PREFIX_PROPERTY = "Intention Prefix"
 
@@ -143,6 +151,7 @@ AUDIO_OUTPUT_TARGET_ROW_PROPERTY = "Target Row"
 AUDIO_OUTPUT_AUDIO_CAPTION_PROPERTY = "Audio Caption"
 AUDIO_OUTPUT_FRAGMENT_SEQUENCE_PROPERTY = "Fragment Sequence"
 AUDIO_OUTPUT_CONFIG_KEY_PROPERTY = "Config Key"
+AUDIO_OUTPUT_FOLDER_PROPERTY = "Output Folder"
 AUDIO_OUTPUT_TTS_MODEL_PROPERTY = "TTS Model"
 AUDIO_OUTPUT_TTS_VOICE_PROPERTY = "TTS Voice"
 AUDIO_OUTPUT_TTS_FORMAT_PROPERTY = "TTS Format"
@@ -154,6 +163,11 @@ AUDIO_OUTPUT_MODE_FRAGMENTS = "fragments"
 AUDIO_OUTPUT_MODE_CONFIG = "config"
 SPECIAL_DAILY_NOVENA_AUDIO = "SPECIAL:daily_novena_audio"
 SPECIAL_MONTHLY_INTENTION = "SPECIAL:monthly_intention"
+RSS_MATCH_CONTAINS_WITH_DATE = "contains_with_date"
+RSS_MATCH_DAY_OF_YEAR = "day_of_year"
+RSS_MATCH_MONTH_DAY = "month_day"
+RSS_MATCH_WEEKDAY_MAP = "weekday_map"
+RSS_MATCH_FIXED_TITLE = "fixed_title"
 
 
 def load_shared_module():
@@ -198,6 +212,12 @@ class PageAudioPlan:
 def slugify(text: str) -> str:
     value = re.sub(r"[^a-z0-9]+", "-", str(text or "").lower()).strip("-")
     return value or "page-audio"
+
+
+def safe_path_component(text: str, fallback: str) -> str:
+    value = re.sub(r'[<>:"/\\\\|?*]+', "-", str(text or "").strip())
+    value = re.sub(r"\s{2,}", " ", value).strip().strip(".")
+    return value or fallback
 
 
 def page_audio_hash_marker(render_hash: str) -> str:
@@ -441,6 +461,8 @@ def page_audio_config_from_notion_page(page: Dict[str, Any]) -> Optional[tuple[s
     text_property = page_property_text(page, PAGE_AUDIO_CONFIG_TEXT_PROPERTY).strip()
     feed_url = page_property_text(page, PAGE_AUDIO_CONFIG_FEED_URL_PROPERTY).strip()
     feed_match_text = page_property_text(page, PAGE_AUDIO_CONFIG_FEED_MATCH_TEXT_PROPERTY).strip()
+    feed_match_strategy = page_property_text(page, PAGE_AUDIO_CONFIG_FEED_MATCH_STRATEGY_PROPERTY).strip()
+    feed_match_map = page_property_text(page, PAGE_AUDIO_CONFIG_FEED_MATCH_MAP_PROPERTY).strip()
     intention_property = page_property_text(page, PAGE_AUDIO_CONFIG_INTENTION_PROPERTY).strip()
     intention_prefix = page_property_text(page, PAGE_AUDIO_CONFIG_INTENTION_PREFIX_PROPERTY).strip()
 
@@ -486,6 +508,10 @@ def page_audio_config_from_notion_page(page: Dict[str, Any]) -> Optional[tuple[s
         config["rss_feed_url"] = feed_url
     if feed_match_text:
         config["rss_match_text"] = feed_match_text
+    if feed_match_strategy:
+        config["rss_match_strategy"] = feed_match_strategy
+    if feed_match_map:
+        config["rss_match_map"] = feed_match_map
     if intention_property:
         config["intention_property"] = intention_property
     if intention_prefix:
@@ -707,6 +733,9 @@ def audio_output_common_overrides(page: Dict[str, Any]) -> Dict[str, Any]:
     target_row = page_property_text(page, AUDIO_OUTPUT_TARGET_ROW_PROPERTY).strip()
     if target_row:
         overrides["target_row"] = target_row
+    output_folder = page_property_text(page, AUDIO_OUTPUT_FOLDER_PROPERTY).strip()
+    if output_folder:
+        overrides["output_folder"] = output_folder
     notes = page_property_text(page, AUDIO_OUTPUT_NOTES_PROPERTY).strip()
     if notes:
         overrides["notes"] = notes
@@ -797,6 +826,20 @@ def page_audio_cache_dir() -> Path:
     return path
 
 
+def default_page_audio_library_dir() -> Path:
+    user_profile = os.getenv("USERPROFILE", "").strip()
+    if user_profile:
+        return Path(user_profile) / Path(DEFAULT_PAGE_AUDIO_LIBRARY_RELATIVE)
+    return ROOT / DEFAULT_PAGE_AUDIO_LIBRARY_FALLBACK
+
+
+def page_audio_library_dir() -> Path:
+    raw = os.getenv(PAGE_AUDIO_LIBRARY_DIR, "").strip()
+    path = Path(raw) if raw else default_page_audio_library_dir()
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
 def page_audio_http_should_retry(exc: requests.exceptions.RequestException) -> bool:
     if isinstance(exc, (requests.exceptions.Timeout, requests.exceptions.ConnectionError)):
         return True
@@ -820,7 +863,12 @@ def page_audio_http_retry_delay(exc: requests.exceptions.RequestException, attem
 def page_audio_http_get(url: str, *, params: Optional[Dict[str, Any]] = None, timeout: int = 30) -> requests.Response:
     for attempt in range(1, HTTP_MAX_ATTEMPTS + 1):
         try:
-            response = requests.get(url, params=params, timeout=timeout)
+            response = requests.get(
+                url,
+                params=params,
+                timeout=timeout,
+                headers={"User-Agent": PAGE_AUDIO_HTTP_USER_AGENT},
+            )
             response.raise_for_status()
             return response
         except requests.exceptions.RequestException as exc:
@@ -1490,9 +1538,28 @@ def divine_office_title_date(title: str, target_year: int) -> Optional[datetime.
                 return datetime.date(target_year, month, day)
             except ValueError:
                 continue
+    long_match = re.search(r"\b([A-Za-z]{3,9})\s+(\d{1,2}),\s*(\d{4})\b", value)
+    if long_match:
+        month_token = long_match.group(1).strip()
+        day = int(long_match.group(2))
+        year = int(long_match.group(3))
+        for fmt in ("%b", "%B"):
+            try:
+                month = datetime.datetime.strptime(month_token, fmt).month
+                return datetime.date(year, month, day)
+            except ValueError:
+                continue
     numeric_match = re.match(r"^(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b", value)
     if not numeric_match:
-        return None
+        slash_match = re.match(r"^(\d{1,2})/(\d{1,2})\b", value)
+        if not slash_match:
+            return None
+        month = int(slash_match.group(1))
+        day = int(slash_match.group(2))
+        try:
+            return datetime.date(target_year, month, day)
+        except ValueError:
+            return None
     month = int(numeric_match.group(1))
     day = int(numeric_match.group(2))
     year_token = numeric_match.group(3)
@@ -1505,54 +1572,272 @@ def divine_office_title_date(title: str, target_year: int) -> Optional[datetime.
         return None
 
 
-def fetch_divine_office_feed_entry(
+def rss_title_day_of_year(title: str) -> Optional[int]:
+    match = re.search(r"\bDay\s+(\d{1,3})\b", str(title or ""), re.IGNORECASE)
+    if not match:
+        return None
+    try:
+        value = int(match.group(1))
+    except Exception:
+        return None
+    return value if 1 <= value <= 366 else None
+
+
+def rss_entry_pubdate(item: ET.Element) -> Optional[datetime.date]:
+    raw = str(item.findtext("pubDate", "")).strip()
+    if not raw:
+        return None
+    for fmt in (
+        "%a, %d %b %Y %H:%M:%S %z",
+        "%a, %d %b %Y %H:%M:%S %Z",
+        "%Y-%m-%dT%H:%M:%S%z",
+        "%Y-%m-%dT%H:%M:%SZ",
+    ):
+        try:
+            return datetime.datetime.strptime(raw, fmt).date()
+        except Exception:
+            continue
+    return None
+
+
+def rss_match_map_values(raw: Any) -> Dict[str, str]:
+    if isinstance(raw, dict):
+        out: Dict[str, str] = {}
+        for key, item in raw.items():
+            norm_key = normalize_flag_value(str(key or ""))
+            norm_value = str(item or "").strip()
+            if norm_key and norm_value:
+                out[norm_key] = norm_value
+        return out
+    value = str(raw or "").strip()
+    if not value:
+        return {}
+    try:
+        payload = json.loads(value)
+        if isinstance(payload, dict):
+            out: Dict[str, str] = {}
+            for key, item in payload.items():
+                norm_key = normalize_flag_value(str(key or ""))
+                norm_value = str(item or "").strip()
+                if norm_key and norm_value:
+                    out[norm_key] = norm_value
+            if out:
+                return out
+    except Exception:
+        pass
+    out: Dict[str, str] = {}
+    for line in re.split(r"[\r\n]+", value):
+        part = str(line or "").strip()
+        if not part or "=" not in part:
+            continue
+        key, mapped = part.split("=", 1)
+        norm_key = normalize_flag_value(key)
+        norm_value = str(mapped or "").strip()
+        if norm_key and norm_value:
+            out[norm_key] = norm_value
+    return out
+
+
+def render_feed_match_text(template: str, target_date: datetime.date) -> str:
+    text = str(template or "").strip()
+    if not text:
+        return ""
+    replacements = {
+        "{today_iso}": target_date.isoformat(),
+        "{year}": str(target_date.year),
+        "{month}": str(target_date.month),
+        "{month_zero}": f"{target_date.month:02d}",
+        "{month_name}": target_date.strftime("%B"),
+        "{month_short}": target_date.strftime("%b"),
+        "{day}": str(target_date.day),
+        "{day_zero}": f"{target_date.day:02d}",
+        "{day_of_year}": str(target_date.timetuple().tm_yday),
+        "{weekday}": target_date.strftime("%A"),
+        "{weekday_short}": target_date.strftime("%a"),
+    }
+    rendered = text
+    for needle, replacement in replacements.items():
+        rendered = rendered.replace(needle, replacement)
+    return normalize_whitespace(rendered)
+
+
+def rss_item_to_entry(item: ET.Element, feed_url: str, target_date: datetime.date) -> Optional[Dict[str, Any]]:
+    title = str(item.findtext("title", "")).strip()
+    if not title:
+        return None
+    enclosure = item.find("enclosure")
+    audio_url = str((enclosure.attrib if enclosure is not None else {}).get("url", "")).strip()
+    if not audio_url:
+        return None
+    content_node = item.find("{http://purl.org/rss/1.0/modules/content/}encoded")
+    html_body = str(content_node.text if content_node is not None else item.findtext("description", "") or "").strip()
+    entry_date = divine_office_title_date(title, target_date.year) or rss_entry_pubdate(item)
+    day_of_year = rss_title_day_of_year(title)
+    return {
+        "title": title,
+        "audio_url": audio_url,
+        "source_url": str(item.findtext("link", "")).strip(),
+        "text": "\n\n".join(plain_text_paragraphs_from_html(html_body)),
+        "content_html": html_body,
+        "feed_url": feed_url,
+        "date": entry_date.isoformat() if entry_date else "",
+        "entry_date": entry_date,
+        "day_of_year": day_of_year,
+    }
+
+
+def choose_dated_feed_entry(
+    entries: Sequence[Dict[str, Any]],
     target_date: datetime.date,
-    feed_url: str = DIVINE_OFFICE_FEED_URL,
-    match_text: str = "Invitatory",
-) -> Dict[str, str]:
+    *,
+    title_filter: Optional[str] = None,
+) -> Dict[str, Any]:
+    wanted = str(title_filter or "").strip().lower()
+    exact: Optional[Dict[str, Any]] = None
+    latest_past: Optional[Dict[str, Any]] = None
+    latest_date: Optional[datetime.date] = None
+    for entry in entries:
+        title = str(entry.get("title", "")).strip()
+        if wanted and wanted not in title.lower():
+            continue
+        entry_date = entry.get("entry_date")
+        if not isinstance(entry_date, datetime.date):
+            continue
+        if entry_date == target_date:
+            exact = entry
+            break
+        if entry_date <= target_date and (latest_date is None or entry_date > latest_date):
+            latest_past = entry
+            latest_date = entry_date
+    chosen = exact or latest_past
+    if chosen is None:
+        raise RuntimeError(
+            f"No dated feed entry found in {str((entries[0] if entries else {}).get('feed_url', '')).strip() or 'feed'} "
+            f"for {target_date.isoformat()}."
+        )
+    return chosen
+
+
+def choose_day_of_year_feed_entry(
+    entries: Sequence[Dict[str, Any]],
+    target_date: datetime.date,
+    *,
+    title_filter: str = "",
+) -> Dict[str, Any]:
+    wanted = str(title_filter or "").strip().lower()
+    target_doy = int(target_date.timetuple().tm_yday)
+    exact: Optional[Dict[str, Any]] = None
+    latest_past: Optional[Dict[str, Any]] = None
+    latest_doy: Optional[int] = None
+    for entry in entries:
+        title = str(entry.get("title", "")).strip()
+        if wanted and wanted not in title.lower():
+            continue
+        item_doy = entry.get("day_of_year")
+        if not isinstance(item_doy, int):
+            continue
+        if item_doy == target_doy:
+            exact = entry
+            break
+        if item_doy <= target_doy and (latest_doy is None or item_doy > latest_doy):
+            latest_past = entry
+            latest_doy = item_doy
+    chosen = exact or latest_past
+    if chosen is None:
+        raise RuntimeError(
+            f"No day-of-year feed entry found in {str((entries[0] if entries else {}).get('feed_url', '')).strip() or 'feed'} "
+            f"for day {target_doy}."
+        )
+    return chosen
+
+
+def choose_weekday_map_feed_entry(
+    entries: Sequence[Dict[str, Any]],
+    target_date: datetime.date,
+    match_map: Dict[str, str],
+) -> Dict[str, Any]:
+    weekday_key = normalize_flag_value(target_date.strftime("%A"))
+    wanted = (
+        match_map.get(weekday_key)
+        or match_map.get(normalize_flag_value(target_date.strftime("%a")))
+        or match_map.get("default")
+        or ""
+    ).strip()
+    if not wanted:
+        raise RuntimeError(f"weekday_map strategy has no mapping for {target_date.strftime('%A')}.")
+    lowered = wanted.lower()
+    for entry in entries:
+        title = str(entry.get("title", "")).strip()
+        if lowered in title.lower():
+            return entry
+    raise RuntimeError(
+        f"No weekday-mapped entry found in {str((entries[0] if entries else {}).get('feed_url', '')).strip() or 'feed'} "
+        f"for {target_date.strftime('%A')} using '{wanted}'."
+    )
+
+
+def choose_fixed_title_feed_entry(entries: Sequence[Dict[str, Any]], match_text: str) -> Dict[str, Any]:
+    wanted = str(match_text or "").strip().lower()
+    if not wanted:
+        raise RuntimeError("fixed_title strategy requires Feed Match Text.")
+    for entry in entries:
+        title = str(entry.get("title", "")).strip()
+        lowered = title.lower()
+        if lowered == wanted or wanted in lowered:
+            return entry
+    raise RuntimeError(
+        f"No fixed-title entry found in {str((entries[0] if entries else {}).get('feed_url', '')).strip() or 'feed'} "
+        f"matching '{match_text}'."
+    )
+
+
+def fetch_rss_feed_entry(
+    target_date: datetime.date,
+    *,
+    feed_url: str,
+    match_text: str = "",
+    match_strategy: str = RSS_MATCH_CONTAINS_WITH_DATE,
+    match_map: Optional[Dict[str, str]] = None,
+) -> Dict[str, Any]:
     response = page_audio_http_get(feed_url, timeout=30)
     root = ET.fromstring(response.content)
     channel = root.find("channel")
     if channel is None:
         raise RuntimeError(f"Invalid RSS feed at {feed_url}.")
-    wanted = str(match_text or "").strip().lower()
-    exact: Optional[Dict[str, str]] = None
-    latest_past: Optional[Dict[str, str]] = None
-    latest_past_date: Optional[datetime.date] = None
-    for item in channel.findall("item"):
-        title = str(item.findtext("title", "")).strip()
-        if wanted and wanted not in title.lower():
-            continue
-        item_date = divine_office_title_date(title, target_date.year)
-        if item_date is None:
-            continue
-        enclosure = item.find("enclosure")
-        audio_url = str((enclosure.attrib if enclosure is not None else {}).get("url", "")).strip()
-        if not audio_url:
-            continue
-        content_node = item.find("{http://purl.org/rss/1.0/modules/content/}encoded")
-        html_body = str(content_node.text if content_node is not None else item.findtext("description", "") or "").strip()
-        text_body = "\n\n".join(plain_text_paragraphs_from_html(html_body))
-        entry = {
-            "title": title,
-            "audio_url": audio_url,
-            "source_url": str(item.findtext("link", "")).strip(),
-            "text": text_body,
-            "content_html": html_body,
-            "match_text": match_text,
-            "feed_url": feed_url,
-            "date": item_date.isoformat(),
-        }
-        if item_date == target_date:
-            exact = entry
-            break
-        if item_date <= target_date and (latest_past_date is None or item_date > latest_past_date):
-            latest_past = entry
-            latest_past_date = item_date
-    chosen = exact or latest_past
-    if chosen is None:
-        raise RuntimeError(f"No '{match_text}' entry found in {feed_url} for {target_date.isoformat()} or earlier.")
-    return chosen
+    entries = [
+        entry
+        for entry in (rss_item_to_entry(item, feed_url, target_date) for item in channel.findall("item"))
+        if isinstance(entry, dict)
+    ]
+    if not entries:
+        raise RuntimeError(f"No RSS audio entries found in {feed_url}.")
+
+    strategy = normalize_flag_value(match_strategy) or normalize_flag_value(RSS_MATCH_CONTAINS_WITH_DATE)
+    rendered_match_text = render_feed_match_text(match_text, target_date)
+    parsed_map = match_map or {}
+    if strategy == normalize_flag_value(RSS_MATCH_DAY_OF_YEAR):
+        return choose_day_of_year_feed_entry(entries, target_date, title_filter=rendered_match_text)
+    if strategy == normalize_flag_value(RSS_MATCH_MONTH_DAY):
+        return choose_dated_feed_entry(entries, target_date, title_filter=rendered_match_text)
+    if strategy == normalize_flag_value(RSS_MATCH_WEEKDAY_MAP):
+        return choose_weekday_map_feed_entry(entries, target_date, parsed_map)
+    if strategy == normalize_flag_value(RSS_MATCH_FIXED_TITLE):
+        return choose_fixed_title_feed_entry(entries, rendered_match_text)
+    return choose_dated_feed_entry(entries, target_date, title_filter=rendered_match_text)
+
+
+def fetch_divine_office_feed_entry(
+    target_date: datetime.date,
+    feed_url: str = DIVINE_OFFICE_FEED_URL,
+    match_text: str = "Invitatory",
+) -> Dict[str, str]:
+    entry = fetch_rss_feed_entry(
+        target_date,
+        feed_url=feed_url,
+        match_text=match_text,
+        match_strategy=RSS_MATCH_CONTAINS_WITH_DATE,
+    )
+    return {str(key): value for key, value in entry.items()}
 
 
 def build_divine_office_invitatory_plan(
@@ -1629,9 +1914,15 @@ def build_rss_audio_plan(
     if not feed_url:
         raise RuntimeError("rss_audio_v1 requires 'rss_feed_url'.")
     match_text = str(config.get("rss_match_text", "")).strip()
-    if not match_text:
-        raise RuntimeError("rss_audio_v1 requires 'rss_match_text'.")
-    feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=feed_url, match_text=match_text)
+    match_strategy = str(config.get("rss_match_strategy", RSS_MATCH_CONTAINS_WITH_DATE)).strip() or RSS_MATCH_CONTAINS_WITH_DATE
+    match_map = rss_match_map_values(config.get("rss_match_map", ""))
+    feed_entry = fetch_rss_feed_entry(
+        shared.local_today(),
+        feed_url=feed_url,
+        match_text=match_text,
+        match_strategy=match_strategy,
+        match_map=match_map,
+    )
 
     fragments: List[PageAudioFragment] = []
     intention_property = str(config.get("intention_property", DEFAULT_INTENTION_PROPERTY)).strip() or DEFAULT_INTENTION_PROPERTY
@@ -1658,11 +1949,11 @@ def build_rss_audio_plan(
         )
     )
     paragraphs = plain_text_paragraphs_from_html(feed_entry.get("content_html", ""))
+    text_property = str(config.get("text_property", "")).strip()
     return PageAudioPlan(
         fragments=fragments,
-        text_target="page_content",
-        content_blocks=paragraphs_to_notion_blocks(paragraphs),
-        text_property=str(config.get("text_property", DEFAULT_RSS_TEXT_PROPERTY)).strip() or DEFAULT_RSS_TEXT_PROPERTY,
+        synced_text="\n\n".join(paragraphs),
+        text_property=text_property,
     )
 
 
@@ -1705,6 +1996,87 @@ def page_audio_library_fragment_paths(
     directory = cache_root / "fragments" / collection_slug
     directory.mkdir(parents=True, exist_ok=True)
     return directory / f"{key_slug}.{clean_ext}", directory / f"{key_slug}.json"
+
+
+def page_audio_output_library_paths(
+    page: Dict[str, Any],
+    *,
+    title_property: str,
+    audio_format: str,
+    config: Dict[str, Any],
+) -> tuple[Path, Path]:
+    group_property = (
+        os.getenv(PAGE_AUDIO_LIBRARY_GROUP_PROPERTY, DEFAULT_PAGE_AUDIO_LIBRARY_GROUP_PROPERTY).strip()
+        or DEFAULT_PAGE_AUDIO_LIBRARY_GROUP_PROPERTY
+    )
+    group_name = str(config.get("output_folder", "")).strip() or page_property_text(page, group_property).strip() or "Unassigned"
+    folder_name = safe_path_component(group_name, "Unassigned")
+    title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip() or "page-audio"
+    file_stem = safe_path_component(f"{shared.local_today().isoformat()} - {title}", slugify(title))
+    root = page_audio_library_dir()
+    directory = root / folder_name
+    directory.mkdir(parents=True, exist_ok=True)
+    clean_ext = str(audio_format or "").strip().lstrip(".") or "bin"
+    return directory / f"{file_stem}.{clean_ext}", directory / f"{file_stem}.json"
+
+
+def page_audio_output_library_is_current(audio_path: Path, meta_path: Path, render_hash: str) -> bool:
+    if not audio_path.exists() or not meta_path.exists():
+        return False
+    try:
+        payload = json.loads(meta_path.read_text(encoding="utf-8"))
+    except Exception:
+        return False
+    return str(payload.get("render_hash", "")).strip().lower() == str(render_hash or "").strip().lower()
+
+
+def persist_page_audio_output_library(
+    page: Dict[str, Any],
+    *,
+    title_property: str,
+    config_key: str,
+    config: Dict[str, Any],
+    fragments: Sequence[PageAudioFragment],
+    render_hash: str,
+    audio_bytes: bytes,
+) -> tuple[Path, Path]:
+    settings = tts_settings_from_config(config)
+    audio_path, meta_path = page_audio_output_library_paths(
+        page,
+        title_property=title_property,
+        audio_format=str(settings["format"]),
+        config=config,
+    )
+    audio_path.write_bytes(audio_bytes)
+    payload = {
+        "title": shared.page_title(page, title_property).strip(),
+        "page_id": str(page.get("id", "")).strip(),
+        "playlist": page_property_text(
+            page,
+            os.getenv(PAGE_AUDIO_LIBRARY_GROUP_PROPERTY, DEFAULT_PAGE_AUDIO_LIBRARY_GROUP_PROPERTY).strip()
+            or DEFAULT_PAGE_AUDIO_LIBRARY_GROUP_PROPERTY,
+        ).strip(),
+        "output_folder": str(config.get("output_folder", "")).strip(),
+        "config_key": str(config_key or "").strip(),
+        "builder": str(config.get("builder", "")).strip(),
+        "audio_caption": str(config.get("audio_caption", "")).strip(),
+        "render_hash": str(render_hash or "").strip(),
+        "date": shared.local_today().isoformat(),
+        "tts": settings,
+        "fragments": [
+            {
+                "label": fragment.label,
+                "kind": fragment.kind,
+                "hash_value": fragment.hash_value,
+                "fragment_key": fragment.fragment_key,
+                "collection": fragment.collection,
+                "source_url": fragment.source_url,
+            }
+            for fragment in fragments
+        ],
+    }
+    meta_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    return audio_path, meta_path
 
 
 def legacy_page_audio_library_fragment_paths(
@@ -1951,9 +2323,17 @@ def ensure_source_audio_fragment(fragment: PageAudioFragment, cache_root: Path) 
         path = Path(existing)
         if path.exists():
             return path
-    raw, content_type = shared.notion_download_bytes(fragment.source_url)
+    source_url = str(fragment.source_url or "").strip()
+    if not source_url:
+        raise RuntimeError("Source audio fragment is missing source_url.")
+    if source_url.lower().startswith("http"):
+        response = page_audio_http_get(source_url, timeout=60)
+        raw = response.content
+        content_type = str(response.headers.get("Content-Type", "")).strip()
+    else:
+        raw, content_type = shared.notion_download_bytes(source_url)
     filename = shared.infer_filename_from_url(
-        fragment.source_url,
+        source_url,
         fallback_stem=f"source_audio_{fragment.hash_value}",
         content_type=content_type,
     )
@@ -2307,10 +2687,36 @@ def render_page_audio_for_config(
     render_hash = compute_page_render_hash(config_key, config, fragments)
     current_hash = page_audio_current_render_hash(page_id, notion_token)
     settings = tts_settings_from_config(config)
+    library_audio_path, library_meta_path = page_audio_output_library_paths(
+        page,
+        title_property=title_property,
+        audio_format=str(settings["format"]),
+        config=config,
+    )
     if current_hash == render_hash and page_audio_is_positioned_near_top(page_id, notion_token):
+        if not page_audio_output_library_is_current(library_audio_path, library_meta_path, render_hash):
+            audio_bytes = build_assembled_audio(fragments, config, openai_key, base_url)
+            persist_page_audio_output_library(
+                page,
+                title_property=title_property,
+                config_key=config_key,
+                config=config,
+                fragments=fragments,
+                render_hash=render_hash,
+                audio_bytes=audio_bytes,
+            )
         return f"cached:{settings['format']}:{settings['model']}:{settings['voice']}:hash={render_hash}"
 
     audio_bytes = build_assembled_audio(fragments, config, openai_key, base_url)
+    persist_page_audio_output_library(
+        page,
+        title_property=title_property,
+        config_key=config_key,
+        config=config,
+        fragments=fragments,
+        render_hash=render_hash,
+        audio_bytes=audio_bytes,
+    )
     page_audio_remove_old_blocks(page_id, notion_token)
     page_audio_remove_blank_placeholders(page_id, notion_token)
     filename = f"{slugify(shared.page_title(page, title_property))}_{shared.local_today().isoformat()}.{settings['format']}"

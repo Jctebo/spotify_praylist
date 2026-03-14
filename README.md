@@ -270,7 +270,7 @@ Optional variables:
 - `NOVENA_AUDIO_SPEED` (default `1.0`, range `0.25-4.0`)
 - `NOVENA_AUDIO_CAPTION` (default `Daily Novena Prayer (Audio)`)
 - `NOVENA_AUDIO_FAIL_OPEN` (default `true`; if `true`, text update continues even if audio upload fails)
-- `NOVENA_AUDIO_LIBRARY_DIR` (optional; when set, saint novena audio is prebuilt into a visible library folder with readable `day-01...day-09` filenames and JSON sidecars)
+- `NOVENA_AUDIO_LIBRARY_DIR` (optional; default local root is `%USERPROFILE%\OneDrive\Praylist Audio\Novena Audio Library`; saint novena audio is prebuilt there with readable `day-01...day-09` filenames and JSON sidecars)
 - saint-day novenas now cache two layers:
 - prompt payload JSON once per saint/feast window
 - the full 9-day audio set once per saint/feast window
@@ -300,6 +300,7 @@ Purpose:
 - falls back to the legacy `Audio Configuration` field and then the legacy resolver field when the new properties are blank
 - builds a Notion audio block for `auto-audio` rows and syncs page body content for feed-backed rows
 - caches generated fragment audio under `.cache/page_audio`
+- exports the assembled daily files to `%USERPROFILE%\OneDrive\Praylist Audio\Playlist Audio\<Output Folder>\YYYY-MM-DD - <Title>.mp3` by default
 
 Current config:
 - `MORNING_PRAYER_OUTPUT` in your Notion `Audio Outputs` database
@@ -329,6 +330,18 @@ Current config:
 - wraps `DIVINE_OFFICE_MORNING_PAGE_AUDIO` from `Page Audio Configuration`
 - target row: `Morning Prayer - Liturgy of the Hours (Spotify)`
 - source audio fallback: official DivineOffice.org RSS enclosure for the matching day's `Morning Prayer`
+- additional podcast-backed outputs now live in `Audio Outputs` too, including:
+- `BIBLE_IN_A_YEAR_OUTPUT`
+- `SAINT_OF_DAY_OUTPUT`
+- `USCCB_READINGS_OUTPUT`
+- `DAILY_ROSARY_OUTPUT`
+- `AUXILIUM_OUTPUT`
+- `ANGELUS_MORNING_OUTPUT`
+- `ANGELUS_MIDDAY_OUTPUT`
+- `ANGELUS_EVENING_OUTPUT`
+- `DIVINE_OFFICE_AFTERNOON_OUTPUT`
+- `DIVINE_OFFICE_EVENING_OUTPUT`
+- `DIVINE_OFFICE_NIGHT_OUTPUT`
 - fallback file source remains available in [page_audio_config.json](c:/Users/jcteb/Code/spotify_praylist/config/page_audio_config.json) if the Notion config database is unavailable
 
 Recommended Opus Dei row shape:
@@ -354,6 +367,7 @@ Environment variables:
 - `NOTION_AUDIO_OUTPUTS_DATABASE_NAME` (fallback lookup; default `Audio Outputs`)
 - `PAGE_AUDIO_CONFIG_FILE` (fallback file config if Notion config db is unavailable)
 - `PAGE_AUDIO_CACHE_DIR` (default `.cache/page_audio`)
+- `PAGE_AUDIO_LIBRARY_DIR` (optional; default local root is `%USERPROFILE%\OneDrive\Praylist Audio\Playlist Audio`)
 - `PAGE_AUDIO_CONFIG_KEY` (optional single-config filter)
 - `PAGE_AUDIO_ROW_TITLE` (optional single-row filter)
 - `PAGE_AUDIO_FAIL_OPEN` (default `false`)
@@ -367,6 +381,16 @@ Audio fragment row shape:
 - `Collection`
 - `Enabled`
 - optional `Start Date` and `End Date`
+
+Audio output row shape:
+- `Name`
+- `Output Key`
+- `Output Mode`
+- `Config Key` or `Fragment Sequence`
+- `Target Row`
+- `Audio Caption`
+- `Output Folder` to route exported daily files into the correct OneDrive subfolder
+- `Enabled`
 
 Local run:
 

@@ -68,6 +68,129 @@ class TestPageAudioJob(unittest.TestCase):
         )
         self.assertEqual(parsed, datetime.date(2026, 3, 14))
 
+    def test_fetch_rss_feed_entry_matches_day_of_year(self):
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <item>
+      <title>Day 73: Inheritance of Land (2026)</title>
+      <link>https://example.com/day-73</link>
+      <enclosure url="https://example.com/day-73.mp3" type="audio/mpeg" />
+      <description><![CDATA[<p>Day 73 text.</p>]]></description>
+    </item>
+    <item>
+      <title>Day 72: The Plains of Moab (2026)</title>
+      <link>https://example.com/day-72</link>
+      <enclosure url="https://example.com/day-72.mp3" type="audio/mpeg" />
+      <description><![CDATA[<p>Day 72 text.</p>]]></description>
+    </item>
+  </channel>
+</rss>"""
+
+        class FakeResponse:
+            def __init__(self, content):
+                self.content = content.encode("utf-8")
+
+        with patch.object(self.mod, "page_audio_http_get", return_value=FakeResponse(xml)):
+            entry = self.mod.fetch_rss_feed_entry(
+                datetime.date(2026, 3, 14),
+                feed_url="https://example.com/feed.xml",
+                match_strategy="day_of_year",
+            )
+
+        self.assertEqual(entry["title"], "Day 73: Inheritance of Land (2026)")
+        self.assertEqual(entry["audio_url"], "https://example.com/day-73.mp3")
+
+    def test_fetch_rss_feed_entry_matches_month_day_titles(self):
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <item>
+      <title>3/14 - Matilda of Saxony</title>
+      <link>https://example.com/saint-314</link>
+      <enclosure url="https://example.com/saint-314.mp3" type="audio/mpeg" />
+      <description><![CDATA[<p>Matilda text.</p>]]></description>
+    </item>
+    <item>
+      <title>3/13 - St. Euhrasipa</title>
+      <link>https://example.com/saint-313</link>
+      <enclosure url="https://example.com/saint-313.mp3" type="audio/mpeg" />
+      <description><![CDATA[<p>Euhrasipa text.</p>]]></description>
+    </item>
+  </channel>
+</rss>"""
+
+        class FakeResponse:
+            def __init__(self, content):
+                self.content = content.encode("utf-8")
+
+        with patch.object(self.mod, "page_audio_http_get", return_value=FakeResponse(xml)):
+            entry = self.mod.fetch_rss_feed_entry(
+                datetime.date(2026, 3, 14),
+                feed_url="https://example.com/feed.xml",
+                match_strategy="month_day",
+            )
+
+        self.assertEqual(entry["title"], "3/14 - Matilda of Saxony")
+        self.assertEqual(entry["audio_url"], "https://example.com/saint-314.mp3")
+
+    def test_fetch_rss_feed_entry_matches_weekday_map(self):
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <item>
+      <title>The Joyful Mysteries (Monday + Saturday)</title>
+      <link>https://example.com/joyful</link>
+      <enclosure url="https://example.com/joyful.mp3" type="audio/mpeg" />
+    </item>
+    <item>
+      <title>The Sorrowful Mysteries (Tuesday + Friday)</title>
+      <link>https://example.com/sorrowful</link>
+      <enclosure url="https://example.com/sorrowful.mp3" type="audio/mpeg" />
+    </item>
+  </channel>
+</rss>"""
+
+        class FakeResponse:
+            def __init__(self, content):
+                self.content = content.encode("utf-8")
+
+        with patch.object(self.mod, "page_audio_http_get", return_value=FakeResponse(xml)):
+            entry = self.mod.fetch_rss_feed_entry(
+                datetime.date(2026, 3, 13),
+                feed_url="https://example.com/feed.xml",
+                match_strategy="weekday_map",
+                match_map={"friday": "The Sorrowful Mysteries"},
+            )
+
+        self.assertEqual(entry["title"], "The Sorrowful Mysteries (Tuesday + Friday)")
+
+    def test_fetch_rss_feed_entry_matches_fixed_title(self):
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <item>
+      <title>The Angelus Prayer</title>
+      <link>https://example.com/angelus</link>
+      <enclosure url="https://example.com/angelus.mp3" type="audio/mpeg" />
+    </item>
+  </channel>
+</rss>"""
+
+        class FakeResponse:
+            def __init__(self, content):
+                self.content = content.encode("utf-8")
+
+        with patch.object(self.mod, "page_audio_http_get", return_value=FakeResponse(xml)):
+            entry = self.mod.fetch_rss_feed_entry(
+                datetime.date(2026, 3, 14),
+                feed_url="https://example.com/feed.xml",
+                match_strategy="fixed_title",
+                match_text="The Angelus Prayer",
+            )
+
+        self.assertEqual(entry["audio_url"], "https://example.com/angelus.mp3")
+
     def test_build_divine_office_invitatory_plan_prepends_intention(self):
         page = {
             "id": "page_1",
@@ -733,6 +856,7 @@ class TestPageAudioJob(unittest.TestCase):
                     "Audio Caption": _rich_text_prop("Morning Prayer - Liturgy of the Hours (Audio)"),
                     "Feed URL": _rich_text_prop("https://feeds.castos.com/x8g54"),
                     "Feed Match Text": _rich_text_prop("Lauds"),
+                    "Feed Match Strategy": _rich_text_prop("contains_with_date"),
                     "TTS Model": _rich_text_prop("gpt-4o-mini-tts"),
                     "TTS Voice": _rich_text_prop("alloy"),
                     "TTS Format": _rich_text_prop("mp3"),
@@ -767,6 +891,7 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertIn("SING_THE_HOURS_MORNING_OUTPUT", payload["configs"])
         self.assertEqual(payload["configs"]["SING_THE_HOURS_MORNING_OUTPUT"]["builder"], "rss_audio_v1")
+        self.assertEqual(payload["configs"]["SING_THE_HOURS_MORNING_OUTPUT"]["rss_match_strategy"], "contains_with_date")
 
     def test_render_page_audio_for_config_uses_cached_hash(self):
         page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
@@ -783,6 +908,8 @@ class TestPageAudioJob(unittest.TestCase):
         with patch.object(self.mod, "page_audio_current_render_hash", return_value=render_hash
         ), patch.object(
             self.mod, "page_audio_is_positioned_near_top", return_value=True
+        ), patch.object(
+            self.mod, "page_audio_output_library_is_current", return_value=True
         ), patch.object(self.mod, "build_assembled_audio") as assemble_mock:
             mode = self.mod.render_page_audio_for_config(
                 page=page,
@@ -797,6 +924,56 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertEqual(mode, f"cached:mp3:gpt-4o-mini-tts:alloy:hash={render_hash}")
         assemble_mock.assert_not_called()
+
+    def test_render_page_audio_for_config_exports_library_when_missing(self):
+        page = {
+            "id": "page_1",
+            "properties": {
+                "Name": _title_prop("Bible in a Year"),
+                "Playlist": _rich_text_prop("Morning"),
+            },
+        }
+        config = {
+            "builder": "rss_audio_v1",
+            "audio_caption": "Bible in a Year (Audio)",
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "output_folder": "Morning",
+        }
+        plan = self.mod.PageAudioPlan(
+            fragments=[self.mod.PageAudioFragment(kind="source_audio", label="Day 73", hash_value="hash_1", source_url="https://example.com/day73.mp3")]
+        )
+        render_hash = self.mod.compute_page_render_hash("BIBLE_IN_A_YEAR_OUTPUT", config, plan.fragments)
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with temp_env({"PAGE_AUDIO_LIBRARY_DIR": tmp_dir}), patch.object(
+                self.mod, "page_audio_current_render_hash", return_value=render_hash
+            ), patch.object(
+                self.mod, "page_audio_is_positioned_near_top", return_value=True
+            ), patch.object(
+                self.mod, "page_audio_output_library_is_current", return_value=False
+            ), patch.object(
+                self.mod, "build_assembled_audio", return_value=b"assembled-audio"
+            ):
+                mode = self.mod.render_page_audio_for_config(
+                    page=page,
+                    config_key="BIBLE_IN_A_YEAR_OUTPUT",
+                    config=config,
+                    plan=plan,
+                    title_property="Name",
+                    notion_token="token",
+                    openai_key="openai",
+                    base_url="https://api.openai.com/v1",
+                )
+
+            audio_path = Path(tmp_dir) / "Morning" / "2026-03-14 - Bible in a Year.mp3"
+            meta_path = Path(tmp_dir) / "Morning" / "2026-03-14 - Bible in a Year.json"
+            self.assertTrue(audio_path.exists())
+            self.assertTrue(meta_path.exists())
+            payload = json.loads(meta_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(mode, f"cached:mp3:gpt-4o-mini-tts:alloy:hash={render_hash}")
+        self.assertEqual(payload["output_folder"], "Morning")
+        self.assertEqual(payload["render_hash"], render_hash)
 
     def test_compute_page_render_hash_ignores_cache_promotion_kind(self):
         config = {

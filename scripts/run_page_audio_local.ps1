@@ -18,6 +18,7 @@ param(
   [string]$PageAudioRowTitle,
   [string]$PageAudioConfigFile,
   [string]$PageAudioCacheDir,
+  [string]$PageAudioLibraryDir,
   [string]$PageAudioFailOpen,
   [string]$OaiApiBaseUrl,
   [string]$JobUtcOffset
@@ -44,6 +45,7 @@ if (-not $PageAudioConfigKey) { $PageAudioConfigKey = $env:PAGE_AUDIO_CONFIG_KEY
 if (-not $PageAudioRowTitle) { $PageAudioRowTitle = $env:PAGE_AUDIO_ROW_TITLE }
 if (-not $PageAudioConfigFile) { $PageAudioConfigFile = $env:PAGE_AUDIO_CONFIG_FILE }
 if (-not $PageAudioCacheDir) { $PageAudioCacheDir = $env:PAGE_AUDIO_CACHE_DIR }
+if (-not $PageAudioLibraryDir) { $PageAudioLibraryDir = $env:PAGE_AUDIO_LIBRARY_DIR }
 if (-not $PageAudioFailOpen) { $PageAudioFailOpen = $env:PAGE_AUDIO_FAIL_OPEN }
 if (-not $OaiApiBaseUrl) { $OaiApiBaseUrl = $env:OAI_API_BASE_URL }
 if (-not $JobUtcOffset) { $JobUtcOffset = $env:JOB_UTC_OFFSET }
@@ -72,6 +74,7 @@ if ($PageAudioConfigKey) { $env:PAGE_AUDIO_CONFIG_KEY = $PageAudioConfigKey }
 if ($PageAudioRowTitle) { $env:PAGE_AUDIO_ROW_TITLE = $PageAudioRowTitle }
 if ($PageAudioConfigFile) { $env:PAGE_AUDIO_CONFIG_FILE = $PageAudioConfigFile }
 if ($PageAudioCacheDir) { $env:PAGE_AUDIO_CACHE_DIR = $PageAudioCacheDir }
+if ($PageAudioLibraryDir) { $env:PAGE_AUDIO_LIBRARY_DIR = $PageAudioLibraryDir }
 if ($PageAudioFailOpen) { $env:PAGE_AUDIO_FAIL_OPEN = $PageAudioFailOpen }
 if ($OaiApiBaseUrl) { $env:OAI_API_BASE_URL = $OaiApiBaseUrl }
 if ($JobUtcOffset) { $env:JOB_UTC_OFFSET = $JobUtcOffset }
