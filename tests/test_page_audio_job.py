@@ -205,6 +205,41 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(mode, f"cached:mp3:gpt-4o-mini-tts:alloy:hash={render_hash}")
         assemble_mock.assert_not_called()
 
+    def test_load_page_audio_config_prefers_notion_database(self):
+        env = {
+            "NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID": "page_audio_db_1",
+        }
+        config_pages = [
+            {
+                "id": "cfg_1",
+                "properties": {
+                    "Name": _title_prop("MORNING_PRAYER_PAGE_AUDIO"),
+                    "Enabled": _checkbox_prop(True),
+                    "Builder": _rich_text_prop("morning_prayer_v1"),
+                    "Audio Caption": _rich_text_prop("Morning Prayer (Audio)"),
+                    "Silence Ms": {"type": "number", "number": 450},
+                    "TTS Model": _rich_text_prop("gpt-4o-mini-tts"),
+                    "TTS Voice": _rich_text_prop("alloy"),
+                    "TTS Format": _rich_text_prop("mp3"),
+                    "TTS Speed": {"type": "number", "number": 1.0},
+                    "Monthly Intention Provider": _rich_text_prop("popes_prayer_network_pdf"),
+                    "Monthly Intention Language": _rich_text_prop("en"),
+                    "Daily Novena Page Title": _rich_text_prop("Daily Novenas from Liturgical Calendar"),
+                },
+            }
+        ]
+
+        with temp_env(env):
+            with patch.object(self.mod.shared, "notion_get_all_pages", return_value=config_pages):
+                payload = self.mod.load_page_audio_config("notion_token")
+
+        config = payload["configs"]["MORNING_PRAYER_PAGE_AUDIO"]
+        self.assertEqual(config["builder"], "morning_prayer_v1")
+        self.assertEqual(config["audio_caption"], "Morning Prayer (Audio)")
+        self.assertEqual(config["tts"]["model"], "gpt-4o-mini-tts")
+        self.assertEqual(config["monthly_intention"]["provider"], "popes_prayer_network_pdf")
+        self.assertEqual(config["daily_novena_page_title"], "Daily Novenas from Liturgical Calendar")
+
     def test_main_filters_auto_audio_rows(self):
         env = {
             "OPENAI_API_KEY": "key",

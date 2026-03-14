@@ -25,7 +25,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: .cache/page_audio
-          key: page-audio-${{ runner.os }}-${{ hashFiles('config/page_audio_config.json') }}
+          key: page-audio-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
             page-audio-${{ runner.os }}-
 
@@ -81,6 +81,8 @@ jobs:
           NOTION_AUDIO_PLATFORM_VALUE: auto-audio
           NOTION_AUDIO_RESOLVER_PROPERTY: Spotify Resolver
           NOTION_AUDIO_ENABLED_PROPERTY: Enabled
+          NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID: ${{ vars.NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID || secrets.NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID }}
+          NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME: ${{ vars.NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME }}
           PAGE_AUDIO_CONFIG_FILE: config/page_audio_config.json
           PAGE_AUDIO_CACHE_DIR: .cache/page_audio
           PAGE_AUDIO_FAIL_OPEN: "false"

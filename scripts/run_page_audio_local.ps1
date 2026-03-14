@@ -8,6 +8,8 @@ param(
   [string]$NotionAudioPlatformValue,
   [string]$NotionAudioResolverProperty,
   [string]$NotionAudioEnabledProperty,
+  [string]$NotionPageAudioConfigDatabaseId,
+  [string]$NotionPageAudioConfigDatabaseName,
   [string]$PageAudioConfigKey,
   [string]$PageAudioRowTitle,
   [string]$PageAudioConfigFile,
@@ -28,6 +30,8 @@ if (-not $NotionPlatformProperty) { $NotionPlatformProperty = $env:NOTION_PLATFO
 if (-not $NotionAudioPlatformValue) { $NotionAudioPlatformValue = $env:NOTION_AUDIO_PLATFORM_VALUE }
 if (-not $NotionAudioResolverProperty) { $NotionAudioResolverProperty = $env:NOTION_AUDIO_RESOLVER_PROPERTY }
 if (-not $NotionAudioEnabledProperty) { $NotionAudioEnabledProperty = $env:NOTION_AUDIO_ENABLED_PROPERTY }
+if (-not $NotionPageAudioConfigDatabaseId) { $NotionPageAudioConfigDatabaseId = $env:NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID }
+if (-not $NotionPageAudioConfigDatabaseName) { $NotionPageAudioConfigDatabaseName = $env:NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME }
 if (-not $PageAudioConfigKey) { $PageAudioConfigKey = $env:PAGE_AUDIO_CONFIG_KEY }
 if (-not $PageAudioRowTitle) { $PageAudioRowTitle = $env:PAGE_AUDIO_ROW_TITLE }
 if (-not $PageAudioConfigFile) { $PageAudioConfigFile = $env:PAGE_AUDIO_CONFIG_FILE }
@@ -50,6 +54,8 @@ if ($NotionPlatformProperty) { $env:NOTION_PLATFORM_PROPERTY = $NotionPlatformPr
 if ($NotionAudioPlatformValue) { $env:NOTION_AUDIO_PLATFORM_VALUE = $NotionAudioPlatformValue }
 if ($NotionAudioResolverProperty) { $env:NOTION_AUDIO_RESOLVER_PROPERTY = $NotionAudioResolverProperty }
 if ($NotionAudioEnabledProperty) { $env:NOTION_AUDIO_ENABLED_PROPERTY = $NotionAudioEnabledProperty }
+if ($NotionPageAudioConfigDatabaseId) { $env:NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID = $NotionPageAudioConfigDatabaseId }
+if ($NotionPageAudioConfigDatabaseName) { $env:NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME = $NotionPageAudioConfigDatabaseName }
 if ($PageAudioConfigKey) { $env:PAGE_AUDIO_CONFIG_KEY = $PageAudioConfigKey }
 if ($PageAudioRowTitle) { $env:PAGE_AUDIO_ROW_TITLE = $PageAudioRowTitle }
 if ($PageAudioConfigFile) { $env:PAGE_AUDIO_CONFIG_FILE = $PageAudioConfigFile }

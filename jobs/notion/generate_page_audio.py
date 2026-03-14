@@ -34,6 +34,8 @@ NOTION_TOKEN = "NOTION_TOKEN"
 NOTION_AUDIO_PLATFORM_VALUE = "NOTION_AUDIO_PLATFORM_VALUE"
 NOTION_AUDIO_RESOLVER_PROPERTY = "NOTION_AUDIO_RESOLVER_PROPERTY"
 NOTION_AUDIO_ENABLED_PROPERTY = "NOTION_AUDIO_ENABLED_PROPERTY"
+NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID = "NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID"
+NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME = "NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME"
 PAGE_AUDIO_CONFIG_KEY = "PAGE_AUDIO_CONFIG_KEY"
 PAGE_AUDIO_ROW_TITLE = "PAGE_AUDIO_ROW_TITLE"
 PAGE_AUDIO_CONFIG_FILE = "PAGE_AUDIO_CONFIG_FILE"
@@ -42,6 +44,7 @@ PAGE_AUDIO_FAIL_OPEN = "PAGE_AUDIO_FAIL_OPEN"
 
 DEFAULT_PAGE_AUDIO_CONFIG_FILE = "config/page_audio_config.json"
 DEFAULT_PAGE_AUDIO_CACHE_DIR = ".cache/page_audio"
+DEFAULT_PAGE_AUDIO_CONFIG_DATABASE_NAME = "Page Audio Configuration"
 DEFAULT_AUTO_AUDIO_PLATFORM_VALUE = "auto-audio"
 PAGE_AUDIO_MARKER = "[AUTOGEN_PAGE_AUDIO]"
 PAGE_AUDIO_HASH_MARKER_PREFIX = "[AUTOGEN_PAGE_AUDIO_HASH:"
@@ -69,6 +72,19 @@ MONTH_NAMES = (
 TEXT_SANITIZE_REPLACEMENTS = {
     "without reserve.tog": "without reserve.",
 }
+
+PAGE_AUDIO_CONFIG_TITLE_PROPERTY = "Name"
+PAGE_AUDIO_CONFIG_ENABLED_PROPERTY = "Enabled"
+PAGE_AUDIO_CONFIG_BUILDER_PROPERTY = "Builder"
+PAGE_AUDIO_CONFIG_AUDIO_CAPTION_PROPERTY = "Audio Caption"
+PAGE_AUDIO_CONFIG_SILENCE_MS_PROPERTY = "Silence Ms"
+PAGE_AUDIO_CONFIG_TTS_MODEL_PROPERTY = "TTS Model"
+PAGE_AUDIO_CONFIG_TTS_VOICE_PROPERTY = "TTS Voice"
+PAGE_AUDIO_CONFIG_TTS_FORMAT_PROPERTY = "TTS Format"
+PAGE_AUDIO_CONFIG_TTS_SPEED_PROPERTY = "TTS Speed"
+PAGE_AUDIO_CONFIG_MONTHLY_PROVIDER_PROPERTY = "Monthly Intention Provider"
+PAGE_AUDIO_CONFIG_MONTHLY_LANGUAGE_PROPERTY = "Monthly Intention Language"
+PAGE_AUDIO_CONFIG_DAILY_NOVENA_TITLE_PROPERTY = "Daily Novena Page Title"
 
 
 def load_shared_module():
@@ -183,7 +199,98 @@ def placeholder_kind(text: str) -> str:
     return ""
 
 
-def load_page_audio_config() -> Dict[str, Any]:
+def notion_page_audio_config_database_id(token: str) -> str:
+    database_id = os.getenv(NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID, "").strip()
+    if database_id:
+        return database_id
+    database_name = (
+        os.getenv(NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME, DEFAULT_PAGE_AUDIO_CONFIG_DATABASE_NAME).strip()
+        or DEFAULT_PAGE_AUDIO_CONFIG_DATABASE_NAME
+    )
+    return shared.notion_find_database_id_by_name(token, database_name) or ""
+
+
+def page_audio_config_from_notion_page(page: Dict[str, Any]) -> Optional[tuple[str, Dict[str, Any]]]:
+    key = shared.page_title(page, PAGE_AUDIO_CONFIG_TITLE_PROPERTY).strip()
+    if not key:
+        return None
+    if not page_property_checkbox(page, PAGE_AUDIO_CONFIG_ENABLED_PROPERTY, default=True):
+        return None
+
+    builder = page_property_text(page, PAGE_AUDIO_CONFIG_BUILDER_PROPERTY).strip()
+    audio_caption = page_property_text(page, PAGE_AUDIO_CONFIG_AUDIO_CAPTION_PROPERTY).strip()
+    silence_ms_raw = page_property_text(page, PAGE_AUDIO_CONFIG_SILENCE_MS_PROPERTY).strip()
+    tts_model = page_property_text(page, PAGE_AUDIO_CONFIG_TTS_MODEL_PROPERTY).strip()
+    tts_voice = page_property_text(page, PAGE_AUDIO_CONFIG_TTS_VOICE_PROPERTY).strip()
+    tts_format = page_property_text(page, PAGE_AUDIO_CONFIG_TTS_FORMAT_PROPERTY).strip().lower()
+    tts_speed_raw = page_property_text(page, PAGE_AUDIO_CONFIG_TTS_SPEED_PROPERTY).strip()
+    monthly_provider = page_property_text(page, PAGE_AUDIO_CONFIG_MONTHLY_PROVIDER_PROPERTY).strip()
+    monthly_language = page_property_text(page, PAGE_AUDIO_CONFIG_MONTHLY_LANGUAGE_PROPERTY).strip()
+    daily_novena_page_title = page_property_text(page, PAGE_AUDIO_CONFIG_DAILY_NOVENA_TITLE_PROPERTY).strip()
+
+    config: Dict[str, Any] = {}
+    if builder:
+        config["builder"] = builder
+    if audio_caption:
+        config["audio_caption"] = audio_caption
+    if silence_ms_raw:
+        try:
+            config["silence_ms"] = int(float(silence_ms_raw))
+        except Exception:
+            pass
+
+    tts: Dict[str, Any] = {}
+    if tts_model:
+        tts["model"] = tts_model
+    if tts_voice:
+        tts["voice"] = tts_voice
+    if tts_format:
+        tts["format"] = tts_format
+    if tts_speed_raw:
+        try:
+            tts["speed"] = float(tts_speed_raw)
+        except Exception:
+            pass
+    if tts:
+        config["tts"] = tts
+
+    monthly_intention: Dict[str, Any] = {}
+    if monthly_provider:
+        monthly_intention["provider"] = monthly_provider
+    if monthly_language:
+        monthly_intention["language"] = monthly_language
+    if monthly_intention:
+        config["monthly_intention"] = monthly_intention
+
+    if daily_novena_page_title:
+        config["daily_novena_page_title"] = daily_novena_page_title
+    return key, config
+
+
+def load_page_audio_config_from_notion(token: str) -> Dict[str, Any]:
+    database_id = notion_page_audio_config_database_id(token)
+    if not database_id:
+        return {}
+    pages = shared.notion_get_all_pages(database_id, token)
+    configs: Dict[str, Any] = {}
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        parsed = page_audio_config_from_notion_page(page)
+        if not parsed:
+            continue
+        key, config = parsed
+        configs[key] = config
+    return {"configs": configs} if configs else {}
+
+
+def load_page_audio_config(notion_token: str = "") -> Dict[str, Any]:
+    token = str(notion_token or "").strip()
+    if token:
+        notion_payload = load_page_audio_config_from_notion(token)
+        notion_configs = notion_payload.get("configs") if isinstance(notion_payload, dict) else None
+        if isinstance(notion_configs, dict) and notion_configs:
+            return notion_payload
     config_path = ROOT / (
         os.getenv(PAGE_AUDIO_CONFIG_FILE, DEFAULT_PAGE_AUDIO_CONFIG_FILE).strip()
         or DEFAULT_PAGE_AUDIO_CONFIG_FILE
@@ -917,7 +1024,7 @@ def main() -> int:
         fail_open = shared.bool_env(PAGE_AUDIO_FAIL_OPEN, default=False)
         notion_db_id = shared.notion_find_database_id(notion_token)
 
-        config_payload = load_page_audio_config()
+        config_payload = load_page_audio_config(notion_token)
         config_map = config_payload.get("configs") or {}
         pages = shared.notion_get_all_pages(notion_db_id, notion_token)
         candidates = list_audio_candidate_pages(
