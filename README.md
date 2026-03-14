@@ -300,7 +300,7 @@ Purpose:
 - falls back to the legacy `Audio Configuration` field and then the legacy resolver field when the new properties are blank
 - builds a Notion audio block for `auto-audio` rows and syncs page body content for feed-backed rows
 - caches generated fragment audio under `.cache/page_audio`
-- exports the assembled daily files to `%USERPROFILE%\OneDrive\Praylist Audio\Playlist Audio\<Output Folder>\YYYY-MM-DD - <Title>.mp3` by default
+- exports the assembled files to `%USERPROFILE%\OneDrive\Praylist Audio\Playlist Audio\<Output Folder>\<Title>.mp3` by default
 
 Current config:
 - `MORNING_PRAYER_OUTPUT` in your Notion `Audio Outputs` database

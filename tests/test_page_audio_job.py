@@ -965,8 +965,8 @@ class TestPageAudioJob(unittest.TestCase):
                     base_url="https://api.openai.com/v1",
                 )
 
-            audio_path = Path(tmp_dir) / "Morning" / "2026-03-14 - Bible in a Year.mp3"
-            meta_path = Path(tmp_dir) / "Morning" / "2026-03-14 - Bible in a Year.json"
+            audio_path = Path(tmp_dir) / "Morning" / "Bible in a Year.mp3"
+            meta_path = Path(tmp_dir) / "Morning" / "Bible in a Year.json"
             self.assertTrue(audio_path.exists())
             self.assertTrue(meta_path.exists())
             payload = json.loads(meta_path.read_text(encoding="utf-8"))

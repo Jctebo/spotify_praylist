@@ -60,7 +60,7 @@ PAGE_AUDIO_FAIL_OPEN = "PAGE_AUDIO_FAIL_OPEN"
 
 DEFAULT_PAGE_AUDIO_CONFIG_FILE = "config/page_audio_config.json"
 DEFAULT_PAGE_AUDIO_CACHE_DIR = ".cache/page_audio"
-DEFAULT_PAGE_AUDIO_LIBRARY_RELATIVE = r"OneDrive\Pictures\Samsung Gallery\DCIM\Playlist Audio"
+DEFAULT_PAGE_AUDIO_LIBRARY_RELATIVE = r"OneDrive\Praylist Audio\Playlist Audio"
 DEFAULT_PAGE_AUDIO_LIBRARY_FALLBACK = ".cache/page_audio_library"
 DEFAULT_PAGE_AUDIO_CONFIG_DATABASE_NAME = "Page Audio Configuration"
 DEFAULT_AUDIO_FRAGMENTS_DATABASE_NAME = "Audio Fragments"
@@ -2012,7 +2012,7 @@ def page_audio_output_library_paths(
     group_name = str(config.get("output_folder", "")).strip() or page_property_text(page, group_property).strip() or "Unassigned"
     folder_name = safe_path_component(group_name, "Unassigned")
     title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip() or "page-audio"
-    file_stem = safe_path_component(f"{shared.local_today().isoformat()} - {title}", slugify(title))
+    file_stem = safe_path_component(title, slugify(title))
     root = page_audio_library_dir()
     directory = root / folder_name
     directory.mkdir(parents=True, exist_ok=True)
