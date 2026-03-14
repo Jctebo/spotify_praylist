@@ -289,15 +289,17 @@ Purpose:
 - reads `Opus Dei` rows whose `Platform` contains `auto-audio` or `auto-text`
 - resolves page text from `Text Resolver`
 - resolves page audio from `Auto Audio Resolver 1` and optionally `Auto Audio Resolver 2`
+- supports Notion `Audio Outputs` rows that assemble named `Audio Fragments` plus special cache-only fragments
 - falls back to the legacy `Audio Configuration` field and then the legacy resolver field when the new properties are blank
 - builds a Notion audio block for `auto-audio` rows and syncs page body content for feed-backed rows
 - caches generated fragment audio under `.cache/page_audio`
 
 Current config:
-- `MORNING_PRAYER_PAGE_AUDIO` in your Notion `Page Audio Configuration` database
+- `MORNING_PRAYER_OUTPUT` in your Notion `Audio Outputs` database
 - target row: `Morning Prayer`
-- source placeholder: monthly intention from the Pope's Worldwide Prayer Network English yearly PDF feed
-- source placeholder: `Daily Novenas from Liturgical Calendar` audio blocks reused directly as source fragments
+- source fragments: `Audio Fragments` rows like `Morning Offering`, `Daily Consecration`, and `Intercessory Litany`
+- special fragment: monthly intention from the Pope's Worldwide Prayer Network English yearly PDF feed, cached on disk only
+- special fragment: `Daily Novenas from Liturgical Calendar` audio blocks reused directly as source fragments
 - `DIVINE_OFFICE_INVITATORY_PAGE_AUDIO`
 - target row: `Divine Office Invitatory`
 - source audio: official DivineOffice.org RSS enclosure for the matching day
@@ -333,6 +335,10 @@ Environment variables:
 - `NOTION_AUDIO_ENABLED_PROPERTY` (default `Enabled`)
 - `NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID` (recommended)
 - `NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME` (fallback lookup; default `Page Audio Configuration`)
+- `NOTION_AUDIO_FRAGMENTS_DATABASE_ID` (recommended for fragment-backed outputs)
+- `NOTION_AUDIO_FRAGMENTS_DATABASE_NAME` (fallback lookup; default `Audio Fragments`)
+- `NOTION_AUDIO_OUTPUTS_DATABASE_ID` (recommended for fragment-backed outputs)
+- `NOTION_AUDIO_OUTPUTS_DATABASE_NAME` (fallback lookup; default `Audio Outputs`)
 - `PAGE_AUDIO_CONFIG_FILE` (fallback file config if Notion config db is unavailable)
 - `PAGE_AUDIO_CACHE_DIR` (default `.cache/page_audio`)
 - `PAGE_AUDIO_CONFIG_KEY` (optional single-config filter)

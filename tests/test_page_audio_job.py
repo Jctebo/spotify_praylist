@@ -1,5 +1,8 @@
 import datetime
+import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from tests.test_helpers import load_module, temp_env
@@ -15,6 +18,13 @@ def _rich_text_prop(text):
 
 def _checkbox_prop(value):
     return {"type": "checkbox", "checkbox": bool(value)}
+
+
+def _date_prop(start, end=""):
+    payload = {"start": start}
+    if end:
+        payload["end"] = end
+    return {"type": "date", "date": payload}
 
 
 class TestPageAudioJob(unittest.TestCase):
@@ -288,6 +298,270 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertIn("I offer this day.", fragments[0].text)
         self.assertIn("For the Holy Father's monthly intention: that peace may grow.", fragments[1].text)
 
+    def test_build_morning_prayer_fragments_reuses_library_audio_for_stable_section(self):
+        page = {
+            "id": "page_1",
+            "properties": {"Name": _title_prop("Morning Prayer")},
+        }
+        novena_page = {
+            "id": "page_2",
+            "properties": {"Name": _title_prop("Daily Novenas from Liturgical Calendar")},
+        }
+        top_blocks = [
+            {"id": "heading_1", "type": "heading_3", "heading_3": {"rich_text": [{"plain_text": "Morning Offering"}]}},
+            {"id": "paragraph_1", "type": "paragraph", "paragraph": {"rich_text": [{"plain_text": "Offer my day."}]}},
+            {"id": "paragraph_2", "type": "paragraph", "paragraph": {"rich_text": [{"plain_text": "(Daily Novena Fragment)"}]}},
+        ]
+        novena_blocks = [
+            {
+                "id": "audio_1",
+                "type": "audio",
+                "audio": {
+                    "type": "file",
+                    "file": {"url": "https://example.com/novena_1.mp3"},
+                    "caption": [{"plain_text": "Novena One [AUTOGEN_NOVENA_AUDIO_HASH:abc12345] [AUTOGEN_NOVENA_AUDIO]"}],
+                },
+            }
+        ]
+
+        def fake_children(block_id, _token):
+            if block_id == "page_1":
+                return top_blocks
+            if block_id == "page_2":
+                return novena_blocks
+            return []
+
+        config = {
+            "builder": "morning_prayer_v1",
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "daily_novena_page_title": "Daily Novenas from Liturgical Calendar",
+        }
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with temp_env({"PAGE_AUDIO_CACHE_DIR": tmp_dir}):
+                cache_root = self.mod.page_audio_cache_dir()
+                with patch.object(self.mod.shared, "notion_list_block_children", side_effect=fake_children), patch.object(
+                    self.mod, "fetch_monthly_intention", return_value={"title": "For peace", "spoken_text": "For the Holy Father's monthly intention: that peace may grow."}
+                ):
+                    first_fragments = self.mod.build_morning_prayer_fragments(
+                        page=page,
+                        pages=[page, novena_page],
+                        title_property="Name",
+                        config=config,
+                        token="token",
+                        base_url="https://api.openai.com/v1",
+                    )
+                audio_path, meta_path = self.mod.page_audio_library_fragment_paths(
+                    cache_root, "morning_prayer", "Morning Offering", "mp3"
+                )
+                audio_path.write_bytes(b"existing")
+                meta_path.write_text(json.dumps({"hash_value": first_fragments[0].hash_value}), encoding="utf-8")
+                with patch.object(self.mod.shared, "notion_list_block_children", side_effect=fake_children), patch.object(
+                    self.mod, "fetch_monthly_intention", return_value={"title": "For peace", "spoken_text": "For the Holy Father's monthly intention: that peace may grow."}
+                ):
+                    fragments = self.mod.build_morning_prayer_fragments(
+                        page=page,
+                        pages=[page, novena_page],
+                        title_property="Name",
+                        config=config,
+                        token="token",
+                        base_url="https://api.openai.com/v1",
+                    )
+
+        self.assertEqual(fragments[0].kind, "source_audio")
+        self.assertEqual(Path(fragments[0].cache_path).suffix, ".mp3")
+        self.assertEqual(fragments[1].kind, "source_audio")
+
+    def test_ensure_tts_fragment_audio_persists_library_copy(self):
+        fragment = self.mod.PageAudioFragment(
+            kind="tts",
+            label="Morning Offering",
+            hash_value="abcd1234abcd1234",
+            text="Morning Offering.",
+        )
+        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with temp_env({"PAGE_AUDIO_CACHE_DIR": tmp_dir}):
+                cache_root = self.mod.page_audio_cache_dir()
+                audio_path, meta_path = self.mod.page_audio_library_fragment_paths(
+                    cache_root, "morning_prayer", "Morning Offering", "mp3"
+                )
+                fragment.persist_path = str(audio_path)
+                fragment.persist_meta_path = str(meta_path)
+                with patch.object(self.mod.shared, "generate_openai_audio_bytes", return_value=b"audio-bytes"):
+                    out = self.mod.ensure_tts_fragment_audio(
+                        fragment,
+                        settings,
+                        cache_root,
+                        "openai-key",
+                        "https://api.openai.com/v1",
+                    )
+
+                self.assertTrue(Path(out).exists())
+                self.assertEqual(audio_path.read_bytes(), b"audio-bytes")
+                payload = json.loads(meta_path.read_text(encoding="utf-8"))
+                self.assertEqual(payload["hash_value"], "abcd1234abcd1234")
+                self.assertEqual(payload["text"], "Morning Offering.")
+
+    def test_load_audio_fragments_from_notion_keeps_only_active_rows(self):
+        env = {"NOTION_AUDIO_FRAGMENTS_DATABASE_ID": "fragments_db_1"}
+        pages = [
+            {
+                "id": "frag_1",
+                "properties": {
+                    "Name": _title_prop("Morning Offering"),
+                    "Fragment Key": _rich_text_prop("morning-offering"),
+                    "Spoken Text": _rich_text_prop("Morning Offering."),
+                    "Enabled": _checkbox_prop(True),
+                    "Start Date": _date_prop("2026-03-01"),
+                    "End Date": _date_prop("2026-03-31"),
+                    "Collection": _rich_text_prop("morning_prayer"),
+                },
+            },
+            {
+                "id": "frag_2",
+                "properties": {
+                    "Name": _title_prop("Old Intention"),
+                    "Fragment Key": _rich_text_prop("pope-intention-2026-02"),
+                    "Spoken Text": _rich_text_prop("Old text."),
+                    "Enabled": _checkbox_prop(True),
+                    "Start Date": _date_prop("2026-02-01"),
+                    "End Date": _date_prop("2026-02-28"),
+                    "Collection": _rich_text_prop("monthly_intention"),
+                },
+            },
+        ]
+
+        with temp_env(env), patch.object(self.mod.shared, "notion_get_all_pages", return_value=pages), patch.object(
+            self.mod.shared, "local_today", return_value=datetime.date(2026, 3, 14)
+        ):
+            payload = self.mod.load_audio_fragments_from_notion("token")
+
+        self.assertEqual(sorted(payload["fragments"].keys()), ["morning-offering"])
+
+    def test_build_fragment_output_plan_supports_special_fragments(self):
+        novena_page = {
+            "id": "page_2",
+            "properties": {"Name": _title_prop("Daily Novenas from Liturgical Calendar")},
+        }
+        novena_blocks = [
+            {
+                "id": "audio_1",
+                "type": "audio",
+                "audio": {
+                    "type": "file",
+                    "file": {"url": "https://example.com/novena_1.mp3"},
+                    "caption": [{"plain_text": "Novena One [AUTOGEN_NOVENA_AUDIO_HASH:abc12345] [AUTOGEN_NOVENA_AUDIO]"}],
+                },
+            }
+        ]
+        config = {
+            "builder": "audio_fragments_v1",
+            "audio_caption": "Morning Prayer (Audio)",
+            "silence_ms": 450,
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "fragments": {
+                "morning-offering": {
+                    "key": "morning-offering",
+                    "label": "Morning Offering",
+                    "text": "Morning Offering.",
+                    "collection": "morning_prayer",
+                }
+            },
+            "fragment_sequence": ["morning-offering", "SPECIAL:monthly_intention", "SPECIAL:daily_novena_audio"],
+            "daily_novena_page_title": "Daily Novenas from Liturgical Calendar",
+        }
+
+        def fake_children(block_id, _token):
+            if block_id == "page_2":
+                return novena_blocks
+            return []
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            with temp_env({"PAGE_AUDIO_CACHE_DIR": tmp_dir}), patch.object(
+                self.mod.shared, "notion_list_block_children", side_effect=fake_children
+            ), patch.object(
+                self.mod, "fetch_monthly_intention", return_value={"title": "For peace", "month": "March", "spoken_text": "For the Holy Father's monthly intention: for peace."}
+            ):
+                plan = self.mod.build_fragment_output_plan(
+                    pages=[novena_page],
+                    title_property="Name",
+                    config=config,
+                    token="token",
+                    base_url="https://api.openai.com/v1",
+                )
+
+        self.assertEqual([fragment.kind for fragment in plan.fragments], ["tts", "tts", "source_audio"])
+        self.assertEqual(plan.fragments[0].fragment_key, "morning-offering")
+        self.assertEqual(plan.fragments[1].collection, "monthly_intention")
+        self.assertEqual(plan.fragments[2].source_url, "https://example.com/novena_1.mp3")
+
+    def test_load_page_audio_config_merges_audio_outputs(self):
+        env = {
+            "NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID": "page_audio_db_1",
+            "NOTION_AUDIO_OUTPUTS_DATABASE_ID": "audio_outputs_db_1",
+        }
+        config_pages = [
+            {
+                "id": "cfg_1",
+                "properties": {
+                    "Name": _title_prop("DIVINE_OFFICE_INVITATORY_PAGE_AUDIO"),
+                    "Enabled": _checkbox_prop(True),
+                    "Builder": _rich_text_prop("divine_office_invitatory_v1"),
+                    "Audio Caption": _rich_text_prop("Invitatory (Audio)"),
+                    "TTS Model": _rich_text_prop("gpt-4o-mini-tts"),
+                    "TTS Voice": _rich_text_prop("alloy"),
+                    "TTS Format": _rich_text_prop("mp3"),
+                    "TTS Speed": {"type": "number", "number": 1.0},
+                },
+            }
+        ]
+        output_pages = [
+            {
+                "id": "out_1",
+                "properties": {
+                    "Name": _title_prop("Morning Prayer"),
+                    "Output Key": _rich_text_prop("MORNING_PRAYER_OUTPUT"),
+                    "Output Mode": _rich_text_prop("fragments"),
+                    "Audio Caption": _rich_text_prop("Morning Prayer (Audio)"),
+                    "Fragment Sequence": _rich_text_prop("morning-offering\nSPECIAL:monthly_intention"),
+                    "TTS Model": _rich_text_prop("gpt-4o-mini-tts"),
+                    "TTS Voice": _rich_text_prop("alloy"),
+                    "TTS Format": _rich_text_prop("mp3"),
+                    "TTS Speed": {"type": "number", "number": 1.0},
+                    "Silence Ms": {"type": "number", "number": 450},
+                    "Enabled": _checkbox_prop(True),
+                },
+            }
+        ]
+        fragments_payload = {
+            "fragments": {
+                "morning-offering": {
+                    "key": "morning-offering",
+                    "label": "Morning Offering",
+                    "text": "Morning Offering.",
+                    "collection": "morning_prayer",
+                }
+            }
+        }
+
+        def fake_get_all_pages(database_id, _token):
+            if database_id == "page_audio_db_1":
+                return config_pages
+            if database_id == "audio_outputs_db_1":
+                return output_pages
+            raise AssertionError(database_id)
+
+        with temp_env(env), patch.object(self.mod.shared, "notion_get_all_pages", side_effect=fake_get_all_pages), patch.object(
+            self.mod, "load_audio_fragments_from_notion", return_value=fragments_payload
+        ):
+            payload = self.mod.load_page_audio_config("notion_token")
+
+        self.assertIn("DIVINE_OFFICE_INVITATORY_PAGE_AUDIO", payload["configs"])
+        self.assertIn("MORNING_PRAYER_OUTPUT", payload["configs"])
+        self.assertEqual(payload["configs"]["MORNING_PRAYER_OUTPUT"]["builder"], "audio_fragments_v1")
+
     def test_render_page_audio_for_config_uses_cached_hash(self):
         page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
         config = {
@@ -318,6 +592,38 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(mode, f"cached:mp3:gpt-4o-mini-tts:alloy:hash={render_hash}")
         assemble_mock.assert_not_called()
 
+    def test_compute_page_render_hash_ignores_cache_promotion_kind(self):
+        config = {
+            "builder": "audio_fragments_v1",
+            "audio_caption": "Morning Prayer (Audio)",
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+        }
+        first = [
+            self.mod.PageAudioFragment(
+                kind="tts",
+                label="Morning Offering",
+                fragment_key="morning-offering",
+                collection="morning_prayer",
+                hash_value="hash_1",
+                text="Morning Offering.",
+            )
+        ]
+        second = [
+            self.mod.PageAudioFragment(
+                kind="source_audio",
+                label="Morning Offering",
+                fragment_key="morning-offering",
+                collection="morning_prayer",
+                hash_value="hash_1",
+                cache_path="C:/tmp/morning.mp3",
+            )
+        ]
+
+        self.assertEqual(
+            self.mod.compute_page_render_hash("MORNING_PRAYER_OUTPUT", config, first),
+            self.mod.compute_page_render_hash("MORNING_PRAYER_OUTPUT", config, second),
+        )
+
     def test_load_page_audio_config_prefers_notion_database(self):
         env = {
             "NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID": "page_audio_db_1",
@@ -343,7 +649,9 @@ class TestPageAudioJob(unittest.TestCase):
         ]
 
         with temp_env(env):
-            with patch.object(self.mod.shared, "notion_get_all_pages", return_value=config_pages):
+            with patch.object(self.mod.shared, "notion_get_all_pages", return_value=config_pages), patch.object(
+                self.mod, "load_audio_fragments_from_notion", return_value={}
+            ):
                 payload = self.mod.load_page_audio_config("notion_token")
 
         config = payload["configs"]["MORNING_PRAYER_PAGE_AUDIO"]

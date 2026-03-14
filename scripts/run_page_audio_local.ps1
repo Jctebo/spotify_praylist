@@ -10,6 +10,10 @@ param(
   [string]$NotionAudioEnabledProperty,
   [string]$NotionPageAudioConfigDatabaseId,
   [string]$NotionPageAudioConfigDatabaseName,
+  [string]$NotionAudioFragmentsDatabaseId,
+  [string]$NotionAudioFragmentsDatabaseName,
+  [string]$NotionAudioOutputsDatabaseId,
+  [string]$NotionAudioOutputsDatabaseName,
   [string]$PageAudioConfigKey,
   [string]$PageAudioRowTitle,
   [string]$PageAudioConfigFile,
@@ -32,6 +36,10 @@ if (-not $NotionAudioResolverProperty) { $NotionAudioResolverProperty = $env:NOT
 if (-not $NotionAudioEnabledProperty) { $NotionAudioEnabledProperty = $env:NOTION_AUDIO_ENABLED_PROPERTY }
 if (-not $NotionPageAudioConfigDatabaseId) { $NotionPageAudioConfigDatabaseId = $env:NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID }
 if (-not $NotionPageAudioConfigDatabaseName) { $NotionPageAudioConfigDatabaseName = $env:NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME }
+if (-not $NotionAudioFragmentsDatabaseId) { $NotionAudioFragmentsDatabaseId = $env:NOTION_AUDIO_FRAGMENTS_DATABASE_ID }
+if (-not $NotionAudioFragmentsDatabaseName) { $NotionAudioFragmentsDatabaseName = $env:NOTION_AUDIO_FRAGMENTS_DATABASE_NAME }
+if (-not $NotionAudioOutputsDatabaseId) { $NotionAudioOutputsDatabaseId = $env:NOTION_AUDIO_OUTPUTS_DATABASE_ID }
+if (-not $NotionAudioOutputsDatabaseName) { $NotionAudioOutputsDatabaseName = $env:NOTION_AUDIO_OUTPUTS_DATABASE_NAME }
 if (-not $PageAudioConfigKey) { $PageAudioConfigKey = $env:PAGE_AUDIO_CONFIG_KEY }
 if (-not $PageAudioRowTitle) { $PageAudioRowTitle = $env:PAGE_AUDIO_ROW_TITLE }
 if (-not $PageAudioConfigFile) { $PageAudioConfigFile = $env:PAGE_AUDIO_CONFIG_FILE }
@@ -56,6 +64,10 @@ if ($NotionAudioResolverProperty) { $env:NOTION_AUDIO_RESOLVER_PROPERTY = $Notio
 if ($NotionAudioEnabledProperty) { $env:NOTION_AUDIO_ENABLED_PROPERTY = $NotionAudioEnabledProperty }
 if ($NotionPageAudioConfigDatabaseId) { $env:NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID = $NotionPageAudioConfigDatabaseId }
 if ($NotionPageAudioConfigDatabaseName) { $env:NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME = $NotionPageAudioConfigDatabaseName }
+if ($NotionAudioFragmentsDatabaseId) { $env:NOTION_AUDIO_FRAGMENTS_DATABASE_ID = $NotionAudioFragmentsDatabaseId }
+if ($NotionAudioFragmentsDatabaseName) { $env:NOTION_AUDIO_FRAGMENTS_DATABASE_NAME = $NotionAudioFragmentsDatabaseName }
+if ($NotionAudioOutputsDatabaseId) { $env:NOTION_AUDIO_OUTPUTS_DATABASE_ID = $NotionAudioOutputsDatabaseId }
+if ($NotionAudioOutputsDatabaseName) { $env:NOTION_AUDIO_OUTPUTS_DATABASE_NAME = $NotionAudioOutputsDatabaseName }
 if ($PageAudioConfigKey) { $env:PAGE_AUDIO_CONFIG_KEY = $PageAudioConfigKey }
 if ($PageAudioRowTitle) { $env:PAGE_AUDIO_ROW_TITLE = $PageAudioRowTitle }
 if ($PageAudioConfigFile) { $env:PAGE_AUDIO_CONFIG_FILE = $PageAudioConfigFile }

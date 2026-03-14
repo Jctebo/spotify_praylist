@@ -6,6 +6,7 @@ import io
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -42,6 +43,10 @@ NOTION_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY = "NOTION_AUTO_AUDIO_RESOLVER_SECO
 NOTION_AUDIO_ENABLED_PROPERTY = "NOTION_AUDIO_ENABLED_PROPERTY"
 NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID = "NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID"
 NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME = "NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME"
+NOTION_AUDIO_FRAGMENTS_DATABASE_ID = "NOTION_AUDIO_FRAGMENTS_DATABASE_ID"
+NOTION_AUDIO_FRAGMENTS_DATABASE_NAME = "NOTION_AUDIO_FRAGMENTS_DATABASE_NAME"
+NOTION_AUDIO_OUTPUTS_DATABASE_ID = "NOTION_AUDIO_OUTPUTS_DATABASE_ID"
+NOTION_AUDIO_OUTPUTS_DATABASE_NAME = "NOTION_AUDIO_OUTPUTS_DATABASE_NAME"
 PAGE_AUDIO_CONFIG_KEY = "PAGE_AUDIO_CONFIG_KEY"
 PAGE_AUDIO_ROW_TITLE = "PAGE_AUDIO_ROW_TITLE"
 PAGE_AUDIO_CONFIG_FILE = "PAGE_AUDIO_CONFIG_FILE"
@@ -51,6 +56,8 @@ PAGE_AUDIO_FAIL_OPEN = "PAGE_AUDIO_FAIL_OPEN"
 DEFAULT_PAGE_AUDIO_CONFIG_FILE = "config/page_audio_config.json"
 DEFAULT_PAGE_AUDIO_CACHE_DIR = ".cache/page_audio"
 DEFAULT_PAGE_AUDIO_CONFIG_DATABASE_NAME = "Page Audio Configuration"
+DEFAULT_AUDIO_FRAGMENTS_DATABASE_NAME = "Audio Fragments"
+DEFAULT_AUDIO_OUTPUTS_DATABASE_NAME = "Audio Outputs"
 DEFAULT_AUTO_AUDIO_PLATFORM_VALUE = "auto-audio,auto-text"
 DEFAULT_AUDIO_CONFIG_PROPERTY = "Audio Configuration"
 DEFAULT_TEXT_RESOLVER_PROPERTY = "Text Resolver"
@@ -66,6 +73,7 @@ DIVINE_OFFICE_INVITATORY_BUILDER = "divine_office_invitatory_v1"
 DIVINE_OFFICE_NIGHT_TEXT_BUILDER = "divine_office_night_text_v1"
 DIVINE_OFFICE_MORNING_TEXT_BUILDER = "divine_office_morning_text_v1"
 RSS_AUDIO_BUILDER = "rss_audio_v1"
+AUDIO_FRAGMENTS_BUILDER = "audio_fragments_v1"
 POPES_PRAYER_MEDIA_API_URL = "https://www.popesprayer.va/wp-json/wp/v2/media"
 DIVINE_OFFICE_FEED_URL = "https://divineoffice.org/feed/"
 DEFAULT_RSS_TEXT_PROPERTY = "Description"
@@ -109,6 +117,36 @@ PAGE_AUDIO_CONFIG_FEED_MATCH_TEXT_PROPERTY = "Feed Match Text"
 PAGE_AUDIO_CONFIG_INTENTION_PROPERTY = "Intention Property"
 PAGE_AUDIO_CONFIG_INTENTION_PREFIX_PROPERTY = "Intention Prefix"
 
+AUDIO_FRAGMENT_TITLE_PROPERTY = "Name"
+AUDIO_FRAGMENT_KEY_PROPERTY = "Fragment Key"
+AUDIO_FRAGMENT_TEXT_PROPERTY = "Spoken Text"
+AUDIO_FRAGMENT_ENABLED_PROPERTY = "Enabled"
+AUDIO_FRAGMENT_START_DATE_PROPERTY = "Start Date"
+AUDIO_FRAGMENT_END_DATE_PROPERTY = "End Date"
+AUDIO_FRAGMENT_COLLECTION_PROPERTY = "Collection"
+AUDIO_FRAGMENT_ORDER_PROPERTY = "Order"
+AUDIO_FRAGMENT_NOTES_PROPERTY = "Notes"
+AUDIO_FRAGMENT_DEFAULT_COLLECTION = "audio_fragments"
+AUDIO_FRAGMENT_MONTHLY_COLLECTION = "monthly_intention"
+AUDIO_FRAGMENT_MONTHLY_PREFIX = "pope-intention-"
+
+AUDIO_OUTPUT_TITLE_PROPERTY = "Name"
+AUDIO_OUTPUT_KEY_PROPERTY = "Output Key"
+AUDIO_OUTPUT_MODE_PROPERTY = "Output Mode"
+AUDIO_OUTPUT_TARGET_ROW_PROPERTY = "Target Row"
+AUDIO_OUTPUT_AUDIO_CAPTION_PROPERTY = "Audio Caption"
+AUDIO_OUTPUT_FRAGMENT_SEQUENCE_PROPERTY = "Fragment Sequence"
+AUDIO_OUTPUT_TTS_MODEL_PROPERTY = "TTS Model"
+AUDIO_OUTPUT_TTS_VOICE_PROPERTY = "TTS Voice"
+AUDIO_OUTPUT_TTS_FORMAT_PROPERTY = "TTS Format"
+AUDIO_OUTPUT_TTS_SPEED_PROPERTY = "TTS Speed"
+AUDIO_OUTPUT_SILENCE_MS_PROPERTY = "Silence Ms"
+AUDIO_OUTPUT_ENABLED_PROPERTY = "Enabled"
+AUDIO_OUTPUT_NOTES_PROPERTY = "Notes"
+AUDIO_OUTPUT_MODE_FRAGMENTS = "fragments"
+SPECIAL_DAILY_NOVENA_AUDIO = "SPECIAL:daily_novena_audio"
+SPECIAL_MONTHLY_INTENTION = "SPECIAL:monthly_intention"
+
 
 def load_shared_module():
     shared_path = ROOT / "jobs" / "novena" / "generate_daily_novena_prayer.py"
@@ -132,6 +170,10 @@ class PageAudioFragment:
     source_url: str = ""
     content_type: str = ""
     cache_path: str = ""
+    persist_path: str = ""
+    persist_meta_path: str = ""
+    fragment_key: str = ""
+    collection: str = ""
 
 
 @dataclass
@@ -193,6 +235,45 @@ def page_property_text(page: Dict[str, Any], prop_name: str) -> str:
     return ""
 
 
+def page_property_number(page: Dict[str, Any], prop_name: str, default: float = 0.0) -> float:
+    props = page.get("properties") or {}
+    prop = props.get(prop_name) or {}
+    if str(prop.get("type", "")).strip() == "number":
+        value = prop.get("number")
+        if value is None:
+            return default
+        try:
+            return float(value)
+        except Exception:
+            return default
+    raw = page_property_text(page, prop_name).strip()
+    if not raw:
+        return default
+    try:
+        return float(raw)
+    except Exception:
+        return default
+
+
+def page_property_date_range(page: Dict[str, Any], prop_name: str) -> tuple[str, str]:
+    props = page.get("properties") or {}
+    prop = props.get(prop_name) or {}
+    if str(prop.get("type", "")).strip() != "date":
+        return "", ""
+    value = prop.get("date") or {}
+    return str(value.get("start", "")).strip(), str(value.get("end", "")).strip()
+
+
+def parse_iso_date(value: str) -> Optional[datetime.date]:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        return datetime.date.fromisoformat(text[:10])
+    except Exception:
+        return None
+
+
 def page_property_values(page: Dict[str, Any], prop_name: str) -> List[str]:
     props = page.get("properties") or {}
     prop = props.get(prop_name) or {}
@@ -221,6 +302,19 @@ def page_property_checkbox(page: Dict[str, Any], prop_name: str, default: bool =
     if not value:
         return default
     return value in {"1", "true", "yes", "y", "on"}
+
+
+def notion_database_id_by_env_or_name(
+    token: str,
+    env_id_name: str,
+    env_name_name: str,
+    default_name: str,
+) -> str:
+    database_id = os.getenv(env_id_name, "").strip()
+    if database_id:
+        return database_id
+    database_name = os.getenv(env_name_name, default_name).strip() or default_name
+    return shared.notion_find_database_id_by_name(token, database_name) or ""
 
 
 def normalize_flag_value(text: str) -> str:
@@ -291,14 +385,30 @@ def placeholder_kind(text: str) -> str:
 
 
 def notion_page_audio_config_database_id(token: str) -> str:
-    database_id = os.getenv(NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID, "").strip()
-    if database_id:
-        return database_id
-    database_name = (
-        os.getenv(NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME, DEFAULT_PAGE_AUDIO_CONFIG_DATABASE_NAME).strip()
-        or DEFAULT_PAGE_AUDIO_CONFIG_DATABASE_NAME
+    return notion_database_id_by_env_or_name(
+        token,
+        NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID,
+        NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME,
+        DEFAULT_PAGE_AUDIO_CONFIG_DATABASE_NAME,
     )
-    return shared.notion_find_database_id_by_name(token, database_name) or ""
+
+
+def notion_audio_fragments_database_id(token: str) -> str:
+    return notion_database_id_by_env_or_name(
+        token,
+        NOTION_AUDIO_FRAGMENTS_DATABASE_ID,
+        NOTION_AUDIO_FRAGMENTS_DATABASE_NAME,
+        DEFAULT_AUDIO_FRAGMENTS_DATABASE_NAME,
+    )
+
+
+def notion_audio_outputs_database_id(token: str) -> str:
+    return notion_database_id_by_env_or_name(
+        token,
+        NOTION_AUDIO_OUTPUTS_DATABASE_ID,
+        NOTION_AUDIO_OUTPUTS_DATABASE_NAME,
+        DEFAULT_AUDIO_OUTPUTS_DATABASE_NAME,
+    )
 
 
 def page_audio_config_from_notion_page(page: Dict[str, Any]) -> Optional[tuple[str, Dict[str, Any]]]:
@@ -392,23 +502,208 @@ def load_page_audio_config_from_notion(token: str) -> Dict[str, Any]:
 
 def load_page_audio_config(notion_token: str = "") -> Dict[str, Any]:
     token = str(notion_token or "").strip()
+    payload: Dict[str, Any] = {}
     if token:
         notion_payload = load_page_audio_config_from_notion(token)
         notion_configs = notion_payload.get("configs") if isinstance(notion_payload, dict) else None
         if isinstance(notion_configs, dict) and notion_configs:
-            return notion_payload
-    config_path = ROOT / (
-        os.getenv(PAGE_AUDIO_CONFIG_FILE, DEFAULT_PAGE_AUDIO_CONFIG_FILE).strip()
-        or DEFAULT_PAGE_AUDIO_CONFIG_FILE
-    )
-    with open(config_path, "r", encoding="utf-8") as fh:
-        payload = json.load(fh)
-    if not isinstance(payload, dict):
-        raise RuntimeError(f"Invalid page audio config format in {config_path}: root must be an object.")
-    configs = payload.get("configs")
-    if not isinstance(configs, dict) or not configs:
-        raise RuntimeError(f"Invalid page audio config format in {config_path}: missing or empty 'configs'.")
+            payload = notion_payload
+    if not payload:
+        config_path = ROOT / (
+            os.getenv(PAGE_AUDIO_CONFIG_FILE, DEFAULT_PAGE_AUDIO_CONFIG_FILE).strip()
+            or DEFAULT_PAGE_AUDIO_CONFIG_FILE
+        )
+        with open(config_path, "r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+        if not isinstance(payload, dict):
+            raise RuntimeError(f"Invalid page audio config format in {config_path}: root must be an object.")
+        configs = payload.get("configs")
+        if not isinstance(configs, dict) or not configs:
+            raise RuntimeError(f"Invalid page audio config format in {config_path}: missing or empty 'configs'.")
+
+    configs = dict(payload.get("configs") or {})
+    if token:
+        fragments_payload = load_audio_fragments_from_notion(token)
+        fragment_map = fragments_payload.get("fragments") or {}
+        if fragment_map:
+            output_payload = load_audio_outputs_from_notion(token, fragment_map)
+            output_configs = output_payload.get("configs") or {}
+            if isinstance(output_configs, dict):
+                configs.update(output_configs)
+            payload["audio_fragments"] = fragment_map
+    payload["configs"] = configs
     return payload
+
+
+def page_is_active_for_date(
+    page: Dict[str, Any],
+    *,
+    start_property: str,
+    end_property: str,
+    target_date: datetime.date,
+) -> bool:
+    start_text, _ = page_property_date_range(page, start_property)
+    end_text, _ = page_property_date_range(page, end_property)
+    start_date = parse_iso_date(start_text)
+    end_date = parse_iso_date(end_text)
+    if start_date and target_date < start_date:
+        return False
+    if end_date and target_date > end_date:
+        return False
+    return True
+
+
+def notion_property_payload_for_database(database: Dict[str, Any], prop_name: str, value: Any) -> Optional[Dict[str, Any]]:
+    prop_type = shared.notion_property_type(database, prop_name)
+    if not prop_type:
+        return None
+    if prop_type == "checkbox":
+        return {"checkbox": bool(value)}
+    if prop_type == "date":
+        if isinstance(value, tuple):
+            start, end = value
+        else:
+            start, end = value, ""
+        start_text = str(start or "").strip()
+        end_text = str(end or "").strip()
+        return {"date": {"start": start_text, "end": end_text or None}} if start_text else {"date": None}
+    if prop_type == "number":
+        if value in ("", None):
+            return {"number": None}
+        return {"number": float(value)}
+    return shared.notion_scalar_property_value(prop_type, str(value or "").strip())
+
+
+def page_property_matches_value(page: Dict[str, Any], prop_name: str, value: Any) -> bool:
+    props = page.get("properties") or {}
+    prop = props.get(prop_name) or {}
+    prop_type = str(prop.get("type", "")).strip()
+    if prop_type == "checkbox":
+        return bool(prop.get("checkbox")) == bool(value)
+    if prop_type == "date":
+        current_start, current_end = page_property_date_range(page, prop_name)
+        if isinstance(value, tuple):
+            wanted_start, wanted_end = value
+        else:
+            wanted_start, wanted_end = value, ""
+        return current_start == str(wanted_start or "").strip() and current_end == str(wanted_end or "").strip()
+    if prop_type == "number":
+        try:
+            current = float(prop.get("number")) if prop.get("number") is not None else None
+        except Exception:
+            current = None
+        if value in ("", None):
+            return current is None
+        try:
+            return current == float(value)
+        except Exception:
+            return False
+    return page_property_text(page, prop_name).strip() == str(value or "").strip()
+
+
+def audio_fragment_from_notion_page(
+    page: Dict[str, Any],
+    *,
+    target_date: datetime.date,
+) -> Optional[tuple[str, Dict[str, Any]]]:
+    if not page_property_checkbox(page, AUDIO_FRAGMENT_ENABLED_PROPERTY, default=True):
+        return None
+    if not page_is_active_for_date(
+        page,
+        start_property=AUDIO_FRAGMENT_START_DATE_PROPERTY,
+        end_property=AUDIO_FRAGMENT_END_DATE_PROPERTY,
+        target_date=target_date,
+    ):
+        return None
+    title = shared.page_title(page, AUDIO_FRAGMENT_TITLE_PROPERTY).strip()
+    key = page_property_text(page, AUDIO_FRAGMENT_KEY_PROPERTY).strip() or slugify(title)
+    text = normalize_whitespace(page_property_text(page, AUDIO_FRAGMENT_TEXT_PROPERTY))
+    if not key or not text:
+        return None
+    collection = page_property_text(page, AUDIO_FRAGMENT_COLLECTION_PROPERTY).strip() or AUDIO_FRAGMENT_DEFAULT_COLLECTION
+    return key, {
+        "key": key,
+        "label": title or key,
+        "text": text,
+        "collection": collection,
+        "order": page_property_number(page, AUDIO_FRAGMENT_ORDER_PROPERTY, default=0.0),
+        "notes": page_property_text(page, AUDIO_FRAGMENT_NOTES_PROPERTY).strip(),
+    }
+
+
+def load_audio_fragments_from_notion(token: str) -> Dict[str, Any]:
+    database_id = notion_audio_fragments_database_id(token)
+    if not database_id:
+        return {}
+    pages = shared.notion_get_all_pages(database_id, token)
+    fragments: Dict[str, Dict[str, Any]] = {}
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        parsed = audio_fragment_from_notion_page(page, target_date=shared.local_today())
+        if not parsed:
+            continue
+        key, fragment = parsed
+        fragments[key] = fragment
+    return {"fragments": fragments} if fragments else {}
+
+
+def parse_fragment_sequence(text: str) -> List[str]:
+    out: List[str] = []
+    for line in re.split(r"[\r\n]+", str(text or "").strip()):
+        for part in re.split(r",", line):
+            value = str(part or "").strip()
+            if value and value not in out:
+                out.append(value)
+    return out
+
+
+def audio_output_config_from_notion_page(page: Dict[str, Any], fragments: Dict[str, Dict[str, Any]]) -> Optional[tuple[str, Dict[str, Any]]]:
+    key = page_property_text(page, AUDIO_OUTPUT_KEY_PROPERTY).strip() or shared.page_title(page, AUDIO_OUTPUT_TITLE_PROPERTY).strip()
+    if not key:
+        return None
+    if not page_property_checkbox(page, AUDIO_OUTPUT_ENABLED_PROPERTY, default=True):
+        return None
+    mode = normalize_flag_value(page_property_text(page, AUDIO_OUTPUT_MODE_PROPERTY)) or AUDIO_OUTPUT_MODE_FRAGMENTS
+    if mode != AUDIO_OUTPUT_MODE_FRAGMENTS:
+        return None
+    sequence = parse_fragment_sequence(page_property_text(page, AUDIO_OUTPUT_FRAGMENT_SEQUENCE_PROPERTY))
+    if not sequence:
+        return None
+    config: Dict[str, Any] = {
+        "builder": AUDIO_FRAGMENTS_BUILDER,
+        "audio_caption": page_property_text(page, AUDIO_OUTPUT_AUDIO_CAPTION_PROPERTY).strip()
+        or f"{shared.page_title(page, AUDIO_OUTPUT_TITLE_PROPERTY).strip() or key} (Audio)",
+        "silence_ms": int(page_property_number(page, AUDIO_OUTPUT_SILENCE_MS_PROPERTY, default=DEFAULT_SILENCE_MS)),
+        "tts": {
+            "model": page_property_text(page, AUDIO_OUTPUT_TTS_MODEL_PROPERTY).strip() or "gpt-4o-mini-tts",
+            "voice": page_property_text(page, AUDIO_OUTPUT_TTS_VOICE_PROPERTY).strip() or "alloy",
+            "format": (page_property_text(page, AUDIO_OUTPUT_TTS_FORMAT_PROPERTY).strip().lower() or "mp3"),
+            "speed": page_property_number(page, AUDIO_OUTPUT_TTS_SPEED_PROPERTY, default=1.0),
+        },
+        "fragment_sequence": sequence,
+        "fragments": fragments,
+        "target_row": page_property_text(page, AUDIO_OUTPUT_TARGET_ROW_PROPERTY).strip(),
+        "notes": page_property_text(page, AUDIO_OUTPUT_NOTES_PROPERTY).strip(),
+    }
+    return key, config
+
+
+def load_audio_outputs_from_notion(token: str, fragments: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+    database_id = notion_audio_outputs_database_id(token)
+    if not database_id:
+        return {}
+    pages = shared.notion_get_all_pages(database_id, token)
+    configs: Dict[str, Any] = {}
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        parsed = audio_output_config_from_notion_page(page, fragments)
+        if not parsed:
+            continue
+        key, config = parsed
+        configs[key] = config
+    return {"configs": configs} if configs else {}
 
 
 def page_audio_cache_dir() -> Path:
@@ -563,12 +858,56 @@ def build_monthly_intention_fragment(monthly_intention: Dict[str, str], settings
     spoken_text = str(monthly_intention.get("spoken_text", "")).strip()
     if not spoken_text:
         raise RuntimeError("Monthly intention resolver returned empty text.")
-    hash_value = shared.compute_audio_render_hash(spoken_text, base_url, settings)
+    return stable_text_fragment(
+        cache_root=page_audio_cache_dir(),
+        collection=AUDIO_FRAGMENT_MONTHLY_COLLECTION,
+        key=monthly_intention.get("month", "") or monthly_intention.get("title", "") or "monthly-intention",
+        label=f"Monthly Intention - {monthly_intention.get('title', '').strip() or monthly_intention.get('month', '').strip()}",
+        text=spoken_text,
+        settings=settings,
+        base_url=base_url,
+    )
+
+
+def stable_text_fragment(
+    *,
+    cache_root: Path,
+    collection: str,
+    key: str,
+    label: str,
+    text: str,
+    settings: Dict[str, Any],
+    base_url: str,
+) -> PageAudioFragment:
+    value = normalize_whitespace(text)
+    hash_value = shared.compute_audio_render_hash(value, base_url, settings)
+    reusable = load_library_audio_fragment(
+        cache_root=cache_root,
+        collection=collection,
+        key=key,
+        label=label,
+        hash_value=hash_value,
+        audio_format=str(settings["format"]),
+    )
+    if reusable is not None:
+        reusable.fragment_key = key
+        reusable.collection = collection
+        return reusable
+    audio_path, meta_path = page_audio_library_fragment_paths(
+        cache_root,
+        collection,
+        key,
+        str(settings["format"]),
+    )
     return PageAudioFragment(
         kind="tts",
-        label=f"Monthly Intention - {monthly_intention.get('title', '').strip() or monthly_intention.get('month', '').strip()}",
+        label=label,
         hash_value=hash_value,
-        text=spoken_text,
+        text=value,
+        persist_path=str(audio_path),
+        persist_meta_path=str(meta_path),
+        fragment_key=key,
+        collection=collection,
     )
 
 
@@ -625,6 +964,79 @@ def build_daily_novena_audio_fragments(
     return out
 
 
+def resolve_output_sequence_fragment(
+    sequence_key: str,
+    *,
+    fragments_map: Dict[str, Dict[str, Any]],
+    settings: Dict[str, Any],
+    pages: Sequence[Dict[str, Any]],
+    title_property: str,
+    config: Dict[str, Any],
+    token: str,
+    base_url: str,
+) -> List[PageAudioFragment]:
+    cache_root = page_audio_cache_dir()
+    value = str(sequence_key or "").strip()
+    if not value:
+        return []
+    if value.upper() == SPECIAL_DAILY_NOVENA_AUDIO.upper():
+        novena_page_title = (
+            str(config.get("daily_novena_page_title", DEFAULT_DAILY_NOVENA_PAGE_TITLE)).strip()
+            or DEFAULT_DAILY_NOVENA_PAGE_TITLE
+        )
+        return build_daily_novena_audio_fragments(pages, title_property, novena_page_title, token)
+    if value.upper() == SPECIAL_MONTHLY_INTENTION.upper():
+        monthly_intention = fetch_monthly_intention(shared.local_today())
+        return [build_monthly_intention_fragment(monthly_intention, settings, base_url)]
+    spec = fragments_map.get(value)
+    if not isinstance(spec, dict):
+        raise RuntimeError(f"Unknown audio fragment '{value}'.")
+    return [
+        stable_text_fragment(
+            cache_root=cache_root,
+            collection=str(spec.get("collection", AUDIO_FRAGMENT_DEFAULT_COLLECTION)).strip() or AUDIO_FRAGMENT_DEFAULT_COLLECTION,
+            key=str(spec.get("key", value)).strip() or value,
+            label=str(spec.get("label", value)).strip() or value,
+            text=str(spec.get("text", "")).strip(),
+            settings=settings,
+            base_url=base_url,
+        )
+    ]
+
+
+def build_fragment_output_plan(
+    pages: Sequence[Dict[str, Any]],
+    title_property: str,
+    config: Dict[str, Any],
+    token: str,
+    base_url: str,
+) -> PageAudioPlan:
+    settings = tts_settings_from_config(config)
+    fragments_map = config.get("fragments") or {}
+    if not isinstance(fragments_map, dict):
+        raise RuntimeError("Invalid audio output config: fragments must be a map.")
+    sequence = config.get("fragment_sequence") or []
+    if not isinstance(sequence, list):
+        raise RuntimeError("Invalid audio output config: fragment_sequence must be a list.")
+    fragments: List[PageAudioFragment] = []
+    for entry in sequence:
+        fragments.extend(
+            resolve_output_sequence_fragment(
+                str(entry or "").strip(),
+                fragments_map=fragments_map,
+                settings=settings,
+                pages=pages,
+                title_property=title_property,
+                config=config,
+                token=token,
+                base_url=base_url,
+            )
+        )
+    if not fragments:
+        raise RuntimeError("Audio output did not produce any fragments.")
+    return PageAudioPlan(fragments=fragments)
+
+
 def build_morning_prayer_fragments(
     page: Dict[str, Any],
     pages: Sequence[Dict[str, Any]],
@@ -637,6 +1049,7 @@ def build_morning_prayer_fragments(
     if not page_id:
         raise RuntimeError("Target page has no id.")
     settings = tts_settings_from_config(config)
+    cache_root = page_audio_cache_dir()
     monthly_intention = fetch_monthly_intention(shared.local_today())
     monthly_fragment = build_monthly_intention_fragment(monthly_intention, settings, base_url)
     novena_page_title = (
@@ -648,6 +1061,17 @@ def build_morning_prayer_fragments(
     fragments: List[PageAudioFragment] = []
     current_heading = ""
     current_lines: List[str] = []
+
+    def stable_morning_fragment(label: str, text: str) -> PageAudioFragment:
+        return stable_text_fragment(
+            cache_root=cache_root,
+            collection="morning_prayer",
+            key=label,
+            label=label,
+            text=text,
+            settings=settings,
+            base_url=base_url,
+        )
 
     def flush_heading() -> None:
         nonlocal current_heading, current_lines
@@ -661,8 +1085,7 @@ def build_morning_prayer_fragments(
             current_lines = []
             return
         text = normalize_whitespace(f"{current_heading}.\n\n{body}")
-        hash_value = shared.compute_audio_render_hash(text, base_url, settings)
-        fragments.append(PageAudioFragment(kind="tts", label=current_heading, hash_value=hash_value, text=text))
+        fragments.append(stable_morning_fragment(current_heading, text))
         current_heading = ""
         current_lines = []
 
@@ -690,8 +1113,7 @@ def build_morning_prayer_fragments(
             current_lines.extend(lines)
         else:
             text = normalize_whitespace("\n".join(lines))
-            hash_value = shared.compute_audio_render_hash(text, base_url, settings)
-            fragments.append(PageAudioFragment(kind="tts", label=text[:80], hash_value=hash_value, text=text))
+            fragments.append(stable_morning_fragment(text[:80], text))
 
     flush_heading()
     if not fragments:
@@ -966,7 +1388,7 @@ def compute_page_render_hash(
         "silence_ms": int(config.get("silence_ms", DEFAULT_SILENCE_MS)),
         "tts": tts_settings_from_config(config),
         "fragments": [
-            {"kind": fragment.kind, "label": fragment.label, "hash": fragment.hash_value}
+            {"label": fragment.label, "hash": fragment.hash_value, "key": fragment.fragment_key, "collection": fragment.collection}
             for fragment in fragments
         ],
     }
@@ -978,6 +1400,95 @@ def page_audio_cache_path(cache_root: Path, bucket: str, hash_value: str, extens
     path = cache_root / bucket / hash_value[:2] / hash_value[2:4]
     path.mkdir(parents=True, exist_ok=True)
     return path / f"{hash_value}.{clean_ext}"
+
+
+def page_audio_library_fragment_paths(
+    cache_root: Path,
+    collection: str,
+    key: str,
+    extension: str,
+) -> tuple[Path, Path]:
+    clean_ext = str(extension or "").strip().lstrip(".") or "bin"
+    collection_slug = slugify(collection)
+    key_slug = slugify(key)
+    directory = cache_root / "fragments" / collection_slug
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory / f"{key_slug}.{clean_ext}", directory / f"{key_slug}.json"
+
+
+def legacy_page_audio_library_fragment_paths(
+    cache_root: Path,
+    collection: str,
+    key: str,
+    extension: str,
+) -> tuple[Path, Path]:
+    clean_ext = str(extension or "").strip().lstrip(".") or "bin"
+    collection_slug = slugify(collection)
+    key_slug = slugify(key)
+    directory = cache_root / "library" / collection_slug
+    return directory / f"{key_slug}.{clean_ext}", directory / f"{key_slug}.json"
+
+
+def load_library_audio_fragment(
+    cache_root: Path,
+    collection: str,
+    key: str,
+    label: str,
+    hash_value: str,
+    audio_format: str,
+) -> Optional[PageAudioFragment]:
+    for audio_path, meta_path in (
+        page_audio_library_fragment_paths(cache_root, collection, key, audio_format),
+        legacy_page_audio_library_fragment_paths(cache_root, collection, key, audio_format),
+    ):
+        if not audio_path.exists() or not meta_path.exists():
+            continue
+        try:
+            payload = json.loads(meta_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        cached_hash = str(payload.get("hash_value", "")).strip().lower()
+        if not cached_hash or cached_hash != str(hash_value or "").strip().lower():
+            continue
+        return PageAudioFragment(
+            kind="source_audio",
+            label=label,
+            hash_value=hash_value,
+            cache_path=str(audio_path),
+            text=normalize_whitespace(str(payload.get("text", "")).strip()),
+            fragment_key=str(payload.get("fragment_key", "")).strip() or key,
+            collection=str(payload.get("collection", "")).strip() or collection,
+        )
+    return None
+
+
+def persist_library_audio_fragment(
+    fragment: PageAudioFragment,
+    source_path: Path,
+    settings: Dict[str, Any],
+) -> None:
+    persist_path = str(fragment.persist_path or "").strip()
+    persist_meta_path = str(fragment.persist_meta_path or "").strip()
+    if not persist_path or not persist_meta_path:
+        return
+    target_path = Path(persist_path)
+    meta_path = Path(persist_meta_path)
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    meta_path.parent.mkdir(parents=True, exist_ok=True)
+    if source_path.resolve() != target_path.resolve():
+        shutil.copyfile(source_path, target_path)
+    payload = {
+        "label": fragment.label,
+        "hash_value": fragment.hash_value,
+        "format": str(settings.get("format", "")),
+        "model": str(settings.get("model", "")),
+        "voice": str(settings.get("voice", "")),
+        "speed": float(settings.get("speed", 1.0)),
+        "text": normalize_whitespace(fragment.text),
+        "fragment_key": str(fragment.fragment_key or "").strip(),
+        "collection": str(fragment.collection or "").strip(),
+    }
+    meta_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
 def page_audio_current_render_hash(page_id: str, token: str) -> str:
@@ -1084,6 +1595,7 @@ def ensure_tts_fragment_audio(
 ) -> Path:
     cache_path = page_audio_cache_path(cache_root, "tts", fragment.hash_value, str(settings["format"]))
     if cache_path.exists():
+        persist_library_audio_fragment(fragment, cache_path, settings)
         return cache_path
     audio_bytes = shared.generate_openai_audio_bytes(
         api_key=openai_key,
@@ -1095,6 +1607,7 @@ def ensure_tts_fragment_audio(
         text=fragment.text,
     )
     cache_path.write_bytes(audio_bytes)
+    persist_library_audio_fragment(fragment, cache_path, settings)
     return cache_path
 
 
@@ -1406,6 +1919,14 @@ def build_page_audio_plan(
         return build_divine_office_morning_text_plan(config=config)
     if builder == RSS_AUDIO_BUILDER:
         return build_rss_audio_plan(page=page, config=config, base_url=base_url)
+    if builder == AUDIO_FRAGMENTS_BUILDER:
+        return build_fragment_output_plan(
+            pages=pages,
+            title_property=title_property,
+            config=config,
+            token=notion_token,
+            base_url=base_url,
+        )
     raise RuntimeError(f"Unsupported page audio builder '{builder}'.")
 
 
