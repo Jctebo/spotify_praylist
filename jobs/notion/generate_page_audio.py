@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
@@ -136,6 +137,7 @@ AUDIO_OUTPUT_MODE_PROPERTY = "Output Mode"
 AUDIO_OUTPUT_TARGET_ROW_PROPERTY = "Target Row"
 AUDIO_OUTPUT_AUDIO_CAPTION_PROPERTY = "Audio Caption"
 AUDIO_OUTPUT_FRAGMENT_SEQUENCE_PROPERTY = "Fragment Sequence"
+AUDIO_OUTPUT_CONFIG_KEY_PROPERTY = "Config Key"
 AUDIO_OUTPUT_TTS_MODEL_PROPERTY = "TTS Model"
 AUDIO_OUTPUT_TTS_VOICE_PROPERTY = "TTS Voice"
 AUDIO_OUTPUT_TTS_FORMAT_PROPERTY = "TTS Format"
@@ -144,6 +146,7 @@ AUDIO_OUTPUT_SILENCE_MS_PROPERTY = "Silence Ms"
 AUDIO_OUTPUT_ENABLED_PROPERTY = "Enabled"
 AUDIO_OUTPUT_NOTES_PROPERTY = "Notes"
 AUDIO_OUTPUT_MODE_FRAGMENTS = "fragments"
+AUDIO_OUTPUT_MODE_CONFIG = "config"
 SPECIAL_DAILY_NOVENA_AUDIO = "SPECIAL:daily_novena_audio"
 SPECIAL_MONTHLY_INTENTION = "SPECIAL:monthly_intention"
 
@@ -525,11 +528,11 @@ def load_page_audio_config(notion_token: str = "") -> Dict[str, Any]:
     if token:
         fragments_payload = load_audio_fragments_from_notion(token)
         fragment_map = fragments_payload.get("fragments") or {}
+        output_payload = load_audio_outputs_from_notion(token, fragment_map, configs)
+        output_configs = output_payload.get("configs") or {}
+        if isinstance(output_configs, dict):
+            configs.update(output_configs)
         if fragment_map:
-            output_payload = load_audio_outputs_from_notion(token, fragment_map)
-            output_configs = output_payload.get("configs") or {}
-            if isinstance(output_configs, dict):
-                configs.update(output_configs)
             payload["audio_fragments"] = fragment_map
     payload["configs"] = configs
     return payload
@@ -658,38 +661,102 @@ def parse_fragment_sequence(text: str) -> List[str]:
     return out
 
 
-def audio_output_config_from_notion_page(page: Dict[str, Any], fragments: Dict[str, Dict[str, Any]]) -> Optional[tuple[str, Dict[str, Any]]]:
+def audio_output_common_overrides(page: Dict[str, Any]) -> Dict[str, Any]:
+    overrides: Dict[str, Any] = {}
+    audio_caption = page_property_text(page, AUDIO_OUTPUT_AUDIO_CAPTION_PROPERTY).strip()
+    if audio_caption:
+        overrides["audio_caption"] = audio_caption
+
+    silence_raw = page_property_text(page, AUDIO_OUTPUT_SILENCE_MS_PROPERTY).strip()
+    if silence_raw:
+        overrides["silence_ms"] = int(page_property_number(page, AUDIO_OUTPUT_SILENCE_MS_PROPERTY, default=DEFAULT_SILENCE_MS))
+
+    tts_overrides: Dict[str, Any] = {}
+    tts_model = page_property_text(page, AUDIO_OUTPUT_TTS_MODEL_PROPERTY).strip()
+    tts_voice = page_property_text(page, AUDIO_OUTPUT_TTS_VOICE_PROPERTY).strip()
+    tts_format = page_property_text(page, AUDIO_OUTPUT_TTS_FORMAT_PROPERTY).strip().lower()
+    tts_speed_raw = page_property_text(page, AUDIO_OUTPUT_TTS_SPEED_PROPERTY).strip()
+    if tts_model:
+        tts_overrides["model"] = tts_model
+    if tts_voice:
+        tts_overrides["voice"] = tts_voice
+    if tts_format:
+        tts_overrides["format"] = tts_format
+    if tts_speed_raw:
+        tts_overrides["speed"] = page_property_number(page, AUDIO_OUTPUT_TTS_SPEED_PROPERTY, default=1.0)
+    if tts_overrides:
+        overrides["tts"] = tts_overrides
+
+    target_row = page_property_text(page, AUDIO_OUTPUT_TARGET_ROW_PROPERTY).strip()
+    if target_row:
+        overrides["target_row"] = target_row
+    notes = page_property_text(page, AUDIO_OUTPUT_NOTES_PROPERTY).strip()
+    if notes:
+        overrides["notes"] = notes
+    return overrides
+
+
+def apply_audio_output_overrides(base_config: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, Any]:
+    config = deepcopy(base_config)
+    if not overrides:
+        return config
+    for key, value in overrides.items():
+        if key == "tts" and isinstance(value, dict):
+            merged_tts = dict(config.get("tts") or {})
+            merged_tts.update(value)
+            config["tts"] = merged_tts
+            continue
+        config[key] = value
+    return config
+
+
+def audio_output_config_from_notion_page(
+    page: Dict[str, Any],
+    fragments: Dict[str, Dict[str, Any]],
+    base_configs: Dict[str, Any],
+) -> Optional[tuple[str, Dict[str, Any]]]:
     key = page_property_text(page, AUDIO_OUTPUT_KEY_PROPERTY).strip() or shared.page_title(page, AUDIO_OUTPUT_TITLE_PROPERTY).strip()
     if not key:
         return None
     if not page_property_checkbox(page, AUDIO_OUTPUT_ENABLED_PROPERTY, default=True):
         return None
     mode = normalize_flag_value(page_property_text(page, AUDIO_OUTPUT_MODE_PROPERTY)) or AUDIO_OUTPUT_MODE_FRAGMENTS
+    overrides = audio_output_common_overrides(page)
+    if mode == AUDIO_OUTPUT_MODE_CONFIG:
+        source_key = page_property_text(page, AUDIO_OUTPUT_CONFIG_KEY_PROPERTY).strip()
+        if not source_key:
+            return None
+        source_config = base_configs.get(source_key)
+        if not isinstance(source_config, dict):
+            raise RuntimeError(f"Audio output '{key}' references unknown config '{source_key}'.")
+        config = apply_audio_output_overrides(source_config, overrides)
+        config["source_config_key"] = source_key
+        return key, config
     if mode != AUDIO_OUTPUT_MODE_FRAGMENTS:
         return None
     sequence = parse_fragment_sequence(page_property_text(page, AUDIO_OUTPUT_FRAGMENT_SEQUENCE_PROPERTY))
     if not sequence:
         return None
-    config: Dict[str, Any] = {
+    default_config: Dict[str, Any] = {
         "builder": AUDIO_FRAGMENTS_BUILDER,
-        "audio_caption": page_property_text(page, AUDIO_OUTPUT_AUDIO_CAPTION_PROPERTY).strip()
-        or f"{shared.page_title(page, AUDIO_OUTPUT_TITLE_PROPERTY).strip() or key} (Audio)",
-        "silence_ms": int(page_property_number(page, AUDIO_OUTPUT_SILENCE_MS_PROPERTY, default=DEFAULT_SILENCE_MS)),
+        "audio_caption": f"{shared.page_title(page, AUDIO_OUTPUT_TITLE_PROPERTY).strip() or key} (Audio)",
+        "silence_ms": DEFAULT_SILENCE_MS,
         "tts": {
-            "model": page_property_text(page, AUDIO_OUTPUT_TTS_MODEL_PROPERTY).strip() or "gpt-4o-mini-tts",
-            "voice": page_property_text(page, AUDIO_OUTPUT_TTS_VOICE_PROPERTY).strip() or "alloy",
-            "format": (page_property_text(page, AUDIO_OUTPUT_TTS_FORMAT_PROPERTY).strip().lower() or "mp3"),
-            "speed": page_property_number(page, AUDIO_OUTPUT_TTS_SPEED_PROPERTY, default=1.0),
+            "model": "gpt-4o-mini-tts",
+            "voice": "alloy",
+            "format": "mp3",
+            "speed": 1.0,
         },
         "fragment_sequence": sequence,
         "fragments": fragments,
         "target_row": page_property_text(page, AUDIO_OUTPUT_TARGET_ROW_PROPERTY).strip(),
         "notes": page_property_text(page, AUDIO_OUTPUT_NOTES_PROPERTY).strip(),
     }
+    config = apply_audio_output_overrides(default_config, overrides)
     return key, config
 
 
-def load_audio_outputs_from_notion(token: str, fragments: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
+def load_audio_outputs_from_notion(token: str, fragments: Dict[str, Dict[str, Any]], base_configs: Dict[str, Any]) -> Dict[str, Any]:
     database_id = notion_audio_outputs_database_id(token)
     if not database_id:
         return {}
@@ -698,7 +765,7 @@ def load_audio_outputs_from_notion(token: str, fragments: Dict[str, Dict[str, An
     for page in pages:
         if not isinstance(page, dict):
             continue
-        parsed = audio_output_config_from_notion_page(page, fragments)
+        parsed = audio_output_config_from_notion_page(page, fragments, base_configs)
         if not parsed:
             continue
         key, config = parsed

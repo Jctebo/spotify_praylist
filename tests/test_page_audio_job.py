@@ -533,6 +533,17 @@ class TestPageAudioJob(unittest.TestCase):
                     "Silence Ms": {"type": "number", "number": 450},
                     "Enabled": _checkbox_prop(True),
                 },
+            },
+            {
+                "id": "out_2",
+                "properties": {
+                    "Name": _title_prop("Divine Office Invitatory"),
+                    "Output Key": _rich_text_prop("DIVINE_OFFICE_INVITATORY_OUTPUT"),
+                    "Output Mode": _rich_text_prop("config"),
+                    "Config Key": _rich_text_prop("DIVINE_OFFICE_INVITATORY_PAGE_AUDIO"),
+                    "Audio Caption": _rich_text_prop("Divine Office Invitatory (Audio)"),
+                    "Enabled": _checkbox_prop(True),
+                },
             }
         ]
         fragments_payload = {
@@ -560,7 +571,60 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertIn("DIVINE_OFFICE_INVITATORY_PAGE_AUDIO", payload["configs"])
         self.assertIn("MORNING_PRAYER_OUTPUT", payload["configs"])
+        self.assertIn("DIVINE_OFFICE_INVITATORY_OUTPUT", payload["configs"])
         self.assertEqual(payload["configs"]["MORNING_PRAYER_OUTPUT"]["builder"], "audio_fragments_v1")
+        self.assertEqual(payload["configs"]["DIVINE_OFFICE_INVITATORY_OUTPUT"]["builder"], "divine_office_invitatory_v1")
+        self.assertEqual(payload["configs"]["DIVINE_OFFICE_INVITATORY_OUTPUT"]["source_config_key"], "DIVINE_OFFICE_INVITATORY_PAGE_AUDIO")
+
+    def test_load_page_audio_config_merges_config_outputs_without_fragments(self):
+        env = {
+            "NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID": "page_audio_db_1",
+            "NOTION_AUDIO_OUTPUTS_DATABASE_ID": "audio_outputs_db_1",
+        }
+        config_pages = [
+            {
+                "id": "cfg_1",
+                "properties": {
+                    "Name": _title_prop("SING_THE_HOURS_MORNING_PAGE_AUDIO"),
+                    "Enabled": _checkbox_prop(True),
+                    "Builder": _rich_text_prop("rss_audio_v1"),
+                    "Audio Caption": _rich_text_prop("Morning Prayer - Liturgy of the Hours (Audio)"),
+                    "Feed URL": _rich_text_prop("https://feeds.castos.com/x8g54"),
+                    "Feed Match Text": _rich_text_prop("Lauds"),
+                    "TTS Model": _rich_text_prop("gpt-4o-mini-tts"),
+                    "TTS Voice": _rich_text_prop("alloy"),
+                    "TTS Format": _rich_text_prop("mp3"),
+                    "TTS Speed": {"type": "number", "number": 1.0},
+                },
+            }
+        ]
+        output_pages = [
+            {
+                "id": "out_1",
+                "properties": {
+                    "Name": _title_prop("Morning Prayer - Liturgy of the Hours"),
+                    "Output Key": _rich_text_prop("SING_THE_HOURS_MORNING_OUTPUT"),
+                    "Output Mode": _rich_text_prop("config"),
+                    "Config Key": _rich_text_prop("SING_THE_HOURS_MORNING_PAGE_AUDIO"),
+                    "Enabled": _checkbox_prop(True),
+                },
+            }
+        ]
+
+        def fake_get_all_pages(database_id, _token):
+            if database_id == "page_audio_db_1":
+                return config_pages
+            if database_id == "audio_outputs_db_1":
+                return output_pages
+            raise AssertionError(database_id)
+
+        with temp_env(env), patch.object(self.mod.shared, "notion_get_all_pages", side_effect=fake_get_all_pages), patch.object(
+            self.mod, "load_audio_fragments_from_notion", return_value={}
+        ):
+            payload = self.mod.load_page_audio_config("notion_token")
+
+        self.assertIn("SING_THE_HOURS_MORNING_OUTPUT", payload["configs"])
+        self.assertEqual(payload["configs"]["SING_THE_HOURS_MORNING_OUTPUT"]["builder"], "rss_audio_v1")
 
     def test_render_page_audio_for_config_uses_cached_hash(self):
         page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
@@ -651,6 +715,8 @@ class TestPageAudioJob(unittest.TestCase):
         with temp_env(env):
             with patch.object(self.mod.shared, "notion_get_all_pages", return_value=config_pages), patch.object(
                 self.mod, "load_audio_fragments_from_notion", return_value={}
+            ), patch.object(
+                self.mod, "load_audio_outputs_from_notion", return_value={}
             ):
                 payload = self.mod.load_page_audio_config("notion_token")
 

@@ -289,7 +289,9 @@ Purpose:
 - reads `Opus Dei` rows whose `Platform` contains `auto-audio` or `auto-text`
 - resolves page text from `Text Resolver`
 - resolves page audio from `Auto Audio Resolver 1` and optionally `Auto Audio Resolver 2`
-- supports Notion `Audio Outputs` rows that assemble named `Audio Fragments` plus special cache-only fragments
+- supports Notion `Audio Outputs` rows in two modes:
+- `fragments` for named `Audio Fragments` plus special cache-only fragments
+- `config` for composite wrappers around source configs like Divine Office and Sing the Hours
 - falls back to the legacy `Audio Configuration` field and then the legacy resolver field when the new properties are blank
 - builds a Notion audio block for `auto-audio` rows and syncs page body content for feed-backed rows
 - caches generated fragment audio under `.cache/page_audio`
@@ -300,7 +302,8 @@ Current config:
 - source fragments: `Audio Fragments` rows like `Morning Offering`, `Daily Consecration`, and `Intercessory Litany`
 - special fragment: monthly intention from the Pope's Worldwide Prayer Network English yearly PDF feed, cached on disk only
 - special fragment: `Daily Novenas from Liturgical Calendar` audio blocks reused directly as source fragments
-- `DIVINE_OFFICE_INVITATORY_PAGE_AUDIO`
+- `DIVINE_OFFICE_INVITATORY_OUTPUT` in `Audio Outputs`
+- wraps `DIVINE_OFFICE_INVITATORY_PAGE_AUDIO` from `Page Audio Configuration`
 - target row: `Divine Office Invitatory`
 - source audio: official DivineOffice.org RSS enclosure for the matching day
 - source text: synced into the page body
@@ -310,10 +313,12 @@ Current config:
 - `DIVINE_OFFICE_MORNING_TEXT`
 - target row: `Morning Prayer - Liturgy of the Hours (Spotify)`
 - source text: official DivineOffice.org `Morning Prayer` RSS body synced into the page body
-- `SING_THE_HOURS_MORNING_PAGE_AUDIO`
+- `SING_THE_HOURS_MORNING_OUTPUT` in `Audio Outputs`
+- wraps `SING_THE_HOURS_MORNING_PAGE_AUDIO` from `Page Audio Configuration`
 - target row: `Morning Prayer - Liturgy of the Hours (Spotify)`
 - source audio: public Sing the Hours RSS enclosure for the matching day's `Lauds`
-- `DIVINE_OFFICE_MORNING_PAGE_AUDIO`
+- `DIVINE_OFFICE_MORNING_OUTPUT` in `Audio Outputs`
+- wraps `DIVINE_OFFICE_MORNING_PAGE_AUDIO` from `Page Audio Configuration`
 - target row: `Morning Prayer - Liturgy of the Hours (Spotify)`
 - source audio fallback: official DivineOffice.org RSS enclosure for the matching day's `Morning Prayer`
 - fallback file source remains available in [page_audio_config.json](c:/Users/jcteb/Code/spotify_praylist/config/page_audio_config.json) if the Notion config database is unavailable
