@@ -1,3 +1,4 @@
+import datetime
 import unittest
 from unittest.mock import patch
 
@@ -19,6 +20,70 @@ def _checkbox_prop(value):
 class TestPageAudioJob(unittest.TestCase):
     def setUp(self):
         self.mod = load_module("jobs/notion/generate_page_audio.py")
+
+    def test_fetch_divine_office_feed_entry_ignores_future_entry(self):
+        xml = """<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <item>
+      <title>Mar 15, Invitatory for Sunday of the 4th week of Lent</title>
+      <link>https://divineoffice.org/sun</link>
+      <enclosure url="https://example.com/sun.mp3" type="audio/mpeg" />
+      <content:encoded><![CDATA[<p>Future prayer.</p>]]></content:encoded>
+    </item>
+    <item>
+      <title>Mar 14, Invitatory for Saturday of the 3rd week of Lent</title>
+      <link>https://divineoffice.org/sat</link>
+      <enclosure url="https://example.com/sat.mp3" type="audio/mpeg" />
+      <content:encoded><![CDATA[<p>Lord, open my lips.</p><p>And my mouth will proclaim your praise.</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>"""
+
+        class FakeResponse:
+            def __init__(self, content):
+                self.content = content.encode("utf-8")
+
+        with patch.object(self.mod, "page_audio_http_get", return_value=FakeResponse(xml)):
+            entry = self.mod.fetch_divine_office_feed_entry(datetime.date(2026, 3, 14))
+
+        self.assertEqual(entry["title"], "Mar 14, Invitatory for Saturday of the 3rd week of Lent")
+        self.assertEqual(entry["audio_url"], "https://example.com/sat.mp3")
+        self.assertIn("Lord, open my lips.", entry["text"])
+
+    def test_build_divine_office_invitatory_plan_prepends_intention(self):
+        page = {
+            "id": "page_1",
+            "properties": {
+                "Name": _title_prop("Divine Office Invitatory"),
+                "Intention": _rich_text_prop("For peace in my family."),
+                "Description": _rich_text_prop(""),
+            },
+        }
+        config = {
+            "builder": "divine_office_invitatory_v1",
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "text_property": "Description",
+        }
+
+        with patch.object(
+            self.mod,
+            "fetch_divine_office_feed_entry",
+            return_value={
+                "title": "Mar 14, Invitatory for Saturday of the 3rd week of Lent",
+                "audio_url": "https://example.com/invitatory.mp3",
+                "text": "Lord, open my lips.\n\nAnd my mouth will proclaim your praise.",
+                "date": "2026-03-14",
+            },
+        ):
+            plan = self.mod.build_divine_office_invitatory_plan(page, config, "https://api.openai.com/v1")
+
+        self.assertEqual([fragment.kind for fragment in plan.fragments], ["tts", "source_audio"])
+        self.assertIn("For today's intention:", plan.fragments[0].text)
+        self.assertIn("For peace in my family.", plan.fragments[0].text)
+        self.assertEqual(plan.fragments[1].source_url, "https://example.com/invitatory.mp3")
+        self.assertEqual(plan.text_property, "Description")
+        self.assertIn("Lord, open my lips.", plan.synced_text)
 
     def test_parse_monthly_intention_section_builds_spoken_text(self):
         parsed = self.mod.parse_monthly_intention_section(
@@ -190,6 +255,8 @@ class TestPageAudioJob(unittest.TestCase):
 
         with patch.object(self.mod, "build_morning_prayer_fragments", return_value=fragments), patch.object(
             self.mod, "page_audio_current_render_hash", return_value=render_hash
+        ), patch.object(
+            self.mod, "page_audio_is_positioned_near_top", return_value=True
         ), patch.object(self.mod, "build_assembled_audio") as assemble_mock:
             mode = self.mod.render_page_audio_for_config(
                 page=page,
@@ -270,6 +337,47 @@ class TestPageAudioJob(unittest.TestCase):
 
         with temp_env(env):
             with patch.object(self.mod, "load_page_audio_config", return_value={"configs": {"MORNING_PRAYER_PAGE_AUDIO": {"builder": "morning_prayer_v1", "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}}}}), patch.object(
+                self.mod.shared, "notion_find_database_id", return_value="db_1"
+            ), patch.object(
+                self.mod.shared, "notion_get_all_pages", return_value=pages
+            ), patch.object(
+                self.mod, "render_page_audio_for_config", return_value="cached:mp3:gpt-4o-mini-tts:alloy:hash=abcd1234"
+            ) as render_mock:
+                rc = self.mod.main()
+
+        self.assertEqual(rc, 0)
+        render_mock.assert_called_once()
+
+    def test_main_prefers_audio_configuration_property(self):
+        env = {
+            "OPENAI_API_KEY": "key",
+            "NOTION_TOKEN": "notion_token",
+            "NOTION_DATABASE_ID": "db_1",
+            "NOTION_AUDIO_PLATFORM_VALUE": "auto-audio",
+        }
+        pages = [
+            {
+                "id": "page_1",
+                "properties": {
+                    "Name": _title_prop("Divine Office Invitatory"),
+                    "Platform": _rich_text_prop("Spotify, auto-audio"),
+                    "Audio Configuration": _rich_text_prop("DIVINE_OFFICE_INVITATORY_PAGE_AUDIO"),
+                    "Spotify Resolver": _rich_text_prop("DO_INVITATORY"),
+                    "Enabled": _checkbox_prop(True),
+                },
+            }
+        ]
+        config_payload = {
+            "configs": {
+                "DIVINE_OFFICE_INVITATORY_PAGE_AUDIO": {
+                    "builder": "divine_office_invitatory_v1",
+                    "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                }
+            }
+        }
+
+        with temp_env(env):
+            with patch.object(self.mod, "load_page_audio_config", return_value=config_payload), patch.object(
                 self.mod.shared, "notion_find_database_id", return_value="db_1"
             ), patch.object(
                 self.mod.shared, "notion_get_all_pages", return_value=pages

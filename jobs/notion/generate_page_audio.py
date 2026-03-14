@@ -1,5 +1,6 @@
 import datetime
 import hashlib
+import html
 import importlib.util
 import io
 import json
@@ -12,6 +13,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
+import xml.etree.ElementTree as ET
 
 import imageio_ffmpeg
 import requests
@@ -32,6 +34,7 @@ OAI_API_BASE_URL = "OAI_API_BASE_URL"
 NOTION_TOKEN = "NOTION_TOKEN"
 
 NOTION_AUDIO_PLATFORM_VALUE = "NOTION_AUDIO_PLATFORM_VALUE"
+NOTION_AUDIO_CONFIG_PROPERTY = "NOTION_AUDIO_CONFIG_PROPERTY"
 NOTION_AUDIO_RESOLVER_PROPERTY = "NOTION_AUDIO_RESOLVER_PROPERTY"
 NOTION_AUDIO_ENABLED_PROPERTY = "NOTION_AUDIO_ENABLED_PROPERTY"
 NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID = "NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID"
@@ -46,13 +49,19 @@ DEFAULT_PAGE_AUDIO_CONFIG_FILE = "config/page_audio_config.json"
 DEFAULT_PAGE_AUDIO_CACHE_DIR = ".cache/page_audio"
 DEFAULT_PAGE_AUDIO_CONFIG_DATABASE_NAME = "Page Audio Configuration"
 DEFAULT_AUTO_AUDIO_PLATFORM_VALUE = "auto-audio"
+DEFAULT_AUDIO_CONFIG_PROPERTY = "Audio Configuration"
 PAGE_AUDIO_MARKER = "[AUTOGEN_PAGE_AUDIO]"
 PAGE_AUDIO_HASH_MARKER_PREFIX = "[AUTOGEN_PAGE_AUDIO_HASH:"
 PAGE_AUDIO_RENDER_VERSION = "page_audio_v1"
 DEFAULT_SILENCE_MS = 450
 DEFAULT_DAILY_NOVENA_PAGE_TITLE = "Daily Novenas from Liturgical Calendar"
 MORNING_PRAYER_BUILDER = "morning_prayer_v1"
+DIVINE_OFFICE_INVITATORY_BUILDER = "divine_office_invitatory_v1"
 POPES_PRAYER_MEDIA_API_URL = "https://www.popesprayer.va/wp-json/wp/v2/media"
+DIVINE_OFFICE_FEED_URL = "https://divineoffice.org/feed/"
+DEFAULT_RSS_TEXT_PROPERTY = "Description"
+DEFAULT_INTENTION_PROPERTY = "Intention"
+DEFAULT_INTENTION_PREFIX = "For today's intention:"
 HTTP_RETRYABLE_STATUSES = {408, 409, 425, 429, 500, 502, 503, 504}
 HTTP_MAX_ATTEMPTS = 4
 MONTH_NAMES = (
@@ -85,6 +94,11 @@ PAGE_AUDIO_CONFIG_TTS_SPEED_PROPERTY = "TTS Speed"
 PAGE_AUDIO_CONFIG_MONTHLY_PROVIDER_PROPERTY = "Monthly Intention Provider"
 PAGE_AUDIO_CONFIG_MONTHLY_LANGUAGE_PROPERTY = "Monthly Intention Language"
 PAGE_AUDIO_CONFIG_DAILY_NOVENA_TITLE_PROPERTY = "Daily Novena Page Title"
+PAGE_AUDIO_CONFIG_TEXT_PROPERTY = "Text Property"
+PAGE_AUDIO_CONFIG_FEED_URL_PROPERTY = "Feed URL"
+PAGE_AUDIO_CONFIG_FEED_MATCH_TEXT_PROPERTY = "Feed Match Text"
+PAGE_AUDIO_CONFIG_INTENTION_PROPERTY = "Intention Property"
+PAGE_AUDIO_CONFIG_INTENTION_PREFIX_PROPERTY = "Intention Prefix"
 
 
 def load_shared_module():
@@ -109,6 +123,13 @@ class PageAudioFragment:
     source_url: str = ""
     content_type: str = ""
     cache_path: str = ""
+
+
+@dataclass
+class PageAudioPlan:
+    fragments: List[PageAudioFragment]
+    synced_text: str = ""
+    text_property: str = ""
 
 
 def slugify(text: str) -> str:
@@ -227,6 +248,11 @@ def page_audio_config_from_notion_page(page: Dict[str, Any]) -> Optional[tuple[s
     monthly_provider = page_property_text(page, PAGE_AUDIO_CONFIG_MONTHLY_PROVIDER_PROPERTY).strip()
     monthly_language = page_property_text(page, PAGE_AUDIO_CONFIG_MONTHLY_LANGUAGE_PROPERTY).strip()
     daily_novena_page_title = page_property_text(page, PAGE_AUDIO_CONFIG_DAILY_NOVENA_TITLE_PROPERTY).strip()
+    text_property = page_property_text(page, PAGE_AUDIO_CONFIG_TEXT_PROPERTY).strip()
+    feed_url = page_property_text(page, PAGE_AUDIO_CONFIG_FEED_URL_PROPERTY).strip()
+    feed_match_text = page_property_text(page, PAGE_AUDIO_CONFIG_FEED_MATCH_TEXT_PROPERTY).strip()
+    intention_property = page_property_text(page, PAGE_AUDIO_CONFIG_INTENTION_PROPERTY).strip()
+    intention_prefix = page_property_text(page, PAGE_AUDIO_CONFIG_INTENTION_PREFIX_PROPERTY).strip()
 
     config: Dict[str, Any] = {}
     if builder:
@@ -264,6 +290,16 @@ def page_audio_config_from_notion_page(page: Dict[str, Any]) -> Optional[tuple[s
 
     if daily_novena_page_title:
         config["daily_novena_page_title"] = daily_novena_page_title
+    if text_property:
+        config["text_property"] = text_property
+    if feed_url:
+        config["rss_feed_url"] = feed_url
+    if feed_match_text:
+        config["rss_match_text"] = feed_match_text
+    if intention_property:
+        config["intention_property"] = intention_property
+    if intention_prefix:
+        config["intention_prefix"] = intention_prefix
     return key, config
 
 
@@ -371,6 +407,7 @@ def list_audio_candidate_pages(
     title_property: str,
     platform_property: str,
     platform_value: str,
+    config_property: str,
     resolver_property: str,
     enabled_property: str,
     config_key_filter: str,
@@ -391,13 +428,20 @@ def list_audio_candidate_pages(
         platform = page_property_text(page, platform_property).lower()
         if wanted_platform not in platform:
             continue
-        config_key = page_property_text(page, resolver_property).strip()
+        config_key = page_audio_config_key_from_page(page, config_property, resolver_property)
         if not config_key:
             continue
         if wanted_key and config_key.lower() != wanted_key:
             continue
         out.append(page)
     return out
+
+
+def page_audio_config_key_from_page(page: Dict[str, Any], config_property: str, resolver_property: str) -> str:
+    primary = page_property_text(page, config_property).strip()
+    if primary:
+        return primary
+    return page_property_text(page, resolver_property).strip()
 
 
 def find_page_by_title(pages: Sequence[Dict[str, Any]], title_property: str, wanted_title: str) -> Dict[str, Any]:
@@ -576,6 +620,126 @@ def build_morning_prayer_fragments(
     return fragments
 
 
+def plain_text_paragraphs_from_html(raw_html: str) -> List[str]:
+    value = str(raw_html or "").strip()
+    if not value:
+        return []
+    value = re.sub(r"(?is)<\s*br\s*/?\s*>", "\n", value)
+    value = re.sub(r"(?is)</\s*p\s*>", "\n\n", value)
+    value = re.sub(r"(?is)</\s*li\s*>", "\n", value)
+    value = re.sub(r"(?is)<\s*li\b[^>]*>", "\n- ", value)
+    value = re.sub(r"(?is)</\s*h[1-6]\s*>", "\n\n", value)
+    value = re.sub(r"(?is)<[^>]+>", "", value)
+    value = html.unescape(value)
+    value = value.replace("\r", "")
+    value = re.sub(r"\n{3,}", "\n\n", value)
+    paragraphs = [normalize_whitespace(part) for part in re.split(r"\n\s*\n", value) if normalize_whitespace(part)]
+    return paragraphs
+
+
+def divine_office_title_date(title: str, target_year: int) -> Optional[datetime.date]:
+    value = str(title or "").strip()
+    match = re.match(r"^([A-Za-z]{3,9})\s+(\d{1,2}),", value)
+    if not match:
+        return None
+    month_token = match.group(1).strip()
+    day = int(match.group(2))
+    for fmt in ("%b", "%B"):
+        try:
+            month = datetime.datetime.strptime(month_token, fmt).month
+            return datetime.date(target_year, month, day)
+        except ValueError:
+            continue
+    return None
+
+
+def fetch_divine_office_feed_entry(
+    target_date: datetime.date,
+    feed_url: str = DIVINE_OFFICE_FEED_URL,
+    match_text: str = "Invitatory",
+) -> Dict[str, str]:
+    response = page_audio_http_get(feed_url, timeout=30)
+    root = ET.fromstring(response.content)
+    channel = root.find("channel")
+    if channel is None:
+        raise RuntimeError(f"Invalid RSS feed at {feed_url}.")
+    wanted = str(match_text or "").strip().lower()
+    exact: Optional[Dict[str, str]] = None
+    latest_past: Optional[Dict[str, str]] = None
+    latest_past_date: Optional[datetime.date] = None
+    for item in channel.findall("item"):
+        title = str(item.findtext("title", "")).strip()
+        if wanted and wanted not in title.lower():
+            continue
+        item_date = divine_office_title_date(title, target_date.year)
+        if item_date is None:
+            continue
+        enclosure = item.find("enclosure")
+        audio_url = str((enclosure.attrib if enclosure is not None else {}).get("url", "")).strip()
+        if not audio_url:
+            continue
+        content_node = item.find("{http://purl.org/rss/1.0/modules/content/}encoded")
+        html_body = str(content_node.text if content_node is not None else item.findtext("description", "") or "").strip()
+        text_body = "\n\n".join(plain_text_paragraphs_from_html(html_body))
+        entry = {
+            "title": title,
+            "audio_url": audio_url,
+            "source_url": str(item.findtext("link", "")).strip(),
+            "text": text_body,
+            "content_html": html_body,
+            "match_text": match_text,
+            "feed_url": feed_url,
+            "date": item_date.isoformat(),
+        }
+        if item_date == target_date:
+            exact = entry
+            break
+        if item_date <= target_date and (latest_past_date is None or item_date > latest_past_date):
+            latest_past = entry
+            latest_past_date = item_date
+    chosen = exact or latest_past
+    if chosen is None:
+        raise RuntimeError(f"No '{match_text}' entry found in {feed_url} for {target_date.isoformat()} or earlier.")
+    return chosen
+
+
+def build_divine_office_invitatory_plan(
+    page: Dict[str, Any],
+    config: Dict[str, Any],
+    base_url: str,
+) -> PageAudioPlan:
+    settings = tts_settings_from_config(config)
+    intention_property = str(config.get("intention_property", DEFAULT_INTENTION_PROPERTY)).strip() or DEFAULT_INTENTION_PROPERTY
+    intention_prefix = str(config.get("intention_prefix", DEFAULT_INTENTION_PREFIX)).strip() or DEFAULT_INTENTION_PREFIX
+    intention_text = page_property_text(page, intention_property).strip()
+    feed_url = str(config.get("rss_feed_url", DIVINE_OFFICE_FEED_URL)).strip() or DIVINE_OFFICE_FEED_URL
+    match_text = str(config.get("rss_match_text", "Invitatory")).strip() or "Invitatory"
+    feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=feed_url, match_text=match_text)
+
+    fragments: List[PageAudioFragment] = []
+    if intention_text:
+        spoken = normalize_whitespace(f"{intention_prefix} {intention_text}")
+        intention_hash = shared.compute_audio_render_hash(spoken, base_url, settings)
+        fragments.append(PageAudioFragment(kind="tts", label="Daily Intention", hash_value=intention_hash, text=spoken))
+
+    audio_hash = hashlib.sha256(
+        f"{feed_entry['title']}|{feed_entry['audio_url']}|{feed_entry['date']}".encode("utf-8")
+    ).hexdigest()[:16]
+    fragments.append(
+        PageAudioFragment(
+            kind="source_audio",
+            label=feed_entry["title"],
+            hash_value=audio_hash,
+            source_url=feed_entry["audio_url"],
+        )
+    )
+    return PageAudioPlan(
+        fragments=fragments,
+        synced_text=str(feed_entry.get("text", "")).strip(),
+        text_property=str(config.get("text_property", DEFAULT_RSS_TEXT_PROPERTY)).strip() or DEFAULT_RSS_TEXT_PROPERTY,
+    )
+
+
 def compute_page_render_hash(
     config_key: str,
     config: Dict[str, Any],
@@ -616,6 +780,55 @@ def page_audio_current_render_hash(page_id: str, token: str) -> str:
     return ""
 
 
+def page_audio_block_ids(page_id: str, token: str) -> List[str]:
+    out: List[str] = []
+    for block in shared.notion_list_block_children(page_id, token):
+        if str(block.get("type", "")).strip() != "audio":
+            continue
+        caption = shared.audio_block_caption(block)
+        if PAGE_AUDIO_MARKER not in caption:
+            continue
+        block_id = str(block.get("id", "")).strip()
+        if block_id:
+            out.append(block_id)
+    return out
+
+
+def page_audio_insert_after_block_id(page_id: str, token: str) -> str:
+    last_bookmark = ""
+    for block in shared.notion_list_block_children(page_id, token):
+        block_type = str(block.get("type", "")).strip()
+        if block_type != "bookmark":
+            break
+        last_bookmark = str(block.get("id", "")).strip() or last_bookmark
+    return last_bookmark
+
+
+def page_audio_is_positioned_near_top(page_id: str, token: str) -> bool:
+    blocks = shared.notion_list_block_children(page_id, token)
+    for idx, block in enumerate(blocks):
+        if str(block.get("type", "")).strip() != "audio":
+            continue
+        caption = shared.audio_block_caption(block)
+        if PAGE_AUDIO_MARKER not in caption:
+            continue
+        return idx == 0
+    return False
+
+
+def page_audio_top_block_id(page_id: str, token: str) -> str:
+    blocks = shared.notion_list_block_children(page_id, token)
+    if not blocks:
+        return ""
+    block = blocks[0]
+    if str(block.get("type", "")).strip() != "audio":
+        return ""
+    caption = shared.audio_block_caption(block)
+    if PAGE_AUDIO_MARKER not in caption:
+        return ""
+    return str(block.get("id", "")).strip()
+
+
 def page_audio_remove_old_blocks(page_id: str, token: str) -> int:
     removed = 0
     for block in shared.notion_list_block_children(page_id, token):
@@ -649,7 +862,7 @@ def page_audio_remove_blank_placeholders(page_id: str, token: str) -> int:
     return removed
 
 
-def page_audio_append_block(page_id: str, upload_id: str, caption: str, token: str) -> None:
+def page_audio_append_block(page_id: str, upload_id: str, caption: str, token: str, after: str = "") -> None:
     full_caption = f"{str(caption or '').strip()} {PAGE_AUDIO_MARKER}".strip()
     block = {
         "object": "block",
@@ -660,7 +873,7 @@ def page_audio_append_block(page_id: str, upload_id: str, caption: str, token: s
             "caption": [{"type": "text", "text": {"content": full_caption}}],
         },
     }
-    shared.notion_append_children(page_id, [block], token)
+    shared.notion_append_children(page_id, [block], token, after=after)
 
 
 def ffmpeg_audio_codec(audio_format: str) -> str:
@@ -967,6 +1180,20 @@ def fetch_monthly_intention(target_date: datetime.date) -> Dict[str, str]:
     return result
 
 
+def maybe_update_page_text_property(page: Dict[str, Any], property_name: str, text: str, token: str) -> None:
+    prop_name = str(property_name or "").strip()
+    value = normalize_whitespace(text)
+    if not prop_name or not value:
+        return
+    current = normalize_whitespace(page_property_text(page, prop_name))
+    if current == value:
+        return
+    page_id = str(page.get("id", "")).strip()
+    if not page_id:
+        raise RuntimeError("Target page has no id.")
+    shared.notion_update_rich_text_property(page_id, prop_name, value, token)
+
+
 def render_page_audio_for_config(
     page: Dict[str, Any],
     pages: Sequence[Dict[str, Any]],
@@ -978,33 +1205,47 @@ def render_page_audio_for_config(
     base_url: str,
 ) -> str:
     builder = str(config.get("builder", "")).strip() or MORNING_PRAYER_BUILDER
-    if builder != MORNING_PRAYER_BUILDER:
+    if builder == MORNING_PRAYER_BUILDER:
+        plan = PageAudioPlan(
+            fragments=build_morning_prayer_fragments(
+                page=page,
+                pages=pages,
+                title_property=title_property,
+                config=config,
+                token=notion_token,
+                base_url=base_url,
+            )
+        )
+    elif builder == DIVINE_OFFICE_INVITATORY_BUILDER:
+        plan = build_divine_office_invitatory_plan(page=page, config=config, base_url=base_url)
+    else:
         raise RuntimeError(f"Unsupported page audio builder '{builder}'.")
-
-    fragments = build_morning_prayer_fragments(
-        page=page,
-        pages=pages,
-        title_property=title_property,
-        config=config,
-        token=notion_token,
-        base_url=base_url,
-    )
+    fragments = plan.fragments
     render_hash = compute_page_render_hash(config_key, config, fragments)
     page_id = str(page.get("id", "")).strip()
     current_hash = page_audio_current_render_hash(page_id, notion_token)
     settings = tts_settings_from_config(config)
-    if current_hash == render_hash:
+    maybe_update_page_text_property(page, plan.text_property, plan.synced_text, notion_token)
+    if current_hash == render_hash and page_audio_is_positioned_near_top(page_id, notion_token):
         return f"cached:{settings['format']}:{settings['model']}:{settings['voice']}:hash={render_hash}"
 
     audio_bytes = build_assembled_audio(fragments, config, openai_key, base_url)
-    page_audio_remove_old_blocks(page_id, notion_token)
+    existing_audio_ids = page_audio_block_ids(page_id, notion_token)
+    top_audio_id = page_audio_top_block_id(page_id, notion_token)
+    if not top_audio_id:
+        page_audio_remove_old_blocks(page_id, notion_token)
+        existing_audio_ids = []
     page_audio_remove_blank_placeholders(page_id, notion_token)
     filename = f"{slugify(shared.page_title(page, title_property))}_{shared.local_today().isoformat()}.{settings['format']}"
     content_type = shared.audio_content_type(str(settings["format"]))
     upload_id = shared.notion_create_file_upload(filename=filename, content_type=content_type, token=notion_token)
     shared.notion_send_file_upload(upload_id, filename, content_type, audio_bytes, notion_token)
     caption = str(config.get("audio_caption", "Page Audio")).strip() or "Page Audio"
-    page_audio_append_block(page_id, upload_id, f"{caption} {page_audio_hash_marker(render_hash)}", notion_token)
+    insert_after = top_audio_id or page_audio_insert_after_block_id(page_id, notion_token)
+    page_audio_append_block(page_id, upload_id, f"{caption} {page_audio_hash_marker(render_hash)}", notion_token, after=insert_after)
+    for old_block_id in existing_audio_ids:
+        if old_block_id:
+            shared.notion_archive_block(old_block_id, notion_token)
     shared.notion_update_audio_render_metadata(page, render_hash, notion_token)
     return f"attached:{settings['format']}:{settings['model']}:{settings['voice']}:hash={render_hash}"
 
@@ -1017,6 +1258,7 @@ def main() -> int:
         title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
         platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
         platform_value = os.getenv(NOTION_AUDIO_PLATFORM_VALUE, DEFAULT_AUTO_AUDIO_PLATFORM_VALUE).strip() or DEFAULT_AUTO_AUDIO_PLATFORM_VALUE
+        config_property = os.getenv(NOTION_AUDIO_CONFIG_PROPERTY, DEFAULT_AUDIO_CONFIG_PROPERTY).strip() or DEFAULT_AUDIO_CONFIG_PROPERTY
         resolver_property = os.getenv(NOTION_AUDIO_RESOLVER_PROPERTY, "Spotify Resolver").strip() or "Spotify Resolver"
         enabled_property = os.getenv(NOTION_AUDIO_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
         config_key_filter = os.getenv(PAGE_AUDIO_CONFIG_KEY, "").strip()
@@ -1032,6 +1274,7 @@ def main() -> int:
             title_property=title_property,
             platform_property=platform_property,
             platform_value=platform_value,
+            config_property=config_property,
             resolver_property=resolver_property,
             enabled_property=enabled_property,
             config_key_filter=config_key_filter,
@@ -1047,7 +1290,7 @@ def main() -> int:
         failed = 0
         for page in candidates:
             title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip()
-            config_key = page_property_text(page, resolver_property).strip()
+            config_key = page_audio_config_key_from_page(page, config_property, resolver_property)
             config = config_map.get(config_key)
             if not isinstance(config, dict):
                 raise RuntimeError(f"Missing page audio config '{config_key}' for '{title}'.")

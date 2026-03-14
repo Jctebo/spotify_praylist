@@ -287,7 +287,8 @@ Local run:
 ## Auto Page Audio
 Purpose:
 - reads `Opus Dei` rows whose `Platform` contains `auto-audio`
-- uses the row resolver field as a config key into a Notion `Page Audio Configuration` database
+- uses the row `Audio Configuration` property as the config key into a Notion `Page Audio Configuration` database
+- falls back to the legacy resolver field if `Audio Configuration` is blank
 - builds a single Notion audio block from reusable page fragments instead of regenerating the whole page every run
 - caches generated fragment audio under `.cache/page_audio`
 
@@ -296,15 +297,20 @@ Current config:
 - target row: `Morning Prayer`
 - source placeholder: monthly intention from the Pope's Worldwide Prayer Network English yearly PDF feed
 - source placeholder: `Daily Novenas from Liturgical Calendar` audio blocks reused directly as source fragments
+- `DIVINE_OFFICE_INVITATORY_PAGE_AUDIO`
+- target row: `Divine Office Invitatory`
+- source audio: official DivineOffice.org RSS enclosure for the matching day
+- source text: synced into the row `Description` property when available
 - fallback file source remains available in [page_audio_config.json](c:/Users/jcteb/Code/spotify_praylist/config/page_audio_config.json) if the Notion config database is unavailable
 
 Recommended Opus Dei row shape:
 - `Platform = auto-audio`
-- `Spotify Resolver = MORNING_PRAYER_PAGE_AUDIO`
+- `Audio Configuration = MORNING_PRAYER_PAGE_AUDIO`
 - `Enabled = true`
 
 Environment variables:
 - `NOTION_AUDIO_PLATFORM_VALUE` (default `auto-audio`)
+- `NOTION_AUDIO_CONFIG_PROPERTY` (default `Audio Configuration`)
 - `NOTION_AUDIO_RESOLVER_PROPERTY` (default `Spotify Resolver`)
 - `NOTION_AUDIO_ENABLED_PROPERTY` (default `Enabled`)
 - `NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID` (recommended)

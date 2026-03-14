@@ -366,12 +366,18 @@ def notion_archive_block(block_id: str, token: str) -> None:
     notion_call("PATCH", f"https://api.notion.com/v1/blocks/{block_id}", token, {"archived": True})
 
 
-def notion_append_children(parent_id: str, children: Sequence[Dict[str, Any]], token: str) -> None:
+def notion_append_children(parent_id: str, children: Sequence[Dict[str, Any]], token: str, after: str = "") -> None:
     if not children:
         return
+    insert_after = str(after or "").strip()
+    if insert_after and len(children) > 100:
+        raise RuntimeError("notion_append_children with 'after' supports at most 100 children per call.")
     for idx in range(0, len(children), 100):
         batch = list(children[idx : idx + 100])
-        notion_call("PATCH", f"https://api.notion.com/v1/blocks/{parent_id}/children", token, {"children": batch})
+        payload: Dict[str, Any] = {"children": batch}
+        if insert_after and idx == 0:
+            payload["after"] = insert_after
+        notion_call("PATCH", f"https://api.notion.com/v1/blocks/{parent_id}/children", token, payload)
 
 
 def block_rich_text_plain(block: Dict[str, Any]) -> str:
