@@ -262,19 +262,27 @@ def find_page_by_title(pages: Sequence[Dict[str, Any]], title_property: str, wan
     raise RuntimeError(f"Could not find page titled '{wanted_title}'.")
 
 
-def child_text_lines(block: Dict[str, Any], token: str, monthly_text: str) -> List[str]:
-    text = normalize_whitespace(shared.block_rich_text_plain(block))
-    kind = placeholder_kind(text)
+def resolved_placeholder_text(text: str, monthly_text: str) -> Optional[str]:
+    value = normalize_whitespace(text)
+    kind = placeholder_kind(value)
     if kind == "monthly_intention":
-        text = monthly_text
-    elif kind == "daily_novena":
-        return []
-    lines: List[str] = [text] if text else []
+        return monthly_text
+    if kind == "daily_novena":
+        return None
+    return value
+
+
+def child_text_lines(block: Dict[str, Any], token: str, monthly_text: str) -> List[str]:
+    block_type = str(block.get("type", "")).strip()
+    text = resolved_placeholder_text(shared.block_rich_text_plain(block), monthly_text)
+    lines: List[str] = []
+    if text and block_type not in {"heading_1", "heading_2", "heading_3"}:
+        lines.append(text)
     if bool(block.get("has_children")):
         block_id = str(block.get("id", "")).strip()
         if block_id:
             for child in shared.notion_list_block_children(block_id, token):
-                child_text = normalize_whitespace(shared.block_rich_text_plain(child))
+                child_text = resolved_placeholder_text(shared.block_rich_text_plain(child), monthly_text)
                 if child_text:
                     lines.append(child_text)
     return [line for line in lines if line]
@@ -398,7 +406,7 @@ def build_morning_prayer_fragments(
         if block_type == "heading_3":
             flush_heading()
             current_heading = text
-            current_lines = []
+            current_lines = child_text_lines(block, token, monthly_fragment.text)
             continue
         if kind == "daily_novena":
             flush_heading()
