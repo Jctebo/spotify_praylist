@@ -234,6 +234,9 @@ Purpose:
 Script:
 - `jobs/novena/generate_daily_novena_prayer.py`
 
+Starter config:
+- copy values from [.env.example](c:/Users/jcteb/Code/spotify_praylist/.env.example) into your local environment or secret store; the novena/audio section now includes the render-hash metadata properties
+
 Required environment variables:
 - `OPENAI_API_KEY`
 - `NOTION_TOKEN`

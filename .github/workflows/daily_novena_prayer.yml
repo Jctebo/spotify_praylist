@@ -54,6 +54,8 @@ jobs:
           NOVENA_AUDIO_SPEED: "1.0"
           NOVENA_AUDIO_CAPTION: Daily Novena Prayer (Audio)
           NOVENA_AUDIO_FAIL_OPEN: "true"
+          NOTION_AUDIO_RENDER_HASH_PROPERTY: Render Hash
+          NOTION_AUDIO_SAVED_PROPERTY: Audio Saved
           USCCB_READINGS_ENABLED: "true"
           USCCB_READINGS_FAIL_OPEN: "true"
           USCCB_READINGS_BASE_URL: https://bible.usccb.org/bible/readings
