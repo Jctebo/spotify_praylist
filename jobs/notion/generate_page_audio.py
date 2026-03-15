@@ -671,10 +671,11 @@ def audio_fragment_from_notion_page(
     page: Dict[str, Any],
     *,
     target_date: datetime.date,
+    enforce_date_window: bool = True,
 ) -> Optional[tuple[str, Dict[str, Any]]]:
     if not page_property_checkbox(page, AUDIO_FRAGMENT_ENABLED_PROPERTY, default=True):
         return None
-    if not page_is_active_for_date(
+    if enforce_date_window and not page_is_active_for_date(
         page,
         start_property=AUDIO_FRAGMENT_START_DATE_PROPERTY,
         end_property=AUDIO_FRAGMENT_END_DATE_PROPERTY,
@@ -728,6 +729,48 @@ def load_audio_fragments_from_notion(token: str) -> Dict[str, Any]:
     if fragments:
         _AUDIO_FRAGMENTS_CACHE[cache_key] = deepcopy(fragments)
     return {"fragments": fragments} if fragments else {}
+
+
+def audio_fragment_date_sort_key(page: Dict[str, Any]) -> tuple[datetime.date, datetime.date]:
+    start_text, end_text = page_property_date_range(page, AUDIO_FRAGMENT_START_DATE_PROPERTY)
+    start_date = parse_iso_date(start_text) or datetime.date.min
+    end_date = parse_iso_date(end_text) or start_date
+    return (start_date, end_date)
+
+
+def monthly_intention_fragment_from_notion(
+    token: str,
+    *,
+    target_date: datetime.date,
+) -> Optional[Dict[str, Any]]:
+    database_id = notion_audio_fragments_database_id(token)
+    if not database_id:
+        return None
+    pages = shared.notion_get_all_pages(database_id, token)
+    candidates: List[tuple[Dict[str, Any], Dict[str, Any]]] = []
+    active: List[tuple[Dict[str, Any], Dict[str, Any]]] = []
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        parsed = audio_fragment_from_notion_page(page, target_date=target_date, enforce_date_window=False)
+        if not parsed:
+            continue
+        _, fragment = parsed
+        if str(fragment.get("collection", "")).strip() != AUDIO_FRAGMENT_MONTHLY_COLLECTION:
+            continue
+        candidates.append((page, fragment))
+        if page_is_active_for_date(
+            page,
+            start_property=AUDIO_FRAGMENT_START_DATE_PROPERTY,
+            end_property=AUDIO_FRAGMENT_END_DATE_PROPERTY,
+            target_date=target_date,
+        ):
+            active.append((page, fragment))
+    source = active if active else candidates
+    if not source:
+        return None
+    source.sort(key=lambda item: audio_fragment_date_sort_key(item[0]), reverse=True)
+    return deepcopy(source[0][1])
 
 
 def parse_fragment_sequence(text: str) -> List[str]:
@@ -1079,6 +1122,35 @@ def build_monthly_intention_fragment(monthly_intention: Dict[str, str], settings
     )
 
 
+def build_monthly_intention_fragment_from_notion_or_provider(
+    token: str,
+    settings: Dict[str, Any],
+    base_url: str,
+) -> PageAudioFragment:
+    notion_fragment = None
+    if str(token or "").strip():
+        try:
+            notion_fragment = monthly_intention_fragment_from_notion(token, target_date=shared.local_today())
+        except Exception as exc:
+            print(f"page_audio monthly_intention_source=provider fallback_reason={type(exc).__name__}")
+    if isinstance(notion_fragment, dict):
+        key = str(notion_fragment.get("key", "")).strip() or "monthly-intention"
+        label = str(notion_fragment.get("label", "")).strip() or key
+        text = normalize_whitespace(str(notion_fragment.get("text", "")).strip())
+        if text:
+            return stable_text_fragment(
+                cache_root=page_audio_cache_dir(),
+                collection=AUDIO_FRAGMENT_MONTHLY_COLLECTION,
+                key=key,
+                label=label,
+                text=text,
+                settings=settings,
+                base_url=base_url,
+            )
+    monthly_intention = fetch_monthly_intention(shared.local_today())
+    return build_monthly_intention_fragment(monthly_intention, settings, base_url)
+
+
 def stable_text_fragment(
     *,
     cache_root: Path,
@@ -1423,8 +1495,7 @@ def resolve_output_sequence_fragment(
         )
         return build_daily_novena_audio_fragments(pages, title_property, novena_page_title, token)
     if value.upper() == SPECIAL_MONTHLY_INTENTION.upper():
-        monthly_intention = fetch_monthly_intention(shared.local_today())
-        return [build_monthly_intention_fragment(monthly_intention, settings, base_url)]
+        return [build_monthly_intention_fragment_from_notion_or_provider(token, settings, base_url)]
     return [
         build_named_audio_fragment(
             value,
@@ -1754,8 +1825,7 @@ def build_morning_prayer_fragments(
         raise RuntimeError("Target page has no id.")
     settings = tts_settings_from_config(config)
     cache_root = page_audio_cache_dir()
-    monthly_intention = fetch_monthly_intention(shared.local_today())
-    monthly_fragment = build_monthly_intention_fragment(monthly_intention, settings, base_url)
+    monthly_fragment = build_monthly_intention_fragment_from_notion_or_provider(token, settings, base_url)
     novena_page_title = (
         str(config.get("daily_novena_page_title", DEFAULT_DAILY_NOVENA_PAGE_TITLE)).strip()
         or DEFAULT_DAILY_NOVENA_PAGE_TITLE
@@ -3223,6 +3293,17 @@ def extract_month_sections_from_pdf_text(text: str) -> Dict[str, str]:
     return out
 
 
+def clean_monthly_intention_body_clause(text: str) -> str:
+    value = re.sub(r"^Let us pray\s+", "", str(text or "").strip(), flags=re.IGNORECASE).strip().rstrip(".")
+    value = re.sub(
+        r"\s+(?:Francis|Leo)\s+Vatican,.*?(?:Original:\s*[A-Za-z]+)?$",
+        "",
+        value,
+        flags=re.IGNORECASE,
+    ).strip().rstrip(".")
+    return normalize_whitespace(value)
+
+
 def parse_monthly_intention_section(month_name: str, section: str) -> Dict[str, str]:
     value = str(section or "").strip()
     title = value.strip().strip(".")
@@ -3231,7 +3312,7 @@ def parse_monthly_intention_section(month_name: str, section: str) -> Dict[str, 
     if match:
         title = value[: match.start()].strip().strip(".")
         body = value[match.start() :].strip()
-    body_clause = re.sub(r"^Let us pray\s+", "", body, flags=re.IGNORECASE).strip().rstrip(".")
+    body_clause = clean_monthly_intention_body_clause(body)
     spoken_text = f"For the Holy Father's monthly intention: {body_clause}." if body_clause else (
         f"For the Holy Father's monthly intention this month: {title}."
     )
@@ -3241,6 +3322,28 @@ def parse_monthly_intention_section(month_name: str, section: str) -> Dict[str, 
         "body": body,
         "spoken_text": normalize_whitespace(spoken_text),
     }
+
+
+def normalize_monthly_intention_payload(payload: Dict[str, Any]) -> Dict[str, str]:
+    month = str(payload.get("month", "")).strip()
+    title = normalize_whitespace(str(payload.get("title", "")).strip().strip("."))
+    body = normalize_whitespace(str(payload.get("body", "")).strip())
+    body_clause = clean_monthly_intention_body_clause(body)
+    spoken_text = (
+        f"For the Holy Father's monthly intention: {body_clause}."
+        if body_clause
+        else f"For the Holy Father's monthly intention this month: {title or month}."
+    )
+    normalized = {
+        "month": month,
+        "title": title,
+        "body": body,
+        "spoken_text": normalize_whitespace(spoken_text),
+    }
+    source_url = str(payload.get("source_url", "")).strip()
+    if source_url:
+        normalized["source_url"] = source_url
+    return normalized
 
 
 def fetch_monthly_intention(target_date: datetime.date) -> Dict[str, str]:
@@ -3257,7 +3360,7 @@ def fetch_monthly_intention(target_date: datetime.date) -> Dict[str, str]:
         cached_months = cached_payload.get("months") or {}
         cached_month = cached_months.get(month_name)
         if isinstance(cached_month, dict) and str(cached_month.get("spoken_text", "")).strip():
-            return cached_month
+            return normalize_monthly_intention_payload(cached_month)
 
     pdf_url = popes_prayer_pdf_url_for_year(year, language="en")
     response = page_audio_http_get(pdf_url, timeout=60)
@@ -3268,7 +3371,7 @@ def fetch_monthly_intention(target_date: datetime.date) -> Dict[str, str]:
     for parsed_month, section in sections.items():
         parsed = parse_monthly_intention_section(parsed_month, section)
         parsed["source_url"] = pdf_url
-        months_payload[parsed_month] = parsed
+        months_payload[parsed_month] = normalize_monthly_intention_payload(parsed)
     cache_path.write_text(json.dumps({"source_url": pdf_url, "months": months_payload}, indent=2), encoding="utf-8")
     result = months_payload.get(month_name)
     if not isinstance(result, dict) or not str(result.get("spoken_text", "")).strip():

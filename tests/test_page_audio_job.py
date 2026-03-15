@@ -988,6 +988,88 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertEqual(sorted(payload["fragments"].keys()), ["morning-offering"])
 
+    def test_monthly_intention_fragment_from_notion_prefers_active_row(self):
+        env = {"NOTION_AUDIO_FRAGMENTS_DATABASE_ID": "fragments_db_1"}
+        pages = [
+            {
+                "id": "frag_1",
+                "properties": {
+                    "Name": _title_prop("March Intention"),
+                    "Fragment Key": _rich_text_prop("pope-intention-2026-03"),
+                    "Spoken Text": _rich_text_prop("March text."),
+                    "Enabled": _checkbox_prop(True),
+                    "Start Date": _date_prop("2026-03-01"),
+                    "End Date": _date_prop("2026-03-31"),
+                    "Collection": _rich_text_prop("monthly_intention"),
+                },
+            },
+            {
+                "id": "frag_2",
+                "properties": {
+                    "Name": _title_prop("February Intention"),
+                    "Fragment Key": _rich_text_prop("pope-intention-2026-02"),
+                    "Spoken Text": _rich_text_prop("February text."),
+                    "Enabled": _checkbox_prop(True),
+                    "Start Date": _date_prop("2026-02-01"),
+                    "End Date": _date_prop("2026-02-28"),
+                    "Collection": _rich_text_prop("monthly_intention"),
+                },
+            },
+        ]
+
+        with temp_env(env), patch.object(self.mod.shared, "notion_get_all_pages", return_value=pages):
+            fragment = self.mod.monthly_intention_fragment_from_notion("token", target_date=datetime.date(2026, 3, 14))
+
+        self.assertIsNotNone(fragment)
+        self.assertEqual(fragment["key"], "pope-intention-2026-03")
+
+    def test_monthly_intention_fragment_from_notion_falls_back_to_latest_row(self):
+        env = {"NOTION_AUDIO_FRAGMENTS_DATABASE_ID": "fragments_db_1"}
+        pages = [
+            {
+                "id": "frag_1",
+                "properties": {
+                    "Name": _title_prop("December Intention"),
+                    "Fragment Key": _rich_text_prop("pope-intention-2026-12"),
+                    "Spoken Text": _rich_text_prop("December text."),
+                    "Enabled": _checkbox_prop(True),
+                    "Start Date": _date_prop("2026-12-01"),
+                    "End Date": _date_prop("2026-12-31"),
+                    "Collection": _rich_text_prop("monthly_intention"),
+                },
+            },
+            {
+                "id": "frag_2",
+                "properties": {
+                    "Name": _title_prop("November Intention"),
+                    "Fragment Key": _rich_text_prop("pope-intention-2026-11"),
+                    "Spoken Text": _rich_text_prop("November text."),
+                    "Enabled": _checkbox_prop(True),
+                    "Start Date": _date_prop("2026-11-01"),
+                    "End Date": _date_prop("2026-11-30"),
+                    "Collection": _rich_text_prop("monthly_intention"),
+                },
+            },
+        ]
+
+        with temp_env(env), patch.object(self.mod.shared, "notion_get_all_pages", return_value=pages):
+            fragment = self.mod.monthly_intention_fragment_from_notion("token", target_date=datetime.date(2027, 1, 5))
+
+        self.assertIsNotNone(fragment)
+        self.assertEqual(fragment["key"], "pope-intention-2026-12")
+
+    def test_parse_monthly_intention_section_strips_trailing_pdf_footer(self):
+        parsed = self.mod.parse_monthly_intention_section(
+            "December",
+            "For single-parent families Let us pray for families experiencing the absence of a mother or father, that they may find support and accompaniment in the Church, and help and strength in the Faith during difficult times. Francis Vatican, December 31, 2024 Original: Italian",
+        )
+
+        self.assertEqual(parsed["title"], "For single-parent families")
+        self.assertEqual(
+            parsed["spoken_text"],
+            "For the Holy Father's monthly intention: for families experiencing the absence of a mother or father, that they may find support and accompaniment in the Church, and help and strength in the Faith during difficult times.",
+        )
+
     def test_load_audio_fragments_from_notion_supports_prompt_rows(self):
         env = {"NOTION_AUDIO_FRAGMENTS_DATABASE_ID": "fragments_db_1", "OAI_MODEL": "gpt-4.1-mini"}
         pages = [
