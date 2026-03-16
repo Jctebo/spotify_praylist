@@ -36,6 +36,18 @@ class TestDevotionalImageJob(unittest.TestCase):
         result = Image.open(io.BytesIO(overlaid))
         self.assertEqual(result.size, (1024, 1536))
 
+    def test_apply_wide_title_overlay_draws_text_without_resizing(self):
+        image = Image.new("RGB", (1536, 1024), color=(28, 40, 56))
+        raw = io.BytesIO()
+        image.save(raw, format="PNG")
+        source_bytes = raw.getvalue()
+
+        overlaid = self.mod.apply_wide_title_overlay(source_bytes, "St. Joseph", "png")
+
+        self.assertNotEqual(overlaid, source_bytes)
+        result = Image.open(io.BytesIO(overlaid))
+        self.assertEqual(result.size, (1536, 1024))
+
     def test_dedupe_render_targets_prefers_calendar_saint_joseph_over_monthly_devotion(self):
         calendar_target = self.mod.RenderTarget(
             source=self.mod.SOURCE_CALENDAR,
@@ -68,7 +80,7 @@ class TestDevotionalImageJob(unittest.TestCase):
         self.assertEqual(deduped[0].source, self.mod.SOURCE_CALENDAR)
         self.assertEqual(deduped[0].subject_slug, "saint-joseph-spouse-of-the-blessed-virgin-mary")
 
-    def test_select_title_placement_prefers_upper_side_box_on_uniform_portrait(self):
+    def test_select_title_placement_prefers_lower_center_box_on_uniform_portrait(self):
         image = Image.new("RGBA", (1024, 1536), color=(64, 64, 64, 255))
         draw = self.mod.ImageDraw.Draw(image)
         min_font = max(24, int(image.size[1] * 0.026))
@@ -79,12 +91,25 @@ class TestDevotionalImageJob(unittest.TestCase):
 
         self.assertIsNotNone(placement)
         candidate, _font, _lines, _bbox = placement
-        self.assertEqual(candidate.name, "top_left")
+        self.assertEqual(candidate.name, "bottom_center")
 
-    def test_select_title_placement_avoids_busy_side_and_chooses_clear_upper_box(self):
+    def test_select_title_placement_prefers_lower_center_box_on_uniform_widescreen(self):
+        image = Image.new("RGBA", (1536, 1024), color=(64, 64, 64, 255))
+        draw = self.mod.ImageDraw.Draw(image)
+        min_font = max(24, int(image.size[1] * 0.026))
+        max_font = max(min_font, int(image.size[1] * 0.07))
+        line_spacing = max(8, int(image.size[1] * 0.012))
+
+        placement = self.mod._select_title_placement(image, draw, "Saint Joseph", min_font, max_font, line_spacing)
+
+        self.assertIsNotNone(placement)
+        candidate, _font, _lines, _bbox = placement
+        self.assertEqual(candidate.name, "bottom_center")
+
+    def test_select_title_placement_avoids_busy_lower_boxes_and_chooses_clear_lower_box(self):
         image = Image.new("RGBA", (1024, 1536), color=(72, 72, 72, 255))
         candidates = {candidate.name: candidate for candidate in self.mod._title_box_candidates(*image.size)}
-        noisy_names = {"top_left", "bottom_left", "bottom_right", "bottom_center", "top_center"}
+        noisy_names = {"bottom_left", "bottom_center"}
         pixels = image.load()
 
         for name in noisy_names:
@@ -108,7 +133,7 @@ class TestDevotionalImageJob(unittest.TestCase):
 
         self.assertIsNotNone(placement)
         candidate, _font, _lines, _bbox = placement
-        self.assertEqual(candidate.name, "top_right")
+        self.assertEqual(candidate.name, "bottom_right")
 
     def test_migrate_legacy_sidecars_moves_prompt_and_window_into_metadata_archive(self):
         with tempfile.TemporaryDirectory() as tmp:

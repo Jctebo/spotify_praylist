@@ -1386,19 +1386,28 @@ def _fit_title_to_box(
 
 
 def _title_box_candidates(width: int, height: int) -> List[TitlePlacementCandidate]:
+    if width >= height:
+        return [
+            TitlePlacementCandidate(
+                "bottom_center", int(width * 0.24), int(height * 0.74), int(width * 0.52), int(height * 0.16), 0.0
+            ),
+            TitlePlacementCandidate(
+                "bottom_left", int(width * 0.05), int(height * 0.72), int(width * 0.28), int(height * 0.18), 1.0
+            ),
+            TitlePlacementCandidate(
+                "bottom_right", int(width * 0.67), int(height * 0.72), int(width * 0.28), int(height * 0.18), 1.0
+            ),
+        ]
     return [
-        TitlePlacementCandidate("top_left", int(width * 0.05), int(height * 0.06), int(width * 0.38), int(height * 0.18), 0.0),
-        TitlePlacementCandidate("top_right", int(width * 0.57), int(height * 0.06), int(width * 0.38), int(height * 0.18), 0.0),
         TitlePlacementCandidate(
-            "bottom_left", int(width * 0.05), int(height * 0.60), int(width * 0.38), int(height * 0.18), 4.0
+            "bottom_center", int(width * 0.22), int(height * 0.74), int(width * 0.56), int(height * 0.15), 0.0
         ),
         TitlePlacementCandidate(
-            "bottom_right", int(width * 0.57), int(height * 0.60), int(width * 0.38), int(height * 0.18), 4.0
+            "bottom_left", int(width * 0.05), int(height * 0.72), int(width * 0.30), int(height * 0.18), 1.0
         ),
         TitlePlacementCandidate(
-            "bottom_center", int(width * 0.18), int(height * 0.62), int(width * 0.64), int(height * 0.16), 8.0
+            "bottom_right", int(width * 0.65), int(height * 0.72), int(width * 0.30), int(height * 0.18), 1.0
         ),
-        TitlePlacementCandidate("top_center", int(width * 0.18), int(height * 0.04), int(width * 0.64), int(height * 0.16), 22.0),
     ]
 
 
@@ -1441,7 +1450,7 @@ def _select_title_placement(
     return candidate, font, lines, bbox
 
 
-def apply_portrait_title_overlay(image_bytes: bytes, title: str, image_format: str) -> bytes:
+def apply_title_overlay(image_bytes: bytes, title: str, image_format: str) -> bytes:
     image = Image.open(io.BytesIO(image_bytes)).convert("RGBA")
     width, height = image.size
     draw = ImageDraw.Draw(image)
@@ -1494,6 +1503,14 @@ def apply_portrait_title_overlay(image_bytes: bytes, title: str, image_format: s
     save_image = image.convert("RGB") if save_format == "JPEG" else image
     save_image.save(out, format=save_format)
     return out.getvalue()
+
+
+def apply_portrait_title_overlay(image_bytes: bytes, title: str, image_format: str) -> bytes:
+    return apply_title_overlay(image_bytes, title, image_format)
+
+
+def apply_wide_title_overlay(image_bytes: bytes, title: str, image_format: str) -> bytes:
+    return apply_title_overlay(image_bytes, title, image_format)
 
 
 def write_image_file(image_bytes: bytes, output_dir: Path, filename: str) -> Path:
@@ -1816,9 +1833,10 @@ def main() -> int:
                     today=today,
                     layout_hint=(
                         "Phone prayer-card composition in portrait 2:3/9:16 style (not square). "
-                        "Reserve an uncluttered title-safe band in the upper-middle area, "
+                        "Reserve an uncluttered title-safe band in the lower third near the bottom edge, "
+                        "keeping the composition intentionally low rather than high or centered, "
                         "but do not paint any lettering into the artwork itself. "
-                        "Leave generous margins so a later title overlay cannot be clipped by lock-screen crop."
+                        "Leave enough margin for a later title overlay to breathe without pushing it up toward the middle."
                     ),
                 )
                 image_bytes = generate_image_bytes(client, image_model, prompt_text, image_size, image_quality, image_format)
@@ -1845,7 +1863,8 @@ def main() -> int:
                     today=today,
                     layout_hint=(
                         "Widescreen devotional background in native 16:9 composition (not square, not portrait). "
-                        "Frame the scene for full-width landscape use with strong negative space and no text or typography rendered into the artwork."
+                        "Frame the scene for full-width landscape use with strong negative space in the lower third near the bottom edge, "
+                        "and no text or typography rendered into the artwork."
                     ),
                 )
                 image_bytes_wide = generate_image_bytes(
@@ -1855,6 +1874,11 @@ def main() -> int:
                     size=image_size_wide,
                     quality=image_quality,
                     image_format=image_format,
+                )
+                image_bytes_wide = apply_wide_title_overlay(
+                    image_bytes_wide,
+                    overlay_title_for_subject(target.subject),
+                    image_format,
                 )
                 written_wide = write_image_file(image_bytes_wide, wide_dir, filename)
                 prompt_path_wide = write_archived_sidecar(storage, written_wide, ".prompt.txt", prompt_text_wide)
