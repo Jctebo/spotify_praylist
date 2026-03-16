@@ -1855,6 +1855,40 @@ def build_page_intention_fragment(
     )
 
 
+def is_random_intention_fragment(fragment: Optional[PageAudioFragment]) -> bool:
+    if fragment is None:
+        return False
+    fragment_key = normalize_flag_value(fragment.fragment_key)
+    if fragment_key == normalize_flag_value(RANDOM_INTENTION_FRAGMENT_KEY):
+        return True
+    collection = normalize_flag_value(fragment.collection)
+    label = normalize_flag_value(fragment.label)
+    return collection == normalize_flag_value(RANDOM_INTENTION_FRAGMENT_COLLECTION) and label == normalize_flag_value(
+        RANDOM_INTENTION_FRAGMENT_LABEL
+    )
+
+
+def strip_duplicate_leading_random_intention(
+    existing_fragments: Sequence[PageAudioFragment],
+    plan: PageAudioPlan,
+) -> PageAudioPlan:
+    if not existing_fragments or not plan.fragments:
+        return plan
+    prior = existing_fragments[-1]
+    leading = plan.fragments[0]
+    if not (is_random_intention_fragment(prior) and is_random_intention_fragment(leading)):
+        return plan
+    if str(prior.hash_value or "").strip() != str(leading.hash_value or "").strip():
+        return plan
+    return PageAudioPlan(
+        fragments=list(plan.fragments[1:]),
+        synced_text=plan.synced_text,
+        text_property=plan.text_property,
+        text_target=plan.text_target,
+        content_blocks=deepcopy(plan.content_blocks),
+    )
+
+
 def audio_block_source_url(block: Dict[str, Any]) -> str:
     audio = block.get("audio") or {}
     audio_type = str(audio.get("type", "")).strip()
@@ -3229,7 +3263,8 @@ def build_opus_dei_two_list_plan(
         if role in {ASSEMBLY_ROLE_PRIMARY_SOURCE, ASSEMBLY_ROLE_FALLBACK_SOURCE} and text_only_append_selected:
             normalized_child = strip_plan_text_output(normalized_child)
         if role in {ASSEMBLY_ROLE_PRIMARY_SOURCE, ASSEMBLY_ROLE_FALLBACK_SOURCE}:
-            if not child_plan.fragments:
+            normalized_child = strip_duplicate_leading_random_intention(plan.fragments, normalized_child)
+            if not normalized_child.fragments:
                 source_errors.append(f"{label}: no audio fragments were produced")
                 continue
             source_selected = True

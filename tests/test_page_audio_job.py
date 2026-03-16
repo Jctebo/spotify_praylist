@@ -2442,6 +2442,59 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertEqual([fragment.label for fragment in plan.fragments], ["Fallback Source"])
 
+    def test_build_opus_dei_two_list_plan_strips_duplicate_leading_random_intention_from_source(self):
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Saint of the Day")}}
+        row_settings = {
+            "title": "Saint of the Day",
+            "assembly_mode": self.mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS,
+            "text_sync_mode": self.mod.OPUS_DEI_TEXT_SYNC_MODE_NONE,
+            "text_property": "Description",
+            "audio_config": {"tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}},
+            "fragment_specs": [
+                {"label": "Random Intention", "kind": self.mod.FRAGMENT_TYPE_RANDOM_INTENTION, "assembly_role": self.mod.ASSEMBLY_ROLE_APPEND},
+                {"label": "Saint Source", "kind": self.mod.FRAGMENT_KIND_RSS_AUDIO, "assembly_role": self.mod.ASSEMBLY_ROLE_PRIMARY_SOURCE, "config": {}},
+            ],
+        }
+        intention_a = self.mod.PageAudioFragment(
+            kind="tts",
+            label=self.mod.RANDOM_INTENTION_FRAGMENT_LABEL,
+            hash_value="same_hash",
+            fragment_key=self.mod.RANDOM_INTENTION_FRAGMENT_KEY,
+            collection=self.mod.RANDOM_INTENTION_FRAGMENT_COLLECTION,
+        )
+        intention_b = self.mod.PageAudioFragment(
+            kind="tts",
+            label=self.mod.RANDOM_INTENTION_FRAGMENT_LABEL,
+            hash_value="same_hash",
+            fragment_key=self.mod.RANDOM_INTENTION_FRAGMENT_KEY,
+            collection=self.mod.RANDOM_INTENTION_FRAGMENT_COLLECTION,
+        )
+        source_fragment = self.mod.PageAudioFragment(
+            kind="source_audio",
+            label="Saint Source",
+            hash_value="audio_hash",
+            source_url="https://example.com/saint.mp3",
+        )
+
+        with patch.object(
+            self.mod,
+            "build_detailed_fragment_child_plan",
+            side_effect=[
+                self.mod.PageAudioPlan(fragments=[intention_a]),
+                self.mod.PageAudioPlan(fragments=[intention_b, source_fragment]),
+            ],
+        ):
+            plan = self.mod.build_opus_dei_two_list_plan(
+                page=page,
+                pages=[page],
+                title_property="Name",
+                row_settings=row_settings,
+                token="token",
+                base_url="https://api.openai.com/v1",
+            )
+
+        self.assertEqual([fragment.label for fragment in plan.fragments], ["Random Intention", "Saint Source"])
+
 
 if __name__ == "__main__":
     unittest.main()
