@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from openai import OpenAI
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageStat
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
@@ -163,8 +163,9 @@ COLOR PALETTE (AUTOMATIC)
 
 TEXT TREATMENT (AUTOMATIC)
 - Reserve clean negative space for a later title overlay
-- Do not render letters, words, captions, or typography into the artwork itself unless explicitly requested
-- Keep one clear title-safe area in the upper third or lower third
+- Absolutely do not render letters, words, captions, typography, banners, plaques, page text, or readable glyphs anywhere in the artwork
+- If a book, scroll, mosaic, or architectural detail is shown, it must remain blank or purely ornamental with no readable marks
+- Keep one clear title-safe area in the lower third near the bottom edge
 - Preserve safe margins: leave at least 18% padding from left/right and 20% from top/bottom
 - Never place important visual detail where a short title line would need to sit
 - Prioritize legibility on phone lock screens
@@ -1308,11 +1309,16 @@ def generate_image_bytes(
 
 def _font_candidates() -> List[Path]:
     candidates = [
-        Path(r"C:\Windows\Fonts\georgiab.ttf"),
         Path(r"C:\Windows\Fonts\georgia.ttf"),
+        Path(r"C:\Windows\Fonts\times.ttf"),
+        Path(r"C:\Windows\Fonts\georgiab.ttf"),
         Path(r"C:\Windows\Fonts\timesbd.ttf"),
+        Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
         Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
+        Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
         Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
+        Path("/Library/Fonts/Georgia.ttf"),
+        Path("/Library/Fonts/Times New Roman.ttf"),
         Path("/Library/Fonts/Georgia Bold.ttf"),
         Path("/Library/Fonts/Times New Roman Bold.ttf"),
     ]
@@ -1326,6 +1332,26 @@ def _load_title_font(size: int) -> ImageFont.ImageFont:
         except Exception:
             continue
     return ImageFont.load_default()
+
+
+def _clamp_color(value: float) -> int:
+    return max(0, min(255, int(round(value))))
+
+
+def _blend_rgb(base: Tuple[int, int, int], target: Tuple[int, int, int], ratio: float) -> Tuple[int, int, int]:
+    mix = max(0.0, min(1.0, float(ratio)))
+    inv = 1.0 - mix
+    return tuple(_clamp_color((base[idx] * inv) + (target[idx] * mix)) for idx in range(3))
+
+
+def _sample_average_rgb(image: Image.Image, box: Tuple[int, int, int, int]) -> Tuple[int, int, int]:
+    left, top, right, bottom = box
+    crop = image.crop((left, top, max(left + 1, right), max(top + 1, bottom))).convert("RGB")
+    stat = ImageStat.Stat(crop)
+    means = list((stat.mean or [96.0, 88.0, 72.0])[:3])
+    while len(means) < 3:
+        means.append(means[-1] if means else 96.0)
+    return tuple(_clamp_color(value) for value in means[:3])
 
 
 def _wrap_text(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont, max_width: int) -> List[str]:
@@ -1455,46 +1481,55 @@ def apply_title_overlay(image_bytes: bytes, title: str, image_format: str) -> by
     width, height = image.size
     draw = ImageDraw.Draw(image)
 
-    min_font = max(24, int(height * 0.026))
-    max_font = max(min_font, int(height * 0.07))
-    line_spacing = max(8, int(height * 0.012))
-
-    placement = _select_title_placement(image, draw, title, min_font, max_font, line_spacing)
-    if not placement:
+    title_text = overlay_title_for_subject(title)
+    if not title_text:
         return image_bytes
 
-    candidate, best_font, best_lines, bbox = placement
+    is_wide = width >= height
+    band_top = int(height * (0.856 if is_wide else 0.84))
+    sample_top = int(height * (0.54 if is_wide else 0.56))
+    sample_bottom = max(sample_top + 1, band_top - int(height * 0.07))
+    sample_box = (
+        int(width * 0.08),
+        sample_top,
+        int(width * 0.92),
+        sample_bottom,
+    )
+    base_rgb = _sample_average_rgb(image, sample_box)
+    band_rgb = _blend_rgb(base_rgb, (232, 214, 184), 0.38)
+    text_rgb = _blend_rgb(band_rgb, (34, 25, 16), 0.85)
+
+    min_font = max(18, int(height * (0.019 if is_wide else 0.022)))
+    max_font = max(min_font, int(height * (0.042 if is_wide else 0.05)))
+    line_spacing = max(4, int(height * 0.006))
+    text_box_width = int(width * 0.84)
+    text_box_height = max(1, height - band_top - int(height * 0.045))
+    fitted = _fit_title_to_box(draw, title_text, text_box_width, text_box_height, min_font, max_font, line_spacing)
+    if not fitted:
+        return image_bytes
+
+    best_font, best_lines, bbox = fitted
     text = "\n".join(best_lines)
     text_width = bbox[2] - bbox[0]
     text_height = bbox[3] - bbox[1]
-    box_width = min(width, candidate.left + candidate.width) - candidate.left
-    box_height = min(height, candidate.top + candidate.height) - candidate.top
-    x = candidate.left + (box_width - text_width) / 2
-    y = candidate.top + (box_height - text_height) / 2
-    pad_x = int(width * 0.035)
-    pad_y = int(height * 0.02)
+    x = (width - text_width) / 2
+    y = band_top + ((height - band_top - text_height) / 2)
 
     overlay = Image.new("RGBA", image.size, (0, 0, 0, 0))
     overlay_draw = ImageDraw.Draw(overlay)
-    overlay_draw.rounded_rectangle(
-        (
-            x - pad_x,
-            y - pad_y,
-            x + text_width + pad_x,
-            y + text_height + pad_y,
-        ),
-        radius=max(18, int(width * 0.025)),
-        fill=(18, 14, 10, 120),
-    )
+    fade_height = max(22, int(height * 0.064))
+    for step in range(fade_height):
+        fade_y = band_top - fade_height + step
+        alpha = _clamp_color(72.0 + (183.0 * ((step + 1) / float(fade_height))))
+        overlay_draw.rectangle((0, fade_y, width, fade_y + 1), fill=(*band_rgb, alpha))
+    overlay_draw.rectangle((0, band_top, width, height), fill=(*band_rgb, 255))
     overlay_draw.multiline_text(
         (x, y),
         text,
         font=best_font,
-        fill=(247, 242, 232, 255),
+        fill=(*text_rgb, 255),
         align="center",
         spacing=line_spacing,
-        stroke_width=max(1, int(height * 0.0025)),
-        stroke_fill=(22, 18, 14, 180),
     )
     image = Image.alpha_composite(image, overlay)
 
@@ -1835,7 +1870,7 @@ def main() -> int:
                         "Phone prayer-card composition in portrait 2:3/9:16 style (not square). "
                         "Reserve an uncluttered title-safe band in the lower third near the bottom edge, "
                         "keeping the composition intentionally low rather than high or centered, "
-                        "but do not paint any lettering into the artwork itself. "
+                        "and absolutely do not paint any lettering, captions, plaques, banners, or readable symbols into the artwork itself. "
                         "Leave enough margin for a later title overlay to breathe without pushing it up toward the middle."
                     ),
                 )
@@ -1864,7 +1899,7 @@ def main() -> int:
                     layout_hint=(
                         "Widescreen devotional background in native 16:9 composition (not square, not portrait). "
                         "Frame the scene for full-width landscape use with strong negative space in the lower third near the bottom edge, "
-                        "and no text or typography rendered into the artwork."
+                        "and absolutely no text, typography, banners, plaques, or readable symbols rendered into the artwork."
                     ),
                 )
                 image_bytes_wide = generate_image_bytes(
