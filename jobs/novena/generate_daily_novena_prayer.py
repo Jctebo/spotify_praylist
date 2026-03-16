@@ -72,7 +72,7 @@ NOVENA_AUDIO_MARKER = "[AUTOGEN_NOVENA_AUDIO]"
 NOVENA_AUDIO_HASH_MARKER_PREFIX = "[AUTOGEN_NOVENA_AUDIO_HASH:"
 DAILY_NOVENA_AUDIO_RENDER_VERSION = "daily_novena_audio_v1"
 SAINT_NOVENA_AUDIO_RENDER_VERSION = "saint_novena_audio_v2"
-SAINT_NOVENA_PAYLOAD_RENDER_VERSION = "saint_novena_payload_v1"
+SAINT_NOVENA_PAYLOAD_RENDER_VERSION = "saint_novena_payload_v2"
 NOVENA_SECTION_MARKER = "[AUTOGEN_DAILY_ROLLING_NOVENA]"
 NOVENA_DAY_MODE = "NOVENA_DAY_MODE"  # default true when writing into calendar rows
 NOVENA_TEST_SAINT_NAME = "NOVENA_TEST_SAINT_NAME"  # optional saint name for day-by-day backfill test
@@ -801,14 +801,22 @@ def saint_novena_day_audio_fragments(
     intercession: str,
     daily_prayer: str,
 ) -> List[Dict[str, str]]:
+    prayer_text = str(daily_prayer or "").strip() or "Daily novena prayer."
+    intercession_text = str(intercession or "").strip()
+    if prayer_text and intercession_text:
+        first_sentence, separator, remainder = prayer_text.partition(".")
+        if separator and normalize_name_for_match(first_sentence) == normalize_name_for_match(intercession_text.rstrip(".!?")):
+            prayer_text = remainder.strip() or prayer_text
     fragments: List[Dict[str, str]] = [
         {"key": "day_intro", "label": "Day Intro", "text": f"Day {day_num} of the novena."},
     ]
     if theme:
         fragments.append({"key": "theme", "label": "Theme", "text": f"Theme: {theme}."})
+    if intercession_text:
+        fragments.append({"key": "intercession", "label": "Intercession", "text": f"Intercession: {intercession_text}."})
     if opening:
         fragments.append({"key": "opening_prayer", "label": "Opening Prayer", "text": opening})
-    fragments.append({"key": "daily_prayer", "label": "Daily Prayer", "text": daily_prayer or "Daily novena prayer."})
+    fragments.append({"key": "daily_prayer", "label": "Daily Prayer", "text": prayer_text})
     if closing:
         fragments.append({"key": "closing_prayer", "label": "Closing Prayer", "text": closing})
     return fragments
@@ -1879,7 +1887,9 @@ def call_openai_saint_devotional_content(
         "Requirements:\n"
         "- life_sections can have multiple subsections\n"
         "- daily themes must connect to saint's life\n"
-        "- include clear daily intercession request in each day\n"
+        '- "intercession" must contain the daily petition or request for the saint\'s help\n'
+        '- "daily_prayer" must be the main prayer body for the day and must not repeat or restate the same intercession request\n'
+        '- do not include "Intercession:" labels or personal-intention placeholders inside "daily_prayer"\n'
         "- theological fidelity and devotional tone\n"
     )
     text = ""

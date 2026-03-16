@@ -553,7 +553,7 @@ class TestNovenaJob(unittest.TestCase):
         self.assertTrue(audio_exists)
         self.assertTrue(meta_exists)
 
-    def test_saint_novena_day_audio_fragments_omits_standalone_intercession(self):
+    def test_saint_novena_day_audio_fragments_keeps_configured_intercession(self):
         fragments = self.mod.saint_novena_day_audio_fragments(
             day_num=4,
             opening="Opening prayer.",
@@ -565,9 +565,23 @@ class TestNovenaJob(unittest.TestCase):
 
         self.assertEqual(
             [row["key"] for row in fragments],
-            ["day_intro", "theme", "opening_prayer", "daily_prayer", "closing_prayer"],
+            ["day_intro", "theme", "intercession", "opening_prayer", "daily_prayer", "closing_prayer"],
         )
-        self.assertFalse(any("Intercession:" in row["text"] for row in fragments))
+        self.assertTrue(any("Intercession:" in row["text"] for row in fragments))
+
+    def test_saint_novena_day_audio_fragments_strips_exact_duplicate_intercession_from_prayer(self):
+        fragments = self.mod.saint_novena_day_audio_fragments(
+            day_num=2,
+            opening="Opening prayer.",
+            closing="Closing prayer.",
+            theme="Hope",
+            intercession="Saint Agnes, pray that we remain steadfast.",
+            daily_prayer="Saint Agnes, pray that we remain steadfast. Lord, deepen our hope and fidelity. Amen.",
+        )
+
+        self.assertEqual(fragments[2]["key"], "intercession")
+        self.assertEqual(fragments[4]["key"], "daily_prayer")
+        self.assertEqual(fragments[4]["text"], "Lord, deepen our hope and fidelity. Amen.")
 
     def test_main_happy_path(self):
         env = {
