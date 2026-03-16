@@ -202,6 +202,39 @@ class TestRefreshJob(unittest.TestCase):
 
         self.assertEqual(queue, ["spotify:episode:legacy_first", "spotify:episode:explicit_second"])
 
+    def test_build_queue_for_playlist_from_notion_ignores_two_list_audio_fields(self):
+        env = {
+            "NOTION_TOKEN": "notion_token",
+            "NOTION_DATABASE_ID": "db_1",
+        }
+        pages = [
+            {
+                "properties": {
+                    "Name": _title_prop("Spotify Morning Prayer"),
+                    "Platform": _select_prop("spotify"),
+                    "Playlist": _rich_text_prop("Morning"),
+                    "Order": _number_prop(1),
+                    "Spotify Resolver": _rich_text_prop("MORNING"),
+                    "Spotify Fallback Resolver": _rich_text_prop(""),
+                    "URI": _rich_text_prop(""),
+                    "Assembly Mode": _rich_text_prop("fragments"),
+                    "Special Builder": _rich_text_prop(""),
+                    "Text Sync Mode": _rich_text_prop("none"),
+                    "Enabled": _checkbox_prop(True),
+                }
+            }
+        ]
+
+        with temp_env(env):
+            with patch.object(self.mod, "notion_get_all_pages", return_value=pages), patch.object(
+                self.mod, "resolve_spec_uri", return_value="spotify:episode:morning"
+            ):
+                queue = self.mod.build_queue_for_playlist_from_notion(
+                    object(), "Morning", "Wednesday", {}, {}, {}, {}
+                )
+
+        self.assertEqual(queue, ["spotify:episode:morning"])
+
     def test_spotify_value_to_bookmark_url_normalizes_supported_inputs(self):
         self.assertEqual(
             self.mod.spotify_value_to_bookmark_url("spotify:episode:abc123"),

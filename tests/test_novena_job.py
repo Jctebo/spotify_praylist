@@ -131,6 +131,33 @@ class TestNovenaJob(unittest.TestCase):
         self.assertEqual(children[1]["audio"]["type"], "file_upload")
         self.assertEqual(children[1]["audio"]["file_upload"]["id"], "upload_1")
 
+    def test_notion_clone_block_tree_preserves_heading_children(self):
+        heading = {
+            "id": "heading_1",
+            "type": "heading_3",
+            "has_children": True,
+            "heading_3": {
+                "rich_text": [{"plain_text": "Morning Offering", "type": "text", "text": {"content": "Morning Offering"}}]
+            },
+        }
+        child_blocks = [
+            {
+                "id": "paragraph_1",
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [{"plain_text": "Offer my day.", "type": "text", "text": {"content": "Offer my day."}}],
+                    "color": "default",
+                },
+            }
+        ]
+
+        with patch.object(self.mod, "notion_list_block_children", return_value=child_blocks):
+            cloned = self.mod.notion_clone_block_tree(heading, "token")
+
+        self.assertIsNotNone(cloned)
+        self.assertEqual(cloned["type"], "heading_3")
+        self.assertEqual(cloned["heading_3"]["children"][0]["type"], "paragraph")
+
     def test_append_usccb_readings_to_extra_pages_replaces_content_preserving_bookmarks(self):
         existing_blocks = [
             {
@@ -248,6 +275,83 @@ class TestNovenaJob(unittest.TestCase):
         self.assertEqual(data, {"results": []})
         self.assertEqual(request_mock.call_count, 2)
         sleep_mock.assert_called_once_with(1.0)
+
+    def test_notion_upload_file_uses_single_part_path_under_limit(self):
+        create_response = Mock()
+        create_response.raise_for_status.return_value = None
+        create_response.json.return_value = {"id": "upload_1"}
+        send_response = Mock()
+        send_response.raise_for_status.return_value = None
+
+        with patch.object(self.mod.requests, "post", side_effect=[create_response, send_response]) as post_mock:
+            upload_id = self.mod.notion_upload_file(
+                filename="sample.mp3",
+                content_type="audio/mpeg",
+                file_bytes=b"a" * 1024,
+                token="notion_token",
+            )
+
+        self.assertEqual(upload_id, "upload_1")
+        self.assertEqual(post_mock.call_count, 2)
+        create_call = post_mock.call_args_list[0]
+        self.assertEqual(create_call.args[0], "https://api.notion.com/v1/file_uploads")
+        self.assertEqual(
+            create_call.kwargs["json"],
+            {"filename": "sample.mp3", "content_type": "audio/mpeg"},
+        )
+        send_call = post_mock.call_args_list[1]
+        self.assertEqual(send_call.args[0], "https://api.notion.com/v1/file_uploads/upload_1/send")
+        self.assertEqual(send_call.kwargs["files"]["file"], ("sample.mp3", b"a" * 1024, "audio/mpeg"))
+        self.assertIsNone(send_call.kwargs["data"])
+
+    def test_notion_upload_file_uses_multi_part_path_over_limit(self):
+        file_bytes = b"a" * (self.mod.NOTION_FILE_UPLOAD_SINGLE_PART_MAX_BYTES + 1)
+        expected_parts = self.mod.notion_split_file_upload_parts(file_bytes)
+        create_response = Mock()
+        create_response.raise_for_status.return_value = None
+        create_response.json.return_value = {"id": "upload_1"}
+        send_responses = []
+        for _ in expected_parts:
+            response = Mock()
+            response.raise_for_status.return_value = None
+            send_responses.append(response)
+        complete_response = Mock()
+        complete_response.raise_for_status.return_value = None
+
+        with patch.object(
+            self.mod.requests,
+            "post",
+            side_effect=[create_response, *send_responses, complete_response],
+        ) as post_mock:
+            upload_id = self.mod.notion_upload_file(
+                filename="large.mp3",
+                content_type="audio/mpeg",
+                file_bytes=file_bytes,
+                token="notion_token",
+            )
+
+        self.assertEqual(upload_id, "upload_1")
+        self.assertEqual(post_mock.call_count, len(expected_parts) + 2)
+        create_call = post_mock.call_args_list[0]
+        self.assertEqual(
+            create_call.kwargs["json"],
+            {
+                "filename": "large.mp3",
+                "content_type": "audio/mpeg",
+                "mode": "multi_part",
+                "number_of_parts": len(expected_parts),
+            },
+        )
+        for part_index, expected_part in enumerate(expected_parts, start=1):
+            send_call = post_mock.call_args_list[part_index]
+            self.assertEqual(send_call.args[0], "https://api.notion.com/v1/file_uploads/upload_1/send")
+            self.assertEqual(send_call.kwargs["data"], {"part_number": str(part_index)})
+            self.assertEqual(
+                send_call.kwargs["files"]["file"],
+                ("large.mp3", expected_part, "audio/mpeg"),
+            )
+        complete_call = post_mock.call_args_list[-1]
+        self.assertEqual(complete_call.args[0], "https://api.notion.com/v1/file_uploads/upload_1/complete")
 
     def test_maybe_generate_and_attach_audio_uses_cached_render_hash(self):
         page = {"id": "page_1", "properties": {}}

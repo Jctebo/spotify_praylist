@@ -295,8 +295,8 @@ Purpose:
 - resolves page text from `Text Resolver`
 - resolves page audio from `Auto Audio Resolver 1` and optionally `Auto Audio Resolver 2`
 - supports Notion `Audio Outputs` rows in two modes:
-- `fragments` for named `Audio Fragments` plus special cache-only fragments
-- `config` for composite wrappers around source configs like Divine Office and Sing the Hours
+- `fragments` for a top-level `Fragment Key` or `Fragment Sequence`
+- `config` only as a compatibility input; it is normalized into a generated wrapper fragment internally
 - `rosary` for the dynamic fragment-based rosary builder with weekday mystery mapping
 - falls back to the legacy `Audio Configuration` field and then the legacy resolver field when the new properties are blank
 - builds a Notion audio block for `auto-audio` rows and syncs page body content for feed-backed rows
@@ -307,13 +307,12 @@ Current config:
 - `MORNING_PRAYER_OUTPUT` in your Notion `Audio Outputs` database
 - target row: `Morning Prayer`
 - source fragments: `Audio Fragments` rows like `Morning Offering`, `Daily Consecration`, and `Intercessory Litany`
-- each fragment can use either `Spoken Text` or an LLM `Prompt` plus optional `Prompt Model`
-- special fragment: monthly intention from the Pope's Worldwide Prayer Network English yearly PDF feed, cached on disk only
-- special fragment: `Daily Novenas from Liturgical Calendar` audio blocks reused directly as source fragments
+- each fragment can be a leaf (`Spoken Text`, `Prompt`), a wrapper (`Fragment Type = sequence | config | builder`), or a typed special resolver (`monthly_intention`, `random_intention`, `daily_novena_audio`)
+- special fragments are now first-class `Audio Fragments` rows instead of only magic `SPECIAL:*` tokens
 - `DIVINE_OFFICE_INVITATORY_OUTPUT` in `Audio Outputs`
 - wraps `DIVINE_OFFICE_INVITATORY_PAGE_AUDIO` from `Page Audio Configuration`
 - target row: `Divine Office Invitatory`
-- prepended daily intention is cached on disk in the fragment cache
+- prepended intention is emitted as the shared `Random Intention` fragment and cached on disk
 - source audio: official DivineOffice.org RSS enclosure for the matching day
 - source text: synced into the page body
 - `DIVINE_OFFICE_NIGHT_TEXT`
@@ -325,7 +324,7 @@ Current config:
 - `SING_THE_HOURS_MORNING_OUTPUT` in `Audio Outputs`
 - wraps `SING_THE_HOURS_MORNING_PAGE_AUDIO` from `Page Audio Configuration`
 - target row: `Morning Prayer - Liturgy of the Hours (Spotify)`
-- prepended daily intention is cached on disk in the fragment cache
+- prepended intention is emitted as the shared `Random Intention` fragment and cached on disk
 - source audio: public Sing the Hours RSS enclosure for the matching day's `Lauds`
 - `DIVINE_OFFICE_MORNING_OUTPUT` in `Audio Outputs`
 - wraps `DIVINE_OFFICE_MORNING_PAGE_AUDIO` from `Page Audio Configuration`
@@ -379,9 +378,13 @@ Environment variables:
 Audio fragment row shape:
 - `Name`
 - `Fragment Key`
+- `Fragment Type` optional; defaults from the populated fields
 - `Spoken Text` for fixed text fragments
 - `Prompt` for LLM-backed fragments
 - `Prompt Model` optional; defaults to `OAI_MODEL` or `gpt-4.1-mini`
+- `Fragment Sequence` for wrapper/composite fragments
+- `Config Key` for wrapper fragments that reuse a `Page Audio Configuration` row
+- `Builder` plus normal page-audio config fields for custom builder fragments
 - `Collection`
 - `Enabled`
 - optional `Start Date` and `End Date`
@@ -390,7 +393,8 @@ Audio output row shape:
 - `Name`
 - `Output Key`
 - `Output Mode`
-- `Config Key` or `Fragment Sequence`
+- `Fragment Key` or `Fragment Sequence` for fragment-driven outputs
+- `Config Key` is still accepted for migration, but the job now turns it into a wrapper fragment internally
 - `Target Row`
 - `Audio Caption`
 - `Output Folder` to route exported daily files into the correct OneDrive subfolder

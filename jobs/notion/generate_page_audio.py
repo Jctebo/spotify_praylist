@@ -15,7 +15,7 @@ import time
 from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional, Sequence, Set
 import xml.etree.ElementTree as ET
 
 import imageio_ffmpeg
@@ -72,15 +72,20 @@ DEFAULT_TEXT_RESOLVER_PROPERTY = "Text Resolver"
 DEFAULT_AUTO_AUDIO_RESOLVER_PRIMARY_PROPERTY = "Auto Audio Resolver 1"
 DEFAULT_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY = "Auto Audio Resolver 2"
 DEFAULT_PAGE_AUDIO_LIBRARY_GROUP_PROPERTY = "Playlist"
+PCM_NORMALIZE_SAMPLE_RATE = 44100
+PCM_NORMALIZE_CHANNELS = 2
+PCM_NORMALIZE_EXTENSION = "wav"
+PCM_NORMALIZE_PROFILE = f"{PCM_NORMALIZE_EXTENSION}_{PCM_NORMALIZE_SAMPLE_RATE}hz_{PCM_NORMALIZE_CHANNELS}ch_v1"
 PAGE_AUDIO_MARKER = "[AUTOGEN_PAGE_AUDIO]"
 PAGE_AUDIO_HASH_MARKER_PREFIX = "[AUTOGEN_PAGE_AUDIO_HASH:"
-PAGE_AUDIO_RENDER_VERSION = "page_audio_v1"
+PAGE_AUDIO_RENDER_VERSION = "page_audio_v2"
 PAGE_AUDIO_PROMPT_RENDER_VERSION = "page_audio_prompt_v1"
 DEFAULT_SILENCE_MS = 450
 DEFAULT_DAILY_NOVENA_PAGE_TITLE = "Daily Novenas from Liturgical Calendar"
 MORNING_PRAYER_BUILDER = "morning_prayer_v1"
 DIVINE_OFFICE_INVITATORY_BUILDER = "divine_office_invitatory_v1"
 DIVINE_OFFICE_NIGHT_TEXT_BUILDER = "divine_office_night_text_v1"
+DIVINE_OFFICE_EVENING_TEXT_BUILDER = "divine_office_evening_text_v1"
 DIVINE_OFFICE_MORNING_TEXT_BUILDER = "divine_office_morning_text_v1"
 AUXILIUM_DAILY_TEXT_BUILDER = "auxilium_daily_text_v1"
 RSS_AUDIO_BUILDER = "rss_audio_v1"
@@ -101,12 +106,18 @@ HTTP_RETRYABLE_STATUSES = {408, 409, 425, 429, 500, 502, 503, 504}
 HTTP_MAX_ATTEMPTS = 4
 PAGE_AUDIO_HTTP_USER_AGENT = "Mozilla/5.0 (compatible; spotify-praylist/1.0; +https://github.com/Jctebo/spotify_praylist)"
 PAGE_AUDIO_HTTP_ACCEPT = "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8"
+TITLE_MATCH_ALIAS_GROUPS: Sequence[tuple[str, ...]] = (
+    ("lauds", "morning prayer"),
+    ("vespers", "evening prayer"),
+    ("compline", "night prayer"),
+)
 
 _RSS_FEED_ENTRIES_CACHE: Dict[str, List[Dict[str, Any]]] = {}
 _PAGE_AUDIO_BLOCKS_CACHE: Dict[str, List[Dict[str, Any]]] = {}
 _AUXILIUM_SECTIONS_CACHE: Dict[str, Dict[str, List[str]]] = {}
 _AUDIO_FRAGMENTS_CACHE: Dict[str, Dict[str, Dict[str, Any]]] = {}
 _INTENTION_LIBRARY_CACHE: Dict[str, List[str]] = {}
+_PAGE_AUDIO_DEPRECATION_WARNINGS: Set[str] = set()
 MONTH_NAMES = (
     "JANUARY",
     "FEBRUARY",
@@ -147,6 +158,8 @@ PAGE_AUDIO_CONFIG_INTENTION_PREFIX_PROPERTY = "Intention Prefix"
 
 AUDIO_FRAGMENT_TITLE_PROPERTY = "Name"
 AUDIO_FRAGMENT_KEY_PROPERTY = "Fragment Key"
+AUDIO_FRAGMENT_TYPE_PROPERTY = "Fragment Type"
+AUDIO_FRAGMENT_BUILDER_PROPERTY = "Builder"
 AUDIO_FRAGMENT_TEXT_PROPERTY = "Spoken Text"
 AUDIO_FRAGMENT_PROMPT_PROPERTY = "Prompt"
 AUDIO_FRAGMENT_PROMPT_MODEL_PROPERTY = "Prompt Model"
@@ -154,17 +167,33 @@ AUDIO_FRAGMENT_ENABLED_PROPERTY = "Enabled"
 AUDIO_FRAGMENT_START_DATE_PROPERTY = "Start Date"
 AUDIO_FRAGMENT_END_DATE_PROPERTY = "End Date"
 AUDIO_FRAGMENT_COLLECTION_PROPERTY = "Collection"
+AUDIO_FRAGMENT_SEQUENCE_PROPERTY = "Fragment Sequence"
+AUDIO_FRAGMENT_CONFIG_KEY_PROPERTY = "Config Key"
+AUDIO_FRAGMENT_TEXT_TARGET_ROW_PROPERTY = "Target Row"
+AUDIO_FRAGMENT_OUTPUT_FOLDER_PROPERTY = "Output Folder"
 AUDIO_FRAGMENT_ORDER_PROPERTY = "Order"
 AUDIO_FRAGMENT_NOTES_PROPERTY = "Notes"
 AUDIO_FRAGMENT_DEFAULT_COLLECTION = "audio_fragments"
 AUDIO_FRAGMENT_MONTHLY_COLLECTION = "monthly_intention"
 AUDIO_FRAGMENT_MONTHLY_PREFIX = "pope-intention-"
+RANDOM_INTENTION_FRAGMENT_KEY = "random-intention"
+RANDOM_INTENTION_FRAGMENT_LABEL = "Random Intention"
+RANDOM_INTENTION_FRAGMENT_COLLECTION = "random_intentions"
+FRAGMENT_TYPE_TEXT = "text"
+FRAGMENT_TYPE_PROMPT = "prompt"
+FRAGMENT_TYPE_SEQUENCE = "sequence"
+FRAGMENT_TYPE_CONFIG = "config"
+FRAGMENT_TYPE_BUILDER = "builder"
+FRAGMENT_TYPE_MONTHLY_INTENTION = "monthly_intention"
+FRAGMENT_TYPE_RANDOM_INTENTION = "random_intention"
+FRAGMENT_TYPE_DAILY_NOVENA_AUDIO = "daily_novena_audio"
 
 AUDIO_OUTPUT_TITLE_PROPERTY = "Name"
 AUDIO_OUTPUT_KEY_PROPERTY = "Output Key"
 AUDIO_OUTPUT_MODE_PROPERTY = "Output Mode"
 AUDIO_OUTPUT_TARGET_ROW_PROPERTY = "Target Row"
 AUDIO_OUTPUT_AUDIO_CAPTION_PROPERTY = "Audio Caption"
+AUDIO_OUTPUT_FRAGMENT_KEY_PROPERTY = "Fragment Key"
 AUDIO_OUTPUT_FRAGMENT_SEQUENCE_PROPERTY = "Fragment Sequence"
 AUDIO_OUTPUT_CONFIG_KEY_PROPERTY = "Config Key"
 AUDIO_OUTPUT_FOLDER_PROPERTY = "Output Folder"
@@ -181,6 +210,7 @@ AUDIO_OUTPUT_MODE_CONFIG = "config"
 AUDIO_OUTPUT_MODE_ROSARY = "rosary"
 SPECIAL_DAILY_NOVENA_AUDIO = "SPECIAL:daily_novena_audio"
 SPECIAL_MONTHLY_INTENTION = "SPECIAL:monthly_intention"
+MORNING_PRAYER_NOVENA_BLOCK_MARKER_PREFIX = "[AUTOGEN_MORNING_PRAYER_NOVENA:"
 RSS_MATCH_CONTAINS_WITH_DATE = "contains_with_date"
 RSS_MATCH_DAY_OF_YEAR = "day_of_year"
 RSS_MATCH_MONTH_DAY = "month_day"
@@ -198,6 +228,44 @@ DEFAULT_ROSARY_WEEKDAY_MAP = {
     "saturday": "joyful",
     "sunday": "glorious",
 }
+
+OPUS_DEI_ASSEMBLY_MODE_PROPERTY = "Assembly Mode"
+OPUS_DEI_DETAILED_FRAGMENTS_PROPERTY = "Detailed Fragments"
+OPUS_DEI_SPECIAL_BUILDER_PROPERTY = "Special Builder"
+OPUS_DEI_TEXT_SYNC_MODE_PROPERTY = "Text Sync Mode"
+OPUS_DEI_TEXT_PROPERTY_PROPERTY = "Text Property"
+OPUS_DEI_AUDIO_CAPTION_PROPERTY = "Audio Caption"
+OPUS_DEI_OUTPUT_FOLDER_PROPERTY = "Output Folder"
+OPUS_DEI_SILENCE_MS_PROPERTY = "Silence Ms"
+OPUS_DEI_TTS_MODEL_PROPERTY = "TTS Model"
+OPUS_DEI_TTS_VOICE_PROPERTY = "TTS Voice"
+OPUS_DEI_TTS_FORMAT_PROPERTY = "TTS Format"
+OPUS_DEI_TTS_SPEED_PROPERTY = "TTS Speed"
+OPUS_DEI_WEEKDAY_MAP_PROPERTY = "Weekday Map"
+OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS = "fragments"
+OPUS_DEI_ASSEMBLY_MODE_SPECIAL = "special"
+OPUS_DEI_SPECIAL_BUILDER_ROSARY = "rosary"
+OPUS_DEI_TEXT_SYNC_MODE_NONE = "none"
+OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT = "page_content"
+OPUS_DEI_TEXT_SYNC_MODE_TEXT_PROPERTY = "property"
+
+DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY = "Opus Dei Item"
+DETAILED_FRAGMENT_GROUP_PROPERTY = "Group"
+DETAILED_FRAGMENT_KIND_PROPERTY = "Fragment Kind"
+DETAILED_FRAGMENT_ASSEMBLY_ROLE_PROPERTY = "Assembly Role"
+DETAILED_FRAGMENT_SOURCE_URL_PROPERTY = "Source URL"
+DETAILED_FRAGMENT_FEED_URL_PROPERTY = "Feed URL"
+DETAILED_FRAGMENT_FEED_MATCH_TEXT_PROPERTY = "Feed Match Text"
+DETAILED_FRAGMENT_FEED_MATCH_STRATEGY_PROPERTY = "Feed Match Strategy"
+DETAILED_FRAGMENT_FEED_MATCH_MAP_PROPERTY = "Feed Match Map"
+DETAILED_FRAGMENT_INTENTION_PROPERTY = "Intention Property"
+DETAILED_FRAGMENT_INTENTION_PREFIX_PROPERTY = "Intention Prefix"
+FRAGMENT_KIND_RSS_AUDIO = "rss_audio"
+FRAGMENT_KIND_SOURCE_AUDIO = "source_audio"
+FRAGMENT_KIND_BUILDER = "builder"
+ASSEMBLY_ROLE_APPEND = "append"
+ASSEMBLY_ROLE_PRIMARY_SOURCE = "primary_source"
+ASSEMBLY_ROLE_FALLBACK_SOURCE = "fallback_source"
 
 
 def load_shared_module():
@@ -228,6 +296,7 @@ class PageAudioFragment:
     persist_meta_path: str = ""
     fragment_key: str = ""
     collection: str = ""
+    artwork_url: str = ""
 
 
 @dataclass
@@ -237,6 +306,13 @@ class PageAudioPlan:
     text_property: str = ""
     text_target: str = ""
     content_blocks: List[Dict[str, Any]] = field(default_factory=list)
+
+
+@dataclass
+class DailyNovenaSection:
+    marker_id: str
+    header: str
+    content_block: Optional[Dict[str, Any]] = None
 
 
 def slugify(text: str) -> str:
@@ -353,6 +429,15 @@ def page_property_values(page: Dict[str, Any], prop_name: str) -> List[str]:
     return []
 
 
+def page_property_relation_ids(page: Dict[str, Any], prop_name: str) -> List[str]:
+    props = page.get("properties") or {}
+    prop = props.get(prop_name) or {}
+    if str(prop.get("type", "")).strip() != "relation":
+        return []
+    ids = [str(item.get("id", "")).strip() for item in (prop.get("relation") or []) if isinstance(item, dict)]
+    return [value for value in ids if value]
+
+
 def page_property_checkbox(page: Dict[str, Any], prop_name: str, default: bool = False) -> bool:
     props = page.get("properties") or {}
     prop = props.get(prop_name) or {}
@@ -379,6 +464,22 @@ def notion_database_id_by_env_or_name(
 
 def normalize_flag_value(text: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", str(text or "").lower()).strip()
+
+
+def normalize_fragment_type_name(value: Any) -> str:
+    return normalize_flag_value(value)
+
+
+def fragment_type_matches(value: Any, expected: str) -> bool:
+    return normalize_fragment_type_name(value) == normalize_fragment_type_name(expected)
+
+
+def emit_page_audio_deprecation_warning(message: str) -> None:
+    warning = str(message or "").strip()
+    if not warning or warning in _PAGE_AUDIO_DEPRECATION_WARNINGS:
+        return
+    _PAGE_AUDIO_DEPRECATION_WARNINGS.add(warning)
+    print(f"WARN page_audio_deprecated {warning}")
 
 
 def parse_normalized_values(text: str) -> List[str]:
@@ -444,6 +545,42 @@ def placeholder_kind(text: str) -> str:
     return ""
 
 
+def strip_autogen_markers(text: str) -> str:
+    value = str(text or "").strip()
+    value = re.sub(r"\s*\[[^\]]*AUTOGEN_[^\]]*\]\s*", " ", value)
+    return normalize_whitespace(value)
+
+
+def extract_novena_marker_id(text: str) -> str:
+    match = re.search(r"\[AUTOGEN_NOVENA_DAY:([^\]]+)\]", str(text or ""))
+    return str(match.group(1)).strip() if match else ""
+
+
+def morning_prayer_novena_marker(marker_id: str) -> str:
+    value = str(marker_id or "").strip() or "novena"
+    return f"{MORNING_PRAYER_NOVENA_BLOCK_MARKER_PREFIX}{value}]"
+
+
+def is_morning_prayer_autogen_novena_block(block: Dict[str, Any]) -> bool:
+    text = shared.block_rich_text_plain(block)
+    if MORNING_PRAYER_NOVENA_BLOCK_MARKER_PREFIX in str(text or ""):
+        return True
+    return False
+
+
+def novena_header_from_text(text: str) -> str:
+    cleaned = strip_autogen_markers(text)
+    if not cleaned:
+        return ""
+    toggle_match = re.match(r"^Novena\s*-\s*(.+?)\s*\(Day\s*(\d+)\s+of\s+9\)$", cleaned, flags=re.IGNORECASE)
+    if toggle_match:
+        return normalize_whitespace(f"Novena to {toggle_match.group(1)} Day {toggle_match.group(2)}")
+    audio_match = re.match(r"^Novena Audio\s*-\s*(.+?)\s+Day\s*(\d+)\b", cleaned, flags=re.IGNORECASE)
+    if audio_match:
+        return normalize_whitespace(f"Novena to {audio_match.group(1)} Day {audio_match.group(2)}")
+    return cleaned
+
+
 def notion_page_audio_config_database_id(token: str) -> str:
     return notion_database_id_by_env_or_name(
         token,
@@ -471,13 +608,7 @@ def notion_audio_outputs_database_id(token: str) -> str:
     )
 
 
-def page_audio_config_from_notion_page(page: Dict[str, Any]) -> Optional[tuple[str, Dict[str, Any]]]:
-    key = shared.page_title(page, PAGE_AUDIO_CONFIG_TITLE_PROPERTY).strip()
-    if not key:
-        return None
-    if not page_property_checkbox(page, PAGE_AUDIO_CONFIG_ENABLED_PROPERTY, default=True):
-        return None
-
+def audio_builder_config_from_page(page: Dict[str, Any]) -> Dict[str, Any]:
     builder = page_property_text(page, PAGE_AUDIO_CONFIG_BUILDER_PROPERTY).strip()
     audio_caption = page_property_text(page, PAGE_AUDIO_CONFIG_AUDIO_CAPTION_PROPERTY).strip()
     silence_ms_raw = page_property_text(page, PAGE_AUDIO_CONFIG_SILENCE_MS_PROPERTY).strip()
@@ -495,7 +626,8 @@ def page_audio_config_from_notion_page(page: Dict[str, Any]) -> Optional[tuple[s
     feed_match_map = page_property_text(page, PAGE_AUDIO_CONFIG_FEED_MATCH_MAP_PROPERTY).strip()
     intention_property = page_property_text(page, PAGE_AUDIO_CONFIG_INTENTION_PROPERTY).strip()
     intention_prefix = page_property_text(page, PAGE_AUDIO_CONFIG_INTENTION_PREFIX_PROPERTY).strip()
-
+    target_row = page_property_text(page, AUDIO_FRAGMENT_TEXT_TARGET_ROW_PROPERTY).strip()
+    output_folder = page_property_text(page, AUDIO_FRAGMENT_OUTPUT_FOLDER_PROPERTY).strip()
     config: Dict[str, Any] = {}
     if builder:
         config["builder"] = builder
@@ -546,6 +678,20 @@ def page_audio_config_from_notion_page(page: Dict[str, Any]) -> Optional[tuple[s
         config["intention_property"] = intention_property
     if intention_prefix:
         config["intention_prefix"] = intention_prefix
+    if target_row:
+        config["target_row"] = target_row
+    if output_folder:
+        config["output_folder"] = output_folder
+    return config
+
+
+def page_audio_config_from_notion_page(page: Dict[str, Any]) -> Optional[tuple[str, Dict[str, Any]]]:
+    key = shared.page_title(page, PAGE_AUDIO_CONFIG_TITLE_PROPERTY).strip()
+    if not key:
+        return None
+    if not page_property_checkbox(page, PAGE_AUDIO_CONFIG_ENABLED_PROPERTY, default=True):
+        return None
+    config = audio_builder_config_from_page(page)
     return key, config
 
 
@@ -566,28 +712,30 @@ def load_page_audio_config_from_notion(token: str) -> Dict[str, Any]:
     return {"configs": configs} if configs else {}
 
 
+def load_page_audio_config_from_file() -> Dict[str, Any]:
+    config_path = ROOT / (
+        os.getenv(PAGE_AUDIO_CONFIG_FILE, DEFAULT_PAGE_AUDIO_CONFIG_FILE).strip()
+        or DEFAULT_PAGE_AUDIO_CONFIG_FILE
+    )
+    with open(config_path, "r", encoding="utf-8") as fh:
+        payload = json.load(fh)
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"Invalid page audio config format in {config_path}: root must be an object.")
+    configs = payload.get("configs")
+    if not isinstance(configs, dict) or not configs:
+        raise RuntimeError(f"Invalid page audio config format in {config_path}: missing or empty 'configs'.")
+    return payload
+
+
 def load_page_audio_config(notion_token: str = "") -> Dict[str, Any]:
     token = str(notion_token or "").strip()
-    payload: Dict[str, Any] = {}
+    payload: Dict[str, Any] = load_page_audio_config_from_file()
+    configs = dict(payload.get("configs") or {})
     if token:
         notion_payload = load_page_audio_config_from_notion(token)
         notion_configs = notion_payload.get("configs") if isinstance(notion_payload, dict) else None
         if isinstance(notion_configs, dict) and notion_configs:
-            payload = notion_payload
-    if not payload:
-        config_path = ROOT / (
-            os.getenv(PAGE_AUDIO_CONFIG_FILE, DEFAULT_PAGE_AUDIO_CONFIG_FILE).strip()
-            or DEFAULT_PAGE_AUDIO_CONFIG_FILE
-        )
-        with open(config_path, "r", encoding="utf-8") as fh:
-            payload = json.load(fh)
-        if not isinstance(payload, dict):
-            raise RuntimeError(f"Invalid page audio config format in {config_path}: root must be an object.")
-        configs = payload.get("configs")
-        if not isinstance(configs, dict) or not configs:
-            raise RuntimeError(f"Invalid page audio config format in {config_path}: missing or empty 'configs'.")
-
-    configs = dict(payload.get("configs") or {})
+            configs.update(notion_configs)
     if token:
         fragments_payload = load_audio_fragments_from_notion(token)
         fragment_map = fragments_payload.get("fragments") or {}
@@ -625,6 +773,17 @@ def notion_property_payload_for_database(database: Dict[str, Any], prop_name: st
         return None
     if prop_type == "checkbox":
         return {"checkbox": bool(value)}
+    if prop_type == "relation":
+        raw_values = value if isinstance(value, (list, tuple, set)) else [value]
+        relation_ids: List[str] = []
+        for entry in raw_values:
+            if isinstance(entry, dict):
+                relation_id = str(entry.get("id", "")).strip()
+            else:
+                relation_id = str(entry or "").strip()
+            if relation_id and relation_id not in relation_ids:
+                relation_ids.append(relation_id)
+        return {"relation": [{"id": relation_id} for relation_id in relation_ids]}
     if prop_type == "date":
         if isinstance(value, tuple):
             start, end = value
@@ -684,28 +843,85 @@ def audio_fragment_from_notion_page(
         return None
     title = shared.page_title(page, AUDIO_FRAGMENT_TITLE_PROPERTY).strip()
     key = page_property_text(page, AUDIO_FRAGMENT_KEY_PROPERTY).strip() or slugify(title)
+    fragment_type = normalize_fragment_type_name(page_property_text(page, AUDIO_FRAGMENT_TYPE_PROPERTY))
     text = normalize_whitespace(page_property_text(page, AUDIO_FRAGMENT_TEXT_PROPERTY))
     prompt = normalize_whitespace(page_property_text(page, AUDIO_FRAGMENT_PROMPT_PROPERTY))
-    if not key or (not text and not prompt):
+    sequence = parse_fragment_sequence(page_property_text(page, AUDIO_FRAGMENT_SEQUENCE_PROPERTY))
+    source_config_key = page_property_text(page, AUDIO_FRAGMENT_CONFIG_KEY_PROPERTY).strip()
+    builder_config = audio_builder_config_from_page(page)
+    has_builder_definition = bool(str(builder_config.get("builder", "")).strip())
+    if not fragment_type:
+        if text:
+            fragment_type = FRAGMENT_TYPE_TEXT
+        elif prompt:
+            fragment_type = FRAGMENT_TYPE_PROMPT
+        elif sequence:
+            fragment_type = FRAGMENT_TYPE_SEQUENCE
+        elif source_config_key:
+            fragment_type = FRAGMENT_TYPE_CONFIG
+        elif has_builder_definition:
+            fragment_type = FRAGMENT_TYPE_BUILDER
+    if not key or not fragment_type:
         return None
     collection = page_property_text(page, AUDIO_FRAGMENT_COLLECTION_PROPERTY).strip() or AUDIO_FRAGMENT_DEFAULT_COLLECTION
     payload = {
         "key": key,
         "label": title or key,
+        "type": fragment_type,
         "collection": collection,
         "order": page_property_number(page, AUDIO_FRAGMENT_ORDER_PROPERTY, default=0.0),
         "notes": page_property_text(page, AUDIO_FRAGMENT_NOTES_PROPERTY).strip(),
     }
-    if text:
+    if fragment_type_matches(fragment_type, FRAGMENT_TYPE_TEXT):
+        if not text:
+            return None
         payload["text"] = text
-    if prompt and not text:
+        return key, payload
+    if fragment_type_matches(fragment_type, FRAGMENT_TYPE_PROMPT):
+        if not prompt:
+            return None
         payload["prompt"] = prompt
         payload["prompt_model"] = (
             page_property_text(page, AUDIO_FRAGMENT_PROMPT_MODEL_PROPERTY).strip()
             or os.getenv(OAI_MODEL, "").strip()
             or "gpt-4.1-mini"
         )
-    return key, payload
+        return key, payload
+    if fragment_type_matches(fragment_type, FRAGMENT_TYPE_SEQUENCE):
+        if not sequence:
+            return None
+        payload["fragment_sequence"] = sequence
+        if builder_config:
+            payload["config"] = builder_config
+        return key, payload
+    if fragment_type_matches(fragment_type, FRAGMENT_TYPE_CONFIG):
+        if not source_config_key:
+            return None
+        payload["source_config_key"] = source_config_key
+        if builder_config:
+            payload["config"] = builder_config
+        return key, payload
+    if fragment_type_matches(fragment_type, FRAGMENT_TYPE_BUILDER):
+        if not has_builder_definition:
+            return None
+        payload["config"] = builder_config
+        return key, payload
+    if any(
+        fragment_type_matches(fragment_type, special_type)
+        for special_type in (
+            FRAGMENT_TYPE_MONTHLY_INTENTION,
+            FRAGMENT_TYPE_RANDOM_INTENTION,
+            FRAGMENT_TYPE_DAILY_NOVENA_AUDIO,
+        )
+    ):
+        if builder_config:
+            payload["config"] = builder_config
+        if fragment_type_matches(fragment_type, FRAGMENT_TYPE_DAILY_NOVENA_AUDIO):
+            payload["daily_novena_page_title"] = str(
+                (payload.get("config") or {}).get("daily_novena_page_title", "")
+            ).strip() or DEFAULT_DAILY_NOVENA_PAGE_TITLE
+        return key, payload
+    return None
 
 
 def load_audio_fragments_from_notion(token: str) -> Dict[str, Any]:
@@ -838,6 +1054,77 @@ def apply_audio_output_overrides(base_config: Dict[str, Any], overrides: Dict[st
     return config
 
 
+def default_output_tts_settings() -> Dict[str, Any]:
+    return {
+        "model": "gpt-4o-mini-tts",
+        "voice": "alloy",
+        "format": "mp3",
+        "speed": 1.0,
+    }
+
+
+def synthetic_output_wrapper_fragment_key(output_key: str, source_key: str) -> str:
+    output_slug = slugify(output_key)
+    source_slug = slugify(source_key)
+    return f"output-{output_slug}-{source_slug}-wrapper"
+
+
+def build_output_fragment_config(
+    *,
+    output_key: str,
+    output_title: str,
+    fragments: Dict[str, Dict[str, Any]],
+    base_configs: Dict[str, Any],
+    overrides: Dict[str, Any],
+    sequence: Sequence[str],
+) -> Dict[str, Any]:
+    default_config: Dict[str, Any] = {
+        "builder": AUDIO_FRAGMENTS_BUILDER,
+        "audio_caption": f"{output_title or output_key} (Audio)",
+        "silence_ms": DEFAULT_SILENCE_MS,
+        "tts": default_output_tts_settings(),
+        "fragment_sequence": list(sequence),
+        "fragments": fragments,
+        "config_map": base_configs,
+    }
+    return apply_audio_output_overrides(default_config, overrides)
+
+
+def build_output_config_wrapper(
+    *,
+    output_key: str,
+    output_title: str,
+    source_key: str,
+    fragments: Dict[str, Dict[str, Any]],
+    base_configs: Dict[str, Any],
+    overrides: Dict[str, Any],
+) -> Dict[str, Any]:
+    if not isinstance(base_configs.get(source_key), dict):
+        raise RuntimeError(f"Audio output '{output_key}' references unknown config '{source_key}'.")
+    wrapper_key = synthetic_output_wrapper_fragment_key(output_key, source_key)
+    wrapper_spec: Dict[str, Any] = {
+        "key": wrapper_key,
+        "label": f"{output_title or output_key} Wrapper",
+        "type": FRAGMENT_TYPE_CONFIG,
+        "source_config_key": source_key,
+    }
+    if overrides:
+        wrapper_spec["config"] = deepcopy(overrides)
+    fragments_map = dict(fragments)
+    fragments_map[wrapper_key] = wrapper_spec
+    config = build_output_fragment_config(
+        output_key=output_key,
+        output_title=output_title,
+        fragments=fragments_map,
+        base_configs=base_configs,
+        overrides=overrides,
+        sequence=[wrapper_key],
+    )
+    config["source_config_key"] = source_key
+    config["legacy_output_mode"] = AUDIO_OUTPUT_MODE_CONFIG
+    return config
+
+
 def audio_output_config_from_notion_page(
     page: Dict[str, Any],
     fragments: Dict[str, Dict[str, Any]],
@@ -848,57 +1135,55 @@ def audio_output_config_from_notion_page(
         return None
     if not page_property_checkbox(page, AUDIO_OUTPUT_ENABLED_PROPERTY, default=True):
         return None
+    output_title = shared.page_title(page, AUDIO_OUTPUT_TITLE_PROPERTY).strip() or key
     mode = normalize_flag_value(page_property_text(page, AUDIO_OUTPUT_MODE_PROPERTY)) or AUDIO_OUTPUT_MODE_FRAGMENTS
     overrides = audio_output_common_overrides(page)
-    if mode == AUDIO_OUTPUT_MODE_CONFIG:
-        source_key = page_property_text(page, AUDIO_OUTPUT_CONFIG_KEY_PROPERTY).strip()
-        if not source_key:
-            return None
-        source_config = base_configs.get(source_key)
-        if not isinstance(source_config, dict):
-            raise RuntimeError(f"Audio output '{key}' references unknown config '{source_key}'.")
-        config = apply_audio_output_overrides(source_config, overrides)
-        config["source_config_key"] = source_key
-        return key, config
     if mode == AUDIO_OUTPUT_MODE_ROSARY:
         default_config = {
             "builder": ROSARY_DYNAMIC_BUILDER,
-            "audio_caption": f"{shared.page_title(page, AUDIO_OUTPUT_TITLE_PROPERTY).strip() or key} (Audio)",
+            "audio_caption": f"{output_title} (Audio)",
             "silence_ms": DEFAULT_SILENCE_MS,
-            "tts": {
-                "model": "gpt-4o-mini-tts",
-                "voice": "alloy",
-                "format": "mp3",
-                "speed": 1.0,
-            },
+            "tts": default_output_tts_settings(),
             "fragments": fragments,
             "weekday_map": page_property_text(page, AUDIO_OUTPUT_WEEKDAY_MAP_PROPERTY).strip(),
             "target_row": page_property_text(page, AUDIO_OUTPUT_TARGET_ROW_PROPERTY).strip(),
             "notes": page_property_text(page, AUDIO_OUTPUT_NOTES_PROPERTY).strip(),
         }
         return key, apply_audio_output_overrides(default_config, overrides)
-    if mode != AUDIO_OUTPUT_MODE_FRAGMENTS:
-        return None
+    fragment_key = page_property_text(page, AUDIO_OUTPUT_FRAGMENT_KEY_PROPERTY).strip()
     sequence = parse_fragment_sequence(page_property_text(page, AUDIO_OUTPUT_FRAGMENT_SEQUENCE_PROPERTY))
-    if not sequence:
+    if fragment_key:
+        sequence = [fragment_key]
+    source_key = page_property_text(page, AUDIO_OUTPUT_CONFIG_KEY_PROPERTY).strip()
+    for message in audio_output_deprecation_messages(
+        page,
+        output_key=key,
+        output_mode=mode,
+        fragment_sequence=sequence,
+        source_config_key=source_key,
+    ):
+        emit_page_audio_deprecation_warning(message)
+    if sequence:
+        return key, build_output_fragment_config(
+            output_key=key,
+            output_title=output_title,
+            fragments=fragments,
+            base_configs=base_configs,
+            overrides=overrides,
+            sequence=sequence,
+        )
+    if source_key:
+        return key, build_output_config_wrapper(
+            output_key=key,
+            output_title=output_title,
+            source_key=source_key,
+            fragments=fragments,
+            base_configs=base_configs,
+            overrides=overrides,
+        )
+    if mode not in {AUDIO_OUTPUT_MODE_FRAGMENTS, AUDIO_OUTPUT_MODE_CONFIG}:
         return None
-    default_config: Dict[str, Any] = {
-        "builder": AUDIO_FRAGMENTS_BUILDER,
-        "audio_caption": f"{shared.page_title(page, AUDIO_OUTPUT_TITLE_PROPERTY).strip() or key} (Audio)",
-        "silence_ms": DEFAULT_SILENCE_MS,
-        "tts": {
-            "model": "gpt-4o-mini-tts",
-            "voice": "alloy",
-            "format": "mp3",
-            "speed": 1.0,
-        },
-        "fragment_sequence": sequence,
-        "fragments": fragments,
-        "target_row": page_property_text(page, AUDIO_OUTPUT_TARGET_ROW_PROPERTY).strip(),
-        "notes": page_property_text(page, AUDIO_OUTPUT_NOTES_PROPERTY).strip(),
-    }
-    config = apply_audio_output_overrides(default_config, overrides)
-    return key, config
+    return None
 
 
 def load_audio_outputs_from_notion(token: str, fragments: Dict[str, Dict[str, Any]], base_configs: Dict[str, Any]) -> Dict[str, Any]:
@@ -916,6 +1201,200 @@ def load_audio_outputs_from_notion(token: str, fragments: Dict[str, Dict[str, An
         key, config = parsed
         configs[key] = config
     return {"configs": configs} if configs else {}
+
+
+def normalize_opus_dei_assembly_mode(value: str) -> str:
+    text = normalize_flag_value(value).replace(" ", "_")
+    if text == OPUS_DEI_ASSEMBLY_MODE_SPECIAL:
+        return OPUS_DEI_ASSEMBLY_MODE_SPECIAL
+    if text == OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS:
+        return OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS
+    return ""
+
+
+def normalize_opus_dei_text_sync_mode(value: str) -> str:
+    text = normalize_flag_value(value).replace(" ", "_")
+    if text == OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT:
+        return OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT
+    if text == OPUS_DEI_TEXT_SYNC_MODE_TEXT_PROPERTY:
+        return OPUS_DEI_TEXT_SYNC_MODE_TEXT_PROPERTY
+    if text == OPUS_DEI_TEXT_SYNC_MODE_NONE:
+        return OPUS_DEI_TEXT_SYNC_MODE_NONE
+    return ""
+
+
+def normalize_detailed_fragment_kind(value: str) -> str:
+    text = normalize_flag_value(value).replace(" ", "_")
+    aliases = {
+        FRAGMENT_TYPE_TEXT: FRAGMENT_TYPE_TEXT,
+        FRAGMENT_TYPE_PROMPT: FRAGMENT_TYPE_PROMPT,
+        FRAGMENT_TYPE_MONTHLY_INTENTION: FRAGMENT_TYPE_MONTHLY_INTENTION,
+        FRAGMENT_TYPE_RANDOM_INTENTION: FRAGMENT_TYPE_RANDOM_INTENTION,
+        FRAGMENT_TYPE_DAILY_NOVENA_AUDIO: FRAGMENT_TYPE_DAILY_NOVENA_AUDIO,
+        FRAGMENT_KIND_RSS_AUDIO: FRAGMENT_KIND_RSS_AUDIO,
+        FRAGMENT_KIND_SOURCE_AUDIO: FRAGMENT_KIND_SOURCE_AUDIO,
+        FRAGMENT_KIND_BUILDER: FRAGMENT_KIND_BUILDER,
+        FRAGMENT_TYPE_BUILDER: FRAGMENT_KIND_BUILDER,
+    }
+    return aliases.get(text, "")
+
+
+def normalize_fragment_assembly_role(value: str) -> str:
+    text = normalize_flag_value(value).replace(" ", "_")
+    aliases = {
+        ASSEMBLY_ROLE_APPEND: ASSEMBLY_ROLE_APPEND,
+        ASSEMBLY_ROLE_PRIMARY_SOURCE: ASSEMBLY_ROLE_PRIMARY_SOURCE,
+        ASSEMBLY_ROLE_FALLBACK_SOURCE: ASSEMBLY_ROLE_FALLBACK_SOURCE,
+    }
+    return aliases.get(text, "")
+
+
+def opus_dei_row_tts_settings(page: Dict[str, Any]) -> Dict[str, Any]:
+    tts: Dict[str, Any] = {
+        "model": page_property_text(page, OPUS_DEI_TTS_MODEL_PROPERTY).strip() or "gpt-4o-mini-tts",
+        "voice": page_property_text(page, OPUS_DEI_TTS_VOICE_PROPERTY).strip() or "alloy",
+        "format": page_property_text(page, OPUS_DEI_TTS_FORMAT_PROPERTY).strip().lower() or "mp3",
+        "speed": 1.0,
+    }
+    speed_raw = page_property_text(page, OPUS_DEI_TTS_SPEED_PROPERTY).strip()
+    if speed_raw:
+        tts["speed"] = page_property_number(page, OPUS_DEI_TTS_SPEED_PROPERTY, default=1.0)
+    return tts
+
+
+def opus_dei_row_audio_config(page: Dict[str, Any], *, title_property: str) -> Dict[str, Any]:
+    title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip() or "Page Audio"
+    config: Dict[str, Any] = {
+        "audio_caption": page_property_text(page, OPUS_DEI_AUDIO_CAPTION_PROPERTY).strip() or f"{title} (Audio)",
+        "silence_ms": DEFAULT_SILENCE_MS,
+        "tts": opus_dei_row_tts_settings(page),
+        "output_folder": page_property_text(page, OPUS_DEI_OUTPUT_FOLDER_PROPERTY).strip(),
+    }
+    silence_raw = page_property_text(page, OPUS_DEI_SILENCE_MS_PROPERTY).strip()
+    if silence_raw:
+        config["silence_ms"] = int(page_property_number(page, OPUS_DEI_SILENCE_MS_PROPERTY, default=DEFAULT_SILENCE_MS))
+    return config
+
+
+def detailed_fragment_key(page: Dict[str, Any]) -> str:
+    page_id = str(page.get("id", "")).strip()
+    if page_id:
+        return page_id
+    title = shared.page_title(page, AUDIO_FRAGMENT_TITLE_PROPERTY).strip()
+    return slugify(title) or "fragment"
+
+
+def detailed_fragment_from_notion_page(
+    page: Dict[str, Any],
+    *,
+    target_date: datetime.date,
+    enforce_date_window: bool = True,
+) -> Optional[Dict[str, Any]]:
+    if not page_property_checkbox(page, AUDIO_FRAGMENT_ENABLED_PROPERTY, default=True):
+        return None
+    if enforce_date_window and not page_is_active_for_date(
+        page,
+        start_property=AUDIO_FRAGMENT_START_DATE_PROPERTY,
+        end_property=AUDIO_FRAGMENT_END_DATE_PROPERTY,
+        target_date=target_date,
+    ):
+        return None
+    owner_ids = page_property_relation_ids(page, DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY)
+    if not owner_ids:
+        return None
+
+    title = shared.page_title(page, AUDIO_FRAGMENT_TITLE_PROPERTY).strip()
+    text = normalize_whitespace(page_property_text(page, AUDIO_FRAGMENT_TEXT_PROPERTY))
+    prompt = normalize_whitespace(page_property_text(page, AUDIO_FRAGMENT_PROMPT_PROPERTY))
+    source_url = page_property_text(page, DETAILED_FRAGMENT_SOURCE_URL_PROPERTY).strip()
+    group = page_property_text(page, DETAILED_FRAGMENT_GROUP_PROPERTY).strip() or page_property_text(page, AUDIO_FRAGMENT_COLLECTION_PROPERTY).strip() or AUDIO_FRAGMENT_DEFAULT_COLLECTION
+    builder_config = audio_builder_config_from_page(page)
+    kind = normalize_detailed_fragment_kind(page_property_text(page, DETAILED_FRAGMENT_KIND_PROPERTY))
+    if not kind:
+        legacy_type = normalize_detailed_fragment_kind(page_property_text(page, AUDIO_FRAGMENT_TYPE_PROPERTY))
+        if legacy_type:
+            kind = legacy_type
+        elif source_url:
+            kind = FRAGMENT_KIND_SOURCE_AUDIO
+        elif text:
+            kind = FRAGMENT_TYPE_TEXT
+        elif prompt:
+            kind = FRAGMENT_TYPE_PROMPT
+        elif str(builder_config.get("builder", "")).strip() == RSS_AUDIO_BUILDER or str(builder_config.get("rss_feed_url", "")).strip():
+            kind = FRAGMENT_KIND_RSS_AUDIO
+        elif str(builder_config.get("builder", "")).strip():
+            kind = FRAGMENT_KIND_BUILDER
+    if not kind:
+        return None
+
+    if kind == FRAGMENT_KIND_RSS_AUDIO and not str(builder_config.get("builder", "")).strip():
+        builder_config["builder"] = RSS_AUDIO_BUILDER
+    role = normalize_fragment_assembly_role(page_property_text(page, DETAILED_FRAGMENT_ASSEMBLY_ROLE_PROPERTY)) or ASSEMBLY_ROLE_APPEND
+    payload: Dict[str, Any] = {
+        "id": str(page.get("id", "")).strip(),
+        "key": detailed_fragment_key(page),
+        "label": title or detailed_fragment_key(page),
+        "owner_ids": owner_ids,
+        "group": group,
+        "kind": kind,
+        "assembly_role": role,
+        "order": page_property_number(page, AUDIO_FRAGMENT_ORDER_PROPERTY, default=0.0),
+        "notes": page_property_text(page, AUDIO_FRAGMENT_NOTES_PROPERTY).strip(),
+        "config": builder_config,
+    }
+    if kind == FRAGMENT_TYPE_TEXT:
+        payload["text"] = text
+    elif kind == FRAGMENT_TYPE_PROMPT:
+        payload["prompt"] = prompt
+        payload["prompt_model"] = (
+            page_property_text(page, AUDIO_FRAGMENT_PROMPT_MODEL_PROPERTY).strip()
+            or str(builder_config.get("prompt_model", "")).strip()
+            or os.getenv(OAI_MODEL, "").strip()
+            or "gpt-4.1-mini"
+        )
+    elif kind == FRAGMENT_KIND_SOURCE_AUDIO:
+        payload["source_url"] = source_url
+    elif kind == FRAGMENT_KIND_RSS_AUDIO:
+        payload["config"] = builder_config
+    elif kind == FRAGMENT_KIND_BUILDER:
+        payload["config"] = builder_config
+    elif kind == FRAGMENT_TYPE_DAILY_NOVENA_AUDIO:
+        payload["daily_novena_page_title"] = (
+            str(builder_config.get("daily_novena_page_title", "")).strip() or DEFAULT_DAILY_NOVENA_PAGE_TITLE
+        )
+    return payload
+
+
+def load_detailed_fragments_from_notion(token: str) -> Dict[str, Any]:
+    database_id = notion_audio_fragments_database_id(token)
+    if not database_id:
+        return {}
+    cache_key = f"detailed|{database_id}|{shared.local_today().isoformat()}"
+    cached = _AUDIO_FRAGMENTS_CACHE.get(cache_key)
+    if isinstance(cached, dict) and cached:
+        return deepcopy(cached)
+    pages = shared.notion_get_all_pages(database_id, token)
+    fragments_by_page_id: Dict[str, List[Dict[str, Any]]] = {}
+    fragments_by_id: Dict[str, Dict[str, Any]] = {}
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        parsed = detailed_fragment_from_notion_page(page, target_date=shared.local_today())
+        if not isinstance(parsed, dict):
+            continue
+        fragment_id = str(parsed.get("id", "")).strip() or detailed_fragment_key(page)
+        fragments_by_id[fragment_id] = deepcopy(parsed)
+        for owner_id in parsed.get("owner_ids") or []:
+            owner_key = str(owner_id or "").strip()
+            if not owner_key:
+                continue
+            fragments_by_page_id.setdefault(owner_key, []).append(deepcopy(parsed))
+    for specs in fragments_by_page_id.values():
+        specs.sort(key=lambda spec: (float(spec.get("order", 0.0)), str(spec.get("label", "")).lower()))
+    payload = {"fragments_by_page_id": fragments_by_page_id, "fragments_by_id": fragments_by_id}
+    if fragments_by_page_id:
+        _AUDIO_FRAGMENTS_CACHE[cache_key] = deepcopy(payload)
+    return payload
 
 
 def page_audio_cache_dir() -> Path:
@@ -1364,14 +1843,12 @@ def build_page_intention_fragment(
     intention_text = page_property_text(page, intention_property).strip()
     if not intention_text:
         return None
-    title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
-    page_key = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip() or "page"
     spoken = normalize_whitespace(f"{intention_prefix} {intention_text}")
     return stable_text_fragment(
         cache_root=page_audio_cache_dir(),
-        collection="daily_intentions",
-        key=page_key,
-        label=f"Daily Intention - {page_key}",
+        collection=RANDOM_INTENTION_FRAGMENT_COLLECTION,
+        key=RANDOM_INTENTION_FRAGMENT_KEY,
+        label=RANDOM_INTENTION_FRAGMENT_LABEL,
         text=spoken,
         settings=settings,
         base_url=base_url,
@@ -1398,18 +1875,99 @@ def source_audio_fragment_hash(block: Dict[str, Any]) -> str:
     return hashlib.sha256(raw).hexdigest()[:16]
 
 
-def build_daily_novena_audio_fragments(
+def stable_daily_novena_header_fragment(
+    header: str,
+    marker_id: str,
+    *,
+    settings: Dict[str, Any],
+    base_url: str,
+) -> Optional[PageAudioFragment]:
+    title = normalize_whitespace(header)
+    if not title:
+        return None
+    spoken = title if re.search(r"[.!?]$", title) else f"{title}."
+    return stable_text_fragment(
+        cache_root=page_audio_cache_dir(),
+        collection="daily_novena_headers",
+        key=marker_id or title,
+        label=title,
+        text=spoken,
+        settings=settings,
+        base_url=base_url,
+    )
+
+
+def extract_daily_novena_text_block(
+    block: Dict[str, Any],
+    token: str,
+) -> Optional[DailyNovenaSection]:
+    title = shared.block_rich_text_plain(block)
+    marker_id = extract_novena_marker_id(title)
+    header = novena_header_from_text(title)
+    if not header:
+        return None
+    block_id = str(block.get("id", "")).strip()
+    if not block_id:
+        return DailyNovenaSection(marker_id=marker_id, header=header, content_block=None)
+    prayer_toggle: Dict[str, Any] = {}
+    for child in shared.notion_list_block_children(block_id, token):
+        child_title = strip_autogen_markers(shared.block_rich_text_plain(child))
+        if str(child.get("type", "")).strip() == "toggle" and re.match(r"^Day\s+\d+\s+Novena Prayer$", child_title):
+            prayer_toggle = child
+            break
+    if not prayer_toggle:
+        return DailyNovenaSection(marker_id=marker_id, header=header, content_block=None)
+    prayer_block_id = str(prayer_toggle.get("id", "")).strip()
+    lines: List[str] = []
+    if prayer_block_id:
+        for child in shared.notion_list_block_children(prayer_block_id, token):
+            lines.extend(child_text_lines(child, token, ""))
+    if not lines:
+        return DailyNovenaSection(marker_id=marker_id, header=header, content_block=None)
+    return DailyNovenaSection(
+        marker_id=marker_id,
+        header=header,
+        content_block={
+            "object": "block",
+            "type": "toggle",
+            "toggle": {
+                "rich_text": notion_rich_text_chunks(f"{header} {morning_prayer_novena_marker(marker_id)}"),
+                "children": paragraphs_to_notion_blocks(lines),
+            },
+        },
+    )
+
+
+def build_daily_novena_sections(
     pages: Sequence[Dict[str, Any]],
     title_property: str,
     daily_novena_page_title: str,
     token: str,
-) -> List[PageAudioFragment]:
+    *,
+    settings: Dict[str, Any],
+    base_url: str,
+) -> tuple[List[PageAudioFragment], List[Dict[str, Any]]]:
     page = find_page_by_title(pages, title_property, daily_novena_page_title)
     page_id = str(page.get("id", "")).strip()
     if not page_id:
         raise RuntimeError("Daily novena source page has no id.")
-    out: List[PageAudioFragment] = []
-    for block in shared.notion_list_block_children(page_id, token):
+    fragments: List[PageAudioFragment] = []
+    mystery_rows: List[Dict[str, str]] = []
+    mystery_rows: List[Dict[str, str]] = []
+    content_blocks: List[Dict[str, Any]] = []
+    sections_by_marker: Dict[str, DailyNovenaSection] = {}
+    blocks = shared.notion_list_block_children(page_id, token)
+    for block in blocks:
+        if str(block.get("type", "")).strip() != "toggle":
+            continue
+        section = extract_daily_novena_text_block(block, token)
+        if section is None:
+            continue
+        if section.content_block is not None:
+            content_blocks.append(section.content_block)
+        if section.marker_id:
+            sections_by_marker[section.marker_id] = section
+    for block in blocks:
         if str(block.get("type", "")).strip() != "audio":
             continue
         caption = shared.audio_block_caption(block)
@@ -1418,17 +1976,47 @@ def build_daily_novena_audio_fragments(
         url = audio_block_source_url(block)
         if not url:
             continue
-        out.append(
+        marker_id = extract_novena_marker_id(caption)
+        header = sections_by_marker.get(marker_id, DailyNovenaSection(marker_id=marker_id, header=novena_header_from_text(caption))).header
+        header_fragment = stable_daily_novena_header_fragment(
+            header,
+            marker_id or novena_header_from_text(caption),
+            settings=settings,
+            base_url=base_url,
+        )
+        if header_fragment is not None:
+            fragments.append(header_fragment)
+        fragments.append(
             PageAudioFragment(
                 kind="source_audio",
-                label=caption or "Daily Novena Audio",
+                label=caption or header or "Daily Novena Audio",
                 hash_value=source_audio_fragment_hash(block),
                 source_url=url,
             )
         )
-    if not out:
+    if not fragments:
         raise RuntimeError(f"No generated novena audio blocks found on '{daily_novena_page_title}'.")
-    return out
+    return fragments, content_blocks
+
+
+def build_daily_novena_audio_fragments(
+    pages: Sequence[Dict[str, Any]],
+    title_property: str,
+    daily_novena_page_title: str,
+    token: str,
+    *,
+    settings: Dict[str, Any],
+    base_url: str,
+) -> List[PageAudioFragment]:
+    fragments, _content_blocks = build_daily_novena_sections(
+        pages,
+        title_property,
+        daily_novena_page_title,
+        token,
+        settings=settings,
+        base_url=base_url,
+    )
+    return fragments
 
 
 def build_named_audio_fragment(
@@ -1473,10 +2061,96 @@ def build_named_audio_fragment(
     )
 
 
+def resolved_audio_fragment_type(spec: Dict[str, Any]) -> str:
+    fragment_type = normalize_fragment_type_name(spec.get("type", ""))
+    if fragment_type:
+        return fragment_type
+    if normalize_whitespace(str(spec.get("text", "")).strip()):
+        return normalize_fragment_type_name(FRAGMENT_TYPE_TEXT)
+    if normalize_whitespace(str(spec.get("prompt", "")).strip()):
+        return normalize_fragment_type_name(FRAGMENT_TYPE_PROMPT)
+    sequence = spec.get("fragment_sequence") or []
+    if isinstance(sequence, list) and any(str(item or "").strip() for item in sequence):
+        return normalize_fragment_type_name(FRAGMENT_TYPE_SEQUENCE)
+    if str(spec.get("source_config_key", "")).strip():
+        return normalize_fragment_type_name(FRAGMENT_TYPE_CONFIG)
+    nested_config = spec.get("config") or {}
+    if isinstance(nested_config, dict) and str(nested_config.get("builder", "")).strip():
+        return normalize_fragment_type_name(FRAGMENT_TYPE_BUILDER)
+    return ""
+
+
+def append_synced_text(existing: str, addition: str) -> str:
+    current = normalize_whitespace(existing)
+    extra = normalize_whitespace(addition)
+    if not current:
+        return extra
+    if not extra:
+        return current
+    return f"{current}\n\n{extra}"
+
+
+def merge_page_audio_plans(target: PageAudioPlan, addition: PageAudioPlan, *, source_label: str = "") -> None:
+    target.fragments.extend(addition.fragments)
+    label = f"fragment '{source_label}'" if source_label else "fragment"
+    addition_targets_page_content = addition.text_target == "page_content" or bool(addition.content_blocks)
+    addition_synced_text = normalize_whitespace(addition.synced_text)
+
+    if addition_targets_page_content:
+        if addition_synced_text:
+            raise RuntimeError(f"Cannot merge {label}: page-content fragments cannot also sync plain text.")
+        if target.text_target and target.text_target != "page_content":
+            raise RuntimeError(f"Cannot merge {label}: page content conflicts with text-property sync.")
+        target.text_target = "page_content"
+        if addition.text_property:
+            if target.text_property and target.text_property != addition.text_property:
+                raise RuntimeError(f"Cannot merge {label}: conflicting text properties.")
+            target.text_property = addition.text_property
+        target.content_blocks.extend(deepcopy(addition.content_blocks))
+        return
+
+    if addition.text_target:
+        if target.text_target == "page_content" or (target.text_target and target.text_target != addition.text_target):
+            raise RuntimeError(f"Cannot merge {label}: conflicting text targets.")
+        target.text_target = addition.text_target
+
+    if addition.text_property:
+        if target.text_target == "page_content":
+            raise RuntimeError(f"Cannot merge {label}: text-property sync conflicts with page-content sync.")
+        if target.text_property and target.text_property != addition.text_property:
+            raise RuntimeError(f"Cannot merge {label}: conflicting text properties.")
+        target.text_property = addition.text_property
+
+    if addition_synced_text:
+        if target.text_target == "page_content":
+            raise RuntimeError(f"Cannot merge {label}: plain text sync conflicts with page-content sync.")
+        target.synced_text = append_synced_text(target.synced_text, addition_synced_text)
+
+
+def build_nested_fragment_config(
+    base_config: Dict[str, Any],
+    overrides: Optional[Dict[str, Any]],
+    *,
+    settings: Dict[str, Any],
+    fragments_map: Dict[str, Dict[str, Any]],
+    config_map: Dict[str, Any],
+) -> Dict[str, Any]:
+    config = apply_audio_output_overrides(base_config, overrides or {})
+    merged_tts = dict(settings)
+    merged_tts.update(dict(config.get("tts") or {}))
+    config["tts"] = merged_tts
+    if not isinstance(config.get("fragments"), dict):
+        config["fragments"] = fragments_map
+    if not isinstance(config.get("config_map"), dict):
+        config["config_map"] = config_map
+    return config
+
+
 def resolve_output_sequence_fragment(
     sequence_key: str,
     *,
     fragments_map: Dict[str, Dict[str, Any]],
+    config_map: Dict[str, Any],
     settings: Dict[str, Any],
     page: Dict[str, Any],
     pages: Sequence[Dict[str, Any]],
@@ -1484,27 +2158,158 @@ def resolve_output_sequence_fragment(
     config: Dict[str, Any],
     token: str,
     base_url: str,
-) -> List[PageAudioFragment]:
+    fragment_stack: Optional[Sequence[str]] = None,
+) -> PageAudioPlan:
     value = str(sequence_key or "").strip()
     if not value:
-        return []
+        return PageAudioPlan(fragments=[])
     if value.upper() == SPECIAL_DAILY_NOVENA_AUDIO.upper():
         novena_page_title = (
             str(config.get("daily_novena_page_title", DEFAULT_DAILY_NOVENA_PAGE_TITLE)).strip()
             or DEFAULT_DAILY_NOVENA_PAGE_TITLE
         )
-        return build_daily_novena_audio_fragments(pages, title_property, novena_page_title, token)
+        return PageAudioPlan(
+            fragments=build_daily_novena_audio_fragments(
+                pages,
+                title_property,
+                novena_page_title,
+                token,
+                settings=settings,
+                base_url=base_url,
+            )
+        )
     if value.upper() == SPECIAL_MONTHLY_INTENTION.upper():
-        return [build_monthly_intention_fragment_from_notion_or_provider(token, settings, base_url)]
-    return [
-        build_named_audio_fragment(
-            value,
-            fragments_map=fragments_map,
+        return PageAudioPlan(
+            fragments=[build_monthly_intention_fragment_from_notion_or_provider(token, settings, base_url)]
+        )
+    spec = fragments_map.get(value)
+    if not isinstance(spec, dict):
+        raise RuntimeError(f"Unknown audio fragment '{value}'.")
+    fragment_type = resolved_audio_fragment_type(spec)
+    if not fragment_type:
+        raise RuntimeError(f"Audio fragment '{value}' is missing a supported fragment type.")
+    if fragment_type_matches(fragment_type, FRAGMENT_TYPE_TEXT) or fragment_type_matches(fragment_type, FRAGMENT_TYPE_PROMPT):
+        return PageAudioPlan(
+            fragments=[
+                build_named_audio_fragment(
+                    value,
+                    fragments_map=fragments_map,
+                    settings=settings,
+                    page=page,
+                    base_url=base_url,
+                )
+            ]
+        )
+
+    stack = list(fragment_stack or [])
+    if value in stack:
+        cycle = " -> ".join([*stack, value])
+        raise RuntimeError(f"Audio fragment cycle detected: {cycle}")
+    next_stack = [*stack, value]
+
+    if fragment_type_matches(fragment_type, FRAGMENT_TYPE_SEQUENCE):
+        children = spec.get("fragment_sequence") or []
+        if not isinstance(children, list):
+            raise RuntimeError(f"Audio fragment '{value}' has invalid fragment_sequence.")
+        plan = PageAudioPlan(fragments=[])
+        for child_key in children:
+            child_plan = resolve_output_sequence_fragment(
+                str(child_key or "").strip(),
+                fragments_map=fragments_map,
+                config_map=config_map,
+                settings=settings,
+                page=page,
+                pages=pages,
+                title_property=title_property,
+                config=config,
+                token=token,
+                base_url=base_url,
+                fragment_stack=next_stack,
+            )
+            merge_page_audio_plans(plan, child_plan, source_label=value)
+        return plan
+
+    if fragment_type_matches(fragment_type, FRAGMENT_TYPE_CONFIG):
+        source_key = str(spec.get("source_config_key", "")).strip()
+        source_config = config_map.get(source_key)
+        if not isinstance(source_config, dict):
+            raise RuntimeError(f"Audio fragment '{value}' references unknown config '{source_key}'.")
+        nested_config = build_nested_fragment_config(
+            source_config,
+            spec.get("config") if isinstance(spec.get("config"), dict) else None,
             settings=settings,
+            fragments_map=fragments_map,
+            config_map=config_map,
+        )
+        nested_config["source_config_key"] = source_key
+        nested_config["_fragment_stack"] = next_stack
+        return build_page_audio_plan(
             page=page,
+            pages=pages,
+            title_property=title_property,
+            config=nested_config,
+            notion_token=token,
             base_url=base_url,
         )
-    ]
+
+    if fragment_type_matches(fragment_type, FRAGMENT_TYPE_BUILDER):
+        builder_config = spec.get("config") or {}
+        if not isinstance(builder_config, dict) or not str(builder_config.get("builder", "")).strip():
+            raise RuntimeError(f"Audio fragment '{value}' is missing a builder config.")
+        nested_config = build_nested_fragment_config(
+            builder_config,
+            None,
+            settings=settings,
+            fragments_map=fragments_map,
+            config_map=config_map,
+        )
+        nested_config["_fragment_stack"] = next_stack
+        return build_page_audio_plan(
+            page=page,
+            pages=pages,
+            title_property=title_property,
+            config=nested_config,
+            notion_token=token,
+            base_url=base_url,
+        )
+
+    if fragment_type_matches(fragment_type, FRAGMENT_TYPE_MONTHLY_INTENTION):
+        return PageAudioPlan(
+            fragments=[build_monthly_intention_fragment_from_notion_or_provider(token, settings, base_url)]
+        )
+
+    if fragment_type_matches(fragment_type, FRAGMENT_TYPE_RANDOM_INTENTION):
+        special_config = spec.get("config") or {}
+        intention_property = str(special_config.get("intention_property", DEFAULT_INTENTION_PROPERTY)).strip() or DEFAULT_INTENTION_PROPERTY
+        intention_prefix = str(special_config.get("intention_prefix", DEFAULT_INTENTION_PREFIX)).strip() or DEFAULT_INTENTION_PREFIX
+        fragment = build_page_intention_fragment(
+            page,
+            settings=settings,
+            base_url=base_url,
+            intention_property=intention_property,
+            intention_prefix=intention_prefix,
+        )
+        return PageAudioPlan(fragments=[fragment] if fragment is not None else [])
+
+    if fragment_type_matches(fragment_type, FRAGMENT_TYPE_DAILY_NOVENA_AUDIO):
+        special_config = spec.get("config") or {}
+        novena_page_title = (
+            str(special_config.get("daily_novena_page_title", spec.get("daily_novena_page_title", ""))).strip()
+            or str(config.get("daily_novena_page_title", DEFAULT_DAILY_NOVENA_PAGE_TITLE)).strip()
+            or DEFAULT_DAILY_NOVENA_PAGE_TITLE
+        )
+        return PageAudioPlan(
+            fragments=build_daily_novena_audio_fragments(
+                pages,
+                title_property,
+                novena_page_title,
+                token,
+                settings=settings,
+                base_url=base_url,
+            )
+        )
+
+    raise RuntimeError(f"Unsupported audio fragment type '{fragment_type}' for '{value}'.")
 
 
 def build_fragment_output_plan(
@@ -1519,27 +2324,299 @@ def build_fragment_output_plan(
     fragments_map = config.get("fragments") or {}
     if not isinstance(fragments_map, dict):
         raise RuntimeError("Invalid audio output config: fragments must be a map.")
+    config_map = config.get("config_map") or {}
+    if not isinstance(config_map, dict):
+        raise RuntimeError("Invalid audio output config: config_map must be a map.")
+    fragment_stack = config.get("_fragment_stack") or []
+    if not isinstance(fragment_stack, list):
+        fragment_stack = []
     sequence = config.get("fragment_sequence") or []
     if not isinstance(sequence, list):
         raise RuntimeError("Invalid audio output config: fragment_sequence must be a list.")
-    fragments: List[PageAudioFragment] = []
+    plan = PageAudioPlan(fragments=[])
     for entry in sequence:
-        fragments.extend(
-            resolve_output_sequence_fragment(
-                str(entry or "").strip(),
-                fragments_map=fragments_map,
-                settings=settings,
-                page=page,
-                pages=pages,
-                title_property=title_property,
-                config=config,
-                token=token,
-                base_url=base_url,
-            )
+        child_plan = resolve_output_sequence_fragment(
+            str(entry or "").strip(),
+            fragments_map=fragments_map,
+            config_map=config_map,
+            settings=settings,
+            page=page,
+            pages=pages,
+            title_property=title_property,
+            config=config,
+            token=token,
+            base_url=base_url,
+            fragment_stack=fragment_stack,
         )
-    if not fragments:
+        merge_page_audio_plans(plan, child_plan, source_label=str(entry or "").strip())
+    if not plan.fragments:
         raise RuntimeError("Audio output did not produce any fragments.")
-    return PageAudioPlan(fragments=fragments)
+    return plan
+
+
+def notion_rich_text_plain(items: Sequence[Dict[str, Any]]) -> str:
+    parts: List[str] = []
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        plain = str(item.get("plain_text", "")).strip()
+        if not plain:
+            plain = str(((item.get("text") or {}).get("content", ""))).strip()
+        if plain:
+            parts.append(plain)
+    return normalize_whitespace(" ".join(parts))
+
+
+def notion_block_plain_text(block: Dict[str, Any]) -> str:
+    block_type = str(block.get("type", "")).strip()
+    payload = block.get(block_type) or {}
+    rich_text = payload.get("rich_text") or []
+    if isinstance(rich_text, list):
+        return notion_rich_text_plain(rich_text)
+    return ""
+
+
+def notion_blocks_plain_text(blocks: Sequence[Dict[str, Any]]) -> str:
+    paragraphs: List[str] = []
+
+    def visit(block: Dict[str, Any]) -> None:
+        text = notion_block_plain_text(block)
+        if text:
+            paragraphs.append(text)
+        block_type = str(block.get("type", "")).strip()
+        payload = block.get(block_type) or {}
+        for child in payload.get("children") or []:
+            if isinstance(child, dict):
+                visit(child)
+
+    for block in blocks:
+        if isinstance(block, dict):
+            visit(block)
+    return "\n\n".join(paragraphs)
+
+
+def strip_fragment_label_prefix(label: str, text: str) -> str:
+    clean_label = normalize_whitespace(label)
+    value = normalize_whitespace(text)
+    if not clean_label or not value:
+        return value
+    lowered_value = value.lower()
+    lowered_label = clean_label.lower()
+    if lowered_value == lowered_label:
+        return ""
+    if lowered_value.startswith(f"{lowered_label}."):
+        return normalize_whitespace(value[len(clean_label) + 1 :])
+    if lowered_value.startswith(f"{lowered_label}:"):
+        return normalize_whitespace(value[len(clean_label) + 1 :])
+    return value
+
+
+def notion_toggle_block(text: str, children: Optional[Sequence[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    payload: Dict[str, Any] = {"rich_text": notion_rich_text_chunks(text)}
+    child_blocks = list(children or [])
+    if child_blocks:
+        payload["children"] = child_blocks
+    return {"object": "block", "type": "toggle", "toggle": payload}
+
+
+def fragment_text_content_blocks(label: str, text: str) -> List[Dict[str, Any]]:
+    body = strip_fragment_label_prefix(label, text)
+    paragraphs = plain_text_paragraphs_from_html(body) if "<" in body and ">" in body else [
+        normalize_whitespace(part) for part in re.split(r"\n\s*\n", body) if normalize_whitespace(part)
+    ]
+    if not paragraphs and body:
+        paragraphs = [body]
+    return [notion_toggle_block(label, paragraphs_to_notion_blocks(paragraphs))] if paragraphs else [notion_toggle_block(label)]
+
+
+def ensure_prompt_fragment_text(fragment: PageAudioFragment, *, base_url: str) -> str:
+    current = normalize_whitespace(fragment.text)
+    if current:
+        return current
+    prompt = normalize_whitespace(fragment.prompt)
+    prompt_model = str(fragment.prompt_model or "").strip()
+    api_key = os.getenv(OPENAI_API_KEY, "").strip()
+    if not prompt or not prompt_model or not api_key:
+        return current
+    generated = call_openai_fragment_prompt(api_key, base_url, prompt_model, prompt)
+    save_prompt_text_cache(
+        page_audio_cache_dir(),
+        fragment.collection or AUDIO_FRAGMENT_DEFAULT_COLLECTION,
+        fragment.fragment_key or fragment.label,
+        prompt_hash=fragment.hash_value,
+        prompt=prompt,
+        prompt_model=prompt_model,
+        text=generated,
+    )
+    fragment.text = generated
+    return normalize_whitespace(generated)
+
+
+def source_audio_fragment_hash_value(label: str, source_url: str) -> str:
+    raw = f"{normalize_whitespace(label)}|{str(source_url or '').strip()}".encode("utf-8")
+    return hashlib.sha256(raw).hexdigest()[:16]
+
+
+def normalize_plan_for_row_text_sync(
+    plan: PageAudioPlan,
+    *,
+    label: str,
+    text_sync_mode: str,
+    text_property: str,
+) -> PageAudioPlan:
+    normalized = PageAudioPlan(fragments=list(plan.fragments))
+    mode = normalize_opus_dei_text_sync_mode(text_sync_mode)
+    if mode == OPUS_DEI_TEXT_SYNC_MODE_NONE:
+        return normalized
+    if mode == OPUS_DEI_TEXT_SYNC_MODE_TEXT_PROPERTY:
+        normalized.synced_text = normalize_whitespace(plan.synced_text) or normalize_whitespace(
+            notion_blocks_plain_text(plan.content_blocks)
+        )
+        normalized.text_property = text_property
+        return normalized
+    if mode == OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT:
+        if plan.text_target == "page_content" or plan.content_blocks:
+            normalized.text_target = "page_content"
+            normalized.content_blocks = deepcopy(plan.content_blocks)
+            return normalized
+        synced = normalize_whitespace(plan.synced_text)
+        if synced:
+            normalized.text_target = "page_content"
+            normalized.content_blocks = fragment_text_content_blocks(label, synced)
+        return normalized
+    return normalized
+
+
+def plan_has_text_output(plan: PageAudioPlan) -> bool:
+    return bool(plan.text_target or plan.text_property or normalize_whitespace(plan.synced_text) or plan.content_blocks)
+
+
+def strip_plan_text_output(plan: PageAudioPlan) -> PageAudioPlan:
+    return PageAudioPlan(fragments=list(plan.fragments))
+
+
+def build_detailed_fragment_nested_config(
+    spec: Dict[str, Any],
+    row_config: Dict[str, Any],
+    *,
+    default_builder: str = "",
+) -> Dict[str, Any]:
+    config = deepcopy(spec.get("config") or {})
+    builder = str(config.get("builder", "")).strip() or str(default_builder or "").strip()
+    if builder:
+        config["builder"] = builder
+    merged_tts = dict(row_config.get("tts") or {})
+    merged_tts.update(dict(config.get("tts") or {}))
+    config["tts"] = merged_tts
+    if "audio_caption" not in config and row_config.get("audio_caption"):
+        config["audio_caption"] = row_config["audio_caption"]
+    if "silence_ms" not in config:
+        config["silence_ms"] = int(row_config.get("silence_ms", DEFAULT_SILENCE_MS))
+    if row_config.get("output_folder") and "output_folder" not in config:
+        config["output_folder"] = row_config["output_folder"]
+    return config
+
+
+def build_detailed_fragment_child_plan(
+    spec: Dict[str, Any],
+    *,
+    page: Dict[str, Any],
+    pages: Sequence[Dict[str, Any]],
+    title_property: str,
+    row_config: Dict[str, Any],
+    token: str,
+    base_url: str,
+) -> PageAudioPlan:
+    label = str(spec.get("label", "")).strip() or str(spec.get("key", "")).strip() or "Fragment"
+    key = str(spec.get("key", "")).strip() or label
+    group = str(spec.get("group", AUDIO_FRAGMENT_DEFAULT_COLLECTION)).strip() or AUDIO_FRAGMENT_DEFAULT_COLLECTION
+    kind = normalize_detailed_fragment_kind(str(spec.get("kind", "")).strip())
+    settings = tts_settings_from_config(row_config)
+    if kind == FRAGMENT_TYPE_TEXT:
+        fragment = stable_text_fragment(
+            cache_root=page_audio_cache_dir(),
+            collection=group,
+            key=key,
+            label=label,
+            text=str(spec.get("text", "")).strip(),
+            settings=settings,
+            base_url=base_url,
+        )
+        return PageAudioPlan(fragments=[fragment], synced_text=fragment.text)
+    if kind == FRAGMENT_TYPE_PROMPT:
+        fragment = stable_prompt_fragment(
+            cache_root=page_audio_cache_dir(),
+            collection=group,
+            key=key,
+            label=label,
+            prompt=render_fragment_prompt_template(str(spec.get("prompt", "")).strip(), page, shared.local_today()),
+            prompt_model=str(spec.get("prompt_model", "")).strip() or os.getenv(OAI_MODEL, "").strip() or "gpt-4.1-mini",
+            settings=settings,
+            base_url=base_url,
+        )
+        return PageAudioPlan(fragments=[fragment], synced_text=ensure_prompt_fragment_text(fragment, base_url=base_url))
+    if kind == FRAGMENT_TYPE_MONTHLY_INTENTION:
+        fragment = build_monthly_intention_fragment_from_notion_or_provider(token, settings, base_url)
+        return PageAudioPlan(fragments=[fragment], synced_text=fragment.text)
+    if kind == FRAGMENT_TYPE_RANDOM_INTENTION:
+        fragment = build_page_intention_fragment(
+            page,
+            settings=settings,
+            base_url=base_url,
+            intention_property=str((spec.get("config") or {}).get("intention_property", DEFAULT_INTENTION_PROPERTY)).strip()
+            or DEFAULT_INTENTION_PROPERTY,
+            intention_prefix=str((spec.get("config") or {}).get("intention_prefix", DEFAULT_INTENTION_PREFIX)).strip()
+            or DEFAULT_INTENTION_PREFIX,
+        )
+        return PageAudioPlan(
+            fragments=[fragment] if fragment is not None else [],
+            synced_text=normalize_whitespace(fragment.text) if fragment is not None else "",
+        )
+    if kind == FRAGMENT_TYPE_DAILY_NOVENA_AUDIO:
+        novena_page_title = str(spec.get("daily_novena_page_title", "")).strip() or str(
+            (spec.get("config") or {}).get("daily_novena_page_title", "")
+        ).strip() or DEFAULT_DAILY_NOVENA_PAGE_TITLE
+        fragments, content_blocks = build_daily_novena_sections(
+            pages,
+            title_property,
+            novena_page_title,
+            token,
+            settings=settings,
+            base_url=base_url,
+        )
+        return PageAudioPlan(fragments=fragments, text_target="page_content", content_blocks=content_blocks)
+    if kind == FRAGMENT_KIND_SOURCE_AUDIO:
+        source_url = str(spec.get("source_url", "")).strip()
+        if not source_url:
+            raise RuntimeError(f"Detailed fragment '{label}' is missing a source URL.")
+        return PageAudioPlan(
+            fragments=[
+                PageAudioFragment(
+                    kind="source_audio",
+                    label=label,
+                    hash_value=source_audio_fragment_hash_value(label, source_url),
+                    source_url=source_url,
+                    fragment_key=key,
+                    collection=group,
+                )
+            ]
+        )
+    if kind == FRAGMENT_KIND_RSS_AUDIO:
+        config = build_detailed_fragment_nested_config(spec, row_config, default_builder=RSS_AUDIO_BUILDER)
+        return build_rss_audio_plan(page=page, config=config, base_url=base_url)
+    if kind == FRAGMENT_KIND_BUILDER:
+        config = build_detailed_fragment_nested_config(spec, row_config)
+        if not str(config.get("builder", "")).strip():
+            raise RuntimeError(f"Detailed fragment '{label}' is missing a builder.")
+        return build_page_audio_plan(
+            page=page,
+            pages=pages,
+            title_property=title_property,
+            config=config,
+            notion_token=token,
+            base_url=base_url,
+        )
+    raise RuntimeError(f"Unsupported detailed fragment kind '{kind}' for '{label}'.")
 
 
 def parse_weekday_mapping(raw: Any) -> Dict[str, str]:
@@ -1737,24 +2814,29 @@ def build_rosary_dynamic_plan(
     if not isinstance(fragments_map, dict) or not fragments_map:
         raise RuntimeError("Rosary output requires loaded audio fragments.")
     target_date = shared.local_today()
+    include_intentions = bool(config.get("include_intentions", True))
     mystery_set = normalize_rosary_mystery_value(str(config.get("mystery_set", "")).strip()) or choose_rosary_mystery_set(
         target_date,
         config.get("weekday_map", {}),
     )
     intention_property = str(config.get("intention_property", DEFAULT_ROSARY_INTENTION_PROPERTY)).strip() or DEFAULT_ROSARY_INTENTION_PROPERTY
-    intention_entries = load_prayer_intention_entries(notion_token, count=5) if str(notion_token or "").strip() else []
+    intention_entries = load_prayer_intention_entries(notion_token, count=5) if include_intentions and str(notion_token or "").strip() else []
     intentions = [str(item.get("petition", "")).strip() for item in intention_entries if str(item.get("petition", "")).strip()]
-    if not intentions:
-        intentions = split_rosary_intentions(page_property_text(page, intention_property), count=5)
-    elif str(notion_token or "").strip():
-        short_lines = "\n".join(str(item.get("label", "")).strip() for item in intention_entries if str(item.get("label", "")).strip())
-        if short_lines:
-            maybe_update_page_text_property(page, intention_property, short_lines, notion_token)
-    if not intentions:
-        raise RuntimeError(f"Rosary row is missing intentions in '{intention_property}'.")
+    if include_intentions:
+        if not intentions:
+            intentions = split_rosary_intentions(page_property_text(page, intention_property), count=5)
+        elif str(notion_token or "").strip():
+            short_lines = "\n".join(str(item.get("label", "")).strip() for item in intention_entries if str(item.get("label", "")).strip())
+            if short_lines:
+                maybe_update_page_text_property(page, intention_property, short_lines, notion_token)
+        if not intentions:
+            raise RuntimeError(f"Rosary row is missing intentions in '{intention_property}'.")
+    else:
+        intentions = [""] * 5
     meditation_key = str(config.get("meditation_fragment_key", DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY)).strip() or DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY
 
     fragments: List[PageAudioFragment] = []
+    mystery_rows: List[Dict[str, str]] = []
     intro_sequence = [
         "rosary-sign-of-cross",
         "rosary-apostles-creed",
@@ -1774,6 +2856,7 @@ def build_rosary_dynamic_plan(
 
     for decade_number in range(1, 6):
         mystery = rosary_mystery_metadata(fragments_map, mystery_set, decade_number)
+        decade_intention = intentions[decade_number - 1]
         fragments.append(
             build_named_audio_fragment(
                 mystery["key"],
@@ -1783,43 +2866,81 @@ def build_rosary_dynamic_plan(
                 base_url=base_url,
             )
         )
-        fragments.append(
-            build_named_audio_fragment(
-                meditation_key,
-                fragments_map=fragments_map,
-                settings=settings,
-                page=page,
-                base_url=base_url,
-                prompt_context={
-                    "{mystery_set}": mystery_set.title(),
-                    "{mystery_title}": mystery["title"],
-                    "{fruit}": mystery["fruit"],
-                    "{intention}": intentions[decade_number - 1],
-                    "{decade_number}": str(decade_number),
-                },
-                key_override=f"rosary-decade-meditation-{mystery_set}-{decade_number}",
-                label_override=f"Rosary Meditation {decade_number}",
+        if include_intentions:
+            fragments.append(
+                build_named_audio_fragment(
+                    meditation_key,
+                    fragments_map=fragments_map,
+                    settings=settings,
+                    page=page,
+                    base_url=base_url,
+                    prompt_context={
+                        "{mystery_set}": mystery_set.title(),
+                        "{mystery_title}": mystery["title"],
+                        "{fruit}": mystery["fruit"],
+                        "{intention}": decade_intention,
+                        "{decade_number}": str(decade_number),
+                    },
+                    key_override=f"rosary-decade-meditation-{mystery_set}-{decade_number}",
+                    label_override=f"Rosary Meditation {decade_number}",
+                )
             )
-        )
         fragments.append(build_named_audio_fragment("rosary-our-father", fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
         for _ in range(10):
             fragments.append(build_named_audio_fragment("rosary-hail-mary", fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
         fragments.append(build_named_audio_fragment("rosary-glory-be", fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
         fragments.append(build_named_audio_fragment("rosary-fatima-prayer", fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
+        mystery_rows.append(
+            {
+                "title": mystery["title"],
+                "fruit": mystery["fruit"],
+                "intention": decade_intention,
+            }
+        )
 
     for key in closing_sequence:
         fragments.append(build_named_audio_fragment(key, fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
-    return PageAudioPlan(fragments=fragments)
+    toggle_children: List[Dict[str, Any]] = [
+        notion_paragraph_block(f"{target_date.strftime('%A, %B %d, %Y')}: {mystery_set.title()} Mysteries.")
+    ]
+    for mystery in mystery_rows:
+        item_children: List[Dict[str, Any]] = []
+        fruit = normalize_whitespace(str(mystery.get("fruit", "")).strip())
+        intention = normalize_whitespace(str(mystery.get("intention", "")).strip())
+        if fruit:
+            item_children.append(notion_paragraph_block(f"Fruit: {fruit}"))
+        if include_intentions and intention:
+            item_children.append(notion_paragraph_block(f"Intention: {intention}"))
+        toggle_children.append(
+            notion_numbered_list_item_block(
+                normalize_whitespace(str(mystery.get("title", "")).strip()),
+                item_children,
+            )
+        )
+    return PageAudioPlan(
+        fragments=fragments,
+        text_target="page_content",
+        content_blocks=[
+            {
+                "object": "block",
+                "type": "toggle",
+                "toggle": {
+                    "rich_text": notion_rich_text_chunks("Rosary Mysteries"),
+                    "children": toggle_children,
+                },
+            }
+        ],
+    )
 
 
-def build_morning_prayer_fragments(
+def build_morning_prayer_plan(
     page: Dict[str, Any],
     pages: Sequence[Dict[str, Any]],
     title_property: str,
     config: Dict[str, Any],
     token: str,
     base_url: str,
-) -> List[PageAudioFragment]:
+) -> PageAudioPlan:
     page_id = str(page.get("id", "")).strip()
     if not page_id:
         raise RuntimeError("Target page has no id.")
@@ -1830,9 +2951,17 @@ def build_morning_prayer_fragments(
         str(config.get("daily_novena_page_title", DEFAULT_DAILY_NOVENA_PAGE_TITLE)).strip()
         or DEFAULT_DAILY_NOVENA_PAGE_TITLE
     )
-    daily_novena_fragments = build_daily_novena_audio_fragments(pages, title_property, novena_page_title, token)
+    daily_novena_fragments, daily_novena_content_blocks = build_daily_novena_sections(
+        pages,
+        title_property,
+        novena_page_title,
+        token,
+        settings=settings,
+        base_url=base_url,
+    )
 
     fragments: List[PageAudioFragment] = []
+    content_blocks: List[Dict[str, Any]] = []
     current_heading = ""
     current_lines: List[str] = []
 
@@ -1865,6 +2994,14 @@ def build_morning_prayer_fragments(
 
     for block in shared.notion_list_block_children(page_id, token):
         block_type = str(block.get("type", "")).strip()
+        if is_morning_prayer_autogen_novena_block(block):
+            continue
+        if block_type not in {"bookmark", "audio"}:
+            cloned_block = shared.notion_clone_block_tree(block, token)
+            if cloned_block is not None:
+                content_blocks.append(cloned_block)
+            if placeholder_kind(shared.block_rich_text_plain(block)) == "daily_novena":
+                content_blocks.extend(deepcopy(daily_novena_content_blocks))
         if block_type in {"bookmark", "audio"}:
             continue
         text = normalize_whitespace(shared.block_rich_text_plain(block))
@@ -1892,7 +3029,215 @@ def build_morning_prayer_fragments(
     flush_heading()
     if not fragments:
         raise RuntimeError("No audio fragments were produced for Morning Prayer.")
-    return fragments
+    return PageAudioPlan(
+        fragments=fragments,
+        text_target="page_content",
+        content_blocks=content_blocks,
+    )
+
+
+def build_morning_prayer_fragments(
+    page: Dict[str, Any],
+    pages: Sequence[Dict[str, Any]],
+    title_property: str,
+    config: Dict[str, Any],
+    token: str,
+    base_url: str,
+) -> List[PageAudioFragment]:
+    return build_morning_prayer_plan(
+        page=page,
+        pages=pages,
+        title_property=title_property,
+        config=config,
+        token=token,
+        base_url=base_url,
+    ).fragments
+
+
+def rosary_fragment_key_from_label(label: str) -> str:
+    lowered = normalize_flag_value(label)
+    prayer_map = {
+        "sign of the cross": "rosary-sign-of-cross",
+        "apostles creed": "rosary-apostles-creed",
+        "our father": "rosary-our-father",
+        "hail mary": "rosary-hail-mary",
+        "glory be": "rosary-glory-be",
+        "fatima prayer": "rosary-fatima-prayer",
+        "hail holy queen": "rosary-hail-holy-queen",
+        "closing prayer": "rosary-closing-prayer",
+        "rosary meditation template": DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY,
+    }
+    if lowered in prayer_map:
+        return prayer_map[lowered]
+    match = re.match(r"^(joyful|sorrowful|glorious|luminous)\s+([1-5])\b", lowered)
+    if match:
+        return f"rosary-{match.group(1)}-{match.group(2)}"
+    return ""
+
+
+def detailed_fragments_to_legacy_fragments_map(specs: Sequence[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    fragments_map: Dict[str, Dict[str, Any]] = {}
+    for spec in specs:
+        kind = normalize_detailed_fragment_kind(str(spec.get("kind", "")).strip())
+        if kind not in {FRAGMENT_TYPE_TEXT, FRAGMENT_TYPE_PROMPT}:
+            continue
+        key = rosary_fragment_key_from_label(str(spec.get("label", "")).strip()) or str(spec.get("key", "")).strip()
+        if not key:
+            continue
+        payload: Dict[str, Any] = {
+            "key": key,
+            "label": str(spec.get("label", "")).strip() or key,
+            "collection": str(spec.get("group", "rosary")).strip() or "rosary",
+            "notes": str(spec.get("notes", "")).strip(),
+        }
+        if kind == FRAGMENT_TYPE_PROMPT:
+            payload["prompt"] = str(spec.get("prompt", "")).strip()
+            payload["prompt_model"] = str(spec.get("prompt_model", "")).strip() or os.getenv(OAI_MODEL, "").strip() or "gpt-4.1-mini"
+        else:
+            payload["text"] = str(spec.get("text", "")).strip()
+        fragments_map[key] = payload
+    return fragments_map
+
+
+def opus_dei_two_list_settings(
+    page: Dict[str, Any],
+    *,
+    title_property: str,
+    fragments_by_page_id: Dict[str, List[Dict[str, Any]]],
+) -> Dict[str, Any]:
+    page_id = str(page.get("id", "")).strip()
+    related_specs = list(fragments_by_page_id.get(page_id) or [])
+    assembly_mode = normalize_opus_dei_assembly_mode(page_property_text(page, OPUS_DEI_ASSEMBLY_MODE_PROPERTY))
+    special_builder = normalize_flag_value(page_property_text(page, OPUS_DEI_SPECIAL_BUILDER_PROPERTY)).replace(" ", "_")
+    if not assembly_mode:
+        if special_builder:
+            assembly_mode = OPUS_DEI_ASSEMBLY_MODE_SPECIAL
+        elif related_specs:
+            assembly_mode = OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS
+    if not assembly_mode and not related_specs:
+        return {}
+    title = shared.page_title(page, title_property).strip() or page_id or "Page Audio"
+    text_sync_mode = normalize_opus_dei_text_sync_mode(page_property_text(page, OPUS_DEI_TEXT_SYNC_MODE_PROPERTY))
+    include_intentions = "intentions" in title.lower()
+    if not text_sync_mode and special_builder == OPUS_DEI_SPECIAL_BUILDER_ROSARY and include_intentions:
+        text_sync_mode = OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT
+    return {
+        "title": title,
+        "assembly_mode": assembly_mode or OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS,
+        "special_builder": special_builder,
+        "text_sync_mode": text_sync_mode or OPUS_DEI_TEXT_SYNC_MODE_NONE,
+        "text_property": page_property_text(page, OPUS_DEI_TEXT_PROPERTY_PROPERTY).strip() or DEFAULT_RSS_TEXT_PROPERTY,
+        "audio_config": opus_dei_row_audio_config(page, title_property=title_property),
+        "weekday_map": page_property_text(page, OPUS_DEI_WEEKDAY_MAP_PROPERTY).strip(),
+        "fragment_specs": related_specs,
+        "include_intentions": include_intentions,
+    }
+
+
+def opus_dei_row_config_key(page: Dict[str, Any], *, title_property: str) -> str:
+    page_id = str(page.get("id", "")).strip()
+    if page_id:
+        return f"opus_dei:{page_id}"
+    title = shared.page_title(page, title_property).strip()
+    return f"opus_dei:{slugify(title)}"
+
+
+def opus_dei_row_matches_filter(page: Dict[str, Any], config_key_filter: str, *, title_property: str) -> bool:
+    wanted = str(config_key_filter or "").strip()
+    if not wanted:
+        return True
+    title = shared.page_title(page, title_property).strip()
+    candidates = {
+        opus_dei_row_config_key(page, title_property=title_property),
+        f"opus_dei:{slugify(title)}" if title else "",
+        title,
+    }
+    return wanted in {candidate for candidate in candidates if candidate}
+
+
+def build_opus_dei_two_list_plan(
+    page: Dict[str, Any],
+    pages: Sequence[Dict[str, Any]],
+    title_property: str,
+    *,
+    row_settings: Dict[str, Any],
+    token: str,
+    base_url: str,
+) -> PageAudioPlan:
+    assembly_mode = str(row_settings.get("assembly_mode", "")).strip()
+    text_sync_mode = str(row_settings.get("text_sync_mode", OPUS_DEI_TEXT_SYNC_MODE_NONE)).strip() or OPUS_DEI_TEXT_SYNC_MODE_NONE
+    text_property = str(row_settings.get("text_property", DEFAULT_RSS_TEXT_PROPERTY)).strip() or DEFAULT_RSS_TEXT_PROPERTY
+    row_audio_config = deepcopy(row_settings.get("audio_config") or {})
+    fragment_specs = list(row_settings.get("fragment_specs") or [])
+    if assembly_mode == OPUS_DEI_ASSEMBLY_MODE_SPECIAL:
+        special_builder = str(row_settings.get("special_builder", "")).strip()
+        if special_builder != OPUS_DEI_SPECIAL_BUILDER_ROSARY:
+            raise RuntimeError(f"Unsupported special builder '{special_builder}'.")
+        config = {
+            **row_audio_config,
+            "builder": ROSARY_DYNAMIC_BUILDER,
+            "fragments": detailed_fragments_to_legacy_fragments_map(fragment_specs),
+            "weekday_map": row_settings.get("weekday_map", ""),
+            "include_intentions": bool(row_settings.get("include_intentions", True)),
+        }
+        plan = build_rosary_dynamic_plan(page=page, config=config, base_url=base_url, notion_token=token)
+        return normalize_plan_for_row_text_sync(
+            plan,
+            label=str(row_settings.get("title", "")).strip() or shared.page_title(page, title_property).strip() or "Rosary",
+            text_sync_mode=text_sync_mode,
+            text_property=text_property,
+        )
+
+    if not fragment_specs:
+        raise RuntimeError("Two-list assembly row has no related detailed fragments.")
+
+    plan = PageAudioPlan(fragments=[])
+    source_roles_present = False
+    source_selected = False
+    source_errors: List[str] = []
+    text_only_append_selected = False
+    for spec in fragment_specs:
+        label = str(spec.get("label", "")).strip() or str(spec.get("key", "")).strip() or "Fragment"
+        role = normalize_fragment_assembly_role(str(spec.get("assembly_role", "")).strip()) or ASSEMBLY_ROLE_APPEND
+        if role in {ASSEMBLY_ROLE_PRIMARY_SOURCE, ASSEMBLY_ROLE_FALLBACK_SOURCE}:
+            source_roles_present = True
+            if source_selected:
+                continue
+        try:
+            child_plan = build_detailed_fragment_child_plan(
+                spec,
+                page=page,
+                pages=pages,
+                title_property=title_property,
+                row_config=row_audio_config,
+                token=token,
+                base_url=base_url,
+            )
+        except Exception as exc:
+            if role in {ASSEMBLY_ROLE_PRIMARY_SOURCE, ASSEMBLY_ROLE_FALLBACK_SOURCE}:
+                source_errors.append(f"{label}: {exc}")
+                continue
+            raise
+        normalized_child = normalize_plan_for_row_text_sync(
+            child_plan,
+            label=label,
+            text_sync_mode=text_sync_mode,
+            text_property=text_property,
+        )
+        if role == ASSEMBLY_ROLE_APPEND and not child_plan.fragments and plan_has_text_output(normalized_child):
+            text_only_append_selected = True
+        if role in {ASSEMBLY_ROLE_PRIMARY_SOURCE, ASSEMBLY_ROLE_FALLBACK_SOURCE} and text_only_append_selected:
+            normalized_child = strip_plan_text_output(normalized_child)
+        if role in {ASSEMBLY_ROLE_PRIMARY_SOURCE, ASSEMBLY_ROLE_FALLBACK_SOURCE}:
+            if not child_plan.fragments:
+                source_errors.append(f"{label}: no audio fragments were produced")
+                continue
+            source_selected = True
+        merge_page_audio_plans(plan, normalized_child, source_label=label)
+
+    if source_roles_present and not source_selected:
+        raise RuntimeError("; ".join(source_errors) if source_errors else "No source fragment could be resolved.")
+    return plan
 
 
 def plain_text_paragraphs_from_html(raw_html: str) -> List[str]:
@@ -1921,6 +3266,14 @@ def notion_rich_text_chunks(text: str) -> List[Dict[str, Any]]:
 
 def notion_paragraph_block(text: str) -> Dict[str, Any]:
     return {"object": "block", "type": "paragraph", "paragraph": {"rich_text": notion_rich_text_chunks(text)}}
+
+
+def notion_numbered_list_item_block(text: str, children: Optional[Sequence[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    payload: Dict[str, Any] = {"rich_text": notion_rich_text_chunks(text)}
+    child_blocks = list(children or [])
+    if child_blocks:
+        payload["children"] = child_blocks
+    return {"object": "block", "type": "numbered_list_item", "numbered_list_item": payload}
 
 
 def paragraphs_to_notion_blocks(paragraphs: Sequence[str]) -> List[Dict[str, Any]]:
@@ -1965,7 +3318,10 @@ def looks_like_divine_office_title(paragraph: str) -> bool:
         return False
     lowered = value.lower()
     return bool(
-        re.search(r"\b(invitatory|morning prayer|midmorning prayer|midday prayer|midafternoon prayer|afternoon prayer|evening prayer|night prayer)\b", lowered)
+        re.search(
+            r"\b(invitatory|lauds|morning prayer|midmorning prayer|midday prayer|midafternoon prayer|afternoon prayer|vespers|evening prayer|compline|night prayer)\b",
+            lowered,
+        )
         and re.search(r"\bfor\b", lowered)
     )
 
@@ -2396,7 +3752,69 @@ def render_feed_match_text(template: str, target_date: datetime.date) -> str:
     return normalize_whitespace(rendered)
 
 
-def rss_item_to_entry(item: ET.Element, feed_url: str, target_date: datetime.date) -> Optional[Dict[str, Any]]:
+def xml_local_name(tag: Any) -> str:
+    value = str(tag or "").strip()
+    if "}" in value:
+        value = value.rsplit("}", 1)[-1]
+    if ":" in value:
+        value = value.rsplit(":", 1)[-1]
+    return value.lower()
+
+
+def rss_image_url_from_element(element: Optional[ET.Element]) -> str:
+    if element is None:
+        return ""
+    for child in list(element):
+        local_name = xml_local_name(child.tag)
+        if local_name == "image":
+            href = str(child.attrib.get("href", "")).strip()
+            if href:
+                return href
+            url_attr = str(child.attrib.get("url", "")).strip()
+            if url_attr:
+                return url_attr
+            text = str(child.text or "").strip()
+            if text.lower().startswith(("http://", "https://")):
+                return text
+            for grandchild in list(child):
+                if xml_local_name(grandchild.tag) == "url":
+                    value = str(grandchild.text or "").strip()
+                    if value.lower().startswith(("http://", "https://")):
+                        return value
+        if local_name == "thumbnail":
+            value = str(child.attrib.get("url", "")).strip() or str(child.attrib.get("href", "")).strip()
+            if value:
+                return value
+        if local_name == "content":
+            medium = str(child.attrib.get("medium", "")).strip().lower()
+            content_type = str(child.attrib.get("type", "")).strip().lower()
+            if medium == "image" or content_type.startswith("image/"):
+                value = str(child.attrib.get("url", "")).strip() or str(child.attrib.get("href", "")).strip()
+                if value:
+                    return value
+    return ""
+
+
+def title_matches_filter(title: str, filter_text: str) -> bool:
+    wanted = normalize_whitespace(filter_text).lower()
+    if not wanted:
+        return True
+    lowered = normalize_whitespace(title).lower()
+    if wanted in lowered:
+        return True
+    for aliases in TITLE_MATCH_ALIAS_GROUPS:
+        if any(alias in wanted for alias in aliases) and any(alias in lowered for alias in aliases):
+            return True
+    return False
+
+
+def rss_item_to_entry(
+    item: ET.Element,
+    feed_url: str,
+    target_date: datetime.date,
+    *,
+    channel_artwork_url: str = "",
+) -> Optional[Dict[str, Any]]:
     title = str(item.findtext("title", "")).strip()
     if not title:
         return None
@@ -2418,6 +3836,7 @@ def rss_item_to_entry(item: ET.Element, feed_url: str, target_date: datetime.dat
         "date": entry_date.isoformat() if entry_date else "",
         "entry_date": entry_date,
         "day_of_year": day_of_year,
+        "artwork_url": rss_image_url_from_element(item) or str(channel_artwork_url or "").strip(),
     }
 
 
@@ -2427,13 +3846,12 @@ def choose_dated_feed_entry(
     *,
     title_filter: Optional[str] = None,
 ) -> Dict[str, Any]:
-    wanted = str(title_filter or "").strip().lower()
     exact: Optional[Dict[str, Any]] = None
     latest_past: Optional[Dict[str, Any]] = None
     latest_date: Optional[datetime.date] = None
     for entry in entries:
         title = str(entry.get("title", "")).strip()
-        if wanted and wanted not in title.lower():
+        if not title_matches_filter(title, str(title_filter or "")):
             continue
         entry_date = entry.get("entry_date")
         if not isinstance(entry_date, datetime.date):
@@ -2459,14 +3877,13 @@ def choose_day_of_year_feed_entry(
     *,
     title_filter: str = "",
 ) -> Dict[str, Any]:
-    wanted = str(title_filter or "").strip().lower()
     target_doy = int(target_date.timetuple().tm_yday)
     exact: Optional[Dict[str, Any]] = None
     latest_past: Optional[Dict[str, Any]] = None
     latest_doy: Optional[int] = None
     for entry in entries:
         title = str(entry.get("title", "")).strip()
-        if wanted and wanted not in title.lower():
+        if not title_matches_filter(title, title_filter):
             continue
         item_doy = entry.get("day_of_year")
         if not isinstance(item_doy, int):
@@ -2518,7 +3935,7 @@ def choose_fixed_title_feed_entry(entries: Sequence[Dict[str, Any]], match_text:
     for entry in entries:
         title = str(entry.get("title", "")).strip()
         lowered = title.lower()
-        if lowered == wanted or wanted in lowered:
+        if lowered == wanted or title_matches_filter(title, match_text):
             return entry
     raise RuntimeError(
         f"No fixed-title entry found in {str((entries[0] if entries else {}).get('feed_url', '')).strip() or 'feed'} "
@@ -2542,9 +3959,13 @@ def fetch_rss_feed_entry(
         channel = root.find("channel")
         if channel is None:
             raise RuntimeError(f"Invalid RSS feed at {feed_url}.")
+        channel_artwork_url = rss_image_url_from_element(channel)
         entries = [
             entry
-            for entry in (rss_item_to_entry(item, feed_url, target_date) for item in channel.findall("item"))
+            for entry in (
+                rss_item_to_entry(item, feed_url, target_date, channel_artwork_url=channel_artwork_url)
+                for item in channel.findall("item")
+            )
             if isinstance(entry, dict)
         ]
         if not entries:
@@ -2611,6 +4032,7 @@ def build_divine_office_invitatory_plan(
             label=feed_entry["title"],
             hash_value=audio_hash,
             source_url=feed_entry["audio_url"],
+            artwork_url=str(feed_entry.get("artwork_url", "")).strip(),
         )
     )
     content_blocks = divine_office_content_blocks_from_html(feed_entry.get("content_html", ""))
@@ -2625,6 +4047,16 @@ def build_divine_office_invitatory_plan(
 
 def build_divine_office_night_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
     feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=DIVINE_OFFICE_FEED_URL, match_text="Night Prayer")
+    content_blocks = divine_office_content_blocks_from_html(feed_entry.get("content_html", ""))
+    return PageAudioPlan(
+        fragments=[],
+        text_target="page_content",
+        content_blocks=content_blocks,
+    )
+
+
+def build_divine_office_evening_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
+    feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=DIVINE_OFFICE_FEED_URL, match_text="Evening Prayer")
     content_blocks = divine_office_content_blocks_from_html(feed_entry.get("content_html", ""))
     return PageAudioPlan(
         fragments=[],
@@ -2696,6 +4128,7 @@ def build_rss_audio_plan(
             label=feed_entry["title"],
             hash_value=audio_hash,
             source_url=feed_entry["audio_url"],
+            artwork_url=str(feed_entry.get("artwork_url", "")).strip(),
         )
     )
     paragraphs = plain_text_paragraphs_from_html(feed_entry.get("content_html", ""))
@@ -2726,7 +4159,13 @@ def compute_page_render_hash(
         "silence_ms": int(config.get("silence_ms", DEFAULT_SILENCE_MS)),
         "tts": tts_settings_from_config(config),
         "fragments": [
-            {"label": fragment.label, "hash": fragment.hash_value, "key": fragment.fragment_key, "collection": fragment.collection}
+            {
+                "label": fragment.label,
+                "hash": fragment.hash_value,
+                "key": fragment.fragment_key,
+                "collection": fragment.collection,
+                "artwork_url": str(fragment.artwork_url or "").strip(),
+            }
             for fragment in fragments
         ],
     }
@@ -2804,6 +4243,7 @@ def persist_page_audio_output_library(
         config=config,
     )
     audio_path.write_bytes(audio_bytes)
+    artwork_url = page_audio_cover_art_url(fragments)
     payload = {
         "title": shared.page_title(page, title_property).strip(),
         "page_id": str(page.get("id", "")).strip(),
@@ -2819,6 +4259,7 @@ def persist_page_audio_output_library(
         "render_hash": str(render_hash or "").strip(),
         "date": shared.local_today().isoformat(),
         "tts": settings,
+        "artwork_url": artwork_url,
         "fragments": [
             {
                 "label": fragment.label,
@@ -2827,6 +4268,7 @@ def persist_page_audio_output_library(
                 "fragment_key": fragment.fragment_key,
                 "collection": fragment.collection,
                 "source_url": fragment.source_url,
+                "artwork_url": fragment.artwork_url,
             }
             for fragment in fragments
         ],
@@ -3006,6 +4448,154 @@ def ffmpeg_audio_codec(audio_format: str) -> str:
     raise RuntimeError(f"Unsupported ffmpeg audio format '{audio_format}'.")
 
 
+def ffmpeg_audio_output_args(audio_format: str) -> List[str]:
+    fmt = str(audio_format or "").strip().lower()
+    if fmt == "mp3":
+        return ["-c:a", ffmpeg_audio_codec(fmt), "-q:a", "0"]
+    if fmt == "wav":
+        return ["-c:a", ffmpeg_audio_codec(fmt)]
+    if fmt == "aac":
+        return ["-c:a", ffmpeg_audio_codec(fmt), "-b:a", "256k"]
+    if fmt == "opus":
+        return [
+            "-c:a",
+            ffmpeg_audio_codec(fmt),
+            "-b:a",
+            "192k",
+            "-vbr",
+            "on",
+            "-compression_level",
+            "10",
+        ]
+    if fmt == "flac":
+        return ["-c:a", ffmpeg_audio_codec(fmt), "-compression_level", "8"]
+    raise RuntimeError(f"Unsupported ffmpeg audio format '{audio_format}'.")
+
+
+def pcm_normalize_channel_layout() -> str:
+    return "mono" if PCM_NORMALIZE_CHANNELS == 1 else "stereo"
+
+
+def ffmpeg_pcm_normalize_args() -> List[str]:
+    return [
+        "-vn",
+        "-ar",
+        str(PCM_NORMALIZE_SAMPLE_RATE),
+        "-ac",
+        str(PCM_NORMALIZE_CHANNELS),
+        "-c:a",
+        "pcm_s16le",
+    ]
+
+
+def audio_format_supports_embedded_artwork(audio_format: str) -> bool:
+    return str(audio_format or "").strip().lower() == "mp3"
+
+
+def page_audio_cover_art_url(fragments: Sequence[PageAudioFragment]) -> str:
+    for fragment in fragments:
+        if fragment.kind == "source_audio" and str(fragment.artwork_url or "").strip():
+            return str(fragment.artwork_url).strip()
+    for fragment in fragments:
+        if str(fragment.artwork_url or "").strip():
+            return str(fragment.artwork_url).strip()
+    return ""
+
+
+def cached_cover_art_path(cache_root: Path, artwork_hash: str) -> Optional[Path]:
+    directory = cache_root / "artwork" / artwork_hash[:2] / artwork_hash[2:4]
+    if not directory.exists():
+        return None
+    matches = [path for path in directory.glob(f"{artwork_hash}.*") if path.is_file()]
+    return matches[0] if matches else None
+
+
+def ensure_cover_art_path(artwork_url: str, cache_root: Path) -> Optional[Path]:
+    url = str(artwork_url or "").strip()
+    if not url:
+        return None
+    artwork_hash = hashlib.sha256(url.encode("utf-8")).hexdigest()[:16]
+    cached = cached_cover_art_path(cache_root, artwork_hash)
+    if cached is not None:
+        return cached
+    response = page_audio_http_get(url, timeout=30)
+    raw = bytes(response.content or b"")
+    if not raw:
+        return None
+    content_type = str(response.headers.get("Content-Type", "")).strip()
+    filename = shared.infer_filename_from_url(url, fallback_stem=f"cover_art_{artwork_hash}", content_type=content_type)
+    extension = Path(filename).suffix.lstrip(".").lower() or "jpg"
+    if extension == "jpeg":
+        extension = "jpg"
+    path = page_audio_cache_path(cache_root, "artwork", artwork_hash, extension)
+    if not path.exists():
+        path.write_bytes(raw)
+    return path
+
+
+def embed_cover_art_with_ffmpeg(audio_bytes: bytes, audio_format: str, cover_art_path: Path, cache_root: Path) -> bytes:
+    fmt = str(audio_format or "").strip().lower()
+    if not audio_format_supports_embedded_artwork(fmt):
+        return audio_bytes
+    tmp_dir = cache_root / "tmp"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=tmp_dir) as temp_dir:
+        audio_input_path = Path(temp_dir) / f"input.{fmt}"
+        audio_output_path = Path(temp_dir) / f"output.{fmt}"
+        audio_input_path.write_bytes(audio_bytes)
+        run_ffmpeg(
+            [
+                "-y",
+                "-i",
+                str(audio_input_path),
+                "-i",
+                str(cover_art_path),
+                "-map",
+                "0:a:0",
+                "-map",
+                "1:v:0",
+                "-c:a",
+                "copy",
+                "-c:v",
+                "mjpeg",
+                "-id3v2_version",
+                "3",
+                "-metadata:s:v",
+                "title=Album cover",
+                "-metadata:s:v",
+                "comment=Cover (front)",
+                "-disposition:v:0",
+                "attached_pic",
+                str(audio_output_path),
+            ]
+        )
+        return audio_output_path.read_bytes()
+
+
+def maybe_embed_cover_art(
+    audio_bytes: bytes,
+    audio_format: str,
+    fragments: Sequence[PageAudioFragment],
+    cache_root: Path,
+) -> bytes:
+    if not audio_bytes or not audio_format_supports_embedded_artwork(audio_format):
+        return audio_bytes
+    artwork_url = page_audio_cover_art_url(fragments)
+    if not artwork_url:
+        return audio_bytes
+    try:
+        cover_art_path = ensure_cover_art_path(artwork_url, cache_root)
+        if cover_art_path is None:
+            return audio_bytes
+        return embed_cover_art_with_ffmpeg(audio_bytes, audio_format, cover_art_path, cache_root)
+    except Exception as exc:
+        print(
+            f"WARN page_audio_cover_art skipped reason={type(exc).__name__} detail={str(exc).strip() or 'unknown'}",
+            file=sys.stderr,
+        )
+        return audio_bytes
+
+
 def run_ffmpeg(args: Sequence[str]) -> None:
     command = [FFMPEG_BINARY, *args]
     completed = subprocess.run(command, capture_output=True, text=True, check=False)
@@ -3107,11 +4697,9 @@ def ensure_source_audio_fragment(fragment: PageAudioFragment, cache_root: Path) 
     return cache_path
 
 
-def ensure_normalized_audio_fragment(path: Path, hash_value: str, target_format: str, cache_root: Path) -> Path:
-    if path.suffix.lower().lstrip(".") == target_format:
-        return path
-    normalized_hash = hashlib.sha256(f"{hash_value}|{target_format}".encode("utf-8")).hexdigest()[:16]
-    normalized_path = page_audio_cache_path(cache_root, "normalized", normalized_hash, target_format)
+def ensure_normalized_audio_fragment(path: Path, hash_value: str, cache_root: Path) -> Path:
+    normalized_hash = hashlib.sha256(f"{hash_value}|{PCM_NORMALIZE_PROFILE}".encode("utf-8")).hexdigest()[:16]
+    normalized_path = page_audio_cache_path(cache_root, "normalized", normalized_hash, PCM_NORMALIZE_EXTENSION)
     if normalized_path.exists():
         return normalized_path
     run_ffmpeg(
@@ -3119,20 +4707,18 @@ def ensure_normalized_audio_fragment(path: Path, hash_value: str, target_format:
             "-y",
             "-i",
             str(path),
-            "-vn",
-            "-c:a",
-            ffmpeg_audio_codec(target_format),
+            *ffmpeg_pcm_normalize_args(),
             str(normalized_path),
         ]
     )
     return normalized_path
 
 
-def ensure_silence_fragment(cache_root: Path, target_format: str, silence_ms: int) -> Optional[Path]:
+def ensure_silence_fragment(cache_root: Path, silence_ms: int) -> Optional[Path]:
     if silence_ms <= 0:
         return None
-    silence_hash = hashlib.sha256(f"{target_format}|{silence_ms}".encode("utf-8")).hexdigest()[:16]
-    silence_path = page_audio_cache_path(cache_root, "silence", silence_hash, target_format)
+    silence_hash = hashlib.sha256(f"{PCM_NORMALIZE_PROFILE}|{silence_ms}".encode("utf-8")).hexdigest()[:16]
+    silence_path = page_audio_cache_path(cache_root, "silence", silence_hash, PCM_NORMALIZE_EXTENSION)
     if silence_path.exists():
         return silence_path
     duration_seconds = max(0.0, silence_ms / 1000.0)
@@ -3142,11 +4728,10 @@ def ensure_silence_fragment(cache_root: Path, target_format: str, silence_ms: in
             "-f",
             "lavfi",
             "-i",
-            "anullsrc=r=24000:cl=mono",
+            f"anullsrc=r={PCM_NORMALIZE_SAMPLE_RATE}:cl={pcm_normalize_channel_layout()}",
             "-t",
             f"{duration_seconds:.3f}",
-            "-c:a",
-            ffmpeg_audio_codec(target_format),
+            *ffmpeg_pcm_normalize_args(),
             str(silence_path),
         ]
     )
@@ -3156,7 +4741,7 @@ def ensure_silence_fragment(cache_root: Path, target_format: str, silence_ms: in
 def assemble_audio_with_ffmpeg(fragment_paths: Sequence[Path], target_format: str, silence_ms: int, cache_root: Path) -> bytes:
     if not fragment_paths:
         raise RuntimeError("No audio fragments were assembled.")
-    silence_path = ensure_silence_fragment(cache_root, target_format, silence_ms)
+    silence_path = ensure_silence_fragment(cache_root, silence_ms)
     ordered_paths: List[Path] = []
     for idx, path in enumerate(fragment_paths):
         ordered_paths.append(path)
@@ -3178,8 +4763,8 @@ def assemble_audio_with_ffmpeg(fragment_paths: Sequence[Path], target_format: st
                 "0",
                 "-i",
                 str(concat_path),
-                "-c:a",
-                ffmpeg_audio_codec(target_format),
+                "-vn",
+                *ffmpeg_audio_output_args(target_format),
                 str(output_path),
             ]
         )
@@ -3195,7 +4780,7 @@ def build_assembled_audio(
     settings = tts_settings_from_config(config)
     cache_root = page_audio_cache_dir()
     silence_ms = int(config.get("silence_ms", DEFAULT_SILENCE_MS))
-    fragment_paths: List[Path] = []
+    source_paths: List[Path] = []
     for fragment in fragments:
         if fragment.kind == "tts":
             path = ensure_tts_fragment_audio(fragment, settings, cache_root, openai_key, base_url)
@@ -3205,9 +4790,16 @@ def build_assembled_audio(
             path = ensure_source_audio_fragment(fragment, cache_root)
         else:
             raise RuntimeError(f"Unsupported fragment kind '{fragment.kind}'.")
-        normalized = ensure_normalized_audio_fragment(path, fragment.hash_value, str(settings["format"]), cache_root)
-        fragment_paths.append(normalized)
-    return assemble_audio_with_ffmpeg(fragment_paths, str(settings["format"]), silence_ms, cache_root)
+        source_paths.append(path)
+    target_format = str(settings["format"])
+    # Preserve single-fragment files as-is when the source already matches the requested output format.
+    if len(source_paths) == 1 and source_paths[0].suffix.lower().lstrip(".") == target_format:
+        return source_paths[0].read_bytes()
+    fragment_paths = [
+        ensure_normalized_audio_fragment(path, fragment.hash_value, cache_root)
+        for fragment, path in zip(fragments, source_paths)
+    ]
+    return assemble_audio_with_ffmpeg(fragment_paths, target_format, silence_ms, cache_root)
 
 
 def monthly_intention_cache_path(year: int) -> Path:
@@ -3411,20 +5003,20 @@ def build_page_audio_plan(
 ) -> PageAudioPlan:
     builder = str(config.get("builder", "")).strip() or MORNING_PRAYER_BUILDER
     if builder == MORNING_PRAYER_BUILDER:
-        return PageAudioPlan(
-            fragments=build_morning_prayer_fragments(
-                page=page,
-                pages=pages,
-                title_property=title_property,
-                config=config,
-                token=notion_token,
-                base_url=base_url,
-            )
+        return build_morning_prayer_plan(
+            page=page,
+            pages=pages,
+            title_property=title_property,
+            config=config,
+            token=notion_token,
+            base_url=base_url,
         )
     if builder == DIVINE_OFFICE_INVITATORY_BUILDER:
         return build_divine_office_invitatory_plan(page=page, config=config, base_url=base_url)
     if builder == DIVINE_OFFICE_NIGHT_TEXT_BUILDER:
         return build_divine_office_night_text_plan(config=config)
+    if builder == DIVINE_OFFICE_EVENING_TEXT_BUILDER:
+        return build_divine_office_evening_text_plan(config=config)
     if builder == DIVINE_OFFICE_MORNING_TEXT_BUILDER:
         return build_divine_office_morning_text_plan(config=config)
     if builder == AUXILIUM_DAILY_TEXT_BUILDER:
@@ -3485,6 +5077,7 @@ def render_page_audio_for_config(
     render_hash = compute_page_render_hash(config_key, config, fragments)
     current_hash = page_audio_current_render_hash(page_id, notion_token)
     settings = tts_settings_from_config(config)
+    cache_root = page_audio_cache_dir()
     library_audio_path, library_meta_path = page_audio_output_library_paths(
         page,
         title_property=title_property,
@@ -3494,6 +5087,7 @@ def render_page_audio_for_config(
     if current_hash == render_hash and page_audio_is_positioned_near_top(page_id, notion_token):
         if not page_audio_output_library_is_current(library_audio_path, library_meta_path, render_hash):
             audio_bytes = build_assembled_audio(fragments, config, openai_key, base_url)
+            audio_bytes = maybe_embed_cover_art(audio_bytes, str(settings["format"]), fragments, cache_root)
             persist_page_audio_output_library(
                 page,
                 title_property=title_property,
@@ -3506,6 +5100,7 @@ def render_page_audio_for_config(
         return f"cached:{settings['format']}:{settings['model']}:{settings['voice']}:hash={render_hash}"
 
     audio_bytes = build_assembled_audio(fragments, config, openai_key, base_url)
+    audio_bytes = maybe_embed_cover_art(audio_bytes, str(settings["format"]), fragments, cache_root)
     persist_page_audio_output_library(
         page,
         title_property=title_property,
@@ -3519,8 +5114,12 @@ def render_page_audio_for_config(
     page_audio_remove_blank_placeholders(page_id, notion_token)
     filename = f"{slugify(shared.page_title(page, title_property))}_{shared.local_today().isoformat()}.{settings['format']}"
     content_type = shared.audio_content_type(str(settings["format"]))
-    upload_id = shared.notion_create_file_upload(filename=filename, content_type=content_type, token=notion_token)
-    shared.notion_send_file_upload(upload_id, filename, content_type, audio_bytes, notion_token)
+    upload_id = shared.notion_upload_file(
+        filename=filename,
+        content_type=content_type,
+        file_bytes=audio_bytes,
+        token=notion_token,
+    )
     caption = str(config.get("audio_caption", "Page Audio")).strip() or "Page Audio"
     page_audio_append_block(page_id, upload_id, f"{caption} {page_audio_hash_marker(render_hash)}", notion_token, position="start")
     shared.notion_update_audio_render_metadata(page, render_hash, notion_token)
@@ -3533,6 +5132,123 @@ def config_key_if_defined(config_map: Dict[str, Any], *keys: str) -> str:
         if value and isinstance(config_map.get(value), dict):
             return value
     return ""
+
+
+def resolved_config_key_with_source(
+    config_map: Dict[str, Any],
+    property_candidates: Sequence[tuple[str, str]],
+) -> tuple[str, str]:
+    for prop_name, raw_key in property_candidates:
+        value = str(raw_key or "").strip()
+        if not value:
+            continue
+        resolved = config_key_if_defined(config_map, value)
+        if resolved:
+            return resolved, str(prop_name or "").strip()
+    return "", ""
+
+
+def resolved_audio_config_keys_with_sources(
+    page: Dict[str, Any],
+    config_map: Dict[str, Any],
+    *,
+    primary_property: str,
+    secondary_property: str,
+    legacy_config_property: str,
+    legacy_resolver_property: str,
+) -> List[tuple[str, str]]:
+    out: List[tuple[str, str]] = []
+    seen: Set[str] = set()
+    for prop_name in (primary_property, secondary_property, legacy_config_property, legacy_resolver_property):
+        raw_key = page_property_text(page, prop_name).strip()
+        resolved = config_key_if_defined(config_map, raw_key)
+        if resolved and resolved not in seen:
+            seen.add(resolved)
+            out.append((resolved, prop_name))
+    return out
+
+
+def page_sync_deprecation_messages(
+    page: Dict[str, Any],
+    config_map: Dict[str, Any],
+    *,
+    title_property: str,
+    text_resolver_property: str,
+    auto_audio_primary_property: str,
+    auto_audio_secondary_property: str,
+    legacy_config_property: str,
+    legacy_resolver_property: str,
+    auto_text_enabled: bool,
+    auto_audio_enabled: bool,
+) -> List[str]:
+    title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip() or "page"
+    messages: List[str] = []
+    if auto_text_enabled:
+        _, source_property = resolved_config_key_with_source(
+            config_map,
+            [
+                (text_resolver_property, page_property_text(page, text_resolver_property).strip()),
+                (legacy_config_property, page_property_text(page, legacy_config_property).strip()),
+                (legacy_resolver_property, page_property_text(page, legacy_resolver_property).strip()),
+            ],
+        )
+        if source_property == legacy_config_property:
+            messages.append(
+                f'row="{title}" uses deprecated property "{legacy_config_property}" for text sync; move that key to "{text_resolver_property}"'
+            )
+        elif source_property == legacy_resolver_property:
+            messages.append(
+                f'row="{title}" uses deprecated property "{legacy_resolver_property}" for text sync; move that key to "{text_resolver_property}"'
+            )
+    if auto_audio_enabled:
+        audio_sources = resolved_audio_config_keys_with_sources(
+            page,
+            config_map,
+            primary_property=auto_audio_primary_property,
+            secondary_property=auto_audio_secondary_property,
+            legacy_config_property=legacy_config_property,
+            legacy_resolver_property=legacy_resolver_property,
+        )
+        if any(source_property == legacy_config_property for _, source_property in audio_sources):
+            messages.append(
+                f'row="{title}" uses deprecated property "{legacy_config_property}" for audio sync; move those keys to "{auto_audio_primary_property}" and "{auto_audio_secondary_property}"'
+            )
+        if any(source_property == legacy_resolver_property for _, source_property in audio_sources):
+            messages.append(
+                f'row="{title}" uses deprecated property "{legacy_resolver_property}" for audio sync; move those keys to "{auto_audio_primary_property}" and "{auto_audio_secondary_property}"'
+            )
+    return messages
+
+
+def audio_output_deprecation_messages(
+    page: Dict[str, Any],
+    *,
+    output_key: str,
+    output_mode: str,
+    fragment_sequence: Sequence[str],
+    source_config_key: str,
+) -> List[str]:
+    title = shared.page_title(page, AUDIO_OUTPUT_TITLE_PROPERTY).strip() or output_key
+    messages: List[str] = []
+    if normalize_flag_value(output_mode) == AUDIO_OUTPUT_MODE_CONFIG:
+        messages.append(
+            f'output="{output_key}" title="{title}" uses deprecated Output Mode "{output_mode}"; replace it with a top-level wrapper fragment and "Fragment Key"'
+        )
+    if str(source_config_key or "").strip():
+        messages.append(
+            f'output="{output_key}" title="{title}" uses deprecated output-level "Config Key"; move "{source_config_key}" into a fragment row of type "{FRAGMENT_TYPE_CONFIG}"'
+        )
+    for token in fragment_sequence:
+        value = str(token or "").strip()
+        if value.upper() == SPECIAL_MONTHLY_INTENTION.upper():
+            messages.append(
+                f'output="{output_key}" title="{title}" uses deprecated sequence token "{value}"; replace it with a fragment row of type "{FRAGMENT_TYPE_MONTHLY_INTENTION}"'
+            )
+        elif value.upper() == SPECIAL_DAILY_NOVENA_AUDIO.upper():
+            messages.append(
+                f'output="{output_key}" title="{title}" uses deprecated sequence token "{value}"; replace it with a fragment row of type "{FRAGMENT_TYPE_DAILY_NOVENA_AUDIO}"'
+            )
+    return messages
 
 
 def resolve_page_sync_keys(
@@ -3549,29 +5265,60 @@ def resolve_page_sync_keys(
 ) -> tuple[str, List[str]]:
     text_key = ""
     if auto_text_enabled:
-        text_key = config_key_if_defined(
+        text_key, _ = resolved_config_key_with_source(
             config_map,
-            page_text_config_key_from_page(page, text_resolver_property, legacy_config_property),
-            page_property_text(page, legacy_resolver_property).strip(),
+            [
+                (text_resolver_property, page_text_config_key_from_page(page, text_resolver_property, legacy_config_property)),
+                (legacy_resolver_property, page_property_text(page, legacy_resolver_property).strip()),
+            ],
         )
 
     audio_keys: List[str] = []
     if auto_audio_enabled:
-        for key in page_auto_audio_config_keys_from_page(
+        for resolved, _ in resolved_audio_config_keys_with_sources(
             page,
-            auto_audio_primary_property,
-            auto_audio_secondary_property,
-            legacy_config_property,
-            legacy_resolver_property,
+            config_map,
+            primary_property=auto_audio_primary_property,
+            secondary_property=auto_audio_secondary_property,
+            legacy_config_property=legacy_config_property,
+            legacy_resolver_property=legacy_resolver_property,
         ):
-            resolved = config_key_if_defined(config_map, key)
             if resolved and resolved not in audio_keys:
                 audio_keys.append(resolved)
     return text_key, audio_keys
 
 
+def emit_page_sync_deprecation_warnings(
+    page: Dict[str, Any],
+    config_map: Dict[str, Any],
+    *,
+    title_property: str,
+    text_resolver_property: str,
+    auto_audio_primary_property: str,
+    auto_audio_secondary_property: str,
+    legacy_config_property: str,
+    legacy_resolver_property: str,
+    auto_text_enabled: bool,
+    auto_audio_enabled: bool,
+) -> None:
+    for message in page_sync_deprecation_messages(
+        page,
+        config_map,
+        title_property=title_property,
+        text_resolver_property=text_resolver_property,
+        auto_audio_primary_property=auto_audio_primary_property,
+        auto_audio_secondary_property=auto_audio_secondary_property,
+        legacy_config_property=legacy_config_property,
+        legacy_resolver_property=legacy_resolver_property,
+        auto_text_enabled=auto_text_enabled,
+        auto_audio_enabled=auto_audio_enabled,
+    ):
+        emit_page_audio_deprecation_warning(message)
+
+
 def main() -> int:
     try:
+        _PAGE_AUDIO_DEPRECATION_WARNINGS.clear()
         openai_key = shared.require_env(OPENAI_API_KEY)
         notion_token = shared.require_env(NOTION_TOKEN)
         base_url = os.getenv(OAI_API_BASE_URL, "https://api.openai.com/v1").strip() or "https://api.openai.com/v1"
@@ -3594,9 +5341,6 @@ def main() -> int:
         row_title_filter = os.getenv(PAGE_AUDIO_ROW_TITLE, "").strip()
         fail_open = shared.bool_env(PAGE_AUDIO_FAIL_OPEN, default=False)
         notion_db_id = shared.notion_find_database_id(notion_token)
-
-        config_payload = load_page_audio_config(notion_token)
-        config_map = config_payload.get("configs") or {}
         pages = shared.notion_get_all_pages(notion_db_id, notion_token)
         candidates = list_audio_candidate_pages(
             pages=pages,
@@ -3609,83 +5353,71 @@ def main() -> int:
 
         if not candidates:
             print("page_audio_rows=0")
+            print(f"page_audio_deprecations={len(_PAGE_AUDIO_DEPRECATION_WARNINGS)}")
             return 0
+
+        detailed_fragments_payload = load_detailed_fragments_from_notion(notion_token)
+        detailed_fragments_by_page_id: Dict[str, List[Dict[str, Any]]] = detailed_fragments_payload.get("fragments_by_page_id") or {}
 
         attached = 0
         cached = 0
         failed = 0
         processed = 0
+        two_list_rows = 0
+
         for page in candidates:
             title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip()
             page_started = time.perf_counter()
             auto_text_enabled = page_has_platform_value(page, platform_property, "auto-text")
             auto_audio_enabled = page_has_platform_value(page, platform_property, "auto-audio")
-            text_key, audio_keys = resolve_page_sync_keys(
+            row_settings = opus_dei_two_list_settings(
                 page,
-                config_map,
-                text_resolver_property=text_resolver_property,
-                auto_audio_primary_property=auto_audio_primary_property,
-                auto_audio_secondary_property=auto_audio_secondary_property,
-                legacy_config_property=config_property,
-                legacy_resolver_property=legacy_resolver_property,
-                auto_text_enabled=auto_text_enabled,
-                auto_audio_enabled=auto_audio_enabled,
+                title_property=title_property,
+                fragments_by_page_id=detailed_fragments_by_page_id,
             )
-            if config_key_filter:
-                wanted = config_key_if_defined(config_map, config_key_filter)
-                if not wanted:
-                    raise RuntimeError(f"Unknown page audio config '{config_key_filter}'.")
-                if text_key != wanted and wanted not in audio_keys:
-                    continue
-            if not text_key and not audio_keys:
-                raise RuntimeError(f"No page-sync resolver configured for '{title}'.")
+            if not row_settings:
+                raise RuntimeError(
+                    f"No two-list page-audio configuration found for '{title}'. Expected '{OPUS_DEI_ASSEMBLY_MODE_PROPERTY}' and related '{OPUS_DEI_DETAILED_FRAGMENTS_PROPERTY}' rows."
+                )
+            if config_key_filter and not opus_dei_row_matches_filter(
+                page,
+                config_key_filter,
+                title_property=title_property,
+            ):
+                continue
             processed += 1
+            two_list_rows += 1
             try:
                 text_mode = ""
-                if text_key:
-                    text_plan = build_page_audio_plan(
-                        page=page,
-                        pages=pages,
-                        title_property=title_property,
-                        config=config_map[text_key],
-                        notion_token=notion_token,
-                        base_url=base_url,
-                    )
-                    text_mode = apply_page_text_plan(page, text_plan, notion_token)
+                row_plan = build_opus_dei_two_list_plan(
+                    page=page,
+                    pages=pages,
+                    title_property=title_property,
+                    row_settings=row_settings,
+                    token=notion_token,
+                    base_url=base_url,
+                )
+                row_config = deepcopy(row_settings.get("audio_config") or {})
+                row_config["builder"] = f"opus_dei_{row_settings.get('assembly_mode', OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS)}_v1"
+                row_config_key = opus_dei_row_config_key(page, title_property=title_property)
+                should_apply_text = bool(row_plan.text_target or row_plan.text_property)
+                if auto_text_enabled and should_apply_text:
+                    text_mode = apply_page_text_plan(page, row_plan, notion_token)
 
                 audio_mode = ""
-                chosen_audio_key = ""
-                audio_errors: List[str] = []
-                for index, audio_key in enumerate(audio_keys):
-                    chosen_audio_key = audio_key
-                    audio_config = config_map[audio_key]
-                    audio_plan = build_page_audio_plan(
+                if auto_audio_enabled:
+                    audio_mode = render_page_audio_for_config(
                         page=page,
-                        pages=pages,
+                        config_key=row_config_key,
+                        config=row_config,
+                        plan=row_plan,
                         title_property=title_property,
-                        config=audio_config,
                         notion_token=notion_token,
+                        openai_key=openai_key,
                         base_url=base_url,
+                        apply_text=should_apply_text and not bool(text_mode),
                     )
-                    try:
-                        audio_mode = render_page_audio_for_config(
-                            page=page,
-                            config_key=audio_key,
-                            config=audio_config,
-                            plan=audio_plan,
-                            title_property=title_property,
-                            notion_token=notion_token,
-                            openai_key=openai_key,
-                            base_url=base_url,
-                            apply_text=not bool(text_key) and index == 0,
-                        )
-                        break
-                    except Exception as exc:
-                        audio_errors.append(f"{audio_key}: {exc}")
-                        audio_mode = ""
-                        chosen_audio_key = ""
-                if auto_audio_enabled and audio_keys and not audio_mode:
-                    raise RuntimeError("; ".join(audio_errors) if audio_errors else "Auto-audio failed.")
+                config_summary = row_config_key
 
                 mode_parts = [part for part in [text_mode, audio_mode] if part]
                 mode = " | ".join(mode_parts) if mode_parts else "noop"
@@ -3693,8 +5425,6 @@ def main() -> int:
                     attached += 1
                 if audio_mode.startswith("cached:"):
                     cached += 1
-                config_bits = [bit for bit in [f"text={text_key}" if text_key else "", f"audio={chosen_audio_key}" if chosen_audio_key else ""] if bit]
-                config_summary = " ".join(config_bits).strip()
                 elapsed = time.perf_counter() - page_started
                 print(f"page_audio title={title} {config_summary} mode={mode} duration_s={elapsed:.1f}".strip())
             except Exception as exc:
@@ -3702,7 +5432,10 @@ def main() -> int:
                 print(f"page_audio_error title={title} error={exc}", file=sys.stderr)
                 if not fail_open:
                     raise
-        print(f"page_audio_rows={processed} attached={attached} cached={cached} failed={failed}")
+        print(
+            f"page_audio_rows={processed} two_list_rows={two_list_rows} legacy_rows=0 attached={attached} cached={cached} failed={failed}"
+        )
+        print(f"page_audio_deprecations={len(_PAGE_AUDIO_DEPRECATION_WARNINGS)}")
         return 0 if failed == 0 or fail_open else 1
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)

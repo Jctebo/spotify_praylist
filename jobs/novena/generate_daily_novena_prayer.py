@@ -22,6 +22,8 @@ NOTION_FILE_UPLOAD_VERSION = "2025-09-03"
 NOTION_REQUEST_TIMEOUT_SECONDS = 30
 NOTION_MAX_ATTEMPTS = 5
 NOTION_RETRYABLE_STATUSES = {408, 409, 429, 500, 502, 503, 504}
+NOTION_FILE_UPLOAD_SINGLE_PART_MAX_BYTES = 20 * 1024 * 1024
+NOTION_FILE_UPLOAD_PART_SIZE_BYTES = 10 * 1024 * 1024
 DEFAULT_UTC_OFFSET = "-06:00"
 DEFAULT_NOVENA_ROW_TITLES = (
     "Daily Novenas from Liturgical Calendar",
@@ -188,6 +190,56 @@ def notion_file_upload_headers(token: str) -> Dict[str, str]:
         "Authorization": f"Bearer {token}",
         "Notion-Version": NOTION_FILE_UPLOAD_VERSION,
     }
+
+
+def notion_file_upload_raise_for_status(response: requests.Response, context: str) -> None:
+    try:
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as exc:
+        detail = ""
+        try:
+            body = str(response.text or "").strip()
+        except Exception:
+            body = ""
+        if body:
+            detail = f" response={body[:500]}"
+        raise requests.exceptions.HTTPError(f"{context} failed: {exc}{detail}", response=response) from exc
+
+
+def notion_file_upload_post(
+    url: str,
+    token: str,
+    *,
+    json_payload: Optional[Dict[str, Any]] = None,
+    data_payload: Optional[Dict[str, Any]] = None,
+    files: Optional[Dict[str, Any]] = None,
+    timeout: int = 30,
+) -> requests.Response:
+    headers = notion_file_upload_headers(token)
+    if json_payload is not None:
+        headers = {**headers, "Content-Type": "application/json"}
+    for attempt in range(1, NOTION_MAX_ATTEMPTS + 1):
+        try:
+            response = requests.post(
+                url,
+                headers=headers,
+                json=json_payload,
+                data=data_payload,
+                files=files,
+                timeout=timeout,
+            )
+            notion_file_upload_raise_for_status(response, f"Notion file upload POST {url}")
+            return response
+        except requests.exceptions.RequestException as exc:
+            if attempt >= NOTION_MAX_ATTEMPTS or not notion_should_retry(exc):
+                raise
+            delay = notion_retry_delay_seconds(exc, attempt)
+            print(
+                f"WARN notion_file_upload_retry attempt={attempt} delay={delay:.1f}s url={url}",
+                file=sys.stderr,
+            )
+            time.sleep(delay)
+    raise RuntimeError("Notion file upload retry loop exited unexpectedly.")
 
 
 def notion_should_retry(exc: requests.exceptions.RequestException) -> bool:
@@ -789,15 +841,34 @@ def saint_novena_fragments_for_day(day_num: int, devotional_payload: Dict[str, A
     )
 
 
-def notion_create_file_upload(filename: str, content_type: str, token: str) -> str:
+def notion_split_file_upload_parts(file_bytes: bytes, part_size_bytes: int = NOTION_FILE_UPLOAD_PART_SIZE_BYTES) -> List[bytes]:
+    if part_size_bytes <= 0:
+        raise RuntimeError("Notion file upload part size must be positive.")
+    if not file_bytes:
+        raise RuntimeError("Notion file upload content is empty.")
+    return [file_bytes[idx : idx + part_size_bytes] for idx in range(0, len(file_bytes), part_size_bytes)]
+
+
+def notion_create_file_upload(
+    filename: str,
+    content_type: str,
+    token: str,
+    *,
+    mode: str = "single_part",
+    number_of_parts: Optional[int] = None,
+) -> str:
     payload = {"filename": filename, "content_type": content_type}
-    response = requests.post(
+    if mode == "multi_part":
+        if number_of_parts is None or number_of_parts < 2:
+            raise RuntimeError("Notion multi-part uploads require at least 2 parts.")
+        payload["mode"] = "multi_part"
+        payload["number_of_parts"] = number_of_parts
+    response = notion_file_upload_post(
         "https://api.notion.com/v1/file_uploads",
-        headers={**notion_file_upload_headers(token), "Content-Type": "application/json"},
-        json=payload,
+        token,
+        json_payload=payload,
         timeout=30,
     )
-    response.raise_for_status()
     data = response.json()
     if not isinstance(data, dict):
         raise RuntimeError("Unexpected Notion file_upload create response format.")
@@ -807,14 +878,58 @@ def notion_create_file_upload(filename: str, content_type: str, token: str) -> s
     return upload_id
 
 
-def notion_send_file_upload(upload_id: str, filename: str, content_type: str, file_bytes: bytes, token: str) -> None:
-    response = requests.post(
+def notion_send_file_upload(
+    upload_id: str,
+    filename: str,
+    content_type: str,
+    file_bytes: bytes,
+    token: str,
+    *,
+    part_number: Optional[int] = None,
+) -> None:
+    data_payload = {"part_number": str(part_number)} if part_number is not None else None
+    notion_file_upload_post(
         f"https://api.notion.com/v1/file_uploads/{upload_id}/send",
-        headers=notion_file_upload_headers(token),
+        token,
+        data_payload=data_payload,
         files={"file": (filename, file_bytes, content_type)},
         timeout=120,
     )
-    response.raise_for_status()
+
+
+def notion_complete_file_upload(upload_id: str, token: str) -> None:
+    notion_file_upload_post(
+        f"https://api.notion.com/v1/file_uploads/{upload_id}/complete",
+        token,
+        timeout=30,
+    )
+
+
+def notion_upload_file(filename: str, content_type: str, file_bytes: bytes, token: str) -> str:
+    if len(file_bytes) <= NOTION_FILE_UPLOAD_SINGLE_PART_MAX_BYTES:
+        upload_id = notion_create_file_upload(filename=filename, content_type=content_type, token=token)
+        notion_send_file_upload(upload_id, filename, content_type, file_bytes, token)
+        return upload_id
+
+    parts = notion_split_file_upload_parts(file_bytes)
+    upload_id = notion_create_file_upload(
+        filename=filename,
+        content_type=content_type,
+        token=token,
+        mode="multi_part",
+        number_of_parts=len(parts),
+    )
+    for part_index, part_bytes in enumerate(parts, start=1):
+        notion_send_file_upload(
+            upload_id,
+            filename,
+            content_type,
+            part_bytes,
+            token,
+            part_number=part_index,
+        )
+    notion_complete_file_upload(upload_id, token)
+    return upload_id
 
 
 def notion_download_bytes(url: str) -> tuple[bytes, str]:
@@ -1980,7 +2095,17 @@ def notion_clone_block_tree(block: Dict[str, Any], token: str) -> Optional[Dict[
         "embed",
     }:
         cloned_payload = deepcopy(payload)
-        if block_type == "toggle":
+        if str(block.get("id", "")).strip() and block_type in {
+            "heading_1",
+            "heading_2",
+            "heading_3",
+            "bulleted_list_item",
+            "numbered_list_item",
+            "to_do",
+            "toggle",
+            "quote",
+            "callout",
+        }:
             children: List[Dict[str, Any]] = []
             for child in notion_list_block_children(str(block.get("id", "")).strip(), token):
                 cloned_child = notion_clone_block_tree(child, token)
@@ -2013,8 +2138,7 @@ def notion_clone_block_tree(block: Dict[str, Any], token: str) -> Optional[Dict[
                 fallback_stem=f"notion_audio_{str(block.get('id', '')).strip() or 'mirror'}",
                 content_type=content_type,
             )
-            upload_id = notion_create_file_upload(filename, content_type or "application/octet-stream", token)
-            notion_send_file_upload(upload_id, filename, content_type or "application/octet-stream", file_bytes, token)
+            upload_id = notion_upload_file(filename, content_type or "application/octet-stream", file_bytes, token)
             return {
                 "object": "block",
                 "type": "audio",
@@ -2479,8 +2603,7 @@ def maybe_generate_and_attach_audio(
     )
     filename = f"daily_novena_prayer_{local_today().isoformat()}.{settings['format']}"
     content_type = audio_content_type(str(settings["format"]))
-    upload_id = notion_create_file_upload(filename=filename, content_type=content_type, token=notion_token)
-    notion_send_file_upload(upload_id, filename, content_type, audio_bytes, notion_token)
+    upload_id = notion_upload_file(filename=filename, content_type=content_type, file_bytes=audio_bytes, token=notion_token)
     notion_append_audio_block(page_id, upload_id, f"{caption} {render_hash_marker(render_hash)}", notion_token)
     notion_update_audio_render_metadata(page, render_hash, notion_token)
     return f"attached:{settings['format']}:{settings['model']}:{settings['voice']}:hash={render_hash}"
@@ -2825,8 +2948,12 @@ def main() -> int:
                                 audio_bytes = audio_path.read_bytes()
                                 filename = audio_path.name
                                 content_type = audio_content_type(str(audio_settings["format"]))
-                                upload_id = notion_create_file_upload(filename=filename, content_type=content_type, token=notion_token)
-                                notion_send_file_upload(upload_id, filename, content_type, audio_bytes, notion_token)
+                                upload_id = notion_upload_file(
+                                    filename=filename,
+                                    content_type=content_type,
+                                    file_bytes=audio_bytes,
+                                    token=notion_token,
+                                )
                                 notion_append_audio_block(
                                     page_id,
                                     upload_id,
