@@ -806,8 +806,6 @@ def saint_novena_day_audio_fragments(
     ]
     if theme:
         fragments.append({"key": "theme", "label": "Theme", "text": f"Theme: {theme}."})
-    if intercession:
-        fragments.append({"key": "intercession", "label": "Intercession", "text": f"Intercession: {intercession}."})
     if opening:
         fragments.append({"key": "opening_prayer", "label": "Opening Prayer", "text": opening})
     fragments.append({"key": "daily_prayer", "label": "Daily Prayer", "text": daily_prayer or "Daily novena prayer."})
