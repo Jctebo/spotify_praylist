@@ -219,6 +219,118 @@ def find_owned_fragment_page(
     return {}
 
 
+def fragment_value_title(values: Dict[str, Any]) -> str:
+    return str(values.get(mod.AUDIO_FRAGMENT_TITLE_PROPERTY, "")).strip()
+
+
+def fragment_value_kind(values: Dict[str, Any]) -> str:
+    return mod.normalize_detailed_fragment_kind(str(values.get(mod.DETAILED_FRAGMENT_KIND_PROPERTY, "")).strip())
+
+
+def fragment_value_group(values: Dict[str, Any]) -> str:
+    return str(values.get(mod.DETAILED_FRAGMENT_GROUP_PROPERTY, "")).strip()
+
+
+def fragment_page_matches_values(page: Dict[str, Any], values: Dict[str, Any]) -> bool:
+    title = mod.shared.page_title(page, mod.AUDIO_FRAGMENT_TITLE_PROPERTY).strip()
+    if title.lower() != fragment_value_title(values).lower():
+        return False
+    parsed = mod.audio_fragment_from_notion_page(page, target_date=mod.shared.local_today(), enforce_date_window=False)
+    parsed_fragment = parsed[1] if parsed else {}
+    page_kind = mod.normalize_detailed_fragment_kind(
+        mod.page_property_text(page, mod.DETAILED_FRAGMENT_KIND_PROPERTY).strip()
+        or mod.page_property_text(page, mod.AUDIO_FRAGMENT_TYPE_PROPERTY).strip()
+        or str(parsed_fragment.get("type", "")).strip()
+    )
+    if page_kind != fragment_value_kind(values):
+        return False
+    page_group = (
+        mod.page_property_text(page, mod.DETAILED_FRAGMENT_GROUP_PROPERTY).strip()
+        or mod.page_property_text(page, mod.AUDIO_FRAGMENT_COLLECTION_PROPERTY).strip()
+        or str(parsed_fragment.get("collection", "")).strip()
+    )
+    return mod.normalize_flag_value(page_group) == mod.normalize_flag_value(fragment_value_group(values))
+
+
+def find_candidate_fragment_pages(
+    fragment_pages: Sequence[Dict[str, Any]],
+    *,
+    owner_page_id: str,
+    values: Dict[str, Any],
+    require_owner: Optional[bool],
+    reserved_page_ids: Optional[Sequence[str]] = None,
+) -> List[Dict[str, Any]]:
+    reserved = {str(value or "").strip() for value in (reserved_page_ids or []) if str(value or "").strip()}
+    matches: List[Dict[str, Any]] = []
+    for page in fragment_pages:
+        page_id = str(page.get("id", "")).strip()
+        if page_id and page_id in reserved:
+            continue
+        has_owner = bool(mod.page_property_relation_ids(page, mod.DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY))
+        if require_owner is True and not relation_contains_page(page, mod.DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY, owner_page_id):
+            continue
+        if require_owner is False and has_owner:
+            continue
+        if not fragment_page_matches_values(page, values):
+            continue
+        matches.append(page)
+    return matches
+
+
+def build_fragment_page_resolutions(
+    fragment_pages: Sequence[Dict[str, Any]],
+    *,
+    owner_page_id: str,
+    values_list: Sequence[Dict[str, Any]],
+    reuse_ownerless: bool,
+) -> List[Dict[str, Any]]:
+    resolutions: List[Dict[str, Any]] = []
+    reserved_page_ids: List[str] = []
+    for values in values_list:
+        owned_matches = find_candidate_fragment_pages(
+            fragment_pages,
+            owner_page_id=owner_page_id,
+            values=values,
+            require_owner=True,
+            reserved_page_ids=reserved_page_ids,
+        )
+        if len(owned_matches) > 1:
+            resolutions.append({"action": "ambiguous_owned", "matches": owned_matches, "values": values})
+            continue
+        if owned_matches:
+            page = owned_matches[0]
+            page_id = str(page.get("id", "")).strip()
+            if page_id:
+                reserved_page_ids.append(page_id)
+            resolutions.append({"action": "update", "page": page, "values": values})
+            continue
+        if reuse_ownerless:
+            ownerless_matches = find_candidate_fragment_pages(
+                fragment_pages,
+                owner_page_id=owner_page_id,
+                values=values,
+                require_owner=False,
+                reserved_page_ids=reserved_page_ids,
+            )
+            if len(ownerless_matches) > 1:
+                resolutions.append({"action": "ambiguous_ownerless", "matches": ownerless_matches, "values": values})
+                continue
+            if ownerless_matches:
+                page = ownerless_matches[0]
+                page_id = str(page.get("id", "")).strip()
+                if page_id:
+                    reserved_page_ids.append(page_id)
+                resolutions.append({"action": "relink", "page": page, "values": values})
+                continue
+        resolutions.append({"action": "create", "page": {}, "values": values})
+    return resolutions
+
+
+def format_report_list(values: Sequence[str]) -> str:
+    cleaned = [str(value or "").strip() for value in values if str(value or "").strip()]
+    return ", ".join(cleaned) if cleaned else "-"
+
+
 def create_or_update_page(
     *,
     database_id: str,
@@ -663,40 +775,43 @@ def morning_prayer_fragment_values_from_legacy_output(
     owner_page_id: str,
     fragments_map: Dict[str, Dict[str, Any]],
 ) -> List[Dict[str, Any]]:
-    fragment_key = mod.page_property_text(output_page, mod.AUDIO_OUTPUT_FRAGMENT_KEY_PROPERTY).strip()
-    sequence = mod.parse_fragment_sequence(mod.page_property_text(output_page, mod.AUDIO_OUTPUT_FRAGMENT_SEQUENCE_PROPERTY))
-    entries = [fragment_key] if fragment_key else list(sequence)
-    expanded: List[Dict[str, Any]] = []
-    for entry in entries:
-        expanded.extend(expand_legacy_fragment_sequence(entry, fragments_map=fragments_map))
-    if not expanded:
-        return []
+    legacy_by_label: Dict[str, Dict[str, Any]] = {}
+    for spec in fragments_map.values():
+        label = mod.normalize_flag_value(str(spec.get("label", "")).strip())
+        if label and label not in legacy_by_label:
+            legacy_by_label[label] = spec
     values: List[Dict[str, Any]] = []
-    order = 1
-    for item in expanded:
-        item_type = str(item.get("type", "")).strip()
-        title = str(item.get("label", "")).strip() or f"Fragment {order}"
+    for contract_item in mod.morning_prayer_contract_items():
+        order = int(contract_item["order"])
+        title = str(contract_item["label"]).strip()
+        item_type = str(contract_item["kind"]).strip()
+        legacy_spec = legacy_by_label.get(mod.normalize_flag_value(title)) or {}
         if item_type == mod.FRAGMENT_TYPE_TEXT:
+            text = str(legacy_spec.get("text", "")).strip()
+            prompt = str(legacy_spec.get("prompt", "")).strip()
+            if prompt and not text:
+                values.append(
+                    prompt_fragment_values(
+                        owner_page_id=owner_page_id,
+                        title=title,
+                        order=order,
+                        prompt=prompt,
+                        prompt_model=str(legacy_spec.get("prompt_model", "")).strip() or "gpt-4.1-mini",
+                        group=str(contract_item["group"]).strip(),
+                        notes=f"{MIGRATION_TAG} source=legacy_fragment_contract",
+                    )
+                )
+                continue
+            if not text:
+                continue
             values.append(
                 text_fragment_values(
                     owner_page_id=owner_page_id,
                     title=title,
                     order=order,
-                    text=str(item.get("text", "")).strip(),
-                    group="morning_prayer",
-                    notes=f"{MIGRATION_TAG} source=legacy_fragment_sequence",
-                )
-            )
-        elif item_type == mod.FRAGMENT_TYPE_PROMPT:
-            values.append(
-                prompt_fragment_values(
-                    owner_page_id=owner_page_id,
-                    title=title,
-                    order=order,
-                    prompt=str(item.get("prompt", "")).strip(),
-                    prompt_model=str(item.get("prompt_model", "")).strip() or "gpt-4.1-mini",
-                    group="morning_prayer",
-                    notes=f"{MIGRATION_TAG} source=legacy_fragment_sequence",
+                    text=text,
+                    group=str(contract_item["group"]).strip(),
+                    notes=f"{MIGRATION_TAG} source=legacy_fragment_contract",
                 )
             )
         elif item_type == mod.FRAGMENT_TYPE_MONTHLY_INTENTION:
@@ -706,10 +821,10 @@ def morning_prayer_fragment_values_from_legacy_output(
                     mod.DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY: [owner_page_id],
                     mod.AUDIO_FRAGMENT_ENABLED_PROPERTY: True,
                     mod.AUDIO_FRAGMENT_ORDER_PROPERTY: float(order),
-                    mod.DETAILED_FRAGMENT_GROUP_PROPERTY: mod.AUDIO_FRAGMENT_MONTHLY_COLLECTION,
+                    mod.DETAILED_FRAGMENT_GROUP_PROPERTY: str(contract_item["group"]).strip(),
                     mod.DETAILED_FRAGMENT_KIND_PROPERTY: mod.FRAGMENT_TYPE_MONTHLY_INTENTION,
                     mod.DETAILED_FRAGMENT_ASSEMBLY_ROLE_PROPERTY: mod.ASSEMBLY_ROLE_APPEND,
-                    mod.AUDIO_FRAGMENT_NOTES_PROPERTY: f"{MIGRATION_TAG} source=legacy_fragment_sequence monthly_intention",
+                    mod.AUDIO_FRAGMENT_NOTES_PROPERTY: f"{MIGRATION_TAG} source=legacy_fragment_contract monthly_intention",
                 }
             )
         elif item_type == mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO:
@@ -719,14 +834,70 @@ def morning_prayer_fragment_values_from_legacy_output(
                     mod.DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY: [owner_page_id],
                     mod.AUDIO_FRAGMENT_ENABLED_PROPERTY: True,
                     mod.AUDIO_FRAGMENT_ORDER_PROPERTY: float(order),
-                    mod.DETAILED_FRAGMENT_GROUP_PROPERTY: "daily_novena",
+                    mod.DETAILED_FRAGMENT_GROUP_PROPERTY: str(contract_item["group"]).strip(),
                     mod.DETAILED_FRAGMENT_KIND_PROPERTY: mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO,
                     mod.DETAILED_FRAGMENT_ASSEMBLY_ROLE_PROPERTY: mod.ASSEMBLY_ROLE_APPEND,
-                    mod.AUDIO_FRAGMENT_NOTES_PROPERTY: f"{MIGRATION_TAG} source=legacy_fragment_sequence daily_novena",
+                    mod.AUDIO_FRAGMENT_NOTES_PROPERTY: f"{MIGRATION_TAG} source=legacy_fragment_contract daily_novena",
                 }
             )
-        order += 1
     return values
+
+
+def preflight_morning_prayer_migration(
+    *,
+    page: Dict[str, Any],
+    output_page: Dict[str, Any],
+    fragment_pages: Sequence[Dict[str, Any]],
+    fragments_map: Dict[str, Dict[str, Any]],
+    title_property: str,
+    apply: bool,
+) -> Dict[str, Any]:
+    page_id = str(page.get("id", "")).strip()
+    title = mod.shared.page_title(page, title_property).strip() or page_id or mod.MORNING_PRAYER_TITLE
+    values_list = morning_prayer_fragment_values_from_legacy_output(
+        output_page,
+        owner_page_id=page_id,
+        fragments_map=fragments_map,
+    )
+    resolutions = build_fragment_page_resolutions(
+        fragment_pages,
+        owner_page_id=page_id,
+        values_list=values_list,
+        reuse_ownerless=True,
+    )
+    errors = list(mod.morning_prayer_contract_errors(values_list))
+    relink_titles: List[str] = []
+    create_titles: List[str] = []
+    for resolution in resolutions:
+        action = str(resolution.get("action", "")).strip()
+        values = resolution.get("values") or {}
+        item_title = fragment_value_title(values)
+        if action == "relink":
+            relink_titles.append(item_title)
+        elif action == "create":
+            create_titles.append(item_title)
+        elif action.startswith("ambiguous"):
+            match_ids = [str(page.get("id", "")).strip() for page in resolution.get("matches") or [] if str(page.get("id", "")).strip()]
+            match_type = "owner-linked" if action == "ambiguous_owned" else "ownerless"
+            errors.append(
+                f"ambiguous {match_type} fragment candidates for '{item_title}' ({format_report_list(match_ids)})"
+            )
+    print(
+        f'{"APPLY" if apply else "DRYRUN"} morning_prayer_preflight title="{title}" '
+        f'relink={format_report_list(relink_titles)} create={format_report_list(create_titles)}'
+    )
+    if errors:
+        print(
+            f'{"APPLY" if apply else "DRYRUN"} morning_prayer_preflight_errors title="{title}" '
+            f'errors={format_report_list(errors)}'
+        )
+    return {
+        "values_list": values_list,
+        "resolutions": resolutions,
+        "errors": errors,
+        "relink_titles": relink_titles,
+        "create_titles": create_titles,
+    }
 
 
 def rosary_fragment_sort_key(spec: Dict[str, Any]) -> tuple[int, str]:
@@ -805,11 +976,26 @@ def upsert_fragment_pages(
     owner_page_id: str,
     values_list: Sequence[Dict[str, Any]],
     apply: bool,
+    reuse_ownerless: bool = False,
+    planned_resolutions: Optional[Sequence[Dict[str, Any]]] = None,
 ) -> List[str]:
     created_or_found_ids: List[str] = []
-    for values in values_list:
+    resolutions = list(planned_resolutions or build_fragment_page_resolutions(
+        fragment_pages,
+        owner_page_id=owner_page_id,
+        values_list=values_list,
+        reuse_ownerless=reuse_ownerless,
+    ))
+    for index, values in enumerate(values_list):
         title = str(values.get(mod.AUDIO_FRAGMENT_TITLE_PROPERTY, "")).strip()
-        existing = find_owned_fragment_page(fragment_pages, owner_page_id=owner_page_id, title=title)
+        resolution = resolutions[index] if index < len(resolutions) else {}
+        action = str(resolution.get("action", "")).strip()
+        if action.startswith("ambiguous"):
+            match_ids = [str(page.get("id", "")).strip() for page in resolution.get("matches") or [] if str(page.get("id", "")).strip()]
+            raise RuntimeError(
+                f"Ambiguous fragment candidates for '{title}' ({format_report_list(match_ids)})."
+            )
+        existing = resolution.get("page") if action in {"update", "relink"} else {}
         fragment_id = create_or_update_page(
             database_id=fragments_db_id,
             database=fragments_db,
@@ -821,8 +1007,24 @@ def upsert_fragment_pages(
         )
         if apply and not existing:
             fragment_pages[:] = refresh_pages(fragments_db_id, token)
-            existing = find_owned_fragment_page(fragment_pages, owner_page_id=owner_page_id, title=title)
-            fragment_id = str(existing.get("id", "")).strip() or fragment_id
+            matches = find_candidate_fragment_pages(
+                fragment_pages,
+                owner_page_id=owner_page_id,
+                values=values,
+                require_owner=True,
+            )
+            if len(matches) == 1:
+                fragment_id = str(matches[0].get("id", "")).strip() or fragment_id
+        elif apply and action == "relink":
+            fragment_pages[:] = refresh_pages(fragments_db_id, token)
+            matches = find_candidate_fragment_pages(
+                fragment_pages,
+                owner_page_id=owner_page_id,
+                values=values,
+                require_owner=True,
+            )
+            if len(matches) == 1:
+                fragment_id = str(matches[0].get("id", "")).strip() or fragment_id
         if fragment_id:
             created_or_found_ids.append(fragment_id)
     if apply:
@@ -882,6 +1084,27 @@ def migrate_page_rows(
         enabled_property=enabled_property,
         row_title_filter="",
     )
+    morning_prayer_preflights: Dict[str, Dict[str, Any]] = {}
+    for page in candidates:
+        page_id = str(page.get("id", "")).strip()
+        title = mod.shared.page_title(page, title_property).strip() or page_id
+        if not mod.is_morning_prayer_title(title):
+            continue
+        output_page = find_output_row_for_page(output_pages, page, title_property=title_property)
+        preflight = preflight_morning_prayer_migration(
+            page=page,
+            output_page=output_page,
+            fragment_pages=fragment_pages,
+            fragments_map=legacy_fragments_map,
+            title_property=title_property,
+            apply=apply,
+        )
+        morning_prayer_preflights[page_id] = preflight
+        if apply and preflight.get("errors"):
+            raise RuntimeError(
+                "Morning Prayer migration blocked: "
+                + "; ".join(str(error or "").strip() for error in preflight.get("errors") or [] if str(error or "").strip())
+            )
 
     for page in candidates:
         page_id = str(page.get("id", "")).strip()
@@ -924,21 +1147,16 @@ def migrate_page_rows(
                 mod.OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT if "intentions" in title.lower() else mod.OPUS_DEI_TEXT_SYNC_MODE_NONE
             )
             fragment_values_list = rosary_fragment_values(owner_page_id=page_id, legacy_fragments_map=legacy_fragments_map)
-        elif title.lower() == "morning prayer":
+        elif mod.is_morning_prayer_title(title):
             row_values[mod.OPUS_DEI_ASSEMBLY_MODE_PROPERTY] = mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS
             row_values[mod.OPUS_DEI_TEXT_SYNC_MODE_PROPERTY] = mod.OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT
-            fragment_values_list = morning_prayer_fragment_values_from_legacy_output(
-                output_page,
-                owner_page_id=page_id,
-                fragments_map=legacy_fragments_map,
-            )
-            has_static_text = any(
-                str(value.get(mod.DETAILED_FRAGMENT_KIND_PROPERTY, "")).strip()
-                in {mod.FRAGMENT_TYPE_TEXT, mod.FRAGMENT_TYPE_PROMPT, mod.FRAGMENT_TYPE_MONTHLY_INTENTION}
-                for value in fragment_values_list
-            )
-            if not fragment_values_list or not has_static_text:
-                fragment_values_list = morning_prayer_fragment_values_from_page(page, token)
+            preflight = morning_prayer_preflights.get(page_id) or {}
+            fragment_values_list = list(preflight.get("values_list") or [])
+            if preflight.get("errors"):
+                print(
+                    f'DRYRUN skip page title="{title}" reason="Morning Prayer preflight failed; apply would be blocked."'
+                )
+                continue
         else:
             row_values[mod.OPUS_DEI_ASSEMBLY_MODE_PROPERTY] = mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS
             order = 1
@@ -999,6 +1217,8 @@ def migrate_page_rows(
             owner_page_id=page_id,
             values_list=fragment_values_list,
             apply=apply,
+            reuse_ownerless=mod.is_morning_prayer_title(title),
+            planned_resolutions=(morning_prayer_preflights.get(page_id) or {}).get("resolutions"),
         )
         row_values[mod.OPUS_DEI_DETAILED_FRAGMENTS_PROPERTY] = related_fragment_ids
         create_or_update_page(

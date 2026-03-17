@@ -266,6 +266,25 @@ FRAGMENT_KIND_BUILDER = "builder"
 ASSEMBLY_ROLE_APPEND = "append"
 ASSEMBLY_ROLE_PRIMARY_SOURCE = "primary_source"
 ASSEMBLY_ROLE_FALLBACK_SOURCE = "fallback_source"
+MORNING_PRAYER_TITLE = "Morning Prayer"
+MORNING_PRAYER_FRAGMENT_GROUP = "morning_prayer"
+MORNING_PRAYER_DAILY_NOVENA_GROUP = "daily_novena"
+MORNING_PRAYER_FRAGMENT_CONTRACT: Sequence[tuple[str, str, str]] = (
+    ("Morning Offering", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("Daily Consecration", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("Baptismal Renewal", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("Petitions Intro", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("Monthly Intention", FRAGMENT_TYPE_MONTHLY_INTENTION, AUDIO_FRAGMENT_MONTHLY_COLLECTION),
+    ("Petition - Families", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("Petition - Marriages", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("Petition - Conversion", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("Petition - Technology", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("Petition - Church", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("Petition - Sanctification of the Church", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("Petition - Sick and Departed", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("Daily Novena Audio", FRAGMENT_TYPE_DAILY_NOVENA_AUDIO, MORNING_PRAYER_DAILY_NOVENA_GROUP),
+    ("Intercessory Litany", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+)
 
 
 def load_shared_module():
@@ -1247,6 +1266,96 @@ def normalize_fragment_assembly_role(value: str) -> str:
         ASSEMBLY_ROLE_FALLBACK_SOURCE: ASSEMBLY_ROLE_FALLBACK_SOURCE,
     }
     return aliases.get(text, "")
+
+
+def is_morning_prayer_title(title: str) -> bool:
+    return normalize_flag_value(title) == normalize_flag_value(MORNING_PRAYER_TITLE)
+
+
+def morning_prayer_contract_items() -> List[Dict[str, Any]]:
+    items: List[Dict[str, Any]] = []
+    for index, (label, kind, group) in enumerate(MORNING_PRAYER_FRAGMENT_CONTRACT, start=1):
+        items.append(
+            {
+                "label": label,
+                "kind": kind,
+                "group": group,
+                "assembly_role": ASSEMBLY_ROLE_APPEND,
+                "order": float(index),
+            }
+        )
+    return items
+
+
+def spec_fragment_label(spec: Dict[str, Any]) -> str:
+    return (
+        str(spec.get("label", "")).strip()
+        or str(spec.get("title", "")).strip()
+        or str(spec.get(AUDIO_FRAGMENT_TITLE_PROPERTY, "")).strip()
+    )
+
+
+def spec_fragment_kind(spec: Dict[str, Any]) -> str:
+    raw = (
+        str(spec.get("kind", "")).strip()
+        or str(spec.get("type", "")).strip()
+        or str(spec.get(DETAILED_FRAGMENT_KIND_PROPERTY, "")).strip()
+        or str(spec.get(AUDIO_FRAGMENT_TYPE_PROPERTY, "")).strip()
+    )
+    return normalize_detailed_fragment_kind(raw)
+
+
+def spec_fragment_group(spec: Dict[str, Any]) -> str:
+    return (
+        str(spec.get("group", "")).strip()
+        or str(spec.get("collection", "")).strip()
+        or str(spec.get(DETAILED_FRAGMENT_GROUP_PROPERTY, "")).strip()
+        or str(spec.get(AUDIO_FRAGMENT_COLLECTION_PROPERTY, "")).strip()
+    )
+
+
+def spec_fragment_order(spec: Dict[str, Any]) -> float:
+    try:
+        return float(spec.get("order", spec.get(AUDIO_FRAGMENT_ORDER_PROPERTY, 0.0)))
+    except Exception:
+        return 0.0
+
+
+def morning_prayer_contract_errors(specs: Sequence[Dict[str, Any]]) -> List[str]:
+    errors: List[str] = []
+    matched_orders: List[tuple[str, float]] = []
+    items = morning_prayer_contract_items()
+    for item in items:
+        label_matches = [spec for spec in specs if normalize_flag_value(spec_fragment_label(spec)) == normalize_flag_value(item["label"])]
+        if not label_matches:
+            errors.append(f"missing fragment '{item['label']}'")
+            continue
+        if len(label_matches) > 1:
+            errors.append(f"duplicate fragment '{item['label']}'")
+            continue
+        match = label_matches[0]
+        actual_kind = spec_fragment_kind(match)
+        if actual_kind != item["kind"]:
+            errors.append(f"fragment '{item['label']}' has kind '{actual_kind or 'missing'}' instead of '{item['kind']}'")
+        actual_group = normalize_flag_value(spec_fragment_group(match))
+        expected_group = normalize_flag_value(str(item["group"]))
+        if expected_group and actual_group != expected_group:
+            errors.append(f"fragment '{item['label']}' has group '{spec_fragment_group(match) or 'missing'}' instead of '{item['group']}'")
+        actual_role = normalize_fragment_assembly_role(
+            str(match.get("assembly_role", "")).strip() or str(match.get(DETAILED_FRAGMENT_ASSEMBLY_ROLE_PROPERTY, "")).strip()
+        ) or ASSEMBLY_ROLE_APPEND
+        if actual_role != item["assembly_role"]:
+            errors.append(f"fragment '{item['label']}' has assembly role '{actual_role}' instead of '{item['assembly_role']}'")
+        matched_orders.append((item["label"], spec_fragment_order(match)))
+    previous_label = ""
+    previous_order: Optional[float] = None
+    for label, order in matched_orders:
+        if previous_order is not None and order <= previous_order:
+            errors.append(f"fragment '{label}' must sort after '{previous_label}'")
+            break
+        previous_label = label
+        previous_order = order
+    return errors
 
 
 def opus_dei_row_tts_settings(page: Dict[str, Any]) -> Dict[str, Any]:
@@ -3203,6 +3312,7 @@ def build_opus_dei_two_list_plan(
     text_property = str(row_settings.get("text_property", DEFAULT_RSS_TEXT_PROPERTY)).strip() or DEFAULT_RSS_TEXT_PROPERTY
     row_audio_config = deepcopy(row_settings.get("audio_config") or {})
     fragment_specs = list(row_settings.get("fragment_specs") or [])
+    row_title = str(row_settings.get("title", "")).strip() or shared.page_title(page, title_property).strip()
     if assembly_mode == OPUS_DEI_ASSEMBLY_MODE_SPECIAL:
         special_builder = str(row_settings.get("special_builder", "")).strip()
         if special_builder != OPUS_DEI_SPECIAL_BUILDER_ROSARY:
@@ -3224,6 +3334,14 @@ def build_opus_dei_two_list_plan(
 
     if not fragment_specs:
         raise RuntimeError("Two-list assembly row has no related detailed fragments.")
+    if assembly_mode == OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS and is_morning_prayer_title(row_title):
+        contract_errors = morning_prayer_contract_errors(fragment_specs)
+        if contract_errors:
+            raise RuntimeError(
+                "Morning Prayer detailed fragments are incomplete: "
+                + "; ".join(contract_errors)
+                + ". Re-run the Morning Prayer two-list migration before generating page audio."
+            )
 
     plan = PageAudioPlan(fragments=[])
     source_roles_present = False

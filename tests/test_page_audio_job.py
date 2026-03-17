@@ -31,6 +31,21 @@ def _relation_prop(ids):
     return {"type": "relation", "relation": [{"id": value} for value in ids]}
 
 
+def _morning_prayer_two_list_specs(mod):
+    specs = []
+    for item in mod.morning_prayer_contract_items():
+        specs.append(
+            {
+                "label": item["label"],
+                "kind": item["kind"],
+                "group": item["group"],
+                "assembly_role": item["assembly_role"],
+                "order": item["order"],
+            }
+        )
+    return specs
+
+
 class TestPageAudioJob(unittest.TestCase):
     def setUp(self):
         self.mod = load_module("jobs/notion/generate_page_audio.py")
@@ -2295,6 +2310,88 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual([block["marker"] for block in plan.content_blocks], ["text"])
         self.assertEqual([fragment.label for fragment in plan.fragments], ["Morning Audio"])
 
+    def test_build_opus_dei_two_list_plan_rejects_incomplete_morning_prayer_contract(self):
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
+        row_settings = {
+            "title": "Morning Prayer",
+            "assembly_mode": self.mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS,
+            "text_sync_mode": self.mod.OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT,
+            "text_property": "Description",
+            "audio_config": {"tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}},
+            "fragment_specs": [
+                {
+                    "label": "Daily Novena Audio",
+                    "kind": self.mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO,
+                    "group": "daily_novena",
+                    "assembly_role": self.mod.ASSEMBLY_ROLE_APPEND,
+                    "order": 1.0,
+                }
+            ],
+        }
+
+        with self.assertRaisesRegex(RuntimeError, "Morning Prayer detailed fragments are incomplete"):
+            self.mod.build_opus_dei_two_list_plan(
+                page=page,
+                pages=[page],
+                title_property="Name",
+                row_settings=row_settings,
+                token="token",
+                base_url="https://api.openai.com/v1",
+            )
+
+    def test_build_opus_dei_two_list_plan_supports_full_morning_prayer_contract(self):
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
+        row_settings = {
+            "title": "Morning Prayer",
+            "assembly_mode": self.mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS,
+            "text_sync_mode": self.mod.OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT,
+            "text_property": "Description",
+            "audio_config": {"tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}},
+            "fragment_specs": _morning_prayer_two_list_specs(self.mod),
+        }
+
+        def fake_child_plan(spec, **_kwargs):
+            label = spec["label"]
+            if spec["kind"] == self.mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO:
+                return self.mod.PageAudioPlan(
+                    fragments=[
+                        self.mod.PageAudioFragment(
+                            kind="source_audio",
+                            label=label,
+                            hash_value=f"hash-{self.mod.slugify(label)}",
+                            source_url="https://example.com/novena.mp3",
+                        )
+                    ],
+                    text_target="page_content",
+                    content_blocks=[{"marker": "novena"}],
+                )
+            return self.mod.PageAudioPlan(
+                fragments=[
+                    self.mod.PageAudioFragment(
+                        kind="tts",
+                        label=label,
+                        hash_value=f"hash-{self.mod.slugify(label)}",
+                        text=f"{label}.",
+                    )
+                ],
+                synced_text=f"{label}.",
+            )
+
+        with patch.object(self.mod, "build_detailed_fragment_child_plan", side_effect=fake_child_plan):
+            plan = self.mod.build_opus_dei_two_list_plan(
+                page=page,
+                pages=[page],
+                title_property="Name",
+                row_settings=row_settings,
+                token="token",
+                base_url="https://api.openai.com/v1",
+            )
+
+        self.assertEqual(plan.text_target, "page_content")
+        self.assertEqual([fragment.label for fragment in plan.fragments[:3]], ["Morning Offering", "Daily Consecration", "Baptismal Renewal"])
+        self.assertEqual(plan.fragments[-1].label, "Intercessory Litany")
+        self.assertTrue(any(block.get("marker") == "novena" for block in plan.content_blocks))
+
     def test_main_uses_two_list_rows_without_loading_legacy_config(self):
         env = {
             "OPENAI_API_KEY": "key",
@@ -2347,6 +2444,54 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertEqual(rc, 0)
         render_mock.assert_called_once()
+
+    def test_main_does_not_apply_text_for_invalid_morning_prayer_contract(self):
+        env = {
+            "OPENAI_API_KEY": "key",
+            "NOTION_TOKEN": "notion_token",
+            "NOTION_DATABASE_ID": "db_1",
+            "NOTION_AUDIO_PLATFORM_VALUE": "auto-audio,auto-text",
+        }
+        pages = [
+            {
+                "id": "page_1",
+                "properties": {
+                    "Name": _title_prop("Morning Prayer"),
+                    "Platform": _rich_text_prop("auto-audio,auto-text"),
+                    "Enabled": _checkbox_prop(True),
+                },
+            }
+        ]
+        row_settings = {
+            "title": "Morning Prayer",
+            "assembly_mode": self.mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS,
+            "text_sync_mode": self.mod.OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT,
+            "text_property": "Description",
+            "audio_config": {"tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}},
+            "fragment_specs": [
+                {
+                    "label": "Daily Novena Audio",
+                    "kind": self.mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO,
+                    "group": "daily_novena",
+                    "assembly_role": self.mod.ASSEMBLY_ROLE_APPEND,
+                    "order": 1.0,
+                }
+            ],
+        }
+
+        with temp_env(env), patch.object(self.mod.shared, "notion_find_database_id", return_value="db_1"), patch.object(
+            self.mod.shared, "notion_get_all_pages", return_value=pages
+        ), patch.object(
+            self.mod, "load_detailed_fragments_from_notion", return_value={"fragments_by_page_id": {"page_1": []}}
+        ), patch.object(
+            self.mod, "opus_dei_two_list_settings", return_value=row_settings
+        ), patch.object(
+            self.mod, "apply_page_text_plan"
+        ) as text_mock:
+            rc = self.mod.main()
+
+        self.assertEqual(rc, 1)
+        text_mock.assert_not_called()
 
     def test_resolve_page_sync_keys_supports_text_and_audio_together(self):
         page = {

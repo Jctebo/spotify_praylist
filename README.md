@@ -304,11 +304,10 @@ Purpose:
 - exports the assembled files to `%USERPROFILE%\OneDrive\Praylist Audio\Playlist Audio\<Output Folder>\<Title>.mp3` by default
 
 Current config:
-- `MORNING_PRAYER_OUTPUT` in your Notion `Audio Outputs` database
-- target row: `Morning Prayer`
-- source fragments: `Audio Fragments` rows like `Morning Offering`, `Daily Consecration`, and `Intercessory Litany`
-- each fragment can be a leaf (`Spoken Text`, `Prompt`), a wrapper (`Fragment Type = sequence | config | builder`), or a typed special resolver (`monthly_intention`, `random_intention`, `daily_novena_audio`)
-- special fragments are now first-class `Audio Fragments` rows instead of only magic `SPECIAL:*` tokens
+- `Morning Prayer` now runs from the two-list `Opus Dei` + owner-linked `Detailed Fragments` model
+- required Morning Prayer fragments are owner-linked `Audio Fragments` rows for the static prayers, `Monthly Intention`, and `Daily Novena Audio`
+- `Text Sync Mode = page_content` remains the intended Morning Prayer behavior, but page audio now fails closed if the canonical Morning Prayer fragment contract is incomplete
+- legacy `MORNING_PRAYER_OUTPUT` / wrapper / sequence rows can remain as migration references, but they are no longer the active runtime source of truth
 - `DIVINE_OFFICE_INVITATORY_OUTPUT` in `Audio Outputs`
 - wraps `DIVINE_OFFICE_INVITATORY_PAGE_AUDIO` from `Page Audio Configuration`
 - target row: `Divine Office Invitatory`
