@@ -47,13 +47,18 @@ jobs:
         run: |
           REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
           AUDIO_ROOT="${AUDIO_ONEDRIVE_REMOTE_ROOT:-Praylist Audio}"
-          LEGACY_ROOT="${DEVOTIONAL_ONEDRIVE_REMOTE_ROOT:-Pictures/Samsung Gallery/DCIM}"
+          LEGACY_ROOT="${DEVOTIONAL_ONEDRIVE_REMOTE_ROOT:-}"
           NOVENA_LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/Praylist Audio/Novena Audio Library"
           PAGE_AUDIO_LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/Praylist Audio/Playlist Audio"
           mkdir -p "${NOVENA_LOCAL_ROOT}" "${PAGE_AUDIO_LOCAL_ROOT}"
           rclone copy "${REMOTE_NAME}:${AUDIO_ROOT}/Novena Audio Library/" "${NOVENA_LOCAL_ROOT}/" --create-empty-src-dirs || true
           rclone copy "${REMOTE_NAME}:${AUDIO_ROOT}/Playlist Audio/" "${PAGE_AUDIO_LOCAL_ROOT}/" --create-empty-src-dirs || true
-          rclone copy "${REMOTE_NAME}:${LEGACY_ROOT}/Novena Audio Library/" "${NOVENA_LOCAL_ROOT}/" --create-empty-src-dirs || true
+          if [ -n "${LEGACY_ROOT}" ]; then
+            echo "Prefetching legacy Novena Audio Library from ${LEGACY_ROOT}."
+            rclone copy "${REMOTE_NAME}:${LEGACY_ROOT}/Novena Audio Library/" "${NOVENA_LOCAL_ROOT}/" --create-empty-src-dirs || true
+          else
+            echo "Skipping legacy Novena Audio Library prefetch; DEVOTIONAL_ONEDRIVE_REMOTE_ROOT is not set."
+          fi
 
       - name: Restore Page Audio Cache
         uses: actions/cache@v5

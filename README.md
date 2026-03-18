@@ -272,6 +272,7 @@ Optional variables:
 - `NOVENA_AUDIO_FAIL_OPEN` (default `true`; if `true`, text update continues even if audio upload fails)
 - `NOVENA_AUDIO_LIBRARY_DIR` (optional; default local root is `%USERPROFILE%\OneDrive\Praylist Audio\Novena Audio Library`; saint novena audio is prebuilt there with readable `day-01...day-09` filenames and JSON sidecars)
 - the daily novena job fully truncates that managed library root before regeneration so stale audio and payload files do not survive a rerun
+- `DEVOTIONAL_ONEDRIVE_REMOTE_ROOT` (optional legacy novena backfill root; when set, the daily novena workflow also prefetches `Novena Audio Library` from that location)
 - saint-day novenas now cache two layers:
 - prompt payload JSON once per saint/feast window
 - the full 9-day audio set once per saint/feast window
@@ -283,6 +284,10 @@ Optional variables:
 - `USCCB_READINGS_FAIL_OPEN` (default `true`; if `true`, prayer update continues when readings fetch/parse fails)
 - `USCCB_READINGS_BASE_URL` (default `https://bible.usccb.org/bible/readings`)
 - `JOB_UTC_OFFSET` (default `-06:00`)
+
+Workflow note:
+- the scheduled daily novena workflow always prefetches the primary `Praylist Audio` library
+- the legacy `DEVOTIONAL_ONEDRIVE_REMOTE_ROOT` prefetch is skipped unless that env var is explicitly configured
 
 Local run:
 
