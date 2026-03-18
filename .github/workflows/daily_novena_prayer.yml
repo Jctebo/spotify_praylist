@@ -139,6 +139,7 @@ jobs:
           PAGE_AUDIO_CONFIG_FILE: config/page_audio_config.json
           PAGE_AUDIO_CACHE_DIR: .cache/page_audio
           PAGE_AUDIO_LIBRARY_DIR: ${{ github.workspace }}/onedrive_sync/Praylist Audio/Playlist Audio
+          PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS: "true"
           PAGE_AUDIO_FAIL_OPEN: "false"
           OAI_API_BASE_URL: https://api.openai.com/v1
           JOB_UTC_OFFSET: -06:00

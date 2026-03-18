@@ -31,6 +31,10 @@ def _relation_prop(ids):
     return {"type": "relation", "relation": [{"id": value} for value in ids]}
 
 
+def _number_prop(value):
+    return {"type": "number", "number": value}
+
+
 def _morning_prayer_two_list_specs(mod):
     specs = []
     for item in mod.morning_prayer_contract_items():
@@ -456,6 +460,66 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertEqual(mode, "text_updated")
         sync_mock.assert_called_once()
+
+    def test_apply_page_text_plan_uses_managed_section_mode(self):
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Daily Examen")}}
+        plan = self.mod.PageAudioPlan(
+            fragments=[],
+            text_target="page_content",
+            content_blocks=[
+                {
+                    "object": "block",
+                    "type": "paragraph",
+                    "paragraph": {"rich_text": [{"type": "text", "text": {"content": "Examen text."}}]},
+                }
+            ],
+            page_content_mode=self.mod.PAGE_CONTENT_MODE_MANAGED_SECTION,
+            page_content_label="Daily Examen",
+        )
+
+        with patch.object(self.mod, "sync_managed_page_content_section", return_value=True) as sync_mock:
+            mode = self.mod.apply_page_text_plan(page, plan, "token")
+
+        self.assertEqual(mode, "text_updated")
+        sync_mock.assert_called_once()
+
+    def test_sync_managed_page_content_section_preserves_manual_blocks(self):
+        existing_blocks = [
+            {"id": "audio_1", "type": "audio", "audio": {"caption": [{"plain_text": "Prayer Audio"}]}},
+            {
+                "id": "managed_1",
+                "type": "toggle",
+                "has_children": False,
+                "toggle": {"rich_text": [{"plain_text": "Prayer Text [AUTOGEN_PRAYER_TEXT_SECTION:page_1]"}]},
+            },
+            {
+                "id": "paragraph_1",
+                "type": "paragraph",
+                "paragraph": {"rich_text": [{"plain_text": "My manual notes."}]},
+            },
+        ]
+        desired_blocks = [
+            {
+                "object": "block",
+                "type": "paragraph",
+                "paragraph": {"rich_text": [{"type": "text", "text": {"content": "Updated prayer text."}}]},
+            }
+        ]
+
+        with patch.object(self.mod.shared, "notion_list_block_children", return_value=existing_blocks), patch.object(
+            self.mod.shared, "notion_archive_block"
+        ) as archive_mock, patch.object(self.mod.shared, "notion_append_children") as append_mock:
+            changed = self.mod.sync_managed_page_content_section(
+                "page_1",
+                "token",
+                label="Daily Examen",
+                desired_blocks=desired_blocks,
+            )
+
+        self.assertTrue(changed)
+        archive_mock.assert_called_once_with("managed_1", "token")
+        append_mock.assert_called_once()
+        self.assertEqual(append_mock.call_args.kwargs["after"], "audio_1")
 
     def test_parse_monthly_intention_section_builds_spoken_text(self):
         parsed = self.mod.parse_monthly_intention_section(
@@ -1459,7 +1523,7 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(fragment["config"]["intention_prefix"], "For this intention:")
 
     def test_build_fragment_output_plan_supports_special_fragments(self):
-        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer"), "Order": _number_prop(1.0)}}
         novena_page = {
             "id": "page_2",
             "properties": {"Name": _title_prop("Daily Novenas from Liturgical Calendar")},
@@ -1618,7 +1682,7 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual([block["type"] for block in plan.content_blocks], ["toggle"])
 
     def test_build_fragment_output_plan_rejects_fragment_cycles(self):
-        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer"), "Order": _number_prop(1.0)}}
         config = {
             "builder": "audio_fragments_v1",
             "audio_caption": "Morning Prayer (Audio)",
@@ -1642,7 +1706,7 @@ class TestPageAudioJob(unittest.TestCase):
             )
 
     def test_build_fragment_output_plan_supports_prompt_fragments(self):
-        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer"), "Order": _number_prop(1.0)}}
         config = {
             "builder": "audio_fragments_v1",
             "audio_caption": "Morning Prayer (Audio)",
@@ -1983,7 +2047,7 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(payload["configs"]["SING_THE_HOURS_MORNING_OUTPUT"]["fragments"][wrapper_key]["source_config_key"], "SING_THE_HOURS_MORNING_PAGE_AUDIO")
 
     def test_render_page_audio_for_config_uses_cached_hash(self):
-        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer"), "Order": _number_prop(1.0)}}
         config = {
             "builder": "morning_prayer_v1",
             "audio_caption": "Morning Prayer (Audio)",
@@ -2020,6 +2084,7 @@ class TestPageAudioJob(unittest.TestCase):
             "properties": {
                 "Name": _title_prop("Bible in a Year"),
                 "Playlist": _rich_text_prop("Morning"),
+                "Order": _number_prop(1.01),
             },
         }
         config = {
@@ -2054,8 +2119,8 @@ class TestPageAudioJob(unittest.TestCase):
                     base_url="https://api.openai.com/v1",
                 )
 
-            audio_path = Path(tmp_dir) / "Morning" / "Bible in a Year.mp3"
-            meta_path = Path(tmp_dir) / "Morning" / "Bible in a Year.json"
+            audio_path = Path(tmp_dir) / "Morning" / "Morning - 1.01 - Bible in a Year.mp3"
+            meta_path = Path(tmp_dir) / "Morning" / "Morning - 1.01 - Bible in a Year.json"
             self.assertTrue(audio_path.exists())
             self.assertTrue(meta_path.exists())
             payload = json.loads(meta_path.read_text(encoding="utf-8"))
@@ -2063,6 +2128,105 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(mode, f"cached:mp3:gpt-4o-mini-tts:alloy:hash={render_hash}")
         self.assertEqual(payload["output_folder"], "Morning")
         self.assertEqual(payload["render_hash"], render_hash)
+        self.assertEqual(payload["export_order_display"], "1.01")
+        self.assertEqual(payload["export_stem"], "Morning - 1.01 - Bible in a Year")
+
+    def test_page_audio_export_metadata_requires_valid_order(self):
+        page = {
+            "id": "page_1",
+            "properties": {
+                "Name": _title_prop("Bible in a Year"),
+                "Playlist": _rich_text_prop("Morning"),
+            },
+        }
+        config = {
+            "builder": "rss_audio_v1",
+            "audio_caption": "Bible in a Year (Audio)",
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "output_folder": "Morning",
+        }
+
+        with self.assertRaisesRegex(RuntimeError, 'missing a valid "Order"'):
+            self.mod.page_audio_export_metadata(
+                page,
+                title_property="Name",
+                audio_format="mp3",
+                config=config,
+            )
+
+    def test_page_audio_export_metadata_normalizes_integer_order_display(self):
+        page = {
+            "id": "page_1",
+            "properties": {
+                "Name": _title_prop("Morning Prayer"),
+                "Playlist": _rich_text_prop("Morning"),
+                "Order": _number_prop(2.0),
+            },
+        }
+        config = {
+            "builder": "rss_audio_v1",
+            "audio_caption": "Morning Prayer (Audio)",
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "output_folder": "Morning",
+        }
+
+        metadata = self.mod.page_audio_export_metadata(
+            page,
+            title_property="Name",
+            audio_format="mp3",
+            config=config,
+        )
+
+        self.assertEqual(metadata.order_display, "2")
+        self.assertEqual(metadata.file_stem, "Morning - 2 - Morning Prayer")
+
+    def test_validate_unique_page_audio_export_targets_rejects_duplicate_stems(self):
+        first = self.mod.PageAudioExportMetadata(
+            folder_name="Morning",
+            entry_name="Morning Prayer",
+            order_value=1.01,
+            order_display="1.01",
+            file_stem="Morning - 1.01 - Morning Prayer",
+            audio_extension="mp3",
+        )
+        second = self.mod.PageAudioExportMetadata(
+            folder_name="Morning",
+            entry_name="Morning Prayer",
+            order_value=1.01,
+            order_display="1.01",
+            file_stem="Morning - 1.01 - Morning Prayer",
+            audio_extension="mp3",
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "Ordered Playlist Audio export collision"):
+            self.mod.validate_unique_page_audio_export_targets(
+                [("Morning Prayer", first), ("Morning Prayer Copy", second)]
+            )
+
+    def test_truncate_managed_page_audio_outputs_removes_audio_and_json(self):
+        metadata = self.mod.PageAudioExportMetadata(
+            folder_name="Morning",
+            entry_name="Morning Prayer",
+            order_value=1.01,
+            order_display="1.01",
+            file_stem="Morning - 1.01 - Morning Prayer",
+            audio_extension="mp3",
+        )
+
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            morning_dir = Path(tmp_dir) / "Morning"
+            morning_dir.mkdir(parents=True, exist_ok=True)
+            (morning_dir / "Morning - 1.01 - Morning Prayer.mp3").write_bytes(b"audio")
+            (morning_dir / "Morning - 1.01 - Morning Prayer.json").write_text("{}", encoding="utf-8")
+            (morning_dir / "keep.txt").write_text("notes", encoding="utf-8")
+
+            with temp_env({"PAGE_AUDIO_LIBRARY_DIR": tmp_dir}):
+                removed = self.mod.truncate_managed_page_audio_outputs([("Morning Prayer", metadata)])
+
+            self.assertEqual(removed, 2)
+            self.assertFalse((morning_dir / "Morning - 1.01 - Morning Prayer.mp3").exists())
+            self.assertFalse((morning_dir / "Morning - 1.01 - Morning Prayer.json").exists())
+            self.assertTrue((morning_dir / "keep.txt").exists())
 
     def test_compute_page_render_hash_ignores_cache_promotion_kind(self):
         config = {
@@ -2148,6 +2312,7 @@ class TestPageAudioJob(unittest.TestCase):
                 "properties": {
                     "Name": _title_prop("Morning Prayer"),
                     "Platform": _rich_text_prop("auto-audio"),
+                    "Order": _number_prop(1.0),
                     "Auto Audio Resolver 1": _rich_text_prop("MORNING_PRAYER_PAGE_AUDIO"),
                     "Enabled": _checkbox_prop(True),
                 },
@@ -2257,13 +2422,10 @@ class TestPageAudioJob(unittest.TestCase):
                 self.mod, "opus_dei_two_list_settings", return_value=row_settings
             ), patch.object(
                 self.mod, "build_opus_dei_two_list_plan", return_value=self.mod.PageAudioPlan(fragments=[], text_target="page_content", content_blocks=[])
-            ), patch.object(
-                self.mod, "apply_page_text_plan", return_value="text_cached"
-            ) as text_mock:
+            ):
                 rc = self.mod.main()
 
-        self.assertEqual(rc, 0)
-        text_mock.assert_called_once()
+        self.assertEqual(rc, 1)
 
     def test_build_opus_dei_two_list_plan_prefers_text_only_append_text_over_source_text(self):
         page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer - Liturgy of the Hours")}}
@@ -2392,6 +2554,34 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(plan.fragments[-1].label, "Intercessory Litany")
         self.assertTrue(any(block.get("marker") == "novena" for block in plan.content_blocks))
 
+    def test_build_opus_dei_two_list_plan_requires_reliable_text_for_page_content(self):
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Daily Examen")}}
+        row_settings = {
+            "title": "Daily Examen",
+            "assembly_mode": self.mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS,
+            "text_sync_mode": self.mod.OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT,
+            "text_property": "Description",
+            "audio_config": {"tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}},
+            "fragment_specs": [
+                {
+                    "label": "Daily Examen Audio",
+                    "kind": self.mod.FRAGMENT_KIND_SOURCE_AUDIO,
+                    "assembly_role": self.mod.ASSEMBLY_ROLE_PRIMARY_SOURCE,
+                    "source_url": "https://example.com/examen.mp3",
+                }
+            ],
+        }
+
+        with self.assertRaisesRegex(RuntimeError, "configured for page_content but no reliable text content was produced"):
+            self.mod.build_opus_dei_two_list_plan(
+                page=page,
+                pages=[page],
+                title_property="Name",
+                row_settings=row_settings,
+                token="token",
+                base_url="https://api.openai.com/v1",
+            )
+
     def test_main_uses_two_list_rows_without_loading_legacy_config(self):
         env = {
             "OPENAI_API_KEY": "key",
@@ -2405,6 +2595,7 @@ class TestPageAudioJob(unittest.TestCase):
                 "properties": {
                     "Name": _title_prop("Evening Prayer"),
                     "Platform": _rich_text_prop("Spotify, auto-audio"),
+                    "Order": _number_prop(3.0),
                     "Assembly Mode": _rich_text_prop("fragments"),
                     "Enabled": _checkbox_prop(True),
                 },

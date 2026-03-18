@@ -202,6 +202,10 @@ class TestRefreshJob(unittest.TestCase):
 
         self.assertEqual(queue, ["spotify:episode:legacy_first", "spotify:episode:explicit_second"])
 
+    def test_shared_order_contract_normalizes_integer_display(self):
+        self.assertEqual(self.mod.prayer_order_contract.format_top_level_order(2.0), "2")
+        self.assertEqual(self.mod.prayer_order_contract.format_top_level_order(1.01), "1.01")
+
     def test_build_queue_for_playlist_from_notion_ignores_two_list_audio_fields(self):
         env = {
             "NOTION_TOKEN": "notion_token",
