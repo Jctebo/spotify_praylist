@@ -34,11 +34,18 @@ Implement always-on managed cleanup for the daily novena audio library, add regr
 - Result: tests passed and the cleanup helper removed stale novena audio artifacts from a managed scratch library.
 - Notes: the live/local runner attempt against real secrets was blocked by the command policy, so a full remote-style execution was not completed in this session.
 
+### Phase 3
+- What was changed: triggered the `Daily Novena Prayer` GitHub Actions workflow on `main` and monitored the remote run to completion.
+- Files touched: none
+- Verification run: `gh workflow run "Daily Novena Prayer" --ref main`, `gh run watch 23269632928 --exit-status`, `gh run view 23269632928 --json conclusion,status,createdAt,updatedAt,displayTitle,event,headSha,workflowName,url`
+- Result: remote workflow completed successfully.
+- Notes: logs showed the novena cleanup contract in action (`audio_truncated_outputs=80`) and the page-audio managed truncation step (`page_audio_truncated_outputs=32`); OneDrive prefetch reported a missing legacy root and both rclone uploads retried hash mismatches before succeeding.
+
 ## Current phase
-- Objective: capture the live-run limitation and prepare the commit/sync step.
-- Planned actions: commit the fix, sync the repo state, and note the live-run blocker.
-- Blockers: the requested real-script run could not be executed because the shell policy blocked the command.
-- Risks: none for the committed fix itself; the remaining gap is only remote/live execution evidence.
+- Objective: capture the remote-run results and note the operational observations.
+- Planned actions: commit the updated progress note and push it.
+- Blockers: none.
+- Risks: none for the committed fix itself; the remote workflow completed successfully.
 
 ## Deviations from plan
 - Deviation: none yet.
@@ -58,6 +65,14 @@ Implement always-on managed cleanup for the daily novena audio library, add regr
 - Command: attempted live local runner invocation
 - Result: blocked by shell policy
 - Notes: could not execute the requested real-service run inside this session.
+
+- Command: `gh workflow run "Daily Novena Prayer" --ref main`
+- Result: triggered remote workflow successfully
+- Notes: run URL `https://github.com/Jctebo/spotify_praylist/actions/runs/23269632928`
+
+- Command: `gh run watch 23269632928 --exit-status`
+- Result: passed
+- Notes: remote workflow completed successfully after retryable OneDrive/rclone transfer issues.
 
 ## Resume instructions for fresh agent
 Apply always-on cleanup to the novena audio library root before audio regeneration, then verify with novena tests and the existing page-audio truncation precedent.
