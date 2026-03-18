@@ -31,6 +31,7 @@ NOTION_DATABASE_ID = "NOTION_DATABASE_ID"
 NOTION_DATABASE_NAME = "NOTION_DATABASE_NAME"
 NOTION_TITLE_PROPERTY = "NOTION_TITLE_PROPERTY"
 NOTION_PLATFORM_PROPERTY = "NOTION_PLATFORM_PROPERTY"
+NOTION_QUEUE_ORDER_PROPERTY = "NOTION_QUEUE_ORDER_PROPERTY"
 JOB_UTC_OFFSET = "JOB_UTC_OFFSET"
 
 OPENAI_API_KEY = "OPENAI_API_KEY"
@@ -57,6 +58,7 @@ PAGE_AUDIO_CONFIG_FILE = "PAGE_AUDIO_CONFIG_FILE"
 PAGE_AUDIO_CACHE_DIR = "PAGE_AUDIO_CACHE_DIR"
 PAGE_AUDIO_LIBRARY_DIR = "PAGE_AUDIO_LIBRARY_DIR"
 PAGE_AUDIO_LIBRARY_GROUP_PROPERTY = "PAGE_AUDIO_LIBRARY_GROUP_PROPERTY"
+PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS = "PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS"
 PAGE_AUDIO_FAIL_OPEN = "PAGE_AUDIO_FAIL_OPEN"
 
 DEFAULT_PAGE_AUDIO_CONFIG_FILE = "config/page_audio_config.json"
@@ -78,6 +80,7 @@ PCM_NORMALIZE_EXTENSION = "wav"
 PCM_NORMALIZE_PROFILE = f"{PCM_NORMALIZE_EXTENSION}_{PCM_NORMALIZE_SAMPLE_RATE}hz_{PCM_NORMALIZE_CHANNELS}ch_v1"
 PAGE_AUDIO_MARKER = "[AUTOGEN_PAGE_AUDIO]"
 PAGE_AUDIO_HASH_MARKER_PREFIX = "[AUTOGEN_PAGE_AUDIO_HASH:"
+PRAYER_TEXT_SECTION_MARKER_PREFIX = "[AUTOGEN_PRAYER_TEXT_SECTION:"
 PAGE_AUDIO_RENDER_VERSION = "page_audio_v2"
 PAGE_AUDIO_PROMPT_RENDER_VERSION = "page_audio_prompt_v1"
 DEFAULT_SILENCE_MS = 450
@@ -236,6 +239,7 @@ OPUS_DEI_TEXT_SYNC_MODE_PROPERTY = "Text Sync Mode"
 OPUS_DEI_TEXT_PROPERTY_PROPERTY = "Text Property"
 OPUS_DEI_AUDIO_CAPTION_PROPERTY = "Audio Caption"
 OPUS_DEI_OUTPUT_FOLDER_PROPERTY = "Output Folder"
+OPUS_DEI_ORDER_PROPERTY = "Order"
 OPUS_DEI_SILENCE_MS_PROPERTY = "Silence Ms"
 OPUS_DEI_TTS_MODEL_PROPERTY = "TTS Model"
 OPUS_DEI_TTS_VOICE_PROPERTY = "TTS Voice"
@@ -248,6 +252,8 @@ OPUS_DEI_SPECIAL_BUILDER_ROSARY = "rosary"
 OPUS_DEI_TEXT_SYNC_MODE_NONE = "none"
 OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT = "page_content"
 OPUS_DEI_TEXT_SYNC_MODE_TEXT_PROPERTY = "property"
+PAGE_CONTENT_MODE_REPLACE = "replace"
+PAGE_CONTENT_MODE_MANAGED_SECTION = "managed_section"
 
 DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY = "Opus Dei Item"
 DETAILED_FRAGMENT_GROUP_PROPERTY = "Group"
@@ -300,6 +306,19 @@ def load_shared_module():
 shared = load_shared_module()
 
 
+def load_prayer_order_contract():
+    contract_path = ROOT / "jobs" / "prayer_order_contract.py"
+    spec = importlib.util.spec_from_file_location("page_audio_prayer_order_contract", contract_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load prayer order contract at {contract_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+prayer_order_contract = load_prayer_order_contract()
+
+
 @dataclass
 class PageAudioFragment:
     kind: str
@@ -325,6 +344,18 @@ class PageAudioPlan:
     text_property: str = ""
     text_target: str = ""
     content_blocks: List[Dict[str, Any]] = field(default_factory=list)
+    page_content_mode: str = PAGE_CONTENT_MODE_REPLACE
+    page_content_label: str = ""
+
+
+@dataclass
+class PageAudioExportMetadata:
+    folder_name: str
+    entry_name: str
+    order_value: float
+    order_display: str
+    file_stem: str
+    audio_extension: str
 
 
 @dataclass
@@ -408,6 +439,30 @@ def page_property_number(page: Dict[str, Any], prop_name: str, default: float = 
         return float(raw)
     except Exception:
         return default
+
+
+def page_property_number_or_none(page: Dict[str, Any], prop_name: str) -> Optional[float]:
+    props = page.get("properties") or {}
+    prop = props.get(prop_name) or {}
+    if str(prop.get("type", "")).strip() == "number":
+        value = prop.get("number")
+        return prayer_order_contract.parse_top_level_order(value)
+    return prayer_order_contract.parse_top_level_order(page_property_text(page, prop_name).strip())
+
+
+def resolve_top_level_order_property_name() -> str:
+    return os.getenv(NOTION_QUEUE_ORDER_PROPERTY, OPUS_DEI_ORDER_PROPERTY).strip() or OPUS_DEI_ORDER_PROPERTY
+
+
+def prayer_text_section_marker(page_id: str) -> str:
+    return f"{PRAYER_TEXT_SECTION_MARKER_PREFIX}{str(page_id or '').strip() or 'page'}]"
+
+
+def block_has_text_marker(block: Dict[str, Any], marker: str) -> bool:
+    needle = str(marker or "").strip()
+    if not needle:
+        return False
+    return needle in shared.block_rich_text_plain(block)
 
 
 def page_property_date_range(page: Dict[str, Any], prop_name: str) -> tuple[str, str]:
@@ -1995,6 +2050,8 @@ def strip_duplicate_leading_random_intention(
         text_property=plan.text_property,
         text_target=plan.text_target,
         content_blocks=deepcopy(plan.content_blocks),
+        page_content_mode=plan.page_content_mode,
+        page_content_label=plan.page_content_label,
     )
 
 
@@ -2245,6 +2302,22 @@ def merge_page_audio_plans(target: PageAudioPlan, addition: PageAudioPlan, *, so
         if target.text_target and target.text_target != "page_content":
             raise RuntimeError(f"Cannot merge {label}: page content conflicts with text-property sync.")
         target.text_target = "page_content"
+        addition_mode = str(addition.page_content_mode or PAGE_CONTENT_MODE_REPLACE).strip() or PAGE_CONTENT_MODE_REPLACE
+        target_mode = str(target.page_content_mode or PAGE_CONTENT_MODE_REPLACE).strip() or PAGE_CONTENT_MODE_REPLACE
+        replace_mode_selected = False
+        if target.content_blocks and target_mode != addition_mode:
+            if PAGE_CONTENT_MODE_REPLACE in {target_mode, addition_mode}:
+                target_mode = PAGE_CONTENT_MODE_REPLACE
+                replace_mode_selected = True
+            else:
+                raise RuntimeError(f"Cannot merge {label}: conflicting page-content sync modes.")
+        target.page_content_mode = addition_mode
+        if replace_mode_selected:
+            target.page_content_mode = PAGE_CONTENT_MODE_REPLACE
+        if addition.page_content_label:
+            effective_mode = str(target.page_content_mode or PAGE_CONTENT_MODE_REPLACE).strip() or PAGE_CONTENT_MODE_REPLACE
+            if not target.page_content_label or effective_mode != PAGE_CONTENT_MODE_MANAGED_SECTION:
+                target.page_content_label = addition.page_content_label
         if addition.text_property:
             if target.text_property and target.text_property != addition.text_property:
                 raise RuntimeError(f"Cannot merge {label}: conflicting text properties.")
@@ -2621,11 +2694,15 @@ def normalize_plan_for_row_text_sync(
         if plan.text_target == "page_content" or plan.content_blocks:
             normalized.text_target = "page_content"
             normalized.content_blocks = deepcopy(plan.content_blocks)
+            normalized.page_content_mode = str(plan.page_content_mode or PAGE_CONTENT_MODE_REPLACE).strip() or PAGE_CONTENT_MODE_REPLACE
+            normalized.page_content_label = str(plan.page_content_label or label).strip()
             return normalized
         synced = normalize_whitespace(plan.synced_text)
         if synced:
             normalized.text_target = "page_content"
             normalized.content_blocks = fragment_text_content_blocks(label, synced)
+            normalized.page_content_mode = PAGE_CONTENT_MODE_MANAGED_SECTION
+            normalized.page_content_label = str(label or "").strip()
         return normalized
     return normalized
 
@@ -3390,6 +3467,10 @@ def build_opus_dei_two_list_plan(
 
     if source_roles_present and not source_selected:
         raise RuntimeError("; ".join(source_errors) if source_errors else "No source fragment could be resolved.")
+    if text_sync_mode == OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT and not (
+        plan.text_target == "page_content" and bool(plan.content_blocks)
+    ):
+        raise RuntimeError(f'"{row_title}" is configured for page_content but no reliable text content was produced.')
     return plan
 
 
@@ -3767,6 +3848,46 @@ def sync_page_content_blocks(page_id: str, token: str, desired_blocks: Sequence[
         shared.notion_append_children(page_id, list(desired_blocks), token, position="end")
     else:
         shared.notion_append_children(page_id, list(desired_blocks), token, position="start")
+    return True
+
+
+def managed_prayer_text_section_block(page_id: str, label: str, desired_blocks: Sequence[Dict[str, Any]]) -> Dict[str, Any]:
+    heading = normalize_whitespace(label) or "Prayer Text"
+    return notion_toggle_block(f"{heading} {prayer_text_section_marker(page_id)}", deepcopy(list(desired_blocks)))
+
+
+def sync_managed_page_content_section(
+    page_id: str,
+    token: str,
+    *,
+    label: str,
+    desired_blocks: Sequence[Dict[str, Any]],
+) -> bool:
+    existing = shared.notion_list_block_children(page_id, token)
+    marker = prayer_text_section_marker(page_id)
+    removable = [block for block in existing if block_has_text_marker(block, marker)]
+    desired_section = [managed_prayer_text_section_block(page_id, label, desired_blocks)] if desired_blocks else []
+    if existing_content_signature(removable, token) == desired_block_signature(desired_section):
+        return False
+    for block in removable:
+        block_id = str(block.get("id", "")).strip()
+        if block_id:
+            shared.notion_archive_block(block_id, token)
+    if not desired_section:
+        return bool(removable)
+    insert_after = ""
+    for block in existing:
+        if block_has_text_marker(block, marker):
+            continue
+        block_type = str(block.get("type", "")).strip()
+        if block_type in {"audio", "bookmark", "embed"}:
+            insert_after = str(block.get("id", "")).strip()
+            continue
+        break
+    if insert_after:
+        shared.notion_append_children(page_id, desired_section, token, after=insert_after)
+    else:
+        shared.notion_append_children(page_id, desired_section, token, position="start")
     return True
 
 
@@ -4346,26 +4467,59 @@ def page_audio_library_fragment_paths(
     return directory / f"{key_slug}.{clean_ext}", directory / f"{key_slug}.json"
 
 
-def page_audio_output_library_paths(
+def page_audio_export_group_name(page: Dict[str, Any], *, config: Dict[str, Any]) -> str:
+    group_property = (
+        os.getenv(PAGE_AUDIO_LIBRARY_GROUP_PROPERTY, DEFAULT_PAGE_AUDIO_LIBRARY_GROUP_PROPERTY).strip()
+        or DEFAULT_PAGE_AUDIO_LIBRARY_GROUP_PROPERTY
+    )
+    return str(config.get("output_folder", "")).strip() or page_property_text(page, group_property).strip() or "Unassigned"
+
+
+def page_audio_export_entry_name(page: Dict[str, Any], *, title_property: str) -> str:
+    title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip() or "page-audio"
+    return safe_path_component(title, slugify(title))
+
+
+def page_audio_export_metadata(
     page: Dict[str, Any],
     *,
     title_property: str,
     audio_format: str,
     config: Dict[str, Any],
-) -> tuple[Path, Path]:
-    group_property = (
-        os.getenv(PAGE_AUDIO_LIBRARY_GROUP_PROPERTY, DEFAULT_PAGE_AUDIO_LIBRARY_GROUP_PROPERTY).strip()
-        or DEFAULT_PAGE_AUDIO_LIBRARY_GROUP_PROPERTY
+) -> PageAudioExportMetadata:
+    folder_name = safe_path_component(page_audio_export_group_name(page, config=config), "Unassigned")
+    entry_name = page_audio_export_entry_name(page, title_property=title_property)
+    order_property = resolve_top_level_order_property_name()
+    order_value = page_property_number_or_none(page, order_property)
+    if order_value is None:
+        title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip() or "page-audio"
+        raise RuntimeError(f'Row "{title}" is missing a valid "{order_property}" required for ordered Playlist Audio export.')
+    order_display = prayer_order_contract.format_top_level_order(order_value)
+    if not order_display:
+        title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip() or "page-audio"
+        raise RuntimeError(f'Row "{title}" has an invalid "{order_property}" for ordered Playlist Audio export.')
+    file_stem = safe_path_component(
+        f"{folder_name} - {order_display} - {entry_name}",
+        slugify(f"{folder_name}-{order_display}-{entry_name}"),
     )
-    group_name = str(config.get("output_folder", "")).strip() or page_property_text(page, group_property).strip() or "Unassigned"
-    folder_name = safe_path_component(group_name, "Unassigned")
-    title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip() or "page-audio"
-    file_stem = safe_path_component(title, slugify(title))
-    root = page_audio_library_dir()
-    directory = root / folder_name
-    directory.mkdir(parents=True, exist_ok=True)
     clean_ext = str(audio_format or "").strip().lstrip(".") or "bin"
-    return directory / f"{file_stem}.{clean_ext}", directory / f"{file_stem}.json"
+    return PageAudioExportMetadata(
+        folder_name=folder_name,
+        entry_name=entry_name,
+        order_value=float(order_value),
+        order_display=order_display,
+        file_stem=file_stem,
+        audio_extension=clean_ext,
+    )
+
+
+def page_audio_output_library_paths(
+    metadata: PageAudioExportMetadata,
+) -> tuple[Path, Path]:
+    root = page_audio_library_dir()
+    directory = root / metadata.folder_name
+    directory.mkdir(parents=True, exist_ok=True)
+    return directory / f"{metadata.file_stem}.{metadata.audio_extension}", directory / f"{metadata.file_stem}.json"
 
 
 def page_audio_output_library_is_current(audio_path: Path, meta_path: Path, render_hash: str) -> bool:
@@ -4389,11 +4543,14 @@ def persist_page_audio_output_library(
     audio_bytes: bytes,
 ) -> tuple[Path, Path]:
     settings = tts_settings_from_config(config)
-    audio_path, meta_path = page_audio_output_library_paths(
+    export_metadata = page_audio_export_metadata(
         page,
         title_property=title_property,
         audio_format=str(settings["format"]),
         config=config,
+    )
+    audio_path, meta_path = page_audio_output_library_paths(
+        export_metadata,
     )
     audio_path.write_bytes(audio_bytes)
     artwork_url = page_audio_cover_art_url(fragments)
@@ -4412,6 +4569,10 @@ def persist_page_audio_output_library(
         "render_hash": str(render_hash or "").strip(),
         "date": shared.local_today().isoformat(),
         "tts": settings,
+        "export_order": export_metadata.order_value,
+        "export_order_display": export_metadata.order_display,
+        "export_stem": export_metadata.file_stem,
+        "managed_output": True,
         "artwork_url": artwork_url,
         "fragments": [
             {
@@ -5200,7 +5361,17 @@ def apply_page_text_plan(
         raise RuntimeError("Target page has no id.")
     content_changed = False
     if plan.text_target == "page_content":
-        content_changed = sync_page_content_blocks(page_id, notion_token, plan.content_blocks)
+        if not plan.content_blocks:
+            raise RuntimeError("Page-content sync expected content blocks, but none were produced.")
+        if str(plan.page_content_mode or PAGE_CONTENT_MODE_REPLACE).strip() == PAGE_CONTENT_MODE_MANAGED_SECTION:
+            content_changed = sync_managed_page_content_section(
+                page_id,
+                notion_token,
+                label=str(plan.page_content_label or "").strip() or "Prayer Text",
+                desired_blocks=plan.content_blocks,
+            )
+        else:
+            content_changed = sync_page_content_blocks(page_id, notion_token, plan.content_blocks)
         if plan.text_property:
             maybe_update_page_text_property(page, plan.text_property, "", notion_token, allow_empty=True)
     elif plan.text_property:
@@ -5231,11 +5402,14 @@ def render_page_audio_for_config(
     current_hash = page_audio_current_render_hash(page_id, notion_token)
     settings = tts_settings_from_config(config)
     cache_root = page_audio_cache_dir()
-    library_audio_path, library_meta_path = page_audio_output_library_paths(
+    export_metadata = page_audio_export_metadata(
         page,
         title_property=title_property,
         audio_format=str(settings["format"]),
         config=config,
+    )
+    library_audio_path, library_meta_path = page_audio_output_library_paths(
+        export_metadata,
     )
     if current_hash == render_hash and page_audio_is_positioned_near_top(page_id, notion_token):
         if not page_audio_output_library_is_current(library_audio_path, library_meta_path, render_hash):
@@ -5469,6 +5643,41 @@ def emit_page_sync_deprecation_warnings(
         emit_page_audio_deprecation_warning(message)
 
 
+def validate_unique_page_audio_export_targets(entries: Sequence[tuple[str, PageAudioExportMetadata]]) -> None:
+    seen: Dict[tuple[str, str], str] = {}
+    for title, metadata in entries:
+        key = (metadata.folder_name.lower(), metadata.file_stem.lower())
+        prior = seen.get(key)
+        if prior:
+            raise RuntimeError(
+                f'Ordered Playlist Audio export collision: "{prior}" and "{title}" both resolve to '
+                f'"{metadata.folder_name}/{metadata.file_stem}.{metadata.audio_extension}".'
+            )
+        seen[key] = title
+
+
+def truncate_managed_page_audio_outputs(entries: Sequence[tuple[str, PageAudioExportMetadata]]) -> int:
+    directory_extensions: Dict[Path, Set[str]] = {}
+    for _title, metadata in entries:
+        directory = page_audio_library_dir() / metadata.folder_name
+        ext_set = directory_extensions.setdefault(directory, set())
+        ext_set.add(metadata.audio_extension.lower())
+        ext_set.add("json")
+    removed = 0
+    for directory, extensions in directory_extensions.items():
+        if not directory.exists():
+            continue
+        for child in directory.iterdir():
+            if not child.is_file():
+                continue
+            ext = child.suffix.lower().lstrip(".")
+            if ext not in extensions:
+                continue
+            child.unlink()
+            removed += 1
+    return removed
+
+
 def main() -> int:
     try:
         _PAGE_AUDIO_DEPRECATION_WARNINGS.clear()
@@ -5517,10 +5726,11 @@ def main() -> int:
         failed = 0
         processed = 0
         two_list_rows = 0
+        row_jobs: List[Dict[str, Any]] = []
+        managed_exports: List[tuple[str, PageAudioExportMetadata]] = []
 
         for page in candidates:
             title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip()
-            page_started = time.perf_counter()
             auto_text_enabled = page_has_platform_value(page, platform_property, "auto-text")
             auto_audio_enabled = page_has_platform_value(page, platform_property, "auto-audio")
             row_settings = opus_dei_two_list_settings(
@@ -5538,6 +5748,47 @@ def main() -> int:
                 title_property=title_property,
             ):
                 continue
+            row_config = deepcopy(row_settings.get("audio_config") or {})
+            row_config["builder"] = f"opus_dei_{row_settings.get('assembly_mode', OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS)}_v1"
+            row_config_key = opus_dei_row_config_key(page, title_property=title_property)
+            if auto_audio_enabled:
+                managed_exports.append(
+                    (
+                        title,
+                        page_audio_export_metadata(
+                            page,
+                            title_property=title_property,
+                            audio_format=str(tts_settings_from_config(row_config)["format"]),
+                            config=row_config,
+                        ),
+                    )
+                )
+            row_jobs.append(
+                {
+                    "page": page,
+                    "title": title,
+                    "auto_text_enabled": auto_text_enabled,
+                    "auto_audio_enabled": auto_audio_enabled,
+                    "row_settings": row_settings,
+                    "row_config": row_config,
+                    "row_config_key": row_config_key,
+                }
+            )
+
+        if not row_jobs:
+            print("page_audio_rows=0")
+            print(f"page_audio_deprecations={len(_PAGE_AUDIO_DEPRECATION_WARNINGS)}")
+            return 0
+
+        validate_unique_page_audio_export_targets(managed_exports)
+        if shared.bool_env(PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS, default=False):
+            removed_outputs = truncate_managed_page_audio_outputs(managed_exports)
+            print(f"page_audio_truncated_outputs={removed_outputs}")
+
+        for job in row_jobs:
+            page = job["page"]
+            title = job["title"]
+            page_started = time.perf_counter()
             processed += 1
             two_list_rows += 1
             try:
@@ -5546,19 +5797,18 @@ def main() -> int:
                     page=page,
                     pages=pages,
                     title_property=title_property,
-                    row_settings=row_settings,
+                    row_settings=job["row_settings"],
                     token=notion_token,
                     base_url=base_url,
                 )
-                row_config = deepcopy(row_settings.get("audio_config") or {})
-                row_config["builder"] = f"opus_dei_{row_settings.get('assembly_mode', OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS)}_v1"
-                row_config_key = opus_dei_row_config_key(page, title_property=title_property)
+                row_config = deepcopy(job["row_config"])
+                row_config_key = str(job["row_config_key"])
                 should_apply_text = bool(row_plan.text_target or row_plan.text_property)
-                if auto_text_enabled and should_apply_text:
+                if job["auto_text_enabled"] and should_apply_text:
                     text_mode = apply_page_text_plan(page, row_plan, notion_token)
 
                 audio_mode = ""
-                if auto_audio_enabled:
+                if job["auto_audio_enabled"]:
                     audio_mode = render_page_audio_for_config(
                         page=page,
                         config_key=row_config_key,

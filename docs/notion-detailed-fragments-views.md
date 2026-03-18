@@ -233,3 +233,9 @@ A companion view on the `Opus Dei` database is also helpful:
 - `Order`
 
 This makes it easy to move between the parent row and its child fragments.
+
+Important ordering note:
+
+- top-level Opus Dei `Order` is the playlist/export order used for Spotify queueing and ordered OneDrive `Playlist Audio` filenames
+- fragment `Order` remains the canonical assembly order inside one prayer page only
+- Morning Prayer keeps its existing page template behavior even though its exported OneDrive audio now follows the shared top-level ordered filename contract

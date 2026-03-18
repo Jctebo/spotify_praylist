@@ -1,11 +1,13 @@
 import base64
 import datetime
+import importlib.util
 import json
 import os
 import random
 import re
 import sys
 import time
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlsplit, urlunsplit
 
@@ -87,6 +89,7 @@ DEFAULT_PLAYLIST_NOVENA_TITLES = (
     "Daily Novenas from Liturgical Cakendar",
     "Daily Novena Prayer",
 )
+ROOT = Path(__file__).resolve().parents[2]
 
 DEFAULT_SHOWS = {
     "DIVINE_OFFICE": "70ydTdzunoqWAsvutFIkHM",
@@ -123,6 +126,19 @@ DEFAULT_TOKENS: Dict[str, Any] = {
     "DO_EVENING": ["Evening Prayer", "Vespers"],
     "DO_NIGHT_ANY": ["Night Prayer", "Compline"],
 }
+
+
+def load_prayer_order_contract():
+    contract_path = ROOT / "jobs" / "prayer_order_contract.py"
+    spec = importlib.util.spec_from_file_location("playlist_prayer_order_contract", contract_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load prayer order contract at {contract_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+prayer_order_contract = load_prayer_order_contract()
 
 # Allow resolver aliases from Notion rows while keeping canonical internal keys.
 RESOLVER_ALIASES = {
@@ -2285,8 +2301,10 @@ def build_queue_for_playlist_from_notion(
         resolver = page_property_text(page, resolver_property).strip()
         fallback = page_property_text(page, fallback_property).strip()
         direct_uri = (page_uri_value(page, uri_property) or "").strip()
-        order_num = page_property_number(page, order_property)
-        order_value = float(order_num) if order_num is not None else 9999.0
+        order_value = prayer_order_contract.top_level_order_sort_value(
+            page_property_number(page, order_property),
+            default=prayer_order_contract.DEFAULT_TOP_LEVEL_ORDER_FALLBACK,
+        )
         if not resolver and direct_uri.startswith("spotify:"):
             resolver = direct_uri
         if not resolver:
