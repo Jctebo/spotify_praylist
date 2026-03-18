@@ -1,6 +1,8 @@
 import datetime
+from contextlib import ExitStack
 import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import requests
@@ -552,6 +554,146 @@ class TestNovenaJob(unittest.TestCase):
         self.assertTrue(str(first[1]["audio_path"]).endswith("day-01_2026-03-03_saint-agnes.mp3"))
         self.assertTrue(audio_exists)
         self.assertTrue(meta_exists)
+
+    def test_truncate_managed_novena_audio_outputs_clears_stale_library_before_regeneration(self):
+        payload = {
+            "opening_prayer": "Opening prayer.",
+            "daily_prayers": [
+                {"day": day_num, "theme": f"Theme {day_num}", "intercession": f"Intercession {day_num}", "daily_prayer": f"Prayer {day_num}"}
+                for day_num in range(1, 10)
+            ],
+            "closing_prayer": "Closing prayer.",
+        }
+        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        with tempfile.TemporaryDirectory() as tmpdir, temp_env({"NOVENA_AUDIO_LIBRARY_DIR": tmpdir}):
+            root = self.mod.novena_audio_library_dir()
+            stale_folder = root / "2026-03-12_saint-agnes"
+            stale_folder.mkdir(parents=True, exist_ok=True)
+            stale_audio = stale_folder / "obsolete.mp3"
+            stale_audio.write_bytes(b"stale-audio")
+            stale_meta = stale_folder / "obsolete.json"
+            stale_meta.write_text("{}", encoding="utf-8")
+
+            removed = self.mod.truncate_managed_novena_audio_outputs(root)
+
+            with patch.object(self.mod, "call_openai_saint_devotional_content", return_value=payload), patch.object(
+                self.mod, "generate_openai_audio_bytes", return_value=b"audio"
+            ):
+                devotional_payload, payload_mode, payload_path = self.mod.ensure_saint_devotional_payload_cache(
+                    library_root=root,
+                    saint_name="Saint Agnes",
+                    feast_day="2026-03-12",
+                    celebration_type="memorial",
+                    api_key="key",
+                    base_url="https://api.openai.com/v1",
+                    model="gpt-4.1-mini",
+                )
+                audio_map = self.mod.ensure_saint_novena_audio_library(
+                    saint_name="Saint Agnes",
+                    feast_day="2026-03-12",
+                    celebration_type="memorial",
+                    devotional_payload=devotional_payload,
+                    settings=settings,
+                    api_key="key",
+                    base_url="https://api.openai.com/v1",
+                    oai_model="gpt-4.1-mini",
+                )
+
+            self.assertGreaterEqual(removed, 2)
+            self.assertEqual(payload_mode, "generated")
+            self.assertTrue(payload_path.exists())
+            self.assertFalse(stale_audio.exists())
+            self.assertFalse(stale_meta.exists())
+            self.assertTrue(audio_map[1]["audio_path"].exists())
+            self.assertTrue(audio_map[1]["meta_path"].exists())
+            self.assertTrue((root / "2026-03-12_saint-agnes").exists())
+
+        self.assertFalse(stale_audio.exists())
+        self.assertFalse(stale_meta.exists())
+
+    def test_main_truncates_managed_novena_audio_outputs_before_regeneration(self):
+        env = {
+            "OPENAI_API_KEY": "key",
+            "NOTION_TOKEN": "notion_token",
+            "NOTION_DATABASE_ID": "db_1",
+            "NOTION_SAINT_DATABASE_ID": "db_1",
+            "NOTION_NOVENA_ROW_TITLE": "Daily Novenas from Liturgical Calendar",
+            "NOTION_WRITE_DAILY_NOVENA_PAGE": "false",
+            "NOTION_SAINT_RADAR_ENABLED": "true",
+            "NOVENA_AUDIO_ENABLED": "true",
+            "USCCB_READINGS_ENABLED": "false",
+        }
+        page = {
+            "id": "page_1",
+            "properties": {
+                "Name": _title_prop("Daily Novenas from Liturgical Calendar"),
+            },
+        }
+        saints = [{"date": "2026-03-12", "name": "Saint Agnes"}]
+        devotional_payload = {
+            "opening_prayer": "Opening prayer.",
+            "daily_prayers": [{"day": day_num, "daily_prayer": f"Prayer {day_num}"} for day_num in range(1, 10)],
+            "closing_prayer": "Closing prayer.",
+        }
+        audio_map = {
+            1: {
+                "mode": "generated",
+                "render_hash": "render_hash_1",
+                "audio_text": "Prayer 1",
+                "audio_path": Path("audio.mp3"),
+                "meta_path": Path("audio.json"),
+                "target_day": datetime.date(2026, 3, 3),
+            }
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir, temp_env({**env, "NOVENA_AUDIO_LIBRARY_DIR": tmpdir}):
+            stale_root = Path(tmpdir)
+            stale_folder = stale_root / "2026-03-12_saint-agnes"
+            stale_folder.mkdir(parents=True, exist_ok=True)
+            stale_file = stale_folder / "obsolete.mp3"
+            stale_file.write_bytes(b"stale-audio")
+            with ExitStack() as stack:
+                stack.enter_context(patch.object(self.mod, "local_today", return_value=datetime.date(2026, 3, 3)))
+                stack.enter_context(patch.object(self.mod, "notion_find_database_id", return_value="db_1"))
+                stack.enter_context(patch.object(self.mod, "collect_saints_window", return_value=saints))
+                stack.enter_context(patch.object(self.mod, "sync_saint_radar", return_value="existing:db_1"))
+                stack.enter_context(
+                    patch.object(self.mod, "collect_calendar_days_window", return_value=[{"date": "2026-03-03", "name": "Monday"}])
+                )
+                stack.enter_context(
+                    patch.object(self.mod, "build_primary_calendar_titles", return_value={"2026-03-03": "Monday"})
+                )
+                stack.enter_context(patch.object(self.mod, "notion_get_all_pages", return_value=[page]))
+                stack.enter_context(patch.object(self.mod, "find_target_notion_page", return_value=page))
+                stack.enter_context(patch.object(self.mod, "find_calendar_page_for_date", return_value=page))
+                stack.enter_context(patch.object(self.mod, "notion_has_autogen_section_marker", return_value=False))
+                stack.enter_context(patch.object(self.mod, "notion_remove_autogen_markers_from_other_pages_for_day"))
+                stack.enter_context(patch.object(self.mod, "notion_remove_old_autogen_sections_by_markers"))
+                stack.enter_context(patch.object(self.mod, "notion_append_children"))
+                stack.enter_context(patch.object(self.mod, "notion_get_autogen_audio_render_hash", return_value="render_hash_1"))
+                stack.enter_context(patch.object(self.mod, "notion_append_audio_block"))
+                stack.enter_context(patch.object(self.mod, "notion_update_audio_render_metadata"))
+                stack.enter_context(patch.object(self.mod, "mirror_calendar_page_to_novena_page", return_value="mirrored_novena:0"))
+                stack.enter_context(
+                    patch.object(
+                        self.mod,
+                        "ensure_saint_devotional_payload_cache",
+                        return_value=(devotional_payload, "generated", Path(tmpdir) / "payload.json"),
+                    )
+                )
+                stack.enter_context(patch.object(self.mod, "ensure_saint_novena_audio_library", return_value=audio_map))
+                truncate_mock = stack.enter_context(
+                    patch.object(
+                        self.mod,
+                        "truncate_managed_novena_audio_outputs",
+                        wraps=self.mod.truncate_managed_novena_audio_outputs,
+                    )
+                )
+                rc = self.mod.main()
+
+        self.assertEqual(rc, 0)
+        truncate_mock.assert_called_once()
+        self.assertFalse(stale_file.exists())
 
     def test_saint_novena_day_audio_fragments_keeps_configured_intercession(self):
         fragments = self.mod.saint_novena_day_audio_fragments(

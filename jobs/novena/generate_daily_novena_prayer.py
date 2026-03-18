@@ -4,6 +4,7 @@ import html
 import json
 import mimetypes
 import os
+import shutil
 import re
 import sys
 import time
@@ -1330,6 +1331,16 @@ def json_read(path: Path) -> Optional[Dict[str, Any]]:
 def json_write(path: Path, payload: Dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, ensure_ascii=True), encoding="utf-8")
+
+
+def truncate_managed_novena_audio_outputs(root: Path) -> int:
+    if not root.exists():
+        root.mkdir(parents=True, exist_ok=True)
+        return 0
+    removed = sum(1 for _ in root.rglob("*"))
+    shutil.rmtree(root)
+    root.mkdir(parents=True, exist_ok=True)
+    return removed
 
 
 def saint_novena_library_folder(root: Path, saint_name: str, feast_day: str) -> Path:
@@ -2741,6 +2752,9 @@ def main() -> int:
             force_refresh = bool_env(NOTION_SAINT_REFRESH_ALL, default=False)
             audio_enabled = bool_env(NOVENA_AUDIO_ENABLED, default=False)
             audio_settings = novena_audio_settings() if audio_enabled else {}
+            audio_truncated_outputs = 0
+            if audio_enabled:
+                audio_truncated_outputs = truncate_managed_novena_audio_outputs(novena_audio_library_dir())
             wrote_sections = 0
             wrote_audio = 0
             skipped_existing = 0
@@ -2979,6 +2993,7 @@ def main() -> int:
                     f"saint_radar_novena_day_by_day:sections={wrote_sections}:audio={wrote_audio}:"
                     f"payload_cached={payload_cached}:payload_generated={payload_generated}:"
                     f"library_cached={library_cached}:library_generated={library_generated}:"
+                    f"audio_truncated_outputs={audio_truncated_outputs}:"
                     f"skipped_existing={skipped_existing}:force_refresh={str(force_refresh).lower()}"
                 )
             if target_page:

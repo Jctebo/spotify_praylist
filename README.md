@@ -271,6 +271,7 @@ Optional variables:
 - `NOVENA_AUDIO_CAPTION` (default `Daily Novena Prayer (Audio)`)
 - `NOVENA_AUDIO_FAIL_OPEN` (default `true`; if `true`, text update continues even if audio upload fails)
 - `NOVENA_AUDIO_LIBRARY_DIR` (optional; default local root is `%USERPROFILE%\OneDrive\Praylist Audio\Novena Audio Library`; saint novena audio is prebuilt there with readable `day-01...day-09` filenames and JSON sidecars)
+- the daily novena job fully truncates that managed library root before regeneration so stale audio and payload files do not survive a rerun
 - saint-day novenas now cache two layers:
 - prompt payload JSON once per saint/feast window
 - the full 9-day audio set once per saint/feast window
