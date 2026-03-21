@@ -4467,12 +4467,12 @@ def page_audio_library_fragment_paths(
     return directory / f"{key_slug}.{clean_ext}", directory / f"{key_slug}.json"
 
 
-def page_audio_export_group_name(page: Dict[str, Any], *, config: Dict[str, Any]) -> str:
-    group_property = (
-        os.getenv(PAGE_AUDIO_LIBRARY_GROUP_PROPERTY, DEFAULT_PAGE_AUDIO_LIBRARY_GROUP_PROPERTY).strip()
-        or DEFAULT_PAGE_AUDIO_LIBRARY_GROUP_PROPERTY
-    )
-    return str(config.get("output_folder", "")).strip() or page_property_text(page, group_property).strip() or "Unassigned"
+def page_audio_export_group_name(page: Dict[str, Any], *, title_property: str, config: Dict[str, Any]) -> str:
+    output_folder = str(config.get("output_folder", "")).strip()
+    if output_folder:
+        return output_folder
+    title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip() or "page-audio"
+    raise RuntimeError(f'Row "{title}" is missing a valid "Output Folder" required for ordered Playlist Audio export.')
 
 
 def page_audio_export_entry_name(page: Dict[str, Any], *, title_property: str) -> str:
@@ -4487,7 +4487,7 @@ def page_audio_export_metadata(
     audio_format: str,
     config: Dict[str, Any],
 ) -> PageAudioExportMetadata:
-    folder_name = safe_path_component(page_audio_export_group_name(page, config=config), "Unassigned")
+    folder_name = safe_path_component(page_audio_export_group_name(page, title_property=title_property, config=config), "Unassigned")
     entry_name = page_audio_export_entry_name(page, title_property=title_property)
     order_property = resolve_top_level_order_property_name()
     order_value = page_property_number_or_none(page, order_property)
@@ -4499,8 +4499,8 @@ def page_audio_export_metadata(
         title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip() or "page-audio"
         raise RuntimeError(f'Row "{title}" has an invalid "{order_property}" for ordered Playlist Audio export.')
     file_stem = safe_path_component(
-        f"{folder_name} - {order_display} - {entry_name}",
-        slugify(f"{folder_name}-{order_display}-{entry_name}"),
+        f"{order_display} - {folder_name} - {entry_name}",
+        slugify(f"{order_display}-{folder_name}-{entry_name}"),
     )
     clean_ext = str(audio_format or "").strip().lstrip(".") or "bin"
     return PageAudioExportMetadata(

@@ -307,7 +307,7 @@ Purpose:
 - falls back to the legacy `Audio Configuration` field and then the legacy resolver field when the new properties are blank
 - builds a Notion audio block for `auto-audio` rows and syncs page body content for feed-backed rows
 - caches generated fragment audio under `.cache/page_audio`
-- exports the assembled files to `%USERPROFILE%\OneDrive\Praylist Audio\Playlist Audio\<Output Folder>\<FolderName - Order - EntryName>.mp3` by default
+- exports the assembled files to `%USERPROFILE%\OneDrive\Praylist Audio\Playlist Audio\<Output Folder>\<Order - FolderName - EntryName>.mp3`
 - writes the matching JSON sidecar with the same ordered stem
 - can truncate managed playlist-audio outputs locally before regeneration so stale ordered filenames disappear on the next OneDrive sync
 
@@ -407,7 +407,7 @@ Audio output row shape:
 - `Config Key` is still accepted for migration, but the job now turns it into a wrapper fragment internally
 - `Target Row`
 - `Audio Caption`
-- `Output Folder` to route exported daily files into the correct OneDrive subfolder
+- `Output Folder` is required to route exported daily files into the correct OneDrive subfolder
 - `Weekday Map` for outputs that vary by weekday, like the fragment-based rosary
 - `Enabled`
 

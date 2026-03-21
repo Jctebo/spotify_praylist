@@ -2051,6 +2051,7 @@ class TestPageAudioJob(unittest.TestCase):
         config = {
             "builder": "morning_prayer_v1",
             "audio_caption": "Morning Prayer (Audio)",
+            "output_folder": "Morning",
             "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
         }
         plan = self.mod.PageAudioPlan(
@@ -2119,8 +2120,8 @@ class TestPageAudioJob(unittest.TestCase):
                     base_url="https://api.openai.com/v1",
                 )
 
-            audio_path = Path(tmp_dir) / "Morning" / "Morning - 1.01 - Bible in a Year.mp3"
-            meta_path = Path(tmp_dir) / "Morning" / "Morning - 1.01 - Bible in a Year.json"
+            audio_path = Path(tmp_dir) / "Morning" / "1.01 - Morning - Bible in a Year.mp3"
+            meta_path = Path(tmp_dir) / "Morning" / "1.01 - Morning - Bible in a Year.json"
             self.assertTrue(audio_path.exists())
             self.assertTrue(meta_path.exists())
             payload = json.loads(meta_path.read_text(encoding="utf-8"))
@@ -2129,7 +2130,7 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(payload["output_folder"], "Morning")
         self.assertEqual(payload["render_hash"], render_hash)
         self.assertEqual(payload["export_order_display"], "1.01")
-        self.assertEqual(payload["export_stem"], "Morning - 1.01 - Bible in a Year")
+        self.assertEqual(payload["export_stem"], "1.01 - Morning - Bible in a Year")
 
     def test_page_audio_export_metadata_requires_valid_order(self):
         page = {
@@ -2147,6 +2148,28 @@ class TestPageAudioJob(unittest.TestCase):
         }
 
         with self.assertRaisesRegex(RuntimeError, 'missing a valid "Order"'):
+            self.mod.page_audio_export_metadata(
+                page,
+                title_property="Name",
+                audio_format="mp3",
+                config=config,
+            )
+
+    def test_page_audio_export_metadata_requires_output_folder(self):
+        page = {
+            "id": "page_1",
+            "properties": {
+                "Name": _title_prop("Bible in a Year"),
+                "Order": _number_prop(1.01),
+            },
+        }
+        config = {
+            "builder": "rss_audio_v1",
+            "audio_caption": "Bible in a Year (Audio)",
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+        }
+
+        with self.assertRaisesRegex(RuntimeError, 'missing a valid "Output Folder"'):
             self.mod.page_audio_export_metadata(
                 page,
                 title_property="Name",
@@ -2178,7 +2201,7 @@ class TestPageAudioJob(unittest.TestCase):
         )
 
         self.assertEqual(metadata.order_display, "2")
-        self.assertEqual(metadata.file_stem, "Morning - 2 - Morning Prayer")
+        self.assertEqual(metadata.file_stem, "2 - Morning - Morning Prayer")
 
     def test_validate_unique_page_audio_export_targets_rejects_duplicate_stems(self):
         first = self.mod.PageAudioExportMetadata(
@@ -2186,7 +2209,7 @@ class TestPageAudioJob(unittest.TestCase):
             entry_name="Morning Prayer",
             order_value=1.01,
             order_display="1.01",
-            file_stem="Morning - 1.01 - Morning Prayer",
+            file_stem="1.01 - Morning - Morning Prayer",
             audio_extension="mp3",
         )
         second = self.mod.PageAudioExportMetadata(
@@ -2194,7 +2217,7 @@ class TestPageAudioJob(unittest.TestCase):
             entry_name="Morning Prayer",
             order_value=1.01,
             order_display="1.01",
-            file_stem="Morning - 1.01 - Morning Prayer",
+            file_stem="1.01 - Morning - Morning Prayer",
             audio_extension="mp3",
         )
 
@@ -2209,23 +2232,23 @@ class TestPageAudioJob(unittest.TestCase):
             entry_name="Morning Prayer",
             order_value=1.01,
             order_display="1.01",
-            file_stem="Morning - 1.01 - Morning Prayer",
+            file_stem="1.01 - Morning - Morning Prayer",
             audio_extension="mp3",
         )
 
         with tempfile.TemporaryDirectory() as tmp_dir:
             morning_dir = Path(tmp_dir) / "Morning"
             morning_dir.mkdir(parents=True, exist_ok=True)
-            (morning_dir / "Morning - 1.01 - Morning Prayer.mp3").write_bytes(b"audio")
-            (morning_dir / "Morning - 1.01 - Morning Prayer.json").write_text("{}", encoding="utf-8")
+            (morning_dir / "1.01 - Morning - Morning Prayer.mp3").write_bytes(b"audio")
+            (morning_dir / "1.01 - Morning - Morning Prayer.json").write_text("{}", encoding="utf-8")
             (morning_dir / "keep.txt").write_text("notes", encoding="utf-8")
 
             with temp_env({"PAGE_AUDIO_LIBRARY_DIR": tmp_dir}):
                 removed = self.mod.truncate_managed_page_audio_outputs([("Morning Prayer", metadata)])
 
             self.assertEqual(removed, 2)
-            self.assertFalse((morning_dir / "Morning - 1.01 - Morning Prayer.mp3").exists())
-            self.assertFalse((morning_dir / "Morning - 1.01 - Morning Prayer.json").exists())
+            self.assertFalse((morning_dir / "1.01 - Morning - Morning Prayer.mp3").exists())
+            self.assertFalse((morning_dir / "1.01 - Morning - Morning Prayer.json").exists())
             self.assertTrue((morning_dir / "keep.txt").exists())
 
     def test_compute_page_render_hash_ignores_cache_promotion_kind(self):
@@ -2336,7 +2359,10 @@ class TestPageAudioJob(unittest.TestCase):
             "assembly_mode": self.mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS,
             "text_sync_mode": self.mod.OPUS_DEI_TEXT_SYNC_MODE_NONE,
             "text_property": "Description",
-            "audio_config": {"tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}},
+            "audio_config": {
+                "output_folder": "Morning",
+                "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            },
             "fragment_specs": [{"label": "Morning Offering", "kind": self.mod.FRAGMENT_TYPE_TEXT}],
         }
         with temp_env(env):
@@ -2609,6 +2635,7 @@ class TestPageAudioJob(unittest.TestCase):
             "audio_config": {
                 "audio_caption": "Evening Prayer (Audio)",
                 "silence_ms": 450,
+                "output_folder": "Evening",
                 "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
             },
             "fragment_specs": [{"label": "Evening Audio", "kind": self.mod.FRAGMENT_KIND_SOURCE_AUDIO}],
