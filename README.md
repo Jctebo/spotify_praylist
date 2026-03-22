@@ -20,7 +20,6 @@ Optional variables:
 
 ## Files
 - `jobs/playlist/refresh_playlist.py`: main script (token refresh + playlist update)
-- `jobs/notion/sync_notion_completions.py`: hourly sync to mark Notion prayer rows as completed from Spotify listening
 - `jobs/notion/reset_notion_completions.py`: daily reset to uncheck all Notion completion checkboxes
 - `jobs/novena/generate_daily_novena_prayer.py`: generates a daily novena litany from Romcal saints + OpenAI and writes to Notion
 - `jobs/novena/sync_liturgical_calendar.py`: syncs Liturgical Calendar Notion rows from Romcal over a date range (yearly job)
@@ -32,7 +31,6 @@ Optional variables:
 - `scripts/setup_notion_playlists.ps1`: creates/populates the Notion playlists database and backfills the main `Playlist` field
 - `scripts/setup_novena.ps1`: Romcal + OpenAI + Notion setup wizard for daily novena generation
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml`
-- `scripts/run_hourly_notion_sync_local.ps1`: local mirror of `.github/workflows/hourly_notion_sync.yml`
 - `scripts/run_daily_notion_reset_local.ps1`: local mirror of `.github/workflows/daily_notion_reset.yml`
 - `scripts/run_daily_novena_prayer_local.ps1`: local runner for daily novena prayer generation
 - `scripts/run_daily_devotional_image_local.ps1`: local runner for saint devotional image generation
@@ -46,14 +44,13 @@ Optional variables:
 - `sync/build_devotional_image_distribution_bundle.ps1`: builds a `sync\public` + `sync\client` distribution folder
 - `requirements.txt`: Python dependencies
 - `.github/workflows/daily.yml`: daily + manual GitHub Actions workflow
-- `.github/workflows/hourly_notion_sync.yml`: manual Notion completion sync workflow
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
 - `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with rclone upload to OneDrive
 - `.github/workflows/liturgical_calendar_yearly_sync.yml`: Jan 1 + manual Liturgical Calendar population
 
 ## Config Timezone
 - `config/playlist_config.json` supports top-level `utc_offset` in legacy file mode.
-- `JOB_UTC_OFFSET` can override offset at runtime for both daily refresh and hourly sync.
+- `JOB_UTC_OFFSET` can override offset at runtime for date-based jobs.
 - `jobs/playlist/refresh_playlist.py` uses this for all date-based episode selection.
 - Default is CST (`-06:00`) when not set.
 
@@ -159,55 +156,6 @@ Queue-related environment variables:
 - `NOTION_QUEUE_RESOLVER_PROPERTY` (default `Spotify Resolver`)
 - `NOTION_QUEUE_FALLBACK_PROPERTY` (default `Spotify Fallback Resolver`)
 - `NOTION_QUEUE_ENABLED_PROPERTY` (default `Enabled`)
-
-## Notion Completion Sync (Manual)
-Purpose:
-- updates existing rows in your Notion `Opus Dei` database by checking `Completed` when Spotify listening matches configured prayer mappings
-- quiet-hours guard: hourly sync skips between 11:00 PM and 4:00 AM (job local time from `JOB_UTC_OFFSET` or `config/playlist_config.json` `utc_offset`)
-
-How matching works:
-- script reads recent Spotify listening history (default last 3 hours)
-- script reads `config/notion_spotify_sync_config.json`
-- if any `match_any` term is found in recent Spotify item text, the matching Notion row (`notion_name`) is marked completed
-- mapping rows can use `playlists` (preferred) or legacy `profiles` to scope matching
-- script only checks rows; it does not uncheck rows
-- rows with platform value `Spotify-TimeSync` are currently ignored (feature removed)
-
-Required for this script:
-- Spotify token must include `user-read-recently-played` scope
-- Spotify token should also include `user-read-currently-playing` scope
-- `NOTION_TOKEN` secret
-- `NOTION_DATABASE_ID` secret (recommended)
-
-Optional variables/secrets:
-- `NOTION_DATABASE_NAME` (fallback lookup; default `Opus Dei`)
-- `NOTION_TITLE_PROPERTY` (default `Name`)
-- `NOTION_COMPLETED_PROPERTY` (default `Completed`)
-- `NOTION_PLATFORM_PROPERTY` (default `Platform`, used by daily refresh URI sync)
-- `NOTION_PLATFORM_SPOTIFY_VALUE` (default `spotify`, case-insensitive filter)
-- `NOTION_PLATFORM_NOSYNC_VALUE` (default `spotify-nosync`, skip automation)
-- `NOTION_URI_PROPERTY` (default `URI`, used for URI-based completion matching)
-- `NOTION_URI_STRICT_MATCH` (default `false`; set `true` to require URI-only matches for rows with URI)
-- `SPOTIFY_RECENT_LOOKBACK_HOURS` (default `3`, range `1-24`)
-- `SPOTIFY_RECENT_WINDOW_MODE` (default `today`; `today` means midnight-to-now in job timezone, `rolling` uses lookback hours)
-- `SPOTIFY_NOTION_SYNC_CONFIG` (default `config/notion_spotify_sync_config.json`)
-- `JOB_UTC_OFFSET` (optional runtime override for local/GitHub job timezone offset, e.g. `-06:00`)
-
-GitHub setup for manual workflow:
-1. Add secrets:
-- `SPOTIFY_CLIENT_ID`
-- `SPOTIFY_CLIENT_SECRET`
-- `SPOTIFY_REFRESH_TOKEN`
-- `NOTION_TOKEN`
-- `NOTION_DATABASE_ID` (recommended)
-2. Add optional repository variables:
-- `NOTION_DATABASE_NAME`
-- `NOTION_TITLE_PROPERTY`
-- `NOTION_COMPLETED_PROPERTY`
-- `SPOTIFY_RECENT_LOOKBACK_HOURS`
-- `JOB_UTC_OFFSET`
-3. Ensure your Notion integration is connected to the `Opus Dei` database.
-4. Run `.github/workflows/hourly_notion_sync.yml` manually when you want sync behavior.
 
 ## Daily Notion Reset
 Purpose:
@@ -649,9 +597,6 @@ Run local equivalents of each GitHub Action workflow:
 # Daily refresh workflow mirror
 .\scripts\run_daily_refresh_local.ps1
 
-# Hourly notion sync workflow mirror
-.\scripts\run_hourly_notion_sync_local.ps1
-
 # Daily notion reset workflow mirror
 .\scripts\run_daily_notion_reset_local.ps1
 
@@ -711,7 +656,6 @@ Verbose mode:
 
 Coverage:
 - `jobs/playlist/refresh_playlist.py` main flow and playlist recreate chunking (`PUT/POST /items`)
-- `jobs/notion/sync_notion_completions.py` main flow, quiet-hours short-circuit, and URI strict/fallback behavior
 - `jobs/notion/reset_notion_completions.py` checkbox reset behavior and schema error handling
 - `jobs/novena/generate_daily_novena_prayer.py` saint-window selection and Notion write mode behavior
 

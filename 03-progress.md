@@ -11,12 +11,15 @@
 - [x] Add regression tests for special Sundays, Easter Octave, and ordinary solemnities
 - [x] Run the focused verification suite
 - [x] Update the progress note with final results
+- [x] Remove the hourly Notion sync job, test, and runner at user request
+- [x] Remove README references to the hourly sync workflow
 
 ## Completed Work
 - Added a synthetic Romcal overlay child calendar that inherits from the requested calendar and applies the explicit special-Sunday rows.
 - Centralized celebration-rank normalization so the shared novena collectors and the devotional image selector both see the same app-facing rank view.
 - Expanded the devotional image candidate allowlist to keep Easter Octave entries eligible.
 - Added regression tests for the overlay calendar, named special Sundays, Easter Octave, Christmas, Pentecost, Christ the King, and ordinary Sundays.
+- Removed the hourly Notion sync job, its tests, the local runner, and the README instructions for it.
 
 ## Deviations
 - The shared rank helper now performs the final special-Sunday normalization as well, because the installed Romcal 4.0.0b6 build does not consistently honor a precedence-only child override for every computed Sunday row.
@@ -28,6 +31,9 @@
 - `py -3 -m unittest tests.test_novena_job`
 - `py -3 -m unittest tests.test_devotional_image_job`
 - Both focused suites passed locally.
+- `py -3 -m unittest tests.test_sync_job`
+- `py -3 -m unittest`
+- Full suite passed after restoring and then removing the hourly sync feature intentionally.
 
 ## Follow-Ups
 - Run the focused novena and devotional-image unit tests.
