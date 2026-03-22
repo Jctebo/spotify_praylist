@@ -1,5 +1,17 @@
 # Release Log
 
+## [0.0.5.0] - 2026-03-22
+
+### Changed
+- Migrated the repo onto the `docs/releases/` workflow artifacts so release planning, progress, QA, and shipped context now live in one canonical location.
+- Carried forward the consolidated historical release context from the old `release/releaselog.md` source into the new release-folder contract.
+- Documented Morning Prayer detailed fragments as a stable-key workflow where `Fragment Key` is the runtime identity and the row title can evolve independently.
+
+### Fixed
+- Fixed Morning Prayer detailed-fragment validation so it now matches required contract rows by stable key instead of exact display label.
+- Fixed Morning Prayer migration/preflight matching so existing rows with the correct canonical key can be relinked even after a title rename such as `Petition - Church` -> `Petition - Right Use of Technology`.
+- Added regression coverage for renamed-label acceptance, missing-key rejection, and explicit detailed-fragment key preference in the page-audio and migration suites.
+
 ## Enhancement 000: Morning Prayer Fragment Migration
 - Moved Morning Prayer planning from the legacy audio-composition path toward the two-list Opus Dei + Detailed Fragments model.
 - Captured the migration boundary for Morning Prayer, including the required fragment set and the need to avoid orphaned legacy fragment rows.
