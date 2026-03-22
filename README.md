@@ -233,6 +233,7 @@ Purpose:
 
 Script:
 - `jobs/novena/generate_daily_novena_prayer.py`
+- the shared Romcal helper now builds a synthetic child calendar on top of the selected calendar id, normalizes named special Sundays to `solemnity`, and carries Easter Octave weekdays as the app-level pseudo-rank `solemnity-easter octave`
 
 Starter config:
 - copy values from [.env.example](c:/Users/jcteb/Code/spotify_praylist/.env.example) into your local environment or secret store; the novena/audio section now includes the render-hash metadata properties
@@ -456,7 +457,7 @@ Optional variables:
 ## Daily Devotional Image Generation
 Purpose:
 - selects all unseen eligible celebrations from the same 9-day Romcal window (or one date when `DEVOTIONAL_TARGET_DATE` is set)
-- eligible ranks: `solemnity`, `feast`, `memorial`, `optional_memorial`
+- eligible ranks: `solemnity`, `solemnity-easter octave`, `feast`, `memorial`, `optional_memorial`
 - skips already-generated entries by parsing existing filenames
 - generates a high-finish devotional image prompt from saint subject
 - creates an image with OpenAI image generation

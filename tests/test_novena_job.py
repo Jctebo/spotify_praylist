@@ -236,6 +236,44 @@ class TestNovenaJob(unittest.TestCase):
         self.assertEqual(len(saints), 1)
         self.assertEqual(saints[0]["name"], "Tuesday of Lent")
 
+    def test_build_romcal_wraps_requested_calendar_in_overlay_child(self):
+        romcal = self.mod.build_romcal("argentina", "en")
+
+        self.assertEqual(romcal.calendar, "argentina__enhancement_003")
+
+    def test_collect_calendar_days_window_normalizes_special_sundays_and_keeps_regressions(self):
+        cases = {
+            "2026-01-04": "solemnity",
+            "2026-01-18": "Sunday",
+            "2026-01-25": "solemnity",
+            "2026-03-29": "solemnity",
+            "2026-04-05": "solemnity",
+            "2026-04-06": "solemnity-easter octave",
+            "2026-04-12": "solemnity",
+            "2026-05-24": "solemnity",
+            "2026-11-22": "solemnity",
+            "2026-12-25": "solemnity",
+        }
+
+        for ds, expected_rank in cases.items():
+            with self.subTest(date=ds):
+                rows = self.mod.collect_calendar_days_window(
+                    "general_roman",
+                    "en",
+                    datetime.date.fromisoformat(ds),
+                    0,
+                )
+                self.assertEqual(rows[0]["celebration_rank"], expected_rank)
+
+    def test_infer_celebration_rank_maps_easter_octave_precedence_to_pseudo_rank(self):
+        event = {
+            "id": "easter_monday",
+            "rank_name": "solemnity",
+            "precedence": "Precedence.weekday_of_easter_octave_2",
+        }
+
+        self.assertEqual(self.mod.infer_celebration_rank(event), "solemnity-easter octave")
+
     def test_write_prayer_to_notion_page_uses_rich_text_property(self):
         page = {
             "id": "page_1",
