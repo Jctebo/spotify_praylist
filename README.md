@@ -20,7 +20,6 @@ Optional variables:
 
 ## Files
 - `jobs/playlist/refresh_playlist.py`: main script (token refresh + playlist update)
-- `jobs/notion/sync_notion_completions.py`: hourly sync to mark Notion prayer rows as completed from Spotify listening
 - `jobs/notion/reset_notion_completions.py`: daily reset to uncheck all Notion completion checkboxes
 - `jobs/novena/generate_daily_novena_prayer.py`: generates a daily novena litany from Romcal saints + OpenAI and writes to Notion
 - `jobs/novena/sync_liturgical_calendar.py`: syncs Liturgical Calendar Notion rows from Romcal over a date range (yearly job)
@@ -32,7 +31,6 @@ Optional variables:
 - `scripts/setup_notion_playlists.ps1`: creates/populates the Notion playlists database and backfills the main `Playlist` field
 - `scripts/setup_novena.ps1`: Romcal + OpenAI + Notion setup wizard for daily novena generation
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml`
-- `scripts/run_hourly_notion_sync_local.ps1`: local mirror of `.github/workflows/hourly_notion_sync.yml`
 - `scripts/run_daily_notion_reset_local.ps1`: local mirror of `.github/workflows/daily_notion_reset.yml`
 - `scripts/run_daily_novena_prayer_local.ps1`: local runner for daily novena prayer generation
 - `scripts/run_daily_devotional_image_local.ps1`: local runner for saint devotional image generation
@@ -45,15 +43,15 @@ Optional variables:
 - `sync/build_devotional_public_tree.py`: filters the OneDrive-oriented devotional manifest tree into a public current-only export
 - `sync/build_devotional_image_distribution_bundle.ps1`: builds a `sync\public` + `sync\client` distribution folder
 - `requirements.txt`: Python dependencies
+- `release/releaselog.md`: consolidated release log for shipped bug work
 - `.github/workflows/daily.yml`: daily + manual GitHub Actions workflow
-- `.github/workflows/hourly_notion_sync.yml`: manual Notion completion sync workflow
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
 - `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with rclone upload to OneDrive
 - `.github/workflows/liturgical_calendar_yearly_sync.yml`: Jan 1 + manual Liturgical Calendar population
 
 ## Config Timezone
 - `config/playlist_config.json` supports top-level `utc_offset` in legacy file mode.
-- `JOB_UTC_OFFSET` can override offset at runtime for both daily refresh and hourly sync.
+- `JOB_UTC_OFFSET` can override offset at runtime for date-based jobs.
 - `jobs/playlist/refresh_playlist.py` uses this for all date-based episode selection.
 - Default is CST (`-06:00`) when not set.
 
@@ -160,55 +158,6 @@ Queue-related environment variables:
 - `NOTION_QUEUE_FALLBACK_PROPERTY` (default `Spotify Fallback Resolver`)
 - `NOTION_QUEUE_ENABLED_PROPERTY` (default `Enabled`)
 
-## Notion Completion Sync (Manual)
-Purpose:
-- updates existing rows in your Notion `Opus Dei` database by checking `Completed` when Spotify listening matches configured prayer mappings
-- quiet-hours guard: hourly sync skips between 11:00 PM and 4:00 AM (job local time from `JOB_UTC_OFFSET` or `config/playlist_config.json` `utc_offset`)
-
-How matching works:
-- script reads recent Spotify listening history (default last 3 hours)
-- script reads `config/notion_spotify_sync_config.json`
-- if any `match_any` term is found in recent Spotify item text, the matching Notion row (`notion_name`) is marked completed
-- mapping rows can use `playlists` (preferred) or legacy `profiles` to scope matching
-- script only checks rows; it does not uncheck rows
-- rows with platform value `Spotify-TimeSync` are currently ignored (feature removed)
-
-Required for this script:
-- Spotify token must include `user-read-recently-played` scope
-- Spotify token should also include `user-read-currently-playing` scope
-- `NOTION_TOKEN` secret
-- `NOTION_DATABASE_ID` secret (recommended)
-
-Optional variables/secrets:
-- `NOTION_DATABASE_NAME` (fallback lookup; default `Opus Dei`)
-- `NOTION_TITLE_PROPERTY` (default `Name`)
-- `NOTION_COMPLETED_PROPERTY` (default `Completed`)
-- `NOTION_PLATFORM_PROPERTY` (default `Platform`, used by daily refresh URI sync)
-- `NOTION_PLATFORM_SPOTIFY_VALUE` (default `spotify`, case-insensitive filter)
-- `NOTION_PLATFORM_NOSYNC_VALUE` (default `spotify-nosync`, skip automation)
-- `NOTION_URI_PROPERTY` (default `URI`, used for URI-based completion matching)
-- `NOTION_URI_STRICT_MATCH` (default `false`; set `true` to require URI-only matches for rows with URI)
-- `SPOTIFY_RECENT_LOOKBACK_HOURS` (default `3`, range `1-24`)
-- `SPOTIFY_RECENT_WINDOW_MODE` (default `today`; `today` means midnight-to-now in job timezone, `rolling` uses lookback hours)
-- `SPOTIFY_NOTION_SYNC_CONFIG` (default `config/notion_spotify_sync_config.json`)
-- `JOB_UTC_OFFSET` (optional runtime override for local/GitHub job timezone offset, e.g. `-06:00`)
-
-GitHub setup for manual workflow:
-1. Add secrets:
-- `SPOTIFY_CLIENT_ID`
-- `SPOTIFY_CLIENT_SECRET`
-- `SPOTIFY_REFRESH_TOKEN`
-- `NOTION_TOKEN`
-- `NOTION_DATABASE_ID` (recommended)
-2. Add optional repository variables:
-- `NOTION_DATABASE_NAME`
-- `NOTION_TITLE_PROPERTY`
-- `NOTION_COMPLETED_PROPERTY`
-- `SPOTIFY_RECENT_LOOKBACK_HOURS`
-- `JOB_UTC_OFFSET`
-3. Ensure your Notion integration is connected to the `Opus Dei` database.
-4. Run `.github/workflows/hourly_notion_sync.yml` manually when you want sync behavior.
-
 ## Daily Notion Reset
 Purpose:
 - unchecks all rows in your Notion `Completed` checkbox column so each day starts fresh
@@ -233,6 +182,7 @@ Purpose:
 
 Script:
 - `jobs/novena/generate_daily_novena_prayer.py`
+- the shared Romcal helper now builds a synthetic child calendar on top of the selected calendar id, normalizes named special Sundays to `solemnity`, and carries Easter Octave weekdays as the app-level pseudo-rank `solemnity-easter octave`
 
 Starter config:
 - copy values from [.env.example](c:/Users/jcteb/Code/spotify_praylist/.env.example) into your local environment or secret store; the novena/audio section now includes the render-hash metadata properties
@@ -314,6 +264,7 @@ Purpose:
 Current config:
 - `Morning Prayer` now runs from the two-list `Opus Dei` + owner-linked `Detailed Fragments` model
 - required Morning Prayer fragments are owner-linked `Audio Fragments` rows for the static prayers, `Monthly Intention`, and `Daily Novena Audio`
+- Morning Prayer contract rows should carry stable `Fragment Key` values; the key is the runtime identity, while the row title can be edited for display text
 - `Text Sync Mode = page_content` remains the intended Morning Prayer behavior, and the job preserves its current working block/template path instead of forcing it into the generic managed-section sync
 - legacy `MORNING_PRAYER_OUTPUT` / wrapper / sequence rows can remain as migration references, but they are no longer the active runtime source of truth
 - `DIVINE_OFFICE_INVITATORY_OUTPUT` in `Audio Outputs`
@@ -388,6 +339,7 @@ Environment variables:
 Audio fragment row shape:
 - `Name`
 - `Fragment Key`
+- for Morning Prayer contract rows, treat `Fragment Key` as required and stable across title/content edits
 - `Fragment Type` optional; defaults from the populated fields
 - `Spoken Text` for fixed text fragments
 - `Prompt` for LLM-backed fragments
@@ -456,7 +408,7 @@ Optional variables:
 ## Daily Devotional Image Generation
 Purpose:
 - selects all unseen eligible celebrations from the same 9-day Romcal window (or one date when `DEVOTIONAL_TARGET_DATE` is set)
-- eligible ranks: `solemnity`, `feast`, `memorial`, `optional_memorial`
+- eligible ranks: `solemnity`, `solemnity-easter octave`, `feast`, `memorial`, `optional_memorial`
 - skips already-generated entries by parsing existing filenames
 - generates a high-finish devotional image prompt from saint subject
 - creates an image with OpenAI image generation
@@ -527,7 +479,7 @@ Local OneDrive upload env (User or Process):
 - `AZURE_TENANT_ID`
 - `AZURE_CLIENT_ID`
 - `AZURE_CLIENT_SECRET` (for service principal login)
-- `DEVOTIONAL_ONEDRIVE_REMOTE_ROOT` (default `Pictures/Samsung Gallery/DCIM`)
+- `DEVOTIONAL_ONEDRIVE_REMOTE_ROOT` (optional legacy novena backfill root)
 
 Client sync without OneDrive:
 
@@ -648,9 +600,6 @@ Run local equivalents of each GitHub Action workflow:
 # Daily refresh workflow mirror
 .\scripts\run_daily_refresh_local.ps1
 
-# Hourly notion sync workflow mirror
-.\scripts\run_hourly_notion_sync_local.ps1
-
 # Daily notion reset workflow mirror
 .\scripts\run_daily_notion_reset_local.ps1
 
@@ -710,7 +659,6 @@ Verbose mode:
 
 Coverage:
 - `jobs/playlist/refresh_playlist.py` main flow and playlist recreate chunking (`PUT/POST /items`)
-- `jobs/notion/sync_notion_completions.py` main flow, quiet-hours short-circuit, and URI strict/fallback behavior
 - `jobs/notion/reset_notion_completions.py` checkbox reset behavior and schema error handling
 - `jobs/novena/generate_daily_novena_prayer.py` saint-window selection and Notion write mode behavior
 

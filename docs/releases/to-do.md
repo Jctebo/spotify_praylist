@@ -1,0 +1,4 @@
+- Novena Audio for Monday, Tuesday of Holy Week - Why is it picking up in Novena? Day is a weekday. 
+- Calendar Sync to Liturgical Calendar
+- Clean-up of Non-Used Configuration
+- Refactor of Audio Fragments

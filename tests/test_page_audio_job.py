@@ -40,6 +40,7 @@ def _morning_prayer_two_list_specs(mod):
     for item in mod.morning_prayer_contract_items():
         specs.append(
             {
+                "key": item["key"],
                 "label": item["label"],
                 "kind": item["kind"],
                 "group": item["group"],
@@ -1680,6 +1681,34 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual([fragment.label for fragment in plan.fragments], ["Intro"])
         self.assertEqual(plan.text_target, "page_content")
         self.assertEqual([block["type"] for block in plan.content_blocks], ["toggle"])
+
+    def test_morning_prayer_contract_errors_accepts_renamed_labels_with_stable_keys(self):
+        specs = _morning_prayer_two_list_specs(self.mod)
+        for spec in specs:
+            if spec["key"] == "petition-church":
+                spec["label"] = "Petition - Right Use of Technology"
+                break
+
+        self.assertEqual(self.mod.morning_prayer_contract_errors(specs), [])
+
+    def test_morning_prayer_contract_errors_rejects_missing_required_key(self):
+        specs = [spec for spec in _morning_prayer_two_list_specs(self.mod) if spec["key"] != "petition-church"]
+
+        self.assertIn(
+            "missing fragment 'petition-church' (Petition - Church)",
+            self.mod.morning_prayer_contract_errors(specs),
+        )
+
+    def test_detailed_fragment_key_prefers_explicit_fragment_key_property(self):
+        page = {
+            "id": "page_1",
+            "properties": {
+                "Name": _title_prop("Petition - Right Use of Technology"),
+                "Fragment Key": _rich_text_prop("petition-church"),
+            },
+        }
+
+        self.assertEqual(self.mod.detailed_fragment_key(page), "petition-church")
 
     def test_build_fragment_output_plan_rejects_fragment_cycles(self):
         page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer"), "Order": _number_prop(1.0)}}

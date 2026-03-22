@@ -275,21 +275,26 @@ ASSEMBLY_ROLE_FALLBACK_SOURCE = "fallback_source"
 MORNING_PRAYER_TITLE = "Morning Prayer"
 MORNING_PRAYER_FRAGMENT_GROUP = "morning_prayer"
 MORNING_PRAYER_DAILY_NOVENA_GROUP = "daily_novena"
-MORNING_PRAYER_FRAGMENT_CONTRACT: Sequence[tuple[str, str, str]] = (
-    ("Morning Offering", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("Daily Consecration", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("Baptismal Renewal", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("Petitions Intro", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("Monthly Intention", FRAGMENT_TYPE_MONTHLY_INTENTION, AUDIO_FRAGMENT_MONTHLY_COLLECTION),
-    ("Petition - Families", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("Petition - Marriages", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("Petition - Conversion", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("Petition - Technology", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("Petition - Church", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("Petition - Sanctification of the Church", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("Petition - Sick and Departed", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("Daily Novena Audio", FRAGMENT_TYPE_DAILY_NOVENA_AUDIO, MORNING_PRAYER_DAILY_NOVENA_GROUP),
-    ("Intercessory Litany", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+MORNING_PRAYER_FRAGMENT_CONTRACT: Sequence[tuple[str, str, str, str]] = (
+    ("morning-offering", "Morning Offering", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("daily-consecration", "Daily Consecration", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("baptismal-renewal", "Baptismal Renewal", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("petitions-intro", "Petitions Intro", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("monthly-intention", "Monthly Intention", FRAGMENT_TYPE_MONTHLY_INTENTION, AUDIO_FRAGMENT_MONTHLY_COLLECTION),
+    ("petition-families", "Petition - Families", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("petition-marriages", "Petition - Marriages", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("petition-conversion", "Petition - Conversion", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("petition-technology", "Petition - Technology", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("petition-church", "Petition - Church", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    (
+        "petition-sanctification-of-the-church",
+        "Petition - Sanctification of the Church",
+        FRAGMENT_TYPE_TEXT,
+        MORNING_PRAYER_FRAGMENT_GROUP,
+    ),
+    ("petition-sick-and-departed", "Petition - Sick and Departed", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("daily-novena-audio", "Daily Novena Audio", FRAGMENT_TYPE_DAILY_NOVENA_AUDIO, MORNING_PRAYER_DAILY_NOVENA_GROUP),
+    ("intercessory-litany", "Intercessory Litany", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
 )
 
 
@@ -1329,9 +1334,10 @@ def is_morning_prayer_title(title: str) -> bool:
 
 def morning_prayer_contract_items() -> List[Dict[str, Any]]:
     items: List[Dict[str, Any]] = []
-    for index, (label, kind, group) in enumerate(MORNING_PRAYER_FRAGMENT_CONTRACT, start=1):
+    for index, (key, label, kind, group) in enumerate(MORNING_PRAYER_FRAGMENT_CONTRACT, start=1):
         items.append(
             {
+                "key": key,
                 "label": label,
                 "kind": kind,
                 "group": group,
@@ -1347,6 +1353,14 @@ def spec_fragment_label(spec: Dict[str, Any]) -> str:
         str(spec.get("label", "")).strip()
         or str(spec.get("title", "")).strip()
         or str(spec.get(AUDIO_FRAGMENT_TITLE_PROPERTY, "")).strip()
+    )
+
+
+def spec_fragment_key(spec: Dict[str, Any]) -> str:
+    return (
+        str(spec.get("key", "")).strip()
+        or str(spec.get(AUDIO_FRAGMENT_KEY_PROPERTY, "")).strip()
+        or slugify(spec_fragment_label(spec))
     )
 
 
@@ -1381,27 +1395,33 @@ def morning_prayer_contract_errors(specs: Sequence[Dict[str, Any]]) -> List[str]
     matched_orders: List[tuple[str, float]] = []
     items = morning_prayer_contract_items()
     for item in items:
-        label_matches = [spec for spec in specs if normalize_flag_value(spec_fragment_label(spec)) == normalize_flag_value(item["label"])]
-        if not label_matches:
-            errors.append(f"missing fragment '{item['label']}'")
+        key_matches = [spec for spec in specs if normalize_flag_value(spec_fragment_key(spec)) == normalize_flag_value(item["key"])]
+        if not key_matches:
+            errors.append(f"missing fragment '{item['key']}' ({item['label']})")
             continue
-        if len(label_matches) > 1:
-            errors.append(f"duplicate fragment '{item['label']}'")
+        if len(key_matches) > 1:
+            errors.append(f"duplicate fragment '{item['key']}' ({item['label']})")
             continue
-        match = label_matches[0]
+        match = key_matches[0]
         actual_kind = spec_fragment_kind(match)
         if actual_kind != item["kind"]:
-            errors.append(f"fragment '{item['label']}' has kind '{actual_kind or 'missing'}' instead of '{item['kind']}'")
+            errors.append(
+                f"fragment '{item['key']}' ({item['label']}) has kind '{actual_kind or 'missing'}' instead of '{item['kind']}'"
+            )
         actual_group = normalize_flag_value(spec_fragment_group(match))
         expected_group = normalize_flag_value(str(item["group"]))
         if expected_group and actual_group != expected_group:
-            errors.append(f"fragment '{item['label']}' has group '{spec_fragment_group(match) or 'missing'}' instead of '{item['group']}'")
+            errors.append(
+                f"fragment '{item['key']}' ({item['label']}) has group '{spec_fragment_group(match) or 'missing'}' instead of '{item['group']}'"
+            )
         actual_role = normalize_fragment_assembly_role(
             str(match.get("assembly_role", "")).strip() or str(match.get(DETAILED_FRAGMENT_ASSEMBLY_ROLE_PROPERTY, "")).strip()
         ) or ASSEMBLY_ROLE_APPEND
         if actual_role != item["assembly_role"]:
-            errors.append(f"fragment '{item['label']}' has assembly role '{actual_role}' instead of '{item['assembly_role']}'")
-        matched_orders.append((item["label"], spec_fragment_order(match)))
+            errors.append(
+                f"fragment '{item['key']}' ({item['label']}) has assembly role '{actual_role}' instead of '{item['assembly_role']}'"
+            )
+        matched_orders.append((item["key"], spec_fragment_order(match)))
     previous_label = ""
     previous_order: Optional[float] = None
     for label, order in matched_orders:
@@ -1441,6 +1461,9 @@ def opus_dei_row_audio_config(page: Dict[str, Any], *, title_property: str) -> D
 
 
 def detailed_fragment_key(page: Dict[str, Any]) -> str:
+    explicit_key = page_property_text(page, AUDIO_FRAGMENT_KEY_PROPERTY).strip()
+    if explicit_key:
+        return explicit_key
     page_id = str(page.get("id", "")).strip()
     if page_id:
         return page_id
@@ -1554,7 +1577,13 @@ def load_detailed_fragments_from_notion(token: str) -> Dict[str, Any]:
                 continue
             fragments_by_page_id.setdefault(owner_key, []).append(deepcopy(parsed))
     for specs in fragments_by_page_id.values():
-        specs.sort(key=lambda spec: (float(spec.get("order", 0.0)), str(spec.get("label", "")).lower()))
+        specs.sort(
+            key=lambda spec: (
+                float(spec.get("order", 0.0)),
+                str(spec.get("key", "")).lower(),
+                str(spec.get("label", "")).lower(),
+            )
+        )
     payload = {"fragments_by_page_id": fragments_by_page_id, "fragments_by_id": fragments_by_id}
     if fragments_by_page_id:
         _AUDIO_FRAGMENTS_CACHE[cache_key] = deepcopy(payload)

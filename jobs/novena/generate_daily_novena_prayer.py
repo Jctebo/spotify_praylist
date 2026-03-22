@@ -17,6 +17,7 @@ from urllib.parse import unquote, urlparse
 import requests
 from openai import OpenAI
 from romcal import Romcal, get_bundled_calendar_definitions, get_bundled_resources
+from romcal.types import CalendarDefinition, DayDefinition, Precedence
 
 NOTION_VERSION = "2022-06-28"
 NOTION_FILE_UPLOAD_VERSION = "2025-09-03"
@@ -84,6 +85,16 @@ NOTION_MAX_BLOCK_CHILDREN = 100
 DEFAULT_NOVENA_AUDIO_LIBRARY_RELATIVE = r"OneDrive\Praylist Audio\Novena Audio Library"
 DEFAULT_NOVENA_AUDIO_LIBRARY_FALLBACK = ".cache/novena_audio_library"
 ROOT = Path(__file__).resolve().parents[2]
+
+ROMCAL_OVERLAY_SUFFIX = "__enhancement_003"
+EASTER_OCTAVE_PSEUDO_RANK = "solemnity-easter octave"
+SPECIAL_SUNDAY_SOLEMNITY_IDS = (
+    "second_sunday_after_christmas",
+    "sunday_of_the_word_of_god",
+    "divine_mercy_sunday",
+    "palm_sunday_of_the_passion_of_the_lord",
+    "easter_sunday",
+)
 
 USCCB_READINGS_ENABLED = "USCCB_READINGS_ENABLED"  # default true
 USCCB_READINGS_FAIL_OPEN = "USCCB_READINGS_FAIL_OPEN"  # default true
@@ -1374,7 +1385,62 @@ def normalize_romcal_calendar(calendar: str) -> str:
     return aliases.get(value, value or "general_roman")
 
 
+@lru_cache(maxsize=1)
+def bundled_calendar_definitions_by_id() -> Dict[str, CalendarDefinition]:
+    return {str(calendar.id).strip(): calendar for calendar in get_bundled_calendar_definitions()}
+
+
+def celebration_id(event: Dict[str, Any]) -> str:
+    return str(event.get("id", "")).strip().lower()
+
+
+def special_sunday_normalization_rows(calendar: str) -> Dict[str, DayDefinition]:
+    base_calendar_id = normalize_romcal_calendar(calendar)
+    bundled = bundled_calendar_definitions_by_id()
+    temporal_cycle = bundled.get("temporal_cycle")
+    if temporal_cycle is None:
+        raise RuntimeError("Could not find Romcal temporal_cycle calendar for special Sunday normalization.")
+
+    overrides: Dict[str, DayDefinition] = {}
+    missing: List[str] = []
+    for day_id in SPECIAL_SUNDAY_SOLEMNITY_IDS:
+        base_day = temporal_cycle.days_definitions.get(day_id) if temporal_cycle.days_definitions else None
+        if base_day is None:
+            missing.append(day_id)
+            continue
+        overrides[day_id] = base_day.model_copy(update={"precedence": Precedence.general_solemnity_3}, deep=True)
+
+    if missing:
+        raise RuntimeError(
+            "Could not build Romcal special Sunday overlay for "
+            f"{base_calendar_id}; missing temporal_cycle day definitions: {', '.join(sorted(missing))}"
+        )
+    return overrides
+
+
+def build_romcal_overlay_calendar(calendar: str) -> CalendarDefinition:
+    base_calendar_id = normalize_romcal_calendar(calendar)
+    bundled = bundled_calendar_definitions_by_id()
+    base_calendar = bundled.get(base_calendar_id)
+    if base_calendar is None:
+        raise RuntimeError(f"Could not find bundled Romcal calendar '{base_calendar_id}'.")
+    overlay_id = f"{base_calendar_id}{ROMCAL_OVERLAY_SUFFIX}"
+    return base_calendar.model_copy(
+        update={
+            "id": overlay_id,
+            "parent_calendar_ids": [base_calendar_id],
+            "days_definitions": special_sunday_normalization_rows(base_calendar_id),
+        },
+        deep=True,
+    )
+
+
 def infer_celebration_rank(event: Dict[str, Any]) -> str:
+    precedence = infer_precedence(event)
+    if precedence.startswith("Precedence.weekday_of_easter_octave_"):
+        return EASTER_OCTAVE_PSEUDO_RANK
+    if celebration_id(event) in SPECIAL_SUNDAY_SOLEMNITY_IDS:
+        return "solemnity"
     # Keep Romcal rank as-is (for example: optional_memorial, memorial, feast, solemnity).
     return str(event.get("rank_name", "")).strip() or str(event.get("rank", "")).strip() or "unknown"
 
@@ -1386,11 +1452,13 @@ def infer_precedence(event: Dict[str, Any]) -> str:
 
 @lru_cache(maxsize=8)
 def build_romcal(calendar: str, locale: str) -> Romcal:
+    calendar_id = normalize_romcal_calendar(calendar)
+    overlay_calendar = build_romcal_overlay_calendar(calendar_id)
     return Romcal(
-        calendar=normalize_romcal_calendar(calendar),
+        calendar=overlay_calendar.id,
         locale=(str(locale or "").strip() or "en"),
         resources=get_bundled_resources(),
-        calendar_definitions=get_bundled_calendar_definitions(),
+        calendar_definitions=[*get_bundled_calendar_definitions(), overlay_calendar],
     )
 
 

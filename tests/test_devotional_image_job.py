@@ -4,6 +4,7 @@ import datetime
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from PIL import Image
 
@@ -79,6 +80,44 @@ class TestDevotionalImageJob(unittest.TestCase):
         self.assertEqual(len(deduped), 1)
         self.assertEqual(deduped[0].source, self.mod.SOURCE_CALENDAR)
         self.assertEqual(deduped[0].subject_slug, "saint-joseph-spouse-of-the-blessed-virgin-mary")
+
+    def test_collect_image_candidates_window_accepts_easter_octave_pseudo_rank(self):
+        start = datetime.date(2026, 4, 6)
+
+        def fake_fetch(_calendar, _locale, _dt):
+            return [
+                {
+                    "id": "easter_monday",
+                    "name": "Monday within the Octave of Easter",
+                    "rank_name": "solemnity",
+                    "precedence": "Precedence.weekday_of_easter_octave_2",
+                }
+            ]
+
+        with patch.object(self.mod, "romcal_fetch_day", side_effect=fake_fetch):
+            rows = self.mod.collect_image_candidates_window("general_roman", "en", start, 0)
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["celebration_rank"], "solemnity-easter octave")
+
+    def test_collect_image_candidates_window_accepts_ordinary_solemnity(self):
+        start = datetime.date(2026, 12, 25)
+
+        def fake_fetch(_calendar, _locale, _dt):
+            return [
+                {
+                    "id": "nativity_of_the_lord",
+                    "name": "The Nativity of the Lord (Christmas)",
+                    "rank_name": "solemnity",
+                    "precedence": "Precedence.proper_of_time_solemnity_2",
+                }
+            ]
+
+        with patch.object(self.mod, "romcal_fetch_day", side_effect=fake_fetch):
+            rows = self.mod.collect_image_candidates_window("general_roman", "en", start, 0)
+
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["celebration_rank"], "solemnity")
 
     def test_select_title_placement_prefers_lower_center_box_on_uniform_portrait(self):
         image = Image.new("RGBA", (1024, 1536), color=(64, 64, 64, 255))

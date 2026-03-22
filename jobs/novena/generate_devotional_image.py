@@ -29,6 +29,7 @@ from jobs.novena.generate_daily_novena_prayer import (
     ROMCAL_LOCALE,
     ROMCAL_WINDOW_DAYS,
     bool_env,
+    infer_celebration_rank,
     infer_precedence,
     int_env,
     local_today,
@@ -67,7 +68,7 @@ DEVOTIONAL_IMAGE_SIZE_WIDE = "DEVOTIONAL_IMAGE_SIZE_WIDE"  # default 1536x1024 (
 DEVOTIONAL_IMAGE_QUALITY = "DEVOTIONAL_IMAGE_QUALITY"  # default high
 DEVOTIONAL_IMAGE_FORMAT = "DEVOTIONAL_IMAGE_FORMAT"  # default png
 DEVOTIONAL_REUSE_ARCHIVE_ENABLED = "DEVOTIONAL_REUSE_ARCHIVE_ENABLED"  # default true
-DEVOTIONAL_ALLOWED_RANKS = {"solemnity", "feast", "memorial", "optional_memorial"}
+DEVOTIONAL_ALLOWED_RANKS = {"solemnity", "solemnity-easter octave", "feast", "memorial", "optional_memorial"}
 
 DEVOTIONAL_NOTION_CONFIG_ENABLED = "DEVOTIONAL_NOTION_CONFIG_ENABLED"  # default true
 NOTION_IMAGE_CONFIG_PARENT_PAGE_ID = "NOTION_IMAGE_CONFIG_PARENT_PAGE_ID"
@@ -348,11 +349,6 @@ def _event_name(event: Dict[str, str]) -> str:
     return ""
 
 
-def _normalized_rank(event: Dict[str, str]) -> str:
-    raw = str(event.get("rank_name", "") or event.get("rank", "")).strip().lower()
-    return raw.replace("rank.", "")
-
-
 def collect_image_candidates_window(
     calendar_name: str,
     locale: str,
@@ -367,7 +363,7 @@ def collect_image_candidates_window(
         for event in events:
             if not isinstance(event, dict):
                 continue
-            rank = _normalized_rank(event)
+            rank = infer_celebration_rank(event)
             if rank not in DEVOTIONAL_ALLOWED_RANKS:
                 continue
             name = _event_name(event)
