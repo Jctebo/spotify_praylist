@@ -19,6 +19,8 @@ from openai import OpenAI
 from romcal import Romcal, get_bundled_calendar_definitions, get_bundled_resources
 from romcal.types import CalendarDefinition, DayDefinition, Precedence
 
+from jobs.novena.liturgical_model import devotional_output_is_eligible
+
 NOTION_VERSION = "2022-06-28"
 NOTION_FILE_UPLOAD_VERSION = "2025-09-03"
 NOTION_REQUEST_TIMEOUT_SECONDS = 30
@@ -1488,51 +1490,6 @@ def celebration_name(event: Dict[str, Any]) -> str:
     return ""
 
 
-def entity_is_saint(entity: Dict[str, Any]) -> bool:
-    level = str(entity.get("canonization_level", "")).strip().lower()
-    return level in {"saint", "blessed"}
-
-
-def looks_like_saint(event: Dict[str, Any], name: str) -> bool:
-    if bool(event.get("isSaint")):
-        return True
-    entities = event.get("entities")
-    if isinstance(entities, list):
-        for entity in entities:
-            if isinstance(entity, dict) and entity_is_saint(entity):
-                return True
-    saint_terms = (
-        "saint",
-        "st.",
-        "martyr",
-        "apostle",
-        "virgin",
-        "bishop",
-        "doctor",
-        "holy",
-        "confessor",
-    )
-    haystack = " ".join(
-        [
-            str(name or ""),
-            str(event.get("type", "")),
-            str(event.get("category", "")),
-            str(event.get("group", "")),
-            str(event.get("gradeName", "")),
-            str(event.get("rank", "")),
-            str(event.get("liturgicalCategory", "")),
-        ]
-    ).lower()
-    if any(term in haystack for term in saint_terms):
-        return True
-    tags = event.get("tags")
-    if isinstance(tags, list):
-        tags_text = " ".join(str(x).lower() for x in tags)
-        if any(term in tags_text for term in saint_terms):
-            return True
-    return False
-
-
 def romcal_fetch_day(calendar: str, locale: str, dt: datetime.date) -> List[Dict[str, Any]]:
     try:
         mass_cal = romcal_year_mass_calendar(calendar, locale, dt.year)
@@ -1581,8 +1538,7 @@ def collect_saints_window(
     start_date: datetime.date,
     days: int,
 ) -> List[Dict[str, str]]:
-    saints: List[Dict[str, str]] = []
-    fallback_names: List[Dict[str, str]] = []
+    celebrations: List[Dict[str, str]] = []
     seen = set()
 
     for offset in range(days + 1):
@@ -1598,20 +1554,20 @@ def collect_saints_window(
             if key in seen:
                 continue
             seen.add(key)
+            celebration_rank = infer_celebration_rank(event)
+            precedence = infer_precedence(event)
+            if not devotional_output_is_eligible(celebration_rank, precedence):
+                continue
             row = {
                 "date": dt.isoformat(),
                 "name": name,
-                "celebration_rank": infer_celebration_rank(event),
-                "precedence": infer_precedence(event),
-                "entry_kind": "saint",
+                "celebration_rank": celebration_rank,
+                "precedence": precedence,
+                "entry_kind": "liturgical_subject",
             }
-            fallback_names.append(row)
-            if looks_like_saint(event, name):
-                saints.append(row)
+            celebrations.append(row)
 
-    if saints:
-        return saints
-    return fallback_names
+    return celebrations
 
 
 def collect_calendar_days_window(
@@ -1671,12 +1627,16 @@ def find_named_saint_feast(
                 continue
             nn = normalize_name_for_match(name)
             if q in nn or nn in q:
+                celebration_rank = infer_celebration_rank(event)
+                precedence = infer_precedence(event)
+                if not devotional_output_is_eligible(celebration_rank, precedence):
+                    continue
                 return {
                     "date": dt.isoformat(),
                     "name": name,
-                    "celebration_rank": infer_celebration_rank(event),
-                    "precedence": infer_precedence(event),
-                    "entry_kind": "saint",
+                    "celebration_rank": celebration_rank,
+                    "precedence": precedence,
+                    "entry_kind": "liturgical_subject",
                 }
     return None
 
@@ -2386,6 +2346,45 @@ def notion_remove_autogen_markers_from_other_pages_for_day(
             notion_remove_old_autogen_audio(page_id, token, marker=marker)
 
 
+def cleanup_ineligible_novena_outputs(
+    pages: Sequence[Dict[str, Any]],
+    feast_day_property: str,
+    celebrations: Sequence[Dict[str, str]],
+    token: str,
+) -> Dict[str, int]:
+    removed_sections = 0
+    removed_audio = 0
+    seen: set[tuple[str, str]] = set()
+    for row in celebrations:
+        feast_iso = str(row.get("date", "")).strip()
+        name = str(row.get("name", "")).strip()
+        rank = str(row.get("celebration_rank", "")).strip()
+        precedence = str(row.get("precedence", "")).strip()
+        if not feast_iso or not name:
+            continue
+        if devotional_output_is_eligible(rank, precedence):
+            continue
+        feast_date = date_from_iso(feast_iso)
+        prep_start = feast_date - datetime.timedelta(days=9)
+        prep_end = feast_date - datetime.timedelta(days=1)
+        for offset in range((prep_end - prep_start).days + 1):
+            target_day = prep_start + datetime.timedelta(days=offset)
+            target_iso = target_day.isoformat()
+            marker = saint_day_marker(name, target_day)
+            audio_marker = f"{marker}:{NOVENA_AUDIO_MARKER}"
+            for page in list_calendar_pages_for_date(pages, feast_day_property, target_iso):
+                page_id = str(page.get("id", "")).strip()
+                if not page_id:
+                    continue
+                key = (page_id, marker)
+                if key in seen:
+                    continue
+                seen.add(key)
+                removed_sections += notion_remove_old_autogen_sections_by_markers(page_id, token, [marker])
+                removed_audio += notion_remove_old_autogen_audio(page_id, token, marker=audio_marker)
+    return {"sections": removed_sections, "audio": removed_audio}
+
+
 def append_usccb_readings_to_extra_pages(
     page_ids: Sequence[str],
     readings_blocks: Sequence[Dict[str, Any]],
@@ -2719,7 +2718,7 @@ def main() -> int:
         end_date = start_date + datetime.timedelta(days=window_days)
         saints = collect_saints_window(romcal_calendar, romcal_locale, start_date, window_days)
         if not saints:
-            raise RuntimeError("No celebrations found from Romcal for requested date window.")
+            raise RuntimeError("No eligible devotional celebrations found from Romcal for requested date window.")
         saint_radar_rows: List[Dict[str, str]] = list(saints)
         test_saint_raw = os.getenv(NOVENA_TEST_SAINT_NAME, "").strip()
         test_saint = normalize_name_for_match(test_saint_raw)
@@ -2830,6 +2829,8 @@ def main() -> int:
             payload_generated = 0
             library_cached = 0
             library_generated = 0
+            cleanup_removed_sections = 0
+            cleanup_removed_audio = 0
             today_page: Optional[Dict[str, Any]] = None
 
             # Keep USCCB daily readings append for today's calendar row.
@@ -2870,6 +2871,14 @@ def main() -> int:
             if not day_mode:
                 write_mode = "saint_radar_day_mode_disabled"
             else:
+                cleanup_counts = cleanup_ineligible_novena_outputs(
+                    pages=pages,
+                    feast_day_property=saint_day_prop,
+                    celebrations=calendar_rows,
+                    token=notion_token,
+                )
+                cleanup_removed_sections = int(cleanup_counts.get("sections", 0))
+                cleanup_removed_audio = int(cleanup_counts.get("audio", 0))
                 for saint in saints:
                     saint_name = str(saint.get("name", "")).strip()
                     feast_iso = str(saint.get("date", "")).strip()
@@ -3061,6 +3070,7 @@ def main() -> int:
                     f"saint_radar_novena_day_by_day:sections={wrote_sections}:audio={wrote_audio}:"
                     f"payload_cached={payload_cached}:payload_generated={payload_generated}:"
                     f"library_cached={library_cached}:library_generated={library_generated}:"
+                    f"cleanup_sections={cleanup_removed_sections}:cleanup_audio={cleanup_removed_audio}:"
                     f"audio_truncated_outputs={audio_truncated_outputs}:"
                     f"skipped_existing={skipped_existing}:force_refresh={str(force_refresh).lower()}"
                 )
