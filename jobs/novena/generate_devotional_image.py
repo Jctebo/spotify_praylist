@@ -43,6 +43,7 @@ from jobs.novena.generate_daily_novena_prayer import (
     require_env,
     romcal_fetch_day,
 )
+from jobs.novena.liturgical_model import devotional_output_is_eligible
 
 DEFAULT_DCIM_RELATIVE = r"OneDrive\Pictures\Samsung Gallery\DCIM"
 DEFAULT_CURRENT_FOLDER = "Current Devotion"
@@ -68,7 +69,6 @@ DEVOTIONAL_IMAGE_SIZE_WIDE = "DEVOTIONAL_IMAGE_SIZE_WIDE"  # default 1536x1024 (
 DEVOTIONAL_IMAGE_QUALITY = "DEVOTIONAL_IMAGE_QUALITY"  # default high
 DEVOTIONAL_IMAGE_FORMAT = "DEVOTIONAL_IMAGE_FORMAT"  # default png
 DEVOTIONAL_REUSE_ARCHIVE_ENABLED = "DEVOTIONAL_REUSE_ARCHIVE_ENABLED"  # default true
-DEVOTIONAL_ALLOWED_RANKS = {"solemnity", "solemnity-easter octave", "feast", "memorial", "optional_memorial"}
 
 DEVOTIONAL_NOTION_CONFIG_ENABLED = "DEVOTIONAL_NOTION_CONFIG_ENABLED"  # default true
 NOTION_IMAGE_CONFIG_PARENT_PAGE_ID = "NOTION_IMAGE_CONFIG_PARENT_PAGE_ID"
@@ -364,7 +364,8 @@ def collect_image_candidates_window(
             if not isinstance(event, dict):
                 continue
             rank = infer_celebration_rank(event)
-            if rank not in DEVOTIONAL_ALLOWED_RANKS:
+            precedence = infer_precedence(event)
+            if not devotional_output_is_eligible(rank, precedence):
                 continue
             name = _event_name(event)
             if not name:
@@ -378,7 +379,7 @@ def collect_image_candidates_window(
                     "date": dt.isoformat(),
                     "name": name,
                     "celebration_rank": rank,
-                    "precedence": infer_precedence(event),
+                    "precedence": precedence,
                 }
             )
     return rows

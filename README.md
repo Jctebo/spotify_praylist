@@ -176,13 +176,14 @@ Optional variables:
 
 ## Daily Novena Prayer Generation
 Purpose:
-- reads saints from Romcal for today through the next 8 days (9-day window)
+- reads eligible liturgical celebrations from Romcal for today through the next 8 days (9-day window)
 - uses OpenAI API to draft a litany-style novena prayer
 - writes prayer text or mirrored daily liturgical content to the Notion row titled `Daily Novenas from Liturgical Calendar`
 
 Script:
 - `jobs/novena/generate_daily_novena_prayer.py`
 - the shared Romcal helper now builds a synthetic child calendar on top of the selected calendar id, normalizes named special Sundays to `solemnity`, and carries Easter Octave weekdays as the app-level pseudo-rank `solemnity-easter octave`
+- devotional outputs now use a shared liturgical eligibility contract: allowed ranks are `solemnity`, `feast`, `memorial`, and `optional_memorial`, and Easter Octave weekdays are explicitly excluded by precedence
 
 Starter config:
 - copy values from [.env.example](c:/Users/jcteb/Code/spotify_praylist/.env.example) into your local environment or secret store; the novena/audio section now includes the render-hash metadata properties
@@ -408,7 +409,8 @@ Optional variables:
 ## Daily Devotional Image Generation
 Purpose:
 - selects all unseen eligible celebrations from the same 9-day Romcal window (or one date when `DEVOTIONAL_TARGET_DATE` is set)
-- eligible ranks: `solemnity`, `solemnity-easter octave`, `feast`, `memorial`, `optional_memorial`
+- eligible ranks: `solemnity`, `feast`, `memorial`, `optional_memorial`
+- explicit exclusion: Easter Octave weekdays (`Precedence.weekday_of_easter_octave_*`) are skipped even though the shared Romcal model still maps them to the pseudo-rank `solemnity-easter octave`
 - skips already-generated entries by parsing existing filenames
 - generates a high-finish devotional image prompt from saint subject
 - creates an image with OpenAI image generation

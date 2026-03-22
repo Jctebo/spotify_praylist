@@ -200,16 +200,16 @@ class TestNovenaJob(unittest.TestCase):
         self.assertEqual(children[0]["type"], "bookmark")
         self.assertEqual(children[1]["type"], "toggle")
 
-    def test_collect_saints_window_prefers_marked_saints(self):
+    def test_collect_saints_window_uses_rank_based_contract(self):
         start = datetime.date(2026, 3, 3)
         day_data = {
             0: [
-                {"name": "Saint Agnes", "isSaint": True},
-                {"name": "Tuesday of Lent", "type": "weekday"},
+                {"name": "Saint Agnes", "rank_name": "memorial", "precedence": "Precedence.general_memorial_10"},
+                {"name": "Tuesday of Lent", "rank_name": "weekday", "precedence": "Precedence.ferial_day_13"},
             ],
             1: [
-                {"name": "St. Patrick", "type": "memorial"},
-                {"name": "Wednesday of Lent", "type": "weekday"},
+                {"name": "The Presentation of the Lord", "rank_name": "feast", "precedence": "Precedence.general_lord_feast_5"},
+                {"name": "Wednesday of Lent", "rank_name": "weekday", "precedence": "Precedence.ferial_day_13"},
             ],
         }
 
@@ -222,19 +222,90 @@ class TestNovenaJob(unittest.TestCase):
 
         names = [row["name"] for row in saints]
         self.assertIn("Saint Agnes", names)
-        self.assertIn("St. Patrick", names)
+        self.assertIn("The Presentation of the Lord", names)
         self.assertNotIn("Tuesday of Lent", names)
+        self.assertNotIn("Wednesday of Lent", names)
 
-    def test_collect_saints_window_falls_back_when_no_saint_markers(self):
+    def test_collect_saints_window_excludes_non_eligible_weekday(self):
         start = datetime.date(2026, 3, 3)
 
         def fake_fetch(_cal, _loc, _dt):
-            return [{"name": "Tuesday of Lent", "type": "weekday"}]
+            return [{"name": "Tuesday of Lent", "rank_name": "weekday", "precedence": "Precedence.ferial_day_13"}]
 
         with patch.object(self.mod, "romcal_fetch_day", side_effect=fake_fetch):
             saints = self.mod.collect_saints_window("general_roman", "en", start, 0)
+        self.assertEqual(saints, [])
+
+    def test_collect_saints_window_excludes_easter_octave_by_precedence(self):
+        start = datetime.date(2026, 4, 6)
+
+        def fake_fetch(_cal, _loc, _dt):
+            return [
+                {
+                    "name": "Monday within the Octave of Easter",
+                    "rank_name": "solemnity",
+                    "precedence": "Precedence.weekday_of_easter_octave_2",
+                }
+            ]
+
+        with patch.object(self.mod, "romcal_fetch_day", side_effect=fake_fetch):
+            saints = self.mod.collect_saints_window("general_roman", "en", start, 0)
+
+        self.assertEqual(saints, [])
+
+    def test_collect_saints_window_accepts_non_saint_solemnity(self):
+        start = datetime.date(2026, 3, 29)
+
+        def fake_fetch(_cal, _loc, _dt):
+            return [
+                {
+                    "name": "Palm Sunday of the Passion of the Lord",
+                    "rank_name": "solemnity",
+                    "precedence": "Precedence.privileged_sunday_2",
+                }
+            ]
+
+        with patch.object(self.mod, "romcal_fetch_day", side_effect=fake_fetch):
+            saints = self.mod.collect_saints_window("general_roman", "en", start, 0)
+
         self.assertEqual(len(saints), 1)
-        self.assertEqual(saints[0]["name"], "Tuesday of Lent")
+        self.assertEqual(saints[0]["name"], "Palm Sunday of the Passion of the Lord")
+        self.assertEqual(saints[0]["entry_kind"], "liturgical_subject")
+
+    def test_cleanup_ineligible_novena_outputs_removes_holy_week_markers(self):
+        pages = [
+            {
+                "id": "page_1",
+                "properties": {
+                    "Name": _title_prop("Monday of Holy Week"),
+                    "Feast Day": {"type": "date", "date": {"start": "2026-03-30"}},
+                },
+            }
+        ]
+        celebrations = [
+            {
+                "date": "2026-03-31",
+                "name": "Tuesday of Holy Week",
+                "celebration_rank": "weekday",
+                "precedence": "Precedence.ferial_day_13",
+            }
+        ]
+        marker = self.mod.saint_day_marker("Tuesday of Holy Week", datetime.date(2026, 3, 30))
+        audio_marker = f"{marker}:{self.mod.NOVENA_AUDIO_MARKER}"
+
+        with patch.object(self.mod, "notion_remove_old_autogen_sections_by_markers", return_value=1) as sections_mock, patch.object(
+            self.mod, "notion_remove_old_autogen_audio", return_value=1
+        ) as audio_mock:
+            counts = self.mod.cleanup_ineligible_novena_outputs(
+                pages=pages,
+                feast_day_property="Feast Day",
+                celebrations=celebrations,
+                token="token",
+            )
+
+        self.assertEqual(counts, {"sections": 1, "audio": 1})
+        sections_mock.assert_called_once_with("page_1", "token", [marker])
+        audio_mock.assert_called_once_with("page_1", "token", marker=audio_marker)
 
     def test_build_romcal_wraps_requested_calendar_in_overlay_child(self):
         romcal = self.mod.build_romcal("argentina", "en")

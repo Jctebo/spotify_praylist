@@ -81,7 +81,7 @@ class TestDevotionalImageJob(unittest.TestCase):
         self.assertEqual(deduped[0].source, self.mod.SOURCE_CALENDAR)
         self.assertEqual(deduped[0].subject_slug, "saint-joseph-spouse-of-the-blessed-virgin-mary")
 
-    def test_collect_image_candidates_window_accepts_easter_octave_pseudo_rank(self):
+    def test_collect_image_candidates_window_excludes_easter_octave_pseudo_rank(self):
         start = datetime.date(2026, 4, 6)
 
         def fake_fetch(_calendar, _locale, _dt):
@@ -97,8 +97,7 @@ class TestDevotionalImageJob(unittest.TestCase):
         with patch.object(self.mod, "romcal_fetch_day", side_effect=fake_fetch):
             rows = self.mod.collect_image_candidates_window("general_roman", "en", start, 0)
 
-        self.assertEqual(len(rows), 1)
-        self.assertEqual(rows[0]["celebration_rank"], "solemnity-easter octave")
+        self.assertEqual(rows, [])
 
     def test_collect_image_candidates_window_accepts_ordinary_solemnity(self):
         start = datetime.date(2026, 12, 25)
