@@ -223,6 +223,10 @@ def fragment_value_title(values: Dict[str, Any]) -> str:
     return str(values.get(mod.AUDIO_FRAGMENT_TITLE_PROPERTY, "")).strip()
 
 
+def fragment_value_key(values: Dict[str, Any]) -> str:
+    return str(values.get(mod.AUDIO_FRAGMENT_KEY_PROPERTY, "")).strip()
+
+
 def fragment_value_kind(values: Dict[str, Any]) -> str:
     return mod.normalize_detailed_fragment_kind(str(values.get(mod.DETAILED_FRAGMENT_KIND_PROPERTY, "")).strip())
 
@@ -232,11 +236,17 @@ def fragment_value_group(values: Dict[str, Any]) -> str:
 
 
 def fragment_page_matches_values(page: Dict[str, Any], values: Dict[str, Any]) -> bool:
-    title = mod.shared.page_title(page, mod.AUDIO_FRAGMENT_TITLE_PROPERTY).strip()
-    if title.lower() != fragment_value_title(values).lower():
-        return False
     parsed = mod.audio_fragment_from_notion_page(page, target_date=mod.shared.local_today(), enforce_date_window=False)
-    parsed_fragment = parsed[1] if parsed else {}
+    parsed_key, parsed_fragment = parsed if parsed else ("", {})
+    wanted_key = fragment_value_key(values)
+    page_key = str(parsed_fragment.get("key", "")).strip() or str(parsed_key or "").strip()
+    if wanted_key:
+        if mod.normalize_flag_value(page_key) != mod.normalize_flag_value(wanted_key):
+            return False
+    else:
+        title = mod.shared.page_title(page, mod.AUDIO_FRAGMENT_TITLE_PROPERTY).strip()
+        if title.lower() != fragment_value_title(values).lower():
+            return False
     page_kind = mod.normalize_detailed_fragment_kind(
         mod.page_property_text(page, mod.DETAILED_FRAGMENT_KIND_PROPERTY).strip()
         or mod.page_property_text(page, mod.AUDIO_FRAGMENT_TYPE_PROPERTY).strip()
@@ -512,6 +522,7 @@ def text_fragment_values(
     *,
     owner_page_id: str,
     title: str,
+    key: str = "",
     order: int,
     text: str,
     group: str,
@@ -519,6 +530,7 @@ def text_fragment_values(
 ) -> Dict[str, Any]:
     return {
         mod.AUDIO_FRAGMENT_TITLE_PROPERTY: title,
+        mod.AUDIO_FRAGMENT_KEY_PROPERTY: key,
         mod.DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY: [owner_page_id],
         mod.AUDIO_FRAGMENT_ENABLED_PROPERTY: True,
         mod.AUDIO_FRAGMENT_ORDER_PROPERTY: float(order),
@@ -534,6 +546,7 @@ def prompt_fragment_values(
     *,
     owner_page_id: str,
     title: str,
+    key: str = "",
     order: int,
     prompt: str,
     prompt_model: str,
@@ -542,6 +555,7 @@ def prompt_fragment_values(
 ) -> Dict[str, Any]:
     return {
         mod.AUDIO_FRAGMENT_TITLE_PROPERTY: title,
+        mod.AUDIO_FRAGMENT_KEY_PROPERTY: key,
         mod.DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY: [owner_page_id],
         mod.AUDIO_FRAGMENT_ENABLED_PROPERTY: True,
         mod.AUDIO_FRAGMENT_ORDER_PROPERTY: float(order),
@@ -783,9 +797,10 @@ def morning_prayer_fragment_values_from_legacy_output(
     values: List[Dict[str, Any]] = []
     for contract_item in mod.morning_prayer_contract_items():
         order = int(contract_item["order"])
+        key = str(contract_item["key"]).strip()
         title = str(contract_item["label"]).strip()
         item_type = str(contract_item["kind"]).strip()
-        legacy_spec = legacy_by_label.get(mod.normalize_flag_value(title)) or {}
+        legacy_spec = fragments_map.get(key) or legacy_by_label.get(mod.normalize_flag_value(title)) or {}
         if item_type == mod.FRAGMENT_TYPE_TEXT:
             text = str(legacy_spec.get("text", "")).strip()
             prompt = str(legacy_spec.get("prompt", "")).strip()
@@ -794,6 +809,7 @@ def morning_prayer_fragment_values_from_legacy_output(
                     prompt_fragment_values(
                         owner_page_id=owner_page_id,
                         title=title,
+                        key=key,
                         order=order,
                         prompt=prompt,
                         prompt_model=str(legacy_spec.get("prompt_model", "")).strip() or "gpt-4.1-mini",
@@ -805,12 +821,13 @@ def morning_prayer_fragment_values_from_legacy_output(
             if not text:
                 continue
             values.append(
-                text_fragment_values(
-                    owner_page_id=owner_page_id,
-                    title=title,
-                    order=order,
-                    text=text,
-                    group=str(contract_item["group"]).strip(),
+                    text_fragment_values(
+                        owner_page_id=owner_page_id,
+                        title=title,
+                        key=key,
+                        order=order,
+                        text=text,
+                        group=str(contract_item["group"]).strip(),
                     notes=f"{MIGRATION_TAG} source=legacy_fragment_contract",
                 )
             )
@@ -818,6 +835,7 @@ def morning_prayer_fragment_values_from_legacy_output(
             values.append(
                 {
                     mod.AUDIO_FRAGMENT_TITLE_PROPERTY: "Monthly Intention",
+                    mod.AUDIO_FRAGMENT_KEY_PROPERTY: key,
                     mod.DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY: [owner_page_id],
                     mod.AUDIO_FRAGMENT_ENABLED_PROPERTY: True,
                     mod.AUDIO_FRAGMENT_ORDER_PROPERTY: float(order),
@@ -831,6 +849,7 @@ def morning_prayer_fragment_values_from_legacy_output(
             values.append(
                 {
                     mod.AUDIO_FRAGMENT_TITLE_PROPERTY: "Daily Novena Audio",
+                    mod.AUDIO_FRAGMENT_KEY_PROPERTY: key,
                     mod.DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY: [owner_page_id],
                     mod.AUDIO_FRAGMENT_ENABLED_PROPERTY: True,
                     mod.AUDIO_FRAGMENT_ORDER_PROPERTY: float(order),

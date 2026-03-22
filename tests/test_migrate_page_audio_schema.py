@@ -54,11 +54,12 @@ def _morning_prayer_fragments_map(script):
     fragments_map = {}
     sequence_entries = []
     for item in script.mod.morning_prayer_contract_items():
+        key = item["key"]
         label = item["label"]
         kind = item["kind"]
-        key = script.mod.slugify(label)
         if kind == script.mod.FRAGMENT_TYPE_TEXT:
             fragments_map[key] = {
+                "key": key,
                 "type": kind,
                 "label": label,
                 "text": f"{label}.",
@@ -146,9 +147,52 @@ class TestMigratePageAudioSchema(unittest.TestCase):
             [item["label"] for item in contract],
         )
         self.assertEqual(
+            [value[self.script.mod.AUDIO_FRAGMENT_KEY_PROPERTY] for value in values],
+            [item["key"] for item in contract],
+        )
+        self.assertEqual(
             [value[self.script.mod.DETAILED_FRAGMENT_KIND_PROPERTY] for value in values],
             [item["kind"] for item in contract],
         )
+
+    def test_preflight_morning_prayer_migration_accepts_renamed_label_when_key_matches(self):
+        fragments_map, sequence_entries = _morning_prayer_fragments_map(self.script)
+        output_page = _output_page(sequence_entries)
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
+        fragment_pages = [
+            _fragment_page(
+                "Petition - Right Use of Technology",
+                page_id="fragment_1",
+                text="Updated petition.",
+                group="morning_prayer",
+                legacy_type=self.script.mod.FRAGMENT_TYPE_TEXT,
+            )
+        ]
+        fragment_pages[0]["properties"]["Fragment Key"] = _rich_text_prop("petition-church")
+        for item in self.script.mod.morning_prayer_contract_items():
+            if item["key"] == "petition-church":
+                continue
+            fragment_pages.append(
+                _fragment_page(
+                    item["label"],
+                    page_id=f"fragment-{item['key']}",
+                    text=f"{item['label']}.",
+                    group=item["group"],
+                    legacy_type=item["kind"],
+                )
+            )
+            fragment_pages[-1]["properties"]["Fragment Key"] = _rich_text_prop(item["key"])
+
+        preflight = self.script.preflight_morning_prayer_migration(
+            page=page,
+            output_page=output_page,
+            fragment_pages=fragment_pages,
+            fragments_map=fragments_map,
+            title_property="Name",
+            apply=False,
+        )
+
+        self.assertEqual(preflight["errors"], [])
 
     def test_build_fragment_page_resolutions_reuses_ownerless_rows(self):
         values = [
@@ -231,7 +275,7 @@ class TestMigratePageAudioSchema(unittest.TestCase):
             apply=False,
         )
 
-        self.assertTrue(any("missing fragment 'Morning Offering'" in error for error in preflight["errors"]))
+        self.assertTrue(any("missing fragment 'morning-offering' (Morning Offering)" in error for error in preflight["errors"]))
         self.assertEqual(preflight["create_titles"], ["Monthly Intention", "Daily Novena Audio"])
 
     def test_migrate_page_rows_does_not_fallback_to_page_body_for_invalid_morning_prayer(self):

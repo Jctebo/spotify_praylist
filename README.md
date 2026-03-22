@@ -264,6 +264,7 @@ Purpose:
 Current config:
 - `Morning Prayer` now runs from the two-list `Opus Dei` + owner-linked `Detailed Fragments` model
 - required Morning Prayer fragments are owner-linked `Audio Fragments` rows for the static prayers, `Monthly Intention`, and `Daily Novena Audio`
+- Morning Prayer contract rows should carry stable `Fragment Key` values; the key is the runtime identity, while the row title can be edited for display text
 - `Text Sync Mode = page_content` remains the intended Morning Prayer behavior, and the job preserves its current working block/template path instead of forcing it into the generic managed-section sync
 - legacy `MORNING_PRAYER_OUTPUT` / wrapper / sequence rows can remain as migration references, but they are no longer the active runtime source of truth
 - `DIVINE_OFFICE_INVITATORY_OUTPUT` in `Audio Outputs`
@@ -338,6 +339,7 @@ Environment variables:
 Audio fragment row shape:
 - `Name`
 - `Fragment Key`
+- for Morning Prayer contract rows, treat `Fragment Key` as required and stable across title/content edits
 - `Fragment Type` optional; defaults from the populated fields
 - `Spoken Text` for fixed text fragments
 - `Prompt` for LLM-backed fragments
