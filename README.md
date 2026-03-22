@@ -43,6 +43,7 @@ Optional variables:
 - `sync/build_devotional_public_tree.py`: filters the OneDrive-oriented devotional manifest tree into a public current-only export
 - `sync/build_devotional_image_distribution_bundle.ps1`: builds a `sync\public` + `sync\client` distribution folder
 - `requirements.txt`: Python dependencies
+- `release/releaselog.md`: consolidated release log for shipped bug work
 - `.github/workflows/daily.yml`: daily + manual GitHub Actions workflow
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
 - `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with rclone upload to OneDrive
@@ -476,7 +477,7 @@ Local OneDrive upload env (User or Process):
 - `AZURE_TENANT_ID`
 - `AZURE_CLIENT_ID`
 - `AZURE_CLIENT_SECRET` (for service principal login)
-- `DEVOTIONAL_ONEDRIVE_REMOTE_ROOT` (default `Pictures/Samsung Gallery/DCIM`)
+- `DEVOTIONAL_ONEDRIVE_REMOTE_ROOT` (optional legacy novena backfill root)
 
 Client sync without OneDrive:
 
