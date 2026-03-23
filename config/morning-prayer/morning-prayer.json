@@ -119,21 +119,6 @@
       "order": 13,
       "title": "Intercessory Litany",
       "targets": ["page_content", "audio"]
-    },
-    {
-      "key": "spotify-playlist",
-      "kind": "spotify",
-      "resolver": "do_morning_playlist_v1",
-      "order": 14,
-      "title": "Spotify Playlist",
-      "targets": ["page_content", "playlist_creation"],
-      "metadata": {
-        "playlist_key": "morning-prayer",
-        "playlist_name": "Morning Prayer",
-        "creation_mode": "create_if_missing",
-        "selection_resolver": "DO_MORNING",
-        "fallback_resolver": "DIVINE_OFFICE_MORNING_PAGE_AUDIO"
-      }
     }
   ]
 }
