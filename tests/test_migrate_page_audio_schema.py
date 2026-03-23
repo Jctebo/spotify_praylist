@@ -194,6 +194,59 @@ class TestMigratePageAudioSchema(unittest.TestCase):
 
         self.assertEqual(preflight["errors"], [])
 
+    def test_preflight_morning_prayer_migration_relinks_special_split_rows(self):
+        fragments_map, sequence_entries = _morning_prayer_fragments_map(self.script)
+        output_page = _output_page(sequence_entries)
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
+        fragment_pages = [
+            _fragment_page(
+                "Monthly Intention",
+                page_id="fragment_monthly_ownerless",
+                kind=self.script.mod.FRAGMENT_TYPE_MONTHLY_INTENTION,
+                legacy_type=self.script.mod.FRAGMENT_TYPE_MONTHLY_INTENTION,
+            ),
+            _fragment_page(
+                "Monthly Intention",
+                page_id="fragment_monthly_linked",
+                kind=self.script.mod.FRAGMENT_TYPE_MONTHLY_INTENTION,
+                legacy_type=self.script.mod.FRAGMENT_TYPE_MONTHLY_INTENTION,
+                relation_ids=["page_1"],
+            ),
+            _fragment_page(
+                "Daily Novena Audio",
+                page_id="fragment_daily_ownerless",
+                kind=self.script.mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO,
+                legacy_type=self.script.mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO,
+            ),
+            _fragment_page(
+                "Daily Novena Audio",
+                page_id="fragment_daily_linked",
+                kind=self.script.mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO,
+                legacy_type=self.script.mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO,
+                relation_ids=["page_1"],
+            ),
+        ]
+        for fragment_page in fragment_pages:
+            fragment_page["properties"]["Fragment Key"] = _rich_text_prop("")
+
+        preflight = self.script.preflight_morning_prayer_migration(
+            page=page,
+            output_page=output_page,
+            fragment_pages=fragment_pages,
+            fragments_map=fragments_map,
+            title_property="Name",
+            apply=False,
+        )
+
+        self.assertEqual(preflight["errors"], [])
+        action_titles = {
+            self.script.fragment_value_title(resolution["values"])
+            for resolution in preflight["resolutions"]
+            if str(resolution.get("action", "")).strip() in {"update", "relink"}
+        }
+        self.assertIn("Monthly Intention", action_titles)
+        self.assertIn("Daily Novena Audio", action_titles)
+
     def test_build_fragment_page_resolutions_reuses_ownerless_rows(self):
         values = [
             self.script.text_fragment_values(

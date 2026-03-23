@@ -240,20 +240,24 @@ def fragment_page_matches_values(page: Dict[str, Any], values: Dict[str, Any]) -
     parsed_key, parsed_fragment = parsed if parsed else ("", {})
     wanted_key = fragment_value_key(values)
     page_key = str(parsed_fragment.get("key", "")).strip() or str(parsed_key or "").strip()
-    if wanted_key:
-        if mod.normalize_flag_value(page_key) != mod.normalize_flag_value(wanted_key):
-            return False
-    else:
-        title = mod.shared.page_title(page, mod.AUDIO_FRAGMENT_TITLE_PROPERTY).strip()
-        if title.lower() != fragment_value_title(values).lower():
-            return False
+    wanted_title = fragment_value_title(values)
+    page_title = mod.shared.page_title(page, mod.AUDIO_FRAGMENT_TITLE_PROPERTY).strip()
     page_kind = mod.normalize_detailed_fragment_kind(
         mod.page_property_text(page, mod.DETAILED_FRAGMENT_KIND_PROPERTY).strip()
         or mod.page_property_text(page, mod.AUDIO_FRAGMENT_TYPE_PROPERTY).strip()
         or str(parsed_fragment.get("type", "")).strip()
     )
-    if page_kind != fragment_value_kind(values):
+    wanted_kind = fragment_value_kind(values)
+    special_kind = wanted_kind in {mod.FRAGMENT_TYPE_MONTHLY_INTENTION, mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO}
+    if wanted_key and mod.normalize_flag_value(page_key) != mod.normalize_flag_value(wanted_key):
+        if not special_kind or page_kind != wanted_kind or page_title.lower() != wanted_title.lower():
+            return False
+    elif not wanted_key and page_title.lower() != wanted_title.lower():
         return False
+    if page_kind != wanted_kind:
+        return False
+    if special_kind:
+        return True
     page_group = (
         mod.page_property_text(page, mod.DETAILED_FRAGMENT_GROUP_PROPERTY).strip()
         or mod.page_property_text(page, mod.AUDIO_FRAGMENT_COLLECTION_PROPERTY).strip()
