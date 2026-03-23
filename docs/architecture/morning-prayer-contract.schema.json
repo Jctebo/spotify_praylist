@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/morning-prayer-contract.schema.json",
+  "title": "Morning Prayer Contract",
+  "type": "object",
+  "required": ["key", "title", "status", "header", "resolvers"],
+  "additionalProperties": false,
+  "properties": {
+    "key": { "type": "string", "minLength": 1 },
+    "title": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["enabled", "draft", "deprecated", "migrated"]
+    },
+    "header": {
+      "type": "object",
+      "required": ["builder", "model", "render_policy", "page_id"],
+      "additionalProperties": false,
+      "properties": {
+        "builder": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "render_policy": { "type": "string", "minLength": 1 },
+        "page_id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "resolvers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/resolver" }
+    }
+  },
+  "$defs": {
+    "resolver": {
+      "type": "object",
+      "required": ["key", "kind", "order", "title", "targets"],
+      "additionalProperties": false,
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "file",
+            "prompt",
+            "template",
+            "monthly_template",
+            "code_driven",
+            "novena_pipeline",
+            "spotify"
+          ]
+        },
+        "resolver": { "type": "string", "minLength": 1 },
+        "path": { "type": "string", "minLength": 1 },
+        "folder": { "type": "string", "minLength": 1 },
+        "selector": { "type": "string", "minLength": 1 },
+        "feast_day_window": { "type": "integer", "minimum": 1 },
+        "order": { "type": "integer", "minimum": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": ["page_content", "audio", "playlist_creation"]
+          }
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "code_driven" } } },
+          "then": { "required": ["resolver"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "file" } } },
+          "then": { "required": ["path"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "template" } } },
+          "then": { "required": ["resolver"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "monthly_template" } } },
+          "then": { "required": ["folder", "selector"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "novena_pipeline" } } },
+          "then": { "required": ["feast_day_window"] }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "spotify" } } },
+          "then": { "required": ["resolver", "metadata"] }
+        }
+      ]
+    }
+  }
+}
