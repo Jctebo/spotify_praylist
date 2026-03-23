@@ -31,7 +31,7 @@ Optional variables:
 - `scripts/setup_notion.ps1`: Notion token/database setup + API validation
 - `scripts/setup_notion_playlists.ps1`: creates/populates the Notion playlists database and backfills the main `Playlist` field
 - `scripts/setup_novena.ps1`: Romcal + OpenAI + Notion setup wizard for daily novena generation
-- `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml`
+- `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` (disabled in this branch)
 - `scripts/run_daily_notion_reset_local.ps1`: local mirror of `.github/workflows/daily_notion_reset.yml`
 - `scripts/run_daily_novena_prayer_local.ps1`: local runner for the generic prayer runner (Morning Prayer config first)
 - `scripts/run_daily_devotional_image_local.ps1`: local runner for saint devotional image generation
@@ -45,7 +45,7 @@ Optional variables:
 - `sync/build_devotional_image_distribution_bundle.ps1`: builds a `sync\public` + `sync\client` distribution folder
 - `requirements.txt`: Python dependencies
 - `release/releaselog.md`: consolidated release log for shipped bug work
-- `.github/workflows/daily.yml`: daily + manual GitHub Actions workflow
+- `.github/workflows/daily.yml`: daily + manual GitHub Actions workflow (refresh job disabled in this branch)
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
 - `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with rclone upload to OneDrive
 - `.github/workflows/liturgical_calendar_yearly_sync.yml`: Jan 1 + manual Liturgical Calendar population
@@ -116,6 +116,8 @@ Expected behavior:
 Workflow triggers:
 - daily schedule (UTC cron in `.github/workflows/daily.yml`)
 - manual run via `workflow_dispatch`
+
+In this branch, the scheduled refresh job is disabled; the workflow file remains for later reactivation.
 
 ## Notion Queue Config (Opus Dei)
 Daily refresh now uses Opus Dei rows as the queue source (`SPOTIFY_REFRESH_CONFIG_SOURCE=notion`).
