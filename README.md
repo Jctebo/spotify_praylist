@@ -21,6 +21,7 @@ Optional variables:
 ## Files
 - `jobs/playlist/refresh_playlist.py`: main script (token refresh + playlist update)
 - `jobs/notion/reset_notion_completions.py`: daily reset to uncheck all Notion completion checkboxes
+- `jobs/notion/generate_prayer.py`: generic prayer runner entrypoint (Morning Prayer config first)
 - `jobs/novena/generate_daily_novena_prayer.py`: generates a daily novena litany from Romcal saints + OpenAI and writes to Notion
 - `jobs/novena/sync_liturgical_calendar.py`: syncs Liturgical Calendar Notion rows from Romcal over a date range (yearly job)
 - `jobs/novena/generate_devotional_image.py`: generates a saint devotional image from the 9-day Romcal window and writes files to OneDrive folders
@@ -32,7 +33,7 @@ Optional variables:
 - `scripts/setup_novena.ps1`: Romcal + OpenAI + Notion setup wizard for daily novena generation
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml`
 - `scripts/run_daily_notion_reset_local.ps1`: local mirror of `.github/workflows/daily_notion_reset.yml`
-- `scripts/run_daily_novena_prayer_local.ps1`: local runner for daily novena prayer generation
+- `scripts/run_daily_novena_prayer_local.ps1`: local runner for the generic prayer runner (Morning Prayer config first)
 - `scripts/run_daily_devotional_image_local.ps1`: local runner for saint devotional image generation
 - `scripts/run_daily_devotional_image_onedrive_local.ps1`: local runner that generates devotional images and uploads them to OneDrive via Microsoft Graph
 - `scripts/run_daily_devotional_image_rclone_local.ps1`: local runner that generates devotional images and uploads to OneDrive using rclone

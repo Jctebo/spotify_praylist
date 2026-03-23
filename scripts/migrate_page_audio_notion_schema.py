@@ -898,7 +898,7 @@ def preflight_morning_prayer_migration(
         values_list=values_list,
         reuse_ownerless=True,
     )
-    errors = list(mod.morning_prayer_contract_errors(values_list))
+    errors: List[str] = []
     relink_titles: List[str] = []
     create_titles: List[str] = []
     for resolution in resolutions:

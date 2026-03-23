@@ -1,4 +1,4 @@
-name: Daily Novena Prayer
+name: Morning Prayer
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     - cron: "10 8 * * *" # daily 02:10 CST / 03:10 CDT
 
 jobs:
-  generate-novena:
+  generate-morning-prayer:
     runs-on: ubuntu-latest
 
     steps:
@@ -39,27 +39,6 @@ jobs:
           printf "%s" "${RCLONE_CONFIG_B64}" | base64 -d > "${HOME}/.config/rclone/rclone.conf"
           chmod 600 "${HOME}/.config/rclone/rclone.conf"
 
-      - name: Prefetch Audio Libraries from OneDrive
-        env:
-          RCLONE_REMOTE_NAME: ${{ vars.RCLONE_REMOTE_NAME }}
-          AUDIO_ONEDRIVE_REMOTE_ROOT: ${{ vars.AUDIO_ONEDRIVE_REMOTE_ROOT }}
-          DEVOTIONAL_ONEDRIVE_REMOTE_ROOT: ${{ vars.DEVOTIONAL_ONEDRIVE_REMOTE_ROOT }}
-        run: |
-          REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
-          AUDIO_ROOT="${AUDIO_ONEDRIVE_REMOTE_ROOT:-Praylist Audio}"
-          LEGACY_ROOT="${DEVOTIONAL_ONEDRIVE_REMOTE_ROOT:-}"
-          NOVENA_LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/Praylist Audio/Novena Audio Library"
-          PAGE_AUDIO_LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/Praylist Audio/Playlist Audio"
-          mkdir -p "${NOVENA_LOCAL_ROOT}" "${PAGE_AUDIO_LOCAL_ROOT}"
-          rclone copy "${REMOTE_NAME}:${AUDIO_ROOT}/Novena Audio Library/" "${NOVENA_LOCAL_ROOT}/" --create-empty-src-dirs || true
-          rclone copy "${REMOTE_NAME}:${AUDIO_ROOT}/Playlist Audio/" "${PAGE_AUDIO_LOCAL_ROOT}/" --create-empty-src-dirs || true
-          if [ -n "${LEGACY_ROOT}" ]; then
-            echo "Prefetching legacy Novena Audio Library from ${LEGACY_ROOT}."
-            rclone copy "${REMOTE_NAME}:${LEGACY_ROOT}/Novena Audio Library/" "${NOVENA_LOCAL_ROOT}/" --create-empty-src-dirs || true
-          else
-            echo "Skipping legacy Novena Audio Library prefetch; DEVOTIONAL_ONEDRIVE_REMOTE_ROOT is not set."
-          fi
-
       - name: Restore Page Audio Cache
         uses: actions/cache@v5
         with:
@@ -68,87 +47,22 @@ jobs:
           restore-keys: |
             page-audio-${{ runner.os }}-
 
-      - name: Generate Daily Novena Prayer
+      - name: Generate Morning Prayer Audio
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
-          OAI_API_BASE_URL: https://api.openai.com/v1
-          OAI_MODEL: gpt-4.1-mini
-          ROMCAL_CALENDAR: general_roman
-          ROMCAL_LOCALE: en
-          ROMCAL_WINDOW_DAYS: "9"
-          JOB_UTC_OFFSET: -06:00
-          NOTION_DATABASE_NAME: Opus Dei
-          NOTION_TITLE_PROPERTY: Name
-          NOTION_NOVENA_ROW_TITLE: Daily Novenas from Liturgical Calendar
-          NOTION_NOVENA_PROPERTY: ""
-          NOTION_WRITE_DAILY_NOVENA_PAGE: "false"
-          NOTION_SAINT_RADAR_ENABLED: "true"
-          NOTION_SAINT_DATABASE_ID: ${{ vars.NOTION_SAINT_DATABASE_ID || secrets.NOTION_SAINT_DATABASE_ID }}
-          NOTION_SAINT_DATABASE_NAME: Liturgical Calendar
-          NOTION_SAINT_TITLE_PROPERTY: Name
-          NOTION_SAINT_FEAST_DAY_PROPERTY: Feast Day
-          NOTION_SAINT_CELEBRATION_PROPERTY: Celebration Rank
-          NOTION_SAINT_PRECEDENCE_PROPERTY: Precedence
-          NOTION_SAINT_BACKGROUND_PROPERTY: Background
-          NOTION_SAINT_INCLUDE_CALENDAR_DAYS: "false"
-          NOTION_SAINT_REFRESH_ALL: "false"
-          NOVENA_AUDIO_ENABLED: "true"
-          NOVENA_AUDIO_MODEL: gpt-4o-mini-tts
-          NOVENA_AUDIO_VOICE: alloy
-          NOVENA_AUDIO_FORMAT: mp3
-          NOVENA_AUDIO_SPEED: "1.0"
-          NOVENA_AUDIO_CAPTION: Daily Novena Prayer (Audio)
-          NOVENA_AUDIO_FAIL_OPEN: "true"
-          NOVENA_AUDIO_LIBRARY_DIR: ${{ github.workspace }}/onedrive_sync/Praylist Audio/Novena Audio Library
-          NOTION_AUDIO_RENDER_HASH_PROPERTY: Render Hash
-          NOTION_AUDIO_SAVED_PROPERTY: Audio Saved
-          USCCB_READINGS_ENABLED: "true"
-          USCCB_READINGS_FAIL_OPEN: "true"
-          USCCB_READINGS_BASE_URL: https://bible.usccb.org/bible/readings
-          USCCB_READINGS_EXTRA_PAGE_IDS: "6c389e7d-5bc6-4e11-b678-5e862f97dd54"
-        run: python jobs/novena/generate_daily_novena_prayer.py
-
-      - name: Upload Novena Audio Library to OneDrive
-        env:
-          RCLONE_REMOTE_NAME: ${{ vars.RCLONE_REMOTE_NAME }}
-          AUDIO_ONEDRIVE_REMOTE_ROOT: ${{ vars.AUDIO_ONEDRIVE_REMOTE_ROOT }}
-        run: |
-          REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
-          REMOTE_ROOT="${AUDIO_ONEDRIVE_REMOTE_ROOT:-Praylist Audio}"
-          LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/Praylist Audio/Novena Audio Library"
-          mkdir -p "${LOCAL_ROOT}"
-          rclone sync "${LOCAL_ROOT}/" "${REMOTE_NAME}:${REMOTE_ROOT}/Novena Audio Library/" --progress --transfers 4 --checkers 8
-
-      - name: Generate Auto Page Audio
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
-          NOTION_DATABASE_NAME: Opus Dei
           NOTION_TITLE_PROPERTY: Name
           NOTION_PLATFORM_PROPERTY: Platform
           NOTION_AUDIO_PLATFORM_VALUE: auto-audio,auto-text
-          NOTION_AUDIO_RESOLVER_PROPERTY: Spotify Resolver
-          NOTION_TEXT_RESOLVER_PROPERTY: Text Resolver
-          NOTION_AUTO_AUDIO_RESOLVER_PRIMARY_PROPERTY: Auto Audio Resolver 1
-          NOTION_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY: Auto Audio Resolver 2
           NOTION_AUDIO_ENABLED_PROPERTY: Enabled
-          NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID: ${{ vars.NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID || secrets.NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID }}
-          NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME: ${{ vars.NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME }}
-          NOTION_AUDIO_FRAGMENTS_DATABASE_ID: ${{ vars.NOTION_AUDIO_FRAGMENTS_DATABASE_ID || secrets.NOTION_AUDIO_FRAGMENTS_DATABASE_ID }}
-          NOTION_AUDIO_FRAGMENTS_DATABASE_NAME: ${{ vars.NOTION_AUDIO_FRAGMENTS_DATABASE_NAME }}
-          NOTION_AUDIO_OUTPUTS_DATABASE_ID: ${{ vars.NOTION_AUDIO_OUTPUTS_DATABASE_ID || secrets.NOTION_AUDIO_OUTPUTS_DATABASE_ID }}
-          NOTION_AUDIO_OUTPUTS_DATABASE_NAME: ${{ vars.NOTION_AUDIO_OUTPUTS_DATABASE_NAME }}
-          PAGE_AUDIO_CONFIG_FILE: config/page_audio_config.json
+          PRAYER_CONFIG_FILE: config/morning-prayer/morning-prayer.json
+          PRAYER_ROW_TITLE: Morning Prayer
           PAGE_AUDIO_CACHE_DIR: .cache/page_audio
           PAGE_AUDIO_LIBRARY_DIR: ${{ github.workspace }}/onedrive_sync/Praylist Audio/Playlist Audio
-          PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS: "true"
-          PAGE_AUDIO_FAIL_OPEN: "false"
           OAI_API_BASE_URL: https://api.openai.com/v1
           JOB_UTC_OFFSET: -06:00
-        run: python jobs/notion/generate_page_audio.py
+        run: python jobs/notion/generate_prayer.py
 
       - name: Upload Playlist Audio to OneDrive
         env:

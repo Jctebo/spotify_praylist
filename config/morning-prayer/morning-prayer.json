@@ -55,7 +55,7 @@
     {
       "key": "monthly-intention",
       "kind": "monthly_template",
-      "folder": "templates/monthly-intention",
+      "folder": "config/morning-prayer/templates/monthly-intention",
       "selector": "current_calendar_month",
       "order": 6,
       "title": "Monthly Intention",
@@ -113,22 +113,10 @@
       "targets": ["page_content", "audio"]
     },
     {
-      "key": "daily-novena-audio",
-      "kind": "code_driven",
-      "resolver": "daily_novena_audio_v1",
-      "order": 13,
-      "title": "Daily Novena Audio",
-      "targets": ["audio"],
-      "metadata": {
-        "feast_day_window": 9,
-        "generated_up_front": true
-      }
-    },
-    {
       "key": "intercessory-litany",
       "kind": "file",
       "path": "config/morning-prayer/content/intercessory-litany.txt",
-      "order": 14,
+      "order": 13,
       "title": "Intercessory Litany",
       "targets": ["page_content", "audio"]
     },
@@ -136,7 +124,7 @@
       "key": "spotify-playlist",
       "kind": "spotify",
       "resolver": "do_morning_playlist_v1",
-      "order": 15,
+      "order": 14,
       "title": "Spotify Playlist",
       "targets": ["page_content", "playlist_creation"],
       "metadata": {

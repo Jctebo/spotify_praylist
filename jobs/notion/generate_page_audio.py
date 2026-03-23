@@ -276,35 +276,24 @@ ASSEMBLY_ROLE_PRIMARY_SOURCE = "primary_source"
 ASSEMBLY_ROLE_FALLBACK_SOURCE = "fallback_source"
 MORNING_PRAYER_TITLE = "Morning Prayer"
 MORNING_PRAYER_FRAGMENT_GROUP = "morning_prayer"
-MORNING_PRAYER_DAILY_NOVENA_GROUP = "daily_novena"
 MORNING_PRAYER_FRAGMENT_KEY_ALIASES: Dict[str, str] = {
     "petition church": "petition-church",
     "petition technology": "petition-church",
-    "petition sick departed": "petition-sick-departed",
-    "petition sanctification of the church": "petition-sick-departed",
-    "petition 7": "petition-7",
-    "petition sick and departed": "petition-7",
+    "petition sick departed": "petition-sick-and-departed",
+    "petition sanctification of the church": "petition-sanctification-of-the-church",
+    "petition 7": "petition-sick-and-departed",
+    "petition sick and departed": "petition-sick-and-departed",
 }
-MORNING_PRAYER_FRAGMENT_CONTRACT: Sequence[tuple[str, str, str, str]] = (
-    ("morning-offering", "Morning Offering", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("daily-consecration", "Daily Consecration", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("baptismal-renewal", "Baptismal Renewal", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("petitions-intro", "Petitions Intro", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("monthly-intention", "Monthly Intention", FRAGMENT_TYPE_MONTHLY_INTENTION, AUDIO_FRAGMENT_MONTHLY_COLLECTION),
-    ("petition-families", "Petition - Families", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("petition-marriages", "Petition - Marriages", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("petition-conversion", "Petition - Conversion", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("petition-church", "Petition - Right Use of Technology", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    (
-        "petition-sick-departed",
-        "Petition - Sanctification of the Church",
-        FRAGMENT_TYPE_TEXT,
-        MORNING_PRAYER_FRAGMENT_GROUP,
-    ),
-    ("petition-7", "Petition - Sick and Departed", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("daily-novena-audio", "Daily Novena Audio", FRAGMENT_TYPE_DAILY_NOVENA_AUDIO, MORNING_PRAYER_DAILY_NOVENA_GROUP),
-    ("intercessory-litany", "Intercessory Litany", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-)
+
+
+def morning_prayer_resolver_group(resolver: Dict[str, Any]) -> str:
+    key = str(resolver.get("key", "")).strip()
+    kind = str(resolver.get("kind", "")).strip()
+    if key == "random-intention":
+        return RANDOM_INTENTION_FRAGMENT_COLLECTION
+    if key == "monthly-intention" or kind == "monthly_template":
+        return AUDIO_FRAGMENT_MONTHLY_COLLECTION
+    return MORNING_PRAYER_FRAGMENT_GROUP
 
 
 def normalize_morning_prayer_fragment_key(spec: Dict[str, Any]) -> str:
@@ -838,44 +827,27 @@ def morning_prayer_contract_resolvers(contract: Dict[str, Any]) -> List[Dict[str
     return out
 
 
-def morning_prayer_contract_resolver_keys(contract: Dict[str, Any]) -> List[str]:
-    keys: List[str] = []
-    for resolver in morning_prayer_contract_resolvers(contract):
-        key = str(resolver.get("key", "")).strip()
-        if key:
-            keys.append(key)
-    return keys
-
-
-def morning_prayer_contract_resolver_titles(contract: Dict[str, Any]) -> List[str]:
-    titles: List[str] = []
-    for resolver in morning_prayer_contract_resolvers(contract):
-        title = str(resolver.get("title", "")).strip()
-        if title:
-            titles.append(title)
-    return titles
-
-
-def morning_prayer_contract_page_content_titles(contract: Dict[str, Any]) -> List[str]:
-    titles: List[str] = []
-    for resolver in morning_prayer_contract_resolvers(contract):
-        targets = resolver.get("targets") if isinstance(resolver, dict) else None
-        if not isinstance(targets, list):
-            continue
-        if "page_content" not in {str(target).strip() for target in targets}:
-            continue
-        title = str(resolver.get("title", "")).strip()
-        if title:
-            titles.append(title)
-    return titles
-
-
 def morning_prayer_content_path(resolver_key: str) -> Path:
     return ROOT / "config" / "morning-prayer" / "content" / f"{resolver_key}.txt"
 
 
 def load_morning_prayer_content_text(resolver_key: str) -> str:
     path = morning_prayer_content_path(resolver_key)
+    if not path.exists():
+        return ""
+    return normalize_whitespace(path.read_text(encoding="utf-8"))
+
+
+def morning_prayer_monthly_template_path(folder: str, target_date: datetime.date) -> Path:
+    folder_path = Path(str(folder or "").strip() or ".")
+    if not folder_path.is_absolute():
+        folder_path = ROOT / folder_path
+    month_name = target_date.strftime("%B").lower()
+    return folder_path / f"{month_name}.txt"
+
+
+def load_morning_prayer_monthly_template_text(folder: str, target_date: datetime.date) -> str:
+    path = morning_prayer_monthly_template_path(folder, target_date)
     if not path.exists():
         return ""
     return normalize_whitespace(path.read_text(encoding="utf-8"))
@@ -895,6 +867,33 @@ def morning_prayer_content_block(title: str, text: str) -> Dict[str, Any]:
             "children": children,
         },
     }
+
+
+def build_morning_prayer_monthly_template_fragment(
+    resolver: Dict[str, Any],
+    *,
+    settings: Dict[str, Any],
+    base_url: str,
+    target_date: Optional[datetime.date] = None,
+) -> PageAudioFragment:
+    folder = str(resolver.get("folder", "")).strip()
+    if not folder:
+        raise RuntimeError("Morning Prayer monthly template resolver is missing its folder.")
+    selector = str(resolver.get("selector", "")).strip()
+    if selector and selector != "current_calendar_month":
+        raise RuntimeError(f"Unsupported Morning Prayer monthly template selector '{selector}'.")
+    template_text = load_morning_prayer_monthly_template_text(folder, target_date or shared.local_today())
+    if not template_text:
+        raise RuntimeError(f"Morning Prayer monthly template file is missing or empty for folder '{folder}'.")
+    return stable_text_fragment(
+        cache_root=page_audio_cache_dir(),
+        collection=AUDIO_FRAGMENT_MONTHLY_COLLECTION,
+        key="monthly-intention",
+        label="Monthly Intention",
+        text=template_text,
+        settings=settings,
+        base_url=base_url,
+    )
 
 
 def load_page_audio_config_from_file() -> Dict[str, Any]:
@@ -1445,14 +1444,18 @@ def is_morning_prayer_title(title: str) -> bool:
 
 
 def morning_prayer_contract_items() -> List[Dict[str, Any]]:
+    contract = load_morning_prayer_contract_from_file()
     items: List[Dict[str, Any]] = []
-    for index, (key, label, kind, group) in enumerate(MORNING_PRAYER_FRAGMENT_CONTRACT, start=1):
+    for index, resolver in enumerate(morning_prayer_contract_resolvers(contract), start=1):
+        key = str(resolver.get("key", "")).strip()
+        if not key:
+            continue
         items.append(
             {
                 "key": key,
-                "label": label,
-                "kind": kind,
-                "group": group,
+                "label": str(resolver.get("title", "")).strip() or key,
+                "kind": str(resolver.get("kind", "")).strip(),
+                "group": morning_prayer_resolver_group(resolver),
                 "assembly_role": ASSEMBLY_ROLE_APPEND,
                 "order": float(index),
             }
@@ -1500,53 +1503,6 @@ def spec_fragment_order(spec: Dict[str, Any]) -> float:
         return float(spec.get("order", spec.get(AUDIO_FRAGMENT_ORDER_PROPERTY, 0.0)))
     except Exception:
         return 0.0
-
-
-def morning_prayer_contract_errors(specs: Sequence[Dict[str, Any]]) -> List[str]:
-    errors: List[str] = []
-    matched_orders: List[tuple[str, float]] = []
-    items = morning_prayer_contract_items()
-    for item in items:
-        key_matches = [
-            spec
-            for spec in specs
-            if normalize_flag_value(normalize_morning_prayer_fragment_key(spec)) == normalize_flag_value(item["key"])
-        ]
-        if not key_matches:
-            errors.append(f"missing fragment '{item['key']}' ({item['label']})")
-            continue
-        if len(key_matches) > 1:
-            errors.append(f"duplicate fragment '{item['key']}' ({item['label']})")
-            continue
-        match = key_matches[0]
-        actual_kind = spec_fragment_kind(match)
-        if actual_kind != item["kind"]:
-            errors.append(
-                f"fragment '{item['key']}' ({item['label']}) has kind '{actual_kind or 'missing'}' instead of '{item['kind']}'"
-            )
-        actual_group = normalize_flag_value(spec_fragment_group(match))
-        expected_group = normalize_flag_value(str(item["group"]))
-        if expected_group and actual_group != expected_group:
-            errors.append(
-                f"fragment '{item['key']}' ({item['label']}) has group '{spec_fragment_group(match) or 'missing'}' instead of '{item['group']}'"
-            )
-        actual_role = normalize_fragment_assembly_role(
-            str(match.get("assembly_role", "")).strip() or str(match.get(DETAILED_FRAGMENT_ASSEMBLY_ROLE_PROPERTY, "")).strip()
-        ) or ASSEMBLY_ROLE_APPEND
-        if actual_role != item["assembly_role"]:
-            errors.append(
-                f"fragment '{item['key']}' ({item['label']}) has assembly role '{actual_role}' instead of '{item['assembly_role']}'"
-            )
-        matched_orders.append((item["key"], spec_fragment_order(match)))
-    previous_label = ""
-    previous_order: Optional[float] = None
-    for label, order in matched_orders:
-        if previous_order is not None and order <= previous_order:
-            errors.append(f"fragment '{label}' must sort after '{previous_label}'")
-            break
-        previous_label = label
-        previous_order = order
-    return errors
 
 
 def opus_dei_row_tts_settings(page: Dict[str, Any]) -> Dict[str, Any]:
@@ -3310,134 +3266,13 @@ def build_morning_prayer_plan(
     if not page_id:
         raise RuntimeError("Target page has no id.")
     contract = load_morning_prayer_contract_from_file()
-    contract_keys = morning_prayer_contract_resolver_keys(contract)
-    expected_keys = [
-        "random-intention",
-        "morning-offering",
-        "daily-consecration",
-        "baptismal-renewal",
-        "petitions-intro",
-        "monthly-intention",
-        "petition-families",
-        "petition-marriages",
-        "petition-conversion",
-        "petition-church",
-        "petition-sanctification-of-the-church",
-        "petition-sick-and-departed",
-        "daily-novena-audio",
-        "intercessory-litany",
-        "spotify-playlist",
-    ]
-    if contract_keys:
-        if contract_keys != expected_keys:
-            raise RuntimeError(
-                "Morning Prayer contract file resolver order does not match the runtime expectation."
-            )
-    contract_titles = morning_prayer_contract_resolver_titles(contract)
-    contract_page_content_titles = morning_prayer_contract_page_content_titles(contract)
-    contract_mode = str(config.get("resolver_contract_mode", "")).strip()
-    if contract_mode == "file_driven":
-        settings = tts_settings_from_config(config)
-        cache_root = page_audio_cache_dir()
-        monthly_fragment = build_monthly_intention_fragment_from_notion_or_provider(token, settings, base_url)
-        novena_page_title = (
-            str(config.get("daily_novena_page_title", DEFAULT_DAILY_NOVENA_PAGE_TITLE)).strip()
-            or DEFAULT_DAILY_NOVENA_PAGE_TITLE
-        )
-        daily_novena_fragments, daily_novena_content_blocks = build_daily_novena_sections(
-            pages,
-            title_property,
-            novena_page_title,
-            token,
-            settings=settings,
-            base_url=base_url,
-        )
-        fragments: List[PageAudioFragment] = []
-        content_blocks: List[Dict[str, Any]] = []
-        resolver_map = {str(resolver.get("key", "")).strip(): resolver for resolver in morning_prayer_contract_resolvers(contract)}
-
-        def stable_morning_fragment(label: str, text: str) -> PageAudioFragment:
-            return stable_text_fragment(
-                cache_root=cache_root,
-                collection="morning_prayer",
-                key=label,
-                label=label,
-                text=text,
-                settings=settings,
-                base_url=base_url,
-            )
-
-        for resolver_key in contract_keys:
-            resolver = resolver_map.get(resolver_key, {})
-            title = str(resolver.get("title", resolver_key)).strip() or resolver_key
-            kind = str(resolver.get("kind", "")).strip()
-            targets = {str(target).strip() for target in (resolver.get("targets") or []) if str(target).strip()}
-            if resolver_key == "daily-novena-audio":
-                fragments.extend(daily_novena_fragments)
-                continue
-            if resolver_key == "monthly-intention":
-                fragments.append(monthly_fragment)
-                if "page_content" in targets:
-                    content_blocks.append(morning_prayer_content_block(title, monthly_fragment.text))
-                continue
-            if resolver_key == "random-intention":
-                intention = normalize_whitespace(page_property_text(page, DEFAULT_INTENTION_PROPERTY))
-                if not intention:
-                    continue
-                spoken_text = normalize_whitespace(f"For today's intention: {intention}")
-                fragments.append(
-                    stable_text_fragment(
-                        cache_root=cache_root,
-                        collection=RANDOM_INTENTION_FRAGMENT_COLLECTION,
-                        key=RANDOM_INTENTION_FRAGMENT_KEY,
-                        label=RANDOM_INTENTION_FRAGMENT_LABEL,
-                        text=spoken_text,
-                        settings=settings,
-                        base_url=base_url,
-                    )
-                )
-                if "page_content" in targets:
-                    content_blocks.append(morning_prayer_content_block(title, spoken_text))
-                continue
-            if kind == "spotify":
-                if "page_content" in targets:
-                    content_blocks.append(morning_prayer_content_block(title, "Spotify playlist resolver."))
-                continue
-            if kind != "file":
-                continue
-            file_text = load_morning_prayer_content_text(resolver_key)
-            if not file_text:
-                raise RuntimeError(f"Morning Prayer content file is missing or empty for resolver '{resolver_key}'.")
-            fragments.append(stable_morning_fragment(title, file_text))
-            if "page_content" in targets:
-                content_blocks.append(morning_prayer_content_block(title, file_text))
-
-        if not fragments:
-            raise RuntimeError("No audio fragments were produced for Morning Prayer.")
-        return PageAudioPlan(
-            fragments=fragments,
-            text_target="page_content",
-            content_blocks=content_blocks,
-        )
+    contract_resolvers = morning_prayer_contract_resolvers(contract)
+    if not contract_resolvers:
+        raise RuntimeError("Morning Prayer contract file is empty or missing resolvers.")
     settings = tts_settings_from_config(config)
     cache_root = page_audio_cache_dir()
-    monthly_fragment = build_monthly_intention_fragment_from_notion_or_provider(token, settings, base_url)
-    novena_page_title = (
-        str(config.get("daily_novena_page_title", DEFAULT_DAILY_NOVENA_PAGE_TITLE)).strip()
-        or DEFAULT_DAILY_NOVENA_PAGE_TITLE
-    )
-    daily_novena_fragments, daily_novena_content_blocks = build_daily_novena_sections(
-        pages,
-        title_property,
-        novena_page_title,
-        token,
-        settings=settings,
-        base_url=base_url,
-    )
-
     fragments: List[PageAudioFragment] = []
     content_blocks: List[Dict[str, Any]] = []
-    resolver_map = {str(resolver.get("key", "")).strip(): resolver for resolver in morning_prayer_contract_resolvers(contract)}
 
     def stable_morning_fragment(label: str, text: str) -> PageAudioFragment:
         return stable_text_fragment(
@@ -3450,18 +3285,23 @@ def build_morning_prayer_plan(
             base_url=base_url,
         )
 
-    for resolver_key in contract_keys:
-        resolver = resolver_map.get(resolver_key, {})
+    for resolver in contract_resolvers:
+        resolver_key = str(resolver.get("key", "")).strip()
+        if not resolver_key:
+            continue
         title = str(resolver.get("title", resolver_key)).strip() or resolver_key
         kind = str(resolver.get("kind", "")).strip()
         targets = {str(target).strip() for target in (resolver.get("targets") or []) if str(target).strip()}
-        if resolver_key == "daily-novena-audio":
-            fragments.extend(daily_novena_fragments)
-            continue
         if resolver_key == "monthly-intention":
-            fragments.append(monthly_fragment)
+            fragment = build_morning_prayer_monthly_template_fragment(
+                resolver,
+                settings=settings,
+                base_url=base_url,
+                target_date=shared.local_today(),
+            )
+            fragments.append(fragment)
             if "page_content" in targets:
-                content_blocks.append(morning_prayer_content_block(title, monthly_fragment.text))
+                content_blocks.append(morning_prayer_content_block(title, fragment.text))
             continue
         if resolver_key == "random-intention":
             intention = normalize_whitespace(page_property_text(page, DEFAULT_INTENTION_PROPERTY))
@@ -3493,20 +3333,9 @@ def build_morning_prayer_plan(
             raise RuntimeError(f"Morning Prayer content file is missing or empty for resolver '{resolver_key}'.")
         fragments.append(stable_morning_fragment(title, file_text))
         if "page_content" in targets:
-            content_blocks.append(morning_prayer_content_block(title, file_text))
+                content_blocks.append(morning_prayer_content_block(title, file_text))
     if not fragments:
         raise RuntimeError("No audio fragments were produced for Morning Prayer.")
-    if contract_page_content_titles:
-        emitted_titles = [
-            str(block.get("heading_3", {}).get("rich_text", [{}])[0].get("text", {}).get("content", "")).strip()
-            for block in content_blocks
-            if str(block.get("type", "")).strip() == "heading_3"
-        ]
-        contract_heading_titles = contract_page_content_titles
-        if emitted_titles:
-            visible_titles = [title for title in emitted_titles if title]
-            if visible_titles[: len(contract_heading_titles)] != contract_heading_titles[: len(visible_titles)]:
-                raise RuntimeError("Morning Prayer content order does not match the Morning Prayer resolver contract.")
     return PageAudioPlan(
         fragments=fragments,
         text_target="page_content",
@@ -3669,14 +3498,6 @@ def build_opus_dei_two_list_plan(
 
     if not fragment_specs:
         raise RuntimeError("Two-list assembly row has no related detailed fragments.")
-    if assembly_mode == OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS and is_morning_prayer_title(row_title):
-        contract_errors = morning_prayer_contract_errors(fragment_specs)
-        if contract_errors:
-            raise RuntimeError(
-                "Morning Prayer detailed fragments are incomplete: "
-                + "; ".join(contract_errors)
-                + ". Re-run the Morning Prayer two-list migration before generating page audio."
-            )
 
     plan = PageAudioPlan(fragments=[])
     source_roles_present = False
