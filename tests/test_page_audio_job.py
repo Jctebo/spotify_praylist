@@ -1691,12 +1691,41 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertEqual(self.mod.morning_prayer_contract_errors(specs), [])
 
+    def test_morning_prayer_contract_errors_accepts_legacy_alias_keys(self):
+        specs = _morning_prayer_two_list_specs(self.mod)
+        for spec in specs:
+            if spec["key"] == "petition-church":
+                spec["key"] = "petition-technology"
+                spec["label"] = "Petition - Right Use of Technology"
+            if spec["key"] == "petition-sick-departed":
+                spec["key"] = "petition-sanctification-of-the-church"
+                spec["label"] = "Petition - Sanctification of the Church"
+            if spec["key"] == "petition-7":
+                spec["key"] = "petition-sick-and-departed"
+                spec["label"] = "Petition - Sick and Departed"
+
+        self.assertEqual(self.mod.morning_prayer_contract_errors(specs), [])
+
     def test_morning_prayer_contract_errors_rejects_missing_required_key(self):
         specs = [spec for spec in _morning_prayer_two_list_specs(self.mod) if spec["key"] != "petition-church"]
 
         self.assertIn(
             "missing fragment 'petition-church' (Petition - Right Use of Technology)",
             self.mod.morning_prayer_contract_errors(specs),
+        )
+
+    def test_normalize_morning_prayer_fragment_key_maps_legacy_aliases(self):
+        self.assertEqual(
+            self.mod.normalize_morning_prayer_fragment_key({"key": "petition technology", "label": "Petition - Right Use of Technology"}),
+            "petition-church",
+        )
+        self.assertEqual(
+            self.mod.normalize_morning_prayer_fragment_key({"key": "petition sanctification of the church", "label": "Petition - Sanctification of the Church"}),
+            "petition-sick-departed",
+        )
+        self.assertEqual(
+            self.mod.normalize_morning_prayer_fragment_key({"key": "petition sick and departed", "label": "Petition - Sick and Departed"}),
+            "petition-7",
         )
 
     def test_detailed_fragment_key_prefers_explicit_fragment_key_property(self):

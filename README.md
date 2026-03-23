@@ -266,6 +266,7 @@ Current config:
 - `Morning Prayer` now runs from the two-list `Opus Dei` + owner-linked `Detailed Fragments` model
 - required Morning Prayer fragments are owner-linked `Audio Fragments` rows for the static prayers, `Monthly Intention`, and `Daily Novena Audio`
 - the live Morning Prayer contract currently uses these durable keys for the petition rows: `petition-church` for `Petition - Right Use of Technology`, `petition-sick-departed` for `Petition - Sanctification of the Church`, and `petition-7` for `Petition - Sick and Departed`
+- the page-audio contract also normalizes the live Morning Prayer legacy aliases `petition-technology`, `petition-sanctification-of-the-church`, and `petition-sick-and-departed` onto the same durable keys so the workflow can read the existing Notion rows without weakening missing-fragment checks
 - Morning Prayer contract rows should carry stable `Fragment Key` values; the key is the runtime identity, while the row title can be edited for display text
 - `Text Sync Mode = page_content` remains the intended Morning Prayer behavior, and the job preserves its current working block/template path instead of forcing it into the generic managed-section sync
 - legacy `MORNING_PRAYER_OUTPUT` / wrapper / sequence rows can remain as migration references, but they are no longer the active runtime source of truth

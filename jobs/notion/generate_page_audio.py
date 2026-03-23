@@ -275,6 +275,14 @@ ASSEMBLY_ROLE_FALLBACK_SOURCE = "fallback_source"
 MORNING_PRAYER_TITLE = "Morning Prayer"
 MORNING_PRAYER_FRAGMENT_GROUP = "morning_prayer"
 MORNING_PRAYER_DAILY_NOVENA_GROUP = "daily_novena"
+MORNING_PRAYER_FRAGMENT_KEY_ALIASES: Dict[str, str] = {
+    "petition church": "petition-church",
+    "petition technology": "petition-church",
+    "petition sick departed": "petition-sick-departed",
+    "petition sanctification of the church": "petition-sick-departed",
+    "petition 7": "petition-7",
+    "petition sick and departed": "petition-7",
+}
 MORNING_PRAYER_FRAGMENT_CONTRACT: Sequence[tuple[str, str, str, str]] = (
     ("morning-offering", "Morning Offering", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
     ("daily-consecration", "Daily Consecration", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
@@ -295,6 +303,16 @@ MORNING_PRAYER_FRAGMENT_CONTRACT: Sequence[tuple[str, str, str, str]] = (
     ("daily-novena-audio", "Daily Novena Audio", FRAGMENT_TYPE_DAILY_NOVENA_AUDIO, MORNING_PRAYER_DAILY_NOVENA_GROUP),
     ("intercessory-litany", "Intercessory Litany", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
 )
+
+
+def normalize_morning_prayer_fragment_key(spec: Dict[str, Any]) -> str:
+    raw_key = normalize_flag_value(spec_fragment_key(spec))
+    raw_label = normalize_flag_value(spec_fragment_label(spec))
+    if raw_key in MORNING_PRAYER_FRAGMENT_KEY_ALIASES:
+        return MORNING_PRAYER_FRAGMENT_KEY_ALIASES[raw_key]
+    if raw_label in MORNING_PRAYER_FRAGMENT_KEY_ALIASES:
+        return MORNING_PRAYER_FRAGMENT_KEY_ALIASES[raw_label]
+    return raw_key
 
 
 def load_shared_module():
@@ -1394,7 +1412,11 @@ def morning_prayer_contract_errors(specs: Sequence[Dict[str, Any]]) -> List[str]
     matched_orders: List[tuple[str, float]] = []
     items = morning_prayer_contract_items()
     for item in items:
-        key_matches = [spec for spec in specs if normalize_flag_value(spec_fragment_key(spec)) == normalize_flag_value(item["key"])]
+        key_matches = [
+            spec
+            for spec in specs
+            if normalize_flag_value(normalize_morning_prayer_fragment_key(spec)) == normalize_flag_value(item["key"])
+        ]
         if not key_matches:
             errors.append(f"missing fragment '{item['key']}' ({item['label']})")
             continue
