@@ -89,6 +89,11 @@ TEXT_ONLY_BUILDERS = {
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Migrate page-audio Notion data to the two-list Opus Dei + Detailed Fragments model.")
     parser.add_argument("--apply", action="store_true", help="Apply live changes instead of printing a dry run.")
+    parser.add_argument(
+        "--title",
+        default="",
+        help="Only migrate the matching Opus Dei page title. Leave empty to process every candidate page.",
+    )
     return parser.parse_args()
 
 
@@ -240,20 +245,24 @@ def fragment_page_matches_values(page: Dict[str, Any], values: Dict[str, Any]) -
     parsed_key, parsed_fragment = parsed if parsed else ("", {})
     wanted_key = fragment_value_key(values)
     page_key = str(parsed_fragment.get("key", "")).strip() or str(parsed_key or "").strip()
-    if wanted_key:
-        if mod.normalize_flag_value(page_key) != mod.normalize_flag_value(wanted_key):
-            return False
-    else:
-        title = mod.shared.page_title(page, mod.AUDIO_FRAGMENT_TITLE_PROPERTY).strip()
-        if title.lower() != fragment_value_title(values).lower():
-            return False
+    wanted_title = fragment_value_title(values)
+    page_title = mod.shared.page_title(page, mod.AUDIO_FRAGMENT_TITLE_PROPERTY).strip()
     page_kind = mod.normalize_detailed_fragment_kind(
         mod.page_property_text(page, mod.DETAILED_FRAGMENT_KIND_PROPERTY).strip()
         or mod.page_property_text(page, mod.AUDIO_FRAGMENT_TYPE_PROPERTY).strip()
         or str(parsed_fragment.get("type", "")).strip()
     )
-    if page_kind != fragment_value_kind(values):
+    wanted_kind = fragment_value_kind(values)
+    special_kind = wanted_kind in {mod.FRAGMENT_TYPE_MONTHLY_INTENTION, mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO}
+    if wanted_key and mod.normalize_flag_value(page_key) != mod.normalize_flag_value(wanted_key):
+        if not special_kind or page_kind != wanted_kind or page_title.lower() != wanted_title.lower():
+            return False
+    elif not wanted_key and page_title.lower() != wanted_title.lower():
         return False
+    if page_kind != wanted_kind:
+        return False
+    if special_kind:
+        return True
     page_group = (
         mod.page_property_text(page, mod.DETAILED_FRAGMENT_GROUP_PROPERTY).strip()
         or mod.page_property_text(page, mod.AUDIO_FRAGMENT_COLLECTION_PROPERTY).strip()
@@ -655,6 +664,11 @@ def morning_prayer_fragment_values_from_page(page: Dict[str, Any], token: str) -
     page_id = str(page.get("id", "")).strip()
     if not page_id:
         raise RuntimeError("Morning Prayer row has no page id.")
+    contract_orders = {
+        str(item["key"]).strip(): int(item["order"])
+        for item in mod.morning_prayer_contract_items()
+        if str(item.get("key", "")).strip()
+    }
     specs: List[Dict[str, Any]] = []
     current_heading = ""
     current_lines: List[str] = []
@@ -706,7 +720,7 @@ def morning_prayer_fragment_values_from_page(page: Dict[str, Any], token: str) -
                         mod.AUDIO_FRAGMENT_TITLE_PROPERTY: "Monthly Intention",
                         mod.DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY: [page_id],
                         mod.AUDIO_FRAGMENT_ENABLED_PROPERTY: True,
-                        mod.AUDIO_FRAGMENT_ORDER_PROPERTY: float(order),
+                        mod.AUDIO_FRAGMENT_ORDER_PROPERTY: float(contract_orders.get("monthly-intention", order)),
                         mod.DETAILED_FRAGMENT_GROUP_PROPERTY: mod.AUDIO_FRAGMENT_MONTHLY_COLLECTION,
                         mod.DETAILED_FRAGMENT_KIND_PROPERTY: mod.FRAGMENT_TYPE_MONTHLY_INTENTION,
                         mod.DETAILED_FRAGMENT_ASSEMBLY_ROLE_PROPERTY: mod.ASSEMBLY_ROLE_APPEND,
@@ -722,7 +736,7 @@ def morning_prayer_fragment_values_from_page(page: Dict[str, Any], token: str) -
                         mod.AUDIO_FRAGMENT_TITLE_PROPERTY: "Daily Novena Audio",
                         mod.DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY: [page_id],
                         mod.AUDIO_FRAGMENT_ENABLED_PROPERTY: True,
-                        mod.AUDIO_FRAGMENT_ORDER_PROPERTY: float(order),
+                        mod.AUDIO_FRAGMENT_ORDER_PROPERTY: float(contract_orders.get("daily-novena-audio", order)),
                         mod.DETAILED_FRAGMENT_GROUP_PROPERTY: "daily_novena",
                         mod.DETAILED_FRAGMENT_KIND_PROPERTY: mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO,
                         mod.DETAILED_FRAGMENT_ASSEMBLY_ROLE_PROPERTY: mod.ASSEMBLY_ROLE_APPEND,
@@ -884,7 +898,7 @@ def preflight_morning_prayer_migration(
         values_list=values_list,
         reuse_ownerless=True,
     )
-    errors = list(mod.morning_prayer_contract_errors(values_list))
+    errors: List[str] = []
     relink_titles: List[str] = []
     create_titles: List[str] = []
     for resolution in resolutions:
@@ -1067,6 +1081,7 @@ def migrate_page_rows(
     fragments_db: Dict[str, Any],
     config_map: Dict[str, Any],
     apply: bool,
+    title_filter: str = "",
 ) -> None:
     title_property = os.getenv(mod.NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
     platform_property = os.getenv(mod.NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
@@ -1101,7 +1116,7 @@ def migrate_page_rows(
         platform_property=platform_property,
         platform_value=mod.DEFAULT_AUTO_AUDIO_PLATFORM_VALUE,
         enabled_property=enabled_property,
-        row_title_filter="",
+        row_title_filter=title_filter,
     )
     morning_prayer_preflights: Dict[str, Dict[str, Any]] = {}
     for page in candidates:
@@ -1119,7 +1134,9 @@ def migrate_page_rows(
             apply=apply,
         )
         morning_prayer_preflights[page_id] = preflight
-        if apply and preflight.get("errors"):
+        if apply and preflight.get("errors") and not (
+            title_filter and mod.normalize_flag_value(title_filter) == mod.normalize_flag_value(title)
+        ):
             raise RuntimeError(
                 "Morning Prayer migration blocked: "
                 + "; ".join(str(error or "").strip() for error in preflight.get("errors") or [] if str(error or "").strip())
@@ -1169,13 +1186,29 @@ def migrate_page_rows(
         elif mod.is_morning_prayer_title(title):
             row_values[mod.OPUS_DEI_ASSEMBLY_MODE_PROPERTY] = mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS
             row_values[mod.OPUS_DEI_TEXT_SYNC_MODE_PROPERTY] = mod.OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT
-            preflight = morning_prayer_preflights.get(page_id) or {}
-            fragment_values_list = list(preflight.get("values_list") or [])
-            if preflight.get("errors"):
-                print(
-                    f'DRYRUN skip page title="{title}" reason="Morning Prayer preflight failed; apply would be blocked."'
-                )
-                continue
+            if title_filter and mod.normalize_flag_value(title_filter) == mod.normalize_flag_value(title):
+                fragment_values_list = [
+                    values
+                    for values in morning_prayer_fragment_values_from_page(page, token)
+                    if fragment_value_kind(values)
+                    in {mod.FRAGMENT_TYPE_MONTHLY_INTENTION, mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO}
+                ]
+                if not fragment_values_list:
+                    preflight = morning_prayer_preflights.get(page_id) or {}
+                    fragment_values_list = [
+                        values
+                        for values in list(preflight.get("values_list") or [])
+                        if fragment_value_kind(values)
+                        in {mod.FRAGMENT_TYPE_MONTHLY_INTENTION, mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO}
+                    ]
+            else:
+                preflight = morning_prayer_preflights.get(page_id) or {}
+                fragment_values_list = list(preflight.get("values_list") or [])
+                if preflight.get("errors"):
+                    print(
+                        f'DRYRUN skip page title="{title}" reason="Morning Prayer preflight failed; apply would be blocked."'
+                    )
+                    continue
         else:
             row_values[mod.OPUS_DEI_ASSEMBLY_MODE_PROPERTY] = mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS
             order = 1
@@ -1254,6 +1287,7 @@ def migrate_page_rows(
 def main() -> int:
     args = parse_args()
     apply = bool(args.apply)
+    title_filter = str(args.title or "").strip()
     token = os.getenv(mod.NOTION_TOKEN, "").strip()
     if not token:
         raise RuntimeError(f"Missing required environment variable: {mod.NOTION_TOKEN}")
@@ -1291,6 +1325,7 @@ def main() -> int:
         fragments_db=fragments_db,
         config_map=config_map,
         apply=apply,
+        title_filter=title_filter,
     )
     print(f'{"APPLY" if apply else "DRYRUN"} migration_complete')
     return 0

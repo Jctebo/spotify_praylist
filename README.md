@@ -21,6 +21,7 @@ Optional variables:
 ## Files
 - `jobs/playlist/refresh_playlist.py`: main script (token refresh + playlist update)
 - `jobs/notion/reset_notion_completions.py`: daily reset to uncheck all Notion completion checkboxes
+- `jobs/notion/generate_prayer.py`: generic prayer runner entrypoint (Morning Prayer config first)
 - `jobs/novena/generate_daily_novena_prayer.py`: generates a daily novena litany from Romcal saints + OpenAI and writes to Notion
 - `jobs/novena/sync_liturgical_calendar.py`: syncs Liturgical Calendar Notion rows from Romcal over a date range (yearly job)
 - `jobs/novena/generate_devotional_image.py`: generates a saint devotional image from the 9-day Romcal window and writes files to OneDrive folders
@@ -32,7 +33,7 @@ Optional variables:
 - `scripts/setup_novena.ps1`: Romcal + OpenAI + Notion setup wizard for daily novena generation
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml`
 - `scripts/run_daily_notion_reset_local.ps1`: local mirror of `.github/workflows/daily_notion_reset.yml`
-- `scripts/run_daily_novena_prayer_local.ps1`: local runner for daily novena prayer generation
+- `scripts/run_daily_novena_prayer_local.ps1`: local runner for the generic prayer runner (Morning Prayer config first)
 - `scripts/run_daily_devotional_image_local.ps1`: local runner for saint devotional image generation
 - `scripts/run_daily_devotional_image_onedrive_local.ps1`: local runner that generates devotional images and uploads them to OneDrive via Microsoft Graph
 - `scripts/run_daily_devotional_image_rclone_local.ps1`: local runner that generates devotional images and uploads to OneDrive using rclone
@@ -266,6 +267,7 @@ Current config:
 - `Morning Prayer` now runs from the two-list `Opus Dei` + owner-linked `Detailed Fragments` model
 - required Morning Prayer fragments are owner-linked `Audio Fragments` rows for the static prayers, `Monthly Intention`, and `Daily Novena Audio`
 - the live Morning Prayer contract currently uses these durable keys for the petition rows: `petition-church` for `Petition - Right Use of Technology`, `petition-sick-departed` for `Petition - Sanctification of the Church`, and `petition-7` for `Petition - Sick and Departed`
+- the page-audio contract also normalizes the live Morning Prayer legacy aliases `petition-technology`, `petition-sanctification-of-the-church`, and `petition-sick-and-departed` onto the same durable keys so the workflow can read the existing Notion rows without weakening missing-fragment checks
 - Morning Prayer contract rows should carry stable `Fragment Key` values; the key is the runtime identity, while the row title can be edited for display text
 - `Text Sync Mode = page_content` remains the intended Morning Prayer behavior, and the job preserves its current working block/template path instead of forcing it into the generic managed-section sync
 - legacy `MORNING_PRAYER_OUTPUT` / wrapper / sequence rows can remain as migration references, but they are no longer the active runtime source of truth

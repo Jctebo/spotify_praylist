@@ -10,12 +10,7 @@
         "voice": "alloy",
         "format": "mp3",
         "speed": 1.0
-      },
-      "monthly_intention": {
-        "provider": "popes_prayer_network_pdf",
-        "language": "en"
-      },
-      "daily_novena_page_title": "Daily Novenas from Liturgical Calendar"
+      }
     },
     "DIVINE_OFFICE_INVITATORY_PAGE_AUDIO": {
       "label": "Divine Office Invitatory Page Audio",

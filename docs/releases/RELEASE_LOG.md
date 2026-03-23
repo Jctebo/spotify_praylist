@@ -1,5 +1,24 @@
 # Release Log
 
+## [0.1.0.0] - 2026-03-23
+
+### Added
+- Added a generic `jobs/notion/generate_prayer.py` runner that loads a prayer JSON config and executes Morning Prayer from that contract.
+- Added the repo-local Morning Prayer contract and file-backed content sources under `config/morning-prayer/`.
+- Added future-release planning docs for the shared calendar service, novena consumer layer, devotional image refactor, and later prayer add-backs.
+
+### Changed
+- Narrowed `.github/workflows/daily_novena_prayer.yml` into a Morning Prayer workflow that calls the generic prayer runner.
+- Updated `scripts/run_daily_novena_prayer_local.ps1` to call the generic prayer runner with the Morning Prayer config.
+- Shifted Morning Prayer to a config-driven path while keeping audio file materialization for OneDrive.
+- Removed the old Morning Prayer test shape that exercised the legacy multi-prayer constructions.
+- Updated the Morning Prayer architecture and release docs to describe the hard cutover and the future enhancement ladder.
+
+### Fixed
+- Fixed direct execution of `jobs/notion/generate_prayer.py` by adding repo-root import bootstrap.
+- Fixed local Morning Prayer regeneration so the new runner executes successfully from the repo root.
+- Fixed the remote GitHub Actions Morning Prayer workflow so it completes end to end on the cutover branch.
+
 ## [0.0.5.3] - 2026-03-23
 
 ### Fixed

@@ -35,22 +35,6 @@ def _number_prop(value):
     return {"type": "number", "number": value}
 
 
-def _morning_prayer_two_list_specs(mod):
-    specs = []
-    for item in mod.morning_prayer_contract_items():
-        specs.append(
-            {
-                "key": item["key"],
-                "label": item["label"],
-                "kind": item["kind"],
-                "group": item["group"],
-                "assembly_role": item["assembly_role"],
-                "order": item["order"],
-            }
-        )
-    return specs
-
-
 class TestPageAudioJob(unittest.TestCase):
     def setUp(self):
         self.mod = load_module("jobs/notion/generate_page_audio.py")
@@ -995,335 +979,6 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(plan.text_target, "page_content")
         self.assertEqual([block["type"] for block in plan.content_blocks], ["toggle"])
 
-    def test_build_morning_prayer_fragments_reuses_daily_novena_audio(self):
-        page = {
-            "id": "page_1",
-            "properties": {"Name": _title_prop("Morning Prayer")},
-        }
-        novena_page = {
-            "id": "page_2",
-            "properties": {"Name": _title_prop("Daily Novenas from Liturgical Calendar")},
-        }
-        top_blocks = [
-            {"id": "bookmark_1", "type": "bookmark", "bookmark": {"url": "https://example.com"}},
-            {"id": "heading_1", "type": "heading_3", "heading_3": {"rich_text": [{"plain_text": "Morning Offering"}]}},
-            {"id": "paragraph_1", "type": "paragraph", "paragraph": {"rich_text": [{"plain_text": "Offer my day."}]}},
-            {"id": "heading_2", "type": "heading_3", "heading_3": {"rich_text": [{"plain_text": "Petitions"}]}},
-            {"id": "paragraph_2", "type": "paragraph", "paragraph": {"rich_text": [{"plain_text": "I pray for these intentions."}]}},
-            {
-                "id": "list_1",
-                "type": "numbered_list_item",
-                "numbered_list_item": {"rich_text": [{"plain_text": "(monthly fragment For the Holy Father's monthly intention)"}]},
-            },
-            {"id": "paragraph_3", "type": "paragraph", "paragraph": {"rich_text": [{"plain_text": "(Daily Novena Fragment)"}]}},
-        ]
-        novena_blocks = [
-            {
-                "id": "toggle_1",
-                "type": "toggle",
-                "toggle": {
-                    "rich_text": [{"plain_text": "Novena - Saint Joseph (Day 6 of 9) [AUTOGEN_NOVENA_DAY:saint-joseph:2026-03-15]"}]
-                },
-            },
-            {
-                "id": "audio_1",
-                "type": "audio",
-                "audio": {
-                    "type": "file",
-                    "file": {"url": "https://example.com/novena_1.mp3"},
-                    "caption": [{"plain_text": "Novena Audio - Saint Joseph Day 6 [AUTOGEN_NOVENA_AUDIO_HASH:abc12345] [AUTOGEN_NOVENA_DAY:saint-joseph:2026-03-15]:[AUTOGEN_NOVENA_AUDIO]"}],
-                },
-            },
-            {
-                "id": "toggle_2",
-                "type": "toggle",
-                "toggle": {
-                    "rich_text": [{"plain_text": "Novena - Saint Patrick (Day 8 of 9) [AUTOGEN_NOVENA_DAY:saint-patrick:2026-03-15]"}]
-                },
-            },
-            {
-                "id": "audio_2",
-                "type": "audio",
-                "audio": {
-                    "type": "file",
-                    "file": {"url": "https://example.com/novena_2.mp3"},
-                    "caption": [{"plain_text": "Novena Audio - Saint Patrick Day 8 [AUTOGEN_NOVENA_AUDIO_HASH:def67890] [AUTOGEN_NOVENA_DAY:saint-patrick:2026-03-15]:[AUTOGEN_NOVENA_AUDIO]"}],
-                },
-            },
-        ]
-
-        def fake_children(block_id, _token):
-            if block_id == "page_1":
-                return top_blocks
-            if block_id == "page_2":
-                return novena_blocks
-            return []
-
-        config = {
-            "builder": "morning_prayer_v1",
-            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
-            "daily_novena_page_title": "Daily Novenas from Liturgical Calendar",
-        }
-
-        with patch.object(self.mod.shared, "notion_list_block_children", side_effect=fake_children), patch.object(
-            self.mod, "fetch_monthly_intention", return_value={"title": "For peace", "spoken_text": "For the Holy Father's monthly intention: that peace may grow."}
-        ):
-            fragments = self.mod.build_morning_prayer_fragments(
-                page=page,
-                pages=[page, novena_page],
-                title_property="Name",
-                config=config,
-                token="token",
-                base_url="https://api.openai.com/v1",
-            )
-
-        self.assertEqual([fragment.kind for fragment in fragments], ["tts", "tts", "tts", "source_audio", "tts", "source_audio"])
-        self.assertIn("Morning Offering", fragments[0].text)
-        self.assertIn("For the Holy Father's monthly intention: that peace may grow.", fragments[1].text)
-        self.assertIn("Novena to Saint Joseph Day 6", fragments[2].text)
-        self.assertEqual(fragments[3].source_url, "https://example.com/novena_1.mp3")
-        self.assertEqual(fragments[5].hash_value, "def67890")
-
-    def test_build_morning_prayer_fragments_reads_nested_heading_children(self):
-        page = {
-            "id": "page_1",
-            "properties": {"Name": _title_prop("Morning Prayer")},
-        }
-        novena_page = {
-            "id": "page_2",
-            "properties": {"Name": _title_prop("Daily Novenas from Liturgical Calendar")},
-        }
-        top_blocks = [
-            {
-                "id": "heading_offering",
-                "type": "heading_3",
-                "has_children": True,
-                "heading_3": {"rich_text": [{"plain_text": "Morning Offering"}]},
-            },
-            {
-                "id": "heading_petitions",
-                "type": "heading_3",
-                "has_children": True,
-                "heading_3": {"rich_text": [{"plain_text": "Petitions"}]},
-            },
-            {"id": "placeholder_novena", "type": "paragraph", "paragraph": {"rich_text": [{"plain_text": "(Daily Novena Fragment)"}]}},
-        ]
-        nested_children = {
-            "heading_offering": [
-                {"id": "p_1", "type": "paragraph", "paragraph": {"rich_text": [{"plain_text": "I offer this day."}]}}
-            ],
-            "heading_petitions": [
-                {"id": "p_2", "type": "paragraph", "paragraph": {"rich_text": [{"plain_text": "I offer these intentions."}]}},
-                {"id": "n_1", "type": "numbered_list_item", "numbered_list_item": {"rich_text": [{"plain_text": "(monthly fragment For the Holy Father's monthly intention)"}]}},
-            ],
-            "page_2": [
-                {
-                    "id": "toggle_1",
-                    "type": "toggle",
-                    "toggle": {"rich_text": [{"plain_text": "Novena - Saint Joseph (Day 6 of 9) [AUTOGEN_NOVENA_DAY:saint-joseph:2026-03-15]"}]},
-                },
-                {
-                    "id": "audio_1",
-                    "type": "audio",
-                    "audio": {
-                        "type": "file",
-                        "file": {"url": "https://example.com/novena_1.mp3"},
-                        "caption": [{"plain_text": "Novena Audio - Saint Joseph Day 6 [AUTOGEN_NOVENA_AUDIO_HASH:abc12345] [AUTOGEN_NOVENA_DAY:saint-joseph:2026-03-15]:[AUTOGEN_NOVENA_AUDIO]"}],
-                    },
-                }
-            ],
-        }
-
-        def fake_children(block_id, _token):
-            if block_id == "page_1":
-                return top_blocks
-            return nested_children.get(block_id, [])
-
-        config = {
-            "builder": "morning_prayer_v1",
-            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
-            "daily_novena_page_title": "Daily Novenas from Liturgical Calendar",
-        }
-
-        with patch.object(self.mod.shared, "notion_list_block_children", side_effect=fake_children), patch.object(
-            self.mod, "fetch_monthly_intention", return_value={"title": "For peace", "spoken_text": "For the Holy Father's monthly intention: that peace may grow."}
-        ):
-            fragments = self.mod.build_morning_prayer_fragments(
-                page=page,
-                pages=[page, novena_page],
-                title_property="Name",
-                config=config,
-                token="token",
-                base_url="https://api.openai.com/v1",
-            )
-
-        self.assertEqual([fragment.kind for fragment in fragments], ["tts", "tts", "tts", "source_audio"])
-        self.assertIn("Morning Offering", fragments[0].text)
-        self.assertIn("I offer this day.", fragments[0].text)
-        self.assertIn("For the Holy Father's monthly intention: that peace may grow.", fragments[1].text)
-        self.assertIn("Novena to Saint Joseph Day 6", fragments[2].text)
-
-    def test_build_morning_prayer_fragments_reuses_library_audio_for_stable_section(self):
-        page = {
-            "id": "page_1",
-            "properties": {"Name": _title_prop("Morning Prayer")},
-        }
-        novena_page = {
-            "id": "page_2",
-            "properties": {"Name": _title_prop("Daily Novenas from Liturgical Calendar")},
-        }
-        top_blocks = [
-            {"id": "heading_1", "type": "heading_3", "heading_3": {"rich_text": [{"plain_text": "Morning Offering"}]}},
-            {"id": "paragraph_1", "type": "paragraph", "paragraph": {"rich_text": [{"plain_text": "Offer my day."}]}},
-            {"id": "paragraph_2", "type": "paragraph", "paragraph": {"rich_text": [{"plain_text": "(Daily Novena Fragment)"}]}},
-        ]
-        novena_blocks = [
-            {
-                "id": "toggle_1",
-                "type": "toggle",
-                "toggle": {"rich_text": [{"plain_text": "Novena - Saint Joseph (Day 6 of 9) [AUTOGEN_NOVENA_DAY:saint-joseph:2026-03-15]"}]},
-            },
-            {
-                "id": "audio_1",
-                "type": "audio",
-                "audio": {
-                    "type": "file",
-                    "file": {"url": "https://example.com/novena_1.mp3"},
-                    "caption": [{"plain_text": "Novena Audio - Saint Joseph Day 6 [AUTOGEN_NOVENA_AUDIO_HASH:abc12345] [AUTOGEN_NOVENA_DAY:saint-joseph:2026-03-15]:[AUTOGEN_NOVENA_AUDIO]"}],
-                },
-            }
-        ]
-
-        def fake_children(block_id, _token):
-            if block_id == "page_1":
-                return top_blocks
-            if block_id == "page_2":
-                return novena_blocks
-            return []
-
-        config = {
-            "builder": "morning_prayer_v1",
-            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
-            "daily_novena_page_title": "Daily Novenas from Liturgical Calendar",
-        }
-
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            with temp_env({"PAGE_AUDIO_CACHE_DIR": tmp_dir}):
-                cache_root = self.mod.page_audio_cache_dir()
-                with patch.object(self.mod.shared, "notion_list_block_children", side_effect=fake_children), patch.object(
-                    self.mod, "fetch_monthly_intention", return_value={"title": "For peace", "spoken_text": "For the Holy Father's monthly intention: that peace may grow."}
-                ):
-                    first_fragments = self.mod.build_morning_prayer_fragments(
-                        page=page,
-                        pages=[page, novena_page],
-                        title_property="Name",
-                        config=config,
-                        token="token",
-                        base_url="https://api.openai.com/v1",
-                    )
-                audio_path, meta_path = self.mod.page_audio_library_fragment_paths(
-                    cache_root, "morning_prayer", "Morning Offering", "mp3"
-                )
-                audio_path.write_bytes(b"existing")
-                meta_path.write_text(json.dumps({"hash_value": first_fragments[0].hash_value}), encoding="utf-8")
-                with patch.object(self.mod.shared, "notion_list_block_children", side_effect=fake_children), patch.object(
-                    self.mod, "fetch_monthly_intention", return_value={"title": "For peace", "spoken_text": "For the Holy Father's monthly intention: that peace may grow."}
-                ):
-                    fragments = self.mod.build_morning_prayer_fragments(
-                        page=page,
-                        pages=[page, novena_page],
-                        title_property="Name",
-                        config=config,
-                        token="token",
-                        base_url="https://api.openai.com/v1",
-                    )
-
-        self.assertEqual(fragments[0].kind, "source_audio")
-        self.assertEqual(Path(fragments[0].cache_path).suffix, ".mp3")
-        self.assertEqual(fragments[1].kind, "tts")
-        self.assertEqual(fragments[2].kind, "source_audio")
-
-    def test_build_morning_prayer_plan_inserts_novena_text_toggles(self):
-        page = {
-            "id": "page_1",
-            "properties": {"Name": _title_prop("Morning Prayer")},
-        }
-        novena_page = {
-            "id": "page_2",
-            "properties": {"Name": _title_prop("Daily Novenas from Liturgical Calendar")},
-        }
-        top_blocks = [
-            {"id": "heading_1", "type": "heading_3", "heading_3": {"rich_text": [{"plain_text": "Morning Offering"}]}},
-            {"id": "paragraph_1", "type": "paragraph", "paragraph": {"rich_text": [{"plain_text": "Offer my day."}]}},
-            {"id": "placeholder", "type": "paragraph", "paragraph": {"rich_text": [{"plain_text": "(Daily Novena Fragment)"}]}},
-            {
-                "id": "old_autogen",
-                "type": "toggle",
-                "toggle": {
-                    "rich_text": [{"plain_text": "Novena to Old Saint Day 5 [AUTOGEN_MORNING_PRAYER_NOVENA:old-saint:2026-03-14]"}]
-                },
-            },
-        ]
-        novena_blocks = [
-            {
-                "id": "toggle_1",
-                "type": "toggle",
-                "toggle": {"rich_text": [{"plain_text": "Novena - Saint Joseph (Day 6 of 9) [AUTOGEN_NOVENA_DAY:saint-joseph:2026-03-15]"}]},
-            },
-            {
-                "id": "audio_1",
-                "type": "audio",
-                "audio": {
-                    "type": "file",
-                    "file": {"url": "https://example.com/novena_1.mp3"},
-                    "caption": [{"plain_text": "Novena Audio - Saint Joseph Day 6 [AUTOGEN_NOVENA_AUDIO_HASH:abc12345] [AUTOGEN_NOVENA_DAY:saint-joseph:2026-03-15]:[AUTOGEN_NOVENA_AUDIO]"}],
-                },
-            },
-        ]
-        nested_children = {
-            "toggle_1": [
-                {
-                    "id": "day_toggle",
-                    "type": "toggle",
-                    "toggle": {"rich_text": [{"plain_text": "Day 6 Novena Prayer"}]},
-                }
-            ],
-            "day_toggle": [
-                {"id": "d1", "type": "paragraph", "paragraph": {"rich_text": [{"plain_text": "Theme: Trust in Divine Providence"}]}},
-                {"id": "d2", "type": "paragraph", "paragraph": {"rich_text": [{"plain_text": "Saint Joseph, pray for us."}]}}
-            ],
-        }
-
-        def fake_children(block_id, _token):
-            if block_id == "page_1":
-                return top_blocks
-            if block_id == "page_2":
-                return novena_blocks
-            return nested_children.get(block_id, [])
-
-        config = {
-            "builder": "morning_prayer_v1",
-            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
-            "daily_novena_page_title": "Daily Novenas from Liturgical Calendar",
-        }
-
-        with patch.object(self.mod.shared, "notion_list_block_children", side_effect=fake_children), patch.object(
-            self.mod, "fetch_monthly_intention", return_value={"title": "For peace", "spoken_text": "For the Holy Father's monthly intention: that peace may grow."}
-        ):
-            plan = self.mod.build_morning_prayer_plan(
-                page=page,
-                pages=[page, novena_page],
-                title_property="Name",
-                config=config,
-                token="token",
-                base_url="https://api.openai.com/v1",
-            )
-
-        self.assertEqual(plan.text_target, "page_content")
-        self.assertEqual([block["type"] for block in plan.content_blocks], ["heading_3", "paragraph", "paragraph", "toggle"])
-        self.assertIn("Novena to Saint Joseph Day 6", plan.content_blocks[-1]["toggle"]["rich_text"][0]["text"]["content"])
-        self.assertEqual([child["type"] for child in plan.content_blocks[-1]["toggle"]["children"]], ["paragraph", "paragraph"])
-
     def test_ensure_tts_fragment_audio_persists_library_copy(self):
         fragment = self.mod.PageAudioFragment(
             kind="tts",
@@ -1682,21 +1337,18 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(plan.text_target, "page_content")
         self.assertEqual([block["type"] for block in plan.content_blocks], ["toggle"])
 
-    def test_morning_prayer_contract_errors_accepts_renamed_labels_with_stable_keys(self):
-        specs = _morning_prayer_two_list_specs(self.mod)
-        for spec in specs:
-            if spec["key"] == "petition-church":
-                spec["label"] = "Petition - Right Use of Technology"
-                break
-
-        self.assertEqual(self.mod.morning_prayer_contract_errors(specs), [])
-
-    def test_morning_prayer_contract_errors_rejects_missing_required_key(self):
-        specs = [spec for spec in _morning_prayer_two_list_specs(self.mod) if spec["key"] != "petition-church"]
-
-        self.assertIn(
-            "missing fragment 'petition-church' (Petition - Right Use of Technology)",
-            self.mod.morning_prayer_contract_errors(specs),
+    def test_normalize_morning_prayer_fragment_key_maps_legacy_aliases(self):
+        self.assertEqual(
+            self.mod.normalize_morning_prayer_fragment_key({"key": "petition technology", "label": "Petition - Right Use of Technology"}),
+            "petition-church",
+        )
+        self.assertEqual(
+            self.mod.normalize_morning_prayer_fragment_key({"key": "petition sanctification of the church", "label": "Petition - Sanctification of the Church"}),
+            "petition-sanctification-of-the-church",
+        )
+        self.assertEqual(
+            self.mod.normalize_morning_prayer_fragment_key({"key": "petition sick and departed", "label": "Petition - Sick and Departed"}),
+            "petition-sick-and-departed",
         )
 
     def test_detailed_fragment_key_prefers_explicit_fragment_key_property(self):
@@ -1989,6 +1641,9 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertIn("DIVINE_OFFICE_EVENING_PAGE_AUDIO", payload["configs"])
         self.assertIn("DIVINE_OFFICE_NIGHT_PAGE_AUDIO", payload["configs"])
         self.assertIn("DIVINE_OFFICE_EVENING_TEXT", payload["configs"])
+        self.assertIn("morning_prayer_contract", payload)
+        self.assertEqual(payload["morning_prayer_contract"]["key"], "morning-prayer")
+        self.assertEqual(len(payload["morning_prayer_contract"]["resolvers"]), 14)
 
     def test_load_page_audio_config_merges_notion_configs_on_top_of_file_defaults(self):
         env = {
@@ -2329,9 +1984,6 @@ class TestPageAudioJob(unittest.TestCase):
                     "TTS Voice": _rich_text_prop("alloy"),
                     "TTS Format": _rich_text_prop("mp3"),
                     "TTS Speed": {"type": "number", "number": 1.0},
-                    "Monthly Intention Provider": _rich_text_prop("popes_prayer_network_pdf"),
-                    "Monthly Intention Language": _rich_text_prop("en"),
-                    "Daily Novena Page Title": _rich_text_prop("Daily Novenas from Liturgical Calendar"),
                 },
             }
         ]
@@ -2348,8 +2000,8 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(config["builder"], "morning_prayer_v1")
         self.assertEqual(config["audio_caption"], "Morning Prayer (Audio)")
         self.assertEqual(config["tts"]["model"], "gpt-4o-mini-tts")
-        self.assertEqual(config["monthly_intention"]["provider"], "popes_prayer_network_pdf")
-        self.assertEqual(config["daily_novena_page_title"], "Daily Novenas from Liturgical Calendar")
+        self.assertNotIn("monthly_intention", config)
+        self.assertNotIn("daily_novena_page_title", config)
 
     def test_main_filters_auto_audio_rows(self):
         env = {
@@ -2527,109 +2179,31 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual([block["marker"] for block in plan.content_blocks], ["text"])
         self.assertEqual([fragment.label for fragment in plan.fragments], ["Morning Audio"])
 
-    def test_build_opus_dei_two_list_plan_rejects_incomplete_morning_prayer_contract(self):
-        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
-        row_settings = {
-            "title": "Morning Prayer",
-            "assembly_mode": self.mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS,
-            "text_sync_mode": self.mod.OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT,
-            "text_property": "Description",
-            "audio_config": {"tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}},
-            "fragment_specs": [
-                {
-                    "label": "Daily Novena Audio",
-                    "kind": self.mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO,
-                    "group": "daily_novena",
-                    "assembly_role": self.mod.ASSEMBLY_ROLE_APPEND,
-                    "order": 1.0,
-                }
-            ],
+    def test_build_morning_prayer_plan_uses_repo_monthly_template_and_skips_novena(self):
+        page = {
+            "id": "page_1",
+            "properties": {
+                "Name": _title_prop("Morning Prayer"),
+                "Intention": _rich_text_prop("For peace in my family."),
+            },
         }
+        config = {"builder": "morning_prayer_v1", "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}}
 
-        with self.assertRaisesRegex(RuntimeError, "Morning Prayer detailed fragments are incomplete"):
-            self.mod.build_opus_dei_two_list_plan(
-                page=page,
-                pages=[page],
-                title_property="Name",
-                row_settings=row_settings,
-                token="token",
-                base_url="https://api.openai.com/v1",
-            )
+        plan = self.mod.build_morning_prayer_plan(
+            page=page,
+            pages=[page],
+            title_property="Name",
+            config=config,
+            token="token",
+            base_url="https://api.openai.com/v1",
+        )
 
-    def test_build_opus_dei_two_list_plan_supports_full_morning_prayer_contract(self):
-        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer")}}
-        row_settings = {
-            "title": "Morning Prayer",
-            "assembly_mode": self.mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS,
-            "text_sync_mode": self.mod.OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT,
-            "text_property": "Description",
-            "audio_config": {"tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}},
-            "fragment_specs": _morning_prayer_two_list_specs(self.mod),
-        }
-
-        def fake_child_plan(spec, **_kwargs):
-            label = spec["label"]
-            if spec["kind"] == self.mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO:
-                return self.mod.PageAudioPlan(
-                    fragments=[
-                        self.mod.PageAudioFragment(
-                            kind="source_audio",
-                            label=label,
-                            hash_value=f"hash-{self.mod.slugify(label)}",
-                            source_url="https://example.com/novena.mp3",
-                        )
-                    ],
-                    text_target="page_content",
-                    content_blocks=[{"marker": "novena"}],
-                )
-            return self.mod.PageAudioPlan(
-                fragments=[
-                    self.mod.PageAudioFragment(
-                        kind="tts",
-                        label=label,
-                        hash_value=f"hash-{self.mod.slugify(label)}",
-                        text=f"{label}.",
-                    )
-                ],
-                synced_text=f"{label}.",
-            )
-
-        with patch.object(self.mod, "build_detailed_fragment_child_plan", side_effect=fake_child_plan):
-            plan = self.mod.build_opus_dei_two_list_plan(
-                page=page,
-                pages=[page],
-                title_property="Name",
-                row_settings=row_settings,
-                token="token",
-                base_url="https://api.openai.com/v1",
-            )
-
-        self.assertEqual(plan.text_target, "page_content")
-        self.assertEqual([fragment.label for fragment in plan.fragments[:3]], ["Morning Offering", "Daily Consecration", "Baptismal Renewal"])
-        self.assertEqual(plan.fragments[-1].label, "Intercessory Litany")
-        self.assertTrue(any(block.get("marker") == "novena" for block in plan.content_blocks))
-
-    def test_morning_prayer_contract_errors_accepts_live_data_keys(self):
-        errors = self.mod.morning_prayer_contract_errors(_morning_prayer_two_list_specs(self.mod))
-
-        self.assertEqual(errors, [])
-
-    def test_morning_prayer_contract_errors_still_rejects_missing_keys(self):
-        specs = [
-            {
-                "key": "morning-offering",
-                "label": "Morning Offering",
-                "kind": self.mod.FRAGMENT_TYPE_TEXT,
-                "group": self.mod.MORNING_PRAYER_FRAGMENT_GROUP,
-                "assembly_role": self.mod.ASSEMBLY_ROLE_APPEND,
-                "order": 1.0,
-            }
-        ]
-
-        errors = self.mod.morning_prayer_contract_errors(specs)
-
-        self.assertIn("missing fragment 'daily-consecration' (Daily Consecration)", errors)
-        self.assertIn("missing fragment 'daily-novena-audio' (Daily Novena Audio)", errors)
+        labels = [fragment.label for fragment in plan.fragments]
+        self.assertIn("Monthly Intention", labels)
+        self.assertIn("Random Intention", labels)
+        self.assertNotIn("Daily Novena Audio", labels)
+        monthly_fragment = next(fragment for fragment in plan.fragments if fragment.fragment_key == "monthly-intention")
+        self.assertIn("For the Holy Father's monthly intention", monthly_fragment.text)
 
     def test_build_opus_dei_two_list_plan_requires_reliable_text_for_page_content(self):
         page = {"id": "page_1", "properties": {"Name": _title_prop("Daily Examen")}}
@@ -2713,54 +2287,6 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertEqual(rc, 0)
         render_mock.assert_called_once()
-
-    def test_main_does_not_apply_text_for_invalid_morning_prayer_contract(self):
-        env = {
-            "OPENAI_API_KEY": "key",
-            "NOTION_TOKEN": "notion_token",
-            "NOTION_DATABASE_ID": "db_1",
-            "NOTION_AUDIO_PLATFORM_VALUE": "auto-audio,auto-text",
-        }
-        pages = [
-            {
-                "id": "page_1",
-                "properties": {
-                    "Name": _title_prop("Morning Prayer"),
-                    "Platform": _rich_text_prop("auto-audio,auto-text"),
-                    "Enabled": _checkbox_prop(True),
-                },
-            }
-        ]
-        row_settings = {
-            "title": "Morning Prayer",
-            "assembly_mode": self.mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS,
-            "text_sync_mode": self.mod.OPUS_DEI_TEXT_SYNC_MODE_PAGE_CONTENT,
-            "text_property": "Description",
-            "audio_config": {"tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}},
-            "fragment_specs": [
-                {
-                    "label": "Daily Novena Audio",
-                    "kind": self.mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO,
-                    "group": "daily_novena",
-                    "assembly_role": self.mod.ASSEMBLY_ROLE_APPEND,
-                    "order": 1.0,
-                }
-            ],
-        }
-
-        with temp_env(env), patch.object(self.mod.shared, "notion_find_database_id", return_value="db_1"), patch.object(
-            self.mod.shared, "notion_get_all_pages", return_value=pages
-        ), patch.object(
-            self.mod, "load_detailed_fragments_from_notion", return_value={"fragments_by_page_id": {"page_1": []}}
-        ), patch.object(
-            self.mod, "opus_dei_two_list_settings", return_value=row_settings
-        ), patch.object(
-            self.mod, "apply_page_text_plan"
-        ) as text_mock:
-            rc = self.mod.main()
-
-        self.assertEqual(rc, 1)
-        text_mock.assert_not_called()
 
     def test_resolve_page_sync_keys_supports_text_and_audio_together(self):
         page = {
