@@ -1,6 +1,9 @@
 import datetime
 from contextlib import ExitStack
+import os
 import tempfile
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -51,6 +54,31 @@ class TestNovenaJob(unittest.TestCase):
         )
 
         self.assertEqual(page["id"], "page_1")
+
+    def test_direct_script_import_bootstraps_repo_root_without_pythonpath(self):
+        script_path = Path("jobs/novena/generate_daily_novena_prayer.py").resolve()
+        code = (
+            "import importlib.util; "
+            f"spec = importlib.util.spec_from_file_location('novena_job_bootstrap', r'{script_path}'); "
+            "module = importlib.util.module_from_spec(spec); "
+            "spec.loader.exec_module(module)"
+        )
+
+        env = {key: value for key, value in os.environ.items() if key != "PYTHONPATH"}
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            cwd=tempfile.gettempdir(),
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(
+            result.returncode,
+            0,
+            msg=f"stdout={result.stdout}\nstderr={result.stderr}",
+        )
 
     def test_mirror_calendar_page_to_novena_page_clones_only_novena_toggle_and_audio(self):
         source_blocks = [

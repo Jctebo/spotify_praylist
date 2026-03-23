@@ -19,6 +19,10 @@ from openai import OpenAI
 from romcal import Romcal, get_bundled_calendar_definitions, get_bundled_resources
 from romcal.types import CalendarDefinition, DayDefinition, Precedence
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
 from jobs.novena.liturgical_model import devotional_output_is_eligible
 
 NOTION_VERSION = "2022-06-28"

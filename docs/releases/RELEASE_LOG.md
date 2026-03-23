@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.0.5.3] - 2026-03-23
+
+### Fixed
+- Fixed the daily novena job so `jobs/novena/generate_daily_novena_prayer.py` can run directly in GitHub Actions without a `ModuleNotFoundError` for `jobs`.
+- Added regression coverage for the direct-import startup path to keep the import bootstrap from regressing.
+
 ## [0.0.5.2] - 2026-03-23
 
 ### Added
