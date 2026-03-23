@@ -1695,7 +1695,7 @@ class TestPageAudioJob(unittest.TestCase):
         specs = [spec for spec in _morning_prayer_two_list_specs(self.mod) if spec["key"] != "petition-church"]
 
         self.assertIn(
-            "missing fragment 'petition-church' (Petition - Church)",
+            "missing fragment 'petition-church' (Petition - Right Use of Technology)",
             self.mod.morning_prayer_contract_errors(specs),
         )
 
@@ -2608,6 +2608,28 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual([fragment.label for fragment in plan.fragments[:3]], ["Morning Offering", "Daily Consecration", "Baptismal Renewal"])
         self.assertEqual(plan.fragments[-1].label, "Intercessory Litany")
         self.assertTrue(any(block.get("marker") == "novena" for block in plan.content_blocks))
+
+    def test_morning_prayer_contract_errors_accepts_live_data_keys(self):
+        errors = self.mod.morning_prayer_contract_errors(_morning_prayer_two_list_specs(self.mod))
+
+        self.assertEqual(errors, [])
+
+    def test_morning_prayer_contract_errors_still_rejects_missing_keys(self):
+        specs = [
+            {
+                "key": "morning-offering",
+                "label": "Morning Offering",
+                "kind": self.mod.FRAGMENT_TYPE_TEXT,
+                "group": self.mod.MORNING_PRAYER_FRAGMENT_GROUP,
+                "assembly_role": self.mod.ASSEMBLY_ROLE_APPEND,
+                "order": 1.0,
+            }
+        ]
+
+        errors = self.mod.morning_prayer_contract_errors(specs)
+
+        self.assertIn("missing fragment 'daily-consecration' (Daily Consecration)", errors)
+        self.assertIn("missing fragment 'daily-novena-audio' (Daily Novena Audio)", errors)
 
     def test_build_opus_dei_two_list_plan_requires_reliable_text_for_page_content(self):
         page = {"id": "page_1", "properties": {"Name": _title_prop("Daily Examen")}}

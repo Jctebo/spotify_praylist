@@ -284,15 +284,14 @@ MORNING_PRAYER_FRAGMENT_CONTRACT: Sequence[tuple[str, str, str, str]] = (
     ("petition-families", "Petition - Families", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
     ("petition-marriages", "Petition - Marriages", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
     ("petition-conversion", "Petition - Conversion", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("petition-technology", "Petition - Technology", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
-    ("petition-church", "Petition - Church", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("petition-church", "Petition - Right Use of Technology", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
     (
-        "petition-sanctification-of-the-church",
+        "petition-sick-departed",
         "Petition - Sanctification of the Church",
         FRAGMENT_TYPE_TEXT,
         MORNING_PRAYER_FRAGMENT_GROUP,
     ),
-    ("petition-sick-and-departed", "Petition - Sick and Departed", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
+    ("petition-7", "Petition - Sick and Departed", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
     ("daily-novena-audio", "Daily Novena Audio", FRAGMENT_TYPE_DAILY_NOVENA_AUDIO, MORNING_PRAYER_DAILY_NOVENA_GROUP),
     ("intercessory-litany", "Intercessory Litany", FRAGMENT_TYPE_TEXT, MORNING_PRAYER_FRAGMENT_GROUP),
 )
