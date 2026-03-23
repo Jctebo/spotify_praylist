@@ -71,6 +71,9 @@ if ($SpotifyPlaylistName) { $env:SPOTIFY_PLAYLIST_NAME = $SpotifyPlaylistName }
 if ($JobUtcOffset) { $env:JOB_UTC_OFFSET = $JobUtcOffset }
 
 Write-Host ""
+Write-Host "Daily Spotify playlist refresh is disabled in this branch."
+exit 0
+
 if ($env:SPOTIFY_PLAYLIST_NAME) {
   Write-Host "Running daily refresh for playlist '$($env:SPOTIFY_PLAYLIST_NAME)' from Notion..."
 } else {

@@ -3322,10 +3322,6 @@ def build_morning_prayer_plan(
             if "page_content" in targets:
                 content_blocks.append(morning_prayer_content_block(title, spoken_text))
             continue
-        if kind == "spotify":
-            if "page_content" in targets:
-                content_blocks.append(morning_prayer_content_block(title, "Spotify playlist resolver."))
-            continue
         if kind != "file":
             continue
         file_text = load_morning_prayer_content_text(resolver_key)
@@ -3333,7 +3329,7 @@ def build_morning_prayer_plan(
             raise RuntimeError(f"Morning Prayer content file is missing or empty for resolver '{resolver_key}'.")
         fragments.append(stable_morning_fragment(title, file_text))
         if "page_content" in targets:
-                content_blocks.append(morning_prayer_content_block(title, file_text))
+            content_blocks.append(morning_prayer_content_block(title, file_text))
     if not fragments:
         raise RuntimeError("No audio fragments were produced for Morning Prayer.")
     return PageAudioPlan(

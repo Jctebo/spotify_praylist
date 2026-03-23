@@ -1643,7 +1643,7 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertIn("DIVINE_OFFICE_EVENING_TEXT", payload["configs"])
         self.assertIn("morning_prayer_contract", payload)
         self.assertEqual(payload["morning_prayer_contract"]["key"], "morning-prayer")
-        self.assertEqual(len(payload["morning_prayer_contract"]["resolvers"]), 14)
+        self.assertEqual(len(payload["morning_prayer_contract"]["resolvers"]), 13)
 
     def test_load_page_audio_config_merges_notion_configs_on_top_of_file_defaults(self):
         env = {

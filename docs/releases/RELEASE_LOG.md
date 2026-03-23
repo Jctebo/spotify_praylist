@@ -1,5 +1,22 @@
 # Release Log
 
+## [0.1.0.1] - 2026-03-23
+
+### Added
+- Added a reusable Morning Prayer construction cleanup release artifact and shipped notes for the Morning Prayer audio construction cutover.
+- Added `.gitignore` entries for local `.agents/` and `.copilot/` directories.
+- Added a future-release planning note for the next Rosary prayer work.
+
+### Changed
+- Removed the Spotify resolver from the Morning Prayer contract and content assembly path.
+- Disabled the daily Spotify playlist workflow job and its local mirror script.
+- Updated Morning Prayer content generation so the page-content path follows the generic construction pattern without playlist behavior.
+- Updated the Morning Prayer release artifact, progress tracking, and shipped status to match the cutover.
+
+### Fixed
+- Fixed the Morning Prayer resolver count expectation to match the updated 13-item contract.
+- Kept Morning Prayer audio generation working end to end after removing the playlist construction branch.
+
 ## [0.1.0.0] - 2026-03-23
 
 ### Added
