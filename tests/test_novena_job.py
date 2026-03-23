@@ -200,6 +200,70 @@ class TestNovenaJob(unittest.TestCase):
         self.assertEqual(children[0]["type"], "bookmark")
         self.assertEqual(children[1]["type"], "toggle")
 
+    def test_sync_saint_radar_skips_archived_pages_and_creates_new_rows(self):
+        page = {
+            "id": "page_1",
+            "archived": True,
+            "in_trash": True,
+            "properties": {
+                "Name": _title_prop("Saint Leo the Great, Pope and Doctor of the Church"),
+                "Feast Day": {"type": "date", "date": {"start": "2027-11-10"}},
+            },
+        }
+        database = {
+            "properties": {
+                "Name": {"type": "title"},
+                "Feast Day": {"type": "date"},
+                "Celebration Rank": {"type": "select"},
+                "Precedence": {"type": "rich_text"},
+                "Background": {"type": "rich_text"},
+            }
+        }
+        saints = [
+            {
+                "date": "2027-11-10",
+                "name": "Saint Leo the Great, Pope and Doctor of the Church",
+                "celebration_rank": "solemnity",
+                "precedence": "Precedence.memorial_1",
+                "entry_kind": "calendar_day",
+            }
+        ]
+
+        with temp_env(
+            {
+                "NOTION_SAINT_RADAR_ENABLED": "true",
+                "NOTION_SAINT_DATABASE_ID": "db_1",
+                "NOTION_SAINT_TITLE_PROPERTY": "Name",
+                "NOTION_SAINT_FEAST_DAY_PROPERTY": "Feast Day",
+                "NOTION_SAINT_CELEBRATION_PROPERTY": "Celebration Rank",
+                "NOTION_SAINT_PRECEDENCE_PROPERTY": "Precedence",
+                "NOTION_SAINT_BACKGROUND_PROPERTY": "Background",
+            }
+        ):
+            with patch.object(self.mod, "notion_get_database", return_value=database), patch.object(
+                self.mod, "notion_get_all_pages", return_value=[page]
+            ), patch.object(self.mod, "notion_create_page") as create_mock, patch.object(
+                self.mod, "notion_update_page_properties"
+            ) as update_mock:
+                mode = self.mod.sync_saint_radar(
+                    notion_token="token",
+                    default_parent_database_id="parent_db",
+                    default_parent_page_id="",
+                    saints=saints,
+                    openai_key="",
+                    oai_base_url="https://api.openai.com/v1",
+                    oai_model="gpt-4.1-mini",
+                )
+
+        self.assertEqual(mode, "existing:db_1:upserted=1:regenerated=0:refresh_all=false")
+        update_mock.assert_not_called()
+        create_mock.assert_called_once()
+        created_db_id = create_mock.call_args.args[0]
+        self.assertEqual(created_db_id, "db_1")
+        created_props = create_mock.call_args.args[1]
+        self.assertEqual(created_props["Name"]["title"][0]["text"]["content"], "Saint Leo the Great, Pope and Doctor of the Church")
+        self.assertEqual(created_props["Feast Day"]["date"]["start"], "2027-11-10")
+
     def test_collect_saints_window_uses_rank_based_contract(self):
         start = datetime.date(2026, 3, 3)
         day_data = {

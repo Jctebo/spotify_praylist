@@ -23,14 +23,18 @@ from jobs.novena.generate_daily_novena_prayer import (
     int_env,
     local_today,
     notion_find_database_id,
+    notion_find_database_id_by_name,
     notion_get_all_pages,
     notion_call,
+    notion_page_is_archived,
     page_date,
     page_title,
     require_env,
     sync_saint_radar,
 )
 
+LITURGICAL_CALENDAR_DATABASE_ID = "LITURGICAL_CALENDAR_DATABASE_ID"  # optional explicit liturgical calendar db id
+LITURGICAL_CALENDAR_DATABASE_NAME = "LITURGICAL_CALENDAR_DATABASE_NAME"  # optional explicit liturgical calendar db name
 LITURGICAL_SYNC_START_DATE = "LITURGICAL_SYNC_START_DATE"  # optional YYYY-MM-DD
 LITURGICAL_SYNC_END_DATE = "LITURGICAL_SYNC_END_DATE"  # optional YYYY-MM-DD
 LITURGICAL_SYNC_TARGET_YEAR = "LITURGICAL_SYNC_TARGET_YEAR"  # optional YYYY
@@ -98,6 +102,8 @@ def dedupe_exact_rows(database_id: str, token: str, start: datetime.date, end: d
     pages = notion_get_all_pages(database_id, token)
     buckets: dict[tuple[str, str], list[dict]] = {}
     for p in pages:
+        if notion_page_is_archived(p):
+            continue
         day = page_date(p, "Feast Day").strip()
         if not day:
             continue
@@ -131,8 +137,20 @@ def main() -> int:
         romcal_locale = os.getenv(ROMCAL_LOCALE, "en").strip() or "en"
 
         # Ensure calendar DB defaults are explicit for this job.
-        if not os.getenv(NOTION_SAINT_DATABASE_NAME, "").strip():
-            os.environ[NOTION_SAINT_DATABASE_NAME] = "Liturgical Calendar"
+        liturgical_db_id = (
+            os.getenv(LITURGICAL_CALENDAR_DATABASE_ID, "").strip()
+            or os.getenv(NOTION_SAINT_DATABASE_ID, "").strip()
+        )
+        liturgical_db_name = (
+            os.getenv(LITURGICAL_CALENDAR_DATABASE_NAME, "").strip()
+            or os.getenv(NOTION_SAINT_DATABASE_NAME, "").strip()
+            or "Liturgical Calendar"
+        )
+        if not liturgical_db_id:
+            liturgical_db_id = notion_find_database_id_by_name(notion_token, liturgical_db_name) or ""
+        if liturgical_db_id:
+            os.environ[NOTION_SAINT_DATABASE_ID] = liturgical_db_id
+        os.environ[NOTION_SAINT_DATABASE_NAME] = liturgical_db_name
         os.environ[NOTION_SAINT_RADAR_ENABLED] = "true"
         os.environ.setdefault(NOTION_SAINT_TITLE_PROPERTY, "Name")
         os.environ.setdefault(NOTION_SAINT_FEAST_DAY_PROPERTY, "Feast Day")
@@ -164,13 +182,13 @@ def main() -> int:
         dedupe_mode = "skipped"
         if bool_env(LITURGICAL_DEDUPE_EXACT, default=True):
             keys, archived = dedupe_exact_rows(
-                database_id=os.getenv(NOTION_SAINT_DATABASE_ID, "").strip() or parent_database_id,
+                database_id=liturgical_db_id or parent_database_id,
                 token=notion_token,
                 start=start_date,
                 end=end_date,
             )
             dedupe_mode = f"keys={keys}:archived={archived}"
-        saint_db_id = os.getenv(NOTION_SAINT_DATABASE_ID, "").strip() or "resolved_in_mode"
+        saint_db_id = liturgical_db_id or "resolved_in_mode"
         print(
             f"SUMMARY liturgical_db={saint_db_id} rows={len(rows)} "
             f"window_start={start_date.isoformat()} window_end={end_date.isoformat()} mode={mode} dedupe={dedupe_mode}"
