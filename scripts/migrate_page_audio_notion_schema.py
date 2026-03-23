@@ -664,6 +664,11 @@ def morning_prayer_fragment_values_from_page(page: Dict[str, Any], token: str) -
     page_id = str(page.get("id", "")).strip()
     if not page_id:
         raise RuntimeError("Morning Prayer row has no page id.")
+    contract_orders = {
+        str(item["key"]).strip(): int(item["order"])
+        for item in mod.morning_prayer_contract_items()
+        if str(item.get("key", "")).strip()
+    }
     specs: List[Dict[str, Any]] = []
     current_heading = ""
     current_lines: List[str] = []
@@ -715,7 +720,7 @@ def morning_prayer_fragment_values_from_page(page: Dict[str, Any], token: str) -
                         mod.AUDIO_FRAGMENT_TITLE_PROPERTY: "Monthly Intention",
                         mod.DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY: [page_id],
                         mod.AUDIO_FRAGMENT_ENABLED_PROPERTY: True,
-                        mod.AUDIO_FRAGMENT_ORDER_PROPERTY: float(order),
+                        mod.AUDIO_FRAGMENT_ORDER_PROPERTY: float(contract_orders.get("monthly-intention", order)),
                         mod.DETAILED_FRAGMENT_GROUP_PROPERTY: mod.AUDIO_FRAGMENT_MONTHLY_COLLECTION,
                         mod.DETAILED_FRAGMENT_KIND_PROPERTY: mod.FRAGMENT_TYPE_MONTHLY_INTENTION,
                         mod.DETAILED_FRAGMENT_ASSEMBLY_ROLE_PROPERTY: mod.ASSEMBLY_ROLE_APPEND,
@@ -731,7 +736,7 @@ def morning_prayer_fragment_values_from_page(page: Dict[str, Any], token: str) -
                         mod.AUDIO_FRAGMENT_TITLE_PROPERTY: "Daily Novena Audio",
                         mod.DETAILED_FRAGMENT_OPUS_DEI_RELATION_PROPERTY: [page_id],
                         mod.AUDIO_FRAGMENT_ENABLED_PROPERTY: True,
-                        mod.AUDIO_FRAGMENT_ORDER_PROPERTY: float(order),
+                        mod.AUDIO_FRAGMENT_ORDER_PROPERTY: float(contract_orders.get("daily-novena-audio", order)),
                         mod.DETAILED_FRAGMENT_GROUP_PROPERTY: "daily_novena",
                         mod.DETAILED_FRAGMENT_KIND_PROPERTY: mod.FRAGMENT_TYPE_DAILY_NOVENA_AUDIO,
                         mod.DETAILED_FRAGMENT_ASSEMBLY_ROLE_PROPERTY: mod.ASSEMBLY_ROLE_APPEND,
