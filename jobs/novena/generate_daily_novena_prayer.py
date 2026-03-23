@@ -2459,6 +2459,10 @@ def notion_page_property_type(page: Dict[str, Any], prop_name: str) -> str:
     return str(prop.get("type", "")).strip()
 
 
+def notion_page_is_archived(page: Dict[str, Any]) -> bool:
+    return bool(page.get("archived")) or bool(page.get("in_trash"))
+
+
 def notion_update_scalar_page_property_if_present(page: Dict[str, Any], prop_name: str, value: str, token: str) -> bool:
     page_id = str(page.get("id", "")).strip()
     prop_type = notion_page_property_type(page, prop_name)
@@ -2556,6 +2560,8 @@ def sync_saint_radar(
     pages = notion_get_all_pages(saint_db_id, notion_token)
     existing: Dict[str, Dict[str, Any]] = {}
     for page in pages:
+        if notion_page_is_archived(page):
+            continue
         name = page_title(page, title_prop).strip().lower()
         day = page_date(page, feast_prop).strip()
         if name and day:

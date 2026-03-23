@@ -382,6 +382,7 @@ Local run:
 Purpose:
 - populates your `Liturgical Calendar` Notion database from Romcal calendar-day entries
 - keeps entries pre-created so daily 9-day jobs can update content without creating new calendar-day rows
+- reruns as an upsert by `Name` + `Feast Day`, so repopulating a year is safe when the schema stays stable
 
 Script:
 - `jobs/novena/sync_liturgical_calendar.py`
@@ -392,11 +393,12 @@ Defaults:
 Manual bootstrap examples:
 - through end of 2027: set `LITURGICAL_SYNC_END_YEAR=2027` (optionally `LITURGICAL_SYNC_START_DATE=YYYY-MM-DD`)
 - one explicit year: set `LITURGICAL_SYNC_TARGET_YEAR=2028`
+- repopulate 2026 and 2027 with the current precedence rules: set `LITURGICAL_SYNC_START_DATE=2026-01-01` and `LITURGICAL_SYNC_END_YEAR=2027`
 
 Required environment variables:
 - `NOTION_TOKEN`
 - `NOTION_DATABASE_ID` (parent database used for fallback parent lookup)
-- `NOTION_SAINT_DATABASE_ID` (recommended: your Liturgical Calendar database id)
+- `LITURGICAL_CALENDAR_DATABASE_ID` (recommended: your Liturgical Calendar database id)
 
 Optional variables:
 - `ROMCAL_CALENDAR` (default `general_roman`)
@@ -405,6 +407,8 @@ Optional variables:
 - `LITURGICAL_SYNC_START_DATE` (optional `YYYY-MM-DD`)
 - `LITURGICAL_SYNC_END_DATE` (optional `YYYY-MM-DD`)
 - `LITURGICAL_SYNC_END_YEAR` (optional `YYYY`)
+- `LITURGICAL_CALENDAR_DATABASE_NAME` (optional explicit name; defaults to `Liturgical Calendar`)
+- `NOTION_SAINT_DATABASE_ID` and `NOTION_SAINT_DATABASE_NAME` remain supported as legacy aliases
 
 ## Daily Devotional Image Generation
 Purpose:
