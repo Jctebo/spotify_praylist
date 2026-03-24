@@ -1,12 +1,50 @@
-name: Morning Prayer
+name: Prayer Contracts Matrix
 
 on:
   workflow_dispatch:
   schedule:
     - cron: "10 8 * * *" # daily 02:10 CST / 03:10 CDT
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
-  generate-morning-prayer:
+  discover-contracts:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build-matrix.outputs.matrix }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Build contract matrix
+        id: build-matrix
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          contracts = sorted(
+              str(path.as_posix())
+              for path in Path("config").glob("*.json")
+              if path.is_file()
+          )
+          if not contracts:
+              raise SystemExit("No top-level config/*.json contracts found.")
+
+          matrix = {"include": [{"page_audio_config_file": path} for path in contracts]}
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
+              fh.write(f"matrix={json.dumps(matrix)}\n")
+          PY
+
+  generate-prayer-contracts:
+    needs: discover-contracts
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.discover-contracts.outputs.matrix) }}
     runs-on: ubuntu-latest
 
     steps:
@@ -21,56 +59,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Install rclone
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y rclone
-          rclone version
-
-      - name: Configure rclone
-        env:
-          RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG_B64 }}
-        run: |
-          if [ -z "${RCLONE_CONFIG_B64}" ]; then
-            echo "Missing RCLONE_CONFIG_B64 secret."
-            exit 1
-          fi
-          mkdir -p "${HOME}/.config/rclone"
-          printf "%s" "${RCLONE_CONFIG_B64}" | base64 -d > "${HOME}/.config/rclone/rclone.conf"
-          chmod 600 "${HOME}/.config/rclone/rclone.conf"
-
-      - name: Restore Page Audio Cache
-        uses: actions/cache@v5
-        with:
-          path: .cache/page_audio
-          key: page-audio-${{ runner.os }}-${{ github.run_id }}
-          restore-keys: |
-            page-audio-${{ runner.os }}-
-
-      - name: Generate Morning Prayer Audio
+      - name: Generate page audio from contract
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
-          NOTION_TITLE_PROPERTY: Name
-          NOTION_PLATFORM_PROPERTY: Platform
-          NOTION_AUDIO_PLATFORM_VALUE: auto-audio,auto-text
-          NOTION_AUDIO_ENABLED_PROPERTY: Enabled
-          PRAYER_CONFIG_FILE: config/morning-prayer/morning-prayer.json
-          PRAYER_ROW_TITLE: Morning Prayer
+          PAGE_AUDIO_CONFIG_FILE: ${{ matrix.page_audio_config_file }}
           PAGE_AUDIO_CACHE_DIR: .cache/page_audio
-          PAGE_AUDIO_LIBRARY_DIR: ${{ github.workspace }}/onedrive_sync/Praylist Audio/Playlist Audio
+          PAGE_AUDIO_FAIL_OPEN: "false"
           OAI_API_BASE_URL: https://api.openai.com/v1
           JOB_UTC_OFFSET: -06:00
-        run: python jobs/notion/generate_prayer.py
-
-      - name: Upload Playlist Audio to OneDrive
-        env:
-          RCLONE_REMOTE_NAME: ${{ vars.RCLONE_REMOTE_NAME }}
-          AUDIO_ONEDRIVE_REMOTE_ROOT: ${{ vars.AUDIO_ONEDRIVE_REMOTE_ROOT }}
-        run: |
-          REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
-          REMOTE_ROOT="${AUDIO_ONEDRIVE_REMOTE_ROOT:-Praylist Audio}"
-          LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/Praylist Audio/Playlist Audio"
-          mkdir -p "${LOCAL_ROOT}"
-          rclone sync "${LOCAL_ROOT}/" "${REMOTE_NAME}:${REMOTE_ROOT}/Playlist Audio/" --progress --transfers 4 --checkers 8
+        run: python jobs/notion/generate_page_audio.py
