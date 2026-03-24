@@ -1,5 +1,17 @@
 # Release Log
 
+## [0.1.2.1] - 2026-03-24
+
+### Added
+- Added a matrix-driven prayer contracts workflow that discovers top-level `config/*.json` files at runtime and fans out one page-audio job per contract.
+
+### Changed
+- Replaced the old Morning Prayer-only workflow body with a generic contract-driven matrix workflow.
+- Documented the new matrix behavior in the project README.
+
+### Fixed
+- Fixed the workflow path mismatch by removing the stale nested Morning Prayer contract path from the GitHub Actions runner.
+
 ## [0.1.2.0] - 2026-03-24
 
 ### Added
