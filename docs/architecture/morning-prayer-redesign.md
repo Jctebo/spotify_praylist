@@ -131,7 +131,7 @@ Relevant files today:
 - `scripts/migrate_page_audio_notion_schema.py`
 - `.github/workflows/daily_novena_prayer.yml`
 - `.github/workflows/daily_devotional_image_remote.yml`
-- `config/morning-prayer/morning-prayer.json`
+- `config/morning-prayer.json`
 
 Likely future split:
 - `jobs/novena/calendar_service.py` or similar shared novena/calendar helper

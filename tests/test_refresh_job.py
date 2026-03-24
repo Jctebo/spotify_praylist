@@ -64,21 +64,24 @@ class TestRefreshJob(unittest.TestCase):
             "SPOTIFY_CLIENT_ID": "cid",
             "SPOTIFY_CLIENT_SECRET": "secret",
             "SPOTIFY_REFRESH_TOKEN": "refresh",
-            "SPOTIFY_PLAYLIST_ID": "playlist_123",
-            "SPOTIFY_PLAYLIST_PROFILE": "morning",
-            "SPOTIFY_REFRESH_CONFIG_SOURCE": "file",
+            "NOTION_TOKEN": "notion_token",
+            "NOTION_DATABASE_ID": "db_1",
         }
         queue = ["spotify:track:111", "spotify:episode:222"]
 
         with temp_env(env):
-            with patch.object(self.mod, "load_playlist_config_optional", return_value=self.cfg), patch.object(
-                self.mod, "set_runtime_timezone"
-            ), patch.object(self.mod, "sp_client", return_value=(object(), "token_123")), patch.object(
-                self.mod, "build_queue_for_profile", return_value=queue
+            with patch.object(self.mod, "set_runtime_timezone"), patch.object(
+                self.mod, "sp_client", return_value=(object(), "token_123")
+            ), patch.object(self.mod, "load_notion_playlists", return_value=[{"name": "Morning", "playlist_id": "playlist_123"}]), patch.object(
+                self.mod, "build_queue_for_playlist_from_notion", return_value=queue
             ), patch.object(
                 self.mod, "recreate_playlist_items", return_value=len(queue)
             ) as recreate_mock, patch.object(self.mod, "sync_notion_uris_for_playlist", return_value=(0, [], [], [])), patch.object(
+                self.mod, "sync_notion_spotify_bookmarks", return_value=(0, 0, [], [])
+            ), patch.object(
                 self.mod, "distribute_prayer_intentions", return_value=(0, 0, 0)
+            ), patch.object(self.mod, "sync_notion_sunday_item_enablement", return_value=(0, [], [])), patch.object(
+                self.mod, "sync_notion_playlist_novena_links", return_value=(0, [])
             ):
                 rc = self.mod.main()
 
@@ -90,16 +93,17 @@ class TestRefreshJob(unittest.TestCase):
             "SPOTIFY_CLIENT_ID": "cid",
             "SPOTIFY_CLIENT_SECRET": "secret",
             "SPOTIFY_REFRESH_TOKEN": "refresh",
-            "SPOTIFY_PLAYLIST_ID": "playlist_123",
-            "SPOTIFY_PLAYLIST_PROFILE": "morning",
-            "SPOTIFY_REFRESH_CONFIG_SOURCE": "file",
+            "NOTION_TOKEN": "notion_token",
+            "NOTION_DATABASE_ID": "db_1",
         }
 
         with temp_env(env):
-            with patch.object(self.mod, "load_playlist_config_optional", return_value=self.cfg), patch.object(
-                self.mod, "set_runtime_timezone"
-            ), patch.object(self.mod, "sp_client", return_value=(object(), "token_123")), patch.object(
-                self.mod, "build_queue_for_profile", return_value=[]
+            with patch.object(self.mod, "set_runtime_timezone"), patch.object(
+                self.mod, "sp_client", return_value=(object(), "token_123")
+            ), patch.object(self.mod, "load_notion_playlists", return_value=[{"name": "Morning", "playlist_id": "playlist_123"}]), patch.object(
+                self.mod, "build_queue_for_playlist_from_notion", return_value=[]
+            ), patch.object(self.mod, "sync_notion_sunday_item_enablement", return_value=(0, [], [])), patch.object(
+                self.mod, "sync_notion_playlist_novena_links", return_value=(0, [])
             ):
                 rc = self.mod.main()
 

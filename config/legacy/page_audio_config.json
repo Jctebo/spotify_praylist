@@ -12,23 +12,6 @@
         "speed": 1.0
       }
     },
-    "DIVINE_OFFICE_INVITATORY_PAGE_AUDIO": {
-      "label": "Divine Office Invitatory Page Audio",
-      "builder": "divine_office_invitatory_v1",
-      "audio_caption": "Divine Office Invitatory (Audio)",
-      "silence_ms": 450,
-      "tts": {
-        "model": "gpt-4o-mini-tts",
-        "voice": "alloy",
-        "format": "mp3",
-        "speed": 1.0
-      },
-      "text_property": "Description",
-      "rss_feed_url": "https://divineoffice.org/feed/",
-      "rss_match_text": "Invitatory",
-      "intention_property": "Intention",
-      "intention_prefix": "For today's intention:"
-    },
     "SING_THE_HOURS_MORNING_PAGE_AUDIO": {
       "label": "Sing the Hours Morning Prayer Audio",
       "builder": "rss_audio_v1",
