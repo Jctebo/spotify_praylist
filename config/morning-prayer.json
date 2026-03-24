@@ -1,6 +1,7 @@
 {
   "key": "morning-prayer",
   "title": "Morning Prayer",
+  "target_row": "Morning Prayer",
   "status": "enabled",
   "header": {
     "builder": "morning_prayer_v1",
@@ -23,7 +24,7 @@
     {
       "key": "morning-offering",
       "kind": "file",
-      "path": "config/morning-prayer/content/morning-offering.txt",
+      "path": "config/content/morning-prayer/content/morning-offering.txt",
       "order": 2,
       "title": "Morning Offering",
       "targets": ["page_content", "audio"]
@@ -31,7 +32,7 @@
     {
       "key": "daily-consecration",
       "kind": "file",
-      "path": "config/morning-prayer/content/daily-consecration.txt",
+      "path": "config/content/morning-prayer/content/daily-consecration.txt",
       "order": 3,
       "title": "Daily Consecration",
       "targets": ["page_content", "audio"]
@@ -39,7 +40,7 @@
     {
       "key": "baptismal-renewal",
       "kind": "file",
-      "path": "config/morning-prayer/content/baptismal-renewal.txt",
+      "path": "config/content/morning-prayer/content/baptismal-renewal.txt",
       "order": 4,
       "title": "Baptismal Renewal",
       "targets": ["page_content", "audio"]
@@ -47,7 +48,7 @@
     {
       "key": "petitions-intro",
       "kind": "file",
-      "path": "config/morning-prayer/content/petitions-intro.txt",
+      "path": "config/content/morning-prayer/content/petitions-intro.txt",
       "order": 5,
       "title": "Petitions Intro",
       "targets": ["page_content", "audio"]
@@ -55,7 +56,7 @@
     {
       "key": "monthly-intention",
       "kind": "monthly_template",
-      "folder": "config/morning-prayer/templates/monthly-intention",
+      "folder": "config/content/morning-prayer/templates/monthly-intention",
       "selector": "current_calendar_month",
       "order": 6,
       "title": "Monthly Intention",
@@ -67,7 +68,7 @@
     {
       "key": "petition-families",
       "kind": "file",
-      "path": "config/morning-prayer/content/petition-families.txt",
+      "path": "config/content/morning-prayer/content/petition-families.txt",
       "order": 7,
       "title": "Petition - Families",
       "targets": ["page_content", "audio"]
@@ -75,7 +76,7 @@
     {
       "key": "petition-marriages",
       "kind": "file",
-      "path": "config/morning-prayer/content/petition-marriages.txt",
+      "path": "config/content/morning-prayer/content/petition-marriages.txt",
       "order": 8,
       "title": "Petition - Marriages",
       "targets": ["page_content", "audio"]
@@ -83,7 +84,7 @@
     {
       "key": "petition-conversion",
       "kind": "file",
-      "path": "config/morning-prayer/content/petition-conversion.txt",
+      "path": "config/content/morning-prayer/content/petition-conversion.txt",
       "order": 9,
       "title": "Petition - Conversion",
       "targets": ["page_content", "audio"]
@@ -91,7 +92,7 @@
     {
       "key": "petition-church",
       "kind": "file",
-      "path": "config/morning-prayer/content/petition-church.txt",
+      "path": "config/content/morning-prayer/content/petition-church.txt",
       "order": 10,
       "title": "Petition - Church",
       "targets": ["page_content", "audio"]
@@ -99,7 +100,7 @@
     {
       "key": "petition-sanctification-of-the-church",
       "kind": "file",
-      "path": "config/morning-prayer/content/petition-sanctification-of-the-church.txt",
+      "path": "config/content/morning-prayer/content/petition-sanctification-of-the-church.txt",
       "order": 11,
       "title": "Petition - Sanctification of the Church",
       "targets": ["page_content", "audio"]
@@ -107,7 +108,7 @@
     {
       "key": "petition-sick-and-departed",
       "kind": "file",
-      "path": "config/morning-prayer/content/petition-sick-and-departed.txt",
+      "path": "config/content/morning-prayer/content/petition-sick-and-departed.txt",
       "order": 12,
       "title": "Petition - Sick and Departed",
       "targets": ["page_content", "audio"]
@@ -115,7 +116,7 @@
     {
       "key": "intercessory-litany",
       "kind": "file",
-      "path": "config/morning-prayer/content/intercessory-litany.txt",
+      "path": "config/content/morning-prayer/content/intercessory-litany.txt",
       "order": 13,
       "title": "Intercessory Litany",
       "targets": ["page_content", "audio"]

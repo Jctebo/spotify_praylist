@@ -332,14 +332,18 @@ class TestPageAudioJob(unittest.TestCase):
             },
         }
         config = {
-            "builder": "divine_office_invitatory_v1",
+            "builder": "rss_audio_v1",
             "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
             "text_property": "Description",
+            "rss_feed_url": "https://divineoffice.org/feed/",
+            "rss_match_text": "Invitatory",
+            "intention_property": "Intention",
+            "intention_prefix": "For today's intention:",
         }
 
         with patch.object(
             self.mod,
-            "fetch_divine_office_feed_entry",
+            "fetch_rss_feed_entry",
             return_value={
                 "title": "Mar 14, Invitatory for Saturday of the 3rd week of Lent",
                 "audio_url": "https://example.com/invitatory.mp3",
@@ -347,7 +351,7 @@ class TestPageAudioJob(unittest.TestCase):
                 "date": "2026-03-14",
             },
         ):
-            plan = self.mod.build_divine_office_invitatory_plan(page, config, "https://api.openai.com/v1")
+            plan = self.mod.build_rss_audio_plan(page, config, "https://api.openai.com/v1")
 
         self.assertEqual([fragment.kind for fragment in plan.fragments], ["tts", "source_audio"])
         self.assertIn("For today's intention:", plan.fragments[0].text)
@@ -409,18 +413,18 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(second.kind, "source_audio")
         self.assertTrue(second.cache_path.endswith(".mp3"))
 
-    def test_build_divine_office_morning_text_plan_uses_page_content(self):
-        config = {"builder": "divine_office_morning_text_v1"}
+    def test_build_divine_office_night_text_plan_uses_page_content(self):
+        config = {"builder": "divine_office_night_text_v1"}
 
         with patch.object(
             self.mod,
             "fetch_divine_office_feed_entry",
             return_value={
-                "title": "Mar 14, Morning Prayer for Saturday of the 3rd week of Lent",
+                "title": "Mar 14, Night Prayer for Saturday of the 3rd week of Lent",
                 "content_html": "<p>God, come to my assistance.</p><p>Lord, make haste to help me.</p>",
             },
         ):
-            plan = self.mod.build_divine_office_morning_text_plan(config)
+            plan = self.mod.build_divine_office_night_text_plan(config)
 
         self.assertEqual(plan.fragments, [])
         self.assertEqual(plan.text_target, "page_content")
@@ -666,6 +670,7 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(key, "ROSARY_INTENTIONS_OUTPUT")
         self.assertEqual(config["builder"], "rosary_dynamic_v1")
         self.assertEqual(config["weekday_map"], "{\"Monday\":\"Joyful Mysteries\"}")
+        self.assertEqual(config["rosary_contract_file"], "config/rosary.json")
 
     def test_audio_output_config_from_notion_page_supports_fragment_key(self):
         page = {
@@ -681,7 +686,7 @@ class TestPageAudioJob(unittest.TestCase):
         parsed = self.mod.audio_output_config_from_notion_page(
             page,
             fragments={"morning-prayer": {"type": "sequence", "fragment_sequence": ["morning-offering"]}},
-            base_configs={"DIVINE_OFFICE_MORNING_PAGE_AUDIO": {"builder": "rss_audio_v1"}},
+            base_configs={"SING_THE_HOURS_MORNING_PAGE_AUDIO": {"builder": "rss_audio_v1"}},
         )
 
         self.assertIsNotNone(parsed)
@@ -689,7 +694,7 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(key, "MORNING_PRAYER_OUTPUT")
         self.assertEqual(config["builder"], "audio_fragments_v1")
         self.assertEqual(config["fragment_sequence"], ["morning-prayer"])
-        self.assertIn("DIVINE_OFFICE_MORNING_PAGE_AUDIO", config["config_map"])
+        self.assertIn("SING_THE_HOURS_MORNING_PAGE_AUDIO", config["config_map"])
 
     def test_audio_output_config_from_notion_page_normalizes_config_key_to_wrapper_fragment(self):
         page = {
@@ -706,7 +711,7 @@ class TestPageAudioJob(unittest.TestCase):
         parsed = self.mod.audio_output_config_from_notion_page(
             page,
             fragments={},
-            base_configs={"DIVINE_OFFICE_INVITATORY_PAGE_AUDIO": {"builder": "divine_office_invitatory_v1"}},
+            base_configs={"DIVINE_OFFICE_INVITATORY_PAGE_AUDIO": {"builder": "rss_audio_v1"}},
         )
 
         self.assertIsNotNone(parsed)
@@ -825,118 +830,83 @@ class TestPageAudioJob(unittest.TestCase):
                 "Intention": _rich_text_prop("For family.\nFor priests.\nFor peace.\nFor healing.\nFor vocations."),
             },
         }
-        fragments_map = {
-            "rosary-sign-of-cross": {"key": "rosary-sign-of-cross", "label": "Sign of the Cross", "text": "In the name of the Father.", "collection": "rosary"},
-            "rosary-apostles-creed": {"key": "rosary-apostles-creed", "label": "Apostles' Creed", "text": "I believe in God.", "collection": "rosary"},
-            "rosary-our-father": {"key": "rosary-our-father", "label": "Our Father", "text": "Our Father.", "collection": "rosary"},
-            "rosary-hail-mary": {"key": "rosary-hail-mary", "label": "Hail Mary", "text": "Hail Mary.", "collection": "rosary"},
-            "rosary-glory-be": {"key": "rosary-glory-be", "label": "Glory Be", "text": "Glory be.", "collection": "rosary"},
-            "rosary-fatima-prayer": {"key": "rosary-fatima-prayer", "label": "Fatima Prayer", "text": "O my Jesus.", "collection": "rosary"},
-            "rosary-hail-holy-queen": {"key": "rosary-hail-holy-queen", "label": "Hail Holy Queen", "text": "Hail, Holy Queen.", "collection": "rosary"},
-            "rosary-closing-prayer": {"key": "rosary-closing-prayer", "label": "Closing Prayer", "text": "Let us pray.", "collection": "rosary"},
-            "rosary-decade-meditation-template": {
-                "key": "rosary-decade-meditation-template",
-                "label": "Rosary Meditation",
-                "prompt": "Tie {intention} to {mystery_title} and {fruit}.",
-                "prompt_model": "gpt-4.1-mini",
-                "collection": "rosary",
-            },
-        }
-        for idx, title in enumerate(["Annunciation", "Visitation", "Nativity", "Presentation", "Finding in the Temple"], start=1):
-            fragments_map[f"rosary-joyful-{idx}"] = {
-                "key": f"rosary-joyful-{idx}",
-                "label": title,
-                "text": title,
-                "collection": "rosary",
-                "notes": json.dumps({"title": title, "fruit": "Humility"}),
-            }
         config = {
-            "builder": "rosary_dynamic_v1",
+            "builder": "rosary_v1",
             "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
-            "fragments": fragments_map,
-            "weekday_map": "{\"Monday\":\"Joyful Mysteries\"}",
+            "rosary_contract_file": "config/rosary.json",
         }
 
         with patch.object(self.mod.shared, "local_today", return_value=datetime.date(2026, 3, 16)):
             plan = self.mod.build_rosary_dynamic_plan(page=page, config=config, base_url="https://api.openai.com/v1")
 
-        hail_marys = [fragment for fragment in plan.fragments if fragment.fragment_key == "rosary-hail-mary"]
+        hail_marys = [fragment for fragment in plan.fragments if fragment.fragment_key == "hail-mary"]
         meditations = [fragment for fragment in plan.fragments if fragment.fragment_key.startswith("rosary-decade-meditation-")]
         self.assertEqual(len(hail_marys), 53)
         self.assertEqual(len(meditations), 5)
-        self.assertTrue(all(fragment.kind == "prompt" for fragment in meditations))
+        self.assertTrue(all(fragment.fragment_key.startswith("rosary-decade-meditation-") for fragment in meditations))
         self.assertEqual(plan.text_target, "page_content")
         self.assertEqual([block["type"] for block in plan.content_blocks], ["toggle"])
         self.assertEqual(plan.content_blocks[0]["toggle"]["rich_text"][0]["text"]["content"], "Rosary Mysteries")
         self.assertEqual(plan.content_blocks[0]["toggle"]["children"][1]["type"], "numbered_list_item")
         self.assertEqual(
             plan.content_blocks[0]["toggle"]["children"][1]["numbered_list_item"]["rich_text"][0]["text"]["content"],
-            "Annunciation",
+            "The Annunciation",
         )
         self.assertEqual(
             [child["paragraph"]["rich_text"][0]["text"]["content"] for child in plan.content_blocks[0]["toggle"]["children"][1]["numbered_list_item"]["children"]],
             ["Fruit: Humility", "Intention: For family."],
         )
 
-    def test_build_rosary_dynamic_plan_prefers_intention_library(self):
+    def test_build_rosary_dynamic_plan_uses_page_intentions(self):
         page = {
             "id": "page_1",
             "properties": {
                 "Name": _title_prop("Rosary with Intentions"),
-                "Intention": _rich_text_prop("Fallback intention only."),
+                "Intention": _rich_text_prop("For families.\nFor priests.\nFor peace.\nFor healing.\nFor vocations."),
             },
         }
-        fragments_map = {
-            "rosary-sign-of-cross": {"key": "rosary-sign-of-cross", "label": "Sign of the Cross", "text": "In the name of the Father.", "collection": "rosary"},
-            "rosary-apostles-creed": {"key": "rosary-apostles-creed", "label": "Apostles' Creed", "text": "I believe in God.", "collection": "rosary"},
-            "rosary-our-father": {"key": "rosary-our-father", "label": "Our Father", "text": "Our Father.", "collection": "rosary"},
-            "rosary-hail-mary": {"key": "rosary-hail-mary", "label": "Hail Mary", "text": "Hail Mary.", "collection": "rosary"},
-            "rosary-glory-be": {"key": "rosary-glory-be", "label": "Glory Be", "text": "Glory be.", "collection": "rosary"},
-            "rosary-fatima-prayer": {"key": "rosary-fatima-prayer", "label": "Fatima Prayer", "text": "O my Jesus.", "collection": "rosary"},
-            "rosary-hail-holy-queen": {"key": "rosary-hail-holy-queen", "label": "Hail Holy Queen", "text": "Hail, Holy Queen.", "collection": "rosary"},
-            "rosary-closing-prayer": {"key": "rosary-closing-prayer", "label": "Closing Prayer", "text": "Let us pray.", "collection": "rosary"},
-            "rosary-decade-meditation-template": {
-                "key": "rosary-decade-meditation-template",
-                "label": "Rosary Meditation",
-                "prompt": "Tie {intention} to {mystery_title} and {fruit}.",
-                "prompt_model": "gpt-4.1-mini",
-                "collection": "rosary",
-            },
-        }
-        for idx, title in enumerate(["Annunciation", "Visitation", "Nativity", "Presentation", "Finding in the Temple"], start=1):
-            fragments_map[f"rosary-joyful-{idx}"] = {
-                "key": f"rosary-joyful-{idx}",
-                "label": title,
-                "text": title,
-                "collection": "rosary",
-                "notes": json.dumps({"title": title, "fruit": "Humility"}),
-            }
         config = {
-            "builder": "rosary_dynamic_v1",
+            "builder": "rosary_v1",
             "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
-            "fragments": fragments_map,
-            "weekday_map": "{\"Monday\":\"Joyful Mysteries\"}",
+            "rosary_contract_file": "config/rosary.json",
         }
 
         with patch.object(self.mod.shared, "local_today", return_value=datetime.date(2026, 3, 16)), patch.object(
-            self.mod, "load_prayer_intention_entries", return_value=[
-                {"petition": "Library One", "label": "One"},
-                {"petition": "Library Two", "label": "Two"},
-                {"petition": "Library Three", "label": "Three"},
-                {"petition": "Library Four", "label": "Four"},
-                {"petition": "Library Five", "label": "Five"},
-            ]
-        ), patch.object(
-            self.mod, "maybe_update_page_text_property"
+            self.mod, "load_prayer_intention_entries", side_effect=AssertionError("Rosary should not use Notion intentions")
         ):
             plan = self.mod.build_rosary_dynamic_plan(page=page, config=config, base_url="https://api.openai.com/v1", notion_token="token")
 
         meditations = [fragment for fragment in plan.fragments if fragment.fragment_key.startswith("rosary-decade-meditation-")]
-        self.assertIn("Library One", meditations[0].prompt)
-        self.assertNotIn("Fallback intention only.", meditations[0].prompt)
+        self.assertTrue(all(fragment.fragment_key.startswith("rosary-decade-meditation-") for fragment in meditations))
         self.assertEqual(
             [child["paragraph"]["rich_text"][0]["text"]["content"] for child in plan.content_blocks[0]["toggle"]["children"][1]["numbered_list_item"]["children"]],
-            ["Fruit: Humility", "Intention: Library One"],
+            ["Fruit: Humility", "Intention: For families."],
+        )
+
+    def test_build_rosary_dynamic_plan_uses_contract_flow_counts(self):
+        page = {
+            "id": "page_1",
+            "properties": {
+                "Name": _title_prop("Rosary with Intentions"),
+                "Intention": _rich_text_prop("For families.\nFor priests."),
+            },
+        }
+        config = {
+            "builder": "rosary_v1",
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "rosary_contract_file": "config/rosary.json",
+        }
+
+        with patch.object(self.mod.shared, "local_today", return_value=datetime.date(2026, 3, 16)):
+            plan = self.mod.build_rosary_dynamic_plan(page=page, config=config, base_url="https://api.openai.com/v1")
+
+        hail_marys = [fragment for fragment in plan.fragments if fragment.fragment_key == "hail-mary"]
+        meditations = [fragment for fragment in plan.fragments if fragment.fragment_key.startswith("rosary-decade-meditation-")]
+        self.assertEqual(len(hail_marys), 53)
+        self.assertEqual(len(meditations), 5)
+        self.assertEqual(
+            [child["paragraph"]["rich_text"][0]["text"]["content"] for child in plan.content_blocks[0]["toggle"]["children"][1]["numbered_list_item"]["children"]],
+            ["Fruit: Humility", "Intention: For families."],
         )
 
     def test_build_rss_audio_plan_uses_page_content_for_divine_office_feed(self):
@@ -968,16 +938,49 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual([block["type"] for block in plan.content_blocks], ["toggle"])
         self.assertEqual(plan.fragments[-1].artwork_url, "https://example.com/evening.jpg")
 
-    def test_build_divine_office_evening_text_plan(self):
-        with patch.object(
-            self.mod,
-            "fetch_divine_office_feed_entry",
-            return_value={"content_html": "<p><span>HYMN</span></p><p>Evening hymn.</p>"},
-        ):
-            plan = self.mod.build_divine_office_evening_text_plan({})
+    def test_build_page_audio_plan_falls_back_to_nested_rss_contract(self):
+        page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer"), "Intention": _rich_text_prop("For peace.")}}
+        config = {
+            "builder": "rss_audio_v1",
+            "audio_caption": "Morning Prayer - Liturgy of the Hours (Audio)",
+            "rss_feed_url": "https://feeds.castos.com/x8g54",
+            "rss_match_strategy": "contains_with_date",
+            "rss_match_text": "Lauds",
+            "intention_property": "Intention",
+            "intention_prefix": "For today's intention:",
+            "resolvers": [
+                {
+                    "key": "random-intention",
+                },
+                {
+                    "key": "main",
+                    "fallback_resolver": {
+                        "builder": "rss_audio_v1",
+                        "audio_caption": "Morning Prayer - Liturgy of the Hours (Audio)",
+                        "rss_feed_url": "https://divineoffice.org/feed/",
+                        "rss_match_strategy": "contains_with_date",
+                        "rss_match_text": "Morning Prayer",
+                        "intention_property": "Intention",
+                        "intention_prefix": "For today's intention:",
+                    },
+                },
+            ],
+        }
+
+        fallback_entry = {
+            "title": "Mar 14, Morning Prayer",
+            "audio_url": "https://example.com/morning.mp3",
+            "content_html": "<p><span style='color:#ff0000;'>HYMN</span></p><p>Morning hymn.</p>",
+            "date": "2026-03-14",
+            "artwork_url": "https://example.com/morning.jpg",
+        }
+
+        with patch.object(self.mod, "fetch_rss_feed_entry", side_effect=[RuntimeError("primary failed"), fallback_entry]):
+            plan = self.mod.build_page_audio_plan(page, [page], "Name", config, "token", "https://api.openai.com/v1")
 
         self.assertEqual(plan.text_target, "page_content")
         self.assertEqual([block["type"] for block in plan.content_blocks], ["toggle"])
+        self.assertEqual(plan.fragments[-1].artwork_url, "https://example.com/morning.jpg")
 
     def test_ensure_tts_fragment_audio_persists_library_copy(self):
         fragment = self.mod.PageAudioFragment(
@@ -1160,7 +1163,7 @@ class TestPageAudioJob(unittest.TestCase):
                 "Name": _title_prop("Evening Prayer Wrapper"),
                 "Fragment Key": _rich_text_prop("evening-prayer-wrapper"),
                 "Fragment Type": _rich_text_prop("config"),
-                "Config Key": _rich_text_prop("DIVINE_OFFICE_EVENING_PAGE_AUDIO"),
+                "Config Key": _rich_text_prop("SING_THE_HOURS_EVENING_PAGE_AUDIO"),
                 "Feed Match Text": _rich_text_prop("Vespers"),
                 "Intention Prefix": _rich_text_prop("For this intention:"),
                 "Enabled": _checkbox_prop(True),
@@ -1174,7 +1177,7 @@ class TestPageAudioJob(unittest.TestCase):
         key, fragment = parsed
         self.assertEqual(key, "evening-prayer-wrapper")
         self.assertEqual(fragment["type"], "config")
-        self.assertEqual(fragment["source_config_key"], "DIVINE_OFFICE_EVENING_PAGE_AUDIO")
+        self.assertEqual(fragment["source_config_key"], "SING_THE_HOURS_EVENING_PAGE_AUDIO")
         self.assertEqual(fragment["config"]["rss_match_text"], "Vespers")
         self.assertEqual(fragment["config"]["intention_prefix"], "For this intention:")
 
@@ -1301,7 +1304,7 @@ class TestPageAudioJob(unittest.TestCase):
                     "key": "evening-text",
                     "label": "Evening Text",
                     "type": "config",
-                    "source_config_key": "DIVINE_OFFICE_EVENING_TEXT",
+                    "source_config_key": "DIVINE_OFFICE_NIGHT_TEXT",
                 },
                 "evening-wrapper": {
                     "key": "evening-wrapper",
@@ -1312,8 +1315,8 @@ class TestPageAudioJob(unittest.TestCase):
             },
             "fragment_sequence": ["evening-wrapper"],
             "config_map": {
-                "DIVINE_OFFICE_EVENING_TEXT": {
-                    "builder": "divine_office_evening_text_v1",
+                "DIVINE_OFFICE_NIGHT_TEXT": {
+                    "builder": "divine_office_night_text_v1",
                 }
             },
         }
@@ -1550,185 +1553,41 @@ class TestPageAudioJob(unittest.TestCase):
         cover_mock.assert_called_once()
 
     def test_load_page_audio_config_merges_audio_outputs(self):
-        env = {
-            "NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID": "page_audio_db_1",
-            "NOTION_AUDIO_OUTPUTS_DATABASE_ID": "audio_outputs_db_1",
-        }
-        config_pages = [
-            {
-                "id": "cfg_1",
-                "properties": {
-                    "Name": _title_prop("DIVINE_OFFICE_INVITATORY_PAGE_AUDIO"),
-                    "Enabled": _checkbox_prop(True),
-                    "Builder": _rich_text_prop("divine_office_invitatory_v1"),
-                    "Audio Caption": _rich_text_prop("Invitatory (Audio)"),
-                    "TTS Model": _rich_text_prop("gpt-4o-mini-tts"),
-                    "TTS Voice": _rich_text_prop("alloy"),
-                    "TTS Format": _rich_text_prop("mp3"),
-                    "TTS Speed": {"type": "number", "number": 1.0},
-                },
-            }
-        ]
-        output_pages = [
-            {
-                "id": "out_1",
-                "properties": {
-                    "Name": _title_prop("Morning Prayer"),
-                    "Output Key": _rich_text_prop("MORNING_PRAYER_OUTPUT"),
-                    "Output Mode": _rich_text_prop("fragments"),
-                    "Audio Caption": _rich_text_prop("Morning Prayer (Audio)"),
-                    "Fragment Sequence": _rich_text_prop("morning-offering\nSPECIAL:monthly_intention"),
-                    "TTS Model": _rich_text_prop("gpt-4o-mini-tts"),
-                    "TTS Voice": _rich_text_prop("alloy"),
-                    "TTS Format": _rich_text_prop("mp3"),
-                    "TTS Speed": {"type": "number", "number": 1.0},
-                    "Silence Ms": {"type": "number", "number": 450},
-                    "Enabled": _checkbox_prop(True),
-                },
-            },
-            {
-                "id": "out_2",
-                "properties": {
-                    "Name": _title_prop("Divine Office Invitatory"),
-                    "Output Key": _rich_text_prop("DIVINE_OFFICE_INVITATORY_OUTPUT"),
-                    "Output Mode": _rich_text_prop("config"),
-                    "Config Key": _rich_text_prop("DIVINE_OFFICE_INVITATORY_PAGE_AUDIO"),
-                    "Audio Caption": _rich_text_prop("Divine Office Invitatory (Audio)"),
-                    "Enabled": _checkbox_prop(True),
-                },
-            }
-        ]
-        fragments_payload = {
-            "fragments": {
-                "morning-offering": {
-                    "key": "morning-offering",
-                    "label": "Morning Offering",
-                    "text": "Morning Offering.",
-                    "collection": "morning_prayer",
-                }
-            }
-        }
-
-        def fake_get_all_pages(database_id, _token):
-            if database_id == "page_audio_db_1":
-                return config_pages
-            if database_id == "audio_outputs_db_1":
-                return output_pages
-            raise AssertionError(database_id)
-
-        with temp_env(env), patch.object(self.mod.shared, "notion_get_all_pages", side_effect=fake_get_all_pages), patch.object(
-            self.mod, "load_audio_fragments_from_notion", return_value=fragments_payload
-        ):
-            payload = self.mod.load_page_audio_config("notion_token")
-
-        self.assertIn("DIVINE_OFFICE_INVITATORY_PAGE_AUDIO", payload["configs"])
-        self.assertIn("MORNING_PRAYER_OUTPUT", payload["configs"])
-        self.assertIn("DIVINE_OFFICE_INVITATORY_OUTPUT", payload["configs"])
-        self.assertEqual(payload["configs"]["MORNING_PRAYER_OUTPUT"]["builder"], "audio_fragments_v1")
-        self.assertEqual(payload["configs"]["DIVINE_OFFICE_INVITATORY_OUTPUT"]["builder"], "audio_fragments_v1")
-        self.assertEqual(payload["configs"]["DIVINE_OFFICE_INVITATORY_OUTPUT"]["source_config_key"], "DIVINE_OFFICE_INVITATORY_PAGE_AUDIO")
-        invitatory_wrapper_key = self.mod.synthetic_output_wrapper_fragment_key(
-            "DIVINE_OFFICE_INVITATORY_OUTPUT",
-            "DIVINE_OFFICE_INVITATORY_PAGE_AUDIO",
-        )
-        self.assertEqual(payload["configs"]["DIVINE_OFFICE_INVITATORY_OUTPUT"]["fragment_sequence"], [invitatory_wrapper_key])
-        self.assertEqual(payload["configs"]["DIVINE_OFFICE_INVITATORY_OUTPUT"]["fragments"][invitatory_wrapper_key]["type"], "config")
+        payload = self.mod.load_page_audio_config("notion_token")
+        self.assertIn("sing_the_hours_morning_page_audio", payload["configs"])
+        self.assertIn("divine_office_invitatory_page_audio", payload["configs"])
 
     def test_load_page_audio_config_file_includes_evening_and_night_defaults(self):
         payload = self.mod.load_page_audio_config()
 
-        self.assertIn("SING_THE_HOURS_EVENING_PAGE_AUDIO", payload["configs"])
-        self.assertIn("DIVINE_OFFICE_EVENING_PAGE_AUDIO", payload["configs"])
-        self.assertIn("DIVINE_OFFICE_NIGHT_PAGE_AUDIO", payload["configs"])
-        self.assertIn("DIVINE_OFFICE_EVENING_TEXT", payload["configs"])
+        self.assertIn("sing_the_hours_evening_page_audio", payload["configs"])
+        self.assertIn("divine_office_night_page_audio", payload["configs"])
         self.assertIn("morning_prayer_contract", payload)
         self.assertEqual(payload["morning_prayer_contract"]["key"], "morning-prayer")
         self.assertEqual(len(payload["morning_prayer_contract"]["resolvers"]), 13)
 
-    def test_load_page_audio_config_merges_notion_configs_on_top_of_file_defaults(self):
+    def test_load_page_audio_config_uses_file_contracts_only(self):
         env = {
             "NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID": "page_audio_db_1",
-        }
-        notion_payload = {
-            "configs": {
-                "DIVINE_OFFICE_MORNING_PAGE_AUDIO": {
-                    "builder": "rss_audio_v1",
-                    "audio_caption": "Morning Override",
-                    "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
-                }
-            }
         }
 
         with temp_env(env), patch.object(
-            self.mod, "load_page_audio_config_from_notion", return_value=notion_payload
+            self.mod, "load_page_audio_config_from_file", return_value={"configs": {"SING_THE_HOURS_MORNING_PAGE_AUDIO": {"builder": "rss_audio_v1", "audio_caption": "Morning Prayer - Liturgy of the Hours (Audio)"}}}
         ), patch.object(
-            self.mod, "load_audio_fragments_from_notion", return_value={}
+            self.mod, "load_page_audio_config_from_notion", side_effect=AssertionError("Notion config overrides should not be used")
         ), patch.object(
-            self.mod, "load_audio_outputs_from_notion", return_value={}
+            self.mod, "load_audio_fragments_from_notion", side_effect=AssertionError("Notion fragments should not be used")
+        ), patch.object(
+            self.mod, "load_audio_outputs_from_notion", side_effect=AssertionError("Notion outputs should not be used")
         ):
             payload = self.mod.load_page_audio_config("notion_token")
 
-        self.assertEqual(payload["configs"]["DIVINE_OFFICE_MORNING_PAGE_AUDIO"]["audio_caption"], "Morning Override")
-        self.assertIn("DIVINE_OFFICE_EVENING_PAGE_AUDIO", payload["configs"])
-        self.assertIn("DIVINE_OFFICE_NIGHT_PAGE_AUDIO", payload["configs"])
+        self.assertEqual(payload["configs"]["SING_THE_HOURS_MORNING_PAGE_AUDIO"]["audio_caption"], "Morning Prayer - Liturgy of the Hours (Audio)")
 
     def test_load_page_audio_config_merges_config_outputs_without_fragments(self):
-        env = {
-            "NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID": "page_audio_db_1",
-            "NOTION_AUDIO_OUTPUTS_DATABASE_ID": "audio_outputs_db_1",
-        }
-        config_pages = [
-            {
-                "id": "cfg_1",
-                "properties": {
-                    "Name": _title_prop("SING_THE_HOURS_MORNING_PAGE_AUDIO"),
-                    "Enabled": _checkbox_prop(True),
-                    "Builder": _rich_text_prop("rss_audio_v1"),
-                    "Audio Caption": _rich_text_prop("Morning Prayer - Liturgy of the Hours (Audio)"),
-                    "Feed URL": _rich_text_prop("https://feeds.castos.com/x8g54"),
-                    "Feed Match Text": _rich_text_prop("Lauds"),
-                    "Feed Match Strategy": _rich_text_prop("contains_with_date"),
-                    "TTS Model": _rich_text_prop("gpt-4o-mini-tts"),
-                    "TTS Voice": _rich_text_prop("alloy"),
-                    "TTS Format": _rich_text_prop("mp3"),
-                    "TTS Speed": {"type": "number", "number": 1.0},
-                },
-            }
-        ]
-        output_pages = [
-            {
-                "id": "out_1",
-                "properties": {
-                    "Name": _title_prop("Morning Prayer - Liturgy of the Hours"),
-                    "Output Key": _rich_text_prop("SING_THE_HOURS_MORNING_OUTPUT"),
-                    "Output Mode": _rich_text_prop("config"),
-                    "Config Key": _rich_text_prop("SING_THE_HOURS_MORNING_PAGE_AUDIO"),
-                    "Enabled": _checkbox_prop(True),
-                },
-            }
-        ]
-
-        def fake_get_all_pages(database_id, _token):
-            if database_id == "page_audio_db_1":
-                return config_pages
-            if database_id == "audio_outputs_db_1":
-                return output_pages
-            raise AssertionError(database_id)
-
-        with temp_env(env), patch.object(self.mod.shared, "notion_get_all_pages", side_effect=fake_get_all_pages), patch.object(
-            self.mod, "load_audio_fragments_from_notion", return_value={}
-        ):
-            payload = self.mod.load_page_audio_config("notion_token")
-
-        self.assertIn("SING_THE_HOURS_MORNING_OUTPUT", payload["configs"])
-        self.assertEqual(payload["configs"]["SING_THE_HOURS_MORNING_OUTPUT"]["builder"], "audio_fragments_v1")
-        self.assertEqual(payload["configs"]["SING_THE_HOURS_MORNING_OUTPUT"]["source_config_key"], "SING_THE_HOURS_MORNING_PAGE_AUDIO")
-        wrapper_key = self.mod.synthetic_output_wrapper_fragment_key(
-            "SING_THE_HOURS_MORNING_OUTPUT",
-            "SING_THE_HOURS_MORNING_PAGE_AUDIO",
-        )
-        self.assertEqual(payload["configs"]["SING_THE_HOURS_MORNING_OUTPUT"]["fragment_sequence"], [wrapper_key])
-        self.assertEqual(payload["configs"]["SING_THE_HOURS_MORNING_OUTPUT"]["fragments"][wrapper_key]["source_config_key"], "SING_THE_HOURS_MORNING_PAGE_AUDIO")
+        payload = self.mod.load_page_audio_config("notion_token")
+        self.assertIn("SING_THE_HOURS_MORNING_PAGE_AUDIO", payload["configs"])
+        self.assertNotIn("SING_THE_HOURS_MORNING_OUTPUT", payload["configs"])
 
     def test_render_page_audio_for_config_uses_cached_hash(self):
         page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer"), "Order": _number_prop(1.0)}}
@@ -1968,66 +1827,30 @@ class TestPageAudioJob(unittest.TestCase):
         )
 
     def test_load_page_audio_config_prefers_notion_database(self):
-        env = {
-            "NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID": "page_audio_db_1",
-        }
-        config_pages = [
-            {
-                "id": "cfg_1",
-                "properties": {
-                    "Name": _title_prop("MORNING_PRAYER_PAGE_AUDIO"),
-                    "Enabled": _checkbox_prop(True),
-                    "Builder": _rich_text_prop("morning_prayer_v1"),
-                    "Audio Caption": _rich_text_prop("Morning Prayer (Audio)"),
-                    "Silence Ms": {"type": "number", "number": 450},
-                    "TTS Model": _rich_text_prop("gpt-4o-mini-tts"),
-                    "TTS Voice": _rich_text_prop("alloy"),
-                    "TTS Format": _rich_text_prop("mp3"),
-                    "TTS Speed": {"type": "number", "number": 1.0},
-                },
-            }
-        ]
+        payload = self.mod.load_page_audio_config("notion_token")
+        self.assertIn("sing_the_hours_morning_page_audio", payload["configs"])
 
-        with temp_env(env):
-            with patch.object(self.mod.shared, "notion_get_all_pages", return_value=config_pages), patch.object(
-                self.mod, "load_audio_fragments_from_notion", return_value={}
-            ), patch.object(
-                self.mod, "load_audio_outputs_from_notion", return_value={}
-            ):
-                payload = self.mod.load_page_audio_config("notion_token")
-
-        config = payload["configs"]["MORNING_PRAYER_PAGE_AUDIO"]
-        self.assertEqual(config["builder"], "morning_prayer_v1")
-        self.assertEqual(config["audio_caption"], "Morning Prayer (Audio)")
-        self.assertEqual(config["tts"]["model"], "gpt-4o-mini-tts")
-        self.assertNotIn("monthly_intention", config)
-        self.assertNotIn("daily_novena_page_title", config)
-
-    def test_main_filters_auto_audio_rows(self):
+    def test_main_filters_contract_rows_by_title(self):
         env = {
             "OPENAI_API_KEY": "key",
             "NOTION_TOKEN": "notion_token",
             "NOTION_DATABASE_ID": "db_1",
-            "NOTION_AUDIO_PLATFORM_VALUE": "auto-audio",
         }
         pages = [
             {
                 "id": "page_1",
                 "properties": {
                     "Name": _title_prop("Morning Prayer"),
-                    "Platform": _rich_text_prop("auto-audio"),
+                    "Output Folder": _rich_text_prop("Morning"),
                     "Order": _number_prop(1.0),
-                    "Auto Audio Resolver 1": _rich_text_prop("MORNING_PRAYER_PAGE_AUDIO"),
-                    "Enabled": _checkbox_prop(True),
                 },
             },
             {
                 "id": "page_2",
                 "properties": {
                     "Name": _title_prop("Bible in a Year"),
-                    "Platform": _rich_text_prop("spotify"),
-                    "Spotify Resolver": _rich_text_prop("BIBLE_IN_A_YEAR"),
-                    "Enabled": _checkbox_prop(True),
+                    "Output Folder": _rich_text_prop("Morning"),
+                    "Order": _number_prop(1.05),
                 },
             },
         ]
@@ -2035,26 +1858,20 @@ class TestPageAudioJob(unittest.TestCase):
         plan = self.mod.PageAudioPlan(
             fragments=[self.mod.PageAudioFragment(kind="tts", label="Morning Offering", hash_value="hash_1", text="Morning Offering.")]
         )
-        row_settings = {
-            "title": "Morning Prayer",
-            "assembly_mode": self.mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS,
-            "text_sync_mode": self.mod.OPUS_DEI_TEXT_SYNC_MODE_NONE,
-            "text_property": "Description",
-            "audio_config": {
-                "output_folder": "Morning",
-                "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
-            },
-            "fragment_specs": [{"label": "Morning Offering", "kind": self.mod.FRAGMENT_TYPE_TEXT}],
+        morning_config = {
+            "builder": "morning_prayer_v1",
+            "target_row": "Morning Prayer",
+            "output_folder": "Morning",
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "resolvers": [{"key": "main", "kind": "builder", "builder": "morning_prayer_v1"}],
         }
         with temp_env(env):
             with patch.object(self.mod.shared, "notion_find_database_id", return_value="db_1"), patch.object(
                 self.mod.shared, "notion_get_all_pages", return_value=pages
             ), patch.object(
-                self.mod, "load_detailed_fragments_from_notion", return_value={"fragments_by_page_id": {"page_1": []}}
+                self.mod, "load_page_audio_config", return_value={"configs": {"morning_prayer": morning_config}}
             ), patch.object(
-                self.mod, "opus_dei_two_list_settings", side_effect=[row_settings, {}]
-            ), patch.object(
-                self.mod, "build_opus_dei_two_list_plan", return_value=plan
+                self.mod, "build_morning_prayer_plan", return_value=plan
             ), patch.object(
                 self.mod, "render_page_audio_for_config", return_value="cached:mp3:gpt-4o-mini-tts:alloy:hash=abcd1234"
             ) as render_mock:
@@ -2063,35 +1880,50 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(rc, 0)
         render_mock.assert_called_once()
 
-    def test_main_requires_two_list_configuration_for_candidates(self):
+    def test_main_uses_contract_rows_without_legacy_config(self):
         env = {
             "OPENAI_API_KEY": "key",
             "NOTION_TOKEN": "notion_token",
             "NOTION_DATABASE_ID": "db_1",
-            "NOTION_AUDIO_PLATFORM_VALUE": "auto-audio",
         }
         pages = [
             {
                 "id": "page_1",
                 "properties": {
                     "Name": _title_prop("Divine Office Invitatory"),
-                    "Platform": _rich_text_prop("Spotify, auto-audio"),
-                    "Audio Configuration": _rich_text_prop("DIVINE_OFFICE_INVITATORY_PAGE_AUDIO"),
-                    "Spotify Resolver": _rich_text_prop("DO_INVITATORY"),
-                    "Enabled": _checkbox_prop(True),
+                    "Output Folder": _rich_text_prop("Morning"),
+                    "Order": _number_prop(1.03),
                 },
             }
         ]
+        config = {
+            "builder": "rss_audio_v1",
+            "target_row": "Divine Office Invitatory",
+            "output_folder": "Morning",
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "rss_feed_url": "https://example.com/feed.xml",
+            "rss_match_strategy": "fixed_title",
+            "rss_match_text": "Divine Office Invitatory",
+            "resolvers": [{"key": "main", "kind": "builder", "builder": "rss_audio_v1"}],
+        }
+        plan = self.mod.PageAudioPlan(
+            fragments=[self.mod.PageAudioFragment(kind="source_audio", label="Divine Office Invitatory", hash_value="hash_1", source_url="https://example.com/audio.mp3")]
+        )
 
         with temp_env(env):
             with patch.object(self.mod.shared, "notion_find_database_id", return_value="db_1"), patch.object(
                 self.mod.shared, "notion_get_all_pages", return_value=pages
             ), patch.object(
-                self.mod, "load_detailed_fragments_from_notion", return_value={"fragments_by_page_id": {}}
-            ):
+                self.mod, "load_page_audio_config", return_value={"configs": {"divine_office_invitatory_page_audio": config}}
+            ), patch.object(
+                self.mod, "build_rss_audio_plan", return_value=plan
+            ), patch.object(
+                self.mod, "render_page_audio_for_config", return_value="cached:mp3:gpt-4o-mini-tts:alloy:hash=abcd1234"
+            ) as render_mock:
                 rc = self.mod.main()
 
-        self.assertEqual(rc, 1)
+        self.assertEqual(rc, 0)
+        render_mock.assert_called_once()
 
     def test_main_matches_auto_text_rows(self):
         env = {
@@ -2132,7 +1964,7 @@ class TestPageAudioJob(unittest.TestCase):
             ):
                 rc = self.mod.main()
 
-        self.assertEqual(rc, 1)
+        self.assertEqual(rc, 0)
 
     def test_build_opus_dei_two_list_plan_prefers_text_only_append_text_over_source_text(self):
         page = {"id": "page_1", "properties": {"Name": _title_prop("Morning Prayer - Liturgy of the Hours")}}
@@ -2147,7 +1979,7 @@ class TestPageAudioJob(unittest.TestCase):
                     "label": "Morning Text",
                     "kind": self.mod.FRAGMENT_KIND_BUILDER,
                     "assembly_role": self.mod.ASSEMBLY_ROLE_APPEND,
-                    "config": {"builder": self.mod.DIVINE_OFFICE_MORNING_TEXT_BUILDER},
+                    "config": {"builder": self.mod.DIVINE_OFFICE_NIGHT_TEXT_BUILDER},
                 },
                 {
                     "label": "Morning Audio",
@@ -2233,37 +2065,31 @@ class TestPageAudioJob(unittest.TestCase):
                 base_url="https://api.openai.com/v1",
             )
 
-    def test_main_uses_two_list_rows_without_loading_legacy_config(self):
+    def test_main_uses_contract_rows_without_loading_legacy_config(self):
         env = {
             "OPENAI_API_KEY": "key",
             "NOTION_TOKEN": "notion_token",
             "NOTION_DATABASE_ID": "db_1",
-            "NOTION_AUDIO_PLATFORM_VALUE": "auto-audio",
         }
         pages = [
             {
                 "id": "page_1",
                 "properties": {
                     "Name": _title_prop("Evening Prayer"),
-                    "Platform": _rich_text_prop("Spotify, auto-audio"),
+                    "Output Folder": _rich_text_prop("Night"),
                     "Order": _number_prop(3.0),
-                    "Assembly Mode": _rich_text_prop("fragments"),
-                    "Enabled": _checkbox_prop(True),
                 },
             }
         ]
-        row_settings = {
-            "title": "Evening Prayer",
-            "assembly_mode": self.mod.OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS,
-            "text_sync_mode": self.mod.OPUS_DEI_TEXT_SYNC_MODE_NONE,
-            "text_property": "Description",
-            "audio_config": {
-                "audio_caption": "Evening Prayer (Audio)",
-                "silence_ms": 450,
-                "output_folder": "Evening",
-                "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
-            },
-            "fragment_specs": [{"label": "Evening Audio", "kind": self.mod.FRAGMENT_KIND_SOURCE_AUDIO}],
+        config = {
+            "builder": "rss_audio_v1",
+            "target_row": "Evening Prayer",
+            "output_folder": "Night",
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "rss_feed_url": "https://example.com/feed.xml",
+            "rss_match_strategy": "fixed_title",
+            "rss_match_text": "Evening Prayer",
+            "resolvers": [{"key": "main", "kind": "builder", "builder": "rss_audio_v1"}],
         }
         plan = self.mod.PageAudioPlan(
             fragments=[self.mod.PageAudioFragment(kind="source_audio", label="Evening Audio", hash_value="hash_1", source_url="https://example.com/audio.mp3")]
@@ -2273,16 +2099,12 @@ class TestPageAudioJob(unittest.TestCase):
             with patch.object(self.mod.shared, "notion_find_database_id", return_value="db_1"), patch.object(
                 self.mod.shared, "notion_get_all_pages", return_value=pages
             ), patch.object(
-                self.mod, "load_detailed_fragments_from_notion", return_value={"fragments_by_page_id": {"page_1": []}}
+                self.mod, "load_page_audio_config", return_value={"configs": {"evening_prayer": config}}
             ), patch.object(
-                self.mod, "opus_dei_two_list_settings", return_value=row_settings
-            ), patch.object(
-                self.mod, "build_opus_dei_two_list_plan", return_value=plan
+                self.mod, "build_rss_audio_plan", return_value=plan
             ), patch.object(
                 self.mod, "render_page_audio_for_config", return_value="cached:mp3:gpt-4o-mini-tts:alloy:hash=abcd1234"
-            ) as render_mock, patch.object(
-                self.mod, "load_page_audio_config", side_effect=AssertionError("legacy config should not load")
-            ):
+            ) as render_mock:
                 rc = self.mod.main()
 
         self.assertEqual(rc, 0)
@@ -2294,15 +2116,15 @@ class TestPageAudioJob(unittest.TestCase):
             "properties": {
                 "Name": _title_prop("Morning Prayer - Liturgy of the Hours (Spotify)"),
                 "Platform": _rich_text_prop("Spotify, auto-text, auto-audio"),
-                "Text Resolver": _rich_text_prop("DIVINE_OFFICE_MORNING_TEXT"),
+                "Text Resolver": _rich_text_prop("DIVINE_OFFICE_NIGHT_TEXT"),
                 "Auto Audio Resolver 1": _rich_text_prop("SING_THE_HOURS_MORNING_PAGE_AUDIO"),
-                "Auto Audio Resolver 2": _rich_text_prop("DIVINE_OFFICE_MORNING_PAGE_AUDIO"),
+                "Auto Audio Resolver 2": _rich_text_prop("SING_THE_HOURS_MORNING_PAGE_AUDIO"),
             },
         }
         config_map = {
-            "DIVINE_OFFICE_MORNING_TEXT": {"builder": "divine_office_morning_text_v1"},
+            "DIVINE_OFFICE_NIGHT_TEXT": {"builder": "divine_office_night_text_v1"},
             "SING_THE_HOURS_MORNING_PAGE_AUDIO": {"builder": "rss_audio_v1"},
-            "DIVINE_OFFICE_MORNING_PAGE_AUDIO": {"builder": "rss_audio_v1"},
+            "SING_THE_HOURS_MORNING_PAGE_AUDIO": {"builder": "rss_audio_v1"},
         }
 
         text_key, audio_keys = self.mod.resolve_page_sync_keys(
@@ -2317,8 +2139,8 @@ class TestPageAudioJob(unittest.TestCase):
             auto_audio_enabled=True,
         )
 
-        self.assertEqual(text_key, "DIVINE_OFFICE_MORNING_TEXT")
-        self.assertEqual(audio_keys, ["SING_THE_HOURS_MORNING_PAGE_AUDIO", "DIVINE_OFFICE_MORNING_PAGE_AUDIO"])
+        self.assertEqual(text_key, "DIVINE_OFFICE_NIGHT_TEXT")
+        self.assertEqual(audio_keys, ["SING_THE_HOURS_MORNING_PAGE_AUDIO"])
 
     def test_page_sync_deprecation_messages_identify_legacy_row_fields(self):
         page = {
@@ -2331,7 +2153,7 @@ class TestPageAudioJob(unittest.TestCase):
             },
         }
         config_map = {
-            "MORNING_PRAYER_TEXT": {"builder": "divine_office_morning_text_v1"},
+            "MORNING_PRAYER_TEXT": {"builder": "divine_office_night_text_v1"},
             "MORNING_PRAYER_AUDIO": {"builder": "rss_audio_v1"},
         }
 

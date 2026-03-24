@@ -76,11 +76,12 @@ if ($PageAudioConfigFile) { $env:PAGE_AUDIO_CONFIG_FILE = $PageAudioConfigFile }
 if ($PageAudioCacheDir) { $env:PAGE_AUDIO_CACHE_DIR = $PageAudioCacheDir }
 if ($PageAudioLibraryDir) { $env:PAGE_AUDIO_LIBRARY_DIR = $PageAudioLibraryDir }
 if ($PageAudioFailOpen) { $env:PAGE_AUDIO_FAIL_OPEN = $PageAudioFailOpen }
+if (-not $env:PAGE_AUDIO_FAIL_OPEN) { $env:PAGE_AUDIO_FAIL_OPEN = "true" }
 if ($OaiApiBaseUrl) { $env:OAI_API_BASE_URL = $OaiApiBaseUrl }
 if ($JobUtcOffset) { $env:JOB_UTC_OFFSET = $JobUtcOffset }
 
 Write-Host "Generating page audio locally..."
-py -3 jobs/notion/generate_page_audio.py
+python jobs/notion/generate_page_audio.py
 if ($LASTEXITCODE -ne 0) {
   throw "jobs/notion/generate_page_audio.py failed"
 }

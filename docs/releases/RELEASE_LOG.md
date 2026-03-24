@@ -1,5 +1,24 @@
 # Release Log
 
+## [0.1.2.0] - 2026-03-24
+
+### Added
+- Added root-level file-backed page-audio contracts for Morning Prayer, Rosary, Sing the Hours, Divine Office Invitatory, Bible in a Year, Daily Mass Readings, Saint of the Day, Daily Examen, Angelus (Morning/Midday/Evening), Afternoon Prayer, and Auxilium Christianorum.
+- Added Rosary weekday mystery mapping and reusable fragment composition from the contract tree.
+- Added file-backed prayer content under `config/content/` and moved the active contract JSONs to the root `config/` directory.
+
+### Changed
+- Refactored the page-audio refresh loop to iterate config files first and use Notion only for the `Name`, `Order`, and `Output Folder` page fields.
+- Removed the legacy page-audio and playlist/sync config merge paths so file contracts are authoritative.
+- Updated Morning Prayer LOH and Evening Prayer LOH to resolve from the config-driven RSS builder path.
+- Normalized active contract filenames and removed stale fallback chains outside the Morning Prayer contract.
+
+### Fixed
+- Fixed Daily Examen to resolve from the provided episode page.
+- Fixed the Morning Prayer LOH and Evening Prayer LOH page-audio refresh flow so it completes against the new contract-first loop.
+- Fixed OneDrive export naming to use the current Notion `Output Folder` column and contract-derived content.
+- Fixed Rosary to compile from resolver order instead of the older flow fixture shape.
+
 ## [0.1.0.1] - 2026-03-23
 
 ### Added

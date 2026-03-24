@@ -37,7 +37,7 @@ class TestGeneratePrayer(unittest.TestCase):
             "OPENAI_API_KEY": "openai",
             "NOTION_TOKEN": "notion",
             "NOTION_DATABASE_ID": "db_1",
-            "PRAYER_CONFIG_FILE": "config/morning-prayer/morning-prayer.json",
+            "PRAYER_CONFIG_FILE": "config/morning-prayer.json",
             "PRAYER_ROW_TITLE": "Morning Prayer",
         }
 

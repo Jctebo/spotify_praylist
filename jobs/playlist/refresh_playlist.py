@@ -2386,19 +2386,12 @@ def build_queue_for_profile(
 
 def main() -> int:
     try:
-        source = os.getenv(SPOTIFY_REFRESH_CONFIG_SOURCE, "notion").strip().lower() or "notion"
-        if source not in {"notion", "file"}:
-            source = "notion"
-        cfg = load_playlist_config_optional()
-        set_runtime_timezone(cfg)
-        profiles_cfg, shows_cfg, fixed_cfg, tokens_cfg = load_resolver_runtime_config(cfg)
-        catalog_cfg = cfg.get("catalog", {}) if isinstance(cfg.get("catalog"), dict) else {}
-
-        # Optional compatibility read; not used by default flow.
-        _ = os.getenv(SPOTIFY_USER_ID, "")
+        set_runtime_timezone({})
+        _, shows_cfg, fixed_cfg, tokens_cfg = load_resolver_runtime_config({})
 
         sp, spotify_token = sp_client()
         weekday = local_now().strftime("%A")
+        source = "notion"
         uri_autosync_enabled = bool_env(SPOTIFY_ENABLE_URI_AUTOSYNC, default=False)
         notion_spotify_bookmarks_enabled_flag = notion_spotify_bookmarks_enabled()
         notion_playlist_novena_links_enabled_flag = notion_playlist_novena_links_enabled()
@@ -2413,80 +2406,46 @@ def main() -> int:
         sunday_items_enabled: List[str] = []
         sunday_items_disabled: List[str] = []
 
-        if source == "file":
-            profile = os.getenv(SPOTIFY_PLAYLIST_PROFILE, "morning").strip().lower() or "morning"
-            if profile == "day":
-                # Backward compatibility for older env values.
-                profile = "morning"
-
-            playlist_id = os.getenv(SPOTIFY_PLAYLIST_ID, "").strip()
-            if not playlist_id:
-                playlist_id = os.getenv(f"SPOTIFY_PLAYLIST_ID_{profile.upper()}", "").strip()
-            if not playlist_id:
-                profile_cfg = profiles_cfg.get(profile)
-                if isinstance(profile_cfg, dict):
-                    playlist_id = str(profile_cfg.get("playlist_id", "")).strip()
-            if not playlist_id:
-                raise RuntimeError(
-                    f"Missing required environment variable: {SPOTIFY_PLAYLIST_ID}. "
-                    f"Set {SPOTIFY_PLAYLIST_ID} (or SPOTIFY_PLAYLIST_ID_{profile.upper()})."
-                )
-            if not profiles_cfg or not catalog_cfg:
-                raise RuntimeError("File mode requires config/playlist_config.json with profiles + catalog.")
-            status: Dict[str, bool] = {}
-            queue = build_queue_for_profile(
-                sp, profile, weekday, status, profiles_cfg, catalog_cfg, shows_cfg, fixed_cfg, tokens_cfg
+        _ = os.getenv(SPOTIFY_USER_ID, "")
+        notion_token = require_env(NOTION_TOKEN)
+        (
+            sunday_item_updates,
+            sunday_items_enabled,
+            sunday_items_disabled,
+        ) = sync_notion_sunday_item_enablement(notion_token, weekday)
+        if notion_playlist_novena_links_enabled_flag:
+            novena_link_updates, novena_link_update_names = sync_notion_playlist_novena_links(notion_token)
+        playlist_filter = os.getenv(SPOTIFY_PLAYLIST_NAME, "").strip()
+        runs = []
+        for target in load_notion_playlists(notion_token, playlist_filter):
+            status = {}
+            queue = build_queue_for_playlist_from_notion(
+                sp, target["name"], weekday, status, shows_cfg, fixed_cfg, tokens_cfg
             )
             if not queue:
-                raise RuntimeError("No tracks/episodes resolved for this run.")
-            runs.append(
-                {
-                    "name": profile,
-                    "playlist_id": normalize_spotify_playlist_id(playlist_id) or playlist_id,
-                    "queue": queue,
-                    "status": status,
-                }
-            )
-        else:
-            notion_token = require_env(NOTION_TOKEN)
-            (
-                sunday_item_updates,
-                sunday_items_enabled,
-                sunday_items_disabled,
-            ) = sync_notion_sunday_item_enablement(notion_token, weekday)
-            if notion_playlist_novena_links_enabled_flag:
-                novena_link_updates, novena_link_update_names = sync_notion_playlist_novena_links(notion_token)
-            playlist_filter = os.getenv(SPOTIFY_PLAYLIST_NAME, "").strip()
-            runs = []
-            for target in load_notion_playlists(notion_token, playlist_filter):
-                status = {}
-                queue = build_queue_for_playlist_from_notion(
-                    sp, target["name"], weekday, status, shows_cfg, fixed_cfg, tokens_cfg
+                if status.get("__no_eligible_rows__"):
+                    print(
+                        "INFO notion_playlist_skipped "
+                        f"playlist={target['name']} reason=no_enabled_source_rows weekday={weekday}"
+                    )
+                    continue
+                raise RuntimeError(f"No tracks/episodes resolved for playlist '{target['name']}'.")
+            runs.append({"name": target["name"], "playlist_id": target["playlist_id"], "queue": queue, "status": status})
+        override_playlist_id = normalize_spotify_playlist_id(os.getenv(SPOTIFY_PLAYLIST_ID, "").strip())
+        if override_playlist_id:
+            if len(runs) != 1:
+                raise RuntimeError(
+                    f"{SPOTIFY_PLAYLIST_ID} override requires exactly one target playlist. "
+                    f"Set {SPOTIFY_PLAYLIST_NAME} to a single playlist name."
                 )
-                if not queue:
-                    if status.get("__no_eligible_rows__"):
-                        print(
-                            "INFO notion_playlist_skipped "
-                            f"playlist={target['name']} reason=no_enabled_source_rows weekday={weekday}"
-                        )
-                        continue
-                    raise RuntimeError(f"No tracks/episodes resolved for playlist '{target['name']}'.")
-                runs.append({"name": target["name"], "playlist_id": target["playlist_id"], "queue": queue, "status": status})
-            override_playlist_id = normalize_spotify_playlist_id(os.getenv(SPOTIFY_PLAYLIST_ID, "").strip())
-            if override_playlist_id:
-                if len(runs) != 1:
-                    raise RuntimeError(
-                        f"{SPOTIFY_PLAYLIST_ID} override requires exactly one target playlist. "
-                        f"Set {SPOTIFY_PLAYLIST_NAME} to a single playlist name."
-                    )
-                runs[0]["playlist_id"] = override_playlist_id
-            if not runs:
-                raise RuntimeError("No enabled playlists found in the Notion playlists database.")
-            if notion_spotify_bookmarks_enabled_flag:
-                bookmark_updates, bookmark_removed, bookmark_update_details, bookmark_unresolved = (
-                    sync_notion_spotify_bookmarks(
-                        sp, weekday, shows_cfg, fixed_cfg, tokens_cfg
-                    )
+            runs[0]["playlist_id"] = override_playlist_id
+        if not runs:
+            raise RuntimeError("No enabled playlists found in the Notion playlists database.")
+        if notion_spotify_bookmarks_enabled_flag:
+            bookmark_updates, bookmark_removed, bookmark_update_details, bookmark_unresolved = (
+                sync_notion_spotify_bookmarks(
+                    sp, weekday, shows_cfg, fixed_cfg, tokens_cfg
+                )
                 )
             print(f"INFO notion_sunday_items_updated count={sunday_item_updates} weekday={weekday}")
             for name in sunday_items_enabled:

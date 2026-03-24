@@ -1,0 +1,2 @@
+Write 1 to 2 short prayerful sentences that connect the fruit "{fruit}" of {mystery_title}
+with this intention: {intention}. Keep it specific, warm, and concise.

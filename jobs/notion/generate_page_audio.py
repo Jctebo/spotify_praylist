@@ -63,7 +63,7 @@ PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS = "PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS"
 PAGE_AUDIO_FAIL_OPEN = "PAGE_AUDIO_FAIL_OPEN"
 
 DEFAULT_PAGE_AUDIO_CONFIG_FILE = "config/page_audio_config.json"
-DEFAULT_MORNING_PRAYER_CONTRACT_FILE = "config/morning-prayer/morning-prayer.json"
+DEFAULT_MORNING_PRAYER_CONTRACT_FILE = "config/morning-prayer.json"
 DEFAULT_PAGE_AUDIO_CACHE_DIR = ".cache/page_audio"
 DEFAULT_PAGE_AUDIO_LIBRARY_RELATIVE = r"OneDrive\Praylist Audio\Playlist Audio"
 DEFAULT_PAGE_AUDIO_LIBRARY_FALLBACK = ".cache/page_audio_library"
@@ -88,14 +88,12 @@ PAGE_AUDIO_PROMPT_RENDER_VERSION = "page_audio_prompt_v1"
 DEFAULT_SILENCE_MS = 450
 DEFAULT_DAILY_NOVENA_PAGE_TITLE = "Daily Novenas from Liturgical Calendar"
 MORNING_PRAYER_BUILDER = "morning_prayer_v1"
-DIVINE_OFFICE_INVITATORY_BUILDER = "divine_office_invitatory_v1"
 DIVINE_OFFICE_NIGHT_TEXT_BUILDER = "divine_office_night_text_v1"
-DIVINE_OFFICE_EVENING_TEXT_BUILDER = "divine_office_evening_text_v1"
-DIVINE_OFFICE_MORNING_TEXT_BUILDER = "divine_office_morning_text_v1"
 AUXILIUM_DAILY_TEXT_BUILDER = "auxilium_daily_text_v1"
 RSS_AUDIO_BUILDER = "rss_audio_v1"
 AUDIO_FRAGMENTS_BUILDER = "audio_fragments_v1"
 ROSARY_DYNAMIC_BUILDER = "rosary_dynamic_v1"
+ROSARY_BUILDER = "rosary_v1"
 POPES_PRAYER_MEDIA_API_URL = "https://www.popesprayer.va/wp-json/wp/v2/media"
 DIVINE_OFFICE_FEED_URL = "https://divineoffice.org/feed/"
 DEFAULT_RSS_TEXT_PROPERTY = "Description"
@@ -223,7 +221,12 @@ RSS_MATCH_WEEKDAY_MAP = "weekday_map"
 RSS_MATCH_FIXED_TITLE = "fixed_title"
 DEFAULT_ROSARY_INTENTION_PROPERTY = "Intention"
 DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY = "rosary-decade-meditation-template"
+ROSARY_CONTRACT_FILE = "ROSARY_CONTRACT_FILE"
+DEFAULT_ROSARY_CONTRACT_FILE = "config/rosary.json"
+ROSARY_CONTENT_DIR = "ROSARY_CONTENT_DIR"
+DEFAULT_ROSARY_CONTENT_DIR = "config/content/rosary"
 ROSARY_MYSTERY_KEYS = ("joyful", "sorrowful", "glorious", "luminous")
+DEFAULT_ROSARY_PRAYER_COUNT = 5
 DEFAULT_ROSARY_WEEKDAY_MAP = {
     "monday": "joyful",
     "tuesday": "sorrowful",
@@ -805,14 +808,10 @@ def load_morning_prayer_contract_from_file() -> Dict[str, Any]:
         or DEFAULT_MORNING_PRAYER_CONTRACT_FILE
     )
     if not config_path.exists():
-        return {}
+        raise RuntimeError(f"Missing Morning Prayer contract file: {config_path}")
     with open(config_path, "r", encoding="utf-8") as fh:
         payload = json.load(fh)
-    if not isinstance(payload, dict):
-        raise RuntimeError(f"Invalid Morning Prayer contract format in {config_path}: root must be an object.")
-    resolvers = payload.get("resolvers")
-    if not isinstance(resolvers, list) or not resolvers:
-        raise RuntimeError(f"Invalid Morning Prayer contract format in {config_path}: missing or empty 'resolvers'.")
+    validate_page_audio_contract(payload, source=str(config_path))
     return payload
 
 
@@ -828,14 +827,27 @@ def morning_prayer_contract_resolvers(contract: Dict[str, Any]) -> List[Dict[str
 
 
 def morning_prayer_content_path(resolver_key: str) -> Path:
-    return ROOT / "config" / "morning-prayer" / "content" / f"{resolver_key}.txt"
+    return ROOT / "config" / "content" / "morning-prayer" / "content" / f"{resolver_key}.txt"
 
 
-def load_morning_prayer_content_text(resolver_key: str) -> str:
-    path = morning_prayer_content_path(resolver_key)
-    if not path.exists():
+def load_morning_prayer_content_text(resolver: Any) -> str:
+    if isinstance(resolver, dict):
+        raw_path = str(resolver.get("path", "")).strip()
+        if raw_path:
+            path = Path(raw_path)
+            if not path.is_absolute():
+                path = ROOT / path
+            if path.exists():
+                return normalize_whitespace(path.read_text(encoding="utf-8"))
+        resolver_key = str(resolver.get("key", "")).strip()
+    else:
+        resolver_key = str(resolver or "").strip()
+    if not resolver_key:
         return ""
-    return normalize_whitespace(path.read_text(encoding="utf-8"))
+    path = morning_prayer_content_path(resolver_key)
+    if path.exists():
+        return normalize_whitespace(path.read_text(encoding="utf-8"))
+    return ""
 
 
 def morning_prayer_monthly_template_path(folder: str, target_date: datetime.date) -> Path:
@@ -869,31 +881,26 @@ def morning_prayer_content_block(title: str, text: str) -> Dict[str, Any]:
     }
 
 
-def build_morning_prayer_monthly_template_fragment(
-    resolver: Dict[str, Any],
-    *,
-    settings: Dict[str, Any],
-    base_url: str,
-    target_date: Optional[datetime.date] = None,
-) -> PageAudioFragment:
-    folder = str(resolver.get("folder", "")).strip()
-    if not folder:
-        raise RuntimeError("Morning Prayer monthly template resolver is missing its folder.")
-    selector = str(resolver.get("selector", "")).strip()
-    if selector and selector != "current_calendar_month":
-        raise RuntimeError(f"Unsupported Morning Prayer monthly template selector '{selector}'.")
-    template_text = load_morning_prayer_monthly_template_text(folder, target_date or shared.local_today())
-    if not template_text:
-        raise RuntimeError(f"Morning Prayer monthly template file is missing or empty for folder '{folder}'.")
-    return stable_text_fragment(
-        cache_root=page_audio_cache_dir(),
-        collection=AUDIO_FRAGMENT_MONTHLY_COLLECTION,
-        key="monthly-intention",
-        label="Monthly Intention",
-        text=template_text,
-        settings=settings,
-        base_url=base_url,
-    )
+def validate_page_audio_contract(contract: Dict[str, Any], *, source: str) -> None:
+    if not isinstance(contract, dict):
+        raise RuntimeError(f"Invalid page audio contract in {source}: root must be an object.")
+    required_top_level = ["key", "title", "target_row", "status", "header", "resolvers"]
+    for field in required_top_level:
+        if field not in contract:
+            raise RuntimeError(f"Invalid page audio contract in {source}: missing '{field}'.")
+    header = contract.get("header")
+    if not isinstance(header, dict):
+        raise RuntimeError(f"Invalid page audio contract in {source}: 'header' must be an object.")
+    resolvers = contract.get("resolvers")
+    if not isinstance(resolvers, list) or not resolvers:
+        raise RuntimeError(f"Invalid page audio contract in {source}: 'resolvers' must be a non-empty array.")
+    for resolver in resolvers:
+        if not isinstance(resolver, dict):
+            raise RuntimeError(f"Invalid page audio contract in {source}: resolver entries must be objects.")
+        if not str(resolver.get("key", "")).strip():
+            raise RuntimeError(f"Invalid page audio contract in {source}: resolver missing 'key'.")
+        if not str(resolver.get("kind", "")).strip():
+            raise RuntimeError(f"Invalid page audio contract in {source}: resolver '{resolver.get('key', '')}' missing 'kind'.")
 
 
 def load_page_audio_config_from_file() -> Dict[str, Any]:
@@ -901,41 +908,66 @@ def load_page_audio_config_from_file() -> Dict[str, Any]:
         os.getenv(PAGE_AUDIO_CONFIG_FILE, DEFAULT_PAGE_AUDIO_CONFIG_FILE).strip()
         or DEFAULT_PAGE_AUDIO_CONFIG_FILE
     )
-    with open(config_path, "r", encoding="utf-8") as fh:
-        payload = json.load(fh)
-    if not isinstance(payload, dict):
-        raise RuntimeError(f"Invalid page audio config format in {config_path}: root must be an object.")
-    configs = payload.get("configs")
-    if not isinstance(configs, dict) or not configs:
-        raise RuntimeError(f"Invalid page audio config format in {config_path}: missing or empty 'configs'.")
+    if config_path.exists():
+        with open(config_path, "r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+        if not isinstance(payload, dict):
+            raise RuntimeError(f"Invalid page audio config format in {config_path}: root must be an object.")
+    else:
+        payload = {}
+    configs: Dict[str, Any] = {}
+    page_audio_dir = ROOT / "config"
+    if page_audio_dir.exists():
+        for path in sorted(page_audio_dir.glob("*.json")):
+            if path.name in {
+                "morning-prayer.json",
+                "rosary.json",
+                "page_audio_config.json",
+                "playlist_config.json",
+                "notion_spotify_sync_config.json",
+            }:
+                continue
+            with open(path, "r", encoding="utf-8") as fh:
+                contract = json.load(fh)
+            validate_page_audio_contract(contract, source=str(path))
+            key = path.stem
+            configs[key] = contract
+            upper_key = key.upper()
+            if upper_key != key:
+                configs[upper_key] = contract
+    if not configs and isinstance(payload.get("configs"), dict):
+        configs = dict(payload.get("configs") or {})
     morning_prayer_contract = load_morning_prayer_contract_from_file()
     if morning_prayer_contract:
         payload["morning_prayer_contract"] = morning_prayer_contract
         morning_prayer_config = configs.get("MORNING_PRAYER_PAGE_AUDIO")
         if isinstance(morning_prayer_config, dict):
             morning_prayer_config["resolver_contract_mode"] = "file_driven"
+    if not configs:
+        raise RuntimeError("Invalid page audio config format: missing or empty 'configs'.")
+    payload["configs"] = configs
     return payload
+
+
+def fetch_divine_office_feed_entry(
+    target_date: datetime.date,
+    feed_url: str = DIVINE_OFFICE_FEED_URL,
+    match_text: str = "Invitatory",
+) -> Dict[str, str]:
+    entry = fetch_rss_feed_entry(
+        target_date,
+        feed_url=feed_url,
+        match_text=match_text,
+        match_strategy=RSS_MATCH_CONTAINS_WITH_DATE,
+    )
+    return {str(key): value for key, value in entry.items()}
 
 
 def load_page_audio_config(notion_token: str = "") -> Dict[str, Any]:
     token = str(notion_token or "").strip()
     payload: Dict[str, Any] = load_page_audio_config_from_file()
-    configs = dict(payload.get("configs") or {})
-    if token:
-        notion_payload = load_page_audio_config_from_notion(token)
-        notion_configs = notion_payload.get("configs") if isinstance(notion_payload, dict) else None
-        if isinstance(notion_configs, dict) and notion_configs:
-            configs.update(notion_configs)
-    if token:
-        fragments_payload = load_audio_fragments_from_notion(token)
-        fragment_map = fragments_payload.get("fragments") or {}
-        output_payload = load_audio_outputs_from_notion(token, fragment_map, configs)
-        output_configs = output_payload.get("configs") or {}
-        if isinstance(output_configs, dict):
-            configs.update(output_configs)
-        if fragment_map:
-            payload["audio_fragments"] = fragment_map
-    payload["configs"] = configs
+    file_configs = dict(payload.get("configs") or {})
+    payload["configs"] = file_configs
     return payload
 
 
@@ -1328,15 +1360,16 @@ def audio_output_config_from_notion_page(
     output_title = shared.page_title(page, AUDIO_OUTPUT_TITLE_PROPERTY).strip() or key
     mode = normalize_flag_value(page_property_text(page, AUDIO_OUTPUT_MODE_PROPERTY)) or AUDIO_OUTPUT_MODE_FRAGMENTS
     overrides = audio_output_common_overrides(page)
+    target_row = page_property_text(page, AUDIO_OUTPUT_TARGET_ROW_PROPERTY).strip() or output_title
     if mode == AUDIO_OUTPUT_MODE_ROSARY:
         default_config = {
             "builder": ROSARY_DYNAMIC_BUILDER,
             "audio_caption": f"{output_title} (Audio)",
             "silence_ms": DEFAULT_SILENCE_MS,
             "tts": default_output_tts_settings(),
-            "fragments": fragments,
+            "rosary_contract_file": DEFAULT_ROSARY_CONTRACT_FILE,
             "weekday_map": page_property_text(page, AUDIO_OUTPUT_WEEKDAY_MAP_PROPERTY).strip(),
-            "target_row": page_property_text(page, AUDIO_OUTPUT_TARGET_ROW_PROPERTY).strip(),
+            "target_row": target_row,
             "notes": page_property_text(page, AUDIO_OUTPUT_NOTES_PROPERTY).strip(),
         }
         return key, apply_audio_output_overrides(default_config, overrides)
@@ -1750,6 +1783,9 @@ def invalidate_page_audio_cached_blocks(page_id: str) -> None:
 
 def tts_settings_from_config(config: Dict[str, Any]) -> Dict[str, Any]:
     tts = config.get("tts") or {}
+    if not isinstance(tts, dict) or not tts:
+        header = config.get("header") if isinstance(config.get("header"), dict) else {}
+        tts = header.get("tts") or {}
     if not isinstance(tts, dict):
         raise RuntimeError("Invalid page audio config: 'tts' must be an object.")
     model = str(tts.get("model", "gpt-4o-mini-tts")).strip() or "gpt-4o-mini-tts"
@@ -2992,6 +3028,222 @@ def split_rosary_intentions(text: str, count: int = 5) -> List[str]:
     return out
 
 
+def load_rosary_contract_from_file(config_path: Optional[str] = None) -> Dict[str, Any]:
+    raw_path = str(
+        config_path
+        or os.getenv(ROSARY_CONTRACT_FILE, DEFAULT_ROSARY_CONTRACT_FILE).strip()
+        or DEFAULT_ROSARY_CONTRACT_FILE
+    ).strip()
+    path = Path(raw_path)
+    if not path.is_absolute():
+        path = ROOT / path
+    if not path.exists():
+        return {}
+    with open(path, "r", encoding="utf-8") as fh:
+        payload = json.load(fh)
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"Invalid Rosary contract format in {path}: root must be an object.")
+    if not rosary_contract_resolvers(payload):
+        raise RuntimeError(f"Invalid Rosary contract format in {path}: missing or empty 'resolvers'.")
+    return payload
+
+
+def rosary_contract_from_config(config: Dict[str, Any]) -> Dict[str, Any]:
+    contract = config.get("rosary_contract")
+    if isinstance(contract, dict) and contract:
+        return deepcopy(contract)
+    if isinstance(contract, str) and contract.strip():
+        return load_rosary_contract_from_file(contract)
+    contract_file = str(config.get("rosary_contract_file", "")).strip()
+    return load_rosary_contract_from_file(contract_file or None)
+
+
+def rosary_contract_body(contract: Dict[str, Any]) -> Dict[str, Any]:
+    if not isinstance(contract, dict):
+        return {}
+    main_resolver = None
+    resolvers = contract.get("resolvers")
+    if isinstance(resolvers, list):
+        for resolver in resolvers:
+            if isinstance(resolver, dict) and str(resolver.get("key", "")).strip() == "main":
+                main_resolver = resolver
+                break
+    if isinstance(main_resolver, dict) and main_resolver:
+        return main_resolver
+    return contract
+
+
+def rosary_contract_resolvers(contract: Dict[str, Any]) -> List[Dict[str, Any]]:
+    body = rosary_contract_body(contract)
+    resolvers = body.get("resolvers") if isinstance(body, dict) else None
+    if not isinstance(resolvers, list):
+        return []
+    return [resolver for resolver in resolvers if isinstance(resolver, dict)]
+
+
+def rosary_content_dir(contract: Dict[str, Any]) -> Path:
+    raw_path = os.getenv(ROSARY_CONTENT_DIR, DEFAULT_ROSARY_CONTENT_DIR).strip() or DEFAULT_ROSARY_CONTENT_DIR
+    path = Path(raw_path)
+    if not path.is_absolute():
+        path = ROOT / path
+    return path
+
+
+def load_rosary_content_text(contract: Dict[str, Any], filename: str) -> str:
+    path = rosary_content_dir(contract) / filename
+    if not path.exists():
+        return ""
+    return normalize_whitespace(path.read_text(encoding="utf-8"))
+
+
+def safe_config_text(config: Dict[str, Any], key: str) -> str:
+    value = config.get(key, "")
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
+def rosary_fragment_filename(fragment_key: str, resolver: Dict[str, Any]) -> str:
+    path = str(resolver.get("path", "")).strip()
+    if path:
+        return Path(path).name
+    if fragment_key == "hail-mary":
+        return "hail-mary.txt"
+    if fragment_key == "rosary-decade-meditation-template":
+        return "decade-meditation-template.txt"
+    return f"{fragment_key}.txt"
+
+
+def rosary_contract_content_map(contract: Dict[str, Any]) -> Dict[str, str]:
+    out: Dict[str, str] = {}
+    stack = list(rosary_contract_resolvers(contract))
+    while stack:
+        resolver = stack.pop(0)
+        if not isinstance(resolver, dict):
+            continue
+        nested = rosary_contract_resolvers(resolver)
+        if nested:
+            stack.extend(nested)
+        if normalize_flag_value(str(resolver.get("kind", "")).strip()) != "file":
+            continue
+        key = str(resolver.get("key", "")).strip()
+        if not key:
+            continue
+        out[key] = rosary_fragment_filename(key, resolver)
+    return out
+
+
+def rosary_contract_fragments(contract: Dict[str, Any]) -> Dict[str, Dict[str, Any]]:
+    fragments: Dict[str, Dict[str, Any]] = {}
+    content_map = rosary_contract_content_map(contract)
+    if not content_map:
+        raise RuntimeError("Rosary contract is missing its content file map.")
+    body = rosary_contract_body(contract)
+    strategy = body.get("intention_strategy") if isinstance(body, dict) else {}
+    bridge_key = str((strategy or {}).get("bridge_fragment_key", "")).strip() or DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY
+    bridge_prompt_model = str((strategy or {}).get("prompt_model", "")).strip() or os.getenv(OAI_MODEL, "").strip() or "gpt-4.1-mini"
+    for fragment_key, filename in content_map.items():
+        text = load_rosary_content_text(contract, filename)
+        if not text:
+            raise RuntimeError(f"Rosary content file '{filename}' is missing or empty.")
+        spec: Dict[str, Any] = {
+            "key": fragment_key,
+            "label": fragment_key.replace("rosary-", "").replace("-", " ").title(),
+            "collection": "rosary",
+        }
+        if fragment_key == bridge_key:
+            spec["prompt"] = text
+            spec["prompt_model"] = bridge_prompt_model
+        else:
+            spec["text"] = text
+        fragments[fragment_key] = spec
+
+    fallback_paths = {
+        "hail-mary": "hail-mary.txt",
+        DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY: "decade-meditation-template.txt",
+    }
+    for fragment_key, filename in fallback_paths.items():
+        if fragment_key in fragments:
+            continue
+        text = load_rosary_content_text(contract, filename)
+        if not text:
+            continue
+        fragments[fragment_key] = {
+            "key": fragment_key,
+            "label": fragment_key.replace("rosary-", "").replace("-", " ").title(),
+            "text": text,
+            "collection": "rosary",
+        }
+
+    mysteries = body.get("mysteries")
+    if isinstance(mysteries, dict):
+        for mystery_set, entries in mysteries.items():
+            if not isinstance(entries, list):
+                continue
+            for idx, entry in enumerate(entries, start=1):
+                if not isinstance(entry, dict):
+                    continue
+                title = normalize_whitespace(str(entry.get("title", "")).strip())
+                fruit = normalize_whitespace(str(entry.get("fruit", "")).strip())
+                if not title or not fruit:
+                    continue
+                key = rosary_mystery_fragment_key(str(mystery_set).strip(), idx)
+                fragments[key] = {
+                    "key": key,
+                    "label": title,
+                    "text": title,
+                    "collection": "rosary",
+                    "notes": json.dumps({"title": title, "fruit": fruit}),
+                }
+    return fragments
+
+
+def rosary_contract_flow(contract: Dict[str, Any]) -> List[Dict[str, Any]]:
+    return rosary_contract_resolvers(contract)
+
+
+def rosary_contract_mystery_entries(contract: Dict[str, Any], mystery_set: str) -> List[Dict[str, Any]]:
+    body = rosary_contract_body(contract)
+    mysteries = body.get("mysteries") if isinstance(body, dict) else None
+    if not isinstance(mysteries, dict):
+        return []
+    entries = mysteries.get(mystery_set) or []
+    if not isinstance(entries, list):
+        return []
+    return [entry for entry in entries if isinstance(entry, dict)]
+
+
+def rosary_block_count(block: Dict[str, Any], default: int = 1) -> int:
+    try:
+        count = int(block.get("count", default))
+    except Exception:
+        count = default
+    return max(1, count)
+
+
+def rosary_block_kind(block: Dict[str, Any]) -> str:
+    return normalize_flag_value(str(block.get("kind", "")).strip()).replace(" ", "_")
+
+
+def rosary_contract_prayer_count(contract: Dict[str, Any]) -> int:
+    try:
+        prayer_count = int(rosary_contract_body(contract).get("prayer_count", DEFAULT_ROSARY_PRAYER_COUNT))
+    except Exception:
+        prayer_count = DEFAULT_ROSARY_PRAYER_COUNT
+    return max(1, prayer_count)
+
+
+def rosary_contract_intention_count(contract: Dict[str, Any], *, default: int = DEFAULT_ROSARY_PRAYER_COUNT) -> int:
+    strategy = rosary_contract_body(contract).get("intention_strategy") if isinstance(contract, dict) else None
+    if isinstance(strategy, dict):
+        try:
+            count = int(strategy.get("count", default))
+        except Exception:
+            count = default
+        return max(1, count)
+    return max(1, default)
+
+
 def rosary_mystery_fragment_key(mystery_set: str, decade_number: int) -> str:
     return f"rosary-{mystery_set}-{int(decade_number)}"
 
@@ -3104,22 +3356,23 @@ def load_prayer_intention_petitions(token: str, *, count: int = 5) -> List[str]:
     return [str(item.get("petition", "")).strip() for item in load_prayer_intention_entries(token, count=count) if str(item.get("petition", "")).strip()]
 
 
-def rosary_mystery_metadata(fragments_map: Dict[str, Dict[str, Any]], mystery_set: str, decade_number: int) -> Dict[str, str]:
+def rosary_mystery_metadata(contract: Dict[str, Any], mystery_set: str, decade_number: int) -> Dict[str, str]:
     key = rosary_mystery_fragment_key(mystery_set, decade_number)
-    spec = fragments_map.get(key)
-    if not isinstance(spec, dict):
-        raise RuntimeError(f"Missing rosary mystery fragment '{key}'.")
-    notes = str(spec.get("notes", "")).strip()
-    metadata: Dict[str, str] = {}
-    if notes:
-        try:
-            payload = json.loads(notes)
-            if isinstance(payload, dict):
-                metadata = {str(k): str(v).strip() for k, v in payload.items() if str(v).strip()}
-        except Exception:
-            metadata = {}
-    title = metadata.get("title") or str(spec.get("label", "")).strip() or key
-    fruit = metadata.get("fruit", "")
+    entries = rosary_contract_mystery_entries(contract, mystery_set)
+    index = decade_number - 1
+    if index < 0 or index >= len(entries):
+        raise RuntimeError(f"Missing rosary mystery metadata for '{mystery_set}' decade {decade_number}.")
+    metadata = entries[index]
+    title = normalize_whitespace(
+        str(metadata.get("title", "")).strip()
+        or str(metadata.get("label", "")).strip()
+        or str(metadata.get("name", "")).strip()
+    )
+    fruit = normalize_whitespace(str(metadata.get("fruit", "")).strip())
+    if not title:
+        raise RuntimeError(f"Rosary mystery '{key}' is missing a title.")
+    if not fruit:
+        raise RuntimeError(f"Rosary mystery '{key}' is missing a fruit.")
     return {"key": key, "title": title, "fruit": fruit}
 
 
@@ -3131,96 +3384,205 @@ def build_rosary_dynamic_plan(
     notion_token: str = "",
 ) -> PageAudioPlan:
     settings = tts_settings_from_config(config)
-    fragments_map = config.get("fragments") or {}
-    if not isinstance(fragments_map, dict) or not fragments_map:
-        raise RuntimeError("Rosary output requires loaded audio fragments.")
+    contract = rosary_contract_from_config(config)
+    if not contract:
+        raise RuntimeError("Rosary output requires a Rosary contract.")
+    fragments_map = rosary_contract_fragments(contract)
+
+    flow = rosary_contract_flow(contract)
+    if not flow:
+        raise RuntimeError("Rosary contract is missing flow sections.")
+
     target_date = shared.local_today()
-    include_intentions = bool(config.get("include_intentions", True))
+    include_intentions = bool(
+        config.get(
+            "include_intentions",
+            (contract.get("intention_strategy") or {}).get("include_intentions", True) if isinstance(contract.get("intention_strategy"), dict) else True,
+        )
+    )
+    intention_strategy = contract.get("intention_strategy") if isinstance(contract.get("intention_strategy"), dict) else {}
+    intention_property = (
+        str(config.get("intention_property", "")).strip()
+        or str((intention_strategy or {}).get("fallback_property", "")).strip()
+        or DEFAULT_ROSARY_INTENTION_PROPERTY
+    )
+    intention_count = rosary_contract_intention_count(contract, default=rosary_contract_prayer_count(contract))
+    meditation_key = (
+        str(config.get("meditation_fragment_key", "")).strip()
+        or str((intention_strategy or {}).get("bridge_fragment_key", "")).strip()
+        or DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY
+    )
+    prayer_count = rosary_contract_prayer_count(contract)
+    weekday_map = config.get("weekday_map") or contract.get("weekday_map") or DEFAULT_ROSARY_WEEKDAY_MAP
     mystery_set = normalize_rosary_mystery_value(str(config.get("mystery_set", "")).strip()) or choose_rosary_mystery_set(
         target_date,
-        config.get("weekday_map", {}),
+        weekday_map,
     )
-    intention_property = str(config.get("intention_property", DEFAULT_ROSARY_INTENTION_PROPERTY)).strip() or DEFAULT_ROSARY_INTENTION_PROPERTY
-    intention_entries = load_prayer_intention_entries(notion_token, count=5) if include_intentions and str(notion_token or "").strip() else []
-    intentions = [str(item.get("petition", "")).strip() for item in intention_entries if str(item.get("petition", "")).strip()]
+    intentions = split_rosary_intentions(page_property_text(page, intention_property), count=intention_count) if include_intentions else [""] * intention_count
     if include_intentions:
         if not intentions:
-            intentions = split_rosary_intentions(page_property_text(page, intention_property), count=5)
-        elif str(notion_token or "").strip():
-            short_lines = "\n".join(str(item.get("label", "")).strip() for item in intention_entries if str(item.get("label", "")).strip())
-            if short_lines:
-                maybe_update_page_text_property(page, intention_property, short_lines, notion_token)
-        if not intentions:
             raise RuntimeError(f"Rosary row is missing intentions in '{intention_property}'.")
-    else:
-        intentions = [""] * 5
-    meditation_key = str(config.get("meditation_fragment_key", DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY)).strip() or DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY
+        rng = random.Random(f"{target_date.isoformat()}|{str(page.get('id', '')).strip()}|rosary")
+        rng.shuffle(intentions)
+
+    decade_sections: List[Dict[str, Any]] = []
+    for section in flow:
+        kind = rosary_block_kind(section)
+        section_key = normalize_flag_value(str(section.get("key", "")).strip())
+        if kind == "code_driven":
+            continue
+        if kind == "decade" or section_key == "mysteries":
+            decade_sections.append(section)
+
+    if not decade_sections:
+        raise RuntimeError("Rosary contract does not define a decade flow section.")
+
+    if len(decade_sections) > 1:
+        raise RuntimeError("Rosary contract defines more than one decade flow section.")
+
+    decade_section = decade_sections[0]
+    if rosary_block_count(decade_section, default=prayer_count) != prayer_count:
+        raise RuntimeError("Rosary contract prayer_count does not match the decade flow count.")
+    if not rosary_contract_resolvers(decade_section):
+        raise RuntimeError("Rosary contract decade flow is missing steps.")
 
     fragments: List[PageAudioFragment] = []
     mystery_rows: List[Dict[str, str]] = []
-    intro_sequence = [
-        "rosary-sign-of-cross",
-        "rosary-apostles-creed",
-        "rosary-our-father",
-        "rosary-hail-mary",
-        "rosary-hail-mary",
-        "rosary-hail-mary",
-        "rosary-glory-be",
-    ]
-    closing_sequence = [
-        "rosary-hail-holy-queen",
-        "rosary-closing-prayer",
-        "rosary-sign-of-cross",
-    ]
-    for key in intro_sequence:
-        fragments.append(build_named_audio_fragment(key, fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
 
-    for decade_number in range(1, 6):
-        mystery = rosary_mystery_metadata(fragments_map, mystery_set, decade_number)
-        decade_intention = intentions[decade_number - 1]
+    def append_fragment(
+        fragment_key: str,
+        *,
+        key_override: str = "",
+        label_override: str = "",
+        prompt_context: Optional[Dict[str, str]] = None,
+    ) -> None:
+        key = str(fragment_key or "").strip()
+        if not key:
+            raise RuntimeError("Rosary contract references a blank fragment key.")
         fragments.append(
             build_named_audio_fragment(
-                mystery["key"],
+                key,
                 fragments_map=fragments_map,
                 settings=settings,
                 page=page,
                 base_url=base_url,
+                prompt_context=prompt_context,
+                key_override=key_override or None,
+                label_override=label_override or None,
             )
         )
-        if include_intentions:
-            fragments.append(
-                build_named_audio_fragment(
+
+    def compile_sequence_section(section: Dict[str, Any]) -> None:
+        section_steps = rosary_contract_resolvers(section) or [step for step in (section.get("steps") or []) if isinstance(step, dict)]
+        if not section_steps:
+            return
+        for _ in range(rosary_block_count(section)):
+            for step in section_steps:
+                compile_step(step, 0)
+
+    def compile_decade_section(section: Dict[str, Any]) -> None:
+        section_steps = rosary_contract_resolvers(section) or [step for step in (section.get("steps") or []) if isinstance(step, dict)]
+        if not section_steps:
+            raise RuntimeError("Rosary contract decade flow is missing steps.")
+        for _ in range(rosary_block_count(section, default=prayer_count)):
+            decade_number = len(mystery_rows) + 1
+            mystery = rosary_mystery_metadata(contract, mystery_set, decade_number)
+            decade_intention = intentions[decade_number - 1] if decade_number - 1 < len(intentions) else ""
+            for step in section_steps:
+                compile_step(step, decade_number, mystery=mystery, intention=decade_intention)
+            mystery_rows.append(
+                {
+                    "title": mystery["title"],
+                    "fruit": mystery["fruit"],
+                    "intention": decade_intention,
+                }
+            )
+
+    def compile_step(
+        step: Dict[str, Any],
+        decade_number: int,
+        *,
+        mystery: Optional[Dict[str, str]] = None,
+        intention: str = "",
+    ) -> None:
+        kind = rosary_block_kind(step)
+        step_count = rosary_block_count(step)
+        nested_resolvers = rosary_contract_resolvers(step)
+        if kind == "sequence":
+            for _ in range(step_count):
+                for child in nested_resolvers or [child for child in (step.get("steps") or []) if isinstance(child, dict)]:
+                    compile_step(child, decade_number, mystery=mystery, intention=intention)
+            return
+        if kind == "decade":
+            for _ in range(step_count):
+                compile_decade_section(step)
+            return
+        if kind == "repeat":
+            source_key = str(step.get("source_key", "")).strip() or str(step.get("fragment_key", "")).strip()
+            if not source_key:
+                raise RuntimeError("Rosary repeat step is missing a source_key.")
+            for _ in range(step_count):
+                append_fragment(source_key)
+            return
+        if kind == "mystery":
+            if not mystery:
+                raise RuntimeError("Rosary mystery step was encountered outside a decade section.")
+            append_fragment(
+                mystery["key"],
+            )
+            return
+        if kind == "dynamic_mystery":
+            if not mystery:
+                raise RuntimeError("Rosary mystery step was encountered outside a decade section.")
+            append_fragment(
+                mystery["key"],
+            )
+            return
+        if kind in {"bridge", "prompt"}:
+            if include_intentions and mystery:
+                append_fragment(
                     meditation_key,
-                    fragments_map=fragments_map,
-                    settings=settings,
-                    page=page,
-                    base_url=base_url,
+                    key_override=f"rosary-decade-meditation-{mystery_set}-{decade_number}",
+                    label_override=f"Rosary Meditation {decade_number}",
                     prompt_context={
                         "{mystery_set}": mystery_set.title(),
                         "{mystery_title}": mystery["title"],
                         "{fruit}": mystery["fruit"],
-                        "{intention}": decade_intention,
+                        "{intention}": intention,
                         "{decade_number}": str(decade_number),
                     },
-                    key_override=f"rosary-decade-meditation-{mystery_set}-{decade_number}",
-                    label_override=f"Rosary Meditation {decade_number}",
                 )
-            )
-        fragments.append(build_named_audio_fragment("rosary-our-father", fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
-        for _ in range(10):
-            fragments.append(build_named_audio_fragment("rosary-hail-mary", fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
-        fragments.append(build_named_audio_fragment("rosary-glory-be", fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
-        fragments.append(build_named_audio_fragment("rosary-fatima-prayer", fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
-        mystery_rows.append(
-            {
-                "title": mystery["title"],
-                "fruit": mystery["fruit"],
-                "intention": decade_intention,
-            }
-        )
+            return
+        if kind == "file":
+            fragment_key = str(step.get("key", "")).strip()
+            if not fragment_key:
+                raise RuntimeError("Rosary file step is missing a key.")
+            for _ in range(step_count):
+                append_fragment(fragment_key)
+            return
+        fragment_key = str(step.get("fragment_key", "")).strip()
+        if not fragment_key:
+            raise RuntimeError(f"Rosary contract step '{kind or 'fragment'}' is missing a fragment_key.")
+        for _ in range(step_count):
+            append_fragment(fragment_key)
 
-    for key in closing_sequence:
-        fragments.append(build_named_audio_fragment(key, fragments_map=fragments_map, settings=settings, page=page, base_url=base_url))
+    for section in flow:
+        kind = rosary_block_kind(section)
+        section_key = normalize_flag_value(str(section.get("key", "")).strip())
+        if kind == "code_driven":
+            continue
+        if kind == "sequence" and section_key != "mysteries":
+            compile_sequence_section(section)
+        elif kind == "decade" or section_key == "mysteries":
+            compile_decade_section(section)
+        elif kind in {"fragment", "mystery", "bridge", "prompt", "repeat"}:
+            compile_step(section, 0)
+        else:
+            raise RuntimeError(f"Unsupported Rosary contract flow section '{kind}'.")
+
+    if len(mystery_rows) != prayer_count:
+        raise RuntimeError(f"Rosary contract produced {len(mystery_rows)} mysteries, expected {prayer_count}.")
+
     toggle_children: List[Dict[str, Any]] = [
         notion_paragraph_block(f"{target_date.strftime('%A, %B %d, %Y')}: {mystery_set.title()} Mysteries.")
     ]
@@ -3285,6 +3647,26 @@ def build_morning_prayer_plan(
             base_url=base_url,
         )
 
+    def build_morning_prayer_monthly_template_fragment(resolver: Dict[str, Any]) -> PageAudioFragment:
+        folder = str(resolver.get("folder", "")).strip()
+        if not folder:
+            raise RuntimeError("Morning Prayer monthly template resolver is missing its folder.")
+        selector = str(resolver.get("selector", "")).strip()
+        if selector and selector != "current_calendar_month":
+            raise RuntimeError(f"Unsupported Morning Prayer monthly template selector '{selector}'.")
+        template_text = load_morning_prayer_monthly_template_text(folder, shared.local_today())
+        if not template_text:
+            raise RuntimeError(f"Morning Prayer monthly template file is missing or empty for folder '{folder}'.")
+        return stable_text_fragment(
+            cache_root=cache_root,
+            collection=AUDIO_FRAGMENT_MONTHLY_COLLECTION,
+            key="monthly-intention",
+            label="Monthly Intention",
+            text=template_text,
+            settings=settings,
+            base_url=base_url,
+        )
+
     for resolver in contract_resolvers:
         resolver_key = str(resolver.get("key", "")).strip()
         if not resolver_key:
@@ -3293,12 +3675,7 @@ def build_morning_prayer_plan(
         kind = str(resolver.get("kind", "")).strip()
         targets = {str(target).strip() for target in (resolver.get("targets") or []) if str(target).strip()}
         if resolver_key == "monthly-intention":
-            fragment = build_morning_prayer_monthly_template_fragment(
-                resolver,
-                settings=settings,
-                base_url=base_url,
-                target_date=shared.local_today(),
-            )
+            fragment = build_morning_prayer_monthly_template_fragment(resolver)
             fragments.append(fragment)
             if "page_content" in targets:
                 content_blocks.append(morning_prayer_content_block(title, fragment.text))
@@ -3324,7 +3701,7 @@ def build_morning_prayer_plan(
             continue
         if kind != "file":
             continue
-        file_text = load_morning_prayer_content_text(resolver_key)
+        file_text = load_morning_prayer_content_text(resolver)
         if not file_text:
             raise RuntimeError(f"Morning Prayer content file is missing or empty for resolver '{resolver_key}'.")
         fragments.append(stable_morning_fragment(title, file_text))
@@ -3480,7 +3857,7 @@ def build_opus_dei_two_list_plan(
         config = {
             **row_audio_config,
             "builder": ROSARY_DYNAMIC_BUILDER,
-            "fragments": detailed_fragments_to_legacy_fragments_map(fragment_specs),
+            "rosary_contract_file": DEFAULT_ROSARY_CONTRACT_FILE,
             "weekday_map": row_settings.get("weekday_map", ""),
             "include_intentions": bool(row_settings.get("include_intentions", True)),
         }
@@ -4300,25 +4677,45 @@ def fetch_rss_feed_entry(
     match_strategy: str = RSS_MATCH_CONTAINS_WITH_DATE,
     match_map: Optional[Dict[str, str]] = None,
 ) -> Dict[str, Any]:
-    cache_key = cached_rss_feed_entries_key(feed_url, target_date.year)
+    normalized_feed_url = str(feed_url or "").strip()
+    if "podcast.show" in normalized_feed_url.lower() and "/episode/" in normalized_feed_url.lower():
+        response = page_audio_http_get(normalized_feed_url, timeout=30)
+        html = response.text
+        audio_url_match = re.search(r'https://[^"\']+\.mp3', html, re.I)
+        if not audio_url_match:
+            raise RuntimeError(f"Unable to locate episode audio in {normalized_feed_url}.")
+        title_match = re.search(r'<meta name="description" content="[^"]*-\s*([^"]+)"\s*/?>', html, re.I)
+        if not title_match:
+            title_match = re.search(r'<meta property="og:title" content="([^"]+)"', html, re.I)
+        episode_title = normalize_whitespace(title_match.group(1) if title_match else "Podcast Episode")
+        description_match = re.search(r'<meta name="description"\s+content="([^"]+)"', html, re.I)
+        description = normalize_whitespace(html.unescape(description_match.group(1))) if description_match else ""
+        return {
+            "title": episode_title,
+            "link": normalized_feed_url,
+            "audio_url": audio_url_match.group(0),
+            "content_html": description,
+            "date": target_date.isoformat(),
+        }
+    cache_key = cached_rss_feed_entries_key(normalized_feed_url, target_date.year)
     entries = _RSS_FEED_ENTRIES_CACHE.get(cache_key)
     if entries is None:
-        response = page_audio_http_get(feed_url, timeout=30)
+        response = page_audio_http_get(normalized_feed_url, timeout=30)
         root = ET.fromstring(response.content)
         channel = root.find("channel")
         if channel is None:
-            raise RuntimeError(f"Invalid RSS feed at {feed_url}.")
+            raise RuntimeError(f"Invalid RSS feed at {normalized_feed_url}.")
         channel_artwork_url = rss_image_url_from_element(channel)
         entries = [
             entry
             for entry in (
-                rss_item_to_entry(item, feed_url, target_date, channel_artwork_url=channel_artwork_url)
+                rss_item_to_entry(item, normalized_feed_url, target_date, channel_artwork_url=channel_artwork_url)
                 for item in channel.findall("item")
             )
             if isinstance(entry, dict)
         ]
         if not entries:
-            raise RuntimeError(f"No RSS audio entries found in {feed_url}.")
+            raise RuntimeError(f"No RSS audio entries found in {normalized_feed_url}.")
         _RSS_FEED_ENTRIES_CACHE[cache_key] = list(entries)
 
     strategy = normalize_flag_value(match_strategy) or normalize_flag_value(RSS_MATCH_CONTAINS_WITH_DATE)
@@ -4335,65 +4732,6 @@ def fetch_rss_feed_entry(
     return choose_dated_feed_entry(entries, target_date, title_filter=rendered_match_text)
 
 
-def fetch_divine_office_feed_entry(
-    target_date: datetime.date,
-    feed_url: str = DIVINE_OFFICE_FEED_URL,
-    match_text: str = "Invitatory",
-) -> Dict[str, str]:
-    entry = fetch_rss_feed_entry(
-        target_date,
-        feed_url=feed_url,
-        match_text=match_text,
-        match_strategy=RSS_MATCH_CONTAINS_WITH_DATE,
-    )
-    return {str(key): value for key, value in entry.items()}
-
-
-def build_divine_office_invitatory_plan(
-    page: Dict[str, Any],
-    config: Dict[str, Any],
-    base_url: str,
-) -> PageAudioPlan:
-    settings = tts_settings_from_config(config)
-    intention_property = str(config.get("intention_property", DEFAULT_INTENTION_PROPERTY)).strip() or DEFAULT_INTENTION_PROPERTY
-    intention_prefix = str(config.get("intention_prefix", DEFAULT_INTENTION_PREFIX)).strip() or DEFAULT_INTENTION_PREFIX
-    feed_url = str(config.get("rss_feed_url", DIVINE_OFFICE_FEED_URL)).strip() or DIVINE_OFFICE_FEED_URL
-    match_text = str(config.get("rss_match_text", "Invitatory")).strip() or "Invitatory"
-    feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=feed_url, match_text=match_text)
-
-    fragments: List[PageAudioFragment] = []
-    intention_fragment = build_page_intention_fragment(
-        page,
-        settings=settings,
-        base_url=base_url,
-        intention_property=intention_property,
-        intention_prefix=intention_prefix,
-    )
-    if intention_fragment is not None:
-        fragments.append(intention_fragment)
-
-    audio_hash = hashlib.sha256(
-        f"{feed_entry['title']}|{feed_entry['audio_url']}|{feed_entry['date']}".encode("utf-8")
-    ).hexdigest()[:16]
-    fragments.append(
-        PageAudioFragment(
-            kind="source_audio",
-            label=feed_entry["title"],
-            hash_value=audio_hash,
-            source_url=feed_entry["audio_url"],
-            artwork_url=str(feed_entry.get("artwork_url", "")).strip(),
-        )
-    )
-    content_blocks = divine_office_content_blocks_from_html(feed_entry.get("content_html", ""))
-    return PageAudioPlan(
-        fragments=fragments,
-        synced_text="",
-        text_property=str(config.get("text_property", DEFAULT_RSS_TEXT_PROPERTY)).strip() or DEFAULT_RSS_TEXT_PROPERTY,
-        text_target="page_content",
-        content_blocks=content_blocks,
-    )
-
-
 def build_divine_office_night_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
     feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=DIVINE_OFFICE_FEED_URL, match_text="Night Prayer")
     content_blocks = divine_office_content_blocks_from_html(feed_entry.get("content_html", ""))
@@ -4404,28 +4742,8 @@ def build_divine_office_night_text_plan(config: Dict[str, Any]) -> PageAudioPlan
     )
 
 
-def build_divine_office_evening_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
-    feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=DIVINE_OFFICE_FEED_URL, match_text="Evening Prayer")
-    content_blocks = divine_office_content_blocks_from_html(feed_entry.get("content_html", ""))
-    return PageAudioPlan(
-        fragments=[],
-        text_target="page_content",
-        content_blocks=content_blocks,
-    )
-
-
-def build_divine_office_morning_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
-    entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=DIVINE_OFFICE_FEED_URL, match_text="Morning Prayer")
-    content_blocks = divine_office_content_blocks_from_html(entry.get("content_html", ""))
-    return PageAudioPlan(
-        fragments=[],
-        text_target="page_content",
-        content_blocks=content_blocks,
-    )
-
-
 def build_auxilium_daily_text_plan(config: Dict[str, Any], notion_token: str = "") -> PageAudioPlan:
-    pdf_url = str(config.get("rss_feed_url", "")).strip()
+    pdf_url = safe_config_text(config, "rss_feed_url")
     if not pdf_url:
         raise RuntimeError("auxilium_daily_text_v1 requires 'rss_feed_url' to point at the source PDF.")
     return PageAudioPlan(
@@ -4441,11 +4759,11 @@ def build_rss_audio_plan(
     base_url: str,
 ) -> PageAudioPlan:
     settings = tts_settings_from_config(config)
-    feed_url = str(config.get("rss_feed_url", "")).strip()
+    feed_url = safe_config_text(config, "rss_feed_url")
     if not feed_url:
         raise RuntimeError("rss_audio_v1 requires 'rss_feed_url'.")
-    match_text = str(config.get("rss_match_text", "")).strip()
-    match_strategy = str(config.get("rss_match_strategy", RSS_MATCH_CONTAINS_WITH_DATE)).strip() or RSS_MATCH_CONTAINS_WITH_DATE
+    match_text = safe_config_text(config, "rss_match_text")
+    match_strategy = safe_config_text(config, "rss_match_strategy") or RSS_MATCH_CONTAINS_WITH_DATE
     match_map = rss_match_map_values(config.get("rss_match_map", ""))
     feed_entry = fetch_rss_feed_entry(
         shared.local_today(),
@@ -4456,8 +4774,8 @@ def build_rss_audio_plan(
     )
 
     fragments: List[PageAudioFragment] = []
-    intention_property = str(config.get("intention_property", DEFAULT_INTENTION_PROPERTY)).strip() or DEFAULT_INTENTION_PROPERTY
-    intention_prefix = str(config.get("intention_prefix", DEFAULT_INTENTION_PREFIX)).strip() or DEFAULT_INTENTION_PREFIX
+    intention_property = safe_config_text(config, "intention_property") or DEFAULT_INTENTION_PROPERTY
+    intention_prefix = safe_config_text(config, "intention_prefix") or DEFAULT_INTENTION_PREFIX
     intention_fragment = build_page_intention_fragment(
         page,
         settings=settings,
@@ -4481,10 +4799,11 @@ def build_rss_audio_plan(
         )
     )
     paragraphs = plain_text_paragraphs_from_html(feed_entry.get("content_html", ""))
-    text_property = str(config.get("text_property", "")).strip()
+    text_property = safe_config_text(config, "text_property")
     if "divineoffice.org" in feed_url.lower():
         return PageAudioPlan(
             fragments=fragments,
+            text_property=text_property,
             text_target="page_content",
             content_blocks=divine_office_content_blocks_from_html(feed_entry.get("content_html", "")),
         )
@@ -4586,6 +4905,35 @@ def page_audio_export_metadata(
         file_stem=file_stem,
         audio_extension=clean_ext,
     )
+
+
+def page_audio_runtime_config_for_page(page: Dict[str, Any], config: Dict[str, Any]) -> Dict[str, Any]:
+    runtime_config = deepcopy(config)
+    output_folder = page_property_text(page, AUDIO_OUTPUT_FOLDER_PROPERTY).strip()
+    if output_folder:
+        runtime_config["output_folder"] = output_folder
+    return runtime_config
+
+
+def find_page_for_audio_config(
+    pages: Sequence[Dict[str, Any]],
+    *,
+    title_property: str,
+    config: Dict[str, Any],
+) -> Optional[Dict[str, Any]]:
+    target_row = str(config.get("target_row", "")).strip()
+    target_title = str(config.get("title", "")).strip()
+    wanted_titles = [value for value in (target_row, target_title) if value]
+    if not wanted_titles:
+        raise RuntimeError("Page audio config is missing both 'target_row' and 'title'.")
+    normalized_wanted = {title.strip().lower() for title in wanted_titles}
+    for page in pages:
+        if not isinstance(page, dict):
+            continue
+        title = shared.page_title(page, title_property).strip().lower()
+        if title in normalized_wanted:
+            return page
+    return None
 
 
 def page_audio_output_library_paths(
@@ -5391,6 +5739,7 @@ def build_page_audio_plan(
     base_url: str,
 ) -> PageAudioPlan:
     builder = str(config.get("builder", "")).strip() or MORNING_PRAYER_BUILDER
+    has_rss_source = bool(str(config.get("rss_feed_url", "")).strip())
     if builder == MORNING_PRAYER_BUILDER:
         return build_morning_prayer_plan(
             page=page,
@@ -5400,18 +5749,37 @@ def build_page_audio_plan(
             token=notion_token,
             base_url=base_url,
         )
-    if builder == DIVINE_OFFICE_INVITATORY_BUILDER:
-        return build_divine_office_invitatory_plan(page=page, config=config, base_url=base_url)
     if builder == DIVINE_OFFICE_NIGHT_TEXT_BUILDER:
         return build_divine_office_night_text_plan(config=config)
-    if builder == DIVINE_OFFICE_EVENING_TEXT_BUILDER:
-        return build_divine_office_evening_text_plan(config=config)
-    if builder == DIVINE_OFFICE_MORNING_TEXT_BUILDER:
-        return build_divine_office_morning_text_plan(config=config)
     if builder == AUXILIUM_DAILY_TEXT_BUILDER:
         return build_auxilium_daily_text_plan(config=config, notion_token=notion_token)
-    if builder == RSS_AUDIO_BUILDER:
-        return build_rss_audio_plan(page=page, config=config, base_url=base_url)
+    if builder == RSS_AUDIO_BUILDER or has_rss_source:
+        try:
+            return build_rss_audio_plan(page=page, config=config, base_url=base_url)
+        except Exception as exc:
+            nested_config: Dict[str, Any] = {}
+            resolvers = config.get("resolvers")
+            if isinstance(resolvers, list):
+                for resolver in resolvers:
+                    if not isinstance(resolver, dict):
+                        continue
+                    if str(resolver.get("key", "")).strip() != "main":
+                        continue
+                    fallback_resolver = resolver.get("fallback_resolver")
+                    if isinstance(fallback_resolver, dict):
+                        nested_config = deepcopy(fallback_resolver)
+                    break
+            if not nested_config:
+                raise
+            nested_config.setdefault("_fallback_source_error", f"{type(exc).__name__}: {exc}")
+            return build_page_audio_plan(
+                page=page,
+                pages=pages,
+                title_property=title_property,
+                config=nested_config,
+                notion_token=notion_token,
+                base_url=base_url,
+            )
     if builder == AUDIO_FRAGMENTS_BUILDER:
         return build_fragment_output_plan(
             page=page,
@@ -5421,7 +5789,7 @@ def build_page_audio_plan(
             token=notion_token,
             base_url=base_url,
         )
-    if builder == ROSARY_DYNAMIC_BUILDER:
+    if builder in {ROSARY_DYNAMIC_BUILDER, ROSARY_BUILDER}:
         return build_rosary_dynamic_plan(page=page, config=config, base_url=base_url, notion_token=notion_token)
     raise RuntimeError(f"Unsupported page audio builder '{builder}'.")
 
@@ -5760,158 +6128,87 @@ def main() -> int:
         notion_token = shared.require_env(NOTION_TOKEN)
         base_url = os.getenv(OAI_API_BASE_URL, "https://api.openai.com/v1").strip() or "https://api.openai.com/v1"
         title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
-        platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
-        platform_value = os.getenv(NOTION_AUDIO_PLATFORM_VALUE, DEFAULT_AUTO_AUDIO_PLATFORM_VALUE).strip() or DEFAULT_AUTO_AUDIO_PLATFORM_VALUE
-        config_property = os.getenv(NOTION_AUDIO_CONFIG_PROPERTY, DEFAULT_AUDIO_CONFIG_PROPERTY).strip() or DEFAULT_AUDIO_CONFIG_PROPERTY
-        legacy_resolver_property = os.getenv(NOTION_AUDIO_RESOLVER_PROPERTY, "Spotify Resolver").strip() or "Spotify Resolver"
-        text_resolver_property = os.getenv(NOTION_TEXT_RESOLVER_PROPERTY, DEFAULT_TEXT_RESOLVER_PROPERTY).strip() or DEFAULT_TEXT_RESOLVER_PROPERTY
-        auto_audio_primary_property = (
-            os.getenv(NOTION_AUTO_AUDIO_RESOLVER_PRIMARY_PROPERTY, DEFAULT_AUTO_AUDIO_RESOLVER_PRIMARY_PROPERTY).strip()
-            or DEFAULT_AUTO_AUDIO_RESOLVER_PRIMARY_PROPERTY
-        )
-        auto_audio_secondary_property = (
-            os.getenv(NOTION_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY, DEFAULT_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY).strip()
-            or DEFAULT_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY
-        )
-        enabled_property = os.getenv(NOTION_AUDIO_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
-        config_key_filter = str(os.getenv(PAGE_AUDIO_CONFIG_KEY, "")).strip()
-        row_title_filter = os.getenv(PAGE_AUDIO_ROW_TITLE, "").strip()
         fail_open = shared.bool_env(PAGE_AUDIO_FAIL_OPEN, default=False)
         notion_db_id = shared.notion_find_database_id(notion_token)
         pages = shared.notion_get_all_pages(notion_db_id, notion_token)
-        candidates = list_audio_candidate_pages(
-            pages=pages,
-            title_property=title_property,
-            platform_property=platform_property,
-            platform_value=platform_value,
-            enabled_property=enabled_property,
-            row_title_filter=row_title_filter,
-        )
-
-        if not candidates:
+        config_payload = load_page_audio_config(notion_token)
+        configs = config_payload.get("configs") or {}
+        if not isinstance(configs, dict) or not configs:
             print("page_audio_rows=0")
             print(f"page_audio_deprecations={len(_PAGE_AUDIO_DEPRECATION_WARNINGS)}")
             return 0
-
-        detailed_fragments_payload = load_detailed_fragments_from_notion(notion_token)
-        detailed_fragments_by_page_id: Dict[str, List[Dict[str, Any]]] = detailed_fragments_payload.get("fragments_by_page_id") or {}
 
         attached = 0
         cached = 0
         failed = 0
         processed = 0
-        two_list_rows = 0
-        row_jobs: List[Dict[str, Any]] = []
-        managed_exports: List[tuple[str, PageAudioExportMetadata]] = []
-
-        for page in candidates:
-            title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip()
-            auto_text_enabled = page_has_platform_value(page, platform_property, "auto-text")
-            auto_audio_enabled = page_has_platform_value(page, platform_property, "auto-audio")
-            row_settings = opus_dei_two_list_settings(
-                page,
-                title_property=title_property,
-                fragments_by_page_id=detailed_fragments_by_page_id,
-            )
-            if not row_settings:
-                raise RuntimeError(
-                    f"No two-list page-audio configuration found for '{title}'. Expected '{OPUS_DEI_ASSEMBLY_MODE_PROPERTY}' and related '{OPUS_DEI_DETAILED_FRAGMENTS_PROPERTY}' rows."
-                )
-            if config_key_filter and not opus_dei_row_matches_filter(
-                page,
-                config_key_filter,
-                title_property=title_property,
-            ):
+        matched_jobs: List[Dict[str, Any]] = []
+        seen_rows: Set[str] = set()
+        for config_key, config in sorted(configs.items(), key=lambda item: str(item[0]).lower()):
+            if not isinstance(config, dict):
                 continue
-            row_config = deepcopy(row_settings.get("audio_config") or {})
-            row_config["builder"] = f"opus_dei_{row_settings.get('assembly_mode', OPUS_DEI_ASSEMBLY_MODE_FRAGMENTS)}_v1"
-            row_config_key = opus_dei_row_config_key(page, title_property=title_property)
-            if auto_audio_enabled:
-                managed_exports.append(
-                    (
-                        title,
-                        page_audio_export_metadata(
-                            page,
-                            title_property=title_property,
-                            audio_format=str(tts_settings_from_config(row_config)["format"]),
-                            config=row_config,
-                        ),
-                    )
+            row_name = normalize_flag_value(str(config.get("target_row", "")).strip() or str(config.get("title", "")).strip())
+            if row_name in seen_rows:
+                continue
+            page = find_page_for_audio_config(pages, title_property=title_property, config=config)
+            if not page:
+                print(
+                    f"WARN page_audio_missing_page config_key={config_key} target_row={str(config.get('target_row', '')).strip() or str(config.get('title', '')).strip()}",
+                    file=sys.stderr,
                 )
-            row_jobs.append(
-                {
-                    "page": page,
-                    "title": title,
-                    "auto_text_enabled": auto_text_enabled,
-                    "auto_audio_enabled": auto_audio_enabled,
-                    "row_settings": row_settings,
-                    "row_config": row_config,
-                    "row_config_key": row_config_key,
-                }
-            )
+                continue
+            seen_rows.add(row_name)
+            matched_jobs.append({"page": page, "config_key": config_key, "config": config})
 
-        if not row_jobs:
+        if not matched_jobs:
             print("page_audio_rows=0")
             print(f"page_audio_deprecations={len(_PAGE_AUDIO_DEPRECATION_WARNINGS)}")
             return 0
 
-        validate_unique_page_audio_export_targets(managed_exports)
-        if shared.bool_env(PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS, default=False):
-            removed_outputs = truncate_managed_page_audio_outputs(managed_exports)
-            print(f"page_audio_truncated_outputs={removed_outputs}")
-
-        for job in row_jobs:
+        for job in matched_jobs:
             page = job["page"]
-            title = job["title"]
+            config = job["config"]
+            title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip()
             page_started = time.perf_counter()
             processed += 1
-            two_list_rows += 1
             try:
-                text_mode = ""
-                row_plan = build_opus_dei_two_list_plan(
+                runtime_config = page_audio_runtime_config_for_page(page, config)
+                config_key = str(job["config_key"])
+                plan = build_page_audio_plan(
                     page=page,
                     pages=pages,
                     title_property=title_property,
-                    row_settings=job["row_settings"],
-                    token=notion_token,
+                    config=runtime_config,
+                    notion_token=notion_token,
                     base_url=base_url,
                 )
-                row_config = deepcopy(job["row_config"])
-                row_config_key = str(job["row_config_key"])
-                should_apply_text = bool(row_plan.text_target or row_plan.text_property)
-                if job["auto_text_enabled"] and should_apply_text:
-                    text_mode = apply_page_text_plan(page, row_plan, notion_token)
-
-                audio_mode = ""
-                if job["auto_audio_enabled"]:
-                    audio_mode = render_page_audio_for_config(
-                        page=page,
-                        config_key=row_config_key,
-                        config=row_config,
-                        plan=row_plan,
-                        title_property=title_property,
-                        notion_token=notion_token,
-                        openai_key=openai_key,
-                        base_url=base_url,
-                        apply_text=should_apply_text and not bool(text_mode),
-                    )
-                config_summary = row_config_key
-
-                mode_parts = [part for part in [text_mode, audio_mode] if part]
-                mode = " | ".join(mode_parts) if mode_parts else "noop"
+                should_apply_text = bool(plan.text_target or plan.text_property)
+                text_mode = apply_page_text_plan(page, plan, notion_token) if should_apply_text else ""
+                audio_mode = render_page_audio_for_config(
+                    page=page,
+                    config_key=config_key,
+                    config=runtime_config,
+                    plan=plan,
+                    title_property=title_property,
+                    notion_token=notion_token,
+                    openai_key=openai_key,
+                    base_url=base_url,
+                    apply_text=False,
+                )
                 if audio_mode.startswith("attached:"):
                     attached += 1
                 if audio_mode.startswith("cached:"):
                     cached += 1
                 elapsed = time.perf_counter() - page_started
-                print(f"page_audio title={title} {config_summary} mode={mode} duration_s={elapsed:.1f}".strip())
+                mode = " | ".join([part for part in [text_mode, audio_mode] if part]) or "noop"
+                print(f"page_audio title={title} {config_key} mode={mode} duration_s={elapsed:.1f}".strip())
             except Exception as exc:
                 failed += 1
                 print(f"page_audio_error title={title} error={exc}", file=sys.stderr)
                 if not fail_open:
                     raise
         print(
-            f"page_audio_rows={processed} two_list_rows={two_list_rows} legacy_rows=0 attached={attached} cached={cached} failed={failed}"
+            f"page_audio_rows={processed} attached={attached} cached={cached} failed={failed}"
         )
         print(f"page_audio_deprecations={len(_PAGE_AUDIO_DEPRECATION_WARNINGS)}")
         return 0 if failed == 0 or fail_open else 1

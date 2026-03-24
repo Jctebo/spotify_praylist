@@ -21,8 +21,6 @@ param(
   [string]$NotionSaintCelebrationProperty,
   [string]$NotionSaintPrecedenceProperty,
   [string]$NotionSaintBackgroundProperty,
-  [string]$NotionAudioRenderHashProperty,
-  [string]$NotionAudioSavedProperty,
   [string]$RomcalCalendar,
   [string]$RomcalLocale,
   [string]$RomcalWindowDays,
@@ -54,7 +52,7 @@ if (-not $PageAudioLibraryDir) { $PageAudioLibraryDir = $env:PAGE_AUDIO_LIBRARY_
 if (-not $OpenAiApiKey) { $OpenAiApiKey = Read-Host "OPENAI_API_KEY" }
 if (-not $NotionToken) { $NotionToken = Read-Host "NOTION_TOKEN" }
 if (-not $NotionDatabaseId -and -not $NotionDatabaseName) { $NotionDatabaseId = Read-Host "NOTION_DATABASE_ID" }
-if (-not $PrayerConfigFile) { $PrayerConfigFile = "config/morning-prayer/morning-prayer.json" }
+if (-not $PrayerConfigFile) { $PrayerConfigFile = "config/morning-prayer.json" }
 if (-not $PrayerRowTitle) { $PrayerRowTitle = "Morning Prayer" }
 
 $env:OPENAI_API_KEY = $OpenAiApiKey
@@ -72,7 +70,7 @@ if ($PageAudioCacheDir) { $env:PAGE_AUDIO_CACHE_DIR = $PageAudioCacheDir }
 if ($PageAudioLibraryDir) { $env:PAGE_AUDIO_LIBRARY_DIR = $PageAudioLibraryDir }
 
 Write-Host "Generating Morning Prayer locally..."
-py -3 jobs/notion/generate_prayer.py
+python jobs/notion/generate_prayer.py
 if ($LASTEXITCODE -ne 0) {
   throw "jobs/notion/generate_prayer.py failed"
 }

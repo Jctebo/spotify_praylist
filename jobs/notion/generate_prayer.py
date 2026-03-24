@@ -15,13 +15,15 @@ from jobs.notion import generate_page_audio as page_audio
 
 PRAYER_CONFIG_FILE = "PRAYER_CONFIG_FILE"
 PRAYER_ROW_TITLE = "PRAYER_ROW_TITLE"
-DEFAULT_PRAYER_CONFIG_FILE = "config/morning-prayer/morning-prayer.json"
+DEFAULT_PRAYER_CONFIG_FILE = "config/morning-prayer.json"
 
 
 def load_prayer_config_from_file() -> Dict[str, Any]:
-    config_path = ROOT / (
-        os.getenv(PRAYER_CONFIG_FILE, DEFAULT_PRAYER_CONFIG_FILE).strip() or DEFAULT_PRAYER_CONFIG_FILE
-    )
+    configured = os.getenv(PRAYER_CONFIG_FILE, "").strip()
+    raw_path = configured or DEFAULT_PRAYER_CONFIG_FILE
+    config_path = Path(raw_path)
+    if not config_path.is_absolute():
+        config_path = ROOT / config_path
     if not config_path.exists():
         raise RuntimeError(f"Missing prayer config file: {config_path}")
     with open(config_path, "r", encoding="utf-8") as fh:

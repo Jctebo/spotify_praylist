@@ -1,0 +1,48 @@
+{
+  "key": "DIVINE_OFFICE_NIGHT_PAGE_AUDIO",
+  "title": "Divine Office Night Prayer Audio",
+  "target_row": "Night Prayer (LOH)",
+  "status": "enabled",
+  "header": {
+    "builder": "rss_audio_v1",
+    "model": "gpt-4o-mini-tts",
+    "render_policy": "strict",
+    "tts": {
+      "model": "gpt-4o-mini-tts",
+      "voice": "alloy",
+      "format": "mp3",
+      "speed": 1.0
+    }
+  },
+  "resolvers": [
+    {
+      "key": "random-intention",
+      "kind": "code_driven",
+      "resolver": "random_intention_v1",
+      "order": 1,
+      "title": "Random Intention",
+      "targets": [
+        "audio"
+      ],
+      "metadata": {
+        "role": "shared_intro"
+      }
+    },
+    {
+      "key": "main",
+      "kind": "builder",
+      "builder": "rss_audio_v1",
+      "title": "Divine Office Night Prayer Audio",
+      "targets": [
+        "audio"
+      ],
+      "audio_caption": "Night Prayer (Audio)",
+      "rss_feed_url": "https://divineoffice.org/feed/",
+      "rss_match_strategy": "contains_with_date",
+      "rss_match_text": "Night Prayer",
+      "intention_property": "Intention",
+      "intention_prefix": "For today's intention:",
+      "order": 2
+    }
+  ]
+}
