@@ -35,6 +35,7 @@ Optional variables:
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` (disabled in this branch)
 - `scripts/run_daily_notion_reset_local.ps1`: local mirror of `.github/workflows/daily_notion_reset.yml`
 - `scripts/run_daily_novena_prayer_local.ps1`: local runner for the generic prayer runner (Morning Prayer config first)
+- `.github/workflows/daily_novena_prayer.yml`: matrix workflow that discovers top-level `config/*.json` contracts and runs page-audio generation per contract
 - `scripts/run_daily_devotional_image_local.ps1`: local runner for saint devotional image generation
 - `scripts/run_daily_devotional_image_onedrive_local.ps1`: local runner that generates devotional images and uploads them to OneDrive via Microsoft Graph
 - `scripts/run_daily_devotional_image_rclone_local.ps1`: local runner that generates devotional images and uploads to OneDrive using rclone
