@@ -249,7 +249,7 @@ jobs:
       - name: Upload page audio library artifact
         uses: actions/upload-artifact@v4
         with:
-          name: page-audio-library-${{ replace(matrix.page_audio_config_file, '/', '_') }}
+          name: page-audio-library-${{ strategy.job-index }}
           path: ${{ github.workspace }}/page_audio_library
           if-no-files-found: error
 
