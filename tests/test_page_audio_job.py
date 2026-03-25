@@ -1557,6 +1557,60 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertIn("sing_the_hours_morning_page_audio", payload["configs"])
         self.assertIn("divine_office_invitatory_page_audio", payload["configs"])
 
+    def test_normalize_page_audio_contract_promotes_header_builder(self):
+        contract = {
+            "key": "rosary",
+            "title": "Rosary with Intentions",
+            "target_row": "Rosary with Intentions",
+            "status": "enabled",
+            "header": {"builder": "rosary_v1"},
+            "resolvers": [{"key": "main", "kind": "builder", "builder": "rosary_v1"}],
+        }
+
+        normalized = self.mod.normalize_page_audio_contract(contract)
+
+        self.assertEqual(normalized["builder"], "rosary_v1")
+        self.assertNotIn("builder", contract)
+
+    def test_load_page_audio_config_from_file_normalizes_contract_builders(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            config_dir = root / "config"
+            config_dir.mkdir(parents=True)
+            (config_dir / "morning-prayer.json").write_text(
+                json.dumps(
+                    {
+                        "key": "morning-prayer",
+                        "title": "Morning Prayer",
+                        "target_row": "Morning Prayer",
+                        "status": "enabled",
+                        "header": {"builder": "morning_prayer_v1"},
+                        "resolvers": [{"key": "main", "kind": "builder", "builder": "morning_prayer_v1"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            contract_path = config_dir / "sample.json"
+            contract_path.write_text(
+                json.dumps(
+                    {
+                        "key": "sample",
+                        "title": "Sample Prayer",
+                        "target_row": "Sample Prayer",
+                        "status": "enabled",
+                        "header": {"builder": "rosary_v1"},
+                        "resolvers": [{"key": "main", "kind": "builder", "builder": "rosary_v1"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with patch.object(self.mod, "ROOT", root):
+                payload = self.mod.load_page_audio_config_from_file()
+
+        self.assertEqual(payload["configs"]["sample"]["builder"], "rosary_v1")
+        self.assertEqual(payload["configs"]["SAMPLE"]["builder"], "rosary_v1")
+
     def test_load_page_audio_config_file_includes_evening_and_night_defaults(self):
         payload = self.mod.load_page_audio_config()
 

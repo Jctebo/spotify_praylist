@@ -903,6 +903,18 @@ def validate_page_audio_contract(contract: Dict[str, Any], *, source: str) -> No
             raise RuntimeError(f"Invalid page audio contract in {source}: resolver '{resolver.get('key', '')}' missing 'kind'.")
 
 
+def normalize_page_audio_contract(contract: Dict[str, Any]) -> Dict[str, Any]:
+    normalized = deepcopy(contract)
+    if not isinstance(normalized, dict):
+        return normalized
+    header = normalized.get("header")
+    if isinstance(header, dict):
+        builder = str(header.get("builder", "")).strip()
+        if builder and not str(normalized.get("builder", "")).strip():
+            normalized["builder"] = builder
+    return normalized
+
+
 def load_page_audio_config_from_file() -> Dict[str, Any]:
     config_path = ROOT / (
         os.getenv(PAGE_AUDIO_CONFIG_FILE, DEFAULT_PAGE_AUDIO_CONFIG_FILE).strip()
@@ -930,6 +942,7 @@ def load_page_audio_config_from_file() -> Dict[str, Any]:
             with open(path, "r", encoding="utf-8") as fh:
                 contract = json.load(fh)
             validate_page_audio_contract(contract, source=str(path))
+            contract = normalize_page_audio_contract(contract)
             key = path.stem
             configs[key] = contract
             upper_key = key.upper()
