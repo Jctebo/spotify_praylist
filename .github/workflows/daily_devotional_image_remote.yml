@@ -13,9 +13,6 @@ permissions:
 jobs:
   calendar:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy-pages.outputs.page_url }}
 
     env:
       OAI_API_BASE_URL: https://api.openai.com/v1
@@ -163,14 +160,17 @@ jobs:
             --target-root "${GITHUB_WORKSPACE}/pages/devotional/DCIM"
 
       - name: Configure GitHub Pages
+        if: github.ref == 'refs/heads/main'
         uses: actions/configure-pages@v5
 
       - name: Upload GitHub Pages artifact
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v4
         with:
           path: ${{ github.workspace }}/pages
 
       - name: Deploy GitHub Pages
+        if: github.ref == 'refs/heads/main'
         id: deploy-pages
         uses: actions/deploy-pages@v4
 
