@@ -84,7 +84,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RCLONE_REMOTE_NAME: ${{ vars.RCLONE_REMOTE_NAME }}
-      RCLONE_REMOTE_ROOT: ${{ vars.RCLONE_REMOTE_ROOT }}
+      RCLONE_REMOTE_ROOT: ${{ vars.PLAYLIST_AUDIO_REMOTE_ROOT }}
     steps:
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -127,7 +127,7 @@ jobs:
 
           LOCAL_LIBRARY_DIR="${GITHUB_WORKSPACE}/page_audio_library_merged"
           REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
-          REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Pictures/Samsung Gallery/DCIM}"
+          REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Praylist Audio/Playlist Audio}"
 
           if [ -d "$LOCAL_LIBRARY_DIR" ]; then
             rclone sync "$LOCAL_LIBRARY_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/" --progress --transfers 4 --checkers 8
