@@ -912,6 +912,25 @@ def normalize_page_audio_contract(contract: Dict[str, Any]) -> Dict[str, Any]:
         builder = str(header.get("builder", "")).strip()
         if builder and not str(normalized.get("builder", "")).strip():
             normalized["builder"] = builder
+    resolvers = normalized.get("resolvers")
+    main_resolver: Dict[str, Any] = {}
+    if isinstance(resolvers, list):
+        for resolver in resolvers:
+            if not isinstance(resolver, dict):
+                continue
+            if str(resolver.get("key", "")).strip() == "main":
+                main_resolver = resolver
+                break
+        if not main_resolver:
+            for resolver in resolvers:
+                if isinstance(resolver, dict) and str(resolver.get("kind", "")).strip() == "builder":
+                    main_resolver = resolver
+                    break
+    if main_resolver:
+        for key, value in main_resolver.items():
+            if key in {"key", "kind", "order", "title", "targets", "metadata"}:
+                continue
+            normalized.setdefault(key, deepcopy(value))
     return normalized
 
 

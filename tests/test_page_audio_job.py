@@ -1564,12 +1564,20 @@ class TestPageAudioJob(unittest.TestCase):
             "target_row": "Rosary with Intentions",
             "status": "enabled",
             "header": {"builder": "rosary_v1"},
-            "resolvers": [{"key": "main", "kind": "builder", "builder": "rosary_v1"}],
+            "resolvers": [
+                {
+                    "key": "main",
+                    "kind": "builder",
+                    "builder": "rosary_v1",
+                    "rss_feed_url": "https://example.com/feed.xml",
+                }
+            ],
         }
 
         normalized = self.mod.normalize_page_audio_contract(contract)
 
         self.assertEqual(normalized["builder"], "rosary_v1")
+        self.assertEqual(normalized["rss_feed_url"], "https://example.com/feed.xml")
         self.assertNotIn("builder", contract)
 
     def test_load_page_audio_config_from_file_normalizes_contract_builders(self):
