@@ -2,8 +2,6 @@ name: Prayer Contracts Matrix
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "10 8 * * *" # daily 02:10 CST / 03:10 CDT
 
 defaults:
   run:

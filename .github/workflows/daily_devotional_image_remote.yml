@@ -11,7 +11,7 @@ permissions:
   id-token: write
 
 jobs:
-  devotional-image-remote:
+  calendar:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -111,6 +111,19 @@ jobs:
           DEVOTIONAL_ONEDRIVE_DCIM_DIR: ${{ github.workspace }}/onedrive_sync/DCIM
         run: python jobs/novena/generate_devotional_image.py
 
+      - name: Generate daily novena locally on runner
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          NOTION_DATABASE_NAME: ${{ vars.NOTION_DATABASE_NAME }}
+          NOTION_WRITE_DAILY_NOVENA_PAGE: "true"
+          NOVENA_AUDIO_ENABLED: "false"
+          ROMCAL_CALENDAR: general_roman
+          ROMCAL_LOCALE: en
+          ROMCAL_WINDOW_DAYS: "9"
+        run: python jobs/novena/generate_daily_novena_prayer.py
+
       - name: Upload files to OneDrive with rclone
         shell: bash
         run: |
@@ -160,3 +173,50 @@ jobs:
       - name: Deploy GitHub Pages
         id: deploy-pages
         uses: actions/deploy-pages@v4
+
+  matrix:
+    needs: calendar
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - page_audio_config_file: config/afternoon_prayer_page_audio.json
+          - page_audio_config_file: config/angelus_evening_page_audio.json
+          - page_audio_config_file: config/angelus_midday_page_audio.json
+          - page_audio_config_file: config/angelus_morning_page_audio.json
+          - page_audio_config_file: config/auxilium_daily_text.json
+          - page_audio_config_file: config/bible_in_a_year_page_audio.json
+          - page_audio_config_file: config/daily_examen_page_audio.json
+          - page_audio_config_file: config/daily_mass_readings_page_audio.json
+          - page_audio_config_file: config/divine_office_invitatory_page_audio.json
+          - page_audio_config_file: config/divine_office_night_page_audio.json
+          - page_audio_config_file: config/morning-prayer.json
+          - page_audio_config_file: config/rosary.json
+          - page_audio_config_file: config/saint_of_the_day_page_audio.json
+          - page_audio_config_file: config/sing_the_hours_evening_page_audio.json
+          - page_audio_config_file: config/sing_the_hours_morning_page_audio.json
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate page audio from contract
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          PAGE_AUDIO_CONFIG_FILE: ${{ matrix.page_audio_config_file }}
+          PAGE_AUDIO_CACHE_DIR: .cache/page_audio
+          PAGE_AUDIO_FAIL_OPEN: "false"
+          OAI_API_BASE_URL: https://api.openai.com/v1
+          JOB_UTC_OFFSET: -06:00
+        run: python jobs/notion/generate_page_audio.py
