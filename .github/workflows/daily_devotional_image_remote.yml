@@ -176,6 +176,9 @@ jobs:
   matrix:
     needs: calendar
     runs-on: ubuntu-latest
+    env:
+      RCLONE_REMOTE_NAME: ${{ vars.RCLONE_REMOTE_NAME }}
+      RCLONE_REMOTE_ROOT: ${{ vars.RCLONE_REMOTE_ROOT }}
     strategy:
       fail-fast: false
       matrix:
@@ -207,6 +210,28 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      - name: Install rclone
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y rclone
+          rclone version
+
+      - name: Configure rclone
+        shell: bash
+        env:
+          RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RCLONE_CONFIG_B64:-}" ]; then
+            echo "Missing secret RCLONE_CONFIG_B64" >&2
+            exit 1
+          fi
+          mkdir -p "${HOME}/.config/rclone"
+          printf "%s" "${RCLONE_CONFIG_B64}" | base64 -d > "${HOME}/.config/rclone/rclone.conf"
+          chmod 600 "${HOME}/.config/rclone/rclone.conf"
 
       - name: Generate page audio from contract
         env:
