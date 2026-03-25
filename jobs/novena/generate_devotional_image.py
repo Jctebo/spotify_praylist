@@ -1738,15 +1738,20 @@ def main() -> int:
         notion_token = os.getenv(NOTION_TOKEN, "").strip()
 
         if notion_enabled and notion_token:
-            styles, devotions, pipelines, db_ids = ensure_notion_image_config(
-                token=notion_token,
-                default_window_days=default_window_days,
-            )
-            config_mode = (
-                f"notion:styles={len(styles)}:devotions={len(devotions)}:pipelines={len(pipelines)}:"
-                f"style_db={db_ids.get('style_db','')}:devotion_db={db_ids.get('devotion_db','')}:"
-                f"pipeline_db={db_ids.get('pipeline_db','')}"
-            )
+            try:
+                styles, devotions, pipelines, db_ids = ensure_notion_image_config(
+                    token=notion_token,
+                    default_window_days=default_window_days,
+                )
+                config_mode = (
+                    f"notion:styles={len(styles)}:devotions={len(devotions)}:pipelines={len(pipelines)}:"
+                    f"style_db={db_ids.get('style_db','')}:devotion_db={db_ids.get('devotion_db','')}:"
+                    f"pipeline_db={db_ids.get('pipeline_db','')}"
+                )
+            except Exception as exc:
+                print(f"warn: notion image config fallback: {exc}")
+                styles, devotions, pipelines, _db_ids = default_local_config(default_window_days)
+                config_mode = "local_fallback:notion_config_unavailable"
         else:
             styles, devotions, pipelines, _db_ids = default_local_config(default_window_days)
             if notion_enabled and not notion_token:

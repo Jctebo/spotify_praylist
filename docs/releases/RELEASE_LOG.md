@@ -1,5 +1,22 @@
 # Release Log
 
+## [0.1.2.3] - 2026-03-25
+
+### Added
+- Added a calendar-first devotional pipeline that generates devotional images and novenas before the prayer matrix runs.
+- Added a final OneDrive sync job that downloads the page-audio artifacts from the matrix rows and uploads the merged library once.
+
+### Changed
+- Reworked `daily_devotional_image_remote.yml` into a two-stage workflow with `calendar` followed by `matrix` and a final `sync_page_audio_library` job.
+- Moved the page-audio OneDrive delivery boundary out of the matrix rows to avoid concurrent sync races.
+- Kept Morning Prayer as a matrix contract row while preserving the calendar-produced novena handoff.
+- Kept GitHub Pages deployment gated to `main` so feature-branch runs stay focused on validation.
+
+### Fixed
+- Fixed the page-audio OneDrive sync failure caused by concurrent matrix rows racing to sync the same remote folder.
+- Fixed the GitHub Actions artifact naming so page-audio library uploads use a valid matrix-based artifact name.
+- Fixed the devotional image fallback path so the calendar job can continue when the Notion image config parent is unavailable.
+
 ## [0.1.2.1] - 2026-03-24
 
 ### Added
