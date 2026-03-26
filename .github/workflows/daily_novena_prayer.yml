@@ -130,7 +130,9 @@ jobs:
           REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Praylist Audio/Playlist Audio}"
 
           if [ -d "$LOCAL_LIBRARY_DIR" ]; then
+            rclone purge "${REMOTE_NAME}:${REMOTE_ROOT}/" --progress
             rclone sync "$LOCAL_LIBRARY_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/" --progress --transfers 4 --checkers 8
+            rclone check "$LOCAL_LIBRARY_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/" --progress --one-way
           else
             echo "No page audio library directory found at ${LOCAL_LIBRARY_DIR}; skipping OneDrive sync."
           fi

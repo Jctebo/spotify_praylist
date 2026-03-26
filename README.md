@@ -332,7 +332,7 @@ Environment variables:
 - `NOTION_AUDIO_FRAGMENTS_DATABASE_NAME` (fallback lookup; default `Audio Fragments`)
 - `NOTION_AUDIO_OUTPUTS_DATABASE_ID` (recommended for fragment-backed outputs)
 - `NOTION_AUDIO_OUTPUTS_DATABASE_NAME` (fallback lookup; default `Audio Outputs`)
-- `PAGE_AUDIO_CONFIG_FILE` (fallback file config if Notion config db is unavailable)
+- `PAGE_AUDIO_CONFIG_FILE` (fallback file config if Notion config db is unavailable; when set to a specific contract JSON, the run now executes only that selected contract)
 - `PAGE_AUDIO_CACHE_DIR` (default `.cache/page_audio`)
 - `PAGE_AUDIO_LIBRARY_DIR` (optional; default local root is `%USERPROFILE%\OneDrive\Praylist Audio\Playlist Audio`)
 - `PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS` (default `false`; when `true`, remove managed playlist-audio exports locally before regeneration)

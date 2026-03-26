@@ -1619,6 +1619,181 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(payload["configs"]["sample"]["builder"], "rosary_v1")
         self.assertEqual(payload["configs"]["SAMPLE"]["builder"], "rosary_v1")
 
+    def test_load_page_audio_config_from_file_selected_page_audio_contract_only_loads_selected_file(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            config_dir = root / "config"
+            config_dir.mkdir(parents=True)
+            (config_dir / "morning-prayer.json").write_text(
+                json.dumps(
+                    {
+                        "key": "morning-prayer",
+                        "title": "Morning Prayer",
+                        "target_row": "Morning Prayer",
+                        "status": "enabled",
+                        "header": {"builder": "morning_prayer_v1"},
+                        "resolvers": [{"key": "main", "kind": "builder", "builder": "morning_prayer_v1"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (config_dir / "sample.json").write_text(
+                json.dumps(
+                    {
+                        "key": "sample",
+                        "title": "Sample Prayer",
+                        "target_row": "Sample Prayer",
+                        "status": "enabled",
+                        "header": {"builder": "rss_audio_v1"},
+                        "resolvers": [
+                            {
+                                "key": "main",
+                                "kind": "builder",
+                                "builder": "rss_audio_v1",
+                                "rss_feed_url": "https://example.com/feed.xml",
+                                "rss_match_text": "Sample Prayer",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (config_dir / "peer.json").write_text(
+                json.dumps(
+                    {
+                        "key": "peer",
+                        "title": "Peer Prayer",
+                        "target_row": "Peer Prayer",
+                        "status": "enabled",
+                        "header": {"builder": "rss_audio_v1"},
+                        "resolvers": [
+                            {
+                                "key": "main",
+                                "kind": "builder",
+                                "builder": "rss_audio_v1",
+                                "rss_feed_url": "https://example.com/peer.xml",
+                                "rss_match_text": "Peer Prayer",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with temp_env({"PAGE_AUDIO_CONFIG_FILE": "config/sample.json"}), patch.object(self.mod, "ROOT", root):
+                payload = self.mod.load_page_audio_config_from_file()
+
+        self.assertEqual(set(payload["configs"].keys()), {"sample", "SAMPLE"})
+        self.assertEqual(payload["configs"]["sample"]["builder"], "rss_audio_v1")
+        self.assertNotIn("peer", payload["configs"])
+
+    def test_load_page_audio_config_from_file_selected_morning_prayer_contract_is_runnable(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            config_dir = root / "config"
+            config_dir.mkdir(parents=True)
+            (config_dir / "morning-prayer.json").write_text(
+                json.dumps(
+                    {
+                        "key": "morning-prayer",
+                        "title": "Morning Prayer",
+                        "target_row": "Morning Prayer",
+                        "status": "enabled",
+                        "header": {"builder": "morning_prayer_v1"},
+                        "resolvers": [{"key": "main", "kind": "builder", "builder": "morning_prayer_v1"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (config_dir / "peer.json").write_text(
+                json.dumps(
+                    {
+                        "key": "peer",
+                        "title": "Peer Prayer",
+                        "target_row": "Peer Prayer",
+                        "status": "enabled",
+                        "header": {"builder": "rss_audio_v1"},
+                        "resolvers": [
+                            {
+                                "key": "main",
+                                "kind": "builder",
+                                "builder": "rss_audio_v1",
+                                "rss_feed_url": "https://example.com/peer.xml",
+                                "rss_match_text": "Peer Prayer",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with temp_env({"PAGE_AUDIO_CONFIG_FILE": "config/morning-prayer.json"}), patch.object(self.mod, "ROOT", root):
+                payload = self.mod.load_page_audio_config_from_file()
+
+        self.assertEqual(set(payload["configs"].keys()), {"morning-prayer", "MORNING-PRAYER"})
+        self.assertEqual(payload["configs"]["morning-prayer"]["builder"], "morning_prayer_v1")
+        self.assertNotIn("peer", payload["configs"])
+
+    def test_load_page_audio_config_from_file_selected_rosary_contract_is_runnable(self):
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            root = Path(tmp_dir)
+            config_dir = root / "config"
+            config_dir.mkdir(parents=True)
+            (config_dir / "morning-prayer.json").write_text(
+                json.dumps(
+                    {
+                        "key": "morning-prayer",
+                        "title": "Morning Prayer",
+                        "target_row": "Morning Prayer",
+                        "status": "enabled",
+                        "header": {"builder": "morning_prayer_v1"},
+                        "resolvers": [{"key": "main", "kind": "builder", "builder": "morning_prayer_v1"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (config_dir / "rosary.json").write_text(
+                json.dumps(
+                    {
+                        "key": "rosary",
+                        "title": "Rosary with Intentions",
+                        "target_row": "Rosary with Intentions",
+                        "status": "enabled",
+                        "header": {"builder": "rosary_v1"},
+                        "resolvers": [{"key": "main", "kind": "builder", "builder": "rosary_v1"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (config_dir / "peer.json").write_text(
+                json.dumps(
+                    {
+                        "key": "peer",
+                        "title": "Peer Prayer",
+                        "target_row": "Peer Prayer",
+                        "status": "enabled",
+                        "header": {"builder": "rss_audio_v1"},
+                        "resolvers": [
+                            {
+                                "key": "main",
+                                "kind": "builder",
+                                "builder": "rss_audio_v1",
+                                "rss_feed_url": "https://example.com/peer.xml",
+                                "rss_match_text": "Peer Prayer",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            with temp_env({"PAGE_AUDIO_CONFIG_FILE": "config/rosary.json"}), patch.object(self.mod, "ROOT", root):
+                payload = self.mod.load_page_audio_config_from_file()
+
+        self.assertEqual(set(payload["configs"].keys()), {"rosary", "ROSARY"})
+        self.assertEqual(payload["configs"]["rosary"]["builder"], "rosary_v1")
+        self.assertNotIn("peer", payload["configs"])
+
     def test_load_page_audio_config_file_includes_evening_and_night_defaults(self):
         payload = self.mod.load_page_audio_config()
 

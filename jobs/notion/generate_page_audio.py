@@ -934,41 +934,74 @@ def normalize_page_audio_contract(contract: Dict[str, Any]) -> Dict[str, Any]:
     return normalized
 
 
+def page_audio_config_file_path() -> Path:
+    raw_path = os.getenv(PAGE_AUDIO_CONFIG_FILE, DEFAULT_PAGE_AUDIO_CONFIG_FILE).strip() or DEFAULT_PAGE_AUDIO_CONFIG_FILE
+    config_path = Path(raw_path)
+    if not config_path.is_absolute():
+        config_path = ROOT / config_path
+    return config_path
+
+
+def load_page_audio_json_file(config_path: Path) -> Dict[str, Any]:
+    with open(config_path, "r", encoding="utf-8") as fh:
+        payload = json.load(fh)
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"Invalid page audio config format in {config_path}: root must be an object.")
+    return payload
+
+
+def page_audio_selected_contract_configs(config_path: Path, contract: Dict[str, Any]) -> Dict[str, Any]:
+    normalized = normalize_page_audio_contract(contract)
+    key = str(normalized.get("key", "")).strip() or config_path.stem
+    configs: Dict[str, Any] = {}
+    for candidate in [key, config_path.stem]:
+        value = str(candidate or "").strip()
+        if not value:
+            continue
+        configs[value] = normalized
+        upper_value = value.upper()
+        if upper_value != value:
+            configs[upper_value] = normalized
+    return configs
+
+
 def load_page_audio_config_from_file() -> Dict[str, Any]:
-    config_path = ROOT / (
-        os.getenv(PAGE_AUDIO_CONFIG_FILE, DEFAULT_PAGE_AUDIO_CONFIG_FILE).strip()
-        or DEFAULT_PAGE_AUDIO_CONFIG_FILE
-    )
+    config_path = page_audio_config_file_path()
+    explicit_config_file = bool(os.getenv(PAGE_AUDIO_CONFIG_FILE, "").strip())
     if config_path.exists():
-        with open(config_path, "r", encoding="utf-8") as fh:
-            payload = json.load(fh)
-        if not isinstance(payload, dict):
-            raise RuntimeError(f"Invalid page audio config format in {config_path}: root must be an object.")
+        payload = load_page_audio_json_file(config_path)
     else:
         payload = {}
     configs: Dict[str, Any] = {}
-    page_audio_dir = ROOT / "config"
-    if page_audio_dir.exists():
-        for path in sorted(page_audio_dir.glob("*.json")):
-            if path.name in {
-                "morning-prayer.json",
-                "rosary.json",
-                "page_audio_config.json",
-                "playlist_config.json",
-                "notion_spotify_sync_config.json",
-            }:
-                continue
-            with open(path, "r", encoding="utf-8") as fh:
-                contract = json.load(fh)
-            validate_page_audio_contract(contract, source=str(path))
-            contract = normalize_page_audio_contract(contract)
-            key = path.stem
-            configs[key] = contract
-            upper_key = key.upper()
-            if upper_key != key:
-                configs[upper_key] = contract
-    if not configs and isinstance(payload.get("configs"), dict):
-        configs = dict(payload.get("configs") or {})
+    if explicit_config_file and config_path.exists():
+        if isinstance(payload.get("configs"), dict):
+            configs = dict(payload.get("configs") or {})
+        else:
+            validate_page_audio_contract(payload, source=str(config_path))
+            configs = page_audio_selected_contract_configs(config_path, payload)
+            payload = normalize_page_audio_contract(payload)
+    else:
+        page_audio_dir = ROOT / "config"
+        if page_audio_dir.exists():
+            for path in sorted(page_audio_dir.glob("*.json")):
+                if path.name in {
+                    "morning-prayer.json",
+                    "rosary.json",
+                    "page_audio_config.json",
+                    "playlist_config.json",
+                    "notion_spotify_sync_config.json",
+                }:
+                    continue
+                contract = load_page_audio_json_file(path)
+                validate_page_audio_contract(contract, source=str(path))
+                contract = normalize_page_audio_contract(contract)
+                key = path.stem
+                configs[key] = contract
+                upper_key = key.upper()
+                if upper_key != key:
+                    configs[upper_key] = contract
+        if not configs and isinstance(payload.get("configs"), dict):
+            configs = dict(payload.get("configs") or {})
     morning_prayer_contract = load_morning_prayer_contract_from_file()
     if morning_prayer_contract:
         payload["morning_prayer_contract"] = morning_prayer_contract
