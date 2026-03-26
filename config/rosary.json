@@ -1,10 +1,11 @@
 {
   "key": "rosary",
-  "title": "Rosary with Intentions",
-  "target_row": "Rosary with Intentions",
+  "title": "Daily Rosary with Intentions",
+  "target_row": "Daily Rosary with Intentions",
   "status": "enabled",
   "header": {
     "builder": "rosary_v1",
+    "page_id": "32319eee-5051-81f8-bbd5-f837ed3123d7",
     "render_policy": "strict"
   },
   "weekday_map": {

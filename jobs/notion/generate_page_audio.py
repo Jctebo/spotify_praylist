@@ -965,6 +965,20 @@ def page_audio_selected_contract_configs(config_path: Path, contract: Dict[str, 
     return configs
 
 
+def normalize_notion_page_id(value: Any) -> str:
+    return str(value or "").strip().replace("-", "").lower()
+
+
+def page_audio_config_page_id(config: Dict[str, Any]) -> str:
+    page_id = normalize_notion_page_id(config.get("page_id"))
+    if page_id:
+        return page_id
+    header = config.get("header")
+    if isinstance(header, dict):
+        return normalize_notion_page_id(header.get("page_id"))
+    return ""
+
+
 def load_page_audio_config_from_file() -> Dict[str, Any]:
     config_path = page_audio_config_file_path()
     explicit_config_file = bool(os.getenv(PAGE_AUDIO_CONFIG_FILE, "").strip())
@@ -4986,6 +5000,13 @@ def find_page_for_audio_config(
     title_property: str,
     config: Dict[str, Any],
 ) -> Optional[Dict[str, Any]]:
+    wanted_page_id = page_audio_config_page_id(config)
+    if wanted_page_id:
+        for page in pages:
+            if not isinstance(page, dict):
+                continue
+            if normalize_notion_page_id(page.get("id")) == wanted_page_id:
+                return page
     target_row = str(config.get("target_row", "")).strip()
     target_title = str(config.get("title", "")).strip()
     wanted_titles = [value for value in (target_row, target_title) if value]

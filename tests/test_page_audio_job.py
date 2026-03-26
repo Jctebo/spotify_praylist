@@ -1560,8 +1560,8 @@ class TestPageAudioJob(unittest.TestCase):
     def test_normalize_page_audio_contract_promotes_header_builder(self):
         contract = {
             "key": "rosary",
-            "title": "Rosary with Intentions",
-            "target_row": "Rosary with Intentions",
+            "title": "Daily Rosary with Intentions",
+            "target_row": "Daily Rosary with Intentions",
             "status": "enabled",
             "header": {"builder": "rosary_v1"},
             "resolvers": [
@@ -1756,8 +1756,8 @@ class TestPageAudioJob(unittest.TestCase):
                 json.dumps(
                     {
                         "key": "rosary",
-                        "title": "Rosary with Intentions",
-                        "target_row": "Rosary with Intentions",
+                        "title": "Daily Rosary with Intentions",
+                        "target_row": "Daily Rosary with Intentions",
                         "status": "enabled",
                         "header": {"builder": "rosary_v1"},
                         "resolvers": [{"key": "main", "kind": "builder", "builder": "rosary_v1"}],
@@ -2346,6 +2346,28 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertEqual(rc, 0)
         render_mock.assert_called_once()
+
+    def test_find_page_for_audio_config_uses_page_id_before_title(self):
+        pages = [
+            {
+                "id": "32319eee-5051-81f8-bbd5-f837ed3123d7",
+                "properties": {"Name": _title_prop("Daily Rosary with Intentions")},
+            },
+            {
+                "id": "other_page",
+                "properties": {"Name": _title_prop("Rosary with Intentions")},
+            },
+        ]
+        config = {
+            "title": "Rosary with Intentions",
+            "target_row": "Rosary with Intentions",
+            "header": {"page_id": "32319eee-5051-81f8-bbd5-f837ed3123d7"},
+        }
+
+        page = self.mod.find_page_for_audio_config(pages, title_property="Name", config=config)
+
+        self.assertIsNotNone(page)
+        self.assertEqual(page["id"], "32319eee-5051-81f8-bbd5-f837ed3123d7")
 
     def test_resolve_page_sync_keys_supports_text_and_audio_together(self):
         page = {
