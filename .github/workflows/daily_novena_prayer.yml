@@ -77,7 +77,7 @@ jobs:
         with:
           name: page-audio-library-${{ strategy.job-index }}
           path: ${{ github.workspace }}/page_audio_library
-          if-no-files-found: error
+          if-no-files-found: warn
 
   sync-page-audio-library:
     needs: generate-prayer-contracts
