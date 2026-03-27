@@ -88,7 +88,10 @@ PAGE_AUDIO_PROMPT_RENDER_VERSION = "page_audio_prompt_v1"
 DEFAULT_SILENCE_MS = 450
 DEFAULT_DAILY_NOVENA_PAGE_TITLE = "Daily Novenas from Liturgical Calendar"
 MORNING_PRAYER_BUILDER = "morning_prayer_v1"
+DIVINE_OFFICE_INVITATORY_BUILDER = "divine_office_invitatory_v1"
 DIVINE_OFFICE_NIGHT_TEXT_BUILDER = "divine_office_night_text_v1"
+DIVINE_OFFICE_EVENING_TEXT_BUILDER = "divine_office_evening_text_v1"
+DIVINE_OFFICE_MORNING_TEXT_BUILDER = "divine_office_morning_text_v1"
 AUXILIUM_DAILY_TEXT_BUILDER = "auxilium_daily_text_v1"
 RSS_AUDIO_BUILDER = "rss_audio_v1"
 AUDIO_FRAGMENTS_BUILDER = "audio_fragments_v1"
@@ -903,40 +906,119 @@ def validate_page_audio_contract(contract: Dict[str, Any], *, source: str) -> No
             raise RuntimeError(f"Invalid page audio contract in {source}: resolver '{resolver.get('key', '')}' missing 'kind'.")
 
 
+def normalize_page_audio_contract(contract: Dict[str, Any]) -> Dict[str, Any]:
+    normalized = deepcopy(contract)
+    if not isinstance(normalized, dict):
+        return normalized
+    header = normalized.get("header")
+    if isinstance(header, dict):
+        builder = str(header.get("builder", "")).strip()
+        if builder and not str(normalized.get("builder", "")).strip():
+            normalized["builder"] = builder
+    resolvers = normalized.get("resolvers")
+    main_resolver: Dict[str, Any] = {}
+    if isinstance(resolvers, list):
+        for resolver in resolvers:
+            if not isinstance(resolver, dict):
+                continue
+            if str(resolver.get("key", "")).strip() == "main":
+                main_resolver = resolver
+                break
+        if not main_resolver:
+            for resolver in resolvers:
+                if isinstance(resolver, dict) and str(resolver.get("kind", "")).strip() == "builder":
+                    main_resolver = resolver
+                    break
+    if main_resolver:
+        for key, value in main_resolver.items():
+            if key in {"key", "kind", "order", "title", "targets", "metadata"}:
+                continue
+            normalized.setdefault(key, deepcopy(value))
+    return normalized
+
+
+def page_audio_config_file_path() -> Path:
+    raw_path = os.getenv(PAGE_AUDIO_CONFIG_FILE, DEFAULT_PAGE_AUDIO_CONFIG_FILE).strip() or DEFAULT_PAGE_AUDIO_CONFIG_FILE
+    config_path = Path(raw_path)
+    if not config_path.is_absolute():
+        config_path = ROOT / config_path
+    return config_path
+
+
+def load_page_audio_json_file(config_path: Path) -> Dict[str, Any]:
+    with open(config_path, "r", encoding="utf-8") as fh:
+        payload = json.load(fh)
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"Invalid page audio config format in {config_path}: root must be an object.")
+    return payload
+
+
+def page_audio_selected_contract_configs(config_path: Path, contract: Dict[str, Any]) -> Dict[str, Any]:
+    normalized = normalize_page_audio_contract(contract)
+    key = str(normalized.get("key", "")).strip() or config_path.stem
+    configs: Dict[str, Any] = {}
+    for candidate in [key, config_path.stem]:
+        value = str(candidate or "").strip()
+        if not value:
+            continue
+        configs[value] = normalized
+        upper_value = value.upper()
+        if upper_value != value:
+            configs[upper_value] = normalized
+    return configs
+
+
+def normalize_notion_page_id(value: Any) -> str:
+    return str(value or "").strip().replace("-", "").lower()
+
+
+def page_audio_config_page_id(config: Dict[str, Any]) -> str:
+    page_id = normalize_notion_page_id(config.get("page_id"))
+    if page_id:
+        return page_id
+    header = config.get("header")
+    if isinstance(header, dict):
+        return normalize_notion_page_id(header.get("page_id"))
+    return ""
+
+
 def load_page_audio_config_from_file() -> Dict[str, Any]:
-    config_path = ROOT / (
-        os.getenv(PAGE_AUDIO_CONFIG_FILE, DEFAULT_PAGE_AUDIO_CONFIG_FILE).strip()
-        or DEFAULT_PAGE_AUDIO_CONFIG_FILE
-    )
+    config_path = page_audio_config_file_path()
+    explicit_config_file = bool(os.getenv(PAGE_AUDIO_CONFIG_FILE, "").strip())
     if config_path.exists():
-        with open(config_path, "r", encoding="utf-8") as fh:
-            payload = json.load(fh)
-        if not isinstance(payload, dict):
-            raise RuntimeError(f"Invalid page audio config format in {config_path}: root must be an object.")
+        payload = load_page_audio_json_file(config_path)
     else:
         payload = {}
     configs: Dict[str, Any] = {}
-    page_audio_dir = ROOT / "config"
-    if page_audio_dir.exists():
-        for path in sorted(page_audio_dir.glob("*.json")):
-            if path.name in {
-                "morning-prayer.json",
-                "rosary.json",
-                "page_audio_config.json",
-                "playlist_config.json",
-                "notion_spotify_sync_config.json",
-            }:
-                continue
-            with open(path, "r", encoding="utf-8") as fh:
-                contract = json.load(fh)
-            validate_page_audio_contract(contract, source=str(path))
-            key = path.stem
-            configs[key] = contract
-            upper_key = key.upper()
-            if upper_key != key:
-                configs[upper_key] = contract
-    if not configs and isinstance(payload.get("configs"), dict):
-        configs = dict(payload.get("configs") or {})
+    if explicit_config_file and config_path.exists():
+        if isinstance(payload.get("configs"), dict):
+            configs = dict(payload.get("configs") or {})
+        else:
+            validate_page_audio_contract(payload, source=str(config_path))
+            configs = page_audio_selected_contract_configs(config_path, payload)
+            payload = normalize_page_audio_contract(payload)
+    else:
+        page_audio_dir = ROOT / "config"
+        if page_audio_dir.exists():
+            for path in sorted(page_audio_dir.glob("*.json")):
+                if path.name in {
+                    "morning-prayer.json",
+                    "rosary.json",
+                    "page_audio_config.json",
+                    "playlist_config.json",
+                    "notion_spotify_sync_config.json",
+                }:
+                    continue
+                contract = load_page_audio_json_file(path)
+                validate_page_audio_contract(contract, source=str(path))
+                contract = normalize_page_audio_contract(contract)
+                key = path.stem
+                configs[key] = contract
+                upper_key = key.upper()
+                if upper_key != key:
+                    configs[upper_key] = contract
+        if not configs and isinstance(payload.get("configs"), dict):
+            configs = dict(payload.get("configs") or {})
     morning_prayer_contract = load_morning_prayer_contract_from_file()
     if morning_prayer_contract:
         payload["morning_prayer_contract"] = morning_prayer_contract
@@ -4732,14 +4814,41 @@ def fetch_rss_feed_entry(
     return choose_dated_feed_entry(entries, target_date, title_filter=rendered_match_text)
 
 
-def build_divine_office_night_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
-    feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=DIVINE_OFFICE_FEED_URL, match_text="Night Prayer")
+def build_divine_office_invitatory_plan(
+    page: Dict[str, Any],
+    config: Dict[str, Any],
+    base_url: str,
+) -> PageAudioPlan:
+    normalized_config = deepcopy(config)
+    normalized_config["builder"] = RSS_AUDIO_BUILDER
+    if not safe_config_text(normalized_config, "rss_feed_url"):
+        normalized_config["rss_feed_url"] = DIVINE_OFFICE_FEED_URL
+    if not safe_config_text(normalized_config, "rss_match_text"):
+        normalized_config["rss_match_text"] = "Invitatory"
+    return build_rss_audio_plan(page=page, config=normalized_config, base_url=base_url)
+
+
+def build_divine_office_text_plan(config: Dict[str, Any], *, match_text: str) -> PageAudioPlan:
+    feed_url = safe_config_text(config, "rss_feed_url") or DIVINE_OFFICE_FEED_URL
+    feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=feed_url, match_text=match_text)
     content_blocks = divine_office_content_blocks_from_html(feed_entry.get("content_html", ""))
     return PageAudioPlan(
         fragments=[],
         text_target="page_content",
         content_blocks=content_blocks,
     )
+
+
+def build_divine_office_night_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
+    return build_divine_office_text_plan(config, match_text="Night Prayer")
+
+
+def build_divine_office_evening_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
+    return build_divine_office_text_plan(config, match_text="Evening Prayer")
+
+
+def build_divine_office_morning_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
+    return build_divine_office_text_plan(config, match_text="Morning Prayer")
 
 
 def build_auxilium_daily_text_plan(config: Dict[str, Any], notion_token: str = "") -> PageAudioPlan:
@@ -4921,6 +5030,13 @@ def find_page_for_audio_config(
     title_property: str,
     config: Dict[str, Any],
 ) -> Optional[Dict[str, Any]]:
+    wanted_page_id = page_audio_config_page_id(config)
+    if wanted_page_id:
+        for page in pages:
+            if not isinstance(page, dict):
+                continue
+            if normalize_notion_page_id(page.get("id")) == wanted_page_id:
+                return page
     target_row = str(config.get("target_row", "")).strip()
     target_title = str(config.get("title", "")).strip()
     wanted_titles = [value for value in (target_row, target_title) if value]
@@ -5749,8 +5865,14 @@ def build_page_audio_plan(
             token=notion_token,
             base_url=base_url,
         )
+    if builder == DIVINE_OFFICE_INVITATORY_BUILDER:
+        return build_divine_office_invitatory_plan(page=page, config=config, base_url=base_url)
     if builder == DIVINE_OFFICE_NIGHT_TEXT_BUILDER:
         return build_divine_office_night_text_plan(config=config)
+    if builder == DIVINE_OFFICE_EVENING_TEXT_BUILDER:
+        return build_divine_office_evening_text_plan(config=config)
+    if builder == DIVINE_OFFICE_MORNING_TEXT_BUILDER:
+        return build_divine_office_morning_text_plan(config=config)
     if builder == AUXILIUM_DAILY_TEXT_BUILDER:
         return build_auxilium_daily_text_plan(config=config, notion_token=notion_token)
     if builder == RSS_AUDIO_BUILDER or has_rss_source:

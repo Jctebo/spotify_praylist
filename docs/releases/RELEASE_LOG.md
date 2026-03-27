@@ -1,5 +1,22 @@
 # Release Log
 
+## [0.1.3.0] - 2026-03-27
+
+### Added
+- Added single-contract execution mode for `PAGE_AUDIO_CONFIG_FILE`, so a selected JSON contract now runs by itself instead of silently rebuilding the shared bundled config set.
+- Added page-audio library artifact fan-in and OneDrive sync stages to the prayer workflow, along with regression coverage for contract normalization, single-file loading, page-ID lookup, and legacy Divine Office builder compatibility.
+
+### Changed
+- Updated the Rosary contract to target the live Notion row `Daily Rosary with Intentions` and pinned its current page ID for stable remote resolution.
+- Updated the prayer and devotional workflows to use the playlist-audio OneDrive root for page-audio sync work instead of reusing the devotional-image root.
+- Documented that setting `PAGE_AUDIO_CONFIG_FILE` to a specific contract file now executes only that contract.
+
+### Fixed
+- Fixed Morning Prayer and Rosary matrix rows so they execute their selected contracts rather than unrelated shared page-audio configs.
+- Fixed page lookup for file-backed contracts by honoring explicit Notion page IDs before stale title matches.
+- Fixed legacy Divine Office builder compatibility needed by the page-audio migration tooling and tests.
+- Fixed prayer-workflow sync safety so runs fail closed before upload when contract generation or artifact production fails.
+
 ## [0.1.2.3] - 2026-03-25
 
 ### Added
