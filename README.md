@@ -575,7 +575,7 @@ Expected HTTP layout:
 ```text
 https://jctebo.github.io/spotify_praylist/devotional/DCIM/devotional_image_library.json
 https://jctebo.github.io/spotify_praylist/devotional/DCIM/Current%20Devotion/images_manifest.json
-https://jctebo.github.io/spotify_praylist/devotional/DCIM/Current%20Devotion/03-01_03-31_dev_st-joseph_mod_realism.png
+https://jctebo.github.io/spotify_praylist/devotional/DCIM/Current%20Devotion/<manifest-relative-image-path>.png
 https://jctebo.github.io/spotify_praylist/devotional/DCIM/Current%20Devotion%20Wide/images_manifest.json
 ```
 
