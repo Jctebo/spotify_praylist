@@ -88,7 +88,10 @@ PAGE_AUDIO_PROMPT_RENDER_VERSION = "page_audio_prompt_v1"
 DEFAULT_SILENCE_MS = 450
 DEFAULT_DAILY_NOVENA_PAGE_TITLE = "Daily Novenas from Liturgical Calendar"
 MORNING_PRAYER_BUILDER = "morning_prayer_v1"
+DIVINE_OFFICE_INVITATORY_BUILDER = "divine_office_invitatory_v1"
 DIVINE_OFFICE_NIGHT_TEXT_BUILDER = "divine_office_night_text_v1"
+DIVINE_OFFICE_EVENING_TEXT_BUILDER = "divine_office_evening_text_v1"
+DIVINE_OFFICE_MORNING_TEXT_BUILDER = "divine_office_morning_text_v1"
 AUXILIUM_DAILY_TEXT_BUILDER = "auxilium_daily_text_v1"
 RSS_AUDIO_BUILDER = "rss_audio_v1"
 AUDIO_FRAGMENTS_BUILDER = "audio_fragments_v1"
@@ -4811,14 +4814,41 @@ def fetch_rss_feed_entry(
     return choose_dated_feed_entry(entries, target_date, title_filter=rendered_match_text)
 
 
-def build_divine_office_night_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
-    feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=DIVINE_OFFICE_FEED_URL, match_text="Night Prayer")
+def build_divine_office_invitatory_plan(
+    page: Dict[str, Any],
+    config: Dict[str, Any],
+    base_url: str,
+) -> PageAudioPlan:
+    normalized_config = deepcopy(config)
+    normalized_config["builder"] = RSS_AUDIO_BUILDER
+    if not safe_config_text(normalized_config, "rss_feed_url"):
+        normalized_config["rss_feed_url"] = DIVINE_OFFICE_FEED_URL
+    if not safe_config_text(normalized_config, "rss_match_text"):
+        normalized_config["rss_match_text"] = "Invitatory"
+    return build_rss_audio_plan(page=page, config=normalized_config, base_url=base_url)
+
+
+def build_divine_office_text_plan(config: Dict[str, Any], *, match_text: str) -> PageAudioPlan:
+    feed_url = safe_config_text(config, "rss_feed_url") or DIVINE_OFFICE_FEED_URL
+    feed_entry = fetch_divine_office_feed_entry(shared.local_today(), feed_url=feed_url, match_text=match_text)
     content_blocks = divine_office_content_blocks_from_html(feed_entry.get("content_html", ""))
     return PageAudioPlan(
         fragments=[],
         text_target="page_content",
         content_blocks=content_blocks,
     )
+
+
+def build_divine_office_night_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
+    return build_divine_office_text_plan(config, match_text="Night Prayer")
+
+
+def build_divine_office_evening_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
+    return build_divine_office_text_plan(config, match_text="Evening Prayer")
+
+
+def build_divine_office_morning_text_plan(config: Dict[str, Any]) -> PageAudioPlan:
+    return build_divine_office_text_plan(config, match_text="Morning Prayer")
 
 
 def build_auxilium_daily_text_plan(config: Dict[str, Any], notion_token: str = "") -> PageAudioPlan:
@@ -5835,8 +5865,14 @@ def build_page_audio_plan(
             token=notion_token,
             base_url=base_url,
         )
+    if builder == DIVINE_OFFICE_INVITATORY_BUILDER:
+        return build_divine_office_invitatory_plan(page=page, config=config, base_url=base_url)
     if builder == DIVINE_OFFICE_NIGHT_TEXT_BUILDER:
         return build_divine_office_night_text_plan(config=config)
+    if builder == DIVINE_OFFICE_EVENING_TEXT_BUILDER:
+        return build_divine_office_evening_text_plan(config=config)
+    if builder == DIVINE_OFFICE_MORNING_TEXT_BUILDER:
+        return build_divine_office_morning_text_plan(config=config)
     if builder == AUXILIUM_DAILY_TEXT_BUILDER:
         return build_auxilium_daily_text_plan(config=config, notion_token=notion_token)
     if builder == RSS_AUDIO_BUILDER or has_rss_source:

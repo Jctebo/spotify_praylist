@@ -361,6 +361,40 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(plan.text_target, "page_content")
         self.assertEqual([block["type"] for block in plan.content_blocks], ["toggle"])
 
+    def test_build_divine_office_invitatory_plan_supports_legacy_builder(self):
+        page = {
+            "id": "page_1",
+            "properties": {
+                "Name": _title_prop("Divine Office Invitatory"),
+                "Intention": _rich_text_prop("For peace in my family."),
+                "Description": _rich_text_prop(""),
+            },
+        }
+        config = {
+            "builder": self.mod.DIVINE_OFFICE_INVITATORY_BUILDER,
+            "tts": {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "text_property": "Description",
+            "intention_property": "Intention",
+            "intention_prefix": "For today's intention:",
+        }
+
+        with patch.object(
+            self.mod,
+            "fetch_rss_feed_entry",
+            return_value={
+                "title": "Mar 14, Invitatory for Saturday of the 3rd week of Lent",
+                "audio_url": "https://example.com/invitatory.mp3",
+                "content_html": "<p>Lord, open my lips.</p><p>And my mouth will proclaim your praise.</p>",
+                "date": "2026-03-14",
+            },
+        ) as fetch_mock:
+            plan = self.mod.build_divine_office_invitatory_plan(page, config, "https://api.openai.com/v1")
+
+        self.assertEqual(fetch_mock.call_args.kwargs["feed_url"], self.mod.DIVINE_OFFICE_FEED_URL)
+        self.assertEqual(fetch_mock.call_args.kwargs["match_text"], "Invitatory")
+        self.assertEqual([fragment.kind for fragment in plan.fragments], ["tts", "source_audio"])
+        self.assertEqual(plan.text_target, "page_content")
+
     def test_build_page_intention_fragment_reuses_cached_audio(self):
         page = {
             "id": "page_1",
@@ -426,6 +460,25 @@ class TestPageAudioJob(unittest.TestCase):
         ):
             plan = self.mod.build_divine_office_night_text_plan(config)
 
+        self.assertEqual(plan.fragments, [])
+        self.assertEqual(plan.text_target, "page_content")
+        self.assertEqual([block["type"] for block in plan.content_blocks], ["toggle"])
+
+    def test_build_divine_office_morning_text_plan_supports_legacy_builder(self):
+        config = {"builder": self.mod.DIVINE_OFFICE_MORNING_TEXT_BUILDER}
+
+        with patch.object(
+            self.mod,
+            "fetch_divine_office_feed_entry",
+            return_value={
+                "title": "Mar 14, Morning Prayer for Saturday of the 3rd week of Lent",
+                "content_html": "<p>God, come to my assistance.</p><p>Lord, make haste to help me.</p>",
+            },
+        ) as fetch_mock:
+            plan = self.mod.build_divine_office_morning_text_plan(config)
+
+        self.assertEqual(fetch_mock.call_args.kwargs["feed_url"], self.mod.DIVINE_OFFICE_FEED_URL)
+        self.assertEqual(fetch_mock.call_args.kwargs["match_text"], "Morning Prayer")
         self.assertEqual(plan.fragments, [])
         self.assertEqual(plan.text_target, "page_content")
         self.assertEqual([block["type"] for block in plan.content_blocks], ["toggle"])
