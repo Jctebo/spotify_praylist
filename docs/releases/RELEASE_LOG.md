@@ -1,5 +1,23 @@
 # Release Log
 
+## [0.1.3.2] - 2026-03-28
+
+### Added
+- Added `jobs/novena/liturgical_helpers.py` as the shared liturgical helper boundary for the devotional image and novena jobs.
+- Added regression coverage for the shared helper bootstrap path and devotional-image eligibility filtering.
+
+### Changed
+- Cut `jobs/novena/generate_devotional_image.py` and `jobs/novena/generate_daily_novena_prayer.py` over to the shared helper module and removed the old `jobs/novena/liturgical_model.py` file.
+- Simplified `.github/workflows/daily_devotional_image_remote.yml` so the active workflow now runs the devotional image job only.
+- Updated `README.md` and the 0.1.3.2 release artifact to document the image-first rollout and keep the novena workflow disabled.
+
+### Fixed
+- Fixed direct script bootstrap for the devotional image and helper modules when run from an arbitrary working directory.
+- Fixed the helper eligibility boundary so the image and novena paths share one consistent liturgical contract.
+
+### Removed
+- Removed the old novena helper module and the staged future-release planning files under `docs/releases/future-releases/`.
+
 ## [0.1.3.1] - 2026-03-27
 
 ### Added
