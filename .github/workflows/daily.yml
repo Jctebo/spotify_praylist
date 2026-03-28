@@ -38,4 +38,4 @@ jobs:
           NOTION_DATABASE_NAME: ${{ vars.NOTION_DATABASE_NAME }}
           JOB_UTC_OFFSET: ${{ vars.JOB_UTC_OFFSET }}
           SPOTIFY_PLAYLIST_NAME: ${{ github.event.inputs.spotify_playlist_name }}
-        run: python jobs/playlist/refresh_playlist.py
+        run: python -m jobs.playlist.refresh_playlist

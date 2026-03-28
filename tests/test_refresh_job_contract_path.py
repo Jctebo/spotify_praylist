@@ -1,8 +1,11 @@
+import os
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from tests.test_helpers import load_module, temp_env
+from tests.test_helpers import ROOT, load_module, temp_env
 
 
 def _queue_contract(mod, key, name=None, resolver="", fallback_resolver="", spotify_uri="", weekdays=()):
@@ -30,6 +33,26 @@ def _playlist_definition(mod, key, name=None, playlist_id=None, contracts=()):
 class TestRefreshJobContractPath(unittest.TestCase):
     def setUp(self):
         self.mod = load_module("jobs/playlist/refresh_playlist.py")
+
+    def test_direct_script_execution_bootstraps_repo_root(self):
+        env = os.environ.copy()
+        env.pop("PYTHONPATH", None)
+        env["SPOTIFY_CLIENT_ID"] = ""
+        env["SPOTIFY_CLIENT_SECRET"] = ""
+        env["SPOTIFY_REFRESH_TOKEN"] = ""
+        env["NOTION_TOKEN"] = ""
+
+        result = subprocess.run(
+            [sys.executable, "jobs/playlist/refresh_playlist.py"],
+            cwd=ROOT,
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Missing required environment variable: SPOTIFY_CLIENT_ID", result.stderr)
+        self.assertNotIn("ModuleNotFoundError: No module named 'jobs'", result.stderr)
 
     def test_main_single_playlist_filter_uses_override_id(self):
         env = {

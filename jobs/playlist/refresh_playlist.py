@@ -15,6 +15,10 @@ import requests
 import spotipy
 from spotipy.exceptions import SpotifyException
 
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 from jobs.playlist.spotify_contracts import (
     SpotifyPlaylistDefinition,
     SpotifyQueueContract,
@@ -102,7 +106,6 @@ DEFAULT_PLAYLIST_NOVENA_TITLES = (
     "Daily Novena Prayer",
 )
 OUTPUT_FOLDER_PROPERTY = "Output Folder"
-ROOT = Path(__file__).resolve().parents[2]
 
 DEFAULT_SHOWS = {
     "DIVINE_OFFICE": "70ydTdzunoqWAsvutFIkHM",

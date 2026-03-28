@@ -100,7 +100,7 @@ $env:NOTION_DATABASE_ID = "..."
 5. Run either:
 
 ```bash
-python jobs/playlist/refresh_playlist.py
+python -m jobs.playlist.refresh_playlist
 ```
 
 or:
