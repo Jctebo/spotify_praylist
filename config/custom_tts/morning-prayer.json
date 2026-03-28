@@ -3,6 +3,9 @@
   "title": "Morning Prayer",
   "target_row": "Morning Prayer",
   "status": "enabled",
+  "output_type": "page_audio",
+  "path": "config/custom_tts/morning-prayer.json",
+  "enabled": true,
   "header": {
     "builder": "morning_prayer_v1",
     "model": "gpt-4o-mini-tts",

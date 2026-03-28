@@ -3,15 +3,19 @@
   "$id": "https://example.local/schemas/morning-prayer-contract.schema.json",
   "title": "Morning Prayer Contract",
   "type": "object",
-  "required": ["key", "title", "status", "header", "resolvers"],
+  "required": ["key", "title", "target_row", "status", "output_type", "path", "enabled", "header", "resolvers"],
   "additionalProperties": false,
   "properties": {
     "key": { "type": "string", "minLength": 1 },
     "title": { "type": "string", "minLength": 1 },
+    "target_row": { "type": "string", "minLength": 1 },
     "status": {
       "type": "string",
       "enum": ["enabled", "draft", "deprecated", "migrated"]
     },
+    "output_type": { "type": "string", "minLength": 1 },
+    "path": { "type": "string", "minLength": 1 },
+    "enabled": { "type": "boolean" },
     "header": {
       "type": "object",
       "required": ["builder", "model", "render_policy", "page_id"],

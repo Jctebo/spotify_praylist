@@ -1,5 +1,9 @@
 # Roadmap: Novena Audio
 
+## To Integrate
+- Easter Season Angelus Swap in Resolver
+
+
 ## Summary Of Changes
 - Novena work is moving onto its own audio roadmap so stabilization can stay focused on Morning Prayer.
 - This roadmap starts with contract-based novena output, then configurable content for each day, then AI-driven generation after the contract is stable.

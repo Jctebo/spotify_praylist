@@ -63,7 +63,8 @@ PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS = "PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS"
 PAGE_AUDIO_FAIL_OPEN = "PAGE_AUDIO_FAIL_OPEN"
 
 DEFAULT_PAGE_AUDIO_CONFIG_FILE = "config/legacy/page_audio_config.json"
-DEFAULT_MORNING_PRAYER_CONTRACT_FILE = "config/legacy/morning-prayer.json"
+DEFAULT_MORNING_PRAYER_CONTRACT_FILE = "config/custom_tts/morning-prayer.json"
+DEFAULT_CUSTOM_TTS_CONTRACT_DIR = "config/custom_tts"
 DEFAULT_PAGE_AUDIO_CACHE_DIR = ".cache/page_audio"
 DEFAULT_PAGE_AUDIO_LIBRARY_RELATIVE = r"OneDrive\Praylist Audio\Playlist Audio"
 DEFAULT_PAGE_AUDIO_LIBRARY_FALLBACK = ".cache/page_audio_library"
@@ -810,11 +811,33 @@ def load_morning_prayer_contract_from_file() -> Dict[str, Any]:
         os.getenv(MORNING_PRAYER_CONTRACT_FILE, DEFAULT_MORNING_PRAYER_CONTRACT_FILE).strip()
         or DEFAULT_MORNING_PRAYER_CONTRACT_FILE
     )
+    custom_tts_dir = custom_tts_config_dir()
+    if config_path.is_dir():
+        configs = load_custom_tts_contracts_from_dir(custom_tts_dir)
+        if not configs:
+            raise RuntimeError(f"Missing Morning Prayer contract file: {config_path}")
+        candidate_keys = ["morning-prayer", "MORNING-PRAYER"]
+        for key in candidate_keys:
+            contract = configs.get(key)
+            if isinstance(contract, dict):
+                return contract
+        raise RuntimeError(f"Missing enabled Morning Prayer contract file: {config_path}")
+    if config_path.parent == custom_tts_dir:
+        if not config_path.exists():
+            raise RuntimeError(f"Missing Morning Prayer contract file: {config_path}")
+        configs = load_custom_tts_contracts_from_dir(custom_tts_dir)
+        contract = configs.get(config_path.stem) or configs.get(config_path.stem.upper())
+        if isinstance(contract, dict):
+            return contract
+        raise RuntimeError(f"Missing enabled Morning Prayer contract file: {config_path}")
     if not config_path.exists():
         raise RuntimeError(f"Missing Morning Prayer contract file: {config_path}")
     with open(config_path, "r", encoding="utf-8") as fh:
         payload = json.load(fh)
+    validate_custom_tts_contract(payload, source=str(config_path), source_path=config_path)
     validate_page_audio_contract(payload, source=str(config_path))
+    if not payload.get("enabled", False):
+        raise RuntimeError(f"Morning Prayer contract file is disabled: {config_path}")
     return payload
 
 
@@ -951,6 +974,51 @@ def load_page_audio_json_file(config_path: Path) -> Dict[str, Any]:
     if not isinstance(payload, dict):
         raise RuntimeError(f"Invalid page audio config format in {config_path}: root must be an object.")
     return payload
+
+
+def custom_tts_config_dir() -> Path:
+    return ROOT / DEFAULT_CUSTOM_TTS_CONTRACT_DIR
+
+
+def validate_custom_tts_contract(contract: Dict[str, Any], *, source: str, source_path: Optional[Path] = None) -> None:
+    validate_page_audio_contract(contract, source=source)
+    for field in ["target_row", "output_type", "path", "enabled"]:
+        if field not in contract:
+            raise RuntimeError(f"Invalid Morning Prayer contract in {source}: missing '{field}'.")
+    output_type = str(contract.get("output_type", "")).strip()
+    if not output_type:
+        raise RuntimeError(f"Invalid Morning Prayer contract in {source}: 'output_type' must be a non-empty string.")
+    output_path = str(contract.get("path", "")).strip()
+    if not output_path:
+        raise RuntimeError(f"Invalid Morning Prayer contract in {source}: 'path' must be a non-empty string.")
+    if not isinstance(contract.get("enabled"), bool):
+        raise RuntimeError(f"Invalid Morning Prayer contract in {source}: 'enabled' must be a boolean.")
+    if source_path is not None:
+        declared_path = Path(output_path)
+        if not declared_path.is_absolute():
+            declared_path = ROOT / declared_path
+        if declared_path.resolve() != source_path.resolve():
+            raise RuntimeError(
+                f"Invalid Morning Prayer contract in {source}: 'path' must match the source file path {source_path}."
+            )
+
+
+def load_custom_tts_contracts_from_dir(config_dir: Optional[Path] = None) -> Dict[str, Dict[str, Any]]:
+    directory = config_dir or custom_tts_config_dir()
+    if not directory.exists():
+        return {}
+    configs: Dict[str, Dict[str, Any]] = {}
+    for path in sorted(directory.glob("*.json")):
+        payload = load_page_audio_json_file(path)
+        validate_custom_tts_contract(payload, source=str(path), source_path=path)
+        if not payload.get("enabled"):
+            continue
+        key = str(payload.get("key", "")).strip() or path.stem
+        configs[key] = payload
+        upper_key = key.upper()
+        if upper_key != key:
+            configs[upper_key] = payload
+    return configs
 
 
 def page_audio_selected_contract_configs(config_path: Path, contract: Dict[str, Any]) -> Dict[str, Any]:

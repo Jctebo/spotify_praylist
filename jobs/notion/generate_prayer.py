@@ -15,7 +15,7 @@ from jobs.notion import generate_page_audio as page_audio
 
 PRAYER_CONFIG_FILE = "PRAYER_CONFIG_FILE"
 PRAYER_ROW_TITLE = "PRAYER_ROW_TITLE"
-DEFAULT_PRAYER_CONFIG_FILE = "config/legacy/morning-prayer.json"
+DEFAULT_PRAYER_CONFIG_FILE = "config/custom_tts/morning-prayer.json"
 
 
 def load_prayer_config_from_file() -> Dict[str, Any]:
@@ -30,9 +30,9 @@ def load_prayer_config_from_file() -> Dict[str, Any]:
         payload = json.load(fh)
     if not isinstance(payload, dict):
         raise RuntimeError(f"Invalid prayer config format in {config_path}: root must be an object.")
-    resolvers = payload.get("resolvers")
-    if not isinstance(resolvers, list) or not resolvers:
-        raise RuntimeError(f"Invalid prayer config format in {config_path}: missing or empty 'resolvers'.")
+    page_audio.validate_custom_tts_contract(payload, source=str(config_path), source_path=config_path)
+    if not payload.get("enabled", False):
+        raise RuntimeError(f"Disabled prayer config file: {config_path}")
     return payload
 
 
