@@ -1,11 +1,13 @@
 # Spotify Playlist Refresher
 
-Python project for refreshing a Spotify playlist daily using GitHub Actions.
+Python automation for rebuilding Spotify prayer playlists from repo-owned queue contracts and thin playlist definitions.
 
 ## Runtime
 - Python 3.11
-- Non-interactive auth via refresh token
-- Daily refresh queue config is Notion-first (Opus Dei rows)
+- Non-interactive Spotify auth via refresh token
+- Repo-owned queue contracts in `config/spotify/contracts/*.json`
+- Repo-owned playlist definitions in `config/spotify/playlists/*.json`
+- Base Spotify refresh does not require Notion; Notion is only used for optional post-write helpers
 
 Required variables:
 - `SPOTIFY_CLIENT_ID`
@@ -13,51 +15,60 @@ Required variables:
 - `SPOTIFY_REFRESH_TOKEN`
 
 Optional variables:
-- `SPOTIFY_USER_ID` (compatibility only)
-- `SPOTIFY_PLAYLIST_NAME` (Notion mode only; optional single-playlist filter)
-- `SPOTIFY_PLAYLIST_ID` (optional single-playlist target override)
-- `SPOTIFY_PLAYLIST_PROFILE` (legacy file-mode selector; default `morning`)
+- `SPOTIFY_PLAYLIST_NAME` to target one playlist definition by stable key or display name
+- `SPOTIFY_PLAYLIST_ID` to override the selected playlist definition's playlist id for a one-off validation run
+- `SPOTIFY_USER_ID` for compatibility with older local setups
+- `JOB_UTC_OFFSET` to override the runtime timezone
+- `NOTION_TOKEN` plus related Notion ids/properties only if you want optional post-write sync behavior
 
 ## Files
-- `jobs/playlist/refresh_playlist.py`: main script (token refresh + playlist update)
-- `jobs/notion/reset_notion_completions.py`: daily reset to uncheck all Notion completion checkboxes
-- `jobs/notion/generate_prayer.py`: generic prayer runner entrypoint (Morning Prayer config first)
-- `jobs/novena/generate_daily_novena_prayer.py`: generates a daily novena litany from Romcal saints + OpenAI and writes to Notion
-- `jobs/novena/sync_liturgical_calendar.py`: syncs Liturgical Calendar Notion rows from Romcal over a date range (yearly job)
-- `jobs/novena/generate_devotional_image.py`: generates a saint devotional image from the 9-day Romcal window and writes files to OneDrive folders
-- `config/content/`: prayer-first content root
-- `config/playlist_config.json`: legacy file-mode config (optional fallback)
-- `config/notion_spotify_sync_config.json`: legacy mapping rules from Spotify item text -> Notion row name
-- `scripts/setup_spotify.ps1`: Spotify setup + refresh-token wizard
-- `scripts/setup_notion.ps1`: Notion token/database setup + API validation
-- `scripts/setup_notion_playlists.ps1`: creates/populates the Notion playlists database and backfills the main `Playlist` field
-- `scripts/setup_novena.ps1`: Romcal + OpenAI + Notion setup wizard for daily novena generation
-- `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` (disabled in this branch)
-- `scripts/run_daily_notion_reset_local.ps1`: local mirror of `.github/workflows/daily_notion_reset.yml`
-- `scripts/run_daily_novena_prayer_local.ps1`: local runner for the generic prayer runner (Morning Prayer config first)
-- `.github/workflows/daily_novena_prayer.yml`: manual matrix workflow that discovers top-level `config/*.json` contracts and runs page-audio generation per contract
-- `scripts/run_daily_devotional_image_local.ps1`: local runner for saint devotional image generation
-- `scripts/run_daily_devotional_image_onedrive_local.ps1`: local runner that generates devotional images and uploads them to OneDrive via Microsoft Graph
-- `scripts/run_daily_devotional_image_rclone_local.ps1`: local runner that generates devotional images and uploads to OneDrive using rclone
-- `scripts/setup_onedrive_local.ps1`: stores local Azure/OneDrive app settings for local Graph upload runs
-- `scripts/setup_rclone_github.ps1`: wizard to create/validate rclone OneDrive remote and export `RCLONE_CONFIG_B64` for GitHub Actions
-- `sync/sync_devotional_images_client.py`: portable client sync script for non-OneDrive consumers
-- `sync/setup_devotional_image_client.ps1`: wizard to create a portable client sync bundle
-- `sync/build_devotional_public_tree.py`: filters the OneDrive-oriented devotional manifest tree into a public current-only export
-- `sync/build_devotional_image_distribution_bundle.ps1`: builds a `sync\public` + `sync\client` distribution folder
-- `requirements.txt`: Python dependencies
-- `release/releaselog.md`: consolidated release log for shipped bug work
-- `.github/workflows/daily.yml`: daily + manual GitHub Actions workflow (refresh job disabled in this branch)
+- `jobs/playlist/refresh_playlist.py`: active contract-first Spotify refresh runtime
+- `jobs/playlist/spotify_contracts.py`: loader and validation for `config/spotify/contracts/*.json` and `config/spotify/playlists/*.json`
+- `config/spotify/contracts/*.json`: one resolver-backed or fixed-URI queue contract per file
+- `config/spotify/playlists/*.json`: thin playlist definitions with playlist identity and ordered contract keys
+- `config/legacy/playlist_config.json`: legacy reference config kept off the active runtime path
+- `config/legacy/page_audio/*.json`, `config/legacy/morning-prayer.json`, `config/legacy/rosary.json`, and `config/legacy/auxilium_daily_text.json`: discontinued top-level page-audio contracts retained only for legacy reference
+- `scripts/setup_spotify.ps1`: Spotify credential wizard that also updates `config/spotify/playlists/*.json`
+- `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` with optional single-playlist targeting
+- `scripts/setup_notion_playlists.ps1`: legacy Notion playlist-registry helper, no longer on the active Spotify hot path
+- `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; scheduled runs are gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
-- `.github/workflows/daily_devotional_image_remote.yml`: daily + manual calendar-first devotional image + novena generation, then matrix contract generation, with rclone upload to OneDrive
+- `.github/workflows/daily_novena_prayer.yml`: legacy page-audio contract matrix kept as a disabled no-op after the top-level contract surface moved under `config/legacy/`
+- `.github/workflows/daily_devotional_image_remote.yml`: daily + manual calendar-first devotional image + novena generation, with the legacy page-audio matrix now disabled
 - `.github/workflows/liturgical_calendar_yearly_sync.yml`: Jan 1 + manual Liturgical Calendar population
 
 ## Config Timezone
-- `config/morning-prayer.json` is the active Morning Prayer contract.
-- `config/playlist_config.json` supports top-level `utc_offset` in legacy file mode.
-- `JOB_UTC_OFFSET` can override offset at runtime for date-based jobs.
-- `jobs/playlist/refresh_playlist.py` uses this for all date-based episode selection.
-- Default is CST (`-06:00`) when not set.
+- `jobs/playlist/refresh_playlist.py` uses `JOB_UTC_OFFSET` for all date-based episode selection.
+- Default runtime offset is CST (`-06:00`) when `JOB_UTC_OFFSET` is unset.
+- Spotify playlist definitions carry playlist identity and ordered membership only; timezone does not live in the Spotify config files.
+
+## Spotify Contract Model
+Queue contract files in `config/spotify/contracts/` own:
+- `key`
+- `name`
+- exactly one of `resolver` or `spotify_uri`
+- optional `fallback_resolver`
+- optional `weekdays`
+
+Playlist definition files in `config/spotify/playlists/` own:
+- `key`
+- `name`
+- `playlist_id`
+- ordered `contracts`
+
+The committed playlist definitions are:
+- `config/spotify/playlists/morning.json`
+- `config/spotify/playlists/midday.json`
+- `config/spotify/playlists/night.json`
+- `config/spotify/playlists/sunday.json`
+
+The runtime validates the selected playlist definitions before any Spotify write occurs and fails closed on:
+- invalid JSON
+- duplicate contract or playlist keys/names
+- invalid playlist ids
+- invalid contract weekday names
+- invalid contract resolver-vs-direct-URI shapes
+- playlist definitions that reference unknown contract keys
 
 ## Local Setup
 1. Create and activate a virtual environment.
@@ -75,94 +86,80 @@ PowerShell example:
 $env:SPOTIFY_CLIENT_ID = "..."
 $env:SPOTIFY_CLIENT_SECRET = "..."
 $env:SPOTIFY_REFRESH_TOKEN = "..."
+# Optional single-playlist run:
+$env:SPOTIFY_PLAYLIST_NAME = "morning"
+# Optional single-run override:
+$env:SPOTIFY_PLAYLIST_ID = "spotify:playlist:..."
+$env:JOB_UTC_OFFSET = "-06:00"
+# Optional post-write Notion helpers:
 $env:NOTION_TOKEN = "..."
 $env:NOTION_DATABASE_ID = "..."
-$env:NOTION_PLAYLISTS_DATABASE_ID = "..."
-# Optional single-playlist run:
-$env:SPOTIFY_PLAYLIST_NAME = "Morning"
-# Optional: disable Notion page Spotify bookmark sync
-$env:NOTION_SPOTIFY_BOOKMARKS_ENABLED = "false"
-# Optional:
-$env:SPOTIFY_USER_ID = "..."
-$env:JOB_UTC_OFFSET = "-06:00"
 ```
 
-4. Run:
+4. Review `config/spotify/contracts/*.json` and `config/spotify/playlists/*.json`.
+5. Run either:
 
 ```bash
 python jobs/playlist/refresh_playlist.py
 ```
 
+or:
+
+```powershell
+.\scripts\run_daily_refresh_local.ps1 -SpotifyPlaylistName morning
+```
+
 Expected behavior:
-- refreshes Spotify access token each run
-- reads enabled rows from your Notion playlists database
-- reads Opus Dei rows for each playlist and order
-- supports row-level resolver + fallback (for Morning/Evening LOTH dual-podcast logic)
-- replaces each target playlist contents with resolved items from the flat Notion list
-- keeps a Spotify bookmark block at the top of each Spotify row page when the current row resolves to a Spotify item
+- refreshes the Spotify access token each run
+- loads and validates playlist definitions plus queue contracts before touching Spotify
+- applies contract-level weekday gating such as Sunday-only or Friday-only items
+- resolves each contract through its explicit `resolver` or `spotify_uri`
+- replaces each selected playlist contents with the resolved queue
 - prints one summary per playlist: `playlist`, `playlist_id`, and `tracks_written`
-- exits non-zero on error
+- exits non-zero on invalid contracts, invalid playlist definitions, invalid single-playlist overrides, or unresolved selected runs
 
 ## GitHub Actions Setup
 1. Push this project to a GitHub repository.
-2. In GitHub: `Settings -> Secrets and variables -> Actions -> New repository secret`
-3. Add secrets (exact names):
+2. In GitHub: `Settings -> Secrets and variables -> Actions`.
+3. Add required secrets:
 - `SPOTIFY_CLIENT_ID`
 - `SPOTIFY_CLIENT_SECRET`
 - `SPOTIFY_REFRESH_TOKEN`
+
+4. Add optional secrets and variables only if you want post-write Notion helpers:
 - `NOTION_TOKEN`
-- `NOTION_DATABASE_ID` (recommended)
-- `NOTION_PLAYLISTS_DATABASE_ID` (recommended)
-- `SPOTIFY_USER_ID` (optional)
-- `SPOTIFY_PLAYLIST_ID` (optional single-playlist override only)
+- `NOTION_DATABASE_ID`
+- `NOTION_DATABASE_NAME`
 
-Workflow triggers:
-- daily schedule (UTC cron in `.github/workflows/daily.yml`)
-- manual run via `workflow_dispatch`
+5. Add optional repository variables:
+- `JOB_UTC_OFFSET`
+- `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
 
-In this branch, the scheduled refresh job is disabled; the workflow file remains for later reactivation.
+Workflow behavior:
+- `workflow_dispatch` accepts an optional `spotify_playlist_name` input for a one-playlist validation run
+- scheduled runs use the same workflow file, but only execute when `SPOTIFY_REFRESH_SCHEDULE_ENABLED` is set to `true`
+- the base refresh path succeeds with Spotify secrets only
 
-## Notion Queue Config (Opus Dei)
-Daily refresh now uses Opus Dei rows as the queue source (`SPOTIFY_REFRESH_CONFIG_SOURCE=notion`).
+Recommended rollout:
+1. Run one manual workflow dispatch with `spotify_playlist_name=morning`.
+2. Confirm the playlist-definition path writes the expected playlist.
+3. Set `SPOTIFY_REFRESH_SCHEDULE_ENABLED=true` to let the daily schedule run.
 
-Recommended Opus Dei columns:
-- `Name` (title)
-- `Platform` (must include your Spotify value, default `spotify`; rows with `spotify-nosync` are skipped)
-- `Playlist` (text, select, multi-select, or comma-separated text matching a playlist table row name)
-- `Category` (optional devotional grouping; ignored by Spotify playlist building)
-- `Order` (number; lower runs earlier)
-- `Spotify Resolver` (resolver key like `MORNING`, `EVENING`, `USCCB`, `ROSARY`, etc., or direct `spotify:...` URI)
-- `Spotify Fallback Resolver` (optional; second resolver if primary fails)
-- `Enabled` (checkbox; unchecked rows are skipped)
-- `URI` (optional direct URI; used as fixed source when resolver is blank)
+## Optional Notion Integrations
+The active Spotify queue assembly path no longer reads Opus Dei rows for playlist membership, ordering, resolver choice, or Sunday toggling.
 
-Recommended Spotify Playlists columns:
-- `Name` (title)
-- `Spotify Playlist ID` (raw playlist id, `spotify:playlist:...`, or Spotify playlist URL)
-- `Enabled` (checkbox; unchecked playlists are skipped)
+If `NOTION_TOKEN` is present, the job can still run optional post-write helpers:
+- URI autosync when `SPOTIFY_ENABLE_URI_AUTOSYNC=true`
+- prayer-intention distribution through the existing Notion helper path
 
-Key edge-case support:
-- Morning/Evening Liturgy of the Hours two-podcast backup is handled by resolver logic (`MORNING` and `EVENING` already include STH primary + Divine Office fallback).
-- Additional explicit backup can be set per row with `Spotify Fallback Resolver`.
-- Non-Spotify rows can stay in the same flat list; the refresh job only builds playlists from rows whose `Platform` contains your Spotify value.
-
-Queue-related environment variables:
-- `SPOTIFY_REFRESH_CONFIG_SOURCE` (default `notion`; set `file` for legacy JSON mode)
-- `SPOTIFY_PLAYLIST_NAME` (optional single-playlist filter in Notion mode)
-- `SPOTIFY_ENABLE_URI_AUTOSYNC` (default `false`; keeps automatic URI mapping off)
-- `NOTION_SPOTIFY_BOOKMARKS_ENABLED` (default `true`; inserts/refreshes a Spotify bookmark block at the top of Spotify row pages)
-- `NOTION_SPOTIFY_EMBEDS_ENABLED` (legacy alias for the same setting)
-- `NOTION_PLAYLISTS_DATABASE_ID` (recommended)
-- `NOTION_PLAYLISTS_DATABASE_NAME` (fallback lookup; default `Spotify Playlists`)
-- `NOTION_PLAYLISTS_TITLE_PROPERTY` (default `Name`)
-- `NOTION_PLAYLISTS_ID_PROPERTY` (default `Spotify Playlist ID`)
-- `NOTION_PLAYLISTS_ENABLED_PROPERTY` (default `Enabled`)
-- `NOTION_QUEUE_PLAYLIST_PROPERTY` (default `Playlist`)
-- `NOTION_QUEUE_PROFILE_PROPERTY` (legacy alias fallback for older schemas)
-- `NOTION_QUEUE_ORDER_PROPERTY` (default `Order`)
-- `NOTION_QUEUE_RESOLVER_PROPERTY` (default `Spotify Resolver`)
-- `NOTION_QUEUE_FALLBACK_PROPERTY` (default `Spotify Fallback Resolver`)
-- `NOTION_QUEUE_ENABLED_PROPERTY` (default `Enabled`)
+Useful related variables:
+- `NOTION_TOKEN`
+- `NOTION_DATABASE_ID`
+- `NOTION_DATABASE_NAME`
+- `SPOTIFY_ENABLE_URI_AUTOSYNC`
+- `NOTION_URI_PROPERTY`
+- `NOTION_INTENTIONS_ENABLED`
+- `NOTION_INTENTIONS_RUN_PLAYLIST`
 
 ## Daily Notion Reset
 Purpose:
@@ -307,7 +304,7 @@ Current config:
 - `DIVINE_OFFICE_EVENING_OUTPUT`
 - `DIVINE_OFFICE_NIGHT_OUTPUT`
 - `ROSARY_INTENTIONS_OUTPUT`
-- fallback file source remains available in [page_audio_config.json](c:/Users/jcteb/Code/spotify_praylist/config/page_audio_config.json) if the Notion config database is unavailable
+- legacy fallback file source remains available in [page_audio_config.json](c:/Users/jcteb/Code/spotify_praylist/config/legacy/page_audio_config.json) if the discontinued page-audio stack is ever inspected or run manually
 
 Recommended Opus Dei row shape:
 - `Platform = Spotify, auto-text, auto-audio` for rows that should do all three
@@ -332,7 +329,7 @@ Environment variables:
 - `NOTION_AUDIO_FRAGMENTS_DATABASE_NAME` (fallback lookup; default `Audio Fragments`)
 - `NOTION_AUDIO_OUTPUTS_DATABASE_ID` (recommended for fragment-backed outputs)
 - `NOTION_AUDIO_OUTPUTS_DATABASE_NAME` (fallback lookup; default `Audio Outputs`)
-- `PAGE_AUDIO_CONFIG_FILE` (fallback file config if Notion config db is unavailable; when set to a specific contract JSON, the run now executes only that selected contract)
+- `PAGE_AUDIO_CONFIG_FILE` (legacy fallback file config for the discontinued page-audio stack; when set to a specific contract JSON, the run executes only that selected contract)
 - `PAGE_AUDIO_CACHE_DIR` (default `.cache/page_audio`)
 - `PAGE_AUDIO_LIBRARY_DIR` (optional; default local root is `%USERPROFILE%\OneDrive\Praylist Audio\Playlist Audio`)
 - `PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS` (default `false`; when `true`, remove managed playlist-audio exports locally before regeneration)
@@ -369,7 +366,7 @@ Audio output row shape:
 
 Rosary output mode:
 - `Output Mode = rosary`
-- `config/rosary.json` is the Rosary contract source of truth
+- `config/legacy/rosary.json` is the legacy Rosary contract source of truth
 - `config/content/rosary/` holds the actual Rosary prayer text files and the meditation prompt template
 - `Weekday Map` is a JSON object like `{"Monday":"The Joyful Mysteries", ...}`
 - the Rosary contract declares the visible flow with per-block counts, so `Hail Mary x10` stays obvious in config
