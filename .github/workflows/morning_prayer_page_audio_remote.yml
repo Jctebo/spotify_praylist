@@ -18,6 +18,7 @@ jobs:
       OAI_API_BASE_URL: https://api.openai.com/v1
       PAGE_AUDIO_LIBRARY_DIR: ${{ github.workspace }}/onedrive_sync/Praylist Audio/Playlist Audio
       PAGE_AUDIO_PUBLISH_FOLDER: Morning
+      PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS: "true"
       PAGE_AUDIO_FAIL_OPEN: "true"
       RCLONE_REMOTE_NAME: ${{ vars.RCLONE_REMOTE_NAME }}
       RCLONE_REMOTE_ROOT: ${{ vars.RCLONE_REMOTE_ROOT }}

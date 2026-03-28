@@ -90,6 +90,26 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(contracts["morning-prayer"]["output_type"], "page_audio")
         self.assertEqual(contracts["morning-prayer"]["path"], "config/custom_tts/morning-prayer.json")
 
+    def test_load_page_audio_config_from_file_ignores_legacy_page_audio_contracts(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            custom_dir = root / "config" / "custom_tts"
+            legacy_dir = root / "config" / "legacy" / "page_audio"
+            custom_dir.mkdir(parents=True, exist_ok=True)
+            legacy_dir.mkdir(parents=True, exist_ok=True)
+
+            enabled_path = custom_dir / "morning-prayer.json"
+            legacy_path = legacy_dir / "broken.json"
+            enabled_contract = _base_custom_tts_contract(path="config/custom_tts/morning-prayer.json", enabled=True)
+            enabled_path.write_text(json.dumps(enabled_contract, indent=2), encoding="utf-8")
+            legacy_path.write_text(json.dumps({"not": "a runnable contract"}, indent=2), encoding="utf-8")
+
+            with mock.patch.object(self.page_audio, "ROOT", root), temp_env({"PAGE_AUDIO_CONFIG_FILE": str(legacy_path)}):
+                payload = self.page_audio.load_page_audio_config_from_file()
+
+        self.assertEqual(set(payload.keys()), {"configs"})
+        self.assertEqual(set(payload["configs"].keys()), {"morning-prayer", "MORNING-PRAYER"})
+
     def test_load_custom_tts_contracts_from_dir_requires_output_metadata(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             config_dir = Path(tmpdir) / "config" / "custom_tts"

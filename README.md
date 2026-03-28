@@ -27,8 +27,7 @@ Optional variables:
 - `config/spotify/contracts/*.json`: one resolver-backed or fixed-URI queue contract per file
 - `config/spotify/playlists/*.json`: thin playlist definitions with playlist identity and ordered contract keys
 - `config/legacy/playlist_config.json`: legacy reference config kept off the active runtime path
-- `config/custom_tts/morning-prayer.json`: canonical Morning Prayer custom TTS contract for the active page-audio surface
-- `config/legacy/page_audio/*.json`, `config/legacy/rosary.json`, and `config/legacy/auxilium_daily_text.json`: discontinued top-level page-audio contracts retained only for legacy reference
+- `config/custom_tts/*.json`: active custom TTS contracts for the page-audio surface; Morning Prayer is the current checked-in contract
 - `scripts/setup_spotify.ps1`: Spotify credential wizard that also updates `config/spotify/playlists/*.json`
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` with optional single-playlist targeting
 - `scripts/setup_notion_playlists.ps1`: legacy Notion playlist-registry helper, no longer on the active Spotify hot path
@@ -307,7 +306,7 @@ Current config:
 - `DIVINE_OFFICE_EVENING_OUTPUT`
 - `DIVINE_OFFICE_NIGHT_OUTPUT`
 - `ROSARY_INTENTIONS_OUTPUT`
-- legacy fallback file source remains available in [page_audio_config.json](c:/Users/jcteb/Code/spotify_praylist/config/legacy/page_audio_config.json) if the discontinued page-audio stack is ever inspected or run manually
+- the active page-audio runtime now reads contracts from `config/custom_tts/*.json`; archived `config/legacy/page_audio/*.json` files are no longer part of the runnable surface
 
 Recommended Opus Dei row shape:
 - `Platform = Spotify, auto-text, auto-audio` for rows that should do all three
@@ -333,7 +332,6 @@ Environment variables:
 - `NOTION_AUDIO_OUTPUTS_DATABASE_ID` (recommended for fragment-backed outputs)
 - `NOTION_AUDIO_OUTPUTS_DATABASE_NAME` (fallback lookup; default `Audio Outputs`)
 - `MORNING_PRAYER_CONTRACT_FILE` (default `config/custom_tts/morning-prayer.json`; override-only validation and rollback path for Morning Prayer)
-- `PAGE_AUDIO_CONFIG_FILE` (legacy fallback file config for the discontinued page-audio stack; when set to a specific contract JSON, the run executes only that selected contract)
 - `PAGE_AUDIO_CACHE_DIR` (default `.cache/page_audio`)
 - `PAGE_AUDIO_LIBRARY_DIR` (optional; default local root is `%USERPROFILE%\OneDrive\Praylist Audio\Playlist Audio`)
 - `PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS` (default `false`; when `true`, remove managed playlist-audio exports locally before regeneration)

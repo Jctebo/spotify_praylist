@@ -54,7 +54,6 @@ NOTION_AUDIO_OUTPUTS_DATABASE_ID = "NOTION_AUDIO_OUTPUTS_DATABASE_ID"
 NOTION_AUDIO_OUTPUTS_DATABASE_NAME = "NOTION_AUDIO_OUTPUTS_DATABASE_NAME"
 PAGE_AUDIO_CONFIG_KEY = "PAGE_AUDIO_CONFIG_KEY"
 PAGE_AUDIO_ROW_TITLE = "PAGE_AUDIO_ROW_TITLE"
-PAGE_AUDIO_CONFIG_FILE = "PAGE_AUDIO_CONFIG_FILE"
 MORNING_PRAYER_CONTRACT_FILE = "MORNING_PRAYER_CONTRACT_FILE"
 PAGE_AUDIO_CACHE_DIR = "PAGE_AUDIO_CACHE_DIR"
 PAGE_AUDIO_LIBRARY_DIR = "PAGE_AUDIO_LIBRARY_DIR"
@@ -62,7 +61,6 @@ PAGE_AUDIO_LIBRARY_GROUP_PROPERTY = "PAGE_AUDIO_LIBRARY_GROUP_PROPERTY"
 PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS = "PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS"
 PAGE_AUDIO_FAIL_OPEN = "PAGE_AUDIO_FAIL_OPEN"
 
-DEFAULT_PAGE_AUDIO_CONFIG_FILE = "config/legacy/page_audio_config.json"
 DEFAULT_MORNING_PRAYER_CONTRACT_FILE = "config/custom_tts/morning-prayer.json"
 DEFAULT_CUSTOM_TTS_CONTRACT_DIR = "config/custom_tts"
 DEFAULT_PAGE_AUDIO_CACHE_DIR = ".cache/page_audio"
@@ -960,14 +958,6 @@ def normalize_page_audio_contract(contract: Dict[str, Any]) -> Dict[str, Any]:
     return normalized
 
 
-def page_audio_config_file_path() -> Path:
-    raw_path = os.getenv(PAGE_AUDIO_CONFIG_FILE, DEFAULT_PAGE_AUDIO_CONFIG_FILE).strip() or DEFAULT_PAGE_AUDIO_CONFIG_FILE
-    config_path = Path(raw_path)
-    if not config_path.is_absolute():
-        config_path = ROOT / config_path
-    return config_path
-
-
 def load_page_audio_json_file(config_path: Path) -> Dict[str, Any]:
     with open(config_path, "r", encoding="utf-8") as fh:
         payload = json.load(fh)
@@ -1021,21 +1011,6 @@ def load_custom_tts_contracts_from_dir(config_dir: Optional[Path] = None) -> Dic
     return configs
 
 
-def page_audio_selected_contract_configs(config_path: Path, contract: Dict[str, Any]) -> Dict[str, Any]:
-    normalized = normalize_page_audio_contract(contract)
-    key = str(normalized.get("key", "")).strip() or config_path.stem
-    configs: Dict[str, Any] = {}
-    for candidate in [key, config_path.stem]:
-        value = str(candidate or "").strip()
-        if not value:
-            continue
-        configs[value] = normalized
-        upper_value = value.upper()
-        if upper_value != value:
-            configs[upper_value] = normalized
-    return configs
-
-
 def normalize_notion_page_id(value: Any) -> str:
     return str(value or "").strip().replace("-", "").lower()
 
@@ -1051,44 +1026,10 @@ def page_audio_config_page_id(config: Dict[str, Any]) -> str:
 
 
 def load_page_audio_config_from_file() -> Dict[str, Any]:
-    config_path = page_audio_config_file_path()
-    explicit_config_file = bool(os.getenv(PAGE_AUDIO_CONFIG_FILE, "").strip())
-    if config_path.exists():
-        payload = load_page_audio_json_file(config_path)
-    else:
-        payload = {}
-    configs: Dict[str, Any] = {}
-    if explicit_config_file and config_path.exists():
-        if isinstance(payload.get("configs"), dict):
-            configs = dict(payload.get("configs") or {})
-        else:
-            validate_page_audio_contract(payload, source=str(config_path))
-            configs = page_audio_selected_contract_configs(config_path, payload)
-            payload = normalize_page_audio_contract(payload)
-    else:
-        page_audio_dir = ROOT / "config" / "legacy" / "page_audio"
-        if page_audio_dir.exists():
-            for path in sorted(page_audio_dir.glob("*.json")):
-                contract = load_page_audio_json_file(path)
-                validate_page_audio_contract(contract, source=str(path))
-                contract = normalize_page_audio_contract(contract)
-                key = path.stem
-                configs[key] = contract
-                upper_key = key.upper()
-                if upper_key != key:
-                    configs[upper_key] = contract
-        if not configs and isinstance(payload.get("configs"), dict):
-            configs = dict(payload.get("configs") or {})
-    morning_prayer_contract = load_morning_prayer_contract_from_file()
-    if morning_prayer_contract:
-        payload["morning_prayer_contract"] = morning_prayer_contract
-        morning_prayer_config = configs.get("MORNING_PRAYER_PAGE_AUDIO")
-        if isinstance(morning_prayer_config, dict):
-            morning_prayer_config["resolver_contract_mode"] = "file_driven"
+    configs = load_custom_tts_contracts_from_dir(custom_tts_config_dir())
     if not configs:
         raise RuntimeError("Invalid page audio config format: missing or empty 'configs'.")
-    payload["configs"] = configs
-    return payload
+    return {"configs": configs}
 
 
 def fetch_divine_office_feed_entry(
@@ -6311,6 +6252,7 @@ def main() -> int:
         base_url = os.getenv(OAI_API_BASE_URL, "https://api.openai.com/v1").strip() or "https://api.openai.com/v1"
         title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
         fail_open = shared.bool_env(PAGE_AUDIO_FAIL_OPEN, default=False)
+        truncate_managed_outputs = shared.bool_env(PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS, default=False)
         notion_db_id = shared.notion_find_database_id(notion_token)
         pages = shared.notion_get_all_pages(notion_db_id, notion_token)
         config_payload = load_page_audio_config(notion_token)
@@ -6356,6 +6298,15 @@ def main() -> int:
             try:
                 runtime_config = page_audio_runtime_config_for_page(page, config)
                 config_key = str(job["config_key"])
+                if truncate_managed_outputs:
+                    settings = tts_settings_from_config(runtime_config)
+                    export_metadata = page_audio_export_metadata(
+                        page,
+                        title_property=title_property,
+                        audio_format=str(settings["format"]),
+                        config=runtime_config,
+                    )
+                    truncate_managed_page_audio_outputs([(title, export_metadata)])
                 plan = build_page_audio_plan(
                     page=page,
                     pages=pages,
