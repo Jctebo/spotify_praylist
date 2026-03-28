@@ -1,0 +1,5 @@
+{
+  "key": "morning-prayer",
+  "name": "Morning Prayer",
+  "resolver": "MORNING_PRAYER_MONTHLY"
+}

@@ -15,6 +15,18 @@ import requests
 import spotipy
 from spotipy.exceptions import SpotifyException
 
+from jobs.playlist.spotify_contracts import (
+    SpotifyPlaylistDefinition,
+    SpotifyQueueContract,
+    load_spotify_playlist_definitions,
+    load_spotify_queue_contracts,
+    normalize_spotify_contract_key as normalize_spotify_output_folder,
+    playlist_definition_matches_filter as contract_matches_filter,
+)
+
+SpotifyPlaylistContract = SpotifyPlaylistDefinition
+load_spotify_contracts = load_spotify_playlist_definitions
+
 TOKEN_URL = "https://accounts.spotify.com/api/token"
 SCOPES_NOTE = "playlist-modify-private playlist-modify-public playlist-read-private"
 NOTION_VERSION = "2022-06-28"
@@ -89,6 +101,7 @@ DEFAULT_PLAYLIST_NOVENA_TITLES = (
     "Daily Novenas from Liturgical Cakendar",
     "Daily Novena Prayer",
 )
+OUTPUT_FOLDER_PROPERTY = "Output Folder"
 ROOT = Path(__file__).resolve().parents[2]
 
 DEFAULT_SHOWS = {
@@ -649,7 +662,9 @@ def normalize_spotify_playlist_id(value: str) -> str:
     match = re.search(r"open\.spotify\.com/playlist/([A-Za-z0-9]+)(?:[/?].*)?$", raw, flags=re.IGNORECASE)
     if match:
         return match.group(1)
-    return raw
+    if re.fullmatch(r"[A-Za-z0-9]+", raw):
+        return raw
+    return ""
 
 
 def spotify_value_to_bookmark_parts(value: str) -> Optional[Tuple[str, str, str]]:
@@ -920,6 +935,53 @@ def page_property_normalized_values(page: Dict[str, Any], property_name: str) ->
     return out
 
 
+def spotify_contracts_by_output_folder(
+    contracts: Optional[List[SpotifyPlaylistContract]] = None,
+) -> Dict[str, SpotifyPlaylistContract]:
+    available_contracts = list(contracts or load_spotify_contracts())
+    mapping: Dict[str, SpotifyPlaylistContract] = {}
+    for contract in available_contracts:
+        mapping[normalize_spotify_output_folder(contract.output_folder)] = contract
+    return mapping
+
+
+def select_spotify_contract(
+    playlist_name: str,
+    contracts: Optional[List[SpotifyPlaylistContract]] = None,
+) -> SpotifyPlaylistContract:
+    available_contracts = list(contracts or load_spotify_contracts())
+    matches = [contract for contract in available_contracts if contract_matches_filter(contract, playlist_name)]
+    if not matches:
+        raise RuntimeError(f"No Spotify contract matched '{playlist_name}'.")
+    if len(matches) > 1:
+        raise RuntimeError(f"Multiple Spotify contracts matched '{playlist_name}'.")
+    return matches[0]
+
+
+def resolve_page_output_folder_contract(
+    page: Dict[str, Any],
+    title_property: str,
+    contracts_by_output_folder: Dict[str, SpotifyPlaylistContract],
+) -> SpotifyPlaylistContract:
+    title = page_title(page, title_property).strip() or page_property_text(page, title_property).strip() or "Untitled"
+    output_folder_values = page_property_normalized_values(page, OUTPUT_FOLDER_PROPERTY)
+    raw_output_folder = page_property_text(page, OUTPUT_FOLDER_PROPERTY).strip()
+    if not output_folder_values:
+        raise RuntimeError(f"Spotify row '{title}' is missing '{OUTPUT_FOLDER_PROPERTY}'.")
+    if len(output_folder_values) > 1:
+        raise RuntimeError(
+            f"Spotify row '{title}' has multiple '{OUTPUT_FOLDER_PROPERTY}' values: "
+            f"{raw_output_folder or ', '.join(output_folder_values)}."
+        )
+    contract = contracts_by_output_folder.get(output_folder_values[0])
+    if not contract:
+        raise RuntimeError(
+            f"Spotify row '{title}' has unknown '{OUTPUT_FOLDER_PROPERTY}' value "
+            f"'{raw_output_folder or output_folder_values[0]}'."
+        )
+    return contract
+
+
 def env_normalized_values(name: str, default: str) -> List[str]:
     raw = os.getenv(name, default).strip() or default
     values = parse_csv_values(raw)
@@ -954,7 +1016,11 @@ def sunday_match_tokens() -> set[str]:
     return {token for token in sunday_match.split(" ") if token} or {"sunday"}
 
 
-def sync_notion_sunday_item_enablement(token: str, weekday: str) -> Tuple[int, List[str], List[str]]:
+def sync_notion_sunday_item_enablement(
+    token: str,
+    weekday: str,
+    contracts: Optional[List[SpotifyPlaylistContract]] = None,
+) -> Tuple[int, List[str], List[str]]:
     database_id = os.getenv(NOTION_DATABASE_ID, "").strip()
     if not database_id:
         db_name = os.getenv(NOTION_DATABASE_NAME, "Opus Dei").strip() or "Opus Dei"
@@ -963,9 +1029,11 @@ def sync_notion_sunday_item_enablement(token: str, weekday: str) -> Tuple[int, L
         return 0, [], []
 
     title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
+    platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
     enabled_property = os.getenv(NOTION_QUEUE_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
-    playlist_property = resolve_notion_playlist_property_name()
-    sunday_tokens = sunday_match_tokens()
+    platform_values = env_normalized_values(NOTION_PLATFORM_SPOTIFY_VALUE, "spotify")
+    nosync_values = env_normalized_values(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync")
+    contracts_by_output_folder = spotify_contracts_by_output_folder(contracts)
     enable_sunday = normalize_text(weekday) == "sunday"
 
     updated = 0
@@ -975,9 +1043,15 @@ def sync_notion_sunday_item_enablement(token: str, weekday: str) -> Tuple[int, L
         page_id = str(row.get("id", "")).strip()
         if not page_id:
             continue
-        playlist_value = page_property_text(row, playlist_property).strip()
-        playlist_tokens = {token for token in normalize_text(playlist_value).split(" ") if token}
-        if not (playlist_tokens & sunday_tokens):
+        platform_text = normalize_text(page_property_text(row, platform_property))
+        if page_has_any_normalized_value(row, platform_property, nosync_values):
+            continue
+        if DEPRECATED_TIMESYNC_PLATFORM_VALUE in platform_text:
+            continue
+        if not page_has_any_normalized_value(row, platform_property, platform_values):
+            continue
+        contract = resolve_page_output_folder_contract(row, title_property, contracts_by_output_folder)
+        if contract.key != "sunday":
             continue
         title = page_title(row, title_property).strip() or "Untitled"
         current_enabled = page_property_checkbox(row, enabled_property)
@@ -2248,6 +2322,68 @@ def load_resolver_runtime_config(cfg: Dict[str, Any]) -> Tuple[Dict[str, Any], D
     return profiles_cfg, shows_cfg, fixed_cfg, tokens_cfg
 
 
+def contract_runs_today(contract: SpotifyQueueContract, weekday: str) -> bool:
+    if not contract.weekdays:
+        return True
+    today = str(weekday or "").strip().lower()
+    return today in {day.lower() for day in contract.weekdays}
+
+
+def resolve_contract_uri(
+    sp: spotipy.Spotify,
+    contract: SpotifyQueueContract,
+    weekday: str,
+    status: Dict[str, bool],
+    shows_cfg: Dict[str, Any],
+    fixed_cfg: Dict[str, Any],
+    tokens_cfg: Dict[str, Any],
+) -> Optional[str]:
+    primary_spec = contract.spotify_uri or contract.resolver
+    uri = resolve_spec_uri(sp, primary_spec, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
+    if not uri and contract.fallback_resolver:
+        uri = resolve_spec_uri(sp, contract.fallback_resolver, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
+        status[f"Fallback used:{contract.name}"] = bool(uri)
+    return uri
+
+
+def build_queue_for_playlist_definition(
+    sp: spotipy.Spotify,
+    playlist_definition: SpotifyPlaylistDefinition,
+    weekday: str,
+    status: Dict[str, bool],
+    shows_cfg: Dict[str, Any],
+    fixed_cfg: Dict[str, Any],
+    tokens_cfg: Dict[str, Any],
+    contracts_by_key: Optional[Dict[str, SpotifyQueueContract]] = None,
+) -> List[str]:
+    available_contracts = contracts_by_key or {
+        contract.key: contract for contract in load_spotify_queue_contracts()
+    }
+
+    queue: List[str] = []
+    eligible_contracts = 0
+    for contract_key in playlist_definition.contracts:
+        contract = available_contracts.get(contract_key)
+        if not contract:
+            raise RuntimeError(
+                f"Spotify playlist definition '{playlist_definition.name}' references unknown contract key '{contract_key}'."
+            )
+        if not contract_runs_today(contract, weekday):
+            status[f"Gated:{contract.name}"] = False
+            continue
+
+        eligible_contracts += 1
+        uri = resolve_contract_uri(sp, contract, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
+        if uri:
+            queue.append(uri)
+        else:
+            status[f"Unresolved:{contract.name}"] = False
+
+    if eligible_contracts == 0:
+        status["__no_eligible_contracts__"] = True
+    return queue
+
+
 def build_queue_for_playlist_from_notion(
     sp: spotipy.Spotify,
     playlist_name: str,
@@ -2256,6 +2392,7 @@ def build_queue_for_playlist_from_notion(
     shows_cfg: Dict[str, Any],
     fixed_cfg: Dict[str, Any],
     tokens_cfg: Dict[str, Any],
+    contracts: Optional[List[SpotifyPlaylistContract]] = None,
 ) -> List[str]:
     token = require_env(NOTION_TOKEN)
     database_id = os.getenv(NOTION_DATABASE_ID, "").strip()
@@ -2267,7 +2404,6 @@ def build_queue_for_playlist_from_notion(
 
     title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
     platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
-    playlist_property = resolve_notion_playlist_property_name()
     order_property = os.getenv(NOTION_QUEUE_ORDER_PROPERTY, "Order").strip() or "Order"
     resolver_property = os.getenv(NOTION_QUEUE_RESOLVER_PROPERTY, "Spotify Resolver").strip() or "Spotify Resolver"
     fallback_property = os.getenv(NOTION_QUEUE_FALLBACK_PROPERTY, "Spotify Fallback Resolver").strip() or "Spotify Fallback Resolver"
@@ -2276,10 +2412,12 @@ def build_queue_for_playlist_from_notion(
 
     platform_values = env_normalized_values(NOTION_PLATFORM_SPOTIFY_VALUE, "spotify")
     nosync_values = env_normalized_values(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync")
+    available_contracts = list(contracts or load_spotify_contracts())
+    target_contract = select_spotify_contract(playlist_name, available_contracts)
+    contracts_by_output_folder = spotify_contracts_by_output_folder(available_contracts)
     pages = notion_get_all_pages(database_id, token)
 
     entries: List[Dict[str, Any]] = []
-    playlist_name_norm = normalize_text(playlist_name)
     for page in pages:
         platform_text = normalize_text(page_property_text(page, platform_property))
         if page_has_any_normalized_value(page, platform_property, nosync_values):
@@ -2289,12 +2427,12 @@ def build_queue_for_playlist_from_notion(
         if not page_has_any_normalized_value(page, platform_property, platform_values):
             continue
 
-        enabled = page_property_checkbox(page, enabled_property)
-        if enabled is False:
+        row_contract = resolve_page_output_folder_contract(page, title_property, contracts_by_output_folder)
+        if row_contract.key != target_contract.key:
             continue
 
-        row_playlists = page_property_normalized_values(page, playlist_property)
-        if not row_playlists or playlist_name_norm not in row_playlists:
+        enabled = page_property_checkbox(page, enabled_property)
+        if enabled is False:
             continue
 
         title = page_title(page, title_property).strip()
@@ -2391,47 +2529,47 @@ def main() -> int:
 
         sp, spotify_token = sp_client()
         weekday = local_now().strftime("%A")
-        source = "notion"
+        source = "playlist_definitions"
         uri_autosync_enabled = bool_env(SPOTIFY_ENABLE_URI_AUTOSYNC, default=False)
-        notion_spotify_bookmarks_enabled_flag = notion_spotify_bookmarks_enabled()
-        notion_playlist_novena_links_enabled_flag = notion_playlist_novena_links_enabled()
         runs: List[Dict[str, Any]] = []
-        bookmark_updates = 0
-        bookmark_removed = 0
-        bookmark_update_details: List[Tuple[str, str]] = []
-        bookmark_unresolved: List[str] = []
-        novena_link_updates = 0
-        novena_link_update_names: List[str] = []
-        sunday_item_updates = 0
-        sunday_items_enabled: List[str] = []
-        sunday_items_disabled: List[str] = []
 
         _ = os.getenv(SPOTIFY_USER_ID, "")
-        notion_token = require_env(NOTION_TOKEN)
-        (
-            sunday_item_updates,
-            sunday_items_enabled,
-            sunday_items_disabled,
-        ) = sync_notion_sunday_item_enablement(notion_token, weekday)
-        if notion_playlist_novena_links_enabled_flag:
-            novena_link_updates, novena_link_update_names = sync_notion_playlist_novena_links(notion_token)
+        notion_token = os.getenv(NOTION_TOKEN, "").strip()
+        all_contracts = load_spotify_queue_contracts()
+        contracts_by_key = {contract.key: contract for contract in all_contracts}
         playlist_filter = os.getenv(SPOTIFY_PLAYLIST_NAME, "").strip()
+        selected_playlists = load_spotify_playlist_definitions(
+            playlist_filter=playlist_filter,
+            contracts=all_contracts,
+        )
         runs = []
-        for target in load_notion_playlists(notion_token, playlist_filter):
+        for target in selected_playlists:
             status = {}
-            queue = build_queue_for_playlist_from_notion(
-                sp, target["name"], weekday, status, shows_cfg, fixed_cfg, tokens_cfg
+            queue = build_queue_for_playlist_definition(
+                sp,
+                target,
+                weekday,
+                status,
+                shows_cfg,
+                fixed_cfg,
+                tokens_cfg,
+                contracts_by_key=contracts_by_key,
             )
             if not queue:
-                if status.get("__no_eligible_rows__"):
-                    print(
-                        "INFO notion_playlist_skipped "
-                        f"playlist={target['name']} reason=no_enabled_source_rows weekday={weekday}"
-                    )
+                if status.get("__no_eligible_contracts__"):
+                    if len(selected_playlists) == 1:
+                        raise RuntimeError(f"No Spotify contracts run today for selected playlist '{target.name}'.")
+                    print(f"INFO spotify_playlist_skipped playlist={target.name} reason=no_eligible_contracts weekday={weekday}")
                     continue
-                raise RuntimeError(f"No tracks/episodes resolved for playlist '{target['name']}'.")
-            runs.append({"name": target["name"], "playlist_id": target["playlist_id"], "queue": queue, "status": status})
-        override_playlist_id = normalize_spotify_playlist_id(os.getenv(SPOTIFY_PLAYLIST_ID, "").strip())
+                raise RuntimeError(f"No tracks/episodes resolved for Spotify playlist '{target.name}'.")
+            runs.append({"name": target.name, "playlist_id": target.playlist_id, "queue": queue, "status": status})
+        override_playlist_id_raw = os.getenv(SPOTIFY_PLAYLIST_ID, "").strip()
+        override_playlist_id = normalize_spotify_playlist_id(override_playlist_id_raw)
+        if override_playlist_id_raw and not override_playlist_id:
+            raise RuntimeError(
+                f"{SPOTIFY_PLAYLIST_ID} must be a raw playlist id, spotify:playlist:<id>, "
+                "or an open.spotify.com playlist URL."
+            )
         if override_playlist_id:
             if len(runs) != 1:
                 raise RuntimeError(
@@ -2440,18 +2578,9 @@ def main() -> int:
                 )
             runs[0]["playlist_id"] = override_playlist_id
         if not runs:
-            raise RuntimeError("No enabled playlists found in the Notion playlists database.")
-        if notion_spotify_bookmarks_enabled_flag:
-            bookmark_updates, bookmark_removed, bookmark_update_details, bookmark_unresolved = (
-                sync_notion_spotify_bookmarks(
-                    sp, weekday, shows_cfg, fixed_cfg, tokens_cfg
-                )
-                )
-            print(f"INFO notion_sunday_items_updated count={sunday_item_updates} weekday={weekday}")
-            for name in sunday_items_enabled:
-                print(f"INFO notion_sunday_item_enabled name={name}")
-            for name in sunday_items_disabled:
-                print(f"INFO notion_sunday_item_disabled name={name}")
+            if playlist_filter:
+                raise RuntimeError(f"No Spotify playlists produced a queue for selected filter '{playlist_filter}'.")
+            raise RuntimeError("No Spotify playlist definitions produced a queue.")
 
         for run in runs:
             playlist_name = str(run["name"])
@@ -2464,18 +2593,19 @@ def main() -> int:
             notion_uri_update_details: List[Tuple[str, str]] = []
             notion_uri_unchanged: List[str] = []
             notion_uri_no_match: List[str] = []
-            if uri_autosync_enabled:
+            if uri_autosync_enabled and notion_token:
                 notion_uri_updates, notion_uri_update_details, notion_uri_unchanged, notion_uri_no_match = (
                     sync_notion_uris_for_playlist(sp, queue, playlist_name)
                 )
-            intention_targets, intention_source_count, intention_assigned = distribute_prayer_intentions(playlist_name)
+            if notion_token:
+                intention_targets, intention_source_count, intention_assigned = distribute_prayer_intentions(playlist_name)
+            else:
+                intention_targets, intention_source_count, intention_assigned = (0, 0, 0)
 
             print(f"SUMMARY playlist={playlist_name} playlist_id={playlist_id} tracks_written={written}")
             print(f"INFO playlist={playlist_name} weekday={weekday} playlist_recreated=true source={source}")
             print(f"INFO utc_offset={local_now().strftime('%z')}")
             print(f"INFO uri_autosync_enabled={str(uri_autosync_enabled).lower()}")
-            print(f"INFO notion_spotify_bookmarks_enabled={str(notion_spotify_bookmarks_enabled_flag).lower()}")
-            print(f"INFO notion_playlist_novena_links_enabled={str(notion_playlist_novena_links_enabled_flag).lower()}")
             for name, ok in sorted(status.items()):
                 print(f"INFO resolver_status playlist={playlist_name} name={name} ok={str(ok).lower()}")
             if uri_autosync_enabled and os.getenv(NOTION_TOKEN, "").strip():
@@ -2506,35 +2636,6 @@ def main() -> int:
                 print(
                     "INFO notion_intentions_distributed "
                     f"playlist={playlist_name} targets={intention_targets} source_petitions={intention_source_count} assigned={intention_assigned}"
-                )
-
-        if source == "notion" and notion_spotify_bookmarks_enabled_flag and os.getenv(NOTION_TOKEN, "").strip():
-            print(f"INFO notion_spotify_bookmark_rows_updated count={bookmark_updates}")
-            print(f"INFO notion_spotify_bookmark_rows_removed count={bookmark_removed}")
-            log_limit = int(os.getenv(NOTION_URI_LOG_LIMIT, "25").strip() or "25")
-            for title, bookmark_url in bookmark_update_details[: max(0, log_limit)]:
-                print(f"INFO notion_spotify_bookmark_synced title={title} url={bookmark_url}")
-            for title in bookmark_unresolved[: max(0, log_limit)]:
-                print(f"INFO notion_spotify_bookmark_unresolved title={title}")
-            if len(bookmark_update_details) > max(0, log_limit):
-                print(
-                    "INFO notion_spotify_bookmark_synced_truncated "
-                    f"shown={max(0, log_limit)} total={len(bookmark_update_details)}"
-                )
-            if len(bookmark_unresolved) > max(0, log_limit):
-                print(
-                    "INFO notion_spotify_bookmark_unresolved_truncated "
-                    f"shown={max(0, log_limit)} total={len(bookmark_unresolved)}"
-                )
-        if source == "notion" and notion_playlist_novena_links_enabled_flag and os.getenv(NOTION_TOKEN, "").strip():
-            print(f"INFO notion_playlist_novena_links_updated count={novena_link_updates}")
-            log_limit = int(os.getenv(NOTION_URI_LOG_LIMIT, "25").strip() or "25")
-            for playlist_name in novena_link_update_names[: max(0, log_limit)]:
-                print(f"INFO notion_playlist_novena_link_synced playlist={playlist_name}")
-            if len(novena_link_update_names) > max(0, log_limit):
-                print(
-                    "INFO notion_playlist_novena_link_synced_truncated "
-                    f"shown={max(0, log_limit)} total={len(novena_link_update_names)}"
                 )
 
         return 0

@@ -1,0 +1,8 @@
+{
+  "key": "fr-mike-sunday-homily",
+  "name": "Fr. Mike Sunday Homily",
+  "resolver": "SUNDAY_FRMIKE",
+  "weekdays": [
+    "Sunday"
+  ]
+}

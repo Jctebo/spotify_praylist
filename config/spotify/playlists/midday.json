@@ -1,0 +1,14 @@
+{
+  "key": "midday",
+  "name": "Midday",
+  "playlist_id": "4gQAaPAMiezBaDaoqK6sFQ",
+  "contracts": [
+    "daily-mass-readings",
+    "mass",
+    "angelus-midday",
+    "saint-of-the-day",
+    "auxilium-christianorum",
+    "lenten-devotion",
+    "afternoon-prayer-loh"
+  ]
+}

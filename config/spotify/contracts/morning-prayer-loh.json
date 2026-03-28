@@ -1,0 +1,6 @@
+{
+  "key": "morning-prayer-loh",
+  "name": "Morning Prayer (LOH)",
+  "resolver": "MORNING",
+  "fallback_resolver": "DO_MORNING"
+}
