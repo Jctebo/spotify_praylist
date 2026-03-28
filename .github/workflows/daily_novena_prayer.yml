@@ -1,4 +1,4 @@
-name: Prayer Contracts Matrix
+name: Prayer Contracts Matrix (Disabled)
 
 on:
   workflow_dispatch:
@@ -8,131 +8,12 @@ defaults:
     shell: bash
 
 jobs:
-  discover-contracts:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.build-matrix.outputs.matrix }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Build contract matrix
-        id: build-matrix
-        run: |
-          python - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-
-          contracts = sorted(
-              str(path.as_posix())
-              for path in Path("config").glob("*.json")
-              if path.is_file()
-          )
-          if not contracts:
-              raise SystemExit("No top-level config/*.json contracts found.")
-
-          matrix = {"include": [{"page_audio_config_file": path} for path in contracts]}
-          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as fh:
-              fh.write(f"matrix={json.dumps(matrix)}\n")
-          PY
-
-  generate-prayer-contracts:
-    needs: discover-contracts
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJSON(needs.discover-contracts.outputs.matrix) }}
+  legacy-page-audio-disabled:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Generate page audio from contract
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
-          PAGE_AUDIO_CONFIG_FILE: ${{ matrix.page_audio_config_file }}
-          PAGE_AUDIO_CACHE_DIR: .cache/page_audio
-          PAGE_AUDIO_LIBRARY_DIR: ${{ github.workspace }}/page_audio_library
-          PAGE_AUDIO_FAIL_OPEN: "false"
-          OAI_API_BASE_URL: https://api.openai.com/v1
-          JOB_UTC_OFFSET: -06:00
-        run: python jobs/notion/generate_page_audio.py
-
-      - name: Upload page audio library artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: page-audio-library-${{ strategy.job-index }}
-          path: ${{ github.workspace }}/page_audio_library
-          if-no-files-found: error
-
-  sync-page-audio-library:
-    needs: generate-prayer-contracts
-    runs-on: ubuntu-latest
-    env:
-      RCLONE_REMOTE_NAME: ${{ vars.RCLONE_REMOTE_NAME }}
-      RCLONE_REMOTE_ROOT: ${{ vars.PLAYLIST_AUDIO_REMOTE_ROOT }}
-    steps:
-      - name: Setup Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.11"
-
-      - name: Install rclone
-        shell: bash
+      - name: Legacy page-audio contract matrix disabled
         run: |
-          set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y rclone
-          rclone version
-
-      - name: Configure rclone
-        shell: bash
-        env:
-          RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG_B64 }}
-        run: |
-          set -euo pipefail
-          if [ -z "${RCLONE_CONFIG_B64:-}" ]; then
-            echo "Missing secret RCLONE_CONFIG_B64" >&2
-            exit 1
-          fi
-          mkdir -p "${HOME}/.config/rclone"
-          printf "%s" "${RCLONE_CONFIG_B64}" | base64 -d > "${HOME}/.config/rclone/rclone.conf"
-          chmod 600 "${HOME}/.config/rclone/rclone.conf"
-
-      - name: Download page audio library artifacts
-        uses: actions/download-artifact@v5
-        with:
-          pattern: page-audio-library-*
-          path: ${{ github.workspace }}/page_audio_library_merged
-          merge-multiple: true
-
-      - name: Sync page audio library to OneDrive
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          LOCAL_LIBRARY_DIR="${GITHUB_WORKSPACE}/page_audio_library_merged"
-          REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
-          REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Praylist Audio/Playlist Audio}"
-
-          if [ -d "$LOCAL_LIBRARY_DIR" ]; then
-            rclone purge "${REMOTE_NAME}:${REMOTE_ROOT}/" --progress
-            rclone sync "$LOCAL_LIBRARY_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/" --progress --transfers 4 --checkers 8
-            rclone check "$LOCAL_LIBRARY_DIR/" "${REMOTE_NAME}:${REMOTE_ROOT}/" --progress --one-way
-          else
-            echo "No page audio library directory found at ${LOCAL_LIBRARY_DIR}; skipping OneDrive sync."
-          fi
-
-          echo "Synced page audio library to OneDrive via rclone."
+          echo "The legacy top-level config/*_page_audio.json contract matrix has been discontinued."
+          echo "Those contract files now live under config/legacy/page_audio/."
+          echo "This workflow is intentionally disabled."
