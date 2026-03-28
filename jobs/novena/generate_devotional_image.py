@@ -19,7 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from jobs.novena.generate_daily_novena_prayer import (
+from jobs.novena.liturgical_helpers import (
     NOTION_DATABASE_ID,
     NOTION_DATABASE_NAME,
     NOTION_TOKEN,
@@ -42,8 +42,8 @@ from jobs.novena.generate_daily_novena_prayer import (
     page_title,
     require_env,
     romcal_fetch_day,
+    devotional_output_is_eligible,
 )
-from jobs.novena.liturgical_model import devotional_output_is_eligible
 
 DEFAULT_DCIM_RELATIVE = r"OneDrive\Pictures\Samsung Gallery\DCIM"
 DEFAULT_CURRENT_FOLDER = "Current Devotion"

@@ -23,7 +23,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from jobs.novena.liturgical_model import devotional_output_is_eligible
+from jobs.novena.liturgical_helpers import devotional_output_is_eligible
 
 NOTION_VERSION = "2022-06-28"
 NOTION_FILE_UPLOAD_VERSION = "2025-09-03"

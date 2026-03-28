@@ -33,8 +33,8 @@ Optional variables:
 - `scripts/setup_notion_playlists.ps1`: legacy Notion playlist-registry helper, no longer on the active Spotify hot path
 - `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; scheduled runs are gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
-- `.github/workflows/daily_novena_prayer.yml`: legacy page-audio contract matrix kept as a disabled no-op after the top-level contract surface moved under `config/legacy/`
-- `.github/workflows/daily_devotional_image_remote.yml`: daily + manual calendar-first devotional image + novena generation, with the legacy page-audio matrix now disabled
+- `.github/workflows/daily_novena_prayer.yml`: disabled novena workflow placeholder kept out of the active rollout
+- `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with OneDrive sync and GitHub Pages export
 - `.github/workflows/liturgical_calendar_yearly_sync.yml`: Jan 1 + manual Liturgical Calendar population
 
 ## Config Timezone
@@ -182,6 +182,7 @@ Purpose:
 - reads eligible liturgical celebrations from Romcal for today through the next 8 days (9-day window)
 - uses OpenAI API to draft a litany-style novena prayer
 - writes prayer text or mirrored daily liturgical content to the Notion row titled `Daily Novenas from Liturgical Calendar`
+- the matching GitHub Actions workflow remains intentionally disabled in this release
 
 Script:
 - `jobs/novena/generate_daily_novena_prayer.py`
@@ -240,8 +241,8 @@ Optional variables:
 - `JOB_UTC_OFFSET` (default `-06:00`)
 
 Workflow note:
-- the scheduled daily novena workflow always prefetches the primary `Praylist Audio` library
-- the legacy `DEVOTIONAL_ONEDRIVE_REMOTE_ROOT` prefetch is skipped unless that env var is explicitly configured
+- the scheduled novena workflow stays disabled in GitHub Actions for this release
+- use the local script if you need to run the novena generator manually
 
 Local run:
 

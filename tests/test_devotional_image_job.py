@@ -1,7 +1,10 @@
 import io
 import json
 import datetime
+import os
+import subprocess
 import tempfile
+import sys
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -14,6 +17,31 @@ from tests.test_helpers import load_module
 class TestDevotionalImageJob(unittest.TestCase):
     def setUp(self):
         self.mod = load_module("jobs/novena/generate_devotional_image.py")
+
+    def test_direct_script_import_bootstraps_repo_root_without_pythonpath(self):
+        script_path = Path("jobs/novena/generate_devotional_image.py").resolve()
+        code = (
+            "import importlib.util; "
+            f"spec = importlib.util.spec_from_file_location('devotional_image_bootstrap', r'{script_path}'); "
+            "module = importlib.util.module_from_spec(spec); "
+            "spec.loader.exec_module(module)"
+        )
+
+        env = {key: value for key, value in os.environ.items() if key != "PYTHONPATH"}
+        result = subprocess.run(
+            [sys.executable, "-c", code],
+            cwd=tempfile.gettempdir(),
+            env=env,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+        self.assertEqual(
+            result.returncode,
+            0,
+            msg=f"stdout={result.stdout}\nstderr={result.stderr}",
+        )
 
     def make_storage(self, root: Path):
         return self.mod.StorageDirs(

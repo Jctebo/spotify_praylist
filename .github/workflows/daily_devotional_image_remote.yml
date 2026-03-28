@@ -11,7 +11,7 @@ permissions:
   id-token: write
 
 jobs:
-  calendar:
+  image:
     runs-on: ubuntu-latest
 
     env:
@@ -107,19 +107,6 @@ jobs:
           DEVOTIONAL_ONEDRIVE_DCIM_DIR: ${{ github.workspace }}/onedrive_sync/DCIM
         run: python jobs/novena/generate_devotional_image.py
 
-      - name: Generate daily novena locally on runner
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
-          NOTION_DATABASE_NAME: ${{ vars.NOTION_DATABASE_NAME }}
-          NOTION_WRITE_DAILY_NOVENA_PAGE: "true"
-          NOVENA_AUDIO_ENABLED: "false"
-          ROMCAL_CALENDAR: general_roman
-          ROMCAL_LOCALE: en
-          ROMCAL_WINDOW_DAYS: "9"
-        run: python jobs/novena/generate_daily_novena_prayer.py
-
       - name: Upload files to OneDrive with rclone
         shell: bash
         run: |
@@ -172,13 +159,3 @@ jobs:
         if: github.ref == 'refs/heads/main'
         id: deploy-pages
         uses: actions/deploy-pages@v4
-
-  legacy_page_audio_disabled:
-    needs: calendar
-    runs-on: ubuntu-latest
-    steps:
-      - name: Legacy page-audio contract matrix disabled
-        run: |
-          echo "The legacy top-level config/*_page_audio.json contract matrix has been discontinued."
-          echo "Those contract files now live under config/legacy/page_audio/."
-          echo "Page-audio generation is intentionally disabled in this workflow."
