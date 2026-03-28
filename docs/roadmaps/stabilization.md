@@ -1,4 +1,4 @@
-# Roadmap: Spotify Sync, Devotional Recovery, And Morning Prayer Publishing
+# Roadmap: Stabilization of Codebase
 
 ## Recent Releases
 - `0.1.3.1`: Spotify contract sync recovery shipped on 2026-03-27 and moved the active Spotify refresh path onto repo-owned contracts and playlist definitions.
