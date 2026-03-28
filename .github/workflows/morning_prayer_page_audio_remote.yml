@@ -61,16 +61,6 @@ jobs:
           rclone lsd "${REMOTE_NAME}:" >/dev/null
           rclone lsd "${REMOTE_NAME}:${REMOTE_ROOT}" >/dev/null || true
 
-      - name: Prefetch existing page-audio files from OneDrive
-        run: |
-          set -euo pipefail
-          REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
-          REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Praylist Audio/Playlist Audio}"
-          LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/Praylist Audio/Playlist Audio"
-
-          mkdir -p "${LOCAL_ROOT}"
-          rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/" "${LOCAL_ROOT}/" --create-empty-src-dirs || true
-
       - name: Generate page audio on runner
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -86,7 +76,7 @@ jobs:
           JOB_UTC_OFFSET: ${{ vars.JOB_UTC_OFFSET }}
         run: python jobs/notion/generate_page_audio.py
 
-      - name: Sync page-audio library to OneDrive
+      - name: Copy page-audio library to OneDrive
         run: |
           set -euo pipefail
           LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/Praylist Audio/Playlist Audio"
@@ -94,6 +84,6 @@ jobs:
           REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Praylist Audio/Playlist Audio}"
 
           test -d "$LOCAL_ROOT"
-          rclone sync "$LOCAL_ROOT/" "${REMOTE_NAME}:${REMOTE_ROOT}/" --progress --transfers 4 --checkers 8
+          rclone copy "$LOCAL_ROOT/" "${REMOTE_NAME}:${REMOTE_ROOT}/" --progress --stats-one-line --transfers 4 --checkers 8
 
-          echo "Synced page-audio library to OneDrive via rclone."
+          echo "Copied page-audio library to OneDrive via rclone."
