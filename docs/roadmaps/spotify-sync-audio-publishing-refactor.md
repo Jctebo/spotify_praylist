@@ -1,311 +1,413 @@
-# Roadmap: Contract-Driven Spotify Sync And Morning Prayer Publishing Refactor
+# Roadmap: Spotify Sync, Devotional Recovery, And Morning Prayer Publishing
 
-## Summary Of Changes
-- Restore Spotify playlist automation as repo-owned contracts under `config/spotify/` instead of depending on the removed Notion config lists.
-- Keep the slimmed-down Notion database as the content source, but move playlist identity, playlist IDs, and playlist assembly rules into git-managed contracts.
-- Collapse the current multi-contract audio surface into one canonical Morning Prayer publishing path.
-- Add a storage-backed publishing boundary so the daily Morning Prayer artifact can become a podcast episode instead of only a synced file tree.
-- Make ElevenLabs the primary TTS engine for the Morning Prayer publishing path, with OpenAI retained only as a controlled fallback during migration.
-- This roadmap exists now because Spotify sync is intentionally disabled, the current audio runtime is broader than the desired product, and the repo does not yet have a first-class podcast publishing subsystem.
+## Recent Releases
+- `0.1.3.1`: Spotify contract sync recovery shipped on 2026-03-27 and moved the active Spotify refresh path onto repo-owned contracts and playlist definitions.
 
 ## Roadmap Mode
 - Detailed roadmap
 
 ## Problem
-- Spotify playlist sync is a user-visible regression: the workflow is disabled and the current runtime still expects a separate Notion playlists configuration model the user no longer keeps.
-- The repo's audio runtime still treats many prayer contracts as active daily outputs even though the desired product is now one publishable Morning Prayer program.
-- The current prayer pipeline can render and sync audio files, but it does not yet turn that output into a storage-backed podcast publication flow.
-- TTS is currently OpenAI-first across the codebase, which conflicts with the new requirement to make ElevenLabs the primary voice path.
+- The devotional image and novena generation paths are still co-located in code and in the same workflow job, which makes one failure more likely to drag the other down.
+- The shared logic between those jobs should live in helpers, while the runnable entrypoints should be independent.
+- The pipelines should be split so image generation and novena generation can be scheduled, retried, and reasoned about separately.
+- The original first roadmap milestone is no longer future work; Spotify contract sync has already shipped.
+- The next broken daily capability is the devotional image pipeline, which still depends on a working `OPENAI_API_KEY` secret in GitHub Actions.
+- Morning Prayer still needs a stable OneDrive-first delivery path before it is safe to widen the surface to a new TTS provider or RSS publication.
+- The repo has intention-related helpers and Morning/Midday/Night/Sunday playlist surfaces, but it does not yet have custom intention contracts that turn personal intentions from Notion into OneDrive-published outputs.
 
 ## Audience
-- Primary user: the maintainer running daily prayer automation and curating Spotify + Morning Prayer delivery.
-- Secondary stakeholders: listeners consuming the Morning, Midday, and Night Spotify playlists.
-- Secondary stakeholders: future collaborators who need a smaller, clearer runtime surface for prayer publishing work.
+- Primary user: the maintainer operating the daily prayer, image, and publishing automations.
+- Secondary stakeholders: listeners and downstream consumers who depend on Spotify playlists, Morning Prayer outputs, and future RSS delivery being stable.
+- Secondary stakeholders: future collaborators who need one clear release order instead of overlapping "fix, migrate, publish, personalize" tracks.
 
 ## Current Status Quo
-- `.github/workflows/daily.yml` is present but disabled, so daily Spotify playlist refresh is not currently running.
-- `scripts/run_daily_refresh_local.ps1` also exits early and does not invoke the Spotify refresh runtime.
-- `jobs/playlist/refresh_playlist.py` still exists and still expects the current Notion-first queue plus a separate Notion playlists database, with legacy file-mode fallback.
-- `config/spotify/` does not exist today.
-- `jobs/notion/generate_page_audio.py` and `.github/workflows/daily_novena_prayer.yml` currently fan out across top-level `config/*.json` contracts and sync page-audio artifacts to OneDrive.
-- `config/morning-prayer.json` is the active Morning Prayer contract, while `config/rosary.json` and other root-level contracts still represent the broader page-audio surface.
-- `jobs/notion/generate_prayer.py` is nominally generic, but today it still hardcodes the Morning Prayer builder and Morning output folder.
-- Repo inspection did not reveal an existing podcast RSS/feed publication path; current output delivery is storage sync plus Notion/page updates.
-- Current TTS defaults in configs, jobs, tests, and `.env.example` are centered on `gpt-4o-mini-tts`.
+- Release `0.1.3.1` shipped on 2026-03-27 and restored the contract-first Spotify refresh path under `config/spotify/contracts/` and `config/spotify/playlists/`.
+- `.github/workflows/daily_devotional_image_remote.yml` currently uses `OPENAI_API_KEY` for both devotional image generation and the daily novena step before syncing outputs to OneDrive.
+- `.github/workflows/daily_novena_prayer.yml` is intentionally disabled, and the legacy page-audio contract matrix is archived under `config/legacy/page_audio/`.
+- `jobs/notion/generate_page_audio.py` still contains the active Morning Prayer assembly logic and defaults its library root to `OneDrive\Praylist Audio\Playlist Audio`.
+- Current TTS defaults across page-audio and novena paths are still OpenAI-first.
+- The repo can consume RSS-backed sources through builders such as `rss_audio_v1`, but repo inspection did not show an existing Morning Prayer RSS publishing path.
+- Intention handling exists today in two partial forms:
+- random/monthly intention fragment support inside `jobs/notion/generate_page_audio.py`
+- Notion petition distribution helpers inside `jobs/playlist/refresh_playlist.py`
+- There is not yet a release-shaped contract system for custom Morning, Midday, Night, and Sunday intention publishing to OneDrive.
 
 ## What Already Exists
-- A durable Morning Prayer contract in `config/morning-prayer.json` with ordered resolvers, a stable key, and explicit page metadata.
-- A broad page-audio engine in `jobs/notion/generate_page_audio.py` with caching, ordered output assembly, and storage sync support.
-- A single-contract execution pattern already exists in both `PAGE_AUDIO_CONFIG_FILE` handling and `jobs/notion/generate_prayer.py`.
-- A legacy but still useful Spotify refresh runtime exists in `jobs/playlist/refresh_playlist.py`, including resolver logic, playlist recreation, and queue-building helpers.
-- Existing test coverage exists for the page-audio job, Morning Prayer runner, novena audio path, and Spotify refresh job.
-- Existing setup scripts already capture Spotify credentials and playlist IDs, which can inform a contract migration path.
-- Existing storage sync boundaries already exist for OneDrive via `rclone`, and GitHub Pages is already used elsewhere in the repo for public devotional assets.
+- A shipped Spotify contract model with explicit queue contracts and thin playlist definitions.
+- A working devotional image workflow with OneDrive and GitHub Pages delivery boundaries, provided OpenAI authentication succeeds.
+- Morning Prayer assembly and export logic in `jobs/notion/generate_page_audio.py`, plus prior shipped work that moved artifact sync to a single OneDrive boundary.
+- Existing OneDrive setup and upload patterns in local scripts and GitHub workflows.
+- Existing OpenAI-backed TTS settings, cache behavior, and tests that can anchor a provider migration.
+- Existing RSS ingestion patterns that can inform later RSS publication work.
+- Existing intention primitives:
+- `random-intention` and `monthly_intention` fragment support in the page-audio runtime
+- `distribute_prayer_intentions(...)` in the Spotify runtime as a useful Notion-selection reference
 
 ## Sequencing Principles
-- Restore Spotify sync first because it is already disabled and has the clearest user-visible regression.
-- Move playlist truth into repo contracts before re-enabling automation, so the restored system matches the user's new source-of-truth model.
-- Collapse audio to one Morning Prayer publishing path before launching a public podcast, so file naming, metadata, cache keys, and workflow ownership stabilize around one product.
-- Move TTS to ElevenLabs before the public podcast launch, so the first public feed is built on the intended voice stack rather than an interim engine.
-- Keep facts separate from inference during the refactor: repo contracts should define what the system intends to publish, while Notion should remain the slim content source rather than the contract registry.
-- Prefer temporary fallback layers only where they reduce migration risk; avoid preserving two permanent control planes.
+- Decouple first so the image and novena jobs no longer share a single pipeline failure domain.
+- Move shared logic into reusable helpers, but keep each job entrypoint and pipeline independent.
+- Keep shipped work shipped: the completed Spotify sync milestone stays visible in `Recent Releases`, not as a future milestone.
+- Unblock broken daily jobs before adding new delivery surfaces.
+- Treat the OpenAI image failure as an operational recovery first and only widen into code/debug work if a fresh credential does not restore execution.
+- Fix Morning Prayer with artifact integrity first and OneDrive sync second so later TTS and RSS work build on a proven delivery boundary.
+- Do not switch TTS providers while Morning Prayer delivery is still unstable; otherwise provider changes could mask underlying pipeline bugs.
+- Add RSS only after the base Morning Prayer artifact and voice stack are stable enough to publish externally.
+- Add custom intention contracts last, because personalization should target stable distribution surfaces instead of becoming part of the core recovery path.
 
 ## Release Overview
-- Release 1: Spotify Contract Sync Recovery
-  Restore Morning, Midday, and Night Spotify playlist updates through repo-owned contracts and the slimmed-down Notion queue.
-- Release 2: Morning Prayer Publishing Contract
-  Replace the many-contract daily audio surface with one canonical Morning Prayer publishing path and a storage-ready artifact contract.
-- Release 3: ElevenLabs-First Audio Rendering
-  Make ElevenLabs the default synthesis engine for Morning Prayer publishing while preserving controlled fallback behavior.
-- Release 4: Podcast Publication And Runtime Cleanup
-  Publish Morning Prayer as a real podcast feed from storage and remove the deprecated audio contract surface from daily production.
+- Release 1: Novena And Image Decoupling
+  Split the devotional image and novena paths into separate pipelines and push any reusable logic into shared helpers.
+- Release 2: Devotional Image OpenAI Key Recovery
+  Restore the image workflow by fixing the OpenAI auth boundary so image jobs begin running again.
+- Release 3: Morning Prayer OneDrive-First Repair
+  Repair Morning Prayer generation and keep OneDrive as the first stable publish boundary.
+- Release 4: TTS Provider Migration
+  Switch Morning Prayer off the current OpenAI-first TTS path onto the next chosen provider once delivery is stable.
+- Release 5: RSS Publication Surface
+  Publish Morning Prayer through an RSS feed backed by the stabilized artifact and voice pipeline.
+- Release 6: Custom Intention Contracts
+  Add Morning, Midday, Night, and Sunday intention contracts that source personal intentions from Notion and publish them to OneDrive.
 
-## Release 1: Spotify Contract Sync Recovery
+## Release 1: Novena And Image Decoupling
 
 ### Goal
-- Restore daily Spotify playlist creation and updates for Morning, Midday, and Night using repo-owned contracts under `config/spotify/`.
+- Split the devotional image and daily novena jobs into separate pipelines so they can fail, retry, and ship independently.
 
 ### Scope
 - In scope:
-- Define a contract shape for playlist identity, playlist ID, ordering rules, and queue assembly inputs.
-- Add repo-owned contracts for Morning, Midday, and Night.
-- Update the Spotify refresh runtime to load playlist definitions from `config/spotify/` instead of requiring a separate Notion playlists database.
-- Keep the slimmed-down Notion database as the source for queue items and resolver metadata.
-- Re-enable the daily Spotify workflow and local runner once the contract path is ready.
-- Add regression coverage for contract loading, single-playlist runs, and the three canonical playlists.
+- Move any reusable code between the image and novena jobs into shared helpers.
+- Remove pipeline-level coupling so devotional image generation does not depend on the novena job running in the same workflow.
+- Create two distinct pipeline entrypoints or workflow paths, one for devotional images and one for daily novena generation.
+- Keep the existing shared liturgical and helper logic available to both jobs.
 - Explicitly deferred:
-- Podcast publishing.
-- ElevenLabs migration.
-- Deleting the legacy Spotify runtime before the contract path is proven.
+- Fixing the OpenAI secret boundary for image generation.
+- Morning Prayer publishing changes.
+- TTS-provider migration.
 
 ### Why This Release Now
-- The Spotify workflow is currently disabled, so there is no active sync path to preserve.
-- This is the smallest release that restores a broken user-facing capability while aligning the source of truth with the user's new operating model.
+- The two jobs currently share the same workflow job and several of the same inputs, so one failure can take down both outputs.
+- Decoupling reduces blast radius before we spend effort on secret rotation or pipeline fixes.
 
 ### Research Notes
-- `jobs/playlist/refresh_playlist.py` already contains resolver logic, playlist recreation, and Notion queue assembly.
-- The current runtime still expects `NOTION_PLAYLISTS_DATABASE_ID` or a legacy file-mode config path.
-- `config/spotify/` is absent today, so this release introduces a new contract boundary rather than extending an existing folder.
-- `scripts/setup_spotify.ps1` already captures Morning, Midday, and Night playlist IDs, which can help seed the initial repo contracts or migration tooling.
+- `jobs/novena/generate_devotional_image.py` imports shared constants and helpers from `jobs/novena/generate_daily_novena_prayer.py`.
+- `.github/workflows/daily_devotional_image_remote.yml` currently runs devotional image generation and novena generation in the same `calendar` job.
+- The local wrappers also mirror the image job directly rather than exposing a separate novena/image split for operators.
 
 ### Plan
-- Create a small contract schema and contract loader for Spotify playlists.
-- Reuse the existing Notion queue reading path where possible, but stop treating Notion playlists rows as the definition of which playlists exist.
-- Keep a short-lived compatibility path only if it materially reduces cutover risk.
-- Re-enable automation only after contract validation and a dry-run or targeted single-playlist test path exist.
+- Extract truly shared helper code into a common module where it can be imported by both jobs.
+- Create separate workflow jobs or workflow files so the image pipeline and novena pipeline can run independently.
+- Keep the behavior of each job the same at first, then tighten the boundaries once the split is stable.
 
 ### Features
-- Repo-owned Morning, Midday, and Night playlist contracts.
-- Contract-driven playlist ID and playlist naming rules.
-- Contract-driven queue assembly from the slimmed-down Notion source.
-- Reactivated daily and local Spotify refresh entrypoints.
+- Shared helper modules for common liturgical or Notion logic.
+- Independent devotional image pipeline.
+- Independent daily novena pipeline.
 
 ### Stories
-- As the maintainer, I want Morning, Midday, and Night playlist definitions versioned in git, so I do not have to keep a separate Notion config list alive.
-- As the maintainer, I want to rerun one playlist from its contract, so I can validate a fix without touching the other two playlists.
-- As a listener, I want the right time-of-day playlist to refresh daily, so Spotify reflects the current prayer rhythm again.
+- As the maintainer, I want image and novena jobs to be separate, so a failure in one does not block the other.
+- As the operator, I want reusable code in shared helpers, so common logic is maintained once instead of copied across jobs.
 
 ### Dependencies
-- Existing Spotify API credentials and refresh token.
-- The slimmed-down Notion queue schema remaining rich enough to determine playlist membership and order.
-- A decision on whether playlist IDs live directly in repo contracts or are injected at deploy time while contract keys remain stable.
+- The existing shared liturgical model and Notion helper code.
+- Workflow restructuring in GitHub Actions.
 
 ### Risks
-- The current Notion queue may still imply assumptions from the removed playlists database, which could force a thin compatibility adapter.
-- Hardcoding too much playlist behavior into code instead of contracts would recreate the same maintenance problem in a different place.
-- Re-enabling the workflow before contract validation could write the wrong queues into live Spotify playlists.
+- Over-sharing helpers could create a new shared-core bottleneck if we move too much logic together.
+- Splitting the workflows without cleaning up shared assumptions could create duplicate environment setup or drift.
+- If helper extraction is too aggressive, we could blur the boundaries again instead of clarifying them.
 
 ### Exit Criteria
-- `config/spotify/` contains contracts for Morning, Midday, and Night.
-- A local and CI path can update one selected playlist from its contract.
-- The daily workflow is re-enabled and updates all three playlists without depending on the old Notion playlists database.
+- The image pipeline and novena pipeline can run independently.
+- Shared logic lives in helper modules, not duplicated directly in the two job entrypoints.
+- A failure in one pipeline no longer requires the other pipeline to run in the same job.
 
-## Release 2: Morning Prayer Publishing Contract
+## Release 2: Devotional Image OpenAI Key Recovery
 
 ### Goal
-- Replace the current many-contract daily audio runtime with one canonical Morning Prayer publishing contract that produces a storage-ready daily artifact.
+- Get the devotional image workflow running again by restoring the OpenAI credential boundary used by the image and novena steps.
 
 ### Scope
 - In scope:
-- Define one Morning Prayer publishing contract that owns render metadata, output naming, storage destination intent, and publication metadata.
-- Narrow the daily production workflow so it builds one Morning Prayer artifact instead of fanning out across the current contract matrix.
-- Separate render concerns from publish concerns so the pipeline can produce a canonical audio file plus metadata package for storage.
-- Keep Notion page updates only where they still support the Morning Prayer product.
-- Treat the current non-Morning contracts as deprecated for daily production, while deciding whether any of them remain as manual-only tools.
+- Validate the current GitHub Actions `OPENAI_API_KEY` secret path used by `.github/workflows/daily_devotional_image_remote.yml`.
+- Rotate or replace the OpenAI key if the current secret is stale, revoked, or otherwise unusable.
+- Run one manual workflow dispatch to confirm image generation begins successfully again.
+- Confirm whether the same fix also restores the novena step that runs in the same workflow.
+- Add minimal operational notes or validation guidance if needed to keep the secret boundary understandable.
 - Explicitly deferred:
-- Public podcast RSS launch.
-- Final TTS-provider migration.
-- Full deletion of deprecated contracts before the Morning Prayer publish path is stable.
+- TTS-provider changes.
+- Morning Prayer publishing redesign.
+- RSS publication.
 
 ### Why This Release Now
-- The repo already has a working Morning Prayer contract and storage-oriented audio assembly path.
-- Public podcast publication should not sit on top of a daily runtime that still thinks many unrelated contracts are first-class products.
+- It is the next broken daily capability after the shipped Spotify recovery.
+- The user explicitly called this out as the first remaining roadmap item and believes it is likely a small key rotation.
 
 ### Research Notes
-- `config/morning-prayer.json` is already the active Morning Prayer contract.
-- `jobs/notion/generate_prayer.py` already demonstrates a Morning Prayer-first single-contract execution pattern, but it still hardcodes Morning Prayer internals.
-- `.github/workflows/daily_novena_prayer.yml` currently discovers all top-level `config/*.json` files and syncs merged artifacts to OneDrive.
-- Repo inspection did not show an existing podcast publishing subsystem, so this release should establish a clean publication artifact before feed generation.
+- `.github/workflows/daily_devotional_image_remote.yml` passes `OPENAI_API_KEY` into both `python jobs/novena/generate_devotional_image.py` and `python jobs/novena/generate_daily_novena_prayer.py`.
+- The workflow already has a working OneDrive sync and Pages publish path once generation succeeds.
+- Repo inspection supports the operational diagnosis that OpenAI auth is on the hot path, but does not by itself prove the failure is only a stale key.
 
 ### Plan
-- Define a publish-ready artifact contract for one daily Morning Prayer output.
-- Move the workflow boundary from "all configs are daily products" to "Morning Prayer is the daily published product."
-- Keep deprecated contracts available only where they still serve migration, QA, or backfill value.
-- Add tests around canonical artifact naming, metadata generation, and storage handoff.
+- Start with the smallest likely fix: validate or rotate the GitHub secret.
+- Re-run the workflow manually after the secret update.
+- If a fresh key still fails, widen the release into a focused auth/model/quota investigation instead of assuming the roadmap item is done.
 
 ### Features
-- One Morning Prayer publishing contract.
-- One canonical daily artifact package for Morning Prayer audio plus metadata.
-- A narrowed workflow that publishes one daily Morning Prayer output to storage.
-- Clear deprecation status for non-Morning daily audio contracts.
+- Restored OpenAI credential path for devotional image generation.
+- Manual workflow verification after credential update.
+- Clear separation between "secret problem" and "code problem" in operator guidance.
 
 ### Stories
-- As the maintainer, I want one canonical Morning Prayer publish job, so I know exactly which output becomes the daily deliverable.
-- As the maintainer, I want the daily artifact to land in storage with stable metadata, so later podcast publishing does not need to reverse-engineer filenames.
-- As a collaborator, I want deprecated contracts called out clearly, so we stop treating old page-audio outputs as active daily products.
+- As the maintainer, I want image jobs to start again after updating the OpenAI secret, so the devotional pipeline resumes without a larger refactor.
+- As the operator, I want to know whether the failure is only a stale key or something deeper, so I can scope the next action correctly.
 
 ### Dependencies
-- Release 1 is not a hard technical dependency, but both releases should agree on storage naming, workflow conventions, and contract patterns.
-- A decision on whether OneDrive remains the first storage target or becomes a staging destination behind a more generic publisher boundary.
+- GitHub Actions secret access for `OPENAI_API_KEY`.
+- A valid OpenAI project/account with access to the configured image and prompt models.
 
 ### Risks
-- `jobs/notion/generate_page_audio.py` currently mixes generic page-audio logic with Morning Prayer-specific behavior, so narrowing the runtime may expose hidden coupling.
-- If deprecated contracts remain half-active, the repo could still feel like it has two daily production surfaces.
-- Overcoupling Notion page updates to publication could make the storage/podcast boundary harder to stabilize.
+- The failure may not be only a secret rotation issue; quota, billing, or model-access changes could look similar.
+- The same secret is used by both image and novena steps in the workflow, so a partial fix may still leave one stage failing.
+- A purely operational fix can drift again later if secret ownership and rotation expectations stay undocumented.
 
 ### Exit Criteria
-- Daily production builds exactly one Morning Prayer artifact package.
-- The artifact package is uploaded to storage with stable naming and metadata.
-- The current contract matrix is no longer the active daily production path.
+- A manual or scheduled run of `.github/workflows/daily_devotional_image_remote.yml` reaches image generation successfully with a valid OpenAI secret.
+- The workflow no longer fails at startup because of the OpenAI credential boundary.
+- The maintainer has evidence showing whether the novena step also recovered or still needs separate follow-up.
 
-## Release 3: ElevenLabs-First Audio Rendering
+## Release 3: Morning Prayer OneDrive-First Repair
 
 ### Goal
-- Make ElevenLabs the primary TTS provider for Morning Prayer publishing while keeping OpenAI only as a managed fallback.
+- Fix Morning Prayer generation and prove it lands correctly in OneDrive before taking on RSS publishing.
 
 ### Scope
 - In scope:
-- Introduce provider-aware TTS configuration for the Morning Prayer publishing path.
-- Add an ElevenLabs adapter and provider-aware cache/render hashing.
-- Move the Morning Prayer contract and publishing workflow to ElevenLabs-first defaults.
-- Keep an explicit fallback path to OpenAI during rollout and quota incidents.
-- Update tests, env docs, and operational configuration for the new provider.
+- Repair Morning Prayer generation, assembly, or contract issues that currently block the desired daily output.
+- Keep OneDrive as the first publish boundary for Morning Prayer artifacts.
+- Validate artifact contents before blaming OneDrive sync when something is missing or malformed.
+- Keep fail-closed behavior so broken generation does not silently publish partial outputs.
+- Decide the single active daily Morning Prayer path the repo should trust while the legacy matrix remains discontinued.
 - Explicitly deferred:
-- Broad provider migration for unrelated jobs that no longer belong in the narrowed daily production path.
-- Public podcast launch until render quality, cost, and operational behavior are stable.
+- RSS feed generation.
+- Broad public-hosting decisions beyond the OneDrive-first boundary.
+- TTS-provider migration until the current Morning Prayer path is stable.
 
 ### Why This Release Now
-- The TTS provider affects audio character, cache identity, cost, and operational reliability.
-- Moving providers before the public podcast launch avoids publishing a feed on one engine and then immediately changing the voice stack underneath listeners.
+- The user wants Morning Prayer fixed before the TTS switch and before RSS.
+- The repo already has OneDrive-oriented artifact patterns, so this is the natural place to stabilize Morning Prayer delivery first.
 
 ### Research Notes
-- Current defaults in `jobs/notion/generate_page_audio.py`, `jobs/notion/generate_prayer.py`, `jobs/novena/generate_daily_novena_prayer.py`, `.env.example`, and many configs still point to `gpt-4o-mini-tts`.
-- Existing tests already validate TTS settings, cache keys, and fragment rendering, which creates a good baseline for provider-aware coverage.
-- The repo does not yet expose a provider abstraction; the current code assumes OpenAI-style model and voice settings.
+- `jobs/notion/generate_page_audio.py` still owns Morning Prayer assembly behavior and exports against the playlist-audio OneDrive root.
+- `docs/releases/0.1.3.0-prayer-output-divergence.md` documents the recent "artifact first, OneDrive second" debugging lesson.
+- `.github/workflows/daily_novena_prayer.yml` is disabled, so the roadmap should assume Morning Prayer needs one clear supported execution path rather than the old legacy matrix.
 
 ### Plan
-- Introduce a provider boundary rather than swapping string constants in place.
-- Keep the first provider migration scoped to the Morning Prayer publishing path.
-- Treat cache keys, render hashes, and failure modes as first-class migration work, not cleanup.
-- Validate the new voice path before making it the only production route.
+- Establish the single Morning Prayer generation path the team wants to keep.
+- Validate generated artifacts locally or in CI before treating sync as the root cause.
+- Keep OneDrive as the first trusted destination once artifact integrity is proven.
+- Delay broader publishing work until the OneDrive boundary is reliable again.
 
 ### Features
-- ElevenLabs provider integration for Morning Prayer publishing.
-- Provider-aware TTS settings and cache keys.
-- OpenAI fallback for controlled failover.
-- Updated tests and env documentation for provider selection.
+- Stable Morning Prayer daily artifact generation.
+- OneDrive-first Morning Prayer publish boundary.
+- Clear validation flow that distinguishes generation failures from sync failures.
 
 ### Stories
-- As the maintainer, I want the Morning Prayer publishing contract to target an ElevenLabs voice, so the daily audio matches the intended voice quality.
-- As the operator, I want a controlled fallback provider, so one outage or quota issue does not block daily publishing.
-- As a listener, I want daily episodes to sound consistent once the public podcast launches.
+- As the maintainer, I want Morning Prayer fixed and landing in OneDrive first, so I can trust the daily output before adding more distribution layers.
+- As an operator, I want artifact-level validation before sync, so debugging does not get stuck on the wrong boundary.
 
 ### Dependencies
-- Release 2's single Morning Prayer publishing contract.
-- ElevenLabs credentials, selected voice IDs, and cost/usage limits.
+- A working current OpenAI auth path while Morning Prayer is still on the existing TTS stack.
+- The shipped OneDrive artifact fan-in and sync patterns already documented in earlier release artifacts.
 
 ### Risks
-- Provider changes can invalidate caches and alter audio duration, which may affect metadata, upload timing, or downstream episode expectations.
-- A weak fallback design could hide production regressions instead of surfacing them clearly.
-- If Morning Prayer still relies on shared novena or fragment audio, those pieces must either migrate with it or stay compatible with the new provider boundary.
+- Morning Prayer still sits inside a broader page-audio runtime, so hidden coupling may surface when narrowing or stabilizing its path.
+- If the repo keeps multiple half-active Morning Prayer entrypoints, operators may still be unsure which path is authoritative.
+- Sync debugging can waste time if artifact integrity is not proven first.
 
 ### Exit Criteria
-- Morning Prayer publishing renders through ElevenLabs in the normal path.
-- Cache keys and regression tests are provider-aware.
-- The pipeline can fail over intentionally when ElevenLabs is unavailable.
+- Morning Prayer can be generated through one clear supported path.
+- The generated artifact is validated before sync.
+- OneDrive receives the expected Morning Prayer output from that validated artifact path.
 
-## Release 4: Podcast Publication And Runtime Cleanup
+## Release 4: TTS Provider Migration
 
 ### Goal
-- Publish Morning Prayer as a storage-backed podcast and remove the deprecated daily audio contract surface from active production.
+- Move Morning Prayer off the current OpenAI-first TTS path onto the next chosen provider after delivery is stable.
 
 ### Scope
 - In scope:
-- Build or integrate a podcast feed generation step that turns the Morning Prayer artifact package into a public RSS feed.
-- Publish feed metadata and episode assets from a stable storage/public-hosting boundary.
-- Decide which storage target is authoritative for public podcast delivery.
-- Remove deprecated daily audio workflows and contract paths that no longer serve the Morning Prayer product.
-- Update docs so the repo clearly describes the new Spotify sync surface and the new Morning Prayer podcast surface.
+- Introduce a provider-aware TTS boundary for the Morning Prayer path.
+- Migrate defaults, cache behavior, and render metadata away from assuming an OpenAI-only TTS model.
+- Keep a controlled fallback during rollout if the new provider strategy requires one.
+- Update tests, docs, and operational setup for the new provider.
 - Explicitly deferred:
-- Re-expanding the daily production runtime to other prayer families.
-- Broad redesign of unrelated devotional image infrastructure unless it becomes part of the chosen public hosting path.
+- RSS launch until the new voice path is stable.
+- Broad migration of unrelated legacy jobs that are no longer part of the core Morning Prayer publish surface.
 
 ### Why This Release Now
-- Public podcast publishing should come after the artifact contract and TTS stack are stable.
-- Cleanup belongs after the new path is proven, so the repo does not lose useful migration or rollback tools too early.
+- Provider migration changes voice quality, cache identity, and operational risk.
+- The user wants this after Morning Prayer is fixed, which is the right order because pipeline and delivery bugs should be isolated before the voice stack changes.
 
 ### Research Notes
-- The repo currently consumes podcast/RSS feeds but does not yet generate one for publication.
-- OneDrive sync exists for private or managed storage, while GitHub Pages is already used for some public devotional assets.
-- It is still unknown which public hosting boundary is best for a podcast feed and audio enclosures; that decision should be validated during this release rather than assumed upfront.
+- Current defaults across page-audio and novena paths remain OpenAI-first.
+- The prior roadmap assumed ElevenLabs as the next provider, but the current user request only says "switch TTS providers."
+- Existing tests and configs already give this release a concrete migration surface even before the final provider is locked.
 
 ### Plan
-- Use the Morning Prayer artifact package as the sole input to feed generation.
-- Choose one public publication boundary and document it clearly.
-- Keep feed metadata stable enough that podcast clients and directories do not treat each rollout as a new show.
-- Remove deprecated daily-runtime surfaces only after the podcast path is proven end to end.
+- Keep the release provider-aware in roadmap form.
+- Lock the exact destination provider during `/plan-astack`.
+- Treat cache keys, render hashes, and fallback behavior as first-class migration work, not cleanup.
 
 ### Features
-- Public Morning Prayer podcast RSS generation.
-- Storage-backed episode publishing.
-- Stable show metadata and episode metadata.
-- Removal or archival of deprecated daily audio contract workflows.
+- Provider-aware Morning Prayer TTS configuration.
+- Updated cache and render identity for the new provider.
+- Controlled rollback or fallback behavior during migration.
 
 ### Stories
-- As a listener, I want to subscribe to Morning Prayer as a podcast, so each day's episode arrives through a normal podcast client.
-- As the maintainer, I want the feed to publish from the same daily artifact package, so storage and podcast delivery stay in sync.
-- As a collaborator, I want the deprecated audio contract surface removed from daily production, so the repo's active runtime matches the actual product.
+- As the maintainer, I want Morning Prayer to render through the new TTS provider, so the voice stack matches the intended product direction.
+- As the operator, I want provider-aware fallbacks and logging, so a provider outage does not turn into silent broken publishing.
 
 ### Dependencies
-- Release 2's canonical Morning Prayer artifact package.
-- Release 3's stable ElevenLabs-first render path.
-- A validated public hosting strategy for RSS and media URLs.
+- Release 2's stable Morning Prayer generation and OneDrive delivery path.
+- Credentials and operational limits for the selected replacement TTS provider.
 
 ### Risks
-- A storage target that works for private sync may not be suitable for podcast clients, enclosure URLs, or long-term public hosting.
-- Feed GUIDs, episode slugs, or metadata churn could create duplicate or broken podcast entries.
-- Cleanup that happens too early could remove useful fallback tools before public publishing has baked long enough.
+- The replacement provider has not yet been explicitly locked in this revised roadmap.
+- Voice changes can alter duration, cache keys, and downstream publishing assumptions.
+- A weak fallback strategy could hide regressions instead of surfacing them clearly.
 
 ### Exit Criteria
-- A public Morning Prayer RSS feed is generated from the daily artifact package.
-- Podcast clients can fetch the feed and today's episode media URL successfully.
-- Deprecated daily audio contract workflows are removed or explicitly archived.
+- Morning Prayer renders through the chosen non-default provider in the normal path.
+- Cache behavior and tests are provider-aware.
+- Operators can deliberately validate fallback or rollback behavior if needed.
+
+## Release 5: RSS Publication Surface
+
+### Goal
+- Publish Morning Prayer through an RSS feed once artifact generation and TTS are stable.
+
+### Scope
+- In scope:
+- Define how a Morning Prayer artifact becomes an RSS item with durable metadata and media URLs.
+- Add feed-generation logic and stable episode metadata.
+- Choose the public-hosting boundary for RSS XML and media enclosures.
+- Keep Morning Prayer as the first RSS product rather than reopening the broader legacy page-audio surface.
+- Explicitly deferred:
+- Re-expanding RSS publication to every older prayer family.
+- Personal intention contract publishing, which stays sequenced after base RSS exists.
+
+### Why This Release Now
+- The user wants RSS after the TTS-provider switch.
+- RSS is safer once the artifact contract and voice stack are already stable enough to publish outside OneDrive-only workflows.
+
+### Research Notes
+- The repo has RSS ingestion builders but repo inspection did not show an existing Morning Prayer RSS publication path.
+- OneDrive and GitHub Pages both already exist in the repo as delivery mechanisms, but neither is yet declared the canonical RSS publication host.
+
+### Plan
+- Reuse the stabilized Morning Prayer artifact package from Releases 3 and 4.
+- Keep feed identity stable enough that podcast clients do not treat each rollout as a new show.
+- Choose one hosting boundary deliberately instead of mixing OneDrive links, Pages assets, and ad hoc storage.
+
+### Features
+- Morning Prayer RSS feed generation.
+- Stable episode metadata and enclosure URLs.
+- A documented hosting boundary for feed and media delivery.
+
+### Stories
+- As a listener, I want Morning Prayer available through RSS, so I can receive the daily output in a standard podcast client.
+- As the maintainer, I want RSS to publish from the same stable artifact path, so OneDrive-first delivery and public feed delivery stay aligned.
+
+### Dependencies
+- Release 2's stable Morning Prayer artifact.
+- Release 3's stable TTS-provider path.
+- A validated public-hosting decision for RSS and media URLs.
+
+### Risks
+- The repo still needs to choose which hosting surface should be authoritative for RSS and audio enclosures.
+- Metadata churn could create duplicate or broken podcast entries.
+- Publishing too early could expose a feed before the underlying artifact contract is stable enough for outside consumption.
+
+### Exit Criteria
+- A valid Morning Prayer RSS feed is generated from the stabilized artifact path.
+- Feed metadata and enclosure URLs are stable and fetchable.
+- The team has one declared publication boundary for the feed.
+
+## Release 6: Custom Intention Contracts
+
+### Goal
+- Add Morning, Midday, Night, and Sunday intention contracts that source personal intentions from Notion and publish them to OneDrive.
+
+### Scope
+- In scope:
+- Define a contract layer for custom time-of-day intention outputs.
+- Pull personal intentions from Notion using a stable mapping instead of ad hoc manual copy.
+- Publish the resulting Morning, Midday, Night, and Sunday intention outputs to OneDrive.
+- Reuse existing intention primitives where they help, but formalize them into durable contracts rather than keeping them as scattered helpers.
+- Explicitly deferred:
+- Reworking Spotify sync again unless a later plan proves these contracts should also affect Spotify outputs.
+- Broad personalization beyond the four requested time-of-day surfaces.
+
+### Why This Release Now
+- The user wants this after RSS.
+- Personalization is more valuable once the base delivery surfaces are already stable; otherwise it adds data-shape and privacy complexity to the core recovery work.
+
+### Research Notes
+- `jobs/notion/generate_page_audio.py` already contains `random-intention` and `monthly_intention` concepts that may be reusable.
+- `jobs/playlist/refresh_playlist.py` already has `distribute_prayer_intentions(...)`, which is not the target release shape but does show an existing Notion-selection pattern.
+- There is not yet a contract-first OneDrive publishing layer for custom Morning/Midday/Night/Sunday intention outputs.
+
+### Plan
+- Define the contract boundary first: what each time-of-day output is called, how it maps to Notion data, and what gets published to OneDrive.
+- Reuse existing selection and fragment ideas where useful, but keep the new release explicit and contract-driven.
+- Protect privacy and publication boundaries before treating personal intentions as routine output artifacts.
+
+### Features
+- Morning intention contract.
+- Midday intention contract.
+- Night intention contract.
+- Sunday intention contract.
+- Notion-sourced personal intention selection and OneDrive publishing.
+
+### Stories
+- As the maintainer, I want personal intentions from Notion turned into time-of-day contracts, so Morning, Midday, Night, and Sunday outputs feel personal and repeatable.
+- As the operator, I want those intention outputs published to OneDrive from one consistent contract surface, so the workflow is inspectable and maintainable.
+
+### Dependencies
+- Stable OneDrive publishing conventions from Release 2.
+- A clear Notion schema for personal intentions.
+- Agreement on what the published OneDrive artifact looks like for each time-of-day contract.
+
+### Risks
+- Personal-intention data can create privacy and publication-boundary concerns if OneDrive destinations are broader than intended.
+- If Notion schema or property names drift, the contract layer could become brittle.
+- Without a clear contract shape, the work could sprawl into a partial redesign of Morning Prayer, playlists, and RSS all at once.
+
+### Exit Criteria
+- The repo has explicit Morning, Midday, Night, and Sunday intention contracts.
+- Those contracts can resolve personal intentions from Notion.
+- The resulting outputs are published to OneDrive through one documented path.
 
 ## Cross-Cutting Risks
-- Source-of-truth sprawl could return if playlist identity, Morning Prayer publish metadata, TTS settings, and storage metadata end up split across repo contracts, Notion, and ad hoc env vars.
-- The current code still mixes generic page-audio behavior with Morning Prayer-specific logic, which raises migration risk in Releases 2 and 3.
-- Storage choices that are fine for sync may not be safe or durable enough for public podcast hosting.
-- Provider migration can change audio timing, caches, and operational cost in ways that ripple into publication.
+- Operational credential issues could affect both devotional and Morning Prayer paths while OpenAI remains on the hot path before the TTS migration ships.
+- The repo still contains legacy and current workflow surfaces, so unclear ownership of "the real path" could slow Releases 3 through 5.
+- OneDrive is already a strong sync boundary, but it may or may not be the right final public-hosting boundary for RSS.
+- Source-of-truth sprawl could return if contracts, Notion properties, workflow secrets, and publish metadata are split across too many places without one clear owner per concern.
+- Personal-intention publishing adds privacy sensitivity that the earlier infrastructure releases do not have.
 
 ## Assumptions And Unknowns
-- Assumption: this roadmap should be detailed, because it is intended to guide a multi-step refactor rather than only rank ideas.
-- Fact from the user request: the slimmed-down Notion source still exists, but the old config lists do not.
-- Assumption: playlist identity and playlist IDs should move into repo-managed contracts under `config/spotify/`.
-- Unknown: whether playlist IDs should be committed directly in contracts or injected by environment while contract keys remain stable.
-- Unknown: whether OneDrive will stay as a staging/storage boundary, become the final publication host, or be replaced for public podcast delivery.
-- Unknown: whether any non-Morning audio contracts should survive as manual-only tools after the daily production surface is narrowed.
-- Unknown: whether Morning Prayer's daily artifact should continue embedding novena-related audio or treat that content differently in the podcast era.
+- Fact: Release 1 shipped in `0.1.3.1` on 2026-03-27, but the roadmap now introduces a new Release 1 for novena/image decoupling.
+- Fact: `.github/workflows/daily_devotional_image_remote.yml` uses `OPENAI_API_KEY` for both devotional image generation and daily novena generation.
+- Fact: `.github/workflows/daily_novena_prayer.yml` is intentionally disabled.
+- Fact: `jobs/notion/generate_page_audio.py` still uses the playlist-audio OneDrive library boundary and still assumes OpenAI on the current TTS path.
+- Fact: the repo has RSS ingestion behavior, but no confirmed Morning Prayer RSS publication path yet.
+- Assumption: the immediate devotional image failure is likely recoverable through OpenAI key rotation or replacement rather than a deeper code change.
+- Assumption: OneDrive should remain the first publish boundary for Morning Prayer before RSS is added.
+- Unknown: the exact replacement TTS provider to be locked during Release 4 planning.
+- Unknown: the final hosting boundary for RSS XML and media URLs.
+- Unknown: the final artifact format for custom intention contracts published to OneDrive.
 
 ## Recommended Next Step
 - Move Release 1 into `/plan-astack` first.
-- It is the clearest broken capability, it matches the user's stated priority order, and it creates the repo-owned contract pattern that the later Morning Prayer publishing work can reuse.
+- It is the cleanest boundary change, it reduces pipeline blast radius, and it will make the later image secret recovery easier to validate in isolation.
