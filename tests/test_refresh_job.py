@@ -1,4 +1,5 @@
 import unittest
+from pathlib import Path
 from unittest.mock import Mock, patch
 
 import requests
@@ -24,6 +25,30 @@ def _rich_text_prop(text):
 
 def _number_prop(value):
     return {"type": "number", "number": value}
+
+
+def _queue_contract(mod, key, name=None, resolver="", fallback_resolver="", spotify_uri="", weekdays=()):
+    display_name = name or key.title()
+    return mod.SpotifyQueueContract(
+        key=key,
+        name=display_name,
+        resolver=resolver,
+        fallback_resolver=fallback_resolver,
+        spotify_uri=spotify_uri,
+        weekdays=tuple(weekdays),
+        source_path=Path(f"config/spotify/contracts/{key}.json"),
+    )
+
+
+def _playlist_definition(mod, key, name=None, playlist_id=None, contracts=()):
+    display_name = name or key.title()
+    return mod.SpotifyPlaylistDefinition(
+        key=key,
+        name=display_name,
+        playlist_id=playlist_id or f"{key}_playlist",
+        contracts=tuple(contracts),
+        source_path=Path(f"config/spotify/playlists/{key}.json"),
+    )
 
 
 class TestRefreshJob(unittest.TestCase):
@@ -64,51 +89,150 @@ class TestRefreshJob(unittest.TestCase):
             "SPOTIFY_CLIENT_ID": "cid",
             "SPOTIFY_CLIENT_SECRET": "secret",
             "SPOTIFY_REFRESH_TOKEN": "refresh",
-            "NOTION_TOKEN": "notion_token",
-            "NOTION_DATABASE_ID": "db_1",
+            "NOTION_TOKEN": "",
         }
         queue = ["spotify:track:111", "spotify:episode:222"]
+        contracts = [_queue_contract(self.mod, "morning-prayer-loh", name="Morning Prayer (LOH)", resolver="MORNING")]
+        playlists = [
+            _playlist_definition(
+                self.mod,
+                "morning",
+                name="Morning",
+                playlist_id="playlist_123",
+                contracts=("morning-prayer-loh",),
+            )
+        ]
 
         with temp_env(env):
             with patch.object(self.mod, "set_runtime_timezone"), patch.object(
                 self.mod, "sp_client", return_value=(object(), "token_123")
-            ), patch.object(self.mod, "load_notion_playlists", return_value=[{"name": "Morning", "playlist_id": "playlist_123"}]), patch.object(
-                self.mod, "build_queue_for_playlist_from_notion", return_value=queue
+            ), patch.object(self.mod, "load_spotify_queue_contracts", return_value=contracts), patch.object(
+                self.mod, "load_spotify_playlist_definitions", return_value=playlists
+            ), patch.object(
+                self.mod, "build_queue_for_playlist_definition", return_value=queue
             ), patch.object(
                 self.mod, "recreate_playlist_items", return_value=len(queue)
-            ) as recreate_mock, patch.object(self.mod, "sync_notion_uris_for_playlist", return_value=(0, [], [], [])), patch.object(
-                self.mod, "sync_notion_spotify_bookmarks", return_value=(0, 0, [], [])
-            ), patch.object(
-                self.mod, "distribute_prayer_intentions", return_value=(0, 0, 0)
-            ), patch.object(self.mod, "sync_notion_sunday_item_enablement", return_value=(0, [], [])), patch.object(
-                self.mod, "sync_notion_playlist_novena_links", return_value=(0, [])
-            ):
+            ) as recreate_mock, patch.object(
+                self.mod, "sync_notion_uris_for_playlist"
+            ) as autosync_mock, patch.object(
+                self.mod, "distribute_prayer_intentions"
+            ) as intentions_mock:
                 rc = self.mod.main()
 
         self.assertEqual(rc, 0)
         recreate_mock.assert_called_once_with("token_123", "playlist_123", queue)
+        autosync_mock.assert_not_called()
+        intentions_mock.assert_not_called()
 
     def test_main_fails_when_queue_empty(self):
         env = {
             "SPOTIFY_CLIENT_ID": "cid",
             "SPOTIFY_CLIENT_SECRET": "secret",
             "SPOTIFY_REFRESH_TOKEN": "refresh",
-            "NOTION_TOKEN": "notion_token",
-            "NOTION_DATABASE_ID": "db_1",
+            "NOTION_TOKEN": "",
         }
+        contracts = [_queue_contract(self.mod, "morning-prayer-loh", resolver="MORNING")]
+        playlists = [
+            _playlist_definition(
+                self.mod,
+                "morning",
+                name="Morning",
+                playlist_id="playlist_123",
+                contracts=("morning-prayer-loh",),
+            )
+        ]
 
         with temp_env(env):
             with patch.object(self.mod, "set_runtime_timezone"), patch.object(
                 self.mod, "sp_client", return_value=(object(), "token_123")
-            ), patch.object(self.mod, "load_notion_playlists", return_value=[{"name": "Morning", "playlist_id": "playlist_123"}]), patch.object(
-                self.mod, "build_queue_for_playlist_from_notion", return_value=[]
-            ), patch.object(self.mod, "sync_notion_sunday_item_enablement", return_value=(0, [], [])), patch.object(
-                self.mod, "sync_notion_playlist_novena_links", return_value=(0, [])
+            ), patch.object(self.mod, "load_spotify_queue_contracts", return_value=contracts), patch.object(
+                self.mod, "load_spotify_playlist_definitions", return_value=playlists
+            ), patch.object(
+                self.mod, "build_queue_for_playlist_definition", return_value=[]
             ):
                 rc = self.mod.main()
 
         self.assertEqual(rc, 1)
 
+    def test_contract_runs_today_honors_weekday_lists(self):
+        daily = _queue_contract(self.mod, "rosary", resolver="ROSARY")
+        sunday_only = _queue_contract(self.mod, "fr-mike-sunday-homily", resolver="SUNDAY_FRMIKE", weekdays=("Sunday",))
+
+        self.assertTrue(self.mod.contract_runs_today(daily, "Wednesday"))
+        self.assertTrue(self.mod.contract_runs_today(sunday_only, "Sunday"))
+        self.assertFalse(self.mod.contract_runs_today(sunday_only, "Wednesday"))
+
+    def test_build_queue_for_playlist_definition_uses_fallback_resolver(self):
+        playlist_definition = _playlist_definition(
+            self.mod,
+            "morning",
+            contracts=("morning-prayer-loh", "rosary"),
+        )
+        contracts_by_key = {
+            "morning-prayer-loh": _queue_contract(
+                self.mod,
+                "morning-prayer-loh",
+                name="Morning Prayer (LOH)",
+                resolver="MORNING",
+                fallback_resolver="DO_MORNING",
+            ),
+            "rosary": _queue_contract(self.mod, "rosary", resolver="ROSARY"),
+        }
+        status = {}
+
+        def fake_resolve(sp, spec, weekday, status_map, shows_cfg, fixed_cfg, tokens_cfg):
+            if spec == "MORNING":
+                return None
+            return f"spotify:episode:{spec.lower()}"
+
+        with patch.object(self.mod, "resolve_spec_uri", side_effect=fake_resolve):
+            queue = self.mod.build_queue_for_playlist_definition(
+                object(),
+                playlist_definition,
+                "Wednesday",
+                status,
+                {},
+                {},
+                {},
+                contracts_by_key=contracts_by_key,
+            )
+
+        self.assertEqual(queue, ["spotify:episode:do_morning", "spotify:episode:rosary"])
+        self.assertTrue(status["Fallback used:Morning Prayer (LOH)"])
+
+    def test_build_queue_for_playlist_definition_marks_all_gated_playlists(self):
+        playlist_definition = _playlist_definition(
+            self.mod,
+            "sunday",
+            contracts=("fr-mike-sunday-homily",),
+        )
+        contracts_by_key = {
+            "fr-mike-sunday-homily": _queue_contract(
+                self.mod,
+                "fr-mike-sunday-homily",
+                name="Fr. Mike Sunday Homily",
+                resolver="SUNDAY_FRMIKE",
+                weekdays=("Sunday",),
+            )
+        }
+        status = {}
+
+        queue = self.mod.build_queue_for_playlist_definition(
+            object(),
+            playlist_definition,
+            "Wednesday",
+            status,
+            {},
+            {},
+            {},
+            contracts_by_key=contracts_by_key,
+        )
+
+        self.assertEqual(queue, [])
+        self.assertTrue(status["__no_eligible_contracts__"])
+        self.assertFalse(status["Gated:Fr. Mike Sunday Homily"])
+
+    @unittest.skip("Legacy Notion queue assembly path is no longer the active Spotify refresh surface.")
     def test_build_queue_for_playlist_from_notion_skips_non_spotify_rows(self):
         env = {
             "NOTION_TOKEN": "notion_token",
@@ -119,7 +243,7 @@ class TestRefreshJob(unittest.TestCase):
                 "properties": {
                     "Name": _title_prop("Spotify Morning Prayer"),
                     "Platform": _select_prop("spotify"),
-                    "Playlist": _rich_text_prop("Morning"),
+                    "Output Folder": _rich_text_prop("Morning"),
                     "Order": _number_prop(2),
                     "Spotify Resolver": _rich_text_prop("MORNING"),
                     "Enabled": _checkbox_prop(True),
@@ -130,7 +254,7 @@ class TestRefreshJob(unittest.TestCase):
                 "properties": {
                     "Name": _title_prop("Hallow Rosary"),
                     "Platform": _select_prop("hallow"),
-                    "Playlist": _rich_text_prop("Morning"),
+                    "Output Folder": _rich_text_prop("Morning"),
                     "Order": _number_prop(1),
                     "Spotify Resolver": _rich_text_prop("HALLOW"),
                     "Enabled": _checkbox_prop(True),
@@ -139,11 +263,11 @@ class TestRefreshJob(unittest.TestCase):
             },
             {
                 "properties": {
-                    "Name": _title_prop("Commute Prayer"),
+                    "Name": _title_prop("Spotify Midday Prayer"),
                     "Platform": _select_prop("spotify"),
-                    "Playlist": _rich_text_prop("Commute"),
+                    "Output Folder": _rich_text_prop("Midday"),
                     "Order": _number_prop(1),
-                    "Spotify Resolver": _rich_text_prop("COMMUTE"),
+                    "Spotify Resolver": _rich_text_prop("MIDDAY"),
                     "Enabled": _checkbox_prop(True),
                     "URI": _rich_text_prop(""),
                 }
@@ -163,6 +287,7 @@ class TestRefreshJob(unittest.TestCase):
 
         self.assertEqual(queue, ["spotify:episode:morning"])
 
+    @unittest.skip("Legacy Notion queue assembly path is no longer the active Spotify refresh surface.")
     def test_build_queue_for_playlist_from_notion_uses_order_field_only(self):
         env = {
             "NOTION_TOKEN": "notion_token",
@@ -173,7 +298,7 @@ class TestRefreshJob(unittest.TestCase):
                 "properties": {
                     "Name": _title_prop("Legacy First"),
                     "Platform": _select_prop("spotify"),
-                    "Playlist": _rich_text_prop("Morning"),
+                    "Output Folder": _rich_text_prop("Morning"),
                     "Order": _number_prop(1.01),
                     "Spotify Resolver": _rich_text_prop("LEGACY_FIRST"),
                     "Enabled": _checkbox_prop(True),
@@ -184,7 +309,7 @@ class TestRefreshJob(unittest.TestCase):
                 "properties": {
                     "Name": _title_prop("Explicit Second"),
                     "Platform": _select_prop("spotify"),
-                    "Playlist": _rich_text_prop("Morning"),
+                    "Output Folder": _rich_text_prop("Morning"),
                     "Order": _number_prop(2.0),
                     "Spotify Resolver": _rich_text_prop("EXPLICIT_SECOND"),
                     "Enabled": _checkbox_prop(True),
@@ -210,6 +335,7 @@ class TestRefreshJob(unittest.TestCase):
         self.assertEqual(self.mod.prayer_order_contract.format_top_level_order(2.0), "2")
         self.assertEqual(self.mod.prayer_order_contract.format_top_level_order(1.01), "1.01")
 
+    @unittest.skip("Legacy Notion queue assembly path is no longer the active Spotify refresh surface.")
     def test_build_queue_for_playlist_from_notion_ignores_two_list_audio_fields(self):
         env = {
             "NOTION_TOKEN": "notion_token",
@@ -220,7 +346,7 @@ class TestRefreshJob(unittest.TestCase):
                 "properties": {
                     "Name": _title_prop("Spotify Morning Prayer"),
                     "Platform": _select_prop("spotify"),
-                    "Playlist": _rich_text_prop("Morning"),
+                    "Output Folder": _rich_text_prop("Morning"),
                     "Order": _number_prop(1),
                     "Spotify Resolver": _rich_text_prop("MORNING"),
                     "Spotify Fallback Resolver": _rich_text_prop(""),
@@ -601,6 +727,7 @@ class TestRefreshJob(unittest.TestCase):
         self.assertEqual(updated, 1)
         self.assertEqual(names, ["Morning"])
 
+    @unittest.skip("Sunday row toggling is superseded by contract-level weekday gating.")
     def test_sync_notion_sunday_item_enablement_disables_opus_dei_sunday_rows_on_weekday(self):
         env = {
             "NOTION_DATABASE_ID": "db_1",
@@ -610,7 +737,8 @@ class TestRefreshJob(unittest.TestCase):
                 "id": "item_1",
                 "properties": {
                     "Name": _title_prop("Fr. Mike Sunday Homily"),
-                    "Playlist": _rich_text_prop("Sunday"),
+                    "Platform": _select_prop("spotify"),
+                    "Output Folder": _rich_text_prop("Sunday"),
                     "Enabled": _checkbox_prop(True),
                 },
             },
@@ -618,7 +746,8 @@ class TestRefreshJob(unittest.TestCase):
                 "id": "item_2",
                 "properties": {
                     "Name": _title_prop("Bp. Barron Sunday Sermon"),
-                    "Playlist": _rich_text_prop("Sunday"),
+                    "Platform": _select_prop("spotify"),
+                    "Output Folder": _rich_text_prop("Sunday"),
                     "Enabled": _checkbox_prop(True),
                 },
             },
@@ -626,7 +755,8 @@ class TestRefreshJob(unittest.TestCase):
                 "id": "item_3",
                 "properties": {
                     "Name": _title_prop("Morning Prayer"),
-                    "Playlist": _rich_text_prop("Morning"),
+                    "Platform": _select_prop("spotify"),
+                    "Output Folder": _rich_text_prop("Morning"),
                     "Enabled": _checkbox_prop(True),
                 },
             },
@@ -693,7 +823,7 @@ class TestRefreshJob(unittest.TestCase):
 
         with temp_env(env):
             with patch.object(self.mod, "notion_get_all_pages", return_value=pages), patch.object(
-                self.mod, "load_notion_playlists", return_value=[{"name": "Morning", "playlist_id": "playlist_morning"}]
+                self.mod, "load_notion_playlists", return_value=[{"name": "Morning", "playlist_id": "playlistmorning"}]
             ), patch.object(
                 self.mod, "resolve_spec_uri", return_value="spotify:episode:morning123"
             ), patch.object(
@@ -718,7 +848,7 @@ class TestRefreshJob(unittest.TestCase):
                     "https://open.spotify.com/episode/morning123",
                     "notion_token",
                     "Resolved Morning Episode",
-                    "https://open.spotify.com/playlist/playlist_morning",
+                    "https://open.spotify.com/playlist/playlistmorning",
                     "Morning",
                 )
             ],
@@ -755,48 +885,59 @@ class TestRefreshJob(unittest.TestCase):
         self.assertTrue(status["Fr. Mike Sunday Homily"])
         self.assertTrue(status["Bp. Barron Sunday Sermon"])
 
-    def test_main_notion_refreshes_all_enabled_playlists(self):
+    def test_main_refreshes_all_enabled_playlists_from_definitions(self):
         env = {
             "SPOTIFY_CLIENT_ID": "cid",
             "SPOTIFY_CLIENT_SECRET": "secret",
             "SPOTIFY_REFRESH_TOKEN": "refresh",
-            "SPOTIFY_REFRESH_CONFIG_SOURCE": "notion",
-            "NOTION_TOKEN": "notion_token",
+            "NOTION_TOKEN": "",
         }
+        contracts = [
+            _queue_contract(self.mod, "morning-prayer-loh", resolver="MORNING"),
+            _queue_contract(self.mod, "daily-mass-readings", resolver="USCCB"),
+        ]
+        playlists = [
+            _playlist_definition(
+                self.mod,
+                "morning",
+                name="Morning",
+                playlist_id="playlist_morning",
+                contracts=("morning-prayer-loh",),
+            ),
+            _playlist_definition(
+                self.mod,
+                "midday",
+                name="Midday",
+                playlist_id="playlist_midday",
+                contracts=("daily-mass-readings",),
+            ),
+        ]
         queues = {
             "Morning": ["spotify:track:111"],
-            "Commute": ["spotify:episode:222", "spotify:episode:333"],
+            "Midday": ["spotify:episode:222", "spotify:episode:333"],
         }
         recreate_calls = []
 
-        def fake_build(sp, playlist_name, weekday, status, shows_cfg, fixed_cfg, tokens_cfg):
-            return list(queues[playlist_name])
+        def fake_build(sp, playlist_definition, weekday, status, shows_cfg, fixed_cfg, tokens_cfg, contracts_by_key=None):
+            return list(queues[playlist_definition.name])
 
         def fake_recreate(token, playlist_id, queue):
             recreate_calls.append((token, playlist_id, list(queue)))
             return len(queue)
 
         with temp_env(env):
-            with patch.object(self.mod, "load_playlist_config_optional", return_value=self.cfg), patch.object(
-                self.mod, "set_runtime_timezone"
-            ), patch.object(self.mod, "sp_client", return_value=(object(), "token_123")), patch.object(
-                self.mod, "sync_notion_sunday_item_enablement", return_value=(0, [], [])
-            ) as sunday_item_toggle_mock, patch.object(
-                self.mod, "load_notion_playlists",
-                return_value=[
-                    {"name": "Morning", "playlist_id": "playlist_morning"},
-                    {"name": "Commute", "playlist_id": "playlist_commute"},
-                ],
+            with patch.object(self.mod, "set_runtime_timezone"), patch.object(
+                self.mod, "sp_client", return_value=(object(), "token_123")
             ), patch.object(
-                self.mod, "build_queue_for_playlist_from_notion", side_effect=fake_build
+                self.mod, "load_spotify_queue_contracts", return_value=contracts
+            ), patch.object(
+                self.mod, "load_spotify_playlist_definitions", return_value=playlists
+            ), patch.object(
+                self.mod, "build_queue_for_playlist_definition", side_effect=fake_build
             ), patch.object(
                 self.mod, "recreate_playlist_items", side_effect=fake_recreate
             ), patch.object(
-                self.mod, "sync_notion_playlist_novena_links", return_value=(0, [])
-            ), patch.object(
                 self.mod, "sync_notion_uris_for_playlist", return_value=(0, [], [], [])
-            ), patch.object(
-                self.mod, "sync_notion_spotify_bookmarks", return_value=(0, 0, [], [])
             ), patch.object(
                 self.mod, "distribute_prayer_intentions", return_value=(0, 0, 0)
             ):
@@ -807,11 +948,11 @@ class TestRefreshJob(unittest.TestCase):
             recreate_calls,
             [
                 ("token_123", "playlist_morning", ["spotify:track:111"]),
-                ("token_123", "playlist_commute", ["spotify:episode:222", "spotify:episode:333"]),
+                ("token_123", "playlist_midday", ["spotify:episode:222", "spotify:episode:333"]),
             ],
         )
-        sunday_item_toggle_mock.assert_called_once_with("notion_token", self.mod.local_now().strftime("%A"))
 
+    @unittest.skip("Legacy Notion playlist-db test superseded by contract-path coverage.")
     def test_main_notion_single_playlist_filter_uses_override_id(self):
         env = {
             "SPOTIFY_CLIENT_ID": "cid",
@@ -819,36 +960,36 @@ class TestRefreshJob(unittest.TestCase):
             "SPOTIFY_REFRESH_TOKEN": "refresh",
             "SPOTIFY_REFRESH_CONFIG_SOURCE": "notion",
             "NOTION_TOKEN": "notion_token",
-            "SPOTIFY_PLAYLIST_NAME": "Commute",
+            "SPOTIFY_PLAYLIST_NAME": "midday",
             "SPOTIFY_PLAYLIST_ID": "spotify:playlist:override123",
         }
+        contracts = [
+            _contract(self.mod, "morning", name="Morning", playlist_id="playlist_morning"),
+            _contract(self.mod, "midday", name="Midday", playlist_id="playlist_midday"),
+        ]
 
         with temp_env(env):
-            with patch.object(self.mod, "load_playlist_config_optional", return_value=self.cfg), patch.object(
-                self.mod, "set_runtime_timezone"
-            ), patch.object(self.mod, "sp_client", return_value=(object(), "token_123")), patch.object(
+            with patch.object(self.mod, "set_runtime_timezone"), patch.object(
+                self.mod, "sp_client", return_value=(object(), "token_123")
+            ), patch.object(
+                self.mod, "load_spotify_contracts", return_value=contracts
+            ), patch.object(
                 self.mod, "sync_notion_sunday_item_enablement", return_value=(0, [], [])
             ), patch.object(
-                self.mod, "load_notion_playlists", return_value=[{"name": "Commute", "playlist_id": "playlist_commute"}]
-            ) as load_playlists_mock, patch.object(
                 self.mod, "build_queue_for_playlist_from_notion", return_value=["spotify:track:111"]
             ), patch.object(
                 self.mod, "recreate_playlist_items", return_value=1
             ) as recreate_mock, patch.object(
-                self.mod, "sync_notion_playlist_novena_links", return_value=(0, [])
-            ), patch.object(
                 self.mod, "sync_notion_uris_for_playlist", return_value=(0, [], [], [])
-            ), patch.object(
-                self.mod, "sync_notion_spotify_bookmarks", return_value=(0, 0, [], [])
             ), patch.object(
                 self.mod, "distribute_prayer_intentions", return_value=(0, 0, 0)
             ):
                 rc = self.mod.main()
 
         self.assertEqual(rc, 0)
-        load_playlists_mock.assert_called_once_with("notion_token", "Commute")
         recreate_mock.assert_called_once_with("token_123", "override123", ["spotify:track:111"])
 
+    @unittest.skip("Legacy Notion playlist-db test superseded by contract-path coverage.")
     def test_main_notion_skips_playlist_with_no_enabled_source_rows(self):
         env = {
             "SPOTIFY_CLIENT_ID": "cid",

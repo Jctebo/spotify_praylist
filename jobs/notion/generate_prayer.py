@@ -15,7 +15,7 @@ from jobs.notion import generate_page_audio as page_audio
 
 PRAYER_CONFIG_FILE = "PRAYER_CONFIG_FILE"
 PRAYER_ROW_TITLE = "PRAYER_ROW_TITLE"
-DEFAULT_PRAYER_CONFIG_FILE = "config/morning-prayer.json"
+DEFAULT_PRAYER_CONFIG_FILE = "config/legacy/morning-prayer.json"
 
 
 def load_prayer_config_from_file() -> Dict[str, Any]:

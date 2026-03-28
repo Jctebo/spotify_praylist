@@ -2,14 +2,40 @@ name: Daily Spotify Playlist Refresh
 
 on:
   workflow_dispatch:
+    inputs:
+      spotify_playlist_name:
+        description: Optional playlist definition key or display name to refresh
+        required: false
+        type: string
   schedule:
     - cron: "5 8 * * *" # daily 02:05 CST / 03:05 CDT
 
 jobs:
   refresh:
-    if: ${{ false }}
+    if: ${{ github.event_name != 'schedule' || vars.SPOTIFY_REFRESH_SCHEDULE_ENABLED == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
-      - name: Disabled
-        run: echo "Daily Spotify playlist refresh is disabled in this branch."
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Refresh Spotify playlists
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
+          # Optional post-write Notion helpers; base Spotify refresh succeeds without these.
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          NOTION_DATABASE_NAME: ${{ vars.NOTION_DATABASE_NAME }}
+          JOB_UTC_OFFSET: ${{ vars.JOB_UTC_OFFSET }}
+          SPOTIFY_PLAYLIST_NAME: ${{ github.event.inputs.spotify_playlist_name }}
+        run: python jobs/playlist/refresh_playlist.py

@@ -1,0 +1,5 @@
+{
+  "key": "saint-of-the-day",
+  "name": "Saint of the Day",
+  "resolver": "SAINT_OF_DAY"
+}

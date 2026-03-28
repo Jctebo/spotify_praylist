@@ -77,7 +77,6 @@ function Get-QueryParamValue {
       }
     }
   } catch {
-    # Fall back to regex for non-URL pasted values.
     if ($Url -match "(?:^|[?&])$ParamName=([^&]+)") {
       return [uri]::UnescapeDataString($matches[1])
     }
@@ -176,8 +175,52 @@ function Get-RefreshToken {
   return $refreshToken
 }
 
+function Get-PlaylistDefinitionPath {
+  param(
+    [string]$Key
+  )
+
+  return (Join-Path $PSScriptRoot "..\config\spotify\playlists\$Key.json")
+}
+
+function Get-PlaylistDefinitionPlaylistId {
+  param(
+    [string]$Key,
+    [string]$Fallback
+  )
+
+  $path = Get-PlaylistDefinitionPath -Key $Key
+  if (Test-Path $path) {
+    try {
+      $contract = Get-Content -Raw $path | ConvertFrom-Json
+      $playlistId = "$($contract.playlist_id)".Trim()
+      if (-not [string]::IsNullOrWhiteSpace($playlistId)) {
+        return $playlistId
+      }
+    } catch {
+    }
+  }
+  return $Fallback
+}
+
+function Set-PlaylistDefinitionPlaylistId {
+  param(
+    [string]$Key,
+    [string]$PlaylistId
+  )
+
+  $path = Get-PlaylistDefinitionPath -Key $Key
+  if (-not (Test-Path $path)) {
+    throw "Spotify playlist definition file not found: $path"
+  }
+
+  $contract = Get-Content -Raw $path | ConvertFrom-Json
+  $contract.playlist_id = $PlaylistId
+  $contract | ConvertTo-Json -Depth 10 | Set-Content -Path $path -Encoding UTF8
+}
+
 Write-Host "Spotify Local Setup Wizard" -ForegroundColor Green
-Write-Host "This will set env vars for your current shell and optionally save for future shells." -ForegroundColor Green
+Write-Host "This sets Spotify credentials in your environment and updates the repo-owned playlist definitions." -ForegroundColor Green
 
 $clientId = if ($env:SPOTIFY_CLIENT_ID) {
   Read-WithDefault "SPOTIFY_CLIENT_ID" $env:SPOTIFY_CLIENT_ID
@@ -219,30 +262,33 @@ if ([string]::IsNullOrWhiteSpace($refreshToken)) {
   }
 }
 
-$morningId = Read-WithDefault "Morning playlist ID" "0sy9eBsySKuCppI0PxXRJN"
-$middayId = Read-WithDefault "Midday playlist ID" "4gQAaPAMiezBaDaoqK6sFQ"
-$nightId = Read-WithDefault "Night playlist ID" "1TAlNiKHMc41cT0fvkYxTD"
+$morningId = Read-WithDefault "Morning playlist ID (config/spotify/playlists/morning.json)" (Get-PlaylistDefinitionPlaylistId -Key "morning" -Fallback "0sy9eBsySKuCppI0PxXRJN")
+$middayId = Read-WithDefault "Midday playlist ID (config/spotify/playlists/midday.json)" (Get-PlaylistDefinitionPlaylistId -Key "midday" -Fallback "4gQAaPAMiezBaDaoqK6sFQ")
+$nightId = Read-WithDefault "Night playlist ID (config/spotify/playlists/night.json)" (Get-PlaylistDefinitionPlaylistId -Key "night" -Fallback "1TAlNiKHMc41cT0fvkYxTD")
+$sundayId = Read-WithDefault "Sunday playlist ID (config/spotify/playlists/sunday.json)" (Get-PlaylistDefinitionPlaylistId -Key "sunday" -Fallback "6J7xLMNK5tPqXY9HbgvZoM")
 
 $env:SPOTIFY_CLIENT_ID = $clientId
 $env:SPOTIFY_CLIENT_SECRET = $clientSecret
 $env:SPOTIFY_REFRESH_TOKEN = $refreshToken
 
-$env:SPOTIFY_PLAYLIST_ID_MORNING = $morningId
-$env:SPOTIFY_PLAYLIST_ID_MIDDAY = $middayId
-$env:SPOTIFY_PLAYLIST_ID_NIGHT = $nightId
+Set-PlaylistDefinitionPlaylistId -Key "morning" -PlaylistId $morningId
+Set-PlaylistDefinitionPlaylistId -Key "midday" -PlaylistId $middayId
+Set-PlaylistDefinitionPlaylistId -Key "night" -PlaylistId $nightId
+Set-PlaylistDefinitionPlaylistId -Key "sunday" -PlaylistId $sundayId
 
 Write-Host ""
 Write-Host "Session environment is set." -ForegroundColor Green
+Write-Host "Updated config/spotify/playlists/*.json with the current playlist ids." -ForegroundColor Green
 
-if (Read-YesNo "Save these values for future terminals (CurrentUser env)?" $true) {
+if (Read-YesNo "Save Spotify credentials for future terminals (CurrentUser env)?" $true) {
   [Environment]::SetEnvironmentVariable("SPOTIFY_CLIENT_ID", $clientId, "User")
   [Environment]::SetEnvironmentVariable("SPOTIFY_CLIENT_SECRET", $clientSecret, "User")
   [Environment]::SetEnvironmentVariable("SPOTIFY_REFRESH_TOKEN", $refreshToken, "User")
-  [Environment]::SetEnvironmentVariable("SPOTIFY_PLAYLIST_ID_MORNING", $morningId, "User")
-  [Environment]::SetEnvironmentVariable("SPOTIFY_PLAYLIST_ID_MIDDAY", $middayId, "User")
-  [Environment]::SetEnvironmentVariable("SPOTIFY_PLAYLIST_ID_NIGHT", $nightId, "User")
-  Write-Host "Saved to CurrentUser environment." -ForegroundColor Green
+  Write-Host "Saved Spotify credentials to CurrentUser environment." -ForegroundColor Green
 }
+
+Write-Host ""
+Write-Host "Playlist ids now live in config/spotify/playlists/*.json. Commit those files when they are correct." -ForegroundColor Cyan
 
 if (Read-YesNo "Run all playlists locally now?" $true) {
   $runLocalPath = Join-Path $PSScriptRoot "run_daily_refresh_local.ps1"
@@ -255,4 +301,4 @@ if (Read-YesNo "Run all playlists locally now?" $true) {
 
 Write-Host ""
 Write-Host "Done." -ForegroundColor Green
-Write-Host "For GitHub Actions, keep using repo Secrets for client id/secret/refresh token." -ForegroundColor Green
+Write-Host "For GitHub Actions, keep using repo secrets for Spotify credentials. Add Notion secrets only if you want optional post-write helpers." -ForegroundColor Green

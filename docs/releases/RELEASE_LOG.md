@@ -1,5 +1,25 @@
 # Release Log
 
+## [0.1.3.1] - 2026-03-27
+
+### Added
+- Added repo-owned Spotify queue contracts under `config/spotify/contracts/` and thin playlist definitions under `config/spotify/playlists/` for the Morning, Midday, Night, and Sunday playlists.
+- Added a dedicated Spotify contract loader plus regression coverage for contract validation, playlist-definition queue assembly, and selected-playlist refresh runs.
+
+### Changed
+- Reworked the Spotify refresh path to assemble queues from committed contract files with explicit resolver metadata, optional fallback resolvers, and contract-level weekday gating.
+- Updated the Spotify workflow, setup script, local runner, and README to document the contract-first refresh model and the corrected local module entrypoint.
+- Moved the discontinued root-level page-audio, Morning Prayer, Rosary, and Auxilium contracts into `config/legacy/` and repointed the archived page-audio defaults at those legacy paths.
+
+### Fixed
+- Fixed the local Spotify refresh script so manual runs execute `python -m jobs.playlist.refresh_playlist` successfully instead of failing on module imports.
+- Fixed the active Spotify contract titles and playlist membership to match the current live Opus Dei ordering.
+- Fixed the legacy automation surface by disabling the archived page-audio workflow jobs before ship.
+
+### Removed
+- Removed required Opus Dei `Output Folder` grouping and required `NOTION_TOKEN` dependence from the active Spotify playlist refresh path.
+- Removed legacy page-audio and prayer-generation test modules from the active test gate now that those jobs are discontinued.
+
 ## [0.1.3.0] - 2026-03-27
 
 ### Added

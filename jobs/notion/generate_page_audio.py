@@ -62,8 +62,8 @@ PAGE_AUDIO_LIBRARY_GROUP_PROPERTY = "PAGE_AUDIO_LIBRARY_GROUP_PROPERTY"
 PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS = "PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS"
 PAGE_AUDIO_FAIL_OPEN = "PAGE_AUDIO_FAIL_OPEN"
 
-DEFAULT_PAGE_AUDIO_CONFIG_FILE = "config/page_audio_config.json"
-DEFAULT_MORNING_PRAYER_CONTRACT_FILE = "config/morning-prayer.json"
+DEFAULT_PAGE_AUDIO_CONFIG_FILE = "config/legacy/page_audio_config.json"
+DEFAULT_MORNING_PRAYER_CONTRACT_FILE = "config/legacy/morning-prayer.json"
 DEFAULT_PAGE_AUDIO_CACHE_DIR = ".cache/page_audio"
 DEFAULT_PAGE_AUDIO_LIBRARY_RELATIVE = r"OneDrive\Praylist Audio\Playlist Audio"
 DEFAULT_PAGE_AUDIO_LIBRARY_FALLBACK = ".cache/page_audio_library"
@@ -225,7 +225,7 @@ RSS_MATCH_FIXED_TITLE = "fixed_title"
 DEFAULT_ROSARY_INTENTION_PROPERTY = "Intention"
 DEFAULT_ROSARY_MEDITATION_FRAGMENT_KEY = "rosary-decade-meditation-template"
 ROSARY_CONTRACT_FILE = "ROSARY_CONTRACT_FILE"
-DEFAULT_ROSARY_CONTRACT_FILE = "config/rosary.json"
+DEFAULT_ROSARY_CONTRACT_FILE = "config/legacy/rosary.json"
 ROSARY_CONTENT_DIR = "ROSARY_CONTENT_DIR"
 DEFAULT_ROSARY_CONTENT_DIR = "config/content/rosary"
 ROSARY_MYSTERY_KEYS = ("joyful", "sorrowful", "glorious", "luminous")
@@ -998,17 +998,9 @@ def load_page_audio_config_from_file() -> Dict[str, Any]:
             configs = page_audio_selected_contract_configs(config_path, payload)
             payload = normalize_page_audio_contract(payload)
     else:
-        page_audio_dir = ROOT / "config"
+        page_audio_dir = ROOT / "config" / "legacy" / "page_audio"
         if page_audio_dir.exists():
             for path in sorted(page_audio_dir.glob("*.json")):
-                if path.name in {
-                    "morning-prayer.json",
-                    "rosary.json",
-                    "page_audio_config.json",
-                    "playlist_config.json",
-                    "notion_spotify_sync_config.json",
-                }:
-                    continue
                 contract = load_page_audio_json_file(path)
                 validate_page_audio_contract(contract, source=str(path))
                 contract = normalize_page_audio_contract(contract)
