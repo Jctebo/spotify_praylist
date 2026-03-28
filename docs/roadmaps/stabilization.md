@@ -3,7 +3,8 @@
 ## Summary Of Changes
 - Release `0.1.3.2` shipped the novena/image decoupling work and moved the shared liturgical helper boundary.
 - The devotional image failure was an OpenAI billing/key issue and was fixed operationally without a release, so it is no longer roadmap work.
-- This roadmap now starts with the remaining stabilization path: Morning Prayer OneDrive first, then novena generation and insertion into Morning Prayer, then the voice, RSS, and intention layers.
+- This roadmap now focuses on Morning Prayer OneDrive-first stability, then voice, RSS, and intention layers.
+- Novena work has been moved into a separate audio roadmap so the stabilization track stays focused.
 
 ## Recent Completed Work
 - `0.1.3.2` shipped on 2026-03-28 and decoupled devotional image generation from the novena helper surface.
@@ -15,41 +16,37 @@
 
 ## Problem
 - Morning Prayer still needs a reliable OneDrive-first delivery path that can be trusted before any broader distribution changes.
-- Novena generation still needs to be restored as part of the Morning Prayer flow, rather than living as a side path.
 - Once those core prayer outputs are stable, the repo can safely move on to TTS migration, RSS publication, and personal intention contracts.
 
 ## Audience
 - Primary user: the maintainer running the daily prayer and publishing automations.
-- Secondary stakeholders: listeners and downstream consumers who rely on Morning Prayer, novena, and future RSS outputs.
+- Secondary stakeholders: listeners and downstream consumers who rely on Morning Prayer and future RSS outputs.
 - Secondary stakeholders: future collaborators who need a simple release order instead of overlapping workstreams.
 
 ## Current Status Quo
 - `0.1.3.2` has already split devotional image generation from the novena helper boundary.
 - The OpenAI image issue is resolved operationally, so it should not stay in the roadmap backlog.
 - `jobs/notion/generate_page_audio.py` still carries the Morning Prayer assembly and OneDrive export path.
-- `jobs/novena/generate_daily_novena_prayer.py` still owns the novena generation logic, but the daily novena workflow remains intentionally disabled.
-- The repo has OneDrive sync patterns, disabled novena workflow scaffolding, and existing intention helpers that can be reused later.
+- The daily novena workflow remains intentionally disabled while its future work is tracked on a separate audio roadmap.
+- The repo has OneDrive sync patterns and existing intention helpers that can be reused later.
 
 ## What Already Exists
 - Morning Prayer assembly and export logic in `jobs/notion/generate_page_audio.py`.
-- A disabled `daily_novena_prayer.yml` workflow and local runner.
 - The shared liturgical helper boundary introduced by `0.1.3.2`.
 - Existing OneDrive upload and sync conventions for prayer artifacts.
 - Existing intention primitives in the page-audio and playlist code paths.
 
 ## Sequencing Principles
 - Stabilize the daily Morning Prayer path before adding new content or new delivery surfaces.
-- Restore novena generation only after Morning Prayer has one clear, trusted OneDrive boundary.
 - Keep TTS migration separate from delivery fixes so voice changes do not hide output bugs.
 - Add RSS only after the artifact, voice, and publish boundary are stable.
 - Leave personal intention contracts until the base prayer outputs are reliable enough to personalize.
 
 ## Release Overview
 - Release 1: Morning Prayer OneDrive-First Repair
-- Release 2: Novena Generation And Morning Prayer Insertion
-- Release 3: TTS Provider Migration
-- Release 4: RSS Publication Surface
-- Release 5: Custom Intention Contracts
+- Release 2: TTS Provider Migration
+- Release 3: RSS Publication Surface
+- Release 4: Custom Intention Contracts
 
 ## Release 1: Morning Prayer OneDrive-First Repair
 
@@ -106,61 +103,7 @@
 - The generated artifact is validated before sync.
 - OneDrive receives the expected Morning Prayer output from that validated artifact path.
 
-## Release 2: Novena Generation And Morning Prayer Insertion
-
-### Goal
-- Restore novena generation and stitch the novena output back into the Morning Prayer flow.
-
-### Scope
-- In scope:
-- Reconnect the novena generator to the Morning Prayer assembly path.
-- Define where the generated novena content lands in the Morning Prayer output so the handoff is explicit.
-- Re-enable the intended daily novena behavior only as part of the Morning Prayer delivery path, not as a separate side experiment.
-- Keep the existing liturgical helper and OneDrive patterns where they still fit.
-- Explicitly deferred:
-- TTS-provider migration.
-- RSS publication.
-- Personal intention contract work.
-
-### Why This Release Now
-- The Morning Prayer boundary should be trusted before we add the novena content back into it.
-- Restoring the novena handoff now keeps the later voice and distribution work from masking a missing content step.
-
-### Research Notes
-- `jobs/novena/generate_daily_novena_prayer.py` still contains the novena generation logic.
-- `jobs/notion/generate_page_audio.py` is the current Morning Prayer assembly surface that needs the novena insertion point.
-- `.github/workflows/daily_novena_prayer.yml` remains disabled, which makes it clear that the novena path is not yet back in the active daily flow.
-
-### Plan
-- Identify the canonical place where novena output should join Morning Prayer.
-- Keep the novena generator and the Morning Prayer assembler aligned on the same output contract.
-- Validate end to end that the resulting Morning Prayer artifact includes the novena content without breaking the OneDrive boundary.
-
-### Features
-- Restored novena generation path.
-- Explicit novena insertion into Morning Prayer output.
-- Validated end-to-end handoff between novena generation and Morning Prayer assembly.
-
-### Stories
-- As the maintainer, I want novena generation back inside Morning Prayer, so the daily prayer output is complete again.
-- As an operator, I want one documented handoff from novena generation into Morning Prayer, so I can tell where the content is assembled.
-
-### Dependencies
-- Release 1's stable Morning Prayer generation and OneDrive boundary.
-- Existing novena generation logic in `jobs/novena/generate_daily_novena_prayer.py`.
-- The current liturgical helper boundary introduced by `0.1.3.2`.
-
-### Risks
-- The canonical handoff between novena output and Morning Prayer may still be ambiguous.
-- Reconnecting novena too early could reintroduce coupling between generation and publish steps.
-- If the insertion point is not documented, future changes could break the handoff without obvious symptoms.
-
-### Exit Criteria
-- Novena generation runs through the intended path.
-- The novena output is visible in the Morning Prayer artifact through one documented insertion point.
-- The workflow or local mirror can prove the combined flow end to end.
-
-## Release 3: TTS Provider Migration
+## Release 2: TTS Provider Migration
 
 ### Goal
 - Move Morning Prayer off the current OpenAI-first TTS path onto the next chosen provider after delivery is stable.
@@ -199,7 +142,7 @@
 - As the operator, I want provider-aware fallbacks and logging, so a provider outage does not turn into silent broken publishing.
 
 ### Dependencies
-- Release 2's stable Morning Prayer and novena-insertion path.
+- Release 1's stable Morning Prayer artifact and OneDrive boundary.
 - Credentials and operational limits for the selected replacement TTS provider.
 
 ### Risks
@@ -212,7 +155,7 @@
 - Cache behavior and tests are provider-aware.
 - Operators can deliberately validate fallback or rollback behavior if needed.
 
-## Release 4: RSS Publication Surface
+## Release 3: RSS Publication Surface
 
 ### Goal
 - Publish Morning Prayer through an RSS feed once artifact generation and TTS are stable.
@@ -235,7 +178,7 @@
 - OneDrive and GitHub Pages already exist as delivery mechanisms, but neither is yet declared the canonical RSS publication host.
 
 ### Plan
-- Reuse the stabilized Morning Prayer artifact package from Releases 1 through 3.
+- Reuse the stabilized Morning Prayer artifact package from Releases 1 and 2.
 - Keep feed identity stable enough that podcast clients do not treat each rollout as a new show.
 - Choose one hosting boundary deliberately instead of mixing OneDrive links, Pages assets, and ad hoc storage.
 
@@ -250,7 +193,7 @@
 
 ### Dependencies
 - Release 1's stable Morning Prayer artifact.
-- Release 3's stable TTS-provider path.
+- Release 2's stable TTS-provider path.
 - A validated public-hosting decision for RSS and media URLs.
 
 ### Risks
@@ -263,7 +206,7 @@
 - Feed metadata and enclosure URLs are stable and fetchable.
 - The team has one declared publication boundary for the feed.
 
-## Release 5: Custom Intention Contracts
+## Release 4: Custom Intention Contracts
 
 ### Goal
 - Add Morning, Midday, Night, and Sunday intention contracts that source personal intentions from Notion and publish them to OneDrive.
@@ -330,8 +273,9 @@
 - Fact: `.github/workflows/daily_novena_prayer.yml` is intentionally disabled.
 - Fact: `jobs/notion/generate_page_audio.py` still uses the playlist-audio OneDrive library boundary and still assumes OpenAI on the current TTS path.
 - Fact: the repo has RSS ingestion behavior, but no confirmed Morning Prayer RSS publication path yet.
+- Fact: novena-specific roadmap work now lives on a separate audio roadmap instead of this stabilization roadmap.
 - Assumption: OneDrive should remain the first publish boundary for Morning Prayer before RSS is added.
-- Unknown: the exact replacement TTS provider to be locked during Release 3 planning.
+- Unknown: the exact replacement TTS provider to be locked during Release 2 planning.
 - Unknown: the final hosting boundary for RSS XML and media URLs.
 - Unknown: the final artifact format for custom intention contracts published to OneDrive.
 
