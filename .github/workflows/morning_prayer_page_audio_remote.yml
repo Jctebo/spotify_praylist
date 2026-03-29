@@ -1,0 +1,92 @@
+name: Morning Prayer Page Audio Publish (Remote OneDrive via rclone)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    env:
+      OAI_API_BASE_URL: https://api.openai.com/v1
+      PAGE_AUDIO_LIBRARY_DIR: ${{ github.workspace }}/onedrive_sync/Praylist Audio/Playlist Audio
+      PAGE_AUDIO_PUBLISH_FOLDER: Morning
+      PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS: "true"
+      PAGE_AUDIO_FAIL_OPEN: "true"
+      RCLONE_REMOTE_NAME: ${{ vars.RCLONE_REMOTE_NAME }}
+      RCLONE_REMOTE_ROOT: ${{ vars.RCLONE_REMOTE_ROOT }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install rclone
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y rclone
+          rclone version
+
+      - name: Configure rclone
+        env:
+          RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RCLONE_CONFIG_B64:-}" ]; then
+            echo "Missing secret RCLONE_CONFIG_B64" >&2
+            exit 1
+          fi
+          mkdir -p "${HOME}/.config/rclone"
+          printf "%s" "${RCLONE_CONFIG_B64}" | base64 -d > "${HOME}/.config/rclone/rclone.conf"
+          chmod 600 "${HOME}/.config/rclone/rclone.conf"
+
+      - name: Validate rclone remote
+        run: |
+          set -euo pipefail
+          REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
+          REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Praylist Audio/Playlist Audio}"
+          rclone lsd "${REMOTE_NAME}:" >/dev/null
+          rclone lsd "${REMOTE_NAME}:${REMOTE_ROOT}" >/dev/null || true
+
+      - name: Generate page audio on runner
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+          NOTION_DATABASE_NAME: ${{ vars.NOTION_DATABASE_NAME }}
+          NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID: ${{ secrets.NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID }}
+          NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME: ${{ vars.NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME }}
+          NOTION_AUDIO_FRAGMENTS_DATABASE_ID: ${{ secrets.NOTION_AUDIO_FRAGMENTS_DATABASE_ID }}
+          NOTION_AUDIO_FRAGMENTS_DATABASE_NAME: ${{ vars.NOTION_AUDIO_FRAGMENTS_DATABASE_NAME }}
+          NOTION_AUDIO_OUTPUTS_DATABASE_ID: ${{ secrets.NOTION_AUDIO_OUTPUTS_DATABASE_ID }}
+          NOTION_AUDIO_OUTPUTS_DATABASE_NAME: ${{ vars.NOTION_AUDIO_OUTPUTS_DATABASE_NAME }}
+          JOB_UTC_OFFSET: ${{ vars.JOB_UTC_OFFSET }}
+        run: python jobs/notion/generate_page_audio.py
+
+      - name: Copy page-audio library to OneDrive
+        run: |
+          set -euo pipefail
+          LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/Praylist Audio/Playlist Audio"
+          PUBLISH_FOLDER="${PAGE_AUDIO_PUBLISH_FOLDER:-Morning}"
+          REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
+          REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Praylist Audio/Playlist Audio}"
+
+          test -d "$LOCAL_ROOT/$PUBLISH_FOLDER"
+          rclone copy "$LOCAL_ROOT/$PUBLISH_FOLDER/" "${REMOTE_NAME}:${REMOTE_ROOT}/$PUBLISH_FOLDER/" --progress --stats-one-line --transfers 4 --checkers 8
+
+          echo "Copied page-audio folder '$PUBLISH_FOLDER' to OneDrive via rclone."
