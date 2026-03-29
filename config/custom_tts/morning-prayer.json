@@ -5,6 +5,7 @@
   "status": "enabled",
   "output_type": "page_audio",
   "path": "config/custom_tts/morning-prayer.json",
+  "output_path": "C:/Users/jcteb/OneDrive/Praylist Audio/Playlist Audio/Morning",
   "enabled": true,
   "header": {
     "builder": "morning_prayer_v1",

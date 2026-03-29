@@ -17,7 +17,6 @@ jobs:
     env:
       OAI_API_BASE_URL: https://api.openai.com/v1
       PAGE_AUDIO_LIBRARY_DIR: ${{ github.workspace }}/onedrive_sync/Praylist Audio/Playlist Audio
-      PAGE_AUDIO_PUBLISH_FOLDER: Morning
       PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS: "true"
       PAGE_AUDIO_FAIL_OPEN: "true"
       RCLONE_REMOTE_NAME: ${{ vars.RCLONE_REMOTE_NAME }}
@@ -82,7 +81,7 @@ jobs:
         run: |
           set -euo pipefail
           LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/Praylist Audio/Playlist Audio"
-          PUBLISH_FOLDER="${PAGE_AUDIO_PUBLISH_FOLDER:-Morning}"
+          PUBLISH_FOLDER="$(python -c 'import json; from pathlib import Path; print(Path(json.loads(Path("config/custom_tts/morning-prayer.json").read_text(encoding="utf-8"))["output_path"]).name)')"
           REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
           REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Praylist Audio/Playlist Audio}"
 

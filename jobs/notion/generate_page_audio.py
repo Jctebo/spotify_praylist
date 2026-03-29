@@ -840,7 +840,7 @@ def load_morning_prayer_contract_from_file() -> Dict[str, Any]:
     validate_page_audio_contract(payload, source=str(config_path))
     if not payload.get("enabled", False):
         raise RuntimeError(f"Morning Prayer contract file is disabled: {config_path}")
-    return payload
+    return normalize_page_audio_contract(payload)
 
 
 def morning_prayer_contract_resolvers(contract: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -959,6 +959,10 @@ def normalize_page_audio_contract(contract: Dict[str, Any]) -> Dict[str, Any]:
             if key in {"key", "kind", "order", "title", "targets", "metadata"}:
                 continue
             normalized.setdefault(key, deepcopy(value))
+    publish_path = str(normalized.get("output_path", "")).strip()
+    if publish_path:
+        normalized["output_folder"] = Path(publish_path).name
+    normalized["tts"] = custom_tts_runtime_settings(normalized)
     return normalized
 
 
@@ -988,25 +992,45 @@ def custom_tts_contract_path_allowed(config_path: Path) -> bool:
     return resolved == allowed_root or resolved.parent == allowed_root
 
 
+def custom_tts_runtime_settings(contract: Dict[str, Any]) -> Dict[str, Any]:
+    header = contract.get("header") if isinstance(contract, dict) else {}
+    if not isinstance(header, dict):
+        header = {}
+    tts = contract.get("tts") if isinstance(contract, dict) else {}
+    if not isinstance(tts, dict):
+        tts = {}
+    model = str(tts.get("model", "")).strip() or str(header.get("model", "")).strip() or "gpt-4o-mini-tts"
+    voice = str(tts.get("voice", "")).strip() or "alloy"
+    audio_format = str(tts.get("format", "")).strip().lower() or "mp3"
+    try:
+        speed = float(tts.get("speed", 1.0))
+    except Exception:
+        speed = 1.0
+    return {"model": model, "voice": voice, "format": audio_format, "speed": speed}
+
+
 def validate_custom_tts_contract(contract: Dict[str, Any], *, source: str, source_path: Optional[Path] = None) -> None:
     validate_page_audio_contract(contract, source=source)
-    for field in ["target_row", "output_type", "path", "enabled"]:
+    for field in ["target_row", "output_type", "path", "enabled", "output_path"]:
         if field not in contract:
             raise RuntimeError(f"Invalid Morning Prayer contract in {source}: missing '{field}'.")
     output_type = str(contract.get("output_type", "")).strip()
     if not output_type:
         raise RuntimeError(f"Invalid Morning Prayer contract in {source}: 'output_type' must be a non-empty string.")
-    output_path = str(contract.get("path", "")).strip()
-    if not output_path:
+    config_path_value = str(contract.get("path", "")).strip()
+    if not config_path_value:
         raise RuntimeError(f"Invalid Morning Prayer contract in {source}: 'path' must be a non-empty string.")
     if not isinstance(contract.get("enabled"), bool):
         raise RuntimeError(f"Invalid Morning Prayer contract in {source}: 'enabled' must be a boolean.")
+    publish_path = str(contract.get("output_path", "")).strip()
+    if not publish_path:
+        raise RuntimeError(f"Invalid Morning Prayer contract in {source}: 'output_path' must be a non-empty string.")
     if source_path is not None:
         if not custom_tts_contract_path_allowed(source_path):
             raise RuntimeError(
                 f"Invalid Morning Prayer contract in {source}: legacy contract paths outside config/custom_tts/ are no longer runnable."
             )
-        declared_path = Path(output_path)
+        declared_path = Path(config_path_value)
         if not declared_path.is_absolute():
             declared_path = ROOT / declared_path
         if declared_path.resolve() != source_path.resolve():
@@ -1025,6 +1049,7 @@ def load_custom_tts_contracts_from_dir(config_dir: Optional[Path] = None) -> Dic
         validate_custom_tts_contract(payload, source=str(path), source_path=path)
         if not payload.get("enabled"):
             continue
+        payload = normalize_page_audio_contract(payload)
         key = str(payload.get("key", "")).strip() or path.stem
         configs[key] = payload
         upper_key = key.upper()
@@ -6355,6 +6380,23 @@ def main() -> int:
             print("page_audio_rows=0")
             print(f"page_audio_deprecations={len(_PAGE_AUDIO_DEPRECATION_WARNINGS)}")
             return 0
+
+        if shared.bool_env(PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS, default=False):
+            export_entries: List[tuple[str, PageAudioExportMetadata]] = []
+            for job in matched_jobs:
+                page = job["page"]
+                config = job["config"]
+                if not isinstance(page, dict) or not isinstance(config, dict):
+                    continue
+                export_metadata = page_audio_export_metadata(
+                    page,
+                    title_property=title_property,
+                    audio_format=str(tts_settings_from_config(config)["format"]),
+                    config=config,
+                )
+                title = shared.page_title(page, title_property).strip() or str(page.get("id", "")).strip() or "page-audio"
+                export_entries.append((title, export_metadata))
+            truncate_managed_page_audio_outputs(export_entries)
 
         for job in matched_jobs:
             page = job["page"]
