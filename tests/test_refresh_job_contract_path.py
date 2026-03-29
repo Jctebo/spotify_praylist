@@ -8,13 +8,25 @@ from unittest.mock import patch
 from tests.test_helpers import ROOT, load_module, temp_env
 
 
-def _queue_contract(mod, key, name=None, resolver="", fallback_resolver="", spotify_uri="", weekdays=()):
+def _queue_contract(
+    mod,
+    key,
+    name=None,
+    resolver="",
+    fallback_resolver="",
+    spotify_uri="",
+    spotify_url_normal="",
+    spotify_uri_easter="",
+    weekdays=(),
+):
     return mod.SpotifyQueueContract(
         key=key,
         name=name or key.title(),
         resolver=resolver,
         fallback_resolver=fallback_resolver,
         spotify_uri=spotify_uri,
+        spotify_url_normal=spotify_url_normal,
+        spotify_uri_easter=spotify_uri_easter,
         weekdays=tuple(weekdays),
         source_path=Path(f"config/spotify/contracts/{key}.json"),
     )
@@ -128,7 +140,17 @@ class TestRefreshJobContractPath(unittest.TestCase):
         ]
         recreate_calls = []
 
-        def fake_build(sp, playlist_definition, weekday, status, shows_cfg, fixed_cfg, tokens_cfg, contracts_by_key=None):
+        def fake_build(
+            sp,
+            playlist_definition,
+            weekday,
+            current_date,
+            status,
+            shows_cfg,
+            fixed_cfg,
+            tokens_cfg,
+            contracts_by_key=None,
+        ):
             if playlist_definition.key == "sunday":
                 status["__no_eligible_contracts__"] = True
                 return []

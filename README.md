@@ -19,12 +19,13 @@ Optional variables:
 - `SPOTIFY_PLAYLIST_ID` to override the selected playlist definition's playlist id for a one-off validation run
 - `SPOTIFY_USER_ID` for compatibility with older local setups
 - `JOB_UTC_OFFSET` to override the runtime timezone
+- `ROMCAL_CALENDAR` and `ROMCAL_LOCALE` to control the liturgical season lookup used by the Marian Antiphon swap
 - `NOTION_TOKEN` plus related Notion ids/properties only if you want optional post-write sync behavior
 
 ## Files
 - `jobs/playlist/refresh_playlist.py`: active contract-first Spotify refresh runtime
 - `jobs/playlist/spotify_contracts.py`: loader and validation for `config/spotify/contracts/*.json` and `config/spotify/playlists/*.json`
-- `config/spotify/contracts/*.json`: one resolver-backed or fixed-URI queue contract per file
+- `config/spotify/contracts/*.json`: one resolver-backed or fixed-URI queue contract per file, plus the three Marian Antiphon seasonal contracts
 - `config/spotify/playlists/*.json`: thin playlist definitions with playlist identity and ordered contract keys
 - `config/legacy/playlist_config.json`: legacy reference config kept off the active runtime path
 - `config/custom_tts/morning-prayer.json`: canonical Morning Prayer custom TTS contract for the active page-audio surface
@@ -47,7 +48,8 @@ Optional variables:
 Queue contract files in `config/spotify/contracts/` own:
 - `key`
 - `name`
-- exactly one of `resolver` or `spotify_uri`
+- exactly one of `resolver` or `spotify_uri` for ordinary contracts
+- the three Marian Antiphon contracts are the seasonal exception: morning and evening use the singing Angelus track, midday uses the spoken Angelus episode, and all three switch to Regina Caeli during Easter; the runtime normalizes those Spotify values into queue-safe `spotify:` URIs
 - optional `fallback_resolver`
 - optional `weekdays`
 
@@ -114,7 +116,7 @@ Expected behavior:
 - refreshes the Spotify access token each run
 - loads and validates playlist definitions plus queue contracts before touching Spotify
 - applies contract-level weekday gating such as Sunday-only or Friday-only items
-- resolves each contract through its explicit `resolver` or `spotify_uri`
+- resolves each contract through its explicit `resolver` or `spotify_uri`, with Marian Antiphon switching between `spotify_url_normal` and `spotify_uri_easter` during Easter season
 - replaces each selected playlist contents with the resolved queue
 - prints one summary per playlist: `playlist`, `playlist_id`, and `tracks_written`
 - exits non-zero on invalid contracts, invalid playlist definitions, invalid single-playlist overrides, or unresolved selected runs

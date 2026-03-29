@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 
 import requests
 from romcal import Romcal, get_bundled_calendar_definitions, get_bundled_resources
-from romcal.types import CalendarDefinition, DayDefinition, Precedence
+from romcal.types import CalendarDefinition, DayDefinition, Precedence, Season
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
@@ -368,6 +368,34 @@ def romcal_fetch_day(calendar: str, locale: str, dt: datetime.date) -> List[Dict
                 row["suppressed"] = False
                 out.append(row)
     return out
+
+
+def _normalize_romcal_season_value(value: Any) -> str:
+    raw = getattr(value, "value", value)
+    text = str(raw or "").strip().lower()
+    if text.startswith("season."):
+        text = text.split(".", 1)[1]
+    return text.replace(" ", "_").replace("-", "_")
+
+
+def is_easter_season_for_date(calendar: str, locale: str, dt: datetime.date) -> bool:
+    rows = romcal_fetch_day(calendar, locale, dt)
+    if not rows:
+        raise RuntimeError(
+            f"Unable to determine Romcal season for {dt.isoformat()} "
+            f"(calendar={normalize_romcal_calendar(calendar)}, locale={locale})"
+        )
+
+    primary = rows[0] if isinstance(rows[0], dict) else {}
+    season_value = _normalize_romcal_season_value(primary.get("season"))
+    if not season_value:
+        season_value = _normalize_romcal_season_value(primary.get("season_name"))
+    if not season_value:
+        raise RuntimeError(
+            f"Unable to determine Romcal season for {dt.isoformat()} "
+            f"(calendar={normalize_romcal_calendar(calendar)}, locale={locale})"
+        )
+    return season_value == Season.easter_time.value
 
 
 def devotional_output_is_eligible(celebration_rank: str, precedence: str) -> bool:

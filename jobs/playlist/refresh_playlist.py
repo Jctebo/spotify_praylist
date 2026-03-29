@@ -25,8 +25,10 @@ from jobs.playlist.spotify_contracts import (
     load_spotify_playlist_definitions,
     load_spotify_queue_contracts,
     normalize_spotify_contract_key as normalize_spotify_output_folder,
+    normalize_spotify_queue_uri,
     playlist_definition_matches_filter as contract_matches_filter,
 )
+from jobs.novena.liturgical_helpers import is_easter_season_for_date
 
 SpotifyPlaylistContract = SpotifyPlaylistDefinition
 load_spotify_contracts = load_spotify_playlist_definitions
@@ -2336,23 +2338,34 @@ def resolve_contract_uri(
     sp: spotipy.Spotify,
     contract: SpotifyQueueContract,
     weekday: str,
+    current_date: datetime.date,
     status: Dict[str, bool],
     shows_cfg: Dict[str, Any],
     fixed_cfg: Dict[str, Any],
     tokens_cfg: Dict[str, Any],
 ) -> Optional[str]:
+    if contract.spotify_url_normal and contract.spotify_uri_easter:
+        romcal_calendar = os.getenv("ROMCAL_CALENDAR", "general_roman").strip() or "general_roman"
+        romcal_locale = os.getenv("ROMCAL_LOCALE", "en").strip() or "en"
+        is_easter = is_easter_season_for_date(romcal_calendar, romcal_locale, current_date)
+        season_label = "easter" if is_easter else "ordinary"
+        status[f"Seasonal:{contract.name}:{season_label}"] = True
+        primary_spec = contract.spotify_uri_easter if is_easter else contract.spotify_url_normal
+        return normalize_spotify_queue_uri(primary_spec) or None
+
     primary_spec = contract.spotify_uri or contract.resolver
     uri = resolve_spec_uri(sp, primary_spec, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
     if not uri and contract.fallback_resolver:
         uri = resolve_spec_uri(sp, contract.fallback_resolver, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
         status[f"Fallback used:{contract.name}"] = bool(uri)
-    return uri
+    return normalize_spotify_queue_uri(uri) if uri else None
 
 
 def build_queue_for_playlist_definition(
     sp: spotipy.Spotify,
     playlist_definition: SpotifyPlaylistDefinition,
     weekday: str,
+    current_date: datetime.date,
     status: Dict[str, bool],
     shows_cfg: Dict[str, Any],
     fixed_cfg: Dict[str, Any],
@@ -2376,7 +2389,7 @@ def build_queue_for_playlist_definition(
             continue
 
         eligible_contracts += 1
-        uri = resolve_contract_uri(sp, contract, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
+        uri = resolve_contract_uri(sp, contract, weekday, current_date, status, shows_cfg, fixed_cfg, tokens_cfg)
         if uri:
             queue.append(uri)
         else:
@@ -2531,7 +2544,9 @@ def main() -> int:
         _, shows_cfg, fixed_cfg, tokens_cfg = load_resolver_runtime_config({})
 
         sp, spotify_token = sp_client()
-        weekday = local_now().strftime("%A")
+        current_now = local_now()
+        current_date = current_now.date()
+        weekday = current_now.strftime("%A")
         source = "playlist_definitions"
         uri_autosync_enabled = bool_env(SPOTIFY_ENABLE_URI_AUTOSYNC, default=False)
         runs: List[Dict[str, Any]] = []
@@ -2552,6 +2567,7 @@ def main() -> int:
                 sp,
                 target,
                 weekday,
+                current_date,
                 status,
                 shows_cfg,
                 fixed_cfg,
@@ -2607,7 +2623,7 @@ def main() -> int:
 
             print(f"SUMMARY playlist={playlist_name} playlist_id={playlist_id} tracks_written={written}")
             print(f"INFO playlist={playlist_name} weekday={weekday} playlist_recreated=true source={source}")
-            print(f"INFO utc_offset={local_now().strftime('%z')}")
+            print(f"INFO utc_offset={current_now.strftime('%z')}")
             print(f"INFO uri_autosync_enabled={str(uri_autosync_enabled).lower()}")
             for name, ok in sorted(status.items()):
                 print(f"INFO resolver_status playlist={playlist_name} name={name} ok={str(ok).lower()}")
