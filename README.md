@@ -28,7 +28,7 @@ Optional variables:
 - `config/spotify/playlists/*.json`: thin playlist definitions with playlist identity and ordered contract keys
 - `config/legacy/playlist_config.json`: legacy reference config kept off the active runtime path
 - `config/custom_tts/morning-prayer.json`: canonical Morning Prayer custom TTS contract for the active page-audio surface
-- `config/legacy/page_audio/*.json`, `config/legacy/rosary.json`, and `config/legacy/auxilium_daily_text.json`: discontinued top-level page-audio contracts retained only for legacy reference
+- `config/legacy/page_audio/*.json`, `config/legacy/rosary.json`, and `config/legacy/auxilium_daily_text.json`: discontinued top-level page-audio contracts retained only as archives; the active runtime no longer loads them
 - `scripts/setup_spotify.ps1`: Spotify credential wizard that also updates `config/spotify/playlists/*.json`
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` with optional single-playlist targeting
 - `scripts/setup_notion_playlists.ps1`: legacy Notion playlist-registry helper, no longer on the active Spotify hot path
@@ -268,14 +268,14 @@ Purpose:
 - can truncate managed playlist-audio outputs locally before regeneration so stale ordered filenames disappear on the next OneDrive sync
 
 Current config:
-- Morning Prayer now resolves from `config/custom_tts/morning-prayer.json`, with `MORNING_PRAYER_CONTRACT_FILE` kept as an override-only validation and rollback path.
+- Morning Prayer now resolves from `config/custom_tts/morning-prayer.json`, with `MORNING_PRAYER_CONTRACT_FILE` kept as an override-only custom-TTS validation path.
 - `Morning Prayer` now runs from the two-list `Opus Dei` + owner-linked `Detailed Fragments` model
 - required Morning Prayer fragments are owner-linked `Audio Fragments` rows for the static prayers, `Monthly Intention`, and `Daily Novena Audio`
 - the live Morning Prayer contract currently uses these durable keys for the petition rows: `petition-church` for `Petition - Right Use of Technology`, `petition-sick-departed` for `Petition - Sanctification of the Church`, and `petition-7` for `Petition - Sick and Departed`
 - the page-audio contract also normalizes the live Morning Prayer legacy aliases `petition-technology`, `petition-sanctification-of-the-church`, and `petition-sick-and-departed` onto the same durable keys so the workflow can read the existing Notion rows without weakening missing-fragment checks
 - Morning Prayer contract rows should carry stable `Fragment Key` values; the key is the runtime identity, while the row title can be edited for display text
 - `Text Sync Mode = page_content` remains the intended Morning Prayer behavior, and the job preserves its current working block/template path instead of forcing it into the generic managed-section sync
-- legacy `MORNING_PRAYER_OUTPUT` / wrapper / sequence rows can remain as migration references, but they are no longer the active runtime source of truth
+- archived `MORNING_PRAYER_OUTPUT` / wrapper / sequence rows can remain as migration references, but they are no longer the active runtime source of truth and are not runnable by the active loaders
 - `DIVINE_OFFICE_INVITATORY_OUTPUT` in `Audio Outputs`
 - wraps `DIVINE_OFFICE_INVITATORY_PAGE_AUDIO` from `Page Audio Configuration`
 - target row: `Divine Office Invitatory`
@@ -307,7 +307,7 @@ Current config:
 - `DIVINE_OFFICE_EVENING_OUTPUT`
 - `DIVINE_OFFICE_NIGHT_OUTPUT`
 - `ROSARY_INTENTIONS_OUTPUT`
-- legacy fallback file source remains available in [page_audio_config.json](c:/Users/jcteb/Code/spotify_praylist/config/legacy/page_audio_config.json) if the discontinued page-audio stack is ever inspected or run manually
+- `config/legacy/page_audio_config.json` remains on disk as an archive, but the active runtime no longer loads it
 
 Recommended Opus Dei row shape:
 - `Platform = Spotify, auto-text, auto-audio` for rows that should do all three
@@ -332,8 +332,8 @@ Environment variables:
 - `NOTION_AUDIO_FRAGMENTS_DATABASE_NAME` (fallback lookup; default `Audio Fragments`)
 - `NOTION_AUDIO_OUTPUTS_DATABASE_ID` (recommended for fragment-backed outputs)
 - `NOTION_AUDIO_OUTPUTS_DATABASE_NAME` (fallback lookup; default `Audio Outputs`)
-- `MORNING_PRAYER_CONTRACT_FILE` (default `config/custom_tts/morning-prayer.json`; override-only validation and rollback path for Morning Prayer)
-- `PAGE_AUDIO_CONFIG_FILE` (legacy fallback file config for the discontinued page-audio stack; when set to a specific contract JSON, the run executes only that selected contract)
+- `MORNING_PRAYER_CONTRACT_FILE` (default `config/custom_tts/morning-prayer.json`; custom-TTS-only override path for Morning Prayer)
+- `PAGE_AUDIO_CONFIG_FILE` (custom-TTS-only contract config; when set to a specific `config/custom_tts/*.json`, the run executes only that selected contract)
 - `PAGE_AUDIO_CACHE_DIR` (default `.cache/page_audio`)
 - `PAGE_AUDIO_LIBRARY_DIR` (optional; default local root is `%USERPROFILE%\OneDrive\Praylist Audio\Playlist Audio`)
 - `PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS` (default `false`; when `true`, remove managed playlist-audio exports locally before regeneration)
