@@ -16,8 +16,10 @@
 
 ## Items to Prioritize
 - Updating Angelus to default to Angelus and use Regina Caeli during Easter season
-  - Singing Version - Pope Leo https://open.spotify.com/track/1dbE76sfAobxVwYYjQ6yb6?si=CpUQlJe7ShyEVPrjXNYnhg
-  - Spoken Version - Catholic Prayers Daily - https://open.spotify.com/episode/68xFE8g1JRFu62osp0tLNg?si=Lwt_hFWtTAqB4FGsOnhvQnT&t=67
+  - Singing Version - Pope Leo https://open.spotify.com/track/39Jgl6ST4fQj4fNyRSQZFk?si=-7fsnRKmTZuQkzmvZKIdxA
+  - Spoken Version - Catholic Prayers Daily - https://open.spotify.com/episode/2HNK8wLRWHh0mJ9xmJjlUD?si=3UOMdUZiRruq8QHGFCYk_g
+  - Regina Caeli singing - https://open.spotify.com/episode/7ni2KH5KdbtK0JFL74V8x3?si=r4gfW4lGSeizSN7KEeykFg&context=spotify%3Ashow%3A4HgdzRwJlQKgaOoZokRW8x
+  - Regina Caeli spoken - https://open.spotify.com/episode/68xFE8g1JRFu62osp0tLNg?si=ZWiUeRs3QbSw4mn5kl8M5g
 
 ## Roadmap Mode
 - Detailed roadmap

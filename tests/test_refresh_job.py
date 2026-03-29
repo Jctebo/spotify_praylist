@@ -1,3 +1,4 @@
+import datetime
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -27,7 +28,17 @@ def _number_prop(value):
     return {"type": "number", "number": value}
 
 
-def _queue_contract(mod, key, name=None, resolver="", fallback_resolver="", spotify_uri="", weekdays=()):
+def _queue_contract(
+    mod,
+    key,
+    name=None,
+    resolver="",
+    fallback_resolver="",
+    spotify_uri="",
+    spotify_url_normal="",
+    spotify_uri_easter="",
+    weekdays=(),
+):
     display_name = name or key.title()
     return mod.SpotifyQueueContract(
         key=key,
@@ -35,6 +46,8 @@ def _queue_contract(mod, key, name=None, resolver="", fallback_resolver="", spot
         resolver=resolver,
         fallback_resolver=fallback_resolver,
         spotify_uri=spotify_uri,
+        spotify_url_normal=spotify_url_normal,
+        spotify_uri_easter=spotify_uri_easter,
         weekdays=tuple(weekdays),
         source_path=Path(f"config/spotify/contracts/{key}.json"),
     )
@@ -183,13 +196,14 @@ class TestRefreshJob(unittest.TestCase):
         def fake_resolve(sp, spec, weekday, status_map, shows_cfg, fixed_cfg, tokens_cfg):
             if spec == "MORNING":
                 return None
-            return f"spotify:episode:{spec.lower()}"
+            return f"spotify:episode:{spec.lower().replace('_', '')}"
 
         with patch.object(self.mod, "resolve_spec_uri", side_effect=fake_resolve):
             queue = self.mod.build_queue_for_playlist_definition(
                 object(),
                 playlist_definition,
                 "Wednesday",
+                datetime.date(2026, 6, 7),
                 status,
                 {},
                 {},
@@ -197,7 +211,7 @@ class TestRefreshJob(unittest.TestCase):
                 contracts_by_key=contracts_by_key,
             )
 
-        self.assertEqual(queue, ["spotify:episode:do_morning", "spotify:episode:rosary"])
+        self.assertEqual(queue, ["spotify:episode:domorning", "spotify:episode:rosary"])
         self.assertTrue(status["Fallback used:Morning Prayer (LOH)"])
 
     def test_build_queue_for_playlist_definition_marks_all_gated_playlists(self):
@@ -221,6 +235,7 @@ class TestRefreshJob(unittest.TestCase):
             object(),
             playlist_definition,
             "Wednesday",
+            datetime.date(2026, 6, 7),
             status,
             {},
             {},
@@ -231,6 +246,89 @@ class TestRefreshJob(unittest.TestCase):
         self.assertEqual(queue, [])
         self.assertTrue(status["__no_eligible_contracts__"])
         self.assertFalse(status["Gated:Fr. Mike Sunday Homily"])
+
+    def test_build_queue_for_playlist_definition_selects_angelus_variant_by_season(self):
+        playlist_definition = _playlist_definition(
+            self.mod,
+            "morning",
+            contracts=("angelus-morning", "angelus-midday", "angelus-evening"),
+        )
+        contracts_by_key = {
+            "angelus-morning": _queue_contract(
+                self.mod,
+                "angelus-morning",
+                name="Marian Antiphon (Morning)",
+                spotify_url_normal="spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
+                spotify_uri_easter="spotify:episode:7ni2KH5KdbtK0JFL74V8x3",
+            ),
+            "angelus-midday": _queue_contract(
+                self.mod,
+                "angelus-midday",
+                name="Marian Antiphon (Midday)",
+                spotify_url_normal="spotify:episode:2HNK8wLRWHh0mJ9xmJjlUD",
+                spotify_uri_easter="spotify:episode:68xFE8g1JRFu62osp0tLNg",
+            ),
+            "angelus-evening": _queue_contract(
+                self.mod,
+                "angelus-evening",
+                name="Marian Antiphon (Evening)",
+                spotify_url_normal="spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
+                spotify_uri_easter="spotify:episode:7ni2KH5KdbtK0JFL74V8x3",
+            )
+        }
+
+        ordinary_status = {}
+        easter_status = {}
+
+        def fake_is_easter(calendar, locale, dt):
+            return dt == datetime.date(2026, 4, 5)
+
+        with patch.object(self.mod, "is_easter_season_for_date", side_effect=fake_is_easter):
+            ordinary_queue = self.mod.build_queue_for_playlist_definition(
+                object(),
+                playlist_definition,
+                "Wednesday",
+                datetime.date(2026, 6, 7),
+                ordinary_status,
+                {},
+                {},
+                {},
+                contracts_by_key=contracts_by_key,
+            )
+            easter_queue = self.mod.build_queue_for_playlist_definition(
+                object(),
+                playlist_definition,
+                "Wednesday",
+                datetime.date(2026, 4, 5),
+                easter_status,
+                {},
+                {},
+                {},
+                contracts_by_key=contracts_by_key,
+            )
+
+        self.assertEqual(
+            ordinary_queue,
+            [
+                "spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
+                "spotify:episode:2HNK8wLRWHh0mJ9xmJjlUD",
+                "spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
+            ],
+        )
+        self.assertEqual(
+            easter_queue,
+            [
+                "spotify:episode:7ni2KH5KdbtK0JFL74V8x3",
+                "spotify:episode:68xFE8g1JRFu62osp0tLNg",
+                "spotify:episode:7ni2KH5KdbtK0JFL74V8x3",
+            ],
+        )
+        self.assertTrue(ordinary_status["Seasonal:Marian Antiphon (Morning):ordinary"])
+        self.assertTrue(ordinary_status["Seasonal:Marian Antiphon (Midday):ordinary"])
+        self.assertTrue(ordinary_status["Seasonal:Marian Antiphon (Evening):ordinary"])
+        self.assertTrue(easter_status["Seasonal:Marian Antiphon (Morning):easter"])
+        self.assertTrue(easter_status["Seasonal:Marian Antiphon (Midday):easter"])
+        self.assertTrue(easter_status["Seasonal:Marian Antiphon (Evening):easter"])
 
     @unittest.skip("Legacy Notion queue assembly path is no longer the active Spotify refresh surface.")
     def test_build_queue_for_playlist_from_notion_skips_non_spotify_rows(self):
@@ -918,7 +1016,17 @@ class TestRefreshJob(unittest.TestCase):
         }
         recreate_calls = []
 
-        def fake_build(sp, playlist_definition, weekday, status, shows_cfg, fixed_cfg, tokens_cfg, contracts_by_key=None):
+        def fake_build(
+            sp,
+            playlist_definition,
+            weekday,
+            current_date,
+            status,
+            shows_cfg,
+            fixed_cfg,
+            tokens_cfg,
+            contracts_by_key=None,
+        ):
             return list(queues[playlist_definition.name])
 
         def fake_recreate(token, playlist_id, queue):

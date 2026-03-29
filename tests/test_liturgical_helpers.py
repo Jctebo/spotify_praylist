@@ -1,9 +1,11 @@
+import datetime
 import os
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from tests.test_helpers import load_module, temp_env
 
@@ -62,6 +64,31 @@ class TestLiturgicalHelpers(unittest.TestCase):
                 "Precedence.ferial_day_13",
             )
         )
+
+    def test_is_easter_season_for_date_detects_easter_and_ordinary_time(self):
+        self.assertTrue(
+            self.mod.is_easter_season_for_date(
+                "general_roman",
+                "en",
+                datetime.date(2026, 4, 5),
+            )
+        )
+        self.assertFalse(
+            self.mod.is_easter_season_for_date(
+                "general_roman",
+                "en",
+                datetime.date(2026, 6, 7),
+            )
+        )
+
+    def test_is_easter_season_for_date_fails_closed_when_season_missing(self):
+        with patch.object(self.mod, "romcal_fetch_day", return_value=[{"id": "mystery"}]):
+            with self.assertRaisesRegex(RuntimeError, "Unable to determine Romcal season"):
+                self.mod.is_easter_season_for_date(
+                    "general_roman",
+                    "en",
+                    datetime.date(2026, 6, 7),
+                )
 
     def test_env_helpers_cover_boolean_integer_and_required_values(self):
         with temp_env({"HELPER_BOOL": "yes", "HELPER_INT": "7"}):

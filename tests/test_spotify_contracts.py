@@ -43,6 +43,68 @@ class TestSpotifyContracts(unittest.TestCase):
         self.assertEqual(contracts[0].weekdays, ("Sunday",))
         self.assertEqual(contracts[1].fallback_resolver, "DO_MORNING")
 
+    def test_load_spotify_queue_contracts_accepts_seasonal_angelus_shape(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            contract_dir = Path(tmpdir)
+            _write_json(
+                contract_dir / "angelus-morning.json",
+                {
+                    "key": "angelus-morning",
+                    "name": "Marian Antiphon (Morning)",
+                    "spotify_url_normal": "spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
+                    "spotify_uri_easter": "spotify:episode:7ni2KH5KdbtK0JFL74V8x3",
+                },
+            )
+            _write_json(
+                contract_dir / "angelus-midday.json",
+                {
+                    "key": "angelus-midday",
+                    "name": "Marian Antiphon (Midday)",
+                    "spotify_url_normal": "spotify:episode:2HNK8wLRWHh0mJ9xmJjlUD",
+                    "spotify_uri_easter": "spotify:episode:68xFE8g1JRFu62osp0tLNg",
+                },
+            )
+            _write_json(
+                contract_dir / "angelus-evening.json",
+                {
+                    "key": "angelus-evening",
+                    "name": "Marian Antiphon (Evening)",
+                    "spotify_url_normal": "spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
+                    "spotify_uri_easter": "spotify:episode:7ni2KH5KdbtK0JFL74V8x3",
+                },
+            )
+
+            contracts = self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
+
+        contracts_by_key = {contract.key: contract for contract in contracts}
+        self.assertEqual(
+            contracts_by_key["angelus-morning"].spotify_url_normal,
+            "spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
+        )
+        self.assertEqual(
+            contracts_by_key["angelus-morning"].spotify_uri_easter,
+            "spotify:episode:7ni2KH5KdbtK0JFL74V8x3",
+        )
+        self.assertEqual(
+            contracts_by_key["angelus-midday"].spotify_url_normal,
+            "spotify:episode:2HNK8wLRWHh0mJ9xmJjlUD",
+        )
+        self.assertEqual(
+            contracts_by_key["angelus-midday"].spotify_uri_easter,
+            "spotify:episode:68xFE8g1JRFu62osp0tLNg",
+        )
+        self.assertEqual(
+            contracts_by_key["angelus-evening"].spotify_url_normal,
+            "spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
+        )
+        self.assertEqual(
+            contracts_by_key["angelus-evening"].spotify_uri_easter,
+            "spotify:episode:7ni2KH5KdbtK0JFL74V8x3",
+        )
+        for contract in contracts:
+            self.assertEqual(contract.spotify_uri, "")
+            self.assertEqual(contract.resolver, "")
+
     def test_load_spotify_queue_contracts_rejects_invalid_contract_shapes(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             contract_dir = Path(tmpdir)
@@ -86,6 +148,21 @@ class TestSpotifyContracts(unittest.TestCase):
             )
 
             with self.assertRaisesRegex(RuntimeError, "invalid weekday 'Funday'"):
+                self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
+
+    def test_load_spotify_queue_contracts_rejects_partial_seasonal_shape(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            contract_dir = Path(tmpdir)
+            _write_json(
+                contract_dir / "broken.json",
+                {
+                    "key": "angelus-morning",
+                    "name": "Marian Antiphon (Morning)",
+                    "spotify_url_normal": "spotify:track:1dbE76sfAobxVwYYjQ6yb6",
+                },
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "must define both 'spotify_url_normal' and 'spotify_uri_easter'"):
                 self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
 
     def test_load_spotify_playlist_definitions_matches_filter_and_validates_refs(self):

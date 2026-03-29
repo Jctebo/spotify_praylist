@@ -26,6 +26,8 @@ class SpotifyQueueContract(NamedTuple):
     resolver: str
     fallback_resolver: str
     spotify_uri: str
+    spotify_url_normal: str
+    spotify_uri_easter: str
     weekdays: Tuple[str, ...]
     source_path: Path
 
@@ -58,6 +60,26 @@ def normalize_spotify_playlist_id(value: str) -> str:
         return match.group(1)
     if re.fullmatch(r"[A-Za-z0-9]+", raw):
         return raw
+    return ""
+
+
+def normalize_spotify_queue_uri(value: str) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+
+    match = re.fullmatch(r"spotify:([a-z]+):([A-Za-z0-9]+)", raw, flags=re.IGNORECASE)
+    if match:
+        return f"spotify:{match.group(1).lower()}:{match.group(2)}"
+
+    match = re.fullmatch(
+        r"https?://(?:open|play)\.spotify\.com/(?:embed/)?([a-z]+)/([A-Za-z0-9]+)(?:[/?].*)?$",
+        raw,
+        flags=re.IGNORECASE,
+    )
+    if match:
+        return f"spotify:{match.group(1).lower()}:{match.group(2)}"
+
     return ""
 
 
@@ -143,20 +165,41 @@ def load_spotify_queue_contracts(contract_dir: Optional[Path] = None) -> List[Sp
         resolver = _optional_text(payload, "resolver")
         fallback_resolver = _optional_text(payload, "fallback_resolver")
         spotify_uri = _optional_text(payload, "spotify_uri")
+        spotify_url_normal = _optional_text(payload, "spotify_url_normal")
+        spotify_uri_easter = _optional_text(payload, "spotify_uri_easter")
         weekdays = _load_contract_weekdays(payload, contract_path)
 
         if not key:
             raise RuntimeError(f"Spotify queue contract '{contract_path}' has an invalid 'key'.")
-        if bool(resolver) == bool(spotify_uri):
-            raise RuntimeError(
-                f"Spotify queue contract '{contract_path}' must define exactly one of 'resolver' or 'spotify_uri'."
-            )
-        if fallback_resolver and not resolver:
-            raise RuntimeError(
-                f"Spotify queue contract '{contract_path}' cannot define 'fallback_resolver' without 'resolver'."
-            )
-        if spotify_uri and not spotify_uri.startswith("spotify:"):
-            raise RuntimeError(f"Spotify queue contract '{contract_path}' has an invalid 'spotify_uri'.")
+        has_seasonal_fields = bool(spotify_url_normal or spotify_uri_easter)
+        if has_seasonal_fields:
+            if not spotify_url_normal or not spotify_uri_easter:
+                raise RuntimeError(
+                    f"Spotify queue contract '{contract_path}' must define both 'spotify_url_normal' and 'spotify_uri_easter'."
+                )
+            if resolver or fallback_resolver or spotify_uri:
+                raise RuntimeError(
+                    f"Spotify queue contract '{contract_path}' cannot mix seasonal fields with 'resolver', 'fallback_resolver', or 'spotify_uri'."
+                )
+            if not normalize_spotify_queue_uri(spotify_url_normal):
+                raise RuntimeError(
+                    f"Spotify queue contract '{contract_path}' has an invalid 'spotify_url_normal'."
+                )
+            if not normalize_spotify_queue_uri(spotify_uri_easter):
+                raise RuntimeError(
+                    f"Spotify queue contract '{contract_path}' has an invalid 'spotify_uri_easter'."
+                )
+        else:
+            if bool(resolver) == bool(spotify_uri):
+                raise RuntimeError(
+                    f"Spotify queue contract '{contract_path}' must define exactly one of 'resolver' or 'spotify_uri'."
+                )
+            if fallback_resolver and not resolver:
+                raise RuntimeError(
+                    f"Spotify queue contract '{contract_path}' cannot define 'fallback_resolver' without 'resolver'."
+                )
+            if spotify_uri and not spotify_uri.startswith("spotify:"):
+                raise RuntimeError(f"Spotify queue contract '{contract_path}' has an invalid 'spotify_uri'.")
 
         duplicate_key_path = seen_keys.get(key)
         if duplicate_key_path:
@@ -179,6 +222,8 @@ def load_spotify_queue_contracts(contract_dir: Optional[Path] = None) -> List[Sp
                 resolver=resolver,
                 fallback_resolver=fallback_resolver,
                 spotify_uri=spotify_uri,
+                spotify_url_normal=spotify_url_normal,
+                spotify_uri_easter=spotify_uri_easter,
                 weekdays=weekdays,
                 source_path=contract_path,
             )
