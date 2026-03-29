@@ -1,5 +1,24 @@
 # Release Log
 
+## [0.1.4.0] - 2026-03-28
+
+### Added
+- Added regression coverage for custom-TTS-only discovery and explicit legacy-path rejection in the page-audio and Morning Prayer loaders.
+
+### Changed
+- Repointed `scripts/run_daily_novena_prayer_local.ps1` at `config/custom_tts/morning-prayer.json`.
+- Kept `PAGE_AUDIO_CONFIG_FILE` and `PRAYER_CONFIG_FILE` as custom-TTS-only override hooks in the active runtime.
+- Simplified `jobs/notion/generate_page_audio.py` so the main runtime no longer uses the managed-output truncation hook.
+- Updated `README.md` and the shipped release artifact to describe the custom-TTS-only boundary and the final Morning Prayer cutover.
+
+### Fixed
+- Removed the legacy `config/legacy/page_audio` auto-scan from the active page-audio loader.
+- Made legacy Morning Prayer contract and prayer-config override paths fail fast instead of loading archived files.
+- Kept the active page-audio runtime on `config/custom_tts/` so legacy contracts no longer run or get copied over.
+
+### Removed
+- Removed the remote Morning Prayer publish workflow (`.github/workflows/morning_prayer_page_audio_remote.yml`).
+
 ## [0.1.3.2] - 2026-03-28
 
 ### Added

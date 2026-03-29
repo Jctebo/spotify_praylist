@@ -52,7 +52,7 @@ if (-not $PageAudioLibraryDir) { $PageAudioLibraryDir = $env:PAGE_AUDIO_LIBRARY_
 if (-not $OpenAiApiKey) { $OpenAiApiKey = Read-Host "OPENAI_API_KEY" }
 if (-not $NotionToken) { $NotionToken = Read-Host "NOTION_TOKEN" }
 if (-not $NotionDatabaseId -and -not $NotionDatabaseName) { $NotionDatabaseId = Read-Host "NOTION_DATABASE_ID" }
-if (-not $PrayerConfigFile) { $PrayerConfigFile = "config/legacy/morning-prayer.json" }
+if (-not $PrayerConfigFile) { $PrayerConfigFile = "config/custom_tts/morning-prayer.json" }
 if (-not $PrayerRowTitle) { $PrayerRowTitle = "Morning Prayer" }
 
 $env:OPENAI_API_KEY = $OpenAiApiKey

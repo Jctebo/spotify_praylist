@@ -24,6 +24,8 @@ def load_prayer_config_from_file() -> Dict[str, Any]:
     config_path = Path(raw_path)
     if not config_path.is_absolute():
         config_path = ROOT / config_path
+    if not page_audio.custom_tts_contract_path_allowed(config_path):
+        raise RuntimeError(f"Legacy prayer config paths are no longer runnable: {config_path}")
     if not config_path.exists():
         raise RuntimeError(f"Missing prayer config file: {config_path}")
     with open(config_path, "r", encoding="utf-8") as fh:
