@@ -77,7 +77,7 @@ jobs:
           JOB_UTC_OFFSET: ${{ vars.JOB_UTC_OFFSET }}
         run: python jobs/notion/generate_page_audio.py
 
-      - name: Copy page-audio library to OneDrive
+      - name: Sync page-audio library to OneDrive
         run: |
           set -euo pipefail
           PUBLISH_INFO="$(python -c 'from pathlib import Path, PureWindowsPath; import json, sys; config = json.loads(Path("config/custom_tts/morning-prayer.json").read_text(encoding="utf-8")); path = PureWindowsPath(str(config["output_path"])); parts = list(path.parts); idx = next((i for i, part in enumerate(parts) if part.lower() == "onedrive"), -1); tail = parts[idx + 1:] if idx >= 0 else []; print("/".join(tail) if len(tail) >= 2 else sys.exit("config/custom_tts/morning-prayer.json output_path must include OneDrive/<remote root>/<folder>"))')"
@@ -87,6 +87,6 @@ jobs:
           REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
 
           test -d "$LOCAL_ROOT/$PUBLISH_FOLDER"
-          rclone copy "$LOCAL_ROOT/$PUBLISH_FOLDER/" "${REMOTE_NAME}:${REMOTE_ROOT}/$PUBLISH_FOLDER/" --progress --stats-one-line --transfers 4 --checkers 8
+          rclone sync "$LOCAL_ROOT/$PUBLISH_FOLDER/" "${REMOTE_NAME}:${REMOTE_ROOT}/$PUBLISH_FOLDER/" --progress --stats-one-line --transfers 4 --checkers 8
 
-          echo "Copied page-audio folder '$REMOTE_ROOT/$PUBLISH_FOLDER' to OneDrive via rclone."
+          echo "Synced page-audio folder '$REMOTE_ROOT/$PUBLISH_FOLDER' to OneDrive via rclone."
