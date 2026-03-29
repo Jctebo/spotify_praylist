@@ -62,7 +62,7 @@ PAGE_AUDIO_LIBRARY_GROUP_PROPERTY = "PAGE_AUDIO_LIBRARY_GROUP_PROPERTY"
 PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS = "PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS"
 PAGE_AUDIO_FAIL_OPEN = "PAGE_AUDIO_FAIL_OPEN"
 
-DEFAULT_PAGE_AUDIO_CONFIG_FILE = "config/legacy/page_audio_config.json"
+DEFAULT_PAGE_AUDIO_CONFIG_FILE = "config/custom_tts/morning-prayer.json"
 DEFAULT_MORNING_PRAYER_CONTRACT_FILE = "config/custom_tts/morning-prayer.json"
 DEFAULT_CUSTOM_TTS_CONTRACT_DIR = "config/custom_tts"
 DEFAULT_PAGE_AUDIO_CACHE_DIR = ".cache/page_audio"
@@ -812,6 +812,8 @@ def load_morning_prayer_contract_from_file() -> Dict[str, Any]:
         or DEFAULT_MORNING_PRAYER_CONTRACT_FILE
     )
     custom_tts_dir = custom_tts_config_dir()
+    if not custom_tts_contract_path_allowed(config_path):
+        raise RuntimeError(f"Legacy Morning Prayer contract paths are no longer runnable: {config_path}.")
     if config_path.is_dir():
         configs = load_custom_tts_contracts_from_dir(custom_tts_dir)
         if not configs:
@@ -980,6 +982,12 @@ def custom_tts_config_dir() -> Path:
     return ROOT / DEFAULT_CUSTOM_TTS_CONTRACT_DIR
 
 
+def custom_tts_contract_path_allowed(config_path: Path) -> bool:
+    allowed_root = custom_tts_config_dir().resolve()
+    resolved = config_path.resolve()
+    return resolved == allowed_root or resolved.parent == allowed_root
+
+
 def validate_custom_tts_contract(contract: Dict[str, Any], *, source: str, source_path: Optional[Path] = None) -> None:
     validate_page_audio_contract(contract, source=source)
     for field in ["target_row", "output_type", "path", "enabled"]:
@@ -994,6 +1002,10 @@ def validate_custom_tts_contract(contract: Dict[str, Any], *, source: str, sourc
     if not isinstance(contract.get("enabled"), bool):
         raise RuntimeError(f"Invalid Morning Prayer contract in {source}: 'enabled' must be a boolean.")
     if source_path is not None:
+        if not custom_tts_contract_path_allowed(source_path):
+            raise RuntimeError(
+                f"Invalid Morning Prayer contract in {source}: legacy contract paths outside config/custom_tts/ are no longer runnable."
+            )
         declared_path = Path(output_path)
         if not declared_path.is_absolute():
             declared_path = ROOT / declared_path
@@ -1051,42 +1063,39 @@ def page_audio_config_page_id(config: Dict[str, Any]) -> str:
 
 
 def load_page_audio_config_from_file() -> Dict[str, Any]:
-    config_path = page_audio_config_file_path()
     explicit_config_file = bool(os.getenv(PAGE_AUDIO_CONFIG_FILE, "").strip())
-    if config_path.exists():
-        payload = load_page_audio_json_file(config_path)
-    else:
-        payload = {}
+    custom_tts_dir = custom_tts_config_dir()
+    payload: Dict[str, Any] = {}
     configs: Dict[str, Any] = {}
-    if explicit_config_file and config_path.exists():
-        if isinstance(payload.get("configs"), dict):
-            configs = dict(payload.get("configs") or {})
+
+    if explicit_config_file:
+        config_path = page_audio_config_file_path()
+        if not custom_tts_contract_path_allowed(config_path):
+            raise RuntimeError(
+                f"Legacy page audio contract files are no longer runnable: {config_path}. Use config/custom_tts/ instead."
+            )
+        if config_path.is_dir():
+            configs = load_custom_tts_contracts_from_dir(config_path)
         else:
-            validate_page_audio_contract(payload, source=str(config_path))
+            if not config_path.exists():
+                raise RuntimeError(f"Missing page audio config file: {config_path}")
+            payload = load_page_audio_json_file(config_path)
+            validate_custom_tts_contract(payload, source=str(config_path), source_path=config_path)
+            if not payload.get("enabled", False):
+                raise RuntimeError(f"Disabled page audio config file: {config_path}")
             configs = page_audio_selected_contract_configs(config_path, payload)
             payload = normalize_page_audio_contract(payload)
     else:
-        page_audio_dir = ROOT / "config" / "legacy" / "page_audio"
-        if page_audio_dir.exists():
-            for path in sorted(page_audio_dir.glob("*.json")):
-                contract = load_page_audio_json_file(path)
-                validate_page_audio_contract(contract, source=str(path))
-                contract = normalize_page_audio_contract(contract)
-                key = path.stem
-                configs[key] = contract
-                upper_key = key.upper()
-                if upper_key != key:
-                    configs[upper_key] = contract
-        if not configs and isinstance(payload.get("configs"), dict):
-            configs = dict(payload.get("configs") or {})
+        configs = load_custom_tts_contracts_from_dir(custom_tts_dir)
+
+    if not configs:
+        raise RuntimeError("Invalid page audio config format: missing or empty 'configs'.")
     morning_prayer_contract = load_morning_prayer_contract_from_file()
     if morning_prayer_contract:
         payload["morning_prayer_contract"] = morning_prayer_contract
         morning_prayer_config = configs.get("MORNING_PRAYER_PAGE_AUDIO")
         if isinstance(morning_prayer_config, dict):
             morning_prayer_config["resolver_contract_mode"] = "file_driven"
-    if not configs:
-        raise RuntimeError("Invalid page audio config format: missing or empty 'configs'.")
     payload["configs"] = configs
     return payload
 

@@ -124,6 +124,40 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertIn("missing 'output_type'", str(ctx.exception))
 
+    def test_load_page_audio_config_from_file_ignores_legacy_page_audio_contracts(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            custom_dir = root / "config" / "custom_tts"
+            legacy_dir = root / "config" / "legacy" / "page_audio"
+            custom_dir.mkdir(parents=True, exist_ok=True)
+            legacy_dir.mkdir(parents=True, exist_ok=True)
+
+            morning_path = custom_dir / "morning-prayer.json"
+            legacy_path = legacy_dir / "legacy-page-audio.json"
+            morning_contract = _base_custom_tts_contract(path="config/custom_tts/morning-prayer.json", enabled=True)
+            legacy_contract = _base_custom_tts_contract(
+                path="config/legacy/page_audio/legacy-page-audio.json",
+                enabled=True,
+                key="legacy-page-audio",
+            )
+            morning_path.write_text(json.dumps(morning_contract, indent=2), encoding="utf-8")
+            legacy_path.write_text(json.dumps(legacy_contract, indent=2), encoding="utf-8")
+
+            with mock.patch.object(self.page_audio, "ROOT", root):
+                payload = self.page_audio.load_page_audio_config_from_file()
+
+        self.assertEqual(set(payload.keys()), {"configs", "morning_prayer_contract"})
+        self.assertEqual(set(payload["configs"].keys()), {"morning-prayer", "MORNING-PRAYER"})
+        self.assertNotIn("legacy-page-audio", payload["configs"])
+        self.assertNotIn("LEGACY-PAGE-AUDIO", payload["configs"])
+
+    def test_load_page_audio_config_from_file_rejects_legacy_override_path(self):
+        legacy_path = Path.cwd() / "config" / "legacy" / "page_audio_config.json"
+        with temp_env({self.page_audio.PAGE_AUDIO_CONFIG_FILE: str(legacy_path)}), self.assertRaises(RuntimeError) as ctx:
+            self.page_audio.load_page_audio_config_from_file()
+
+        self.assertIn("Legacy page audio contract files are no longer runnable", str(ctx.exception))
+
     def test_load_morning_prayer_contract_from_file_uses_custom_tts_default(self):
         with temp_env({self.page_audio.MORNING_PRAYER_CONTRACT_FILE: ""}):
             contract = self.page_audio.load_morning_prayer_contract_from_file()
@@ -133,6 +167,13 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(contract["path"], "config/custom_tts/morning-prayer.json")
         self.assertTrue(contract["enabled"])
 
+    def test_load_morning_prayer_contract_from_file_rejects_legacy_override(self):
+        legacy_path = Path.cwd() / "config" / "legacy" / "morning-prayer.json"
+        with temp_env({self.page_audio.MORNING_PRAYER_CONTRACT_FILE: str(legacy_path)}), self.assertRaises(RuntimeError) as ctx:
+            self.page_audio.load_morning_prayer_contract_from_file()
+
+        self.assertIn("Legacy Morning Prayer contract paths are no longer runnable", str(ctx.exception))
+
     def test_load_prayer_config_from_file_uses_custom_tts_default(self):
         with temp_env({self.prayer.PRAYER_CONFIG_FILE: ""}):
             contract = self.prayer.load_prayer_config_from_file()
@@ -141,6 +182,13 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(contract["output_type"], "page_audio")
         self.assertEqual(contract["path"], "config/custom_tts/morning-prayer.json")
         self.assertTrue(contract["enabled"])
+
+    def test_load_prayer_config_from_file_rejects_legacy_override_path(self):
+        legacy_path = Path.cwd() / "config" / "legacy" / "morning-prayer.json"
+        with temp_env({self.prayer.PRAYER_CONFIG_FILE: str(legacy_path)}), self.assertRaises(RuntimeError) as ctx:
+            self.prayer.load_prayer_config_from_file()
+
+        self.assertIn("Legacy prayer config paths are no longer runnable", str(ctx.exception))
 
 
 if __name__ == "__main__":
