@@ -1,5 +1,23 @@
 # Release Log
 
+## [0.1.4.2] - 2026-03-29
+
+### Added
+- Added season-aware Angelus contract fields for ordinary-time and Easter-season Spotify links.
+- Added Romcal-backed Easter-season detection and regression coverage for the seasonal Angelus path.
+
+### Changed
+- Updated the Angelus refresh flow to choose the ordinary-time singing/spoken links outside Easter and the Regina Caeli singing/spoken links during Easter.
+- Normalized resolved Spotify values to queue-safe `spotify:` URIs before writing playlist items.
+- Updated the stabilization roadmap and README to describe the Angelus seasonal exception.
+
+### Fixed
+- Prevented partial seasonal Angelus contracts from loading and failing later at playlist write time.
+- Kept non-Angelus resolver and weekday-gated contracts on the existing contract-first refresh path.
+
+### Removed
+- Removed the legacy single-URI Angelus contract entries `angelus-song.json` and `angelus-podcast.json`.
+
 ## [0.1.4.1] - 2026-03-29
 
 ### Added
