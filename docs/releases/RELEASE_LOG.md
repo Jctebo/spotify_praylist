@@ -1,5 +1,22 @@
 # Release Log
 
+## [0.1.4.1] - 2026-03-29
+
+### Added
+- Added regression coverage for the managed-output cleanup path and the normalized Morning Prayer contract shape.
+
+### Changed
+- Moved the Morning Prayer publish destination into `config/custom_tts/morning-prayer.json` via `output_path`.
+- Normalized the Morning Prayer runtime to derive its `output_folder` from the contract-owned publish path.
+- Switched the remote Morning Prayer publish workflow to sync the contract-owned folder instead of copying it.
+- Kept the managed-output truncation hook enabled so stale audio files are pruned before regeneration.
+
+### Fixed
+- Prevented stale OneDrive files from lingering when a Morning Prayer output disappears from the contract-owned source tree.
+
+### Removed
+- Removed the `random-intention` Morning Prayer resolver from the active contract shape.
+
 ## [0.1.4.0] - 2026-03-28
 
 ### Added
