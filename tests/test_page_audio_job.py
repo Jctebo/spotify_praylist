@@ -34,11 +34,11 @@ def _base_custom_tts_contract(
         },
         "resolvers": [
             {
-                "key": "random-intention",
-                "kind": "code_driven",
-                "resolver": "random_intention_v1",
+                "key": "morning-offering",
+                "kind": "file",
+                "path": "config/content/morning-prayer/content/morning-offering.txt",
                 "order": 1,
-                "title": "Random Intention",
+                "title": "Morning Offering",
                 "targets": ["page_content", "audio"],
             }
         ],
@@ -124,11 +124,11 @@ class TestPageAudioJob(unittest.TestCase):
                 },
                 "resolvers": [
                     {
-                        "key": "random-intention",
-                        "kind": "code_driven",
-                        "resolver": "random_intention_v1",
+                        "key": "morning-offering",
+                        "kind": "file",
+                        "path": "config/content/morning-prayer/content/morning-offering.txt",
                         "order": 1,
-                        "title": "Random Intention",
+                        "title": "Morning Offering",
                         "targets": ["page_content", "audio"],
                     }
                 ],
@@ -189,6 +189,19 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(contract["output_folder"], "Morning")
         self.assertEqual(contract["tts"]["model"], "gpt-4o-mini-tts")
         self.assertTrue(contract["enabled"])
+
+    def test_load_morning_prayer_contract_from_file_omits_random_intention_resolver(self):
+        with temp_env({self.page_audio.MORNING_PRAYER_CONTRACT_FILE: ""}):
+            contract = self.page_audio.load_morning_prayer_contract_from_file()
+
+        resolver_keys = [
+            str(resolver.get("key", "")).strip()
+            for resolver in contract.get("resolvers", [])
+            if isinstance(resolver, dict)
+        ]
+        self.assertGreater(len(resolver_keys), 0)
+        self.assertNotIn("random-intention", resolver_keys)
+        self.assertEqual(resolver_keys[0], "morning-offering")
 
     def test_load_morning_prayer_contract_from_file_rejects_legacy_override(self):
         legacy_path = Path.cwd() / "config" / "legacy" / "morning-prayer.json"
