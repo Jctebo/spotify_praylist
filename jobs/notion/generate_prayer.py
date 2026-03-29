@@ -44,10 +44,11 @@ def prayer_runtime_config(contract: Dict[str, Any]) -> Dict[str, Any]:
         header = {}
     title = str(contract.get("title", "")).strip() or "Prayer"
     model = str(header.get("model", "")).strip() or os.getenv("OAI_MODEL", "").strip() or "gpt-4o-mini-tts"
+    output_path = str(contract["output_path"]).strip()
     return {
         "builder": "morning_prayer_v1",
         "audio_caption": f"{title} (Audio)",
-        "output_folder": "Morning",
+        "output_folder": Path(output_path).name,
         "tts": {"model": model, "voice": "alloy", "format": "mp3", "speed": 1.0},
     }
 

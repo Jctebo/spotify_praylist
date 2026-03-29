@@ -5,6 +5,7 @@
   "status": "enabled",
   "output_type": "page_audio",
   "path": "config/custom_tts/morning-prayer.json",
+  "output_path": "C:/Users/jcteb/OneDrive/Praylist Audio/Playlist Audio/Morning",
   "enabled": true,
   "header": {
     "builder": "morning_prayer_v1",
@@ -14,21 +15,10 @@
   },
   "resolvers": [
     {
-      "key": "random-intention",
-      "kind": "code_driven",
-      "resolver": "random_intention_v1",
-      "order": 1,
-      "title": "Random Intention",
-      "targets": ["page_content", "audio"],
-      "metadata": {
-        "role": "shared_intro"
-      }
-    },
-    {
       "key": "morning-offering",
       "kind": "file",
       "path": "config/content/morning-prayer/content/morning-offering.txt",
-      "order": 2,
+      "order": 1,
       "title": "Morning Offering",
       "targets": ["page_content", "audio"]
     },
@@ -36,7 +26,7 @@
       "key": "daily-consecration",
       "kind": "file",
       "path": "config/content/morning-prayer/content/daily-consecration.txt",
-      "order": 3,
+      "order": 2,
       "title": "Daily Consecration",
       "targets": ["page_content", "audio"]
     },
@@ -44,7 +34,7 @@
       "key": "baptismal-renewal",
       "kind": "file",
       "path": "config/content/morning-prayer/content/baptismal-renewal.txt",
-      "order": 4,
+      "order": 3,
       "title": "Baptismal Renewal",
       "targets": ["page_content", "audio"]
     },
@@ -52,7 +42,7 @@
       "key": "petitions-intro",
       "kind": "file",
       "path": "config/content/morning-prayer/content/petitions-intro.txt",
-      "order": 5,
+      "order": 4,
       "title": "Petitions Intro",
       "targets": ["page_content", "audio"]
     },
@@ -61,7 +51,7 @@
       "kind": "monthly_template",
       "folder": "config/content/morning-prayer/templates/monthly-intention",
       "selector": "current_calendar_month",
-      "order": 6,
+      "order": 5,
       "title": "Monthly Intention",
       "targets": ["page_content", "audio"],
       "metadata": {
@@ -72,7 +62,7 @@
       "key": "petition-families",
       "kind": "file",
       "path": "config/content/morning-prayer/content/petition-families.txt",
-      "order": 7,
+      "order": 6,
       "title": "Petition - Families",
       "targets": ["page_content", "audio"]
     },
@@ -80,7 +70,7 @@
       "key": "petition-marriages",
       "kind": "file",
       "path": "config/content/morning-prayer/content/petition-marriages.txt",
-      "order": 8,
+      "order": 7,
       "title": "Petition - Marriages",
       "targets": ["page_content", "audio"]
     },
@@ -88,7 +78,7 @@
       "key": "petition-conversion",
       "kind": "file",
       "path": "config/content/morning-prayer/content/petition-conversion.txt",
-      "order": 9,
+      "order": 8,
       "title": "Petition - Conversion",
       "targets": ["page_content", "audio"]
     },
@@ -96,7 +86,7 @@
       "key": "petition-church",
       "kind": "file",
       "path": "config/content/morning-prayer/content/petition-church.txt",
-      "order": 10,
+      "order": 9,
       "title": "Petition - Church",
       "targets": ["page_content", "audio"]
     },
@@ -104,7 +94,7 @@
       "key": "petition-sanctification-of-the-church",
       "kind": "file",
       "path": "config/content/morning-prayer/content/petition-sanctification-of-the-church.txt",
-      "order": 11,
+      "order": 10,
       "title": "Petition - Sanctification of the Church",
       "targets": ["page_content", "audio"]
     },
@@ -112,7 +102,7 @@
       "key": "petition-sick-and-departed",
       "kind": "file",
       "path": "config/content/morning-prayer/content/petition-sick-and-departed.txt",
-      "order": 12,
+      "order": 11,
       "title": "Petition - Sick and Departed",
       "targets": ["page_content", "audio"]
     },
@@ -120,7 +110,7 @@
       "key": "intercessory-litany",
       "kind": "file",
       "path": "config/content/morning-prayer/content/intercessory-litany.txt",
-      "order": 13,
+      "order": 12,
       "title": "Intercessory Litany",
       "targets": ["page_content", "audio"]
     }
