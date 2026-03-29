@@ -1,21 +1,29 @@
 # Roadmap: Stabilization of Codebase
 
+
+
 ## Summary Of Changes
 - Release `0.1.3.2` shipped the novena/image decoupling work and moved the shared liturgical helper boundary.
 - The devotional image failure was an OpenAI billing/key issue and was fixed operationally without a release, so it is no longer roadmap work.
-- This roadmap now focuses on Morning Prayer OneDrive-first stability, then voice, RSS, and intention layers.
+- Morning Prayer OneDrive-first repair is complete, so the roadmap now starts with Angelus as the default and Regina Caeli for Easter season, then voice, RSS, and intention layers.
 - Novena work has been moved into a separate audio roadmap so the stabilization track stays focused.
 
 ## Recent Completed Work
 - `0.1.3.2` shipped on 2026-03-28 and decoupled devotional image generation from the novena helper surface.
 - The image access issue was resolved outside the release train after the underlying billing/key problem was identified.
 - The active roadmap no longer needs a separate image-recovery milestone.
+- The Morning Prayer OneDrive repair is complete and can stay the stable base publish path.
+
+## Items to Prioritize
+- Updating Angelus to default to Angelus and use Regina Caeli during Easter season
+  - Singing Version - Pope Leo https://open.spotify.com/track/1dbE76sfAobxVwYYjQ6yb6?si=CpUQlJe7ShyEVPrjXNYnhg
+  - Spoken Version - Catholic Prayers Daily - https://open.spotify.com/episode/68xFE8g1JRFu62osp0tLNg?si=Lwt_hFWtTAqB4FGsOnhvQnT&t=67
 
 ## Roadmap Mode
 - Detailed roadmap
 
 ## Problem
-- Morning Prayer still needs a reliable OneDrive-first delivery path that can be trusted before any broader distribution changes.
+- Morning Prayer now has a repaired OneDrive-first delivery path, so the next stabilization focus is Angelus as the default and Regina Caeli for Easter season before any broader distribution changes.
 - Once those core prayer outputs are stable, the repo can safely move on to TTS migration, RSS publication, and personal intention contracts.
 
 ## Audience
@@ -37,71 +45,69 @@
 - Existing intention primitives in the page-audio and playlist code paths.
 
 ## Sequencing Principles
-- Stabilize the daily Morning Prayer path before adding new content or new delivery surfaces.
+- Use the repaired Morning Prayer path as the stable base before adding Angelus default/Easter-season Regina Caeli handling or new delivery surfaces.
 - Keep TTS migration separate from delivery fixes so voice changes do not hide output bugs.
 - Add RSS only after the artifact, voice, and publish boundary are stable.
 - Leave personal intention contracts until the base prayer outputs are reliable enough to personalize.
 
 ## Release Overview
-- Release 1: Morning Prayer OneDrive-First Repair
+- Release 1: Angelus Default with Easter Season Regina Caeli
 - Release 2: TTS Provider Migration
 - Release 3: RSS Publication Surface
 - Release 4: Custom Intention Contracts
 
-## Release 1: Morning Prayer OneDrive-First Repair
+## Release 1: Angelus Default with Easter Season Regina Caeli
 
 ### Goal
-- Fix Morning Prayer generation and prove it lands correctly in OneDrive before any broader publishing work.
+- Make Angelus the default and swap to Regina Caeli during Easter season before any broader publishing work.
 
 ### Scope
 - In scope:
-- Repair Morning Prayer generation, assembly, or contract issues that currently block the desired daily output.
-- Keep OneDrive as the first publish boundary for Morning Prayer artifacts.
-- Validate artifact contents before blaming OneDrive sync when something is missing or malformed.
-- Keep fail-closed behavior so broken generation does not silently publish partial outputs.
-- Decide the single active daily Morning Prayer path the repo should trust while the legacy matrix remains discontinued.
+- Repair the Angelus resolver so Angelus is the default and Easter season maps to Regina Caeli.
+- Keep the selected prayer explicit and testable instead of hidden behind manual switches.
+- Validate that Easter season resolves to Regina Caeli and the rest of the year resolves to Angelus.
+- Keep fail-closed behavior so missing calendar mapping does not silently publish the wrong prayer version.
 - Explicitly deferred:
 - RSS feed generation.
-- Broad public-hosting decisions beyond the OneDrive-first boundary.
-- TTS-provider migration until the current Morning Prayer path is stable.
+- Broad public-hosting decisions beyond the Angelus path.
+- TTS-provider migration until default-versus-Easter selection is stable.
 
 ### Why This Release Now
-- The user wants Morning Prayer fixed before the TTS switch and before RSS.
-- The repo already has OneDrive-oriented artifact patterns, so this is the natural place to stabilize Morning Prayer delivery first.
+- The repo already has the Angelus and Regina Caeli variants identified, and the next gap is deterministic default-versus-Easter selection.
+- This keeps the stabilization track focused on a single prayer surface before broader voice or RSS work.
 
 ### Research Notes
-- `jobs/notion/generate_page_audio.py` still owns Morning Prayer assembly behavior and exports against the playlist-audio OneDrive root.
-- `docs/releases/0.1.3.0-prayer-output-divergence.md` documents the recent "artifact first, OneDrive second" debugging lesson.
-- `.github/workflows/daily_novena_prayer.yml` is disabled, so the roadmap should assume Morning Prayer needs one clear supported execution path rather than the old legacy matrix.
+- `docs/roadmaps/novena-audio.md` already calls out the Angelus seasonal adaptation item.
+- The stabilization roadmap should treat that item as a release-level repair, not a loose backlog note.
+- Existing prayer artifact and resolver patterns can inform how the default-versus-Easter boundary should behave.
 
 ### Plan
-- Establish the single Morning Prayer generation path the team wants to keep.
-- Validate generated artifacts locally or in CI before treating sync as the root cause.
-- Keep OneDrive as the first trusted destination once artifact integrity is proven.
-- Delay broader publishing work until the OneDrive boundary is reliable again.
+- Define the default Angelus rule and the Easter-season Regina Caeli swap.
+- Validate the resolver against Easter season and non-Easter paths.
+- Keep the selected variant stable enough that later TTS or publishing work does not have to rediscover the same liturgical logic.
 
 ### Features
-- Stable Morning Prayer daily artifact generation.
-- OneDrive-first Morning Prayer publish boundary.
-- Clear validation flow that distinguishes generation failures from sync failures.
+- Default Angelus selection.
+- Easter-season Regina Caeli routing.
+- Validation that Easter resolves to Regina Caeli and other seasons resolve to Angelus.
 
 ### Stories
-- As the maintainer, I want Morning Prayer fixed and landing in OneDrive first, so I can trust the daily output before adding more distribution layers.
-- As an operator, I want artifact-level validation before sync, so debugging does not get stuck on the wrong boundary.
+- As the maintainer, I want Angelus to stay the default and switch to Regina Caeli during Easter season, so the right prayer version is selected without manual intervention.
+- As a listener, I want Easter season to use Regina Caeli and the rest of the year to use Angelus, so the output feels liturgically appropriate.
 
 ### Dependencies
-- A working current OpenAI auth path while Morning Prayer is still on the existing TTS stack.
-- The shipped OneDrive artifact fan-in and sync patterns already documented in earlier release artifacts.
+- The completed Morning Prayer OneDrive repair as the stable publish base.
+- Clear liturgical mapping for Angelus and Regina Caeli already identified in the separate audio roadmap.
 
 ### Risks
-- Morning Prayer still sits inside a broader page-audio runtime, so hidden coupling may surface when narrowing or stabilizing its path.
-- If the repo keeps multiple half-active Morning Prayer entrypoints, operators may still be unsure which path is authoritative.
-- Sync debugging can waste time if artifact integrity is not proven first.
+- Liturgical logic can be easy to get subtly wrong if the Easter boundary is not explicit.
+- Ambiguous fallback behavior could reintroduce manual selection work.
+- If the resolver and contract drift, the wrong version could be published quietly.
 
 ### Exit Criteria
-- Morning Prayer can be generated through one clear supported path.
-- The generated artifact is validated before sync.
-- OneDrive receives the expected Morning Prayer output from that validated artifact path.
+- Angelus resolves to the default form outside Easter and Regina Caeli during Easter.
+- The selected variant is validated in tests or equivalent checks.
+- The repair can be trusted as the next stable stabilization release.
 
 ## Release 2: TTS Provider Migration
 
@@ -142,7 +148,7 @@
 - As the operator, I want provider-aware fallbacks and logging, so a provider outage does not turn into silent broken publishing.
 
 ### Dependencies
-- Release 1's stable Morning Prayer artifact and OneDrive boundary.
+- The completed Morning Prayer OneDrive repair as the stable publish base.
 - Credentials and operational limits for the selected replacement TTS provider.
 
 ### Risks
@@ -178,7 +184,7 @@
 - OneDrive and GitHub Pages already exist as delivery mechanisms, but neither is yet declared the canonical RSS publication host.
 
 ### Plan
-- Reuse the stabilized Morning Prayer artifact package from Releases 1 and 2.
+- Reuse the stabilized Morning Prayer artifact package from the completed Morning Prayer repair and Release 2.
 - Keep feed identity stable enough that podcast clients do not treat each rollout as a new show.
 - Choose one hosting boundary deliberately instead of mixing OneDrive links, Pages assets, and ad hoc storage.
 
@@ -192,7 +198,7 @@
 - As the maintainer, I want RSS to publish from the same stable artifact path, so OneDrive-first delivery and public feed delivery stay aligned.
 
 ### Dependencies
-- Release 1's stable Morning Prayer artifact.
+- The completed Morning Prayer OneDrive repair as the stable base artifact path.
 - Release 2's stable TTS-provider path.
 - A validated public-hosting decision for RSS and media URLs.
 
@@ -246,7 +252,7 @@
 - As the operator, I want those intention outputs published to OneDrive from one consistent contract surface, so the workflow is inspectable and maintainable.
 
 ### Dependencies
-- Stable OneDrive publishing conventions from Release 1.
+- Stable OneDrive publishing conventions from the completed Morning Prayer repair.
 - A clear Notion schema for personal intentions.
 - Agreement on what the published OneDrive artifact looks like for each time-of-day contract.
 
@@ -271,14 +277,15 @@
 - Fact: `0.1.3.2` shipped on 2026-03-28 and finished the novena/image helper decoupling work.
 - Fact: the OpenAI image failure was resolved operationally and does not need a roadmap release.
 - Fact: `.github/workflows/daily_novena_prayer.yml` is intentionally disabled.
+- Fact: the Morning Prayer OneDrive repair is complete and no longer the active stabilization item.
 - Fact: `jobs/notion/generate_page_audio.py` still uses the playlist-audio OneDrive library boundary and still assumes OpenAI on the current TTS path.
 - Fact: the repo has RSS ingestion behavior, but no confirmed Morning Prayer RSS publication path yet.
 - Fact: novena-specific roadmap work now lives on a separate audio roadmap instead of this stabilization roadmap.
-- Assumption: OneDrive should remain the first publish boundary for Morning Prayer before RSS is added.
+- Assumption: the completed Morning Prayer repair remains the base publish boundary while Angelus becomes the next stabilization release.
 - Unknown: the exact replacement TTS provider to be locked during Release 2 planning.
 - Unknown: the final hosting boundary for RSS XML and media URLs.
 - Unknown: the final artifact format for custom intention contracts published to OneDrive.
 
 ## Recommended Next Step
-- Move Release 1 into `/plan-astack` first.
-- It is the cleanest boundary change, it reduces delivery risk, and it gives us a stable base before reattaching novena generation.
+- Move the Angelus default/Easter-season resolver repair into `/plan-astack` first.
+- It is the cleanest next boundary change, it reduces delivery risk, and it gives us a stable base before broader voice and feed work.
