@@ -3,7 +3,7 @@ name: Publish Liturgical ICS
 on:
   workflow_dispatch:
   schedule:
-    - cron: "30 8 2 1 *" # Jan 2 yearly (02:30 CST / 03:30 CDT)
+    - cron: "30 6 2 1 *" # Jan 2 yearly (00:30 CST / 01:30 CDT)
 
 permissions:
   contents: write
