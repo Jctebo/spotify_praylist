@@ -16,7 +16,7 @@ on:
         required: false
         type: string
   schedule:
-    - cron: "20 8 1 1 *" # Jan 1 yearly, 02:20 CST / 03:20 CDT; populates next year (e.g., 2027 run writes 2028)
+    - cron: "20 6 1 1 *" # Jan 1 yearly, 00:20 CST / 01:20 CDT; populates next year (e.g., 2027 run writes 2028)
 
 jobs:
   sync-liturgical-calendar:

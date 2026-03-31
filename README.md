@@ -170,7 +170,7 @@ Purpose:
 
 Workflow:
 - `.github/workflows/daily_notion_reset.yml`
-- schedule: `0 8 * * *` (02:00 CST / 03:00 CDT)
+- schedule: `0 6 * * *` (00:00 CST / 01:00 CDT)
 
 Required:
 - `NOTION_TOKEN` secret

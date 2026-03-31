@@ -1,5 +1,15 @@
 # Release Log
 
+## [0.1.5.1] - 2026-03-30
+
+### Changed
+- Moved the active scheduled GitHub Actions workflows into a midnight-ish Central time window by shifting the daily cron band from 08:00-08:30 UTC to 06:00-06:30 UTC.
+- Preserved the daily Spotify refresh schedule gate and the manual `workflow_dispatch` entrypoints on the active workflows.
+- Updated the README schedule note so the documented daily Notion reset time matches the new cadence.
+
+### Fixed
+- Kept the yearly January workflows on their intended dates while moving them earlier in the day.
+
 ## [0.1.4.2] - 2026-03-29
 
 ### Added
