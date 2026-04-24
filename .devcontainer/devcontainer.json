@@ -1,0 +1,45 @@
+{
+  "name": "spotify-praylist",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspaces/spotify_praylist",
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "PYTHONUNBUFFERED": "1",
+    "USERPROFILE": "/data",
+    "PAGE_AUDIO_CACHE_DIR": "/data/cache/page_audio",
+    "PAGE_AUDIO_LIBRARY_DIR": "/data/page_audio_library",
+    "NOVENA_AUDIO_LIBRARY_DIR": "/data/novena_audio_library",
+    "DEVOTIONAL_ONEDRIVE_DCIM_DIR": "/data/devotional/DCIM"
+  },
+  "remoteEnv": {
+    "PATH": "${containerWorkspaceFolder}/.venv/bin:${containerEnv:PATH}"
+  },
+  "mounts": [
+    "source=${localWorkspaceFolder}/artifacts/container,target=/data,type=bind,consistency=cached"
+  ],
+  "postCreateCommand": "python -m venv .venv && . .venv/bin/activate && python -m pip install --upgrade pip && python -m pip install -r requirements.txt",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.vscode-pylance"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+        "python.testing.unittestEnabled": true,
+        "python.testing.unittestArgs": [
+          "discover",
+          "-s",
+          "tests",
+          "-p",
+          "test_*.py"
+        ]
+      }
+    }
+  }
+}

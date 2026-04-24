@@ -121,6 +121,117 @@ Expected behavior:
 - prints one summary per playlist: `playlist`, `playlist_id`, and `tracks_written`
 - exits non-zero on invalid contracts, invalid playlist definitions, invalid single-playlist overrides, or unresolved selected runs
 
+## Portable Development Container
+This repository includes a VS Code Dev Container for developing from multiple machines without changing the deployment path.
+
+Use it when you want a consistent Python 3.11 environment with dependencies installed inside Docker while the source code remains mounted from your local checkout.
+
+Prerequisites:
+- Docker Desktop or another Docker engine
+- VS Code with the Dev Containers extension, or another editor that supports `.devcontainer/devcontainer.json`
+
+Open the repo in the container:
+
+```text
+VS Code -> Command Palette -> Dev Containers: Reopen in Container
+```
+
+The dev container:
+- mounts the local checkout into `/workspaces/spotify_praylist`
+- installs `requirements.txt` after creation
+- stores generated cache/audio/image outputs under the mounted `./artifacts/container` folder via `/data`
+- configures unittest discovery for `tests/test_*.py`
+- does not change GitHub Actions or any existing deployment workflow
+
+Run tests inside the dev container:
+
+```bash
+python -m unittest discover -s tests -p "test_*.py"
+```
+
+Run the default Spotify refresh inside the dev container:
+
+```bash
+python -m jobs.playlist.refresh_playlist
+```
+
+## Container Deployment
+This app is packaged as a one-shot job container. It does not expose an HTTP port; a scheduler runs the image, the selected job does its work, and the container exits non-zero if the job fails.
+
+The default container command refreshes Spotify playlists:
+
+```bash
+python -m jobs.playlist.refresh_playlist
+```
+
+Build the deployment image locally:
+
+```bash
+docker build -t spotify-praylist:local .
+```
+
+Run the default Spotify playlist refresh locally:
+
+```bash
+docker run --rm --env-file .env spotify-praylist:local
+```
+
+Run a single playlist:
+
+```bash
+docker run --rm --env-file .env -e SPOTIFY_PLAYLIST_NAME=morning spotify-praylist:local
+```
+
+Run another job by overriding the command:
+
+```bash
+docker run --rm --env-file .env spotify-praylist:local python -m jobs.notion.reset_notion_completions
+docker run --rm --env-file .env -v "$PWD/artifacts/container:/data" spotify-praylist:local python -m jobs.novena.generate_daily_novena_prayer
+docker run --rm --env-file .env -v "$PWD/artifacts/container:/data" spotify-praylist:local python jobs/notion/generate_page_audio.py
+docker run --rm --env-file .env -v "$PWD/artifacts/container:/data" spotify-praylist:local python -m jobs.novena.generate_devotional_image
+```
+
+Run with Docker Compose locally:
+
+```bash
+docker compose run --rm playlist-refresh
+```
+
+Other job entrypoints are available as Compose profiles:
+
+```bash
+docker compose --profile notion run --rm notion-reset
+docker compose --profile novena run --rm novena-prayer
+docker compose --profile audio run --rm page-audio
+docker compose --profile image run --rm devotional-image
+docker compose --profile test run --rm tests
+```
+
+Use a registry image with Compose:
+
+```bash
+SPOTIFY_PRAYLIST_IMAGE=ghcr.io/<owner>/<repo>:latest docker compose run --rm playlist-refresh
+```
+
+Publish the image:
+- `.github/workflows/container.yml` builds and publishes the image to GitHub Container Registry as `ghcr.io/<owner>/<repo>:latest` on pushes to `main`.
+- The same workflow also publishes immutable SHA tags like `ghcr.io/<owner>/<repo>:sha-<commit>`.
+- Run the workflow manually from GitHub Actions if you want to publish without changing app code.
+
+Deploy the image:
+- Use any job scheduler that can run a container, such as GitHub Actions container jobs, Kubernetes CronJob, Azure Container Apps jobs, AWS ECS scheduled tasks, or a VM cron calling `docker run`.
+- Inject secrets at runtime; do not bake `.env` into the image.
+- Mount persistent storage at `/data` for jobs that generate cache/audio/image files.
+- Use `JOB_UTC_OFFSET=-06:00` or another explicit offset so date-sensitive jobs behave consistently.
+
+Container implementation notes:
+- [Dockerfile](c:/Users/jcteb/Code/spotify_praylist/Dockerfile) uses Python 3.11, installs `requirements.txt`, copies the app, and defaults to `python -m jobs.playlist.refresh_playlist`.
+- The runtime image runs as an unprivileged `app` user.
+- `.devcontainer/` is for portable development; the root `Dockerfile` is the deployable runtime image.
+- `.dockerignore` excludes local secrets, caches, virtual environments, and generated artifacts from the image build context.
+- `compose.yaml` mounts `./artifacts/container` to `/data` for generated audio/image/cache outputs.
+- The image sets Linux-safe defaults for `USERPROFILE`, `PAGE_AUDIO_CACHE_DIR`, `PAGE_AUDIO_LIBRARY_DIR`, `NOVENA_AUDIO_LIBRARY_DIR`, and `DEVOTIONAL_ONEDRIVE_DCIM_DIR`; override them with environment variables if you mount a different output path.
+
 ## GitHub Actions Setup
 1. Push this project to a GitHub repository.
 2. In GitHub: `Settings -> Secrets and variables -> Actions`.

@@ -1,0 +1,58 @@
+services:
+  playlist-refresh:
+    build: .
+    image: ${SPOTIFY_PRAYLIST_IMAGE:-spotify-praylist:local}
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./artifacts/container:/data
+    command: ["python", "-m", "jobs.playlist.refresh_playlist"]
+
+  notion-reset:
+    image: ${SPOTIFY_PRAYLIST_IMAGE:-spotify-praylist:local}
+    build: .
+    profiles: ["notion"]
+    env_file:
+      - path: .env
+        required: false
+    command: ["python", "-m", "jobs.notion.reset_notion_completions"]
+
+  novena-prayer:
+    image: ${SPOTIFY_PRAYLIST_IMAGE:-spotify-praylist:local}
+    build: .
+    profiles: ["novena"]
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./artifacts/container:/data
+    command: ["python", "-m", "jobs.novena.generate_daily_novena_prayer"]
+
+  page-audio:
+    image: ${SPOTIFY_PRAYLIST_IMAGE:-spotify-praylist:local}
+    build: .
+    profiles: ["audio"]
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./artifacts/container:/data
+    command: ["python", "jobs/notion/generate_page_audio.py"]
+
+  devotional-image:
+    image: ${SPOTIFY_PRAYLIST_IMAGE:-spotify-praylist:local}
+    build: .
+    profiles: ["image"]
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./artifacts/container:/data
+    command: ["python", "-m", "jobs.novena.generate_devotional_image"]
+
+  tests:
+    image: ${SPOTIFY_PRAYLIST_IMAGE:-spotify-praylist:local}
+    build: .
+    profiles: ["test"]
+    command: ["python", "-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"]
