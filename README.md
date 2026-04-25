@@ -62,10 +62,11 @@ Playlist definition files in `config/spotify/playlists/` own:
 
 Playlist membership and sequence come from checked Notion rows:
 - Notion `Enabled` must be checked.
+- Notion `Output Folder` must be populated; blank `Output Folder` omits the row just like unchecked `Enabled`.
 - Notion `Name` must exactly match a contract `notion_name`.
-- Notion `Output Folder` must match one playlist key or display name such as `Morning`, `Midday`, `Night`, or `Sunday`.
+- Notion `Output Folder`, when populated, must match one playlist key or display name such as `Morning`, `Midday`, `Night`, or `Sunday`.
 - Notion `Order` controls queue order inside the playlist.
-- Contracts with no checked matching Notion row stay inactive without failing the run.
+- Contracts with no checked matching Notion row, or with a row whose `Output Folder` is blank, stay inactive without failing the run.
 
 The committed playlist definitions are:
 - `config/spotify/playlists/morning.json`
@@ -80,8 +81,8 @@ The runtime validates the selected playlist definitions before any Spotify write
 - invalid contract weekday names
 - invalid contract resolver-vs-direct-URI shapes
 - duplicate checked Notion rows for one `notion_name`
-- checked matched rows with blank or unknown `Output Folder`
-- checked matched rows with missing `Order`
+- checked matched rows with unknown `Output Folder`
+- checked matched rows with populated `Output Folder` but missing `Order`
 
 ## Local Setup
 1. Create and activate a virtual environment.

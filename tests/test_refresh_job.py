@@ -352,6 +352,7 @@ class TestRefreshJob(unittest.TestCase):
             _queue_contract(self.mod, "inactive", notion_name="Inactive", resolver="INACTIVE"),
             _queue_contract(self.mod, "first", notion_name="First", resolver="FIRST"),
             _queue_contract(self.mod, "night", notion_name="Night Prayer", resolver="NIGHT"),
+            _queue_contract(self.mod, "unplaced", notion_name="Unplaced", resolver="UNPLACED"),
         ]
         playlists = [
             _playlist_definition(self.mod, "morning", name="Morning", playlist_id="playlist_morning"),
@@ -402,6 +403,14 @@ class TestRefreshJob(unittest.TestCase):
                     "Order": _number_prop(5),
                 },
             },
+            {
+                "id": "page_unplaced",
+                "properties": {
+                    "Name": _title_prop("Unplaced"),
+                    "Enabled": _checkbox_prop(True),
+                    "Order": _number_prop(6),
+                },
+            },
         ]
 
         with temp_env({"NOTION_DATABASE_ID": "db_1"}):
@@ -413,8 +422,9 @@ class TestRefreshJob(unittest.TestCase):
             ["first", "second"],
         )
         self.assertEqual([contract.key for contract in build.contracts_by_playlist["night"]], ["night"])
-        self.assertEqual(build.stats["checked_rows"], 3)
+        self.assertEqual(build.stats["checked_rows"], 4)
         self.assertEqual(build.stats["ignored_non_enabled_rows"], 2)
+        self.assertEqual(build.stats["ignored_missing_output_folder_rows"], 1)
         self.assertEqual(build.stats["inactive_contracts"], 1)
 
     def test_build_notion_playlist_memberships_fails_on_duplicate_checked_title(self):

@@ -999,6 +999,7 @@ def build_notion_playlist_memberships(
         definition.key: [] for definition in playlist_definitions
     }
     inactive_contracts = 0
+    ignored_missing_output_folder_rows = 0
     matched_rows = 0
     for contract in contracts:
         matching_pages = checked_pages_by_title.get(contract.notion_name, [])
@@ -1016,7 +1017,8 @@ def build_notion_playlist_memberships(
         output_folder_values = page_property_normalized_values(page, output_folder_property)
         raw_output_folder = page_property_text(page, output_folder_property).strip()
         if not output_folder_values:
-            raise RuntimeError(f"Spotify row '{contract.notion_name}' is missing '{output_folder_property}'.")
+            ignored_missing_output_folder_rows += 1
+            continue
         if len(output_folder_values) > 1:
             raise RuntimeError(
                 f"Spotify row '{contract.notion_name}' has multiple '{output_folder_property}' values: "
@@ -1063,6 +1065,7 @@ def build_notion_playlist_memberships(
             "notion_rows": len(pages),
             "checked_rows": sum(len(rows) for rows in checked_pages_by_title.values()),
             "ignored_non_enabled_rows": ignored_non_enabled_rows,
+            "ignored_missing_output_folder_rows": ignored_missing_output_folder_rows,
             "matched_rows": matched_rows,
             "inactive_contracts": inactive_contracts,
         },
@@ -2562,6 +2565,7 @@ def main() -> int:
                     f"checked_rows={membership_stats.get('checked_rows', 0)} "
                     f"matched_rows={membership_stats.get('matched_rows', 0)} "
                     f"ignored_non_enabled_rows={membership_stats.get('ignored_non_enabled_rows', 0)} "
+                    f"ignored_missing_output_folder_rows={membership_stats.get('ignored_missing_output_folder_rows', 0)} "
                     f"inactive_contracts={membership_stats.get('inactive_contracts', 0)}"
                 )
             print(f"INFO utc_offset={current_now.strftime('%z')}")
