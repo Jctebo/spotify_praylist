@@ -1,5 +1,5 @@
 {
   "key": "midday-prayer",
-  "name": "Midday Prayer",
+  "notion_name": "Midday Prayer",
   "resolver": "MIDDAY"
 }

@@ -1,6 +1,6 @@
 {
   "key": "lenten-devotion",
-  "name": "Lenten Devotion",
+  "notion_name": "Lenten Devotion",
   "spotify_uri": "spotify:episode:4rZ8YJKq1iuqiypu3Q5TRm",
   "weekdays": [
     "Friday"

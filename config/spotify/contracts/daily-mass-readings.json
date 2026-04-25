@@ -1,5 +1,5 @@
 {
   "key": "daily-mass-readings",
-  "name": "USCCB Daily Readings",
+  "notion_name": "USCCB Daily Readings",
   "resolver": "USCCB"
 }

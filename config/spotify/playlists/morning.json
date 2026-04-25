@@ -1,13 +1,5 @@
 {
   "key": "morning",
   "name": "Morning",
-  "playlist_id": "0sy9eBsySKuCppI0PxXRJN",
-  "contracts": [
-    "morning-prayer",
-    "daily-rosary",
-    "divine-office-invitatory",
-    "morning-prayer-loh",
-    "bible-in-a-year",
-    "angelus-morning"
-  ]
+  "playlist_id": "0sy9eBsySKuCppI0PxXRJN"
 }

@@ -1,5 +1,23 @@
 # Release Log
 
+## [0.1.5.2] - 2026-04-25
+
+### Added
+- Added Notion-owned Spotify playlist membership and ordering for the active refresh path using checked `Enabled` rows, exact `notion_name` title joins, populated `Output Folder`, and Notion `Order`.
+- Added regression coverage for identity-only playlist files, required Notion membership, exact Notion title joins, checked-only inclusion, blank `Output Folder` omission, unknown folder failures, missing order failures, duplicate active row failures, and weekday-gated playlist skips.
+
+### Changed
+- Renamed Spotify queue contract `name` fields to `notion_name` and made playlist JSON files identity-only with `key`, `name`, and `playlist_id`.
+- Updated the Spotify refresh workflow and README to document the hard Notion membership dependency and the `source=notion_membership` runtime.
+- Updated the morning and evening Marian Antiphon Easter URI to the current Regina Caeli episode.
+
+### Fixed
+- Treat blank or missing Notion `Output Folder` values as inactive rows, matching unchecked `Enabled` behavior instead of failing the refresh.
+- Preserve fail-closed validation for duplicate checked Notion rows, unknown populated `Output Folder` values, and missing `Order` values on placed rows.
+
+### Removed
+- Removed the stale legacy Spotify/Notion queue-builder helpers and skipped legacy tests that contradicted the active contract path.
+
 ## [0.1.5.1] - 2026-03-30
 
 ### Changed

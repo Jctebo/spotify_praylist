@@ -31,7 +31,7 @@ def _number_prop(value):
 def _queue_contract(
     mod,
     key,
-    name=None,
+    notion_name=None,
     resolver="",
     fallback_resolver="",
     spotify_uri="",
@@ -39,10 +39,10 @@ def _queue_contract(
     spotify_uri_easter="",
     weekdays=(),
 ):
-    display_name = name or key.title()
+    display_name = notion_name or key.title()
     return mod.SpotifyQueueContract(
         key=key,
-        name=display_name,
+        notion_name=display_name,
         resolver=resolver,
         fallback_resolver=fallback_resolver,
         spotify_uri=spotify_uri,
@@ -102,10 +102,10 @@ class TestRefreshJob(unittest.TestCase):
             "SPOTIFY_CLIENT_ID": "cid",
             "SPOTIFY_CLIENT_SECRET": "secret",
             "SPOTIFY_REFRESH_TOKEN": "refresh",
-            "NOTION_TOKEN": "",
+            "NOTION_TOKEN": "notion_token",
         }
         queue = ["spotify:track:111", "spotify:episode:222"]
-        contracts = [_queue_contract(self.mod, "morning-prayer-loh", name="Morning Prayer (LOH)", resolver="MORNING")]
+        contracts = [_queue_contract(self.mod, "morning-prayer-loh", notion_name="Morning Prayer (LOH)", resolver="MORNING")]
         playlists = [
             _playlist_definition(
                 self.mod,
@@ -124,25 +124,30 @@ class TestRefreshJob(unittest.TestCase):
             ), patch.object(
                 self.mod, "build_queue_for_playlist_definition", return_value=queue
             ), patch.object(
+                self.mod,
+                "build_notion_playlist_memberships",
+                return_value=self.mod.NotionPlaylistMembershipBuild(
+                    contracts_by_playlist={"morning": tuple(contracts)},
+                    stats={},
+                ),
+            ), patch.object(
                 self.mod, "recreate_playlist_items", return_value=len(queue)
             ) as recreate_mock, patch.object(
                 self.mod, "sync_notion_uris_for_playlist"
-            ) as autosync_mock, patch.object(
-                self.mod, "distribute_prayer_intentions"
-            ) as intentions_mock:
+            ) as autosync_mock, patch.object(self.mod, "distribute_prayer_intentions", return_value=(0, 0, 0)) as intentions_mock:
                 rc = self.mod.main()
 
         self.assertEqual(rc, 0)
         recreate_mock.assert_called_once_with("token_123", "playlist_123", queue)
         autosync_mock.assert_not_called()
-        intentions_mock.assert_not_called()
+        intentions_mock.assert_called_once_with("Morning")
 
     def test_main_fails_when_queue_empty(self):
         env = {
             "SPOTIFY_CLIENT_ID": "cid",
             "SPOTIFY_CLIENT_SECRET": "secret",
             "SPOTIFY_REFRESH_TOKEN": "refresh",
-            "NOTION_TOKEN": "",
+            "NOTION_TOKEN": "notion_token",
         }
         contracts = [_queue_contract(self.mod, "morning-prayer-loh", resolver="MORNING")]
         playlists = [
@@ -162,6 +167,13 @@ class TestRefreshJob(unittest.TestCase):
                 self.mod, "load_spotify_playlist_definitions", return_value=playlists
             ), patch.object(
                 self.mod, "build_queue_for_playlist_definition", return_value=[]
+            ), patch.object(
+                self.mod,
+                "build_notion_playlist_memberships",
+                return_value=self.mod.NotionPlaylistMembershipBuild(
+                    contracts_by_playlist={"morning": tuple(contracts)},
+                    stats={},
+                ),
             ):
                 rc = self.mod.main()
 
@@ -185,7 +197,7 @@ class TestRefreshJob(unittest.TestCase):
             "morning-prayer-loh": _queue_contract(
                 self.mod,
                 "morning-prayer-loh",
-                name="Morning Prayer (LOH)",
+                notion_name="Morning Prayer (LOH)",
                 resolver="MORNING",
                 fallback_resolver="DO_MORNING",
             ),
@@ -208,7 +220,7 @@ class TestRefreshJob(unittest.TestCase):
                 {},
                 {},
                 {},
-                contracts_by_key=contracts_by_key,
+                ordered_contracts=tuple(contracts_by_key.values()),
             )
 
         self.assertEqual(queue, ["spotify:episode:domorning", "spotify:episode:rosary"])
@@ -224,7 +236,7 @@ class TestRefreshJob(unittest.TestCase):
             "fr-mike-sunday-homily": _queue_contract(
                 self.mod,
                 "fr-mike-sunday-homily",
-                name="Fr. Mike Sunday Homily",
+                notion_name="Fr. Mike Sunday Homily",
                 resolver="SUNDAY_FRMIKE",
                 weekdays=("Sunday",),
             )
@@ -240,7 +252,7 @@ class TestRefreshJob(unittest.TestCase):
             {},
             {},
             {},
-            contracts_by_key=contracts_by_key,
+            ordered_contracts=tuple(contracts_by_key.values()),
         )
 
         self.assertEqual(queue, [])
@@ -257,21 +269,21 @@ class TestRefreshJob(unittest.TestCase):
             "angelus-morning": _queue_contract(
                 self.mod,
                 "angelus-morning",
-                name="Marian Antiphon (Morning)",
+                notion_name="Marian Antiphon (Morning)",
                 spotify_url_normal="spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
                 spotify_uri_easter="spotify:episode:7ni2KH5KdbtK0JFL74V8x3",
             ),
             "angelus-midday": _queue_contract(
                 self.mod,
                 "angelus-midday",
-                name="Marian Antiphon (Midday)",
+                notion_name="Marian Antiphon (Midday)",
                 spotify_url_normal="spotify:episode:2HNK8wLRWHh0mJ9xmJjlUD",
                 spotify_uri_easter="spotify:episode:68xFE8g1JRFu62osp0tLNg",
             ),
             "angelus-evening": _queue_contract(
                 self.mod,
                 "angelus-evening",
-                name="Marian Antiphon (Evening)",
+                notion_name="Marian Antiphon (Evening)",
                 spotify_url_normal="spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
                 spotify_uri_easter="spotify:episode:7ni2KH5KdbtK0JFL74V8x3",
             )
@@ -293,7 +305,7 @@ class TestRefreshJob(unittest.TestCase):
                 {},
                 {},
                 {},
-                contracts_by_key=contracts_by_key,
+                ordered_contracts=tuple(contracts_by_key.values()),
             )
             easter_queue = self.mod.build_queue_for_playlist_definition(
                 object(),
@@ -304,7 +316,7 @@ class TestRefreshJob(unittest.TestCase):
                 {},
                 {},
                 {},
-                contracts_by_key=contracts_by_key,
+                ordered_contracts=tuple(contracts_by_key.values()),
             )
 
         self.assertEqual(
@@ -330,142 +342,159 @@ class TestRefreshJob(unittest.TestCase):
         self.assertTrue(easter_status["Seasonal:Marian Antiphon (Midday):easter"])
         self.assertTrue(easter_status["Seasonal:Marian Antiphon (Evening):easter"])
 
-    @unittest.skip("Legacy Notion queue assembly path is no longer the active Spotify refresh surface.")
-    def test_build_queue_for_playlist_from_notion_skips_non_spotify_rows(self):
-        env = {
-            "NOTION_TOKEN": "notion_token",
-            "NOTION_DATABASE_ID": "db_1",
-        }
-        pages = [
-            {
-                "properties": {
-                    "Name": _title_prop("Spotify Morning Prayer"),
-                    "Platform": _select_prop("spotify"),
-                    "Output Folder": _rich_text_prop("Morning"),
-                    "Order": _number_prop(2),
-                    "Spotify Resolver": _rich_text_prop("MORNING"),
-                    "Enabled": _checkbox_prop(True),
-                    "URI": _rich_text_prop(""),
-                }
-            },
-            {
-                "properties": {
-                    "Name": _title_prop("Hallow Rosary"),
-                    "Platform": _select_prop("hallow"),
-                    "Output Folder": _rich_text_prop("Morning"),
-                    "Order": _number_prop(1),
-                    "Spotify Resolver": _rich_text_prop("HALLOW"),
-                    "Enabled": _checkbox_prop(True),
-                    "URI": _rich_text_prop(""),
-                }
-            },
-            {
-                "properties": {
-                    "Name": _title_prop("Spotify Midday Prayer"),
-                    "Platform": _select_prop("spotify"),
-                    "Output Folder": _rich_text_prop("Midday"),
-                    "Order": _number_prop(1),
-                    "Spotify Resolver": _rich_text_prop("MIDDAY"),
-                    "Enabled": _checkbox_prop(True),
-                    "URI": _rich_text_prop(""),
-                }
-            },
-        ]
-
-        def fake_resolve(sp, resolver, weekday, status, shows_cfg, fixed_cfg, tokens_cfg):
-            return f"spotify:episode:{resolver.lower()}"
-
-        with temp_env(env):
-            with patch.object(self.mod, "notion_get_all_pages", return_value=pages), patch.object(
-                self.mod, "resolve_spec_uri", side_effect=fake_resolve
-            ):
-                queue = self.mod.build_queue_for_playlist_from_notion(
-                    object(), "Morning", "Wednesday", {}, {}, {}, {}
-                )
-
-        self.assertEqual(queue, ["spotify:episode:morning"])
-
-    @unittest.skip("Legacy Notion queue assembly path is no longer the active Spotify refresh surface.")
-    def test_build_queue_for_playlist_from_notion_uses_order_field_only(self):
-        env = {
-            "NOTION_TOKEN": "notion_token",
-            "NOTION_DATABASE_ID": "db_1",
-        }
-        pages = [
-            {
-                "properties": {
-                    "Name": _title_prop("Legacy First"),
-                    "Platform": _select_prop("spotify"),
-                    "Output Folder": _rich_text_prop("Morning"),
-                    "Order": _number_prop(1.01),
-                    "Spotify Resolver": _rich_text_prop("LEGACY_FIRST"),
-                    "Enabled": _checkbox_prop(True),
-                    "URI": _rich_text_prop(""),
-                }
-            },
-            {
-                "properties": {
-                    "Name": _title_prop("Explicit Second"),
-                    "Platform": _select_prop("spotify"),
-                    "Output Folder": _rich_text_prop("Morning"),
-                    "Order": _number_prop(2.0),
-                    "Spotify Resolver": _rich_text_prop("EXPLICIT_SECOND"),
-                    "Enabled": _checkbox_prop(True),
-                    "URI": _rich_text_prop(""),
-                }
-            },
-        ]
-
-        def fake_resolve(sp, resolver, weekday, status, shows_cfg, fixed_cfg, tokens_cfg):
-            return f"spotify:episode:{resolver.lower()}"
-
-        with temp_env(env):
-            with patch.object(self.mod, "notion_get_all_pages", return_value=pages), patch.object(
-                self.mod, "resolve_spec_uri", side_effect=fake_resolve
-            ):
-                queue = self.mod.build_queue_for_playlist_from_notion(
-                    object(), "Morning", "Wednesday", {}, {}, {}, {}
-                )
-
-        self.assertEqual(queue, ["spotify:episode:legacy_first", "spotify:episode:explicit_second"])
-
     def test_shared_order_contract_normalizes_integer_display(self):
         self.assertEqual(self.mod.prayer_order_contract.format_top_level_order(2.0), "2")
         self.assertEqual(self.mod.prayer_order_contract.format_top_level_order(1.01), "1.01")
 
-    @unittest.skip("Legacy Notion queue assembly path is no longer the active Spotify refresh surface.")
-    def test_build_queue_for_playlist_from_notion_ignores_two_list_audio_fields(self):
-        env = {
-            "NOTION_TOKEN": "notion_token",
-            "NOTION_DATABASE_ID": "db_1",
-        }
+    def test_build_notion_playlist_memberships_groups_checked_rows_by_output_folder_and_order(self):
+        contracts = [
+            _queue_contract(self.mod, "second", notion_name="Second", resolver="SECOND"),
+            _queue_contract(self.mod, "inactive", notion_name="Inactive", resolver="INACTIVE"),
+            _queue_contract(self.mod, "first", notion_name="First", resolver="FIRST"),
+            _queue_contract(self.mod, "night", notion_name="Night Prayer", resolver="NIGHT"),
+            _queue_contract(self.mod, "unplaced", notion_name="Unplaced", resolver="UNPLACED"),
+        ]
+        playlists = [
+            _playlist_definition(self.mod, "morning", name="Morning", playlist_id="playlist_morning"),
+            _playlist_definition(self.mod, "night", name="Night", playlist_id="playlist_night"),
+        ]
         pages = [
             {
+                "id": "page_second",
                 "properties": {
-                    "Name": _title_prop("Spotify Morning Prayer"),
-                    "Platform": _select_prop("spotify"),
+                    "Name": _title_prop("Second"),
+                    "Enabled": _checkbox_prop(True),
+                    "Output Folder": _rich_text_prop("Morning"),
+                    "Order": _number_prop(2),
+                },
+            },
+            {
+                "id": "page_first",
+                "properties": {
+                    "Name": _title_prop("First"),
+                    "Enabled": _checkbox_prop(True),
                     "Output Folder": _rich_text_prop("Morning"),
                     "Order": _number_prop(1),
-                    "Spotify Resolver": _rich_text_prop("MORNING"),
-                    "Spotify Fallback Resolver": _rich_text_prop(""),
-                    "URI": _rich_text_prop(""),
-                    "Assembly Mode": _rich_text_prop("fragments"),
-                    "Special Builder": _rich_text_prop(""),
-                    "Text Sync Mode": _rich_text_prop("none"),
+                },
+            },
+            {
+                "id": "page_night",
+                "properties": {
+                    "Name": _title_prop("Night Prayer"),
                     "Enabled": _checkbox_prop(True),
-                }
-            }
+                    "Output Folder": _rich_text_prop("Night"),
+                    "Order": _number_prop(3),
+                },
+            },
+            {
+                "id": "page_disabled",
+                "properties": {
+                    "Name": _title_prop("Inactive"),
+                    "Enabled": _checkbox_prop(False),
+                    "Output Folder": _rich_text_prop("Morning"),
+                    "Order": _number_prop(4),
+                },
+            },
+            {
+                "id": "page_missing_enabled",
+                "properties": {
+                    "Name": _title_prop("Missing Enabled"),
+                    "Output Folder": _rich_text_prop("Morning"),
+                    "Order": _number_prop(5),
+                },
+            },
+            {
+                "id": "page_unplaced",
+                "properties": {
+                    "Name": _title_prop("Unplaced"),
+                    "Enabled": _checkbox_prop(True),
+                    "Order": _number_prop(6),
+                },
+            },
         ]
 
-        with temp_env(env):
-            with patch.object(self.mod, "notion_get_all_pages", return_value=pages), patch.object(
-                self.mod, "resolve_spec_uri", return_value="spotify:episode:morning"
-            ):
-                queue = self.mod.build_queue_for_playlist_from_notion(
-                    object(), "Morning", "Wednesday", {}, {}, {}, {}
-                )
+        with temp_env({"NOTION_DATABASE_ID": "db_1"}):
+            with patch.object(self.mod, "notion_get_all_pages", return_value=pages):
+                build = self.mod.build_notion_playlist_memberships("notion_token", contracts, playlists)
 
-        self.assertEqual(queue, ["spotify:episode:morning"])
+        self.assertEqual(
+            [contract.key for contract in build.contracts_by_playlist["morning"]],
+            ["first", "second"],
+        )
+        self.assertEqual([contract.key for contract in build.contracts_by_playlist["night"]], ["night"])
+        self.assertEqual(build.stats["checked_rows"], 4)
+        self.assertEqual(build.stats["ignored_non_enabled_rows"], 2)
+        self.assertEqual(build.stats["ignored_missing_output_folder_rows"], 1)
+        self.assertEqual(build.stats["inactive_contracts"], 1)
+
+    def test_build_notion_playlist_memberships_fails_on_duplicate_checked_title(self):
+        contracts = [_queue_contract(self.mod, "first", notion_name="First", resolver="FIRST")]
+        playlists = [_playlist_definition(self.mod, "morning", name="Morning", playlist_id="playlist_morning")]
+        pages = [
+            {
+                "id": "page_1",
+                "properties": {
+                    "Name": _title_prop("First"),
+                    "Enabled": _checkbox_prop(True),
+                    "Output Folder": _rich_text_prop("Morning"),
+                    "Order": _number_prop(1),
+                },
+            },
+            {
+                "id": "page_2",
+                "properties": {
+                    "Name": _title_prop("First"),
+                    "Enabled": _checkbox_prop(True),
+                    "Output Folder": _rich_text_prop("Morning"),
+                    "Order": _number_prop(2),
+                },
+            },
+        ]
+
+        with temp_env({"NOTION_DATABASE_ID": "db_1"}):
+            with patch.object(self.mod, "notion_get_all_pages", return_value=pages):
+                with self.assertRaisesRegex(RuntimeError, "Multiple checked Notion rows"):
+                    self.mod.build_notion_playlist_memberships("notion_token", contracts, playlists)
+
+    def test_build_notion_playlist_memberships_fails_on_bad_folder_or_order(self):
+        contracts = [_queue_contract(self.mod, "first", notion_name="First", resolver="FIRST")]
+        playlists = [_playlist_definition(self.mod, "morning", name="Morning", playlist_id="playlist_morning")]
+
+        with temp_env({"NOTION_DATABASE_ID": "db_1"}):
+            with patch.object(
+                self.mod,
+                "notion_get_all_pages",
+                return_value=[
+                    {
+                        "id": "page_1",
+                        "properties": {
+                            "Name": _title_prop("First"),
+                            "Enabled": _checkbox_prop(True),
+                            "Output Folder": _rich_text_prop("Unknown"),
+                            "Order": _number_prop(1),
+                        },
+                    }
+                ],
+            ):
+                with self.assertRaisesRegex(RuntimeError, "unknown 'Output Folder'"):
+                    self.mod.build_notion_playlist_memberships("notion_token", contracts, playlists)
+
+            with patch.object(
+                self.mod,
+                "notion_get_all_pages",
+                return_value=[
+                    {
+                        "id": "page_1",
+                        "properties": {
+                            "Name": _title_prop("First"),
+                            "Enabled": _checkbox_prop(True),
+                            "Output Folder": _rich_text_prop("Morning"),
+                        },
+                    }
+                ],
+            ):
+                with self.assertRaisesRegex(RuntimeError, "missing 'Order'"):
+                    self.mod.build_notion_playlist_memberships("notion_token", contracts, playlists)
 
     def test_spotify_value_to_bookmark_url_normalizes_supported_inputs(self):
         self.assertEqual(
@@ -825,65 +854,6 @@ class TestRefreshJob(unittest.TestCase):
         self.assertEqual(updated, 1)
         self.assertEqual(names, ["Morning"])
 
-    @unittest.skip("Sunday row toggling is superseded by contract-level weekday gating.")
-    def test_sync_notion_sunday_item_enablement_disables_opus_dei_sunday_rows_on_weekday(self):
-        env = {
-            "NOTION_DATABASE_ID": "db_1",
-        }
-        pages = [
-            {
-                "id": "item_1",
-                "properties": {
-                    "Name": _title_prop("Fr. Mike Sunday Homily"),
-                    "Platform": _select_prop("spotify"),
-                    "Output Folder": _rich_text_prop("Sunday"),
-                    "Enabled": _checkbox_prop(True),
-                },
-            },
-            {
-                "id": "item_2",
-                "properties": {
-                    "Name": _title_prop("Bp. Barron Sunday Sermon"),
-                    "Platform": _select_prop("spotify"),
-                    "Output Folder": _rich_text_prop("Sunday"),
-                    "Enabled": _checkbox_prop(True),
-                },
-            },
-            {
-                "id": "item_3",
-                "properties": {
-                    "Name": _title_prop("Morning Prayer"),
-                    "Platform": _select_prop("spotify"),
-                    "Output Folder": _rich_text_prop("Morning"),
-                    "Enabled": _checkbox_prop(True),
-                },
-            },
-        ]
-        updates = []
-
-        with temp_env(env):
-            with patch.object(self.mod, "notion_get_all_pages", return_value=pages), patch.object(
-                self.mod,
-                "notion_update_checkbox_property",
-                side_effect=lambda page_id, property_name, value, token: updates.append(
-                    (page_id, property_name, value, token)
-                ),
-            ):
-                updated, enabled_names, disabled_names = self.mod.sync_notion_sunday_item_enablement(
-                    "notion_token", "Wednesday"
-                )
-
-        self.assertEqual(updated, 2)
-        self.assertEqual(enabled_names, [])
-        self.assertEqual(disabled_names, ["Fr. Mike Sunday Homily", "Bp. Barron Sunday Sermon"])
-        self.assertEqual(
-            updates,
-            [
-                ("item_1", "Enabled", False, "notion_token"),
-                ("item_2", "Enabled", False, "notion_token"),
-            ],
-        )
-
     def test_sync_notion_spotify_bookmarks_updates_only_spotify_rows(self):
         env = {
             "NOTION_TOKEN": "notion_token",
@@ -988,7 +958,7 @@ class TestRefreshJob(unittest.TestCase):
             "SPOTIFY_CLIENT_ID": "cid",
             "SPOTIFY_CLIENT_SECRET": "secret",
             "SPOTIFY_REFRESH_TOKEN": "refresh",
-            "NOTION_TOKEN": "",
+            "NOTION_TOKEN": "notion_token",
         }
         contracts = [
             _queue_contract(self.mod, "morning-prayer-loh", resolver="MORNING"),
@@ -1025,7 +995,7 @@ class TestRefreshJob(unittest.TestCase):
             shows_cfg,
             fixed_cfg,
             tokens_cfg,
-            contracts_by_key=None,
+            ordered_contracts=None,
         ):
             return list(queues[playlist_definition.name])
 
@@ -1043,6 +1013,16 @@ class TestRefreshJob(unittest.TestCase):
             ), patch.object(
                 self.mod, "build_queue_for_playlist_definition", side_effect=fake_build
             ), patch.object(
+                self.mod,
+                "build_notion_playlist_memberships",
+                return_value=self.mod.NotionPlaylistMembershipBuild(
+                    contracts_by_playlist={
+                        "morning": (contracts[0],),
+                        "midday": (contracts[1],),
+                    },
+                    stats={},
+                ),
+            ), patch.object(
                 self.mod, "recreate_playlist_items", side_effect=fake_recreate
             ), patch.object(
                 self.mod, "sync_notion_uris_for_playlist", return_value=(0, [], [], [])
@@ -1059,93 +1039,6 @@ class TestRefreshJob(unittest.TestCase):
                 ("token_123", "playlist_midday", ["spotify:episode:222", "spotify:episode:333"]),
             ],
         )
-
-    @unittest.skip("Legacy Notion playlist-db test superseded by contract-path coverage.")
-    def test_main_notion_single_playlist_filter_uses_override_id(self):
-        env = {
-            "SPOTIFY_CLIENT_ID": "cid",
-            "SPOTIFY_CLIENT_SECRET": "secret",
-            "SPOTIFY_REFRESH_TOKEN": "refresh",
-            "SPOTIFY_REFRESH_CONFIG_SOURCE": "notion",
-            "NOTION_TOKEN": "notion_token",
-            "SPOTIFY_PLAYLIST_NAME": "midday",
-            "SPOTIFY_PLAYLIST_ID": "spotify:playlist:override123",
-        }
-        contracts = [
-            _contract(self.mod, "morning", name="Morning", playlist_id="playlist_morning"),
-            _contract(self.mod, "midday", name="Midday", playlist_id="playlist_midday"),
-        ]
-
-        with temp_env(env):
-            with patch.object(self.mod, "set_runtime_timezone"), patch.object(
-                self.mod, "sp_client", return_value=(object(), "token_123")
-            ), patch.object(
-                self.mod, "load_spotify_contracts", return_value=contracts
-            ), patch.object(
-                self.mod, "sync_notion_sunday_item_enablement", return_value=(0, [], [])
-            ), patch.object(
-                self.mod, "build_queue_for_playlist_from_notion", return_value=["spotify:track:111"]
-            ), patch.object(
-                self.mod, "recreate_playlist_items", return_value=1
-            ) as recreate_mock, patch.object(
-                self.mod, "sync_notion_uris_for_playlist", return_value=(0, [], [], [])
-            ), patch.object(
-                self.mod, "distribute_prayer_intentions", return_value=(0, 0, 0)
-            ):
-                rc = self.mod.main()
-
-        self.assertEqual(rc, 0)
-        recreate_mock.assert_called_once_with("token_123", "override123", ["spotify:track:111"])
-
-    @unittest.skip("Legacy Notion playlist-db test superseded by contract-path coverage.")
-    def test_main_notion_skips_playlist_with_no_enabled_source_rows(self):
-        env = {
-            "SPOTIFY_CLIENT_ID": "cid",
-            "SPOTIFY_CLIENT_SECRET": "secret",
-            "SPOTIFY_REFRESH_TOKEN": "refresh",
-            "SPOTIFY_REFRESH_CONFIG_SOURCE": "notion",
-            "NOTION_TOKEN": "notion_token",
-        }
-        recreate_calls = []
-
-        def fake_build(sp, playlist_name, weekday, status, shows_cfg, fixed_cfg, tokens_cfg):
-            if playlist_name == "Sunday":
-                status["__no_eligible_rows__"] = True
-                return []
-            return ["spotify:track:111"]
-
-        def fake_recreate(token, playlist_id, queue):
-            recreate_calls.append((token, playlist_id, list(queue)))
-            return len(queue)
-
-        with temp_env(env):
-            with patch.object(self.mod, "load_playlist_config_optional", return_value=self.cfg), patch.object(
-                self.mod, "set_runtime_timezone"
-            ), patch.object(self.mod, "sp_client", return_value=(object(), "token_123")), patch.object(
-                self.mod, "sync_notion_sunday_item_enablement", return_value=(2, [], ["Fr. Mike Sunday Homily"])
-            ), patch.object(
-                self.mod, "load_notion_playlists",
-                return_value=[
-                    {"name": "Morning", "playlist_id": "playlist_morning"},
-                    {"name": "Sunday", "playlist_id": "playlist_sunday"},
-                ],
-            ), patch.object(
-                self.mod, "build_queue_for_playlist_from_notion", side_effect=fake_build
-            ), patch.object(
-                self.mod, "recreate_playlist_items", side_effect=fake_recreate
-            ), patch.object(
-                self.mod, "sync_notion_playlist_novena_links", return_value=(0, [])
-            ), patch.object(
-                self.mod, "sync_notion_uris_for_playlist", return_value=(0, [], [], [])
-            ), patch.object(
-                self.mod, "sync_notion_spotify_bookmarks", return_value=(0, 0, [], [])
-            ), patch.object(
-                self.mod, "distribute_prayer_intentions", return_value=(0, 0, 0)
-            ):
-                rc = self.mod.main()
-
-        self.assertEqual(rc, 0)
-        self.assertEqual(recreate_calls, [("token_123", "playlist_morning", ["spotify:track:111"])])
 
 
 if __name__ == "__main__":

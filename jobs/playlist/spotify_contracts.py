@@ -22,7 +22,7 @@ VALID_WEEKDAY_LOOKUP = {name.lower(): name for name in VALID_WEEKDAYS}
 
 class SpotifyQueueContract(NamedTuple):
     key: str
-    name: str
+    notion_name: str
     resolver: str
     fallback_resolver: str
     spotify_uri: str
@@ -155,13 +155,17 @@ def load_spotify_queue_contracts(contract_dir: Optional[Path] = None) -> List[Sp
 
     contracts: List[SpotifyQueueContract] = []
     seen_keys: Dict[str, Path] = {}
-    seen_names: Dict[str, Path] = {}
+    seen_notion_names: Dict[str, Path] = {}
 
     for contract_path in contract_files:
         payload = _load_payload(contract_path, "Spotify queue contract")
 
         key = normalize_spotify_contract_key(_require_text(payload, "key", contract_path, "Spotify queue contract"))
-        name = _require_text(payload, "name", contract_path, "Spotify queue contract")
+        if "name" in payload and "notion_name" not in payload:
+            raise RuntimeError(
+                f"Spotify queue contract '{contract_path}' uses legacy field 'name'; use required field 'notion_name'."
+            )
+        notion_name = _require_text(payload, "notion_name", contract_path, "Spotify queue contract")
         resolver = _optional_text(payload, "resolver")
         fallback_resolver = _optional_text(payload, "fallback_resolver")
         spotify_uri = _optional_text(payload, "spotify_uri")
@@ -206,19 +210,20 @@ def load_spotify_queue_contracts(contract_dir: Optional[Path] = None) -> List[Sp
             raise RuntimeError(
                 f"Duplicate Spotify queue contract key '{key}' in '{duplicate_key_path}' and '{contract_path}'."
             )
-        name_key = normalize_spotify_contract_key(name)
-        duplicate_name_path = seen_names.get(name_key)
-        if duplicate_name_path:
+        notion_name_key = normalize_spotify_contract_key(notion_name)
+        duplicate_notion_name_path = seen_notion_names.get(notion_name_key)
+        if duplicate_notion_name_path:
             raise RuntimeError(
-                f"Duplicate Spotify queue contract name '{name}' in '{duplicate_name_path}' and '{contract_path}'."
+                f"Duplicate Spotify queue contract notion_name '{notion_name}' in "
+                f"'{duplicate_notion_name_path}' and '{contract_path}'."
             )
 
         seen_keys[key] = contract_path
-        seen_names[name_key] = contract_path
+        seen_notion_names[notion_name_key] = contract_path
         contracts.append(
             SpotifyQueueContract(
                 key=key,
-                name=name,
+                notion_name=notion_name,
                 resolver=resolver,
                 fallback_resolver=fallback_resolver,
                 spotify_uri=spotify_uri,
@@ -232,7 +237,7 @@ def load_spotify_queue_contracts(contract_dir: Optional[Path] = None) -> List[Sp
     contracts.sort(
         key=lambda contract: (
             normalize_spotify_contract_key(contract.key),
-            normalize_spotify_contract_key(contract.name),
+            normalize_spotify_contract_key(contract.notion_name),
         )
     )
     return contracts
@@ -240,10 +245,10 @@ def load_spotify_queue_contracts(contract_dir: Optional[Path] = None) -> List[Sp
 
 def _load_playlist_contract_keys(payload: Dict[str, Any], playlist_path: Path) -> Tuple[str, ...]:
     raw_contracts = payload.get("contracts")
-    if not isinstance(raw_contracts, list) or not raw_contracts:
-        raise RuntimeError(
-            f"Spotify playlist definition '{playlist_path}' must define a non-empty 'contracts' array."
-        )
+    if raw_contracts is None:
+        return ()
+    if not isinstance(raw_contracts, list):
+        raise RuntimeError(f"Spotify playlist definition '{playlist_path}' has invalid 'contracts'; expected an array.")
 
     contract_keys: List[str] = []
     for raw_value in raw_contracts:
@@ -269,9 +274,6 @@ def load_spotify_playlist_definitions(
     playlist_files = sorted(path for path in base_dir.glob("*.json") if path.is_file())
     if not playlist_files:
         raise RuntimeError(f"No Spotify playlist definition files found in {base_dir}.")
-
-    available_contracts = list(contracts or load_spotify_queue_contracts(contract_dir=contract_dir))
-    contracts_by_key = {contract.key: contract for contract in available_contracts}
 
     definitions: List[SpotifyPlaylistDefinition] = []
     seen_keys: Dict[str, Path] = {}
@@ -316,13 +318,6 @@ def load_spotify_playlist_definitions(
                 source_path=playlist_path,
             )
         )
-
-    for definition in definitions:
-        for contract_key in definition.contracts:
-            if contract_key not in contracts_by_key:
-                raise RuntimeError(
-                    f"Spotify playlist definition '{definition.source_path}' references unknown contract key '{contract_key}'."
-                )
 
     definitions.sort(
         key=lambda definition: (

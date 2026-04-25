@@ -6,13 +6,14 @@ Python automation for rebuilding Spotify prayer playlists from repo-owned queue 
 - Python 3.11
 - Non-interactive Spotify auth via refresh token
 - Repo-owned queue contracts in `config/spotify/contracts/*.json`
-- Repo-owned playlist definitions in `config/spotify/playlists/*.json`
-- Base Spotify refresh does not require Notion; Notion is only used for optional post-write helpers
+- Repo-owned playlist identity definitions in `config/spotify/playlists/*.json`
+- Notion `Opus Dei` rows own active playlist membership and order
 
 Required variables:
 - `SPOTIFY_CLIENT_ID`
 - `SPOTIFY_CLIENT_SECRET`
 - `SPOTIFY_REFRESH_TOKEN`
+- `NOTION_TOKEN`
 
 Optional variables:
 - `SPOTIFY_PLAYLIST_NAME` to target one playlist definition by stable key or display name
@@ -20,13 +21,14 @@ Optional variables:
 - `SPOTIFY_USER_ID` for compatibility with older local setups
 - `JOB_UTC_OFFSET` to override the runtime timezone
 - `ROMCAL_CALENDAR` and `ROMCAL_LOCALE` to control the liturgical season lookup used by the Marian Antiphon swap
-- `NOTION_TOKEN` plus related Notion ids/properties only if you want optional post-write sync behavior
+- `NOTION_DATABASE_ID` or `NOTION_DATABASE_NAME` for the `Opus Dei` membership/order database
+- related Notion variables for optional post-write sync behavior
 
 ## Files
-- `jobs/playlist/refresh_playlist.py`: active contract-first Spotify refresh runtime
+- `jobs/playlist/refresh_playlist.py`: active Spotify refresh runtime with Notion-owned membership/order
 - `jobs/playlist/spotify_contracts.py`: loader and validation for `config/spotify/contracts/*.json` and `config/spotify/playlists/*.json`
 - `config/spotify/contracts/*.json`: one resolver-backed or fixed-URI queue contract per file, plus the three Marian Antiphon seasonal contracts
-- `config/spotify/playlists/*.json`: thin playlist definitions with playlist identity and ordered contract keys
+- `config/spotify/playlists/*.json`: thin playlist definitions with playlist identity only
 - `config/legacy/playlist_config.json`: legacy reference config kept off the active runtime path
 - `config/custom_tts/morning-prayer.json`: canonical Morning Prayer custom TTS contract for the active page-audio surface
 - `config/legacy/page_audio/*.json`, `config/legacy/rosary.json`, and `config/legacy/auxilium_daily_text.json`: discontinued top-level page-audio contracts retained only as archives; the active runtime no longer loads them
@@ -42,12 +44,12 @@ Optional variables:
 ## Config Timezone
 - `jobs/playlist/refresh_playlist.py` uses `JOB_UTC_OFFSET` for all date-based episode selection.
 - Default runtime offset is CST (`-06:00`) when `JOB_UTC_OFFSET` is unset.
-- Spotify playlist definitions carry playlist identity and ordered membership only; timezone does not live in the Spotify config files.
+- Spotify playlist definitions carry playlist identity only; timezone does not live in the Spotify config files.
 
 ## Spotify Contract Model
 Queue contract files in `config/spotify/contracts/` own:
 - `key`
-- `name`
+- `notion_name`, the exact Notion row title used for membership matching
 - exactly one of `resolver` or `spotify_uri` for ordinary contracts
 - the three Marian Antiphon contracts are the seasonal exception: morning and evening use the singing Angelus track, midday uses the spoken Angelus episode, and all three switch to Regina Caeli during Easter; the runtime normalizes those Spotify values into queue-safe `spotify:` URIs
 - optional `fallback_resolver`
@@ -57,7 +59,14 @@ Playlist definition files in `config/spotify/playlists/` own:
 - `key`
 - `name`
 - `playlist_id`
-- ordered `contracts`
+
+Playlist membership and sequence come from checked Notion rows:
+- Notion `Enabled` must be checked.
+- Notion `Output Folder` must be populated; blank `Output Folder` omits the row just like unchecked `Enabled`.
+- Notion `Name` must exactly match a contract `notion_name`.
+- Notion `Output Folder`, when populated, must match one playlist key or display name such as `Morning`, `Midday`, `Night`, or `Sunday`.
+- Notion `Order` controls queue order inside the playlist.
+- Contracts with no checked matching Notion row, or with a row whose `Output Folder` is blank, stay inactive without failing the run.
 
 The committed playlist definitions are:
 - `config/spotify/playlists/morning.json`
@@ -71,7 +80,9 @@ The runtime validates the selected playlist definitions before any Spotify write
 - invalid playlist ids
 - invalid contract weekday names
 - invalid contract resolver-vs-direct-URI shapes
-- playlist definitions that reference unknown contract keys
+- duplicate checked Notion rows for one `notion_name`
+- checked matched rows with unknown `Output Folder`
+- checked matched rows with populated `Output Folder` but missing `Order`
 
 ## Local Setup
 1. Create and activate a virtual environment.
@@ -94,7 +105,6 @@ $env:SPOTIFY_PLAYLIST_NAME = "morning"
 # Optional single-run override:
 $env:SPOTIFY_PLAYLIST_ID = "spotify:playlist:..."
 $env:JOB_UTC_OFFSET = "-06:00"
-# Optional post-write Notion helpers:
 $env:NOTION_TOKEN = "..."
 $env:NOTION_DATABASE_ID = "..."
 ```
@@ -114,12 +124,12 @@ or:
 
 Expected behavior:
 - refreshes the Spotify access token each run
-- loads and validates playlist definitions plus queue contracts before touching Spotify
+- loads and validates playlist definitions, queue contracts, and Notion membership before touching Spotify
 - applies contract-level weekday gating such as Sunday-only or Friday-only items
 - resolves each contract through its explicit `resolver` or `spotify_uri`, with Marian Antiphon switching between `spotify_url_normal` and `spotify_uri_easter` during Easter season
 - replaces each selected playlist contents with the resolved queue
-- prints one summary per playlist: `playlist`, `playlist_id`, and `tracks_written`
-- exits non-zero on invalid contracts, invalid playlist definitions, invalid single-playlist overrides, or unresolved selected runs
+- prints one summary per playlist: `playlist`, `playlist_id`, and `tracks_written`, plus `source=notion_membership`
+- exits non-zero on invalid contracts, invalid playlist definitions, missing Notion access, invalid single-playlist overrides, or unresolved selected runs
 
 ## Portable Development Container
 This repository includes a VS Code Dev Container for developing from multiple machines without changing the deployment path.
@@ -240,7 +250,7 @@ Container implementation notes:
 - `SPOTIFY_CLIENT_SECRET`
 - `SPOTIFY_REFRESH_TOKEN`
 
-4. Add optional secrets and variables only if you want post-write Notion helpers:
+4. Add required Notion access for playlist membership and order:
 - `NOTION_TOKEN`
 - `NOTION_DATABASE_ID`
 - `NOTION_DATABASE_NAME`
@@ -252,17 +262,17 @@ Container implementation notes:
 Workflow behavior:
 - `workflow_dispatch` accepts an optional `spotify_playlist_name` input for a one-playlist validation run
 - scheduled runs use the same workflow file, but only execute when `SPOTIFY_REFRESH_SCHEDULE_ENABLED` is set to `true`
-- the base refresh path succeeds with Spotify secrets only
+- the base refresh path requires Spotify secrets plus Notion access to the `Opus Dei` database
 
 Recommended rollout:
 1. Run one manual workflow dispatch with `spotify_playlist_name=morning`.
-2. Confirm the playlist-definition path writes the expected playlist.
+2. Confirm Notion membership/order writes the expected playlist.
 3. Set `SPOTIFY_REFRESH_SCHEDULE_ENABLED=true` to let the daily schedule run.
 
 ## Optional Notion Integrations
-The active Spotify queue assembly path no longer reads Opus Dei rows for playlist membership, ordering, resolver choice, or Sunday toggling.
+The active Spotify queue assembly path reads Opus Dei rows for playlist membership and ordering. Resolver metadata still comes from repo-owned contract files.
 
-If `NOTION_TOKEN` is present, the job can still run optional post-write helpers:
+With `NOTION_TOKEN` present, the job can also run optional post-write helpers:
 - URI autosync when `SPOTIFY_ENABLE_URI_AUTOSYNC=true`
 - prayer-intention distribution through the existing Notion helper path
 
