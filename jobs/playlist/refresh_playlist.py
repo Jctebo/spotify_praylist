@@ -8,7 +8,7 @@ import re
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, NamedTuple, Optional, Tuple
 from urllib.parse import urlsplit, urlunsplit
 
 import requests
@@ -26,12 +26,9 @@ from jobs.playlist.spotify_contracts import (
     load_spotify_queue_contracts,
     normalize_spotify_contract_key as normalize_spotify_output_folder,
     normalize_spotify_queue_uri,
-    playlist_definition_matches_filter as contract_matches_filter,
+    playlist_definition_matches_filter,
 )
 from jobs.novena.liturgical_helpers import is_easter_season_for_date
-
-SpotifyPlaylistContract = SpotifyPlaylistDefinition
-load_spotify_contracts = load_spotify_playlist_definitions
 
 TOKEN_URL = "https://accounts.spotify.com/api/token"
 SCOPES_NOTE = "playlist-modify-private playlist-modify-public playlist-read-private"
@@ -108,6 +105,20 @@ DEFAULT_PLAYLIST_NOVENA_TITLES = (
     "Daily Novena Prayer",
 )
 OUTPUT_FOLDER_PROPERTY = "Output Folder"
+
+
+class NotionPlaylistMembership(NamedTuple):
+    contract: SpotifyQueueContract
+    playlist_key: str
+    playlist_name: str
+    order: float
+    title: str
+    page_id: str
+
+
+class NotionPlaylistMembershipBuild(NamedTuple):
+    contracts_by_playlist: Dict[str, Tuple[SpotifyQueueContract, ...]]
+    stats: Dict[str, int]
 
 DEFAULT_SHOWS = {
     "DIVINE_OFFICE": "70ydTdzunoqWAsvutFIkHM",
@@ -940,51 +951,122 @@ def page_property_normalized_values(page: Dict[str, Any], property_name: str) ->
     return out
 
 
-def spotify_contracts_by_output_folder(
-    contracts: Optional[List[SpotifyPlaylistContract]] = None,
-) -> Dict[str, SpotifyPlaylistContract]:
-    available_contracts = list(contracts or load_spotify_contracts())
-    mapping: Dict[str, SpotifyPlaylistContract] = {}
-    for contract in available_contracts:
-        mapping[normalize_spotify_output_folder(contract.output_folder)] = contract
-    return mapping
+def notion_playlist_membership_database_id(token: str) -> str:
+    database_id = os.getenv(NOTION_DATABASE_ID, "").strip()
+    if database_id:
+        return database_id
+    db_name = os.getenv(NOTION_DATABASE_NAME, "Opus Dei").strip() or "Opus Dei"
+    database_id = notion_find_database_id(token, db_name) or ""
+    if not database_id:
+        raise RuntimeError("Notion database not found. Set NOTION_DATABASE_ID or share database with integration.")
+    return database_id
 
 
-def select_spotify_contract(
-    playlist_name: str,
-    contracts: Optional[List[SpotifyPlaylistContract]] = None,
-) -> SpotifyPlaylistContract:
-    available_contracts = list(contracts or load_spotify_contracts())
-    matches = [contract for contract in available_contracts if contract_matches_filter(contract, playlist_name)]
-    if not matches:
-        raise RuntimeError(f"No Spotify contract matched '{playlist_name}'.")
-    if len(matches) > 1:
-        raise RuntimeError(f"Multiple Spotify contracts matched '{playlist_name}'.")
-    return matches[0]
+def _page_debug_id(page: Dict[str, Any]) -> str:
+    return str(page.get("id", "")).strip() or "unknown_page"
 
 
-def resolve_page_output_folder_contract(
-    page: Dict[str, Any],
-    title_property: str,
-    contracts_by_output_folder: Dict[str, SpotifyPlaylistContract],
-) -> SpotifyPlaylistContract:
-    title = page_title(page, title_property).strip() or page_property_text(page, title_property).strip() or "Untitled"
-    output_folder_values = page_property_normalized_values(page, OUTPUT_FOLDER_PROPERTY)
-    raw_output_folder = page_property_text(page, OUTPUT_FOLDER_PROPERTY).strip()
-    if not output_folder_values:
-        raise RuntimeError(f"Spotify row '{title}' is missing '{OUTPUT_FOLDER_PROPERTY}'.")
-    if len(output_folder_values) > 1:
-        raise RuntimeError(
-            f"Spotify row '{title}' has multiple '{OUTPUT_FOLDER_PROPERTY}' values: "
-            f"{raw_output_folder or ', '.join(output_folder_values)}."
+def build_notion_playlist_memberships(
+    token: str,
+    contracts: List[SpotifyQueueContract],
+    playlist_definitions: List[SpotifyPlaylistDefinition],
+) -> NotionPlaylistMembershipBuild:
+    database_id = notion_playlist_membership_database_id(token)
+    title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
+    order_property = os.getenv(NOTION_QUEUE_ORDER_PROPERTY, "Order").strip() or "Order"
+    enabled_property = os.getenv(NOTION_QUEUE_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
+    output_folder_property = OUTPUT_FOLDER_PROPERTY
+
+    pages = notion_get_all_pages(database_id, token)
+    checked_pages_by_title: Dict[str, List[Dict[str, Any]]] = {}
+    ignored_non_enabled_rows = 0
+    for page in pages:
+        if page_property_checkbox(page, enabled_property) is not True:
+            ignored_non_enabled_rows += 1
+            continue
+        title = page_title(page, title_property).strip()
+        if title:
+            checked_pages_by_title.setdefault(title, []).append(page)
+
+    playlists_by_folder: Dict[str, SpotifyPlaylistDefinition] = {}
+    for definition in playlist_definitions:
+        for value in (definition.key, definition.name):
+            folder_key = normalize_spotify_output_folder(value)
+            if folder_key:
+                playlists_by_folder[folder_key] = definition
+
+    memberships_by_playlist: Dict[str, List[NotionPlaylistMembership]] = {
+        definition.key: [] for definition in playlist_definitions
+    }
+    inactive_contracts = 0
+    matched_rows = 0
+    for contract in contracts:
+        matching_pages = checked_pages_by_title.get(contract.notion_name, [])
+        if not matching_pages:
+            inactive_contracts += 1
+            continue
+        if len(matching_pages) > 1:
+            page_ids = ", ".join(_page_debug_id(page) for page in matching_pages)
+            raise RuntimeError(
+                f"Multiple checked Notion rows match Spotify contract notion_name "
+                f"'{contract.notion_name}' (pages: {page_ids})."
+            )
+
+        page = matching_pages[0]
+        output_folder_values = page_property_normalized_values(page, output_folder_property)
+        raw_output_folder = page_property_text(page, output_folder_property).strip()
+        if not output_folder_values:
+            raise RuntimeError(f"Spotify row '{contract.notion_name}' is missing '{output_folder_property}'.")
+        if len(output_folder_values) > 1:
+            raise RuntimeError(
+                f"Spotify row '{contract.notion_name}' has multiple '{output_folder_property}' values: "
+                f"{raw_output_folder or ', '.join(output_folder_values)}."
+            )
+
+        playlist_definition = playlists_by_folder.get(output_folder_values[0])
+        if not playlist_definition:
+            raise RuntimeError(
+                f"Spotify row '{contract.notion_name}' has unknown '{output_folder_property}' value "
+                f"'{raw_output_folder or output_folder_values[0]}'."
+            )
+
+        order_value = prayer_order_contract.parse_top_level_order(page_property_number(page, order_property))
+        if order_value is None:
+            raise RuntimeError(f"Spotify row '{contract.notion_name}' is missing '{order_property}'.")
+
+        memberships_by_playlist[playlist_definition.key].append(
+            NotionPlaylistMembership(
+                contract=contract,
+                playlist_key=playlist_definition.key,
+                playlist_name=playlist_definition.name,
+                order=order_value,
+                title=contract.notion_name,
+                page_id=_page_debug_id(page),
+            )
         )
-    contract = contracts_by_output_folder.get(output_folder_values[0])
-    if not contract:
-        raise RuntimeError(
-            f"Spotify row '{title}' has unknown '{OUTPUT_FOLDER_PROPERTY}' value "
-            f"'{raw_output_folder or output_folder_values[0]}'."
+        matched_rows += 1
+
+    ordered_contracts_by_playlist: Dict[str, Tuple[SpotifyQueueContract, ...]] = {}
+    for playlist_key, memberships in memberships_by_playlist.items():
+        memberships.sort(
+            key=lambda membership: (
+                membership.order,
+                normalize_spotify_output_folder(membership.contract.notion_name),
+                membership.contract.key,
+            )
         )
-    return contract
+        ordered_contracts_by_playlist[playlist_key] = tuple(membership.contract for membership in memberships)
+
+    return NotionPlaylistMembershipBuild(
+        contracts_by_playlist=ordered_contracts_by_playlist,
+        stats={
+            "notion_rows": len(pages),
+            "checked_rows": sum(len(rows) for rows in checked_pages_by_title.values()),
+            "ignored_non_enabled_rows": ignored_non_enabled_rows,
+            "matched_rows": matched_rows,
+            "inactive_contracts": inactive_contracts,
+        },
+    )
 
 
 def env_normalized_values(name: str, default: str) -> List[str]:
@@ -1019,56 +1101,6 @@ def resolve_notion_playlist_property_name() -> str:
 def sunday_match_tokens() -> set[str]:
     sunday_match = normalize_text(os.getenv(NOTION_PLAYLISTS_SUNDAY_MATCH, "sunday").strip() or "sunday")
     return {token for token in sunday_match.split(" ") if token} or {"sunday"}
-
-
-def sync_notion_sunday_item_enablement(
-    token: str,
-    weekday: str,
-    contracts: Optional[List[SpotifyPlaylistContract]] = None,
-) -> Tuple[int, List[str], List[str]]:
-    database_id = os.getenv(NOTION_DATABASE_ID, "").strip()
-    if not database_id:
-        db_name = os.getenv(NOTION_DATABASE_NAME, "Opus Dei").strip() or "Opus Dei"
-        database_id = notion_find_database_id(token, db_name) or ""
-    if not database_id:
-        return 0, [], []
-
-    title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
-    platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
-    enabled_property = os.getenv(NOTION_QUEUE_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
-    platform_values = env_normalized_values(NOTION_PLATFORM_SPOTIFY_VALUE, "spotify")
-    nosync_values = env_normalized_values(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync")
-    contracts_by_output_folder = spotify_contracts_by_output_folder(contracts)
-    enable_sunday = normalize_text(weekday) == "sunday"
-
-    updated = 0
-    enabled_names: List[str] = []
-    disabled_names: List[str] = []
-    for row in notion_get_all_pages(database_id, token):
-        page_id = str(row.get("id", "")).strip()
-        if not page_id:
-            continue
-        platform_text = normalize_text(page_property_text(row, platform_property))
-        if page_has_any_normalized_value(row, platform_property, nosync_values):
-            continue
-        if DEPRECATED_TIMESYNC_PLATFORM_VALUE in platform_text:
-            continue
-        if not page_has_any_normalized_value(row, platform_property, platform_values):
-            continue
-        contract = resolve_page_output_folder_contract(row, title_property, contracts_by_output_folder)
-        if contract.key != "sunday":
-            continue
-        title = page_title(row, title_property).strip() or "Untitled"
-        current_enabled = page_property_checkbox(row, enabled_property)
-        if current_enabled is not None and current_enabled == enable_sunday:
-            continue
-        notion_update_checkbox_property(page_id, enabled_property, enable_sunday, token)
-        updated += 1
-        if enable_sunday:
-            enabled_names.append(title)
-        else:
-            disabled_names.append(title)
-    return updated, enabled_names, disabled_names
 
 
 def notion_playlist_novena_titles() -> List[str]:
@@ -2349,7 +2381,7 @@ def resolve_contract_uri(
         romcal_locale = os.getenv("ROMCAL_LOCALE", "en").strip() or "en"
         is_easter = is_easter_season_for_date(romcal_calendar, romcal_locale, current_date)
         season_label = "easter" if is_easter else "ordinary"
-        status[f"Seasonal:{contract.name}:{season_label}"] = True
+        status[f"Seasonal:{contract.notion_name}:{season_label}"] = True
         primary_spec = contract.spotify_uri_easter if is_easter else contract.spotify_url_normal
         return normalize_spotify_queue_uri(primary_spec) or None
 
@@ -2357,7 +2389,7 @@ def resolve_contract_uri(
     uri = resolve_spec_uri(sp, primary_spec, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
     if not uri and contract.fallback_resolver:
         uri = resolve_spec_uri(sp, contract.fallback_resolver, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
-        status[f"Fallback used:{contract.name}"] = bool(uri)
+        status[f"Fallback used:{contract.notion_name}"] = bool(uri)
     return normalize_spotify_queue_uri(uri) if uri else None
 
 
@@ -2370,22 +2402,15 @@ def build_queue_for_playlist_definition(
     shows_cfg: Dict[str, Any],
     fixed_cfg: Dict[str, Any],
     tokens_cfg: Dict[str, Any],
-    contracts_by_key: Optional[Dict[str, SpotifyQueueContract]] = None,
+    ordered_contracts: Optional[Tuple[SpotifyQueueContract, ...]] = None,
 ) -> List[str]:
-    available_contracts = contracts_by_key or {
-        contract.key: contract for contract in load_spotify_queue_contracts()
-    }
+    contracts = tuple(ordered_contracts or ())
 
     queue: List[str] = []
     eligible_contracts = 0
-    for contract_key in playlist_definition.contracts:
-        contract = available_contracts.get(contract_key)
-        if not contract:
-            raise RuntimeError(
-                f"Spotify playlist definition '{playlist_definition.name}' references unknown contract key '{contract_key}'."
-            )
+    for contract in contracts:
         if not contract_runs_today(contract, weekday):
-            status[f"Gated:{contract.name}"] = False
+            status[f"Gated:{contract.notion_name}"] = False
             continue
 
         eligible_contracts += 1
@@ -2393,117 +2418,11 @@ def build_queue_for_playlist_definition(
         if uri:
             queue.append(uri)
         else:
-            status[f"Unresolved:{contract.name}"] = False
+            status[f"Unresolved:{contract.notion_name}"] = False
 
     if eligible_contracts == 0:
         status["__no_eligible_contracts__"] = True
     return queue
-
-
-def build_queue_for_playlist_from_notion(
-    sp: spotipy.Spotify,
-    playlist_name: str,
-    weekday: str,
-    status: Dict[str, bool],
-    shows_cfg: Dict[str, Any],
-    fixed_cfg: Dict[str, Any],
-    tokens_cfg: Dict[str, Any],
-    contracts: Optional[List[SpotifyPlaylistContract]] = None,
-) -> List[str]:
-    token = require_env(NOTION_TOKEN)
-    database_id = os.getenv(NOTION_DATABASE_ID, "").strip()
-    if not database_id:
-        db_name = os.getenv(NOTION_DATABASE_NAME, "Opus Dei").strip() or "Opus Dei"
-        database_id = notion_find_database_id(token, db_name) or ""
-    if not database_id:
-        raise RuntimeError("Notion database not found. Set NOTION_DATABASE_ID or share database with integration.")
-
-    title_property = os.getenv(NOTION_TITLE_PROPERTY, "Name").strip() or "Name"
-    platform_property = os.getenv(NOTION_PLATFORM_PROPERTY, "Platform").strip() or "Platform"
-    order_property = os.getenv(NOTION_QUEUE_ORDER_PROPERTY, "Order").strip() or "Order"
-    resolver_property = os.getenv(NOTION_QUEUE_RESOLVER_PROPERTY, "Spotify Resolver").strip() or "Spotify Resolver"
-    fallback_property = os.getenv(NOTION_QUEUE_FALLBACK_PROPERTY, "Spotify Fallback Resolver").strip() or "Spotify Fallback Resolver"
-    enabled_property = os.getenv(NOTION_QUEUE_ENABLED_PROPERTY, "Enabled").strip() or "Enabled"
-    uri_property = os.getenv(NOTION_URI_PROPERTY, "URI").strip() or "URI"
-
-    platform_values = env_normalized_values(NOTION_PLATFORM_SPOTIFY_VALUE, "spotify")
-    nosync_values = env_normalized_values(NOTION_PLATFORM_NOSYNC_VALUE, "spotify-nosync")
-    available_contracts = list(contracts or load_spotify_contracts())
-    target_contract = select_spotify_contract(playlist_name, available_contracts)
-    contracts_by_output_folder = spotify_contracts_by_output_folder(available_contracts)
-    pages = notion_get_all_pages(database_id, token)
-
-    entries: List[Dict[str, Any]] = []
-    for page in pages:
-        platform_text = normalize_text(page_property_text(page, platform_property))
-        if page_has_any_normalized_value(page, platform_property, nosync_values):
-            continue
-        if DEPRECATED_TIMESYNC_PLATFORM_VALUE in platform_text:
-            continue
-        if not page_has_any_normalized_value(page, platform_property, platform_values):
-            continue
-
-        row_contract = resolve_page_output_folder_contract(page, title_property, contracts_by_output_folder)
-        if row_contract.key != target_contract.key:
-            continue
-
-        enabled = page_property_checkbox(page, enabled_property)
-        if enabled is False:
-            continue
-
-        title = page_title(page, title_property).strip()
-        resolver = page_property_text(page, resolver_property).strip()
-        fallback = page_property_text(page, fallback_property).strip()
-        direct_uri = (page_uri_value(page, uri_property) or "").strip()
-        order_value = prayer_order_contract.top_level_order_sort_value(
-            page_property_number(page, order_property),
-            default=prayer_order_contract.DEFAULT_TOP_LEVEL_ORDER_FALLBACK,
-        )
-        if not resolver and direct_uri.startswith("spotify:"):
-            resolver = direct_uri
-        if not resolver:
-            continue
-        entries.append(
-            {
-                "title": title or resolver,
-                "resolver": resolver,
-                "fallback": fallback,
-                "order": order_value,
-            }
-        )
-
-    entries.sort(key=lambda x: (float(x.get("order", 9999.0)), str(x.get("title", "")).lower()))
-
-    if not entries:
-        status["__no_eligible_rows__"] = True
-        return []
-
-    queue: List[str] = []
-    for row in entries:
-        title = str(row.get("title", "")).strip() or "Untitled"
-        resolver = str(row.get("resolver", "")).strip()
-        fallback = str(row.get("fallback", "")).strip()
-        uri = resolve_spec_uri(sp, resolver, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
-        if not uri and fallback:
-            uri = resolve_spec_uri(sp, fallback, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
-            status[f"Fallback used:{title}"] = bool(uri)
-        if uri:
-            queue.append(uri)
-        else:
-            status[f"Unresolved:{title}"] = False
-    return queue
-
-
-def build_queue_for_profile_from_notion(
-    sp: spotipy.Spotify,
-    profile_name: str,
-    weekday: str,
-    status: Dict[str, bool],
-    shows_cfg: Dict[str, Any],
-    fixed_cfg: Dict[str, Any],
-    tokens_cfg: Dict[str, Any],
-) -> List[str]:
-    return build_queue_for_playlist_from_notion(sp, profile_name, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
 
 
 def build_queue_for_profile(
@@ -2547,22 +2466,25 @@ def main() -> int:
         current_now = local_now()
         current_date = current_now.date()
         weekday = current_now.strftime("%A")
-        source = "playlist_definitions"
+        source = "notion_membership"
         uri_autosync_enabled = bool_env(SPOTIFY_ENABLE_URI_AUTOSYNC, default=False)
         runs: List[Dict[str, Any]] = []
 
         _ = os.getenv(SPOTIFY_USER_ID, "")
-        notion_token = os.getenv(NOTION_TOKEN, "").strip()
+        notion_token = require_env(NOTION_TOKEN)
         all_contracts = load_spotify_queue_contracts()
-        contracts_by_key = {contract.key: contract for contract in all_contracts}
         playlist_filter = os.getenv(SPOTIFY_PLAYLIST_NAME, "").strip()
-        selected_playlists = load_spotify_playlist_definitions(
-            playlist_filter=playlist_filter,
-            contracts=all_contracts,
-        )
+        all_playlists = load_spotify_playlist_definitions(contracts=all_contracts)
+        selected_playlists = [
+            playlist for playlist in all_playlists if playlist_definition_matches_filter(playlist, playlist_filter)
+        ]
+        if playlist_filter and not selected_playlists:
+            raise RuntimeError(f"No Spotify playlist definition matched '{playlist_filter}'.")
+        membership_build = build_notion_playlist_memberships(notion_token, all_contracts, all_playlists)
         runs = []
         for target in selected_playlists:
             status = {}
+            ordered_contracts = membership_build.contracts_by_playlist.get(target.key, ())
             queue = build_queue_for_playlist_definition(
                 sp,
                 target,
@@ -2572,7 +2494,7 @@ def main() -> int:
                 shows_cfg,
                 fixed_cfg,
                 tokens_cfg,
-                contracts_by_key=contracts_by_key,
+                ordered_contracts=ordered_contracts,
             )
             if not queue:
                 if status.get("__no_eligible_contracts__"):
@@ -2581,7 +2503,15 @@ def main() -> int:
                     print(f"INFO spotify_playlist_skipped playlist={target.name} reason=no_eligible_contracts weekday={weekday}")
                     continue
                 raise RuntimeError(f"No tracks/episodes resolved for Spotify playlist '{target.name}'.")
-            runs.append({"name": target.name, "playlist_id": target.playlist_id, "queue": queue, "status": status})
+            runs.append(
+                {
+                    "name": target.name,
+                    "playlist_id": target.playlist_id,
+                    "queue": queue,
+                    "status": status,
+                    "membership_stats": membership_build.stats,
+                }
+            )
         override_playlist_id_raw = os.getenv(SPOTIFY_PLAYLIST_ID, "").strip()
         override_playlist_id = normalize_spotify_playlist_id(override_playlist_id_raw)
         if override_playlist_id_raw and not override_playlist_id:
@@ -2606,6 +2536,7 @@ def main() -> int:
             playlist_id = str(run["playlist_id"])
             queue = list(run["queue"])
             status = dict(run["status"])
+            membership_stats = dict(run.get("membership_stats") or {})
 
             written = recreate_playlist_items(spotify_token, playlist_id, queue)
             notion_uri_updates = 0
@@ -2623,6 +2554,16 @@ def main() -> int:
 
             print(f"SUMMARY playlist={playlist_name} playlist_id={playlist_id} tracks_written={written}")
             print(f"INFO playlist={playlist_name} weekday={weekday} playlist_recreated=true source={source}")
+            if membership_stats:
+                print(
+                    "INFO notion_membership "
+                    f"playlist={playlist_name} "
+                    f"notion_rows={membership_stats.get('notion_rows', 0)} "
+                    f"checked_rows={membership_stats.get('checked_rows', 0)} "
+                    f"matched_rows={membership_stats.get('matched_rows', 0)} "
+                    f"ignored_non_enabled_rows={membership_stats.get('ignored_non_enabled_rows', 0)} "
+                    f"inactive_contracts={membership_stats.get('inactive_contracts', 0)}"
+                )
             print(f"INFO utc_offset={current_now.strftime('%z')}")
             print(f"INFO uri_autosync_enabled={str(uri_autosync_enabled).lower()}")
             for name, ok in sorted(status.items()):

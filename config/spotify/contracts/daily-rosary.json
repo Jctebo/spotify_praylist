@@ -1,5 +1,5 @@
 {
   "key": "daily-rosary",
-  "name": "Daily Rosary",
+  "notion_name": "Daily Rosary",
   "resolver": "ROSARY"
 }

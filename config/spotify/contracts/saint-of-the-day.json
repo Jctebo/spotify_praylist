@@ -1,5 +1,5 @@
 {
   "key": "saint-of-the-day",
-  "name": "Saint of the Day",
+  "notion_name": "Saint of the Day",
   "resolver": "SAINT_OF_DAY"
 }

@@ -1,5 +1,5 @@
 {
   "key": "morning-prayer-monthly",
-  "name": "Morning Prayer (Monthly Podcast)",
+  "notion_name": "Morning Prayer (Monthly Podcast)",
   "resolver": "MORNING_PRAYER_MONTHLY"
 }

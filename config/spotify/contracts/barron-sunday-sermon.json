@@ -1,6 +1,6 @@
 {
   "key": "barron-sunday-sermon",
-  "name": "Bp. Barron Sunday Sermon",
+  "notion_name": "Bp. Barron Sunday Sermon",
   "resolver": "SUNDAY_BARRON",
   "weekdays": [
     "Sunday"
