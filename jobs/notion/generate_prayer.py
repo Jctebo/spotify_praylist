@@ -27,6 +27,8 @@ def load_prayer_config_from_file() -> Dict[str, Any]:
     if not page_audio.custom_tts_contract_path_allowed(config_path):
         raise RuntimeError(f"Legacy prayer config paths are no longer runnable: {config_path}")
     if not config_path.exists():
+        if config_path.name == "morning-prayer.json":
+            return page_audio.load_morning_prayer_contract_from_file()
         raise RuntimeError(f"Missing prayer config file: {config_path}")
     with open(config_path, "r", encoding="utf-8") as fh:
         payload = json.load(fh)
