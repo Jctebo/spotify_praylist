@@ -11,7 +11,6 @@ class FakeNotionClient:
         self.page_children = {}
         self.page_children["page-1"] = []
         self.page_children["page-2"] = []
-        self.created = []
         self.updated = []
         self.queries = []
 
@@ -38,12 +37,27 @@ class FakeNotionClient:
             return {"results": list(self.page_children.get(page_id, [])), "has_more": False}
         if method == "PATCH" and path.startswith("/blocks/") and path.endswith("/children"):
             page_id = path.split("/", 3)[2]
-            children = list(payload.get("children") or [])
+            children = []
+            for child in payload.get("children") or []:
+                stored = dict(child)
+                stored.setdefault("id", f"{page_id}-{len(self.page_children.get(page_id, [])) + len(children) + 1}")
+                children.append(stored)
             self.page_children.setdefault(page_id, []).extend(children)
             return {"results": children}
         if method == "PATCH" and path.startswith("/blocks/"):
-            return {"id": path.split("/", 3)[2]}
+            block_id = path.split("/", 3)[2]
+            if payload and payload.get("archived"):
+                for page_id, children in list(self.page_children.items()):
+                    self.page_children[page_id] = [child for child in children if str(child.get("id")) != block_id]
+            return {"id": block_id}
         raise AssertionError(f"Unexpected request: {method} {path}")
+
+
+def _toggle_title(block):
+    rich_text = block.get("toggle", {}).get("rich_text") or []
+    if not rich_text:
+        return ""
+    return str((rich_text[0] or {}).get("text", {}).get("content", "")).strip()
 
 
 class TestPublishTextPipeline(unittest.TestCase):
@@ -65,9 +79,18 @@ class TestPublishTextPipeline(unittest.TestCase):
         self.assertEqual(second["created"], 0)
         self.assertEqual(second["updated"], 2)
         self.assertEqual(set(client.pages.keys()), {"Morning Prayer", "Daily Rosary"})
-        self.assertTrue(any(client.page_children[page_id] for page_id in client.page_children))
-        self.assertEqual(client.page_children["page-1"][0]["type"], "toggle")
-        self.assertEqual(client.page_children["page-2"][0]["type"], "toggle")
+        self.assertEqual([_toggle_title(block) for block in client.page_children["page-1"]], [
+            "Opening Prayers",
+            "Petitions",
+            "Intercessory Litany",
+        ])
+        self.assertEqual([_toggle_title(block) for block in client.page_children["page-2"]], [
+            "Opening Prayers",
+            "Joyful Mysteries",
+            "Closing Prayers",
+        ])
+        self.assertTrue(all(child["type"] == "paragraph" for child in client.page_children["page-1"][0]["toggle"]["children"]))
+        self.assertTrue(all(child["type"] == "paragraph" for child in client.page_children["page-2"][1]["toggle"]["children"]))
 
     def test_run_text_pipeline_returns_summary(self):
         contracts = self.contracts_mod.load_publish_contracts()

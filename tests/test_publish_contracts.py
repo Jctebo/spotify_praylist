@@ -32,6 +32,14 @@ class TestPublishContracts(unittest.TestCase):
         rosary = next(job for job in jobs if job["entry_id"] == "rosary")
         self.assertIn("April", morning["text"])
         self.assertIn("Joyful Mysteries", rosary["text"])
+        self.assertEqual(
+            [section["title"] for section in morning["sections"]],
+            ["Opening Prayers", "Petitions", "Intercessory Litany"],
+        )
+        self.assertEqual(
+            [section["title"] for section in rosary["sections"]],
+            ["Opening Prayers", "Joyful Mysteries", "Closing Prayers"],
+        )
 
     def test_load_publish_contracts_rejects_duplicate_entry_ids(self):
         with tempfile.TemporaryDirectory() as tmpdir:

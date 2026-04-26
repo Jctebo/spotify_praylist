@@ -107,26 +107,25 @@ def notion_toggle_block(title: str, children: Optional[Sequence[Dict[str, Any]]]
     }
 
 
-def _toggle_title(paragraph: str, index: int) -> str:
-    text = " ".join(str(paragraph or "").split())
-    if not text:
-        return f"Section {index}"
-    if len(text) <= 72:
-        return text
-    return text[:69].rstrip() + "..."
-
-
-def paragraphs_to_notion_blocks(text: str) -> List[Dict[str, Any]]:
+def text_to_paragraph_blocks(text: str) -> List[Dict[str, Any]]:
     body = str(text or "").replace("\r\n", "\n").replace("\r", "\n").strip()
     if not body:
         return []
     paragraphs = [paragraph.strip() for paragraph in body.split("\n\n") if paragraph.strip()]
     if not paragraphs:
         paragraphs = [body]
-    blocks: List[Dict[str, Any]] = []
-    for index, paragraph in enumerate(paragraphs, start=1):
-        blocks.append(notion_toggle_block(_toggle_title(paragraph, index), [notion_paragraph_block(paragraph)]))
-    return blocks
+    return [notion_paragraph_block(paragraph) for paragraph in paragraphs]
+
+
+def section_toggle_blocks(sections: Sequence[Dict[str, Any]], fallback_title: str, fallback_text: str) -> List[Dict[str, Any]]:
+    if sections:
+        blocks: List[Dict[str, Any]] = []
+        for section in sections:
+            title = str(section.get("title", "")).strip() or fallback_title
+            text = str(section.get("text", "")).strip()
+            blocks.append(notion_toggle_block(title, text_to_paragraph_blocks(text)))
+        return blocks
+    return [notion_toggle_block(fallback_title, text_to_paragraph_blocks(fallback_text))]
 
 
 
@@ -216,8 +215,9 @@ def _append_children(client: NotionClient, parent_id: str, children: Sequence[Di
         client.request("PATCH", f"/blocks/{parent_id}/children", {"children": batch})
 
 
-def replace_page_body(client: NotionClient, page_id: str, text: str) -> None:
-    desired_children = paragraphs_to_notion_blocks(text)
+def replace_page_body(client: NotionClient, page_id: str, job: Dict[str, Any]) -> None:
+    sections = list(job.get("sections") or [])
+    desired_children = section_toggle_blocks(sections, "Content", str(job.get("text", "")))
     existing_children = _list_block_children(client, page_id)
     for child in existing_children:
         child_id = str(child.get("id", "")).strip()
@@ -270,7 +270,7 @@ def upsert_text_jobs_to_notion(
         if existing and existing.get("id"):
             page_id = str(existing["id"])
             client.update_page(page_id, properties)
-            replace_page_body(client, page_id, str(job.get("text", "")))
+            replace_page_body(client, page_id, job)
             updated += 1
         else:
             raise RuntimeError(

@@ -486,6 +486,77 @@ def _text_hash(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
+def _humanize_slug(value: str) -> str:
+    text = re.sub(r"[-_]+", " ", str(value or "").strip())
+    return text.title().strip()
+
+
+def _first_non_empty_line(text: str) -> str:
+    for line in str(text or "").splitlines():
+        value = " ".join(line.split()).strip()
+        if value:
+            return value
+    return ""
+
+
+def _section_title_for_block(block: Dict[str, Any], text: str, *, index: int, total: int) -> str:
+    explicit = str(block.get("title") or block.get("heading") or block.get("label") or "").strip()
+    if explicit:
+        return explicit
+
+    kind = normalize_publish_key(block.get("kind"))
+    if kind == "sequence":
+        if index == 1:
+            return "Opening Prayers"
+        if index == total:
+            return "Closing Prayers"
+        return f"Section {index}"
+
+    if kind == "weekday-map":
+        first_line = _first_non_empty_line(text)
+        if first_line and len(first_line) <= 80:
+            return first_line
+        return "Mysteries"
+
+    if kind == "monthly-template":
+        folder = str(block.get("folder", "")).strip()
+        folder_name = Path(folder).name if folder else ""
+        return _humanize_slug(folder_name) or "Monthly Intention"
+
+    if kind == "file":
+        first_line = _first_non_empty_line(text)
+        if first_line and len(first_line) <= 80:
+            return first_line
+        path_text = str(block.get("path", "")).strip()
+        return _humanize_slug(Path(path_text).stem) if path_text else f"Section {index}"
+
+    if kind == "inline":
+        first_line = _first_non_empty_line(text)
+        if first_line and len(first_line) <= 80:
+            return first_line
+        return f"Section {index}"
+
+    return f"Section {index}"
+
+
+def _build_text_sections(contract: PublishContract, entry: Dict[str, Any], *, target_date: Optional[_dt.date] = None) -> List[Dict[str, Any]]:
+    sections: List[Dict[str, Any]] = []
+    blocks = list(entry.get("blocks") or [])
+    effective_date = target_date or _local_date_for_timezone(contract.timezone)
+    for index, block in enumerate(blocks, start=1):
+        text = resolve_block_content(block, contract=contract, entry=entry, target_date=effective_date)
+        if not text.strip():
+            continue
+        sections.append(
+            {
+                "title": _section_title_for_block(block, text, index=index, total=len(blocks)),
+                "text": text,
+                "kind": normalize_publish_key(block.get("kind")),
+            }
+        )
+    return sections
+
+
 
 def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Optional[_dt.date] = None) -> List[Dict[str, Any]]:
     jobs: List[Dict[str, Any]] = []
@@ -500,6 +571,7 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
             text_body = _entry_text_body(contract, entry, target_date=effective_date)
             if not text_body.strip():
                 continue
+            sections = _build_text_sections(contract, entry, target_date=effective_date)
             jobs.append(
                 {
                     "entry_id": entry["entry_id"],
@@ -513,6 +585,7 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
                     "status": entry["status"],
                     "text": text_body,
                     "text_hash": _text_hash(text_body),
+                    "sections": sections,
                     "text_config": text_config,
                     "audio_config": dict(entry.get("audio_config") or {}),
                     "notion_target": dict(contract.notion_target),
