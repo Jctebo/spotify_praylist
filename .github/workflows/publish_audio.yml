@@ -2,6 +2,10 @@ name: Publish Prayer Audio
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+      - enhancement/publish-pipeline-cleanup
   schedule:
     - cron: "30 6 * * *"
 

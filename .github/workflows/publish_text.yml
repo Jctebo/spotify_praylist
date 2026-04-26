@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - enhancement/publish-pipeline-cleanup
     paths:
       - config/publish/**
       - jobs/publish/**
