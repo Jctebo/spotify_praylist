@@ -66,6 +66,8 @@ class TestPublishTextPipeline(unittest.TestCase):
         self.assertEqual(second["updated"], 2)
         self.assertEqual(set(client.pages.keys()), {"Morning Prayer", "Daily Rosary"})
         self.assertTrue(any(client.page_children[page_id] for page_id in client.page_children))
+        self.assertEqual(client.page_children["page-1"][0]["type"], "toggle")
+        self.assertEqual(client.page_children["page-2"][0]["type"], "toggle")
 
     def test_run_text_pipeline_returns_summary(self):
         contracts = self.contracts_mod.load_publish_contracts()

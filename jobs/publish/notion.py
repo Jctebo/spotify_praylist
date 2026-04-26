@@ -96,6 +96,26 @@ def notion_paragraph_block(text: str) -> Dict[str, Any]:
     return {"object": "block", "type": "paragraph", "paragraph": {"rich_text": notion_rich_text(text)}}
 
 
+def notion_toggle_block(title: str, children: Optional[Sequence[Dict[str, Any]]] = None) -> Dict[str, Any]:
+    return {
+        "object": "block",
+        "type": "toggle",
+        "toggle": {
+            "rich_text": notion_rich_text(title),
+            "children": list(children or []),
+        },
+    }
+
+
+def _toggle_title(paragraph: str, index: int) -> str:
+    text = " ".join(str(paragraph or "").split())
+    if not text:
+        return f"Section {index}"
+    if len(text) <= 72:
+        return text
+    return text[:69].rstrip() + "..."
+
+
 def paragraphs_to_notion_blocks(text: str) -> List[Dict[str, Any]]:
     body = str(text or "").replace("\r\n", "\n").replace("\r", "\n").strip()
     if not body:
@@ -103,7 +123,10 @@ def paragraphs_to_notion_blocks(text: str) -> List[Dict[str, Any]]:
     paragraphs = [paragraph.strip() for paragraph in body.split("\n\n") if paragraph.strip()]
     if not paragraphs:
         paragraphs = [body]
-    return [notion_paragraph_block(paragraph) for paragraph in paragraphs]
+    blocks: List[Dict[str, Any]] = []
+    for index, paragraph in enumerate(paragraphs, start=1):
+        blocks.append(notion_toggle_block(_toggle_title(paragraph, index), [notion_paragraph_block(paragraph)]))
+    return blocks
 
 
 
