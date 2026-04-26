@@ -2,21 +2,20 @@ name: Publish Prayer Text
 
 on:
   workflow_dispatch:
-  push:
+  workflow_run:
+    workflows:
+      - Daily Spotify Playlist Refresh
+    types:
+      - completed
     branches:
       - main
-      - enhancement/publish-pipeline-cleanup
-    paths:
-      - config/publish/**
-      - jobs/publish/**
-      - tests/test_publish_*.py
-      - .github/workflows/publish_text.yml
 
 permissions:
   contents: read
 
 jobs:
   publish-text:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     env:

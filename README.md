@@ -31,10 +31,12 @@ Optional variables:
 - `config/publish/templates/...`: reusable prayer text assets and Rosary mystery text assets referenced by the contracts
 - `jobs/notion/generate_page_audio.py`: archived page-audio runtime retained only for older Morning Prayer workflows
 - `NOTION_PUBLISH_DATABASE_ID` or `NOTION_DATABASE_NAME` for the new publish-text Notion target, which upserts page titles on the `Opus Dei` database and writes the prayer text into the page body
+- `Publish Prayer Text` now runs after `Daily Spotify Playlist Refresh` completes successfully on `main`, plus manual dispatches
 
 ### Audio
 - `jobs/publish/run_audio_pipeline.py`: contract-driven audio publication that writes `docs/audio/*.mp3` and refreshes `docs/podcast.xml`
 - `PUBLISH_GITHUB_PAGES_BASE_URL` to override the RSS enclosure base URL when publishing audio
+- `Publish Prayer Audio` now runs after `Daily Spotify Playlist Refresh` completes successfully on `main`, plus manual dispatches
 
 ### RSS Pages
 - Site root landing page: `https://jctebo.github.io/spotify_praylist/`

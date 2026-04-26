@@ -2,12 +2,13 @@ name: Publish Prayer Audio
 
 on:
   workflow_dispatch:
-  push:
+  workflow_run:
+    workflows:
+      - Daily Spotify Playlist Refresh
+    types:
+      - completed
     branches:
       - main
-      - enhancement/publish-pipeline-cleanup
-  schedule:
-    - cron: "30 6 * * *"
 
 permissions:
   contents: read
@@ -16,6 +17,7 @@ permissions:
 
 jobs:
   publish-audio:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     env:
