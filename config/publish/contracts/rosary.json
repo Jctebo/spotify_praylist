@@ -73,11 +73,11 @@
       "title": "Intro",
       "targets": ["audio"],
       "resolvers": [
-        { "key": "sign-of-cross", "kind": "file", "path": "config/content/rosary/sign-of-cross.txt", "order": 1, "title": "Sign of the Cross", "targets": ["audio"] },
-        { "key": "apostles-creed", "kind": "file", "path": "config/content/rosary/apostles-creed.txt", "order": 2, "title": "Apostles' Creed", "targets": ["audio"] },
-        { "key": "our-father", "kind": "file", "path": "config/content/rosary/our-father.txt", "order": 3, "title": "Our Father", "targets": ["audio"] },
+        { "key": "sign-of-cross", "kind": "file", "path": "config/publish/templates/rosary/sign-of-cross.txt", "order": 1, "title": "Sign of the Cross", "targets": ["audio"] },
+        { "key": "apostles-creed", "kind": "file", "path": "config/publish/templates/rosary/apostles-creed.txt", "order": 2, "title": "Apostles' Creed", "targets": ["audio"] },
+        { "key": "our-father", "kind": "file", "path": "config/publish/templates/rosary/our-father.txt", "order": 3, "title": "Our Father", "targets": ["audio"] },
         { "key": "hail-mary-3", "kind": "repeat", "source_key": "hail-mary", "count": 3, "order": 4, "title": "Hail Mary x3", "targets": ["audio"] },
-        { "key": "glory-be", "kind": "file", "path": "config/content/rosary/glory-be.txt", "order": 5, "title": "Glory Be", "targets": ["audio"] }
+        { "key": "glory-be", "kind": "file", "path": "config/publish/templates/rosary/glory-be.txt", "order": 5, "title": "Glory Be", "targets": ["audio"] }
       ]
     },
     {
@@ -90,10 +90,10 @@
       "resolvers": [
         { "key": "mystery", "kind": "dynamic_mystery", "order": 1, "title": "Mystery", "targets": ["audio"] },
         { "key": "meditation", "kind": "prompt", "order": 2, "title": "Meditation", "targets": ["audio"], "prompt_key": "rosary-decade-meditation-template" },
-        { "key": "our-father", "kind": "file", "path": "config/content/rosary/our-father.txt", "order": 3, "title": "Our Father", "targets": ["audio"] },
+        { "key": "our-father", "kind": "file", "path": "config/publish/templates/rosary/our-father.txt", "order": 3, "title": "Our Father", "targets": ["audio"] },
         { "key": "hail-mary-10", "kind": "repeat", "source_key": "hail-mary", "count": 10, "order": 4, "title": "Hail Mary x10", "targets": ["audio"] },
-        { "key": "glory-be", "kind": "file", "path": "config/content/rosary/glory-be.txt", "order": 5, "title": "Glory Be", "targets": ["audio"] },
-        { "key": "fatima-prayer", "kind": "file", "path": "config/content/rosary/fatima-prayer.txt", "order": 6, "title": "Fatima Prayer", "targets": ["audio"] }
+        { "key": "glory-be", "kind": "file", "path": "config/publish/templates/rosary/glory-be.txt", "order": 5, "title": "Glory Be", "targets": ["audio"] },
+        { "key": "fatima-prayer", "kind": "file", "path": "config/publish/templates/rosary/fatima-prayer.txt", "order": 6, "title": "Fatima Prayer", "targets": ["audio"] }
       ]
     },
     {
@@ -103,9 +103,9 @@
       "title": "Closing",
       "targets": ["audio"],
       "resolvers": [
-        { "key": "hail-holy-queen", "kind": "file", "path": "config/content/rosary/hail-holy-queen.txt", "order": 1, "title": "Hail Holy Queen", "targets": ["audio"] },
-        { "key": "closing-prayer", "kind": "file", "path": "config/content/rosary/closing-prayer.txt", "order": 2, "title": "Closing Prayer", "targets": ["audio"] },
-        { "key": "sign-of-cross", "kind": "file", "path": "config/content/rosary/sign-of-cross.txt", "order": 3, "title": "Sign of the Cross", "targets": ["audio"] }
+        { "key": "hail-holy-queen", "kind": "file", "path": "config/publish/templates/rosary/hail-holy-queen.txt", "order": 1, "title": "Hail Holy Queen", "targets": ["audio"] },
+        { "key": "closing-prayer", "kind": "file", "path": "config/publish/templates/rosary/closing-prayer.txt", "order": 2, "title": "Closing Prayer", "targets": ["audio"] },
+        { "key": "sign-of-cross", "kind": "file", "path": "config/publish/templates/rosary/sign-of-cross.txt", "order": 3, "title": "Sign of the Cross", "targets": ["audio"] }
       ]
     }
   ]
