@@ -37,6 +37,7 @@ Optional variables:
 - `PUBLISH_GITHUB_PAGES_BASE_URL` to override the RSS enclosure base URL when publishing audio
 
 ### RSS Pages
+- Site root landing page: `https://jctebo.github.io/spotify_praylist/`
 - Feed file: `docs/podcast.xml`
 - Audio enclosures: `docs/audio/*.mp3`
 - Public feed URL on GitHub Pages: `https://jctebo.github.io/spotify_praylist/podcast.xml`

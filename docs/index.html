@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Spotify Praylist</title>
+  <style>
+    :root {
+      --bg: #f4efe7;
+      --bg-alt: #efe4d2;
+      --card: rgba(255, 255, 255, 0.72);
+      --card-border: rgba(83, 62, 40, 0.12);
+      --ink: #2f241b;
+      --muted: #665646;
+      --accent: #8d4d2f;
+      --accent-soft: #f3d2bf;
+      --shadow: 0 24px 70px rgba(68, 45, 28, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(205, 143, 108, 0.22), transparent 34%),
+        radial-gradient(circle at 80% 10%, rgba(141, 77, 47, 0.18), transparent 28%),
+        linear-gradient(180deg, var(--bg), var(--bg-alt));
+      font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.22)),
+        radial-gradient(rgba(141, 77, 47, 0.08) 1px, transparent 1px);
+      background-size: auto, 18px 18px;
+      mix-blend-mode: soft-light;
+      opacity: 0.34;
+    }
+
+    main {
+      position: relative;
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 56px 20px 72px;
+    }
+
+    .hero {
+      display: grid;
+      gap: 20px;
+      align-items: end;
+      padding: 36px;
+      border: 1px solid var(--card-border);
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.62));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+    }
+
+    .eyebrow {
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-size: 0.76rem;
+      color: var(--accent);
+      margin: 0 0 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.8rem, 7vw, 5.5rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+    }
+
+    .lede {
+      margin: 0;
+      max-width: 60ch;
+      font-size: 1.08rem;
+      line-height: 1.7;
+      color: var(--muted);
+    }
+
+    .grid {
+      display: grid;
+      gap: 18px;
+      margin-top: 22px;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+    }
+
+    .panel {
+      grid-column: span 12;
+      padding: 22px;
+      border-radius: 22px;
+      border: 1px solid var(--card-border);
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 14px 40px rgba(68, 45, 28, 0.08);
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 1.15rem;
+    }
+
+    .panel p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .links {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .link {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.75);
+      color: var(--ink);
+      text-decoration: none;
+      border: 1px solid rgba(141, 77, 47, 0.14);
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+    }
+
+    .link:hover {
+      transform: translateY(-1px);
+      border-color: rgba(141, 77, 47, 0.32);
+      background: rgba(255, 255, 255, 0.92);
+    }
+
+    .link strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 4px;
+    }
+
+    .link span {
+      display: block;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .pill {
+      flex: 0 0 auto;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 0.84rem;
+      white-space: nowrap;
+    }
+
+    .meta {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 18px;
+    }
+
+    .stat {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid rgba(141, 77, 47, 0.12);
+    }
+
+    .stat label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .stat code {
+      font-size: 0.94rem;
+      color: var(--ink);
+      word-break: break-word;
+    }
+
+    footer {
+      margin-top: 22px;
+      padding: 8px 2px 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    @media (min-width: 860px) {
+      .hero {
+        grid-template-columns: 1.4fr 0.9fr;
+      }
+
+      .panel.feed,
+      .panel.audio {
+        grid-column: span 6;
+      }
+    }
+
+    @media (max-width: 700px) {
+      main {
+        padding: 24px 14px 40px;
+      }
+
+      .hero {
+        padding: 24px;
+        border-radius: 22px;
+      }
+
+      .meta {
+        grid-template-columns: 1fr;
+      }
+
+      .link {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div>
+        <p class="eyebrow">GitHub Pages</p>
+        <h1>Spotify Praylist</h1>
+        <p class="lede">
+          A small publishing hub for prayer content. The human-readable prayer pages live in Notion,
+          while this site serves the podcast feed and generated audio for listeners and apps.
+        </p>
+      </div>
+      <div>
+        <div class="stat">
+          <label>Current feed</label>
+          <code>/podcast.xml</code>
+        </div>
+        <div class="stat" style="margin-top: 12px;">
+          <label>Audio path</label>
+          <code>/audio/&lt;entry_id&gt;.mp3</code>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid" aria-label="Publishing sections">
+      <article class="panel">
+        <h2>Text</h2>
+        <p>Morning Prayer and Daily Rosary are published into Notion as section-level toggle lists.</p>
+      </article>
+
+      <article class="panel feed">
+        <h2>RSS Pages</h2>
+        <p>Use these links to subscribe or inspect the generated feed.</p>
+        <div class="links">
+          <a class="link" href="podcast.xml">
+            <div>
+              <strong>Podcast feed</strong>
+              <span>RSS 2.0 feed generated by the audio pipeline.</span>
+            </div>
+            <span class="pill">Open XML</span>
+          </a>
+          <a class="link" href="audio/">
+            <div>
+              <strong>Generated audio</strong>
+              <span>MP3 files are written here once the audio job runs.</span>
+            </div>
+            <span class="pill">Browse audio</span>
+          </a>
+        </div>
+      </article>
+
+      <article class="panel audio">
+        <h2>Audio</h2>
+        <p>
+          The branch workflow renders audio successfully, and the main branch publishes the same
+          files to GitHub Pages so the feed and enclosure URLs stay stable.
+        </p>
+      </article>
+    </section>
+
+    <section class="meta" aria-label="Site details">
+      <div class="stat">
+        <label>Public site</label>
+        <code>/spotify_praylist/</code>
+      </div>
+      <div class="stat">
+        <label>Feed URL</label>
+        <code>https://jctebo.github.io/spotify_praylist/podcast.xml</code>
+      </div>
+      <div class="stat">
+        <label>Audio URL pattern</label>
+        <code>https://jctebo.github.io/spotify_praylist/audio/&lt;entry_id&gt;.mp3</code>
+      </div>
+    </section>
+
+    <footer>
+      If you landed here from a 404, the page is now the right place to start.
+    </footer>
+  </main>
+</body>
+</html>
