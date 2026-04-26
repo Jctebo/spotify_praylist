@@ -1,0 +1,52 @@
+name: Publish Prayer Audio
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 6 * * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  publish-audio:
+    runs-on: ubuntu-latest
+
+    env:
+      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+      NOTION_PUBLISH_DATABASE_ID: ${{ secrets.NOTION_PUBLISH_DATABASE_ID }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OAI_API_BASE_URL: https://api.openai.com/v1
+      PUBLISH_GITHUB_PAGES_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Publish audio files and RSS feed
+        run: python -m jobs.publish.run_audio_pipeline
+
+      - name: Configure GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ${{ github.workspace }}/docs
+
+      - name: Deploy GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        id: deploy-pages
+        uses: actions/deploy-pages@v4

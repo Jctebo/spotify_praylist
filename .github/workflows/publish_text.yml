@@ -1,0 +1,38 @@
+name: Publish Prayer Text
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - config/publish/**
+      - jobs/publish/**
+      - tests/test_publish_*.py
+      - .github/workflows/publish_text.yml
+
+permissions:
+  contents: read
+
+jobs:
+  publish-text:
+    runs-on: ubuntu-latest
+
+    env:
+      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+      NOTION_PUBLISH_DATABASE_ID: ${{ secrets.NOTION_PUBLISH_DATABASE_ID }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Publish text entries to Notion
+        run: python -m jobs.publish.run_text_pipeline

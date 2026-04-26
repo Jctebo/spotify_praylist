@@ -24,6 +24,15 @@ Optional variables:
 - `NOTION_DATABASE_ID` or `NOTION_DATABASE_NAME` for the `Opus Dei` membership/order database
 - related Notion variables for optional post-write sync behavior
 
+## Publish Pipelines
+- `jobs/publish/run_text_pipeline.py`: contract-driven Notion text publication for `config/publish/contracts/*.json`
+- `jobs/publish/run_audio_pipeline.py`: contract-driven audio publication that writes `docs/audio/*.mp3` and `docs/podcast.xml`
+- `config/publish/contracts/*.json`: shared Morning Prayer and Rosary publish contracts with a single entry-based schema
+- `config/publish/templates/...`: reusable prayer text assets and Rosary mystery text assets referenced by the contracts
+- `jobs/notion/generate_page_audio.py`: archived page-audio runtime retained only for older Morning Prayer workflows
+- `NOTION_PUBLISH_DATABASE_ID` or `NOTION_DATABASE_NAME` for the new publish-text Notion target
+- `PUBLISH_GITHUB_PAGES_BASE_URL` to override the RSS enclosure base URL when publishing audio
+
 ## Files
 - `jobs/playlist/refresh_playlist.py`: active Spotify refresh runtime with Notion-owned membership/order
 - `jobs/playlist/spotify_contracts.py`: loader and validation for `config/spotify/contracts/*.json` and `config/spotify/playlists/*.json`
@@ -32,6 +41,7 @@ Optional variables:
 - `config/legacy/playlist_config.json`: legacy reference config kept off the active runtime path
 - `config/custom_tts/morning-prayer.json`: canonical Morning Prayer custom TTS contract for the active page-audio surface
 - `config/legacy/page_audio/*.json`, `config/legacy/rosary.json`, and `config/legacy/auxilium_daily_text.json`: discontinued top-level page-audio contracts retained only as archives; the active runtime no longer loads them
+- `jobs/publish/*.py`: new generic publish boundary for Notion text and GitHub Pages audio outputs
 - `scripts/setup_spotify.ps1`: Spotify credential wizard that also updates `config/spotify/playlists/*.json`
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` with optional single-playlist targeting
 - `scripts/setup_notion_playlists.ps1`: legacy Notion playlist-registry helper, no longer on the active Spotify hot path
@@ -197,6 +207,8 @@ Run another job by overriding the command:
 ```bash
 docker run --rm --env-file .env spotify-praylist:local python -m jobs.notion.reset_notion_completions
 docker run --rm --env-file .env -v "$PWD/artifacts/container:/data" spotify-praylist:local python -m jobs.novena.generate_daily_novena_prayer
+docker run --rm --env-file .env -v "$PWD/artifacts/container:/data" spotify-praylist:local python -m jobs.publish.run_text_pipeline
+docker run --rm --env-file .env -v "$PWD/artifacts/container:/data" spotify-praylist:local python -m jobs.publish.run_audio_pipeline
 docker run --rm --env-file .env -v "$PWD/artifacts/container:/data" spotify-praylist:local python jobs/notion/generate_page_audio.py
 docker run --rm --env-file .env -v "$PWD/artifacts/container:/data" spotify-praylist:local python -m jobs.novena.generate_devotional_image
 ```

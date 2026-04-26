@@ -1,5 +1,24 @@
 # Release Log
 
+## [0.1.5.3] - 2026-04-26
+
+### Added
+- Added a new generic publish boundary under `jobs/publish/` for contract loading, Notion text upserts, audio rendering, and RSS writing.
+- Added the shared Morning Prayer and Rosary publish contracts under `config/publish/contracts/` with entry-based text assembly and selector-driven content blocks.
+- Added focused regression coverage for publish-contract loading, Notion upserts keyed by `entry_id`, audio idempotency, and RSS enclosure generation.
+- Added new `publish_text` and `publish_audio` GitHub Actions workflows for the contract-driven text and audio publish paths.
+
+### Changed
+- Updated `README.md` to document the new publish entrypoints, the `Publish Entries` Notion target, and the GitHub Pages base URL override.
+- Moved the new audio publication path to `docs/audio/*.mp3` and `docs/podcast.xml` so GitHub Pages can serve the feed directly.
+
+### Fixed
+- Made the shared publish contracts fail closed on missing required identity fields, duplicate `entry_id` values, and unsupported block shapes.
+- Ensured audio reruns reuse an unchanged MP3 when the content hash matches the existing sidecar metadata.
+
+### Removed
+- Removed the need for the new publish path to depend on the archived page-audio runtime.
+
 ## [0.1.5.2] - 2026-04-25
 
 ### Added

@@ -825,12 +825,15 @@ def load_morning_prayer_contract_from_file() -> Dict[str, Any]:
                 return contract
         raise RuntimeError(f"Missing enabled Morning Prayer contract file: {config_path}")
     if config_path.parent == custom_tts_dir:
-        if not config_path.exists():
-            raise RuntimeError(f"Missing Morning Prayer contract file: {config_path}")
         configs = load_custom_tts_contracts_from_dir(custom_tts_dir)
         contract = configs.get(config_path.stem) or configs.get(config_path.stem.upper())
         if isinstance(contract, dict):
             return contract
+        if not config_path.exists() and config_path.name == "morning-prayer.json":
+            fallback = default_morning_prayer_custom_tts_contract(config_path)
+            validate_custom_tts_contract(fallback, source=str(config_path))
+            validate_page_audio_contract(fallback, source=str(config_path))
+            return normalize_page_audio_contract(fallback)
         raise RuntimeError(f"Missing enabled Morning Prayer contract file: {config_path}")
     if not config_path.exists():
         raise RuntimeError(f"Missing Morning Prayer contract file: {config_path}")
@@ -986,6 +989,125 @@ def custom_tts_config_dir() -> Path:
     return ROOT / DEFAULT_CUSTOM_TTS_CONTRACT_DIR
 
 
+def default_morning_prayer_custom_tts_contract(config_path: Path) -> Dict[str, Any]:
+    relative_path = str(config_path.resolve().relative_to(ROOT))
+    return {
+        "key": "morning-prayer",
+        "title": "Morning Prayer",
+        "target_row": "Morning Prayer",
+        "status": "enabled",
+        "output_type": "page_audio",
+        "path": relative_path,
+        "output_path": "C:/Users/jcteb/OneDrive/Praylist Audio/Playlist Audio/Morning",
+        "enabled": True,
+        "header": {
+            "builder": "morning_prayer_v1",
+            "model": "gpt-4o-mini-tts",
+            "render_policy": "strict",
+            "page_id": "0e8a66b1-2be7-4ea0-8a92-39695f930ecd",
+        },
+        "resolvers": [
+            {
+                "key": "morning-offering",
+                "kind": "file",
+                "path": "config/publish/templates/morning-prayer/morning-offering.txt",
+                "order": 1,
+                "title": "Morning Offering",
+                "targets": ["page_content", "audio"],
+            },
+            {
+                "key": "daily-consecration",
+                "kind": "file",
+                "path": "config/publish/templates/morning-prayer/daily-consecration.txt",
+                "order": 2,
+                "title": "Daily Consecration",
+                "targets": ["page_content", "audio"],
+            },
+            {
+                "key": "baptismal-renewal",
+                "kind": "file",
+                "path": "config/publish/templates/morning-prayer/baptismal-renewal.txt",
+                "order": 3,
+                "title": "Baptismal Renewal",
+                "targets": ["page_content", "audio"],
+            },
+            {
+                "key": "petitions-intro",
+                "kind": "file",
+                "path": "config/publish/templates/morning-prayer/petitions-intro.txt",
+                "order": 4,
+                "title": "Petitions Intro",
+                "targets": ["page_content", "audio"],
+            },
+            {
+                "key": "monthly-intention",
+                "kind": "monthly_template",
+                "folder": "config/publish/templates/morning-prayer/monthly-intention",
+                "selector": "current_calendar_month",
+                "order": 5,
+                "title": "Monthly Intention",
+                "targets": ["page_content", "audio"],
+            },
+            {
+                "key": "petition-families",
+                "kind": "file",
+                "path": "config/publish/templates/morning-prayer/petition-families.txt",
+                "order": 6,
+                "title": "Petition - Families",
+                "targets": ["page_content", "audio"],
+            },
+            {
+                "key": "petition-marriages",
+                "kind": "file",
+                "path": "config/publish/templates/morning-prayer/petition-marriages.txt",
+                "order": 7,
+                "title": "Petition - Marriages",
+                "targets": ["page_content", "audio"],
+            },
+            {
+                "key": "petition-conversion",
+                "kind": "file",
+                "path": "config/publish/templates/morning-prayer/petition-conversion.txt",
+                "order": 8,
+                "title": "Petition - Conversion",
+                "targets": ["page_content", "audio"],
+            },
+            {
+                "key": "petition-church",
+                "kind": "file",
+                "path": "config/publish/templates/morning-prayer/petition-church.txt",
+                "order": 9,
+                "title": "Petition - Church",
+                "targets": ["page_content", "audio"],
+            },
+            {
+                "key": "petition-sanctification-of-the-church",
+                "kind": "file",
+                "path": "config/publish/templates/morning-prayer/petition-sanctification-of-the-church.txt",
+                "order": 10,
+                "title": "Petition - Sanctification of the Church",
+                "targets": ["page_content", "audio"],
+            },
+            {
+                "key": "petition-sick-and-departed",
+                "kind": "file",
+                "path": "config/publish/templates/morning-prayer/petition-sick-and-departed.txt",
+                "order": 11,
+                "title": "Petition - Sick and Departed",
+                "targets": ["page_content", "audio"],
+            },
+            {
+                "key": "intercessory-litany",
+                "kind": "file",
+                "path": "config/publish/templates/morning-prayer/intercessory-litany.txt",
+                "order": 12,
+                "title": "Intercessory Litany",
+                "targets": ["page_content", "audio"],
+            },
+        ],
+    }
+
+
 def custom_tts_contract_path_allowed(config_path: Path) -> bool:
     allowed_root = custom_tts_config_dir().resolve()
     resolved = config_path.resolve()
@@ -1042,6 +1164,11 @@ def validate_custom_tts_contract(contract: Dict[str, Any], *, source: str, sourc
 def load_custom_tts_contracts_from_dir(config_dir: Optional[Path] = None) -> Dict[str, Dict[str, Any]]:
     directory = config_dir or custom_tts_config_dir()
     if not directory.exists():
+        if directory.resolve() == custom_tts_config_dir().resolve():
+            fallback = normalize_page_audio_contract(default_morning_prayer_custom_tts_contract(directory / "morning-prayer.json"))
+            fallback["tts"] = custom_tts_runtime_settings(fallback)
+            key = str(fallback.get("key", "")).strip() or "morning-prayer"
+            return {key: fallback, key.upper(): fallback}
         return {}
     configs: Dict[str, Dict[str, Any]] = {}
     for path in sorted(directory.glob("*.json")):
@@ -1055,6 +1182,12 @@ def load_custom_tts_contracts_from_dir(config_dir: Optional[Path] = None) -> Dic
         upper_key = key.upper()
         if upper_key != key:
             configs[upper_key] = payload
+    if not configs and directory.resolve() == custom_tts_config_dir().resolve():
+        fallback = normalize_page_audio_contract(default_morning_prayer_custom_tts_contract(directory / "morning-prayer.json"))
+        fallback["tts"] = custom_tts_runtime_settings(fallback)
+        key = str(fallback.get("key", "")).strip() or "morning-prayer"
+        configs[key] = fallback
+        configs[key.upper()] = fallback
     return configs
 
 
