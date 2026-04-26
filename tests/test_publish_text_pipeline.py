@@ -7,8 +7,10 @@ from tests.test_helpers import load_module
 
 class FakeNotionClient:
     def __init__(self):
-        self.pages = {}
+        self.pages = {"Morning Prayer": "page-1", "Daily Rosary": "page-2"}
         self.page_children = {}
+        self.page_children["page-1"] = []
+        self.page_children["page-2"] = []
         self.created = []
         self.updated = []
         self.queries = []
@@ -17,20 +19,14 @@ class FakeNotionClient:
         self.queries.append((database_id, body))
         filter_body = body["filter"]
         title_filter = filter_body.get("title") or {}
-        entry_id = title_filter.get("starts_with") or title_filter.get("equals")
+        entry_id = title_filter.get("equals")
         for page_title, page_id in self.pages.items():
-            if page_title.startswith(entry_id):
+            if page_title == entry_id:
                 return {"results": [{"id": page_id}]}
         return {"results": []}
 
     def create_page(self, database_id, properties):
-        page_id = f"page-{len(self.created) + 1}"
-        page_title = next(value for key, value in properties.items() if key == "Name")
-        entry_title = page_title["title"][0]["text"]["content"]
-        self.pages[entry_title] = page_id
-        self.page_children[page_id] = []
-        self.created.append((database_id, properties))
-        return {"id": page_id}
+        raise AssertionError("create_page should not be called")
 
     def update_page(self, page_id, properties):
         self.updated.append((page_id, properties))
@@ -56,7 +52,7 @@ class TestPublishTextPipeline(unittest.TestCase):
         self.notion_mod = load_module("jobs/publish/notion.py")
         self.runner_mod = load_module("jobs/publish/run_text_pipeline.py")
 
-    def test_upsert_text_jobs_uses_entry_id_as_the_stable_key(self):
+    def test_upsert_text_jobs_updates_existing_pages_by_title(self):
         contracts = self.contracts_mod.load_publish_contracts()
         jobs = self.contracts_mod.build_text_jobs(contracts, target_date=datetime.date(2026, 4, 6))
         client = FakeNotionClient()
@@ -64,12 +60,11 @@ class TestPublishTextPipeline(unittest.TestCase):
         first = self.notion_mod.upsert_text_jobs_to_notion(jobs, client=client)
         second = self.notion_mod.upsert_text_jobs_to_notion(jobs, client=client)
 
-        self.assertEqual(first["created"], 2)
-        self.assertEqual(first["updated"], 0)
+        self.assertEqual(first["created"], 0)
+        self.assertEqual(first["updated"], 2)
         self.assertEqual(second["created"], 0)
         self.assertEqual(second["updated"], 2)
-        self.assertTrue(any(title.startswith("morning-prayer - ") for title in client.pages.keys()))
-        self.assertTrue(any(title.startswith("rosary - ") for title in client.pages.keys()))
+        self.assertEqual(set(client.pages.keys()), {"Morning Prayer", "Daily Rosary"})
         self.assertTrue(any(client.page_children[page_id] for page_id in client.page_children))
 
     def test_run_text_pipeline_returns_summary(self):
@@ -88,5 +83,5 @@ class TestPublishTextPipeline(unittest.TestCase):
         result = self.runner_mod.run_text_pipeline()
 
         self.assertEqual(result["jobs"], 2)
-        self.assertEqual(result["created"], 2)
-        self.assertEqual(result["updated"], 0)
+        self.assertEqual(result["created"], 0)
+        self.assertEqual(result["updated"], 2)

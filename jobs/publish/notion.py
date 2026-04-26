@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from jobs.publish.contracts import DEFAULT_NOTION_DATABASE_NAME, DEFAULT_NOTION_FIELDS, normalize_publish_key
+from jobs.publish.contracts import DEFAULT_NOTION_DATABASE_NAME, DEFAULT_NOTION_FIELDS
 
 NOTION_VERSION = "2022-06-28"
 NOTION_REQUEST_TIMEOUT_SECONDS = 30
@@ -140,17 +140,6 @@ def _notion_url_property(value: str) -> Dict[str, Any]:
     return {"url": text or None}
 
 
-def _page_title_for_job(job: Dict[str, Any]) -> str:
-    entry_id = str(job.get("entry_id", "")).strip()
-    title = str(job.get("title", "")).strip()
-    if not entry_id:
-        return title
-    if not title:
-        return entry_id
-    return f"{entry_id} - {title}"
-
-
-
 def _resolve_database_id(client: NotionClient, target: Dict[str, Any]) -> str:
     database_id = str(target.get("database_id", "")).strip()
     if database_id:
@@ -172,7 +161,7 @@ def _resolve_database_id(client: NotionClient, target: Dict[str, Any]) -> str:
 def build_text_job_properties(job: Dict[str, Any], target: Dict[str, Any]) -> Dict[str, Any]:
     fields = dict(DEFAULT_NOTION_FIELDS)
     fields.update(dict(target.get("fields") or {}))
-    return {fields["title"]: _notion_title_property(_page_title_for_job(job))}
+    return {fields["title"]: _notion_title_property(str(job.get("title", "")).strip())}
 
 
 def _list_block_children(client: NotionClient, block_id: str) -> List[Dict[str, Any]]:
@@ -216,30 +205,17 @@ def replace_page_body(client: NotionClient, page_id: str, text: str) -> None:
 
 
 
-def _find_matching_page(client: NotionClient, database_id: str, entry_id: str, *, entry_id_field: str) -> Optional[Dict[str, Any]]:
-    entry_id_field = str(entry_id_field or "").strip() or "Name"
+def _find_matching_page(client: NotionClient, database_id: str, page_title: str, *, title_field: str) -> Optional[Dict[str, Any]]:
+    page_title = str(page_title or "").strip()
+    title_field = str(title_field or "").strip() or "Name"
     query_attempts = [
-        {"property": entry_id_field, "title": {"starts_with": entry_id}},
-        {"property": entry_id_field, "title": {"equals": entry_id}},
-        {"property": entry_id_field, "rich_text": {"equals": entry_id}},
+        {"property": title_field, "title": {"equals": page_title}},
     ]
-    if normalize_publish_key(entry_id_field) != "name":
-        query_attempts.append({"property": "Name", "title": {"starts_with": entry_id}})
-
-    last_error: Optional[Exception] = None
     for filter_body in query_attempts:
-        try:
-            data = client.query_database(database_id, {"page_size": 100, "filter": filter_body})
-        except Exception as exc:
-            last_error = exc
-            continue
+        data = client.query_database(database_id, {"page_size": 100, "filter": filter_body})
         for result in data.get("results") or []:
             if isinstance(result, dict):
                 return result
-        return None
-
-    if last_error is not None:
-        raise last_error
     return None
 
 
@@ -264,8 +240,9 @@ def upsert_text_jobs_to_notion(
         database_id = _resolve_database_id(client, target)
         fields = dict(DEFAULT_NOTION_FIELDS)
         fields.update(dict(target.get("fields") or {}))
-        entry_id_field = fields["entry_id"]
-        existing = _find_matching_page(client, database_id, str(job["entry_id"]), entry_id_field=entry_id_field)
+        title_field = fields["title"]
+        page_title = str(job.get("title", "")).strip()
+        existing = _find_matching_page(client, database_id, page_title, title_field=title_field)
         properties = build_text_job_properties(job, target)
         if existing and existing.get("id"):
             page_id = str(existing["id"])
@@ -273,11 +250,10 @@ def upsert_text_jobs_to_notion(
             replace_page_body(client, page_id, str(job.get("text", "")))
             updated += 1
         else:
-            created_page = client.create_page(database_id, properties)
-            page_id = str(created_page.get("id", "")).strip()
-            if page_id:
-                replace_page_body(client, page_id, str(job.get("text", "")))
-            created += 1
+            raise RuntimeError(
+                f"Unable to find existing Notion page titled '{page_title}' in database '{database_id}'. "
+                "Publish text will not create replacement pages."
+            )
     return {"created": created, "updated": updated, "skipped": skipped, "count": len(jobs)}
 
 

@@ -33,9 +33,9 @@
     {
       "entry_id": "rosary",
       "date": "daily",
-      "title": "Daily Rosary with Intentions",
+      "title": "Daily Rosary",
       "status": "approved",
-      "text": "Daily Rosary with Intentions",
+      "text": "Daily Rosary",
       "text_config": {
         "enabled": true
       },
