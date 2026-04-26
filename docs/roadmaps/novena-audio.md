@@ -1,7 +1,7 @@
 # Roadmap: Novena Audio
 
-## To Integrate
-- Easter Season Angelus Swap in Resolver
+## Moved To Stabilization
+- Easter Season Angelus Swap in Resolver is now tracked in `docs/roadmaps/stabilization.md` as Release 1.
 
 
 ## Summary Of Changes
