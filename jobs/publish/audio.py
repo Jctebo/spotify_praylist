@@ -40,6 +40,11 @@ def audio_sidecar_path(entry_id: str, *, docs_root: Optional[Path] = None) -> Pa
     return audio_output_path(entry_id, docs_root=docs_root).with_suffix(".json")
 
 
+def audio_public_url(entry_id: str, *, base_url: Optional[str] = None) -> str:
+    url_root = (base_url or github_pages_base_url()).rstrip("/")
+    return f"{url_root}/audio/{entry_id}.mp3"
+
+
 
 def content_hash_for_entry(entry: Dict[str, Any], audio_config: Dict[str, Any]) -> str:
     payload = {
@@ -110,7 +115,7 @@ def render_audio_job(
     if _is_current_audio_file(audio_path, sidecar_path, content_hash):
         rendered = dict(job)
         rendered["audio_path"] = str(audio_path)
-        rendered["audio_url"] = f"{github_pages_base_url().rstrip('/')}/docs/audio/{audio_path.name}"
+        rendered["audio_url"] = audio_public_url(str(job["entry_id"]))
         rendered["rendered"] = False
         return rendered
 
@@ -134,7 +139,7 @@ def render_audio_job(
     )
     rendered = dict(job)
     rendered["audio_path"] = str(audio_path)
-    rendered["audio_url"] = f"{github_pages_base_url().rstrip('/')}/docs/audio/{audio_path.name}"
+    rendered["audio_url"] = audio_public_url(str(job["entry_id"]))
     rendered["rendered"] = True
     rendered["content_hash"] = content_hash
     return rendered

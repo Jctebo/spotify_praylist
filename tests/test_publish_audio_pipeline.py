@@ -59,11 +59,11 @@ class TestPublishAudioPipeline(unittest.TestCase):
             feed_xml = self.rss_mod.build_rss_feed([rendered], base_url=self.audio_mod.github_pages_base_url())
             root = ET.fromstring(feed_xml)
             item = root.find("./channel/item")
-            self.assertIsNotNone(item)
-            self.assertEqual(item.findtext("guid"), "morning-prayer")
-            enclosure = item.find("enclosure")
-            self.assertIsNotNone(enclosure)
-            self.assertTrue(enclosure.get("url", "").endswith("/docs/audio/morning-prayer.mp3"))
+        self.assertIsNotNone(item)
+        self.assertEqual(item.findtext("guid"), "morning-prayer")
+        enclosure = item.find("enclosure")
+        self.assertIsNotNone(enclosure)
+        self.assertTrue(enclosure.get("url", "").endswith("/audio/morning-prayer.mp3"))
 
     def test_run_audio_pipeline_writes_feed(self):
         contracts = self.contracts_mod.load_publish_contracts()
