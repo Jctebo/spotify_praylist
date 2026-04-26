@@ -10,7 +10,7 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONTRACT_DIR = ROOT / "config" / "publish" / "contracts"
 DEFAULT_GITHUB_PAGES_BASE_URL = "https://jctebo.github.io/spotify_praylist"
-DEFAULT_NOTION_DATABASE_NAME = "Publish Entries"
+DEFAULT_NOTION_DATABASE_NAME = "Opus Dei"
 DEFAULT_NOTION_FIELDS = {
     "entry_id": "Entry ID",
     "title": "Title",

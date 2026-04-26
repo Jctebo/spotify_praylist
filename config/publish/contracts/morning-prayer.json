@@ -6,7 +6,7 @@
     "timezone": "America/Chicago",
     "version": "1",
     "notion_target": {
-      "database_name": "Publish Entries",
+      "database_name": "Opus Dei",
       "database_id_env": "NOTION_PUBLISH_DATABASE_ID",
       "fields": {
         "entry_id": "Entry ID",
