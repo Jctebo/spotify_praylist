@@ -167,14 +167,28 @@ def build_text_job_properties(job: Dict[str, Any], target: Dict[str, Any]) -> Di
 
 
 def _find_matching_page(client: NotionClient, database_id: str, entry_id: str, *, entry_id_field: str) -> Optional[Dict[str, Any]]:
-    body = {
-        "page_size": 100,
-        "filter": {"property": entry_id_field, "rich_text": {"equals": entry_id}},
-    }
-    data = client.query_database(database_id, body)
-    for result in data.get("results") or []:
-        if isinstance(result, dict):
-            return result
+    entry_id_field = str(entry_id_field or "").strip() or "Entry ID"
+    query_attempts = [
+        {"property": entry_id_field, "rich_text": {"equals": entry_id}},
+        {"property": entry_id_field, "title": {"equals": entry_id}},
+    ]
+    if normalize_publish_key(entry_id_field) != "name":
+        query_attempts.append({"property": "Name", "title": {"equals": entry_id}})
+
+    last_error: Optional[Exception] = None
+    for filter_body in query_attempts:
+        try:
+            data = client.query_database(database_id, {"page_size": 100, "filter": filter_body})
+        except Exception as exc:
+            last_error = exc
+            continue
+        for result in data.get("results") or []:
+            if isinstance(result, dict):
+                return result
+        return None
+
+    if last_error is not None:
+        raise last_error
     return None
 
 

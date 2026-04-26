@@ -14,7 +14,11 @@ class FakeNotionClient:
 
     def query_database(self, database_id, body):
         self.queries.append((database_id, body))
-        entry_id = body["filter"]["rich_text"]["equals"]
+        filter_body = body["filter"]
+        if "rich_text" in filter_body:
+            entry_id = filter_body["rich_text"]["equals"]
+        else:
+            entry_id = filter_body["title"]["equals"]
         if entry_id in self.pages:
             return {"results": [{"id": self.pages[entry_id]}]}
         return {"results": []}
