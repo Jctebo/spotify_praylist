@@ -25,13 +25,22 @@ Optional variables:
 - related Notion variables for optional post-write sync behavior
 
 ## Publish Pipelines
+### Text
 - `jobs/publish/run_text_pipeline.py`: contract-driven Notion text publication for `config/publish/contracts/*.json`
-- `jobs/publish/run_audio_pipeline.py`: contract-driven audio publication that writes `docs/audio/*.mp3` and `docs/podcast.xml`
 - `config/publish/contracts/*.json`: shared Morning Prayer and Rosary publish contracts with a single entry-based schema
 - `config/publish/templates/...`: reusable prayer text assets and Rosary mystery text assets referenced by the contracts
 - `jobs/notion/generate_page_audio.py`: archived page-audio runtime retained only for older Morning Prayer workflows
 - `NOTION_PUBLISH_DATABASE_ID` or `NOTION_DATABASE_NAME` for the new publish-text Notion target, which upserts page titles on the `Opus Dei` database and writes the prayer text into the page body
+
+### Audio
+- `jobs/publish/run_audio_pipeline.py`: contract-driven audio publication that writes `docs/audio/*.mp3` and refreshes `docs/podcast.xml`
 - `PUBLISH_GITHUB_PAGES_BASE_URL` to override the RSS enclosure base URL when publishing audio
+
+### RSS Pages
+- Feed file: `docs/podcast.xml`
+- Audio enclosures: `docs/audio/*.mp3`
+- Public feed URL on GitHub Pages: `https://jctebo.github.io/spotify_praylist/podcast.xml`
+- Public audio URL pattern on GitHub Pages: `https://jctebo.github.io/spotify_praylist/audio/<entry_id>.mp3`
 
 ## Files
 - `jobs/playlist/refresh_playlist.py`: active Spotify refresh runtime with Notion-owned membership/order
