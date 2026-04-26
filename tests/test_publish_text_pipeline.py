@@ -8,6 +8,7 @@ from tests.test_helpers import load_module
 class FakeNotionClient:
     def __init__(self):
         self.pages = {}
+        self.page_children = {}
         self.created = []
         self.updated = []
         self.queries = []
@@ -15,25 +16,38 @@ class FakeNotionClient:
     def query_database(self, database_id, body):
         self.queries.append((database_id, body))
         filter_body = body["filter"]
-        if "rich_text" in filter_body:
-            entry_id = filter_body["rich_text"]["equals"]
-        else:
-            entry_id = filter_body["title"]["equals"]
-        if entry_id in self.pages:
-            return {"results": [{"id": self.pages[entry_id]}]}
+        title_filter = filter_body.get("title") or {}
+        entry_id = title_filter.get("starts_with") or title_filter.get("equals")
+        for page_title, page_id in self.pages.items():
+            if page_title.startswith(entry_id):
+                return {"results": [{"id": page_id}]}
         return {"results": []}
 
     def create_page(self, database_id, properties):
         page_id = f"page-{len(self.created) + 1}"
-        entry_prop = next(value for key, value in properties.items() if key == "Entry ID")
-        entry_id = entry_prop["rich_text"][0]["text"]["content"]
-        self.pages[entry_id] = page_id
+        page_title = next(value for key, value in properties.items() if key == "Name")
+        entry_title = page_title["title"][0]["text"]["content"]
+        self.pages[entry_title] = page_id
+        self.page_children[page_id] = []
         self.created.append((database_id, properties))
         return {"id": page_id}
 
     def update_page(self, page_id, properties):
         self.updated.append((page_id, properties))
         return {"id": page_id}
+
+    def request(self, method, path, payload=None):
+        if method == "GET" and path.startswith("/blocks/") and path.endswith("/children?page_size=100"):
+            page_id = path.split("/", 3)[2]
+            return {"results": list(self.page_children.get(page_id, [])), "has_more": False}
+        if method == "PATCH" and path.startswith("/blocks/") and path.endswith("/children"):
+            page_id = path.split("/", 3)[2]
+            children = list(payload.get("children") or [])
+            self.page_children.setdefault(page_id, []).extend(children)
+            return {"results": children}
+        if method == "PATCH" and path.startswith("/blocks/"):
+            return {"id": path.split("/", 3)[2]}
+        raise AssertionError(f"Unexpected request: {method} {path}")
 
 
 class TestPublishTextPipeline(unittest.TestCase):
@@ -54,7 +68,9 @@ class TestPublishTextPipeline(unittest.TestCase):
         self.assertEqual(first["updated"], 0)
         self.assertEqual(second["created"], 0)
         self.assertEqual(second["updated"], 2)
-        self.assertEqual({entry_id for entry_id in client.pages.keys()}, {"morning-prayer", "rosary"})
+        self.assertTrue(any(title.startswith("morning-prayer - ") for title in client.pages.keys()))
+        self.assertTrue(any(title.startswith("rosary - ") for title in client.pages.keys()))
+        self.assertTrue(any(client.page_children[page_id] for page_id in client.page_children))
 
     def test_run_text_pipeline_returns_summary(self):
         contracts = self.contracts_mod.load_publish_contracts()

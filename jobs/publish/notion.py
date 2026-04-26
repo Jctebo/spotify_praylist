@@ -92,6 +92,20 @@ def notion_rich_text(value: str) -> List[Dict[str, Any]]:
     return [{"type": "text", "text": {"content": text}}]
 
 
+def notion_paragraph_block(text: str) -> Dict[str, Any]:
+    return {"object": "block", "type": "paragraph", "paragraph": {"rich_text": notion_rich_text(text)}}
+
+
+def paragraphs_to_notion_blocks(text: str) -> List[Dict[str, Any]]:
+    body = str(text or "").replace("\r\n", "\n").replace("\r", "\n").strip()
+    if not body:
+        return []
+    paragraphs = [paragraph.strip() for paragraph in body.split("\n\n") if paragraph.strip()]
+    if not paragraphs:
+        paragraphs = [body]
+    return [notion_paragraph_block(paragraph) for paragraph in paragraphs]
+
+
 
 def _notion_text_property(value: str) -> Dict[str, Any]:
     return {"rich_text": notion_rich_text(value)}
@@ -126,6 +140,16 @@ def _notion_url_property(value: str) -> Dict[str, Any]:
     return {"url": text or None}
 
 
+def _page_title_for_job(job: Dict[str, Any]) -> str:
+    entry_id = str(job.get("entry_id", "")).strip()
+    title = str(job.get("title", "")).strip()
+    if not entry_id:
+        return title
+    if not title:
+        return entry_id
+    return f"{entry_id} - {title}"
+
+
 
 def _resolve_database_id(client: NotionClient, target: Dict[str, Any]) -> str:
     database_id = str(target.get("database_id", "")).strip()
@@ -148,32 +172,59 @@ def _resolve_database_id(client: NotionClient, target: Dict[str, Any]) -> str:
 def build_text_job_properties(job: Dict[str, Any], target: Dict[str, Any]) -> Dict[str, Any]:
     fields = dict(DEFAULT_NOTION_FIELDS)
     fields.update(dict(target.get("fields") or {}))
-    properties: Dict[str, Any] = {
-        fields["entry_id"]: _notion_text_property(job["entry_id"]),
-        fields["title"]: _notion_title_property(job["title"]),
-        fields["date"]: _notion_date_property(job.get("date", "")),
-        fields["status"]: _notion_select_property(job.get("status", "")),
-        fields["frequency"]: _notion_select_property(job.get("frequency", "")),
-        fields["contract"]: _notion_text_property(job.get("contract_id", "")),
-        fields["text"]: _notion_text_property(job.get("text", "")),
-        fields["text_hash"]: _notion_text_property(job.get("text_hash", "")),
-        fields["audio_enabled"]: _notion_checkbox_property(bool(job.get("audio_config", {}).get("enabled", False))),
-        fields["audio_url"]: _notion_url_property(job.get("audio_url", "")),
-        fields["audio_path"]: _notion_text_property(job.get("audio_path", "")),
-        fields["content_hash"]: _notion_text_property(job.get("content_hash", "")),
-    }
-    return properties
+    return {fields["title"]: _notion_title_property(_page_title_for_job(job))}
+
+
+def _list_block_children(client: NotionClient, block_id: str) -> List[Dict[str, Any]]:
+    children: List[Dict[str, Any]] = []
+    next_cursor: Optional[str] = None
+    while True:
+        query = "page_size=100"
+        if next_cursor:
+            query += f"&start_cursor={next_cursor}"
+        data = client.request("GET", f"/blocks/{block_id}/children?{query}")
+        for result in data.get("results") or []:
+            if isinstance(result, dict):
+                children.append(result)
+        if not data.get("has_more"):
+            break
+        next_cursor = str(data.get("next_cursor", "")).strip() or None
+    return children
+
+
+def _archive_block(client: NotionClient, block_id: str) -> None:
+    client.request("PATCH", f"/blocks/{block_id}", {"archived": True})
+
+
+def _append_children(client: NotionClient, parent_id: str, children: Sequence[Dict[str, Any]]) -> None:
+    if not children:
+        return
+    for offset in range(0, len(children), 100):
+        batch = list(children[offset : offset + 100])
+        client.request("PATCH", f"/blocks/{parent_id}/children", {"children": batch})
+
+
+def replace_page_body(client: NotionClient, page_id: str, text: str) -> None:
+    desired_children = paragraphs_to_notion_blocks(text)
+    existing_children = _list_block_children(client, page_id)
+    for child in existing_children:
+        child_id = str(child.get("id", "")).strip()
+        if child_id:
+            _archive_block(client, child_id)
+    if desired_children:
+        _append_children(client, page_id, desired_children)
 
 
 
 def _find_matching_page(client: NotionClient, database_id: str, entry_id: str, *, entry_id_field: str) -> Optional[Dict[str, Any]]:
-    entry_id_field = str(entry_id_field or "").strip() or "Entry ID"
+    entry_id_field = str(entry_id_field or "").strip() or "Name"
     query_attempts = [
-        {"property": entry_id_field, "rich_text": {"equals": entry_id}},
+        {"property": entry_id_field, "title": {"starts_with": entry_id}},
         {"property": entry_id_field, "title": {"equals": entry_id}},
+        {"property": entry_id_field, "rich_text": {"equals": entry_id}},
     ]
     if normalize_publish_key(entry_id_field) != "name":
-        query_attempts.append({"property": "Name", "title": {"equals": entry_id}})
+        query_attempts.append({"property": "Name", "title": {"starts_with": entry_id}})
 
     last_error: Optional[Exception] = None
     for filter_body in query_attempts:
@@ -217,10 +268,15 @@ def upsert_text_jobs_to_notion(
         existing = _find_matching_page(client, database_id, str(job["entry_id"]), entry_id_field=entry_id_field)
         properties = build_text_job_properties(job, target)
         if existing and existing.get("id"):
-            client.update_page(str(existing["id"]), properties)
+            page_id = str(existing["id"])
+            client.update_page(page_id, properties)
+            replace_page_body(client, page_id, str(job.get("text", "")))
             updated += 1
         else:
-            client.create_page(database_id, properties)
+            created_page = client.create_page(database_id, properties)
+            page_id = str(created_page.get("id", "")).strip()
+            if page_id:
+                replace_page_body(client, page_id, str(job.get("text", "")))
             created += 1
     return {"created": created, "updated": updated, "skipped": skipped, "count": len(jobs)}
 

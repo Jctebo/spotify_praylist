@@ -10,7 +10,7 @@
       "database_id_env": "NOTION_PUBLISH_DATABASE_ID",
       "fields": {
         "entry_id": "Entry ID",
-        "title": "Title",
+        "title": "Name",
         "date": "Date",
         "status": "Status",
         "frequency": "Frequency",
