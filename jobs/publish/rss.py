@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import datetime as _dt
+from email.utils import format_datetime
 import sys
 import xml.etree.ElementTree as ET
 from textwrap import dedent
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Sequence
+from typing import Any, Dict, List, Sequence
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -45,6 +47,14 @@ def _audio_length_bytes(path_text: str) -> int:
     return path.stat().st_size
 
 
+def _published_at(job: Dict[str, Any]) -> _dt.datetime:
+    raw = str(job.get("published_date", "")).strip()
+    if not raw:
+        raise RuntimeError(f"RSS job is missing required published_date: {job!r}")
+    date_value = _dt.date.fromisoformat(raw)
+    return _dt.datetime.combine(date_value, _dt.time(12, 0, tzinfo=_dt.timezone.utc))
+
+
 
 def build_rss_feed(
     jobs: Sequence[Dict[str, Any]],
@@ -79,14 +89,32 @@ def build_rss_feed(
     ET.SubElement(image, "title").text = RSS_CHANNEL_TITLE
     ET.SubElement(image, "link").text = link
 
-    sorted_jobs = sorted(jobs, key=lambda job: (str(job.get("contract_id", "")), str(job.get("entry_id", ""))))
+    unique_jobs: List[Dict[str, Any]] = []
+    seen_episode_ids: set[str] = set()
+    for job in jobs:
+        episode_id = str(job.get("episode_id", "")).strip() or str(job.get("entry_id", "")).strip()
+        if not episode_id or episode_id in seen_episode_ids:
+            continue
+        seen_episode_ids.add(episode_id)
+        unique_jobs.append(dict(job))
+
+    sorted_jobs = sorted(
+        unique_jobs,
+        key=lambda job: (
+            _published_at(job),
+            str(job.get("episode_id", "")).strip() or str(job.get("entry_id", "")).strip(),
+        ),
+        reverse=True,
+    )
     for job in sorted_jobs:
         item = ET.SubElement(channel, "item")
         title = str(job.get("title", "")).strip() or str(job.get("entry_id", "")).strip() or "Prayer Audio"
         ET.SubElement(item, "title").text = title
-        ET.SubElement(item, "guid", isPermaLink="false").text = str(job.get("entry_id", "")).strip()
+        episode_id = str(job.get("episode_id", "")).strip() or str(job.get("entry_id", "")).strip()
+        ET.SubElement(item, "guid", isPermaLink="false").text = episode_id
         ET.SubElement(item, "link").text = str(job.get("audio_url", "")).strip()
-        ET.SubElement(item, "description").text = str(job.get("text", "")).strip()
+        ET.SubElement(item, "description").text = str(job.get("description", "")).strip() or str(job.get("text", "")).strip()
+        ET.SubElement(item, "pubDate").text = format_datetime(_published_at(job))
         ET.SubElement(item, "author").text = f"{author_email} ({author_name})"
         ET.SubElement(item, f"{{{RSS_ITUNES_NAMESPACE}}}author").text = author_name
         audio_path = str(job.get("audio_path", "")).strip()

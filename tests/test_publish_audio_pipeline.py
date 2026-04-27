@@ -9,10 +9,18 @@ from tests.test_helpers import load_module, make_test_mp3_bytes
 
 class TestPublishAudioPipeline(unittest.TestCase):
     def setUp(self):
+        import jobs.publish.contracts as package_contracts
+
         self.contracts_mod = load_module("jobs/publish/contracts.py")
         self.audio_mod = load_module("jobs/publish/audio.py")
         self.rss_mod = load_module("jobs/publish/rss.py")
         self.runner_mod = load_module("jobs/publish/run_audio_pipeline.py")
+        stub = lambda date_value, **kwargs: (
+            "Today the Church celebrates Saint Example. Praise be to God for his mercy. "
+            "In today's Gospel, Jesus calls his sheep by name."
+        )
+        self.contracts_mod.build_daily_intro_text = stub
+        package_contracts.build_daily_intro_text = stub
 
     def _normalize(self, text):
         return " ".join(str(text or "").split())
@@ -72,10 +80,12 @@ class TestPublishAudioPipeline(unittest.TestCase):
             root = ET.fromstring(feed_xml)
             item = root.find("./channel/item")
         self.assertIsNotNone(item)
-        self.assertEqual(item.findtext("guid"), "morning-prayer")
+        self.assertEqual(item.findtext("guid"), "morning-prayer-2026-04-06")
         enclosure = item.find("enclosure")
         self.assertIsNotNone(enclosure)
-        self.assertTrue(enclosure.get("url", "").endswith("/audio/morning-prayer.mp3"))
+        self.assertTrue(enclosure.get("url", "").endswith("/audio/morning-prayer-2026-04-06.mp3"))
+        self.assertIn("Morning Prayer for April 6, 2026", item.findtext("title") or "")
+        self.assertIn("Morning Prayer for April 6, 2026", item.findtext("description") or "")
         self.assertEqual(root.findtext("./channel/title"), "Ora Pro Nobis")
         self.assertEqual(
             self._normalize(root.findtext("./channel/description")),
@@ -115,6 +125,30 @@ class TestPublishAudioPipeline(unittest.TestCase):
 
             self.assertEqual(result["jobs"], 1)
             self.assertEqual(result["rendered"], 1)
+            self.assertEqual(result["archived"], 1)
             self.assertTrue((docs_root / "podcast.xml").exists())
-            self.assertTrue((docs_root / "audio" / "morning-prayer.mp3").exists())
+            self.assertTrue((docs_root / "audio" / "morning-prayer-2026-04-06.mp3").exists())
             self.assertTrue((docs_root / "images" / "logo_ora_pro_nobis.png").exists())
+
+    def test_run_audio_pipeline_rebuilds_feed_from_archived_sidecars(self):
+        contracts = self.contracts_mod.load_publish_contracts()
+        fake_renderer, _ = self._fake_renderer()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            cache_root = Path(tmpdir) / ".cache"
+            date_state = {"value": datetime.date(2026, 4, 6)}
+            self.runner_mod.load_publish_contracts = lambda contract_dir=None: contracts
+            self.runner_mod.build_audio_jobs = lambda contracts, target_date=None: self.audio_mod.build_audio_jobs(
+                contracts, target_date=date_state["value"]
+            )
+
+            first = self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
+            date_state["value"] = datetime.date(2026, 4, 7)
+            second = self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
+
+            self.assertEqual(first["jobs"], 1)
+            self.assertEqual(second["jobs"], 1)
+            root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
+            guids = [item.findtext("guid") for item in root.findall("./channel/item")]
+            self.assertEqual(guids, ["morning-prayer-2026-04-07", "morning-prayer-2026-04-06"])

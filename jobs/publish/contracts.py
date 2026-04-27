@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Tuple
 from zoneinfo import ZoneInfo
 
+from jobs.publish.daily_intro import build_daily_intro_text
+from jobs.publish.formatting import build_publish_context, derive_episode_id, render_publish_template
 from jobs.publish.fragments import audio_manifest_hash
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -209,6 +211,11 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
         normalized["path"] = file_path
     elif kind == "inline":
         normalized["text"] = str(normalized.get("text", ""))
+    elif kind == "daily-intro":
+        normalized["title"] = str(normalized.get("title", "")).strip()
+        normalized["calendar"] = str(normalized.get("calendar", "")).strip()
+        normalized["locale"] = str(normalized.get("locale", "")).strip()
+        normalized["prompt_model"] = str(normalized.get("prompt_model", "")).strip()
     else:
         raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' uses unsupported block kind '{kind}'.")
     return normalized
@@ -315,6 +322,8 @@ def _validate_entry_blocks(blocks: Sequence[Dict[str, Any]], path: Path, entry_i
                     f"Publish entry '{entry_id}' in '{path}' references missing monthly template folder '{resolved_folder}'."
                 )
         elif kind == "inline":
+            continue
+        elif kind == "daily-intro":
             continue
         else:
             raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' uses unsupported block kind '{kind}'.")
@@ -468,6 +477,14 @@ def resolve_block_content(
         separator = str(block.get("separator", "\n"))
         count = int(block.get("count", 0))
         return separator.join(repeated for _ in range(count)).strip()
+    if kind == "daily-intro":
+        metadata = dict(contract.metadata or {})
+        intro_config = dict(metadata.get("daily_intro") or {}) if isinstance(metadata.get("daily_intro"), dict) else {}
+        intro_config.update({k: v for k, v in block.items() if k not in {"kind", "title"}})
+        calendar = str(intro_config.get("calendar") or "").strip() or None
+        locale = str(intro_config.get("locale") or "").strip() or None
+        prompt_model = str(intro_config.get("prompt_model") or "").strip() or None
+        return build_daily_intro_text(effective_date, calendar=calendar, locale=locale, prompt_model=prompt_model)
     raise RuntimeError(f"Publish entry '{entry.get('entry_id', '')}' uses unsupported block kind '{kind}'.")
 
 
@@ -495,6 +512,9 @@ def _fragment_label_for_block(block: Dict[str, Any], text: str) -> str:
     if kind == "file":
         path_text = str(block.get("path", "")).strip()
         return _humanize_slug(Path(path_text).stem) if path_text else "Fragment"
+
+    if kind == "daily-intro":
+        return explicit or "Daily Intro"
 
     if kind == "inline":
         first_line = _first_non_empty_line(text)
@@ -609,7 +629,7 @@ def _expand_audio_fragments_from_block(
             }
         ]
 
-    if kind in {"file", "inline"}:
+    if kind in {"file", "inline", "daily-intro"}:
         text = resolve_block_content(block, contract=contract, entry=entry, target_date=effective_date)
         if not text.strip():
             return []
@@ -714,6 +734,9 @@ def _section_title_for_block(block: Dict[str, Any], text: str, *, index: int, to
         path_text = str(block.get("path", "")).strip()
         return _humanize_slug(Path(path_text).stem) if path_text else f"Section {index}"
 
+    if kind == "daily-intro":
+        return explicit or "Daily Intro"
+
     if kind == "inline":
         first_line = _first_non_empty_line(text)
         if first_line and len(first_line) <= 80:
@@ -741,6 +764,40 @@ def _build_text_sections(contract: PublishContract, entry: Dict[str, Any], *, ta
     return sections
 
 
+def _render_entry_metadata(
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    *,
+    target_date: Optional[_dt.date] = None,
+) -> Dict[str, Any]:
+    effective_date = target_date or _local_date_for_timezone(contract.timezone)
+    context = build_publish_context(
+        contract_id=contract.contract_id,
+        contract_type=contract.contract_type,
+        frequency=contract.frequency,
+        timezone=contract.timezone,
+        version=contract.version,
+        entry=entry,
+        target_date=effective_date,
+    )
+    metadata = dict(contract.metadata or {})
+    title_template = str(metadata.get("title_template") or metadata.get("title") or "").strip()
+    description_template = str(metadata.get("description_template") or metadata.get("description") or "").strip()
+    episode_id_template = str(metadata.get("episode_id_template") or "").strip()
+    title = render_publish_template(title_template, context) if title_template else str(entry.get("title", "")).strip()
+    if not title:
+        title = str(entry.get("entry_id", "")).strip()
+    description = render_publish_template(description_template, context) if description_template else title
+    episode_id = derive_episode_id(context=context, template=episode_id_template)
+    return {
+        "context": context,
+        "title": title,
+        "description": description,
+        "episode_id": episode_id,
+        "published_date": effective_date.isoformat(),
+    }
+
+
 
 def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Optional[_dt.date] = None) -> List[Dict[str, Any]]:
     jobs: List[Dict[str, Any]] = []
@@ -752,6 +809,7 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
             text_config = dict(entry.get("text_config") or {})
             if not bool(text_config.get("enabled", True)):
                 continue
+            rendered_metadata = _render_entry_metadata(contract, entry, target_date=effective_date)
             text_body = _entry_text_body(contract, entry, target_date=effective_date)
             if not text_body.strip():
                 continue
@@ -759,13 +817,16 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
             jobs.append(
                 {
                     "entry_id": entry["entry_id"],
+                    "episode_id": rendered_metadata["episode_id"],
                     "contract_id": contract.contract_id,
                     "contract_type": contract.contract_type,
                     "frequency": contract.frequency,
                     "timezone": contract.timezone,
                     "version": contract.version,
-                    "title": entry["title"],
+                    "title": rendered_metadata["title"],
+                    "description": rendered_metadata["description"],
                     "date": str(entry.get("date", "daily")).strip() or "daily",
+                    "published_date": rendered_metadata["published_date"],
                     "status": entry["status"],
                     "text": text_body,
                     "text_hash": _text_hash(text_body),
@@ -809,42 +870,39 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
                 audio_config["speed"] = float(DEFAULT_AUDIO_SETTINGS["speed"])
             if not audio_config["enabled"]:
                 continue
+            rendered_metadata = _render_entry_metadata(contract, entry, target_date=effective_date)
             audio_fragments = expand_audio_fragments(contract, entry, target_date=effective_date)
             text_body = _entry_text_body(contract, entry, target_date=effective_date)
             if not text_body.strip():
                 continue
             if not audio_fragments:
                 continue
+            job = {
+                "entry_id": entry["entry_id"],
+                "episode_id": rendered_metadata["episode_id"],
+                "contract_id": contract.contract_id,
+                "contract_type": contract.contract_type,
+                "frequency": contract.frequency,
+                "timezone": contract.timezone,
+                "version": contract.version,
+                "title": rendered_metadata["title"],
+                "description": rendered_metadata["description"],
+                "date": str(entry.get("date", "daily")).strip() or "daily",
+                "published_date": rendered_metadata["published_date"],
+                "status": entry["status"],
+                "text": text_body,
+                "text_hash": _text_hash(text_body),
+                "audio_fragments": audio_fragments,
+                "content_hash": "",
+                "audio_config": audio_config,
+                "notion_target": dict(contract.notion_target),
+                "audio_target": dict(contract.audio_target),
+                "metadata": dict(contract.metadata),
+                "source_path": str(contract.source_path),
+            }
+            job["content_hash"] = audio_manifest_hash(job, audio_fragments, audio_config)
             jobs.append(
-                {
-                    "entry_id": entry["entry_id"],
-                    "contract_id": contract.contract_id,
-                    "contract_type": contract.contract_type,
-                    "frequency": contract.frequency,
-                    "timezone": contract.timezone,
-                    "version": contract.version,
-                    "title": entry["title"],
-                    "date": str(entry.get("date", "daily")).strip() or "daily",
-                    "status": entry["status"],
-                    "text": text_body,
-                    "text_hash": _text_hash(text_body),
-                    "audio_fragments": audio_fragments,
-                    "content_hash": audio_manifest_hash(
-                        {
-                            "entry_id": entry["entry_id"],
-                            "contract_id": contract.contract_id,
-                            "title": entry["title"],
-                            "date": str(entry.get("date", "daily")).strip() or "daily",
-                        },
-                        audio_fragments,
-                        audio_config,
-                    ),
-                    "audio_config": audio_config,
-                    "notion_target": dict(contract.notion_target),
-                    "audio_target": dict(contract.audio_target),
-                    "metadata": dict(contract.metadata),
-                    "source_path": str(contract.source_path),
-                }
+                job
             )
     return jobs
 

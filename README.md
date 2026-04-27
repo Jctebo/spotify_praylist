@@ -34,9 +34,10 @@ Optional variables:
 - `Publish Prayer Text` now runs after `Daily Spotify Playlist Refresh` completes successfully on `main`, plus manual dispatches
 
 ### Audio
-- `jobs/publish/run_audio_pipeline.py`: contract-driven audio publication that writes `docs/audio/*.mp3` and refreshes `docs/podcast.xml`
+- `jobs/publish/run_audio_pipeline.py`: contract-driven audio publication that writes date-scoped `docs/audio/<episode_id>.mp3` files and refreshes `docs/podcast.xml`
 - `jobs/publish/fragments.py`: fragment cache and ffmpeg assembly helpers used by the publish audio path
 - publish audio caches leaf fragments under `.cache/publish_audio/` so unchanged spoken blocks can be reused across reruns
+- publish audio archives one JSON sidecar per episode under `docs/audio/` so the RSS feed can be rebuilt from historical episodes on rerun
 - `config/publish/images/logo_ora_pro_nobis.png`: podcast cover art copied into the published `docs/images/` tree
 - `PUBLISH_GITHUB_PAGES_BASE_URL` to override the RSS enclosure base URL when publishing audio
 - `Publish Prayer Audio` now runs after `Daily Spotify Playlist Refresh` completes successfully on `main`, on pushes to `main`, plus manual dispatches
@@ -46,7 +47,7 @@ Optional variables:
 - Feed file: `docs/podcast.xml`
 - Audio enclosures: `docs/audio/*.mp3`
 - Public feed URL on GitHub Pages: `https://jctebo.github.io/spotify_praylist/podcast.xml`
-- Public audio URL pattern on GitHub Pages: `https://jctebo.github.io/spotify_praylist/audio/<entry_id>.mp3`
+- Public audio URL pattern on GitHub Pages: `https://jctebo.github.io/spotify_praylist/audio/<episode_id>.mp3`
 
 ## Files
 - `jobs/playlist/refresh_playlist.py`: active Spotify refresh runtime with Notion-owned membership/order

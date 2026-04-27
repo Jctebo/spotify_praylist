@@ -11,6 +11,10 @@ class TestPublishAudioFragments(unittest.TestCase):
         self.contracts_mod = load_module("jobs/publish/contracts.py")
         self.audio_mod = load_module("jobs/publish/audio.py")
         self.fragments_mod = load_module("jobs/publish/fragments.py")
+        self.contracts_mod.build_daily_intro_text = lambda date_value, **kwargs: (
+            "Today the Church celebrates Saint Example. Praise be to God for his mercy. "
+            "In today's Gospel, Jesus calls his sheep by name."
+        )
 
     def test_expand_audio_fragments_preserves_order_and_selector_resolution(self):
         contracts = self.contracts_mod.load_publish_contracts()
@@ -19,9 +23,10 @@ class TestPublishAudioFragments(unittest.TestCase):
 
         fragments = job["audio_fragments"]
 
-        self.assertEqual(len(fragments), 12)
-        self.assertEqual(fragments[0]["label"], "Morning Offering")
-        self.assertIn("April", fragments[4]["text"])
+        self.assertEqual(len(fragments), 13)
+        self.assertEqual(fragments[0]["label"], "Daily Intro")
+        self.assertEqual(fragments[1]["label"], "Morning Offering")
+        self.assertIn("April", fragments[5]["text"])
         self.assertEqual(fragments[-1]["label"], "Intercessory Litany")
         self.assertTrue(all(fragment["fragment_key"] for fragment in fragments))
 

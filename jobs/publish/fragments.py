@@ -59,9 +59,12 @@ def audio_manifest_hash(
     ]
     payload = {
         "entry_id": str(job.get("entry_id", "")).strip(),
+        "episode_id": str(job.get("episode_id", "")).strip() or str(job.get("entry_id", "")).strip(),
         "contract_id": str(job.get("contract_id", "")).strip(),
         "title": str(job.get("title", "")).strip(),
+        "description": str(job.get("description", "")).strip(),
         "date": str(job.get("date", "")).strip(),
+        "published_date": str(job.get("published_date", "")).strip(),
         "tts": normalize_audio_settings(audio_config),
         "fragments": fragment_rows,
     }
