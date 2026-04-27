@@ -40,7 +40,7 @@ Optional variables:
 - publish audio archives one JSON sidecar per episode under `docs/audio/` so the RSS feed can be rebuilt from historical episodes on rerun
 - `config/publish/images/logo_ora_pro_nobis.png`: podcast cover art copied into the published `docs/images/` tree
 - `PUBLISH_GITHUB_PAGES_BASE_URL` to override the RSS enclosure base URL when publishing audio
-- `Publish Prayer Audio` now runs after `Daily Spotify Playlist Refresh` completes successfully on `main`, on pushes to `main`, plus manual dispatches
+- `Publish Prayer Audio` now runs at `06:00 UTC`, before `Daily Spotify Playlist Refresh` runs at `07:00 UTC`, on `main`, on pushes to `main`, plus manual dispatches
 
 ### RSS Pages
 - Site root landing page: `https://jctebo.github.io/spotify_praylist/`
@@ -320,7 +320,7 @@ Purpose:
 
 Workflow:
 - `.github/workflows/daily_notion_reset.yml`
-- schedule: `0 6 * * *` (00:00 CST / 01:00 CDT)
+- schedule: `0 7 * * *` (01:00 CST / 02:00 CDT)
 
 Required:
 - `NOTION_TOKEN` secret

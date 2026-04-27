@@ -953,6 +953,72 @@ class TestRefreshJob(unittest.TestCase):
         self.assertTrue(status["Fr. Mike Sunday Homily"])
         self.assertTrue(status["Bp. Barron Sunday Sermon"])
 
+    def test_resolve_item_uri_uses_configured_morning_prayer_show_id(self):
+        status = {}
+        sp = object()
+
+        with patch.object(
+            self.mod,
+            "monthly_morning_prayer_episode",
+            return_value=("spotify:episode:morning", "Morning Prayer for April 27, 2026"),
+        ) as resolver_mock:
+            uri = self.mod.resolve_item_uri(
+                sp,
+                "MORNING_PRAYER_MONTHLY",
+                "Wednesday",
+                status,
+                {"MORNING_PRAYER_MONTHLY": "show_new"},
+                {},
+                {},
+            )
+
+        resolver_mock.assert_called_once_with(sp, "show_new")
+        self.assertEqual(uri, "spotify:episode:morning")
+        self.assertTrue(status["Morning Prayer (Monthly Podcast)"])
+
+    def test_monthly_morning_prayer_episode_matches_date_scoped_title(self):
+        sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Morning Prayer for April 27, 2026",
+                    "uri": "spotify:episode:morning",
+                }
+            ]
+        }
+
+        with patch.object(
+            self.mod,
+            "local_now",
+            return_value=datetime.datetime(2026, 4, 27, 6, 0, tzinfo=self.mod.RUNTIME_TZ),
+        ):
+            uri, name = self.mod.monthly_morning_prayer_episode(sp, "show_new")
+
+        self.assertEqual(uri, "spotify:episode:morning")
+        self.assertEqual(name, "Morning Prayer for April 27, 2026")
+        sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
+
+    def test_monthly_morning_prayer_episode_rejects_old_month_year_title(self):
+        sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Morning Prayer - April 2026",
+                    "uri": "spotify:episode:old",
+                }
+            ]
+        }
+
+        with patch.object(
+            self.mod,
+            "local_now",
+            return_value=datetime.datetime(2026, 4, 27, 6, 0, tzinfo=self.mod.RUNTIME_TZ),
+        ):
+            uri, name = self.mod.monthly_morning_prayer_episode(sp, "show_new")
+
+        self.assertIsNone(uri)
+        self.assertIsNone(name)
+
     def test_main_refreshes_all_enabled_playlists_from_definitions(self):
         env = {
             "SPOTIFY_CLIENT_ID": "cid",

@@ -2,8 +2,9 @@ import os
 import subprocess
 import sys
 import unittest
+import datetime
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from tests.test_helpers import ROOT, load_module, temp_env
 
@@ -65,6 +66,40 @@ class TestRefreshJobContractPath(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("Missing required environment variable: SPOTIFY_CLIENT_ID", result.stderr)
         self.assertNotIn("ModuleNotFoundError: No module named 'jobs'", result.stderr)
+
+    def test_morning_prayer_contract_file_still_resolves_date_scoped_episode(self):
+        contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
+        morning_prayer = contracts["morning-prayer"]
+        self.assertEqual(morning_prayer.resolver, "MORNING_PRAYER_MONTHLY")
+
+        sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Morning Prayer for April 27, 2026",
+                    "uri": "spotify:episode:morning",
+                }
+            ]
+        }
+        status = {}
+
+        with patch.object(
+            self.mod,
+            "local_now",
+            return_value=datetime.datetime(2026, 4, 27, 6, 0, tzinfo=self.mod.RUNTIME_TZ),
+        ):
+            uri = self.mod.resolve_spec_uri(
+                sp,
+                morning_prayer.resolver,
+                "Monday",
+                status,
+                {"MORNING_PRAYER_MONTHLY": "4PNxb0OazrkcEp3FAggRoD"},
+                {},
+                {},
+            )
+
+        self.assertEqual(uri, "spotify:episode:morning")
+        self.assertTrue(status["Morning Prayer (Monthly Podcast)"])
 
     def test_main_single_playlist_filter_uses_override_id(self):
         env = {

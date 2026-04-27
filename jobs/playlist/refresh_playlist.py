@@ -128,7 +128,7 @@ DEFAULT_SHOWS = {
     "LBS_EXEGESIS": "753FVUsio4Y6GjFvbGpvF0",
     "DAILY_MASS_READINGS": "3IANujvjklSBVf6ioZd03N",
     "DAILY_TV_MASS": "2WwFQr9a6BX7YQ4pkoIijp",
-    "MORNING_PRAYER_MONTHLY": "3oP4SunSyZhwX7GUWw3HcR",
+    "MORNING_PRAYER_MONTHLY": "4PNxb0OazrkcEp3FAggRoD",
     "FRMIKE_SUNDAY": "1CK5AHgLneCo2sE17UOfdV",
     "BARRON_SUNDAY": "5G6vtvZBIQMpQ8TLgXLBiK",
     "SAINT_OF_DAY": "1skJeU3tBmO7ftJ2ugNyYd",
@@ -1971,15 +1971,7 @@ def do_date_aware(sp: spotipy.Spotify, show_id: str, terms) -> Tuple[Optional[st
 
 def monthly_morning_prayer_episode(sp: spotipy.Spotify, show_id: str) -> Tuple[Optional[str], Optional[str]]:
     now = local_now()
-    month_full = now.strftime("%B")
-    month_abbr = now.strftime("%b")
-    year = now.strftime("%Y")
-    patterns = [
-        rf"\bmorning prayer\s*-\s*{re.escape(month_full)}\s+{re.escape(year)}\b",
-        rf"\bmorning prayer\s*-\s*{re.escape(month_abbr)}\s+{re.escape(year)}\b",
-        rf"\bmorning prayer\b.*\b{re.escape(month_full)}\b.*\b{re.escape(year)}\b",
-        rf"\bmorning prayer\b.*\b{re.escape(month_abbr)}\b.*\b{re.escape(year)}\b",
-    ]
+    target = f"Morning Prayer for {now.strftime('%B')} {now.day}, {now.year}"
 
     res = safe_call(sp.show_episodes, show_id, limit=50, market="US")
     if not isinstance(res, dict):
@@ -1996,7 +1988,7 @@ def monthly_morning_prayer_episode(sp: spotipy.Spotify, show_id: str) -> Tuple[O
         name = str(ep.get("name", "")).strip()
         if not name:
             continue
-        if any(re.search(pattern, name, re.IGNORECASE) for pattern in patterns):
+        if re.sub(r"\s+", " ", name).strip().casefold() == target.casefold():
             uri = ep.get("uri")
             if uri:
                 return uri, name
