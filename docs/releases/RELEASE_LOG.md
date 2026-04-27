@@ -1,5 +1,16 @@
 # Release Log
 
+## [0.1.5.7] - 2026-04-27
+
+### Changed
+- Repointed the Morning Prayer `MORNING_PRAYER_MONTHLY` resolver to the new Spotify show id and changed its lookup to the date-scoped episode title for today.
+- Added a dedicated `06:00 UTC` schedule to `Publish Prayer Audio` and moved the Spotify refresh to `07:00 UTC` so Morning Prayer publishes before the later refresh window.
+- Updated the README to document the earlier publish cadence and the Morning Prayer show source of truth.
+
+### Fixed
+- Stopped the Morning Prayer playlist resolver from relying on the old month/year episode title pattern.
+- Kept the `MORNING_PRAYER_MONTHLY` contract key stable so the existing playlist contract files did not need a migration.
+
 ## [0.1.5.4] - 2026-04-27
 
 ### Added
