@@ -35,6 +35,9 @@ Optional variables:
 
 ### Audio
 - `jobs/publish/run_audio_pipeline.py`: contract-driven audio publication that writes `docs/audio/*.mp3` and refreshes `docs/podcast.xml`
+- `jobs/publish/fragments.py`: fragment cache and ffmpeg assembly helpers used by the publish audio path
+- publish audio caches leaf fragments under `.cache/publish_audio/` so unchanged spoken blocks can be reused across reruns
+- `config/publish/images/logo_ora_pro_nobis.png`: podcast cover art copied into the published `docs/images/` tree
 - `PUBLISH_GITHUB_PAGES_BASE_URL` to override the RSS enclosure base URL when publishing audio
 - `Publish Prayer Audio` now runs after `Daily Spotify Playlist Refresh` completes successfully on `main`, on pushes to `main`, plus manual dispatches
 
@@ -54,6 +57,7 @@ Optional variables:
 - `config/custom_tts/morning-prayer.json`: canonical Morning Prayer custom TTS contract for the active page-audio surface
 - `config/legacy/page_audio/*.json`, `config/legacy/rosary.json`, and `config/legacy/auxilium_daily_text.json`: discontinued top-level page-audio contracts retained only as archives; the active runtime no longer loads them
 - `jobs/publish/*.py`: new generic publish boundary for Notion text and GitHub Pages audio outputs
+- `jobs/publish/fragments.py`: fragment-level cache and assembly helpers for publish audio
 - `scripts/setup_spotify.ps1`: Spotify credential wizard that also updates `config/spotify/playlists/*.json`
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` with optional single-playlist targeting
 - `scripts/setup_notion_playlists.ps1`: legacy Notion playlist-registry helper, no longer on the active Spotify hot path

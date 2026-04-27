@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import sys
+import shutil
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
@@ -14,10 +14,18 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from jobs.publish.contracts import DEFAULT_GITHUB_PAGES_BASE_URL, ROOT, build_audio_jobs as _build_audio_jobs
+from jobs.publish.fragments import (
+    assemble_audio_fragments,
+    audio_manifest_hash,
+    publish_audio_cache_root,
+    render_fragment_audio,
+)
 
 PUBLISH_DOCS_DIR = ROOT / "docs"
 DEFAULT_AUDIO_DIR = PUBLISH_DOCS_DIR / "audio"
 DEFAULT_PODCAST_FEED_PATH = PUBLISH_DOCS_DIR / "podcast.xml"
+DEFAULT_PODCAST_COVER_ART_SOURCE = ROOT / "config" / "publish" / "images" / "logo_ora_pro_nobis.png"
+DEFAULT_PODCAST_COVER_ART_RELATIVE_PATH = Path("images") / DEFAULT_PODCAST_COVER_ART_SOURCE.name
 PUBLISH_GITHUB_PAGES_BASE_URL = "PUBLISH_GITHUB_PAGES_BASE_URL"
 OPENAI_API_KEY = "OPENAI_API_KEY"
 OAI_API_BASE_URL = "OAI_API_BASE_URL"
@@ -45,23 +53,40 @@ def audio_public_url(entry_id: str, *, base_url: Optional[str] = None) -> str:
     return f"{url_root}/audio/{entry_id}.mp3"
 
 
+def podcast_cover_art_public_url(*, base_url: Optional[str] = None) -> str:
+    url_root = (base_url or github_pages_base_url()).rstrip("/")
+    return f"{url_root}/{DEFAULT_PODCAST_COVER_ART_RELATIVE_PATH.as_posix()}"
+
+
+def ensure_podcast_cover_art(*, docs_root: Optional[Path] = None, source_path: Optional[Path] = None) -> Path:
+    root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
+    source = Path(source_path) if source_path else DEFAULT_PODCAST_COVER_ART_SOURCE
+    if not source.exists():
+        raise RuntimeError(f"Podcast cover art not found: {source}")
+    target = root / DEFAULT_PODCAST_COVER_ART_RELATIVE_PATH
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(source, target)
+    return target
+
+
 
 def content_hash_for_entry(entry: Dict[str, Any], audio_config: Dict[str, Any]) -> str:
-    payload = {
-        "entry_id": entry.get("entry_id", ""),
-        "contract_id": entry.get("contract_id", ""),
-        "title": entry.get("title", ""),
-        "date": entry.get("date", ""),
-        "text": entry.get("text", ""),
-        "tts": {
-            "model": audio_config.get("model", "gpt-4o-mini-tts"),
-            "voice": audio_config.get("voice", "alloy"),
-            "format": audio_config.get("format", "mp3"),
-            "speed": audio_config.get("speed", 1.0),
-        },
-    }
-    text = json.dumps(payload, sort_keys=True, separators=(",", ":"))
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+    fragments = list(entry.get("audio_fragments") or [])
+    if not fragments:
+        text = str(entry.get("text", "")).strip()
+        if not text:
+            fragments = []
+        else:
+            fragments = [
+                {
+                    "fragment_key": f"entry-text/{str(entry.get('entry_id', '')).strip() or 'entry'}",
+                    "block_path": f"entry-text/{str(entry.get('entry_id', '')).strip() or 'entry'}",
+                    "kind": "inline",
+                    "label": str(entry.get("title", "")).strip() or "Fragment",
+                    "text": text,
+                }
+            ]
+    return audio_manifest_hash(entry, fragments, audio_config)
 
 
 
@@ -106,23 +131,62 @@ def render_audio_job(
     *,
     renderer: Optional[Callable[[str, Dict[str, Any]], bytes]] = None,
     docs_root: Optional[Path] = None,
+    cache_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
     audio_path = audio_output_path(str(job["entry_id"]), docs_root=root)
     sidecar_path = audio_sidecar_path(str(job["entry_id"]), docs_root=root)
     audio_path.parent.mkdir(parents=True, exist_ok=True)
-    content_hash = str(job.get("content_hash", "")).strip() or content_hash_for_entry(job, dict(job.get("audio_config") or {}))
+    audio_config = dict(job.get("audio_config") or {})
+    fragments = list(job.get("audio_fragments") or [])
+    if not fragments:
+        text = str(job.get("text", "")).strip()
+        if text:
+            fragments = [
+                {
+                    "fragment_key": f"entry-text/{str(job.get('entry_id', '')).strip() or 'entry'}",
+                    "block_path": f"entry-text/{str(job.get('entry_id', '')).strip() or 'entry'}",
+                    "kind": "inline",
+                    "label": str(job.get("title", "")).strip() or "Fragment",
+                    "text": text,
+                }
+            ]
+    content_hash = str(job.get("content_hash", "")).strip() or content_hash_for_entry(job, audio_config)
     if _is_current_audio_file(audio_path, sidecar_path, content_hash):
         rendered = dict(job)
         rendered["audio_path"] = str(audio_path)
         rendered["audio_url"] = audio_public_url(str(job["entry_id"]))
         rendered["rendered"] = False
+        rendered["content_hash"] = content_hash
         return rendered
 
     renderer = renderer or openai_tts_renderer
-    raw_audio = renderer(str(job.get("text", "")), dict(job.get("audio_config") or {}))
+    fragment_root = publish_audio_cache_root(cache_root)
+    fragment_paths: List[Path] = []
+    fragment_results: List[Dict[str, Any]] = []
+    for fragment in fragments:
+        rendered_fragment = render_fragment_audio(fragment, audio_config, renderer, cache_root=fragment_root)
+        fragment_paths.append(Path(rendered_fragment["audio_path"]))
+        fragment_results.append(
+            {
+                "fragment_key": str(fragment.get("fragment_key", "")).strip(),
+                "block_path": str(fragment.get("block_path", "")).strip(),
+                "kind": str(fragment.get("kind", "")).strip(),
+                "label": str(fragment.get("label", "")).strip(),
+                "text": str(fragment.get("text", "")).strip(),
+                "fragment_hash": rendered_fragment["fragment_hash"],
+                "audio_path": str(rendered_fragment["audio_path"]),
+                "rendered": bool(rendered_fragment.get("rendered", False)),
+            }
+        )
+
+    target_format = str(audio_config.get("format", "mp3")).strip().lower() or "mp3"
+    if len(fragment_paths) == 1 and fragment_paths[0].suffix.lower().lstrip(".") == target_format:
+        raw_audio = fragment_paths[0].read_bytes()
+    else:
+        raw_audio = assemble_audio_fragments(fragment_paths, target_format, cache_root=fragment_root)
     if not raw_audio:
-        raise RuntimeError(f"Audio renderer returned empty output for entry '{job.get('entry_id', '')}'.")
+        raise RuntimeError(f"Audio assembly returned empty output for entry '{job.get('entry_id', '')}'.")
     audio_path.write_bytes(raw_audio)
     sidecar_path.write_text(
         json.dumps(
@@ -130,7 +194,9 @@ def render_audio_job(
                 "entry_id": job.get("entry_id", ""),
                 "content_hash": content_hash,
                 "audio_path": str(audio_path),
-                "tts": dict(job.get("audio_config") or {}),
+                "tts": audio_config,
+                "fragment_manifest_hash": content_hash,
+                "fragments": fragment_results,
             },
             indent=2,
             sort_keys=True,
@@ -142,4 +208,5 @@ def render_audio_job(
     rendered["audio_url"] = audio_public_url(str(job["entry_id"]))
     rendered["rendered"] = True
     rendered["content_hash"] = content_hash
+    rendered["audio_fragments"] = fragments
     return rendered

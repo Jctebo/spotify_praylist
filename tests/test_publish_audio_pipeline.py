@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from tests.test_helpers import load_module
+from tests.test_helpers import load_module, make_test_mp3_bytes
 
 
 class TestPublishAudioPipeline(unittest.TestCase):
@@ -14,6 +14,16 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.rss_mod = load_module("jobs/publish/rss.py")
         self.runner_mod = load_module("jobs/publish/run_audio_pipeline.py")
 
+    def _fake_renderer(self):
+        mp3_bytes = make_test_mp3_bytes()
+        calls = {"count": 0}
+
+        def renderer(text, audio_config):
+            calls["count"] += 1
+            return mp3_bytes
+
+        return renderer, calls
+
     def test_build_audio_jobs_only_includes_enabled_entries(self):
         contracts = self.contracts_mod.load_publish_contracts()
         jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
@@ -21,6 +31,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertEqual(len(jobs), 1)
         self.assertEqual(jobs[0]["entry_id"], "morning-prayer")
         self.assertTrue(jobs[0]["audio_config"]["enabled"])
+        self.assertGreater(len(jobs[0]["audio_fragments"]), 0)
 
     def test_render_audio_job_skips_when_hash_matches(self):
         contracts = self.contracts_mod.load_publish_contracts()
@@ -29,20 +40,19 @@ class TestPublishAudioPipeline(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             docs_root = Path(tmpdir) / "docs"
-            calls = {"count": 0}
+            cache_root = Path(tmpdir) / ".cache"
+            fake_renderer, calls = self._fake_renderer()
 
-            def fake_renderer(text, audio_config):
-                calls["count"] += 1
-                return b"FAKE-MP3"
-
-            first = self.audio_mod.render_audio_job(job, renderer=fake_renderer, docs_root=docs_root)
-            second = self.audio_mod.render_audio_job(job, renderer=fake_renderer, docs_root=docs_root)
+            first = self.audio_mod.render_audio_job(job, renderer=fake_renderer, docs_root=docs_root, cache_root=cache_root)
+            first_calls = calls["count"]
+            second = self.audio_mod.render_audio_job(job, renderer=fake_renderer, docs_root=docs_root, cache_root=cache_root)
 
             self.assertTrue(first["rendered"])
             self.assertFalse(second["rendered"])
-            self.assertEqual(calls["count"], 1)
+            self.assertEqual(calls["count"], first_calls)
             self.assertTrue(Path(first["audio_path"]).exists())
             self.assertTrue(Path(first["audio_path"]).with_suffix(".json").exists())
+            self.assertGreater(Path(first["audio_path"]).stat().st_size, 0)
 
     def test_build_rss_feed_contains_enclosure_and_guid(self):
         contracts = self.contracts_mod.load_publish_contracts()
@@ -51,11 +61,10 @@ class TestPublishAudioPipeline(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             docs_root = Path(tmpdir) / "docs"
+            cache_root = Path(tmpdir) / ".cache"
+            fake_renderer, _ = self._fake_renderer()
 
-            def fake_renderer(text, audio_config):
-                return b"FAKE-MP3"
-
-            rendered = self.audio_mod.render_audio_job(job, renderer=fake_renderer, docs_root=docs_root)
+            rendered = self.audio_mod.render_audio_job(job, renderer=fake_renderer, docs_root=docs_root, cache_root=cache_root)
             feed_xml = self.rss_mod.build_rss_feed([rendered], base_url=self.audio_mod.github_pages_base_url())
             root = ET.fromstring(feed_xml)
             item = root.find("./channel/item")
@@ -64,22 +73,28 @@ class TestPublishAudioPipeline(unittest.TestCase):
         enclosure = item.find("enclosure")
         self.assertIsNotNone(enclosure)
         self.assertTrue(enclosure.get("url", "").endswith("/audio/morning-prayer.mp3"))
+        self.assertEqual(root.findtext("./channel/author"), "john.thibeaux@gmail.com (John Thibeaux)")
+        self.assertEqual(root.findtext("./channel/image/url"), "https://jctebo.github.io/spotify_praylist/images/logo_ora_pro_nobis.png")
+        self.assertEqual(root.findtext("./channel/{http://www.itunes.com/dtds/podcast-1.0.dtd}author"), "John Thibeaux")
+        owner_email = root.find("./channel/{http://www.itunes.com/dtds/podcast-1.0.dtd}owner/{http://www.itunes.com/dtds/podcast-1.0.dtd}email")
+        self.assertIsNotNone(owner_email)
+        self.assertEqual(owner_email.text, "john.thibeaux@gmail.com")
 
     def test_run_audio_pipeline_writes_feed(self):
         contracts = self.contracts_mod.load_publish_contracts()
-
-        def fake_renderer(text, audio_config):
-            return b"FAKE-MP3"
+        fake_renderer, _ = self._fake_renderer()
 
         with tempfile.TemporaryDirectory() as tmpdir:
             docs_root = Path(tmpdir) / "docs"
+            cache_root = Path(tmpdir) / ".cache"
             self.runner_mod.load_publish_contracts = lambda contract_dir=None: contracts
             self.runner_mod.build_audio_jobs = lambda contracts, target_date=None: self.audio_mod.build_audio_jobs(
                 contracts, target_date=datetime.date(2026, 4, 6)
             )
-            result = self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer)
+            result = self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
 
             self.assertEqual(result["jobs"], 1)
             self.assertEqual(result["rendered"], 1)
             self.assertTrue((docs_root / "podcast.xml").exists())
             self.assertTrue((docs_root / "audio" / "morning-prayer.mp3").exists())
+            self.assertTrue((docs_root / "images" / "logo_ora_pro_nobis.png").exists())
