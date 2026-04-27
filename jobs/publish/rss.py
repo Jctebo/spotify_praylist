@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import xml.etree.ElementTree as ET
+from textwrap import dedent
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Sequence
 
@@ -11,14 +12,25 @@ if str(ROOT) not in sys.path:
 
 from jobs.publish.audio import github_pages_base_url, podcast_cover_art_public_url
 
-RSS_CHANNEL_TITLE = "Spotify Praylist"
-RSS_CHANNEL_DESCRIPTION = "Generated prayer audio from repo-owned publish contracts."
+RSS_CHANNEL_TITLE = "Ora Pro Nobis"
+RSS_CHANNEL_DESCRIPTION = dedent(
+    """
+    Ora Pro Nobis is a daily Catholic prayer podcast rooted in the life and tradition of the Church. Each episode offers a simple, structured time of prayer, featuring traditional Catholic prayers, guided novenas to the saints, and reflections drawn from Scripture and the liturgical calendar.
+
+    Whether you are beginning your morning, commuting, or setting aside quiet time, Ora Pro Nobis helps you enter into a consistent rhythm of prayer. Through the Communion of Saints and the rich devotional life of the Church, this podcast invites you to deepen your faith, grow in discipline, and remain attentive to God throughout the day.
+
+    Pray with the Church. Walk with the saints. Ora pro nobis - pray for us.
+    """
+).strip()
 RSS_CHANNEL_LANGUAGE = "en-us"
 RSS_AUDIO_MIME = "audio/mpeg"
 RSS_ITUNES_NAMESPACE = "http://www.itunes.com/dtds/podcast-1.0.dtd"
 RSS_CHANNEL_AUTHOR = "John Thibeaux"
 RSS_CHANNEL_EMAIL = "john.thibeaux@gmail.com"
-RSS_CHANNEL_SUMMARY = RSS_CHANNEL_DESCRIPTION
+RSS_CHANNEL_SUMMARY = (
+    "Daily Catholic prayer podcast featuring traditional prayers, guided novenas, and reflections rooted in Scripture and the Communion of Saints. "
+    "Pray with the Church and walk with the saints - Ora pro nobis."
+)
 RSS_CHANNEL_EXPLICIT = "no"
 
 

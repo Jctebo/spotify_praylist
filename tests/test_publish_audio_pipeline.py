@@ -14,6 +14,9 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.rss_mod = load_module("jobs/publish/rss.py")
         self.runner_mod = load_module("jobs/publish/run_audio_pipeline.py")
 
+    def _normalize(self, text):
+        return " ".join(str(text or "").split())
+
     def _fake_renderer(self):
         mp3_bytes = make_test_mp3_bytes()
         calls = {"count": 0}
@@ -73,9 +76,26 @@ class TestPublishAudioPipeline(unittest.TestCase):
         enclosure = item.find("enclosure")
         self.assertIsNotNone(enclosure)
         self.assertTrue(enclosure.get("url", "").endswith("/audio/morning-prayer.mp3"))
+        self.assertEqual(root.findtext("./channel/title"), "Ora Pro Nobis")
+        self.assertEqual(
+            self._normalize(root.findtext("./channel/description")),
+            self._normalize(
+                "Ora Pro Nobis is a daily Catholic prayer podcast rooted in the life and tradition of the Church. "
+                "Each episode offers a simple, structured time of prayer, featuring traditional Catholic prayers, guided novenas to the saints, and reflections drawn from Scripture and the liturgical calendar. "
+                "Whether you are beginning your morning, commuting, or setting aside quiet time, Ora Pro Nobis helps you enter into a consistent rhythm of prayer. Through the Communion of Saints and the rich devotional life of the Church, this podcast invites you to deepen your faith, grow in discipline, and remain attentive to God throughout the day. "
+                "Pray with the Church. Walk with the saints. Ora pro nobis - pray for us."
+            ),
+        )
         self.assertEqual(root.findtext("./channel/author"), "john.thibeaux@gmail.com (John Thibeaux)")
         self.assertEqual(root.findtext("./channel/image/url"), "https://jctebo.github.io/spotify_praylist/images/logo_ora_pro_nobis.png")
         self.assertEqual(root.findtext("./channel/{http://www.itunes.com/dtds/podcast-1.0.dtd}author"), "John Thibeaux")
+        self.assertEqual(
+            self._normalize(root.findtext("./channel/{http://www.itunes.com/dtds/podcast-1.0.dtd}summary")),
+            self._normalize(
+                "Daily Catholic prayer podcast featuring traditional prayers, guided novenas, and reflections rooted in Scripture and the Communion of Saints. "
+                "Pray with the Church and walk with the saints - Ora pro nobis."
+            ),
+        )
         owner_email = root.find("./channel/{http://www.itunes.com/dtds/podcast-1.0.dtd}owner/{http://www.itunes.com/dtds/podcast-1.0.dtd}email")
         self.assertIsNotNone(owner_email)
         self.assertEqual(owner_email.text, "john.thibeaux@gmail.com")
