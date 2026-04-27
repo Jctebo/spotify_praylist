@@ -332,6 +332,19 @@
 - Updated the README and progress notes to document the opt-in legacy path.
 - Verified the workflow locally and with a remote GitHub Actions run that logged the skip message instead of the missing-root error.
 
+## [0.1.5.6] - 2026-04-27
+
+### Changed
+- Added date-scoped Morning Prayer episode metadata so each day now publishes its own title, description, guid, and sidecar state.
+- Introduced a contract-owned `daily_intro` block for the Morning Prayer opening, powered by Romcal, `catholic-mass-readings`, and OpenAI text generation.
+- Kept the TTS voice on `alloy` while moving the prompt text model onto the repo's existing `OAI_MODEL` convention.
+- Added safe template rendering for contract metadata and archive-aware RSS rebuilding from published sidecars.
+
+### Fixed
+- Fixed daily reruns so today's publish overwrites only today's date-scoped episode artifacts instead of an evergreen record.
+- Fixed the publish pipeline to preserve prior date-scoped episodes in the feed while still allowing today's run to refresh cleanly.
+- Added coverage for the new daily intro, date-scoped audio paths, and archive-aware feed rebuilds.
+
 ## Notes
 - This file initializes the `docs/releases/` contract from the prior `release/releaselog.md` source.
 - Historical context still exists in git history if deeper detail is needed.

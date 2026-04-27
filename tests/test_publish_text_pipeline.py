@@ -7,7 +7,7 @@ from tests.test_helpers import load_module
 
 class FakeNotionClient:
     def __init__(self):
-        self.pages = {"Morning Prayer": "page-1", "Daily Rosary": "page-2"}
+        self.pages = {"Morning Prayer for April 6, 2026": "page-1", "Daily Rosary": "page-2"}
         self.page_children = {}
         self.page_children["page-1"] = []
         self.page_children["page-2"] = []
@@ -65,6 +65,10 @@ class TestPublishTextPipeline(unittest.TestCase):
         self.contracts_mod = load_module("jobs/publish/contracts.py")
         self.notion_mod = load_module("jobs/publish/notion.py")
         self.runner_mod = load_module("jobs/publish/run_text_pipeline.py")
+        self.contracts_mod.build_daily_intro_text = lambda date_value, **kwargs: (
+            "Today the Church celebrates Saint Example. Praise be to God for his mercy. "
+            "In today's Gospel, Jesus calls his sheep by name."
+        )
 
     def test_upsert_text_jobs_updates_existing_pages_by_title(self):
         contracts = self.contracts_mod.load_publish_contracts()
@@ -78,8 +82,9 @@ class TestPublishTextPipeline(unittest.TestCase):
         self.assertEqual(first["updated"], 2)
         self.assertEqual(second["created"], 0)
         self.assertEqual(second["updated"], 2)
-        self.assertEqual(set(client.pages.keys()), {"Morning Prayer", "Daily Rosary"})
+        self.assertEqual(set(client.pages.keys()), {"Morning Prayer for April 6, 2026", "Daily Rosary"})
         self.assertEqual([_toggle_title(block) for block in client.page_children["page-1"]], [
+            "Daily Intro",
             "Opening Prayers",
             "Petitions",
             "Intercessory Litany",

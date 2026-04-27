@@ -2,6 +2,7 @@ spotipy
 requests
 romcal==4.0.0b6
 openai
+catholic-mass-readings
 pillow
 pypdf
 imageio-ffmpeg

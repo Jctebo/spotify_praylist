@@ -13,6 +13,7 @@ from jobs.publish.audio import (
     build_audio_jobs,
     ensure_podcast_cover_art,
     github_pages_base_url,
+    load_published_audio_jobs,
     podcast_cover_art_public_url,
     render_audio_job,
 )
@@ -33,12 +34,14 @@ def run_audio_pipeline(
     rendered_jobs = [render_audio_job(job, renderer=renderer, docs_root=docs_root, cache_root=cache_root) for job in jobs]
     cover_art_path = ensure_podcast_cover_art(docs_root=docs_root)
     cover_art_url = podcast_cover_art_public_url(base_url=github_pages_base_url())
-    feed_xml = build_rss_feed(rendered_jobs, base_url=github_pages_base_url(), cover_art_url=cover_art_url)
+    archived_jobs = load_published_audio_jobs(docs_root=docs_root, base_url=github_pages_base_url())
+    feed_xml = build_rss_feed([*rendered_jobs, *archived_jobs], base_url=github_pages_base_url(), cover_art_url=cover_art_url)
     feed_path = write_podcast_feed(feed_xml, Path(docs_root) / "podcast.xml" if docs_root else DEFAULT_PODCAST_FEED_PATH)
     return {
         "contracts": len(contracts),
         "jobs": len(jobs),
         "rendered": len(rendered_jobs),
+        "archived": len(archived_jobs),
         "feed_path": str(feed_path),
         "cover_art_path": str(cover_art_path),
         "rendered_jobs": rendered_jobs,

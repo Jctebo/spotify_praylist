@@ -27,6 +27,16 @@
       "docs_root": "docs",
       "audio_dir": "docs/audio",
       "feed_path": "docs/podcast.xml"
+    },
+    "metadata": {
+      "title_template": "Morning Prayer for {date:%B %-d, %Y}",
+      "description_template": "Morning Prayer for {date:%B %-d, %Y}. The daily opening block follows the liturgical day and the day's Gospel.",
+      "episode_id_template": "{entry_id}-{date_iso}",
+      "daily_intro": {
+        "calendar": "general_roman",
+        "locale": "en",
+        "prompt_model": "gpt-4.1-mini"
+      }
     }
   },
   "entries": [
@@ -47,6 +57,10 @@
         "speed": 1.0
       },
       "blocks": [
+        {
+          "kind": "daily_intro",
+          "title": "Daily Intro"
+        },
         {
           "kind": "sequence",
           "title": "Opening Prayers",

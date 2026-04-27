@@ -38,19 +38,19 @@ def github_pages_base_url() -> str:
 
 
 
-def audio_output_path(entry_id: str, *, docs_root: Optional[Path] = None) -> Path:
+def audio_output_path(episode_id: str, *, docs_root: Optional[Path] = None) -> Path:
     root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
-    return root / "audio" / f"{entry_id}.mp3"
+    return root / "audio" / f"{episode_id}.mp3"
 
 
 
-def audio_sidecar_path(entry_id: str, *, docs_root: Optional[Path] = None) -> Path:
-    return audio_output_path(entry_id, docs_root=docs_root).with_suffix(".json")
+def audio_sidecar_path(episode_id: str, *, docs_root: Optional[Path] = None) -> Path:
+    return audio_output_path(episode_id, docs_root=docs_root).with_suffix(".json")
 
 
-def audio_public_url(entry_id: str, *, base_url: Optional[str] = None) -> str:
+def audio_public_url(episode_id: str, *, base_url: Optional[str] = None) -> str:
     url_root = (base_url or github_pages_base_url()).rstrip("/")
-    return f"{url_root}/audio/{entry_id}.mp3"
+    return f"{url_root}/audio/{episode_id}.mp3"
 
 
 def podcast_cover_art_public_url(*, base_url: Optional[str] = None) -> str:
@@ -125,6 +125,48 @@ def _is_current_audio_file(audio_path: Path, sidecar_path: Path, content_hash: s
     return str(payload.get("content_hash", "")).strip() == content_hash
 
 
+def load_published_audio_jobs(*, docs_root: Optional[Path] = None, base_url: Optional[str] = None) -> List[Dict[str, Any]]:
+    root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
+    audio_dir = root / "audio"
+    if not audio_dir.exists():
+        return []
+    jobs: List[Dict[str, Any]] = []
+    for sidecar_path in sorted(audio_dir.glob("*.json")):
+        try:
+            payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            raise RuntimeError(f"Invalid published audio sidecar '{sidecar_path}': {exc}") from exc
+        episode_id = str(payload.get("episode_id", "")).strip()
+        if not episode_id:
+            continue
+        published_date = str(payload.get("published_date", "")).strip()
+        if not published_date:
+            raise RuntimeError(f"Published audio sidecar '{sidecar_path}' is missing required field 'published_date'.")
+        audio_path = str(payload.get("audio_path", "")).strip()
+        if not audio_path:
+            audio_path = str(audio_output_path(episode_id, docs_root=root))
+        title = str(payload.get("title", "")).strip() or str(payload.get("entry_id", "")).strip() or episode_id
+        description = str(payload.get("description", "")).strip() or title
+        jobs.append(
+            {
+                "entry_id": str(payload.get("entry_id", "")).strip() or episode_id,
+                "episode_id": episode_id,
+                "contract_id": str(payload.get("contract_id", "")).strip(),
+                "contract_type": str(payload.get("contract_type", "")).strip(),
+                "frequency": str(payload.get("frequency", "")).strip(),
+                "title": title,
+                "description": description,
+                "published_date": published_date,
+                "content_hash": str(payload.get("content_hash", "")).strip(),
+                "audio_path": audio_path,
+                "audio_url": audio_public_url(episode_id, base_url=base_url),
+                "audio_config": dict(payload.get("tts") or {}),
+                "fragments": list(payload.get("fragments") or []),
+            }
+        )
+    return jobs
+
+
 
 def render_audio_job(
     job: Dict[str, Any],
@@ -134,8 +176,11 @@ def render_audio_job(
     cache_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
-    audio_path = audio_output_path(str(job["entry_id"]), docs_root=root)
-    sidecar_path = audio_sidecar_path(str(job["entry_id"]), docs_root=root)
+    episode_id = str(job.get("episode_id") or job.get("entry_id") or "").strip()
+    if not episode_id:
+        raise RuntimeError("Audio job is missing an episode_id.")
+    audio_path = audio_output_path(episode_id, docs_root=root)
+    sidecar_path = audio_sidecar_path(episode_id, docs_root=root)
     audio_path.parent.mkdir(parents=True, exist_ok=True)
     audio_config = dict(job.get("audio_config") or {})
     fragments = list(job.get("audio_fragments") or [])
@@ -155,7 +200,7 @@ def render_audio_job(
     if _is_current_audio_file(audio_path, sidecar_path, content_hash):
         rendered = dict(job)
         rendered["audio_path"] = str(audio_path)
-        rendered["audio_url"] = audio_public_url(str(job["entry_id"]))
+        rendered["audio_url"] = audio_public_url(episode_id)
         rendered["rendered"] = False
         rendered["content_hash"] = content_hash
         return rendered
@@ -192,8 +237,16 @@ def render_audio_job(
         json.dumps(
             {
                 "entry_id": job.get("entry_id", ""),
+                "episode_id": episode_id,
+                "published_date": str(job.get("published_date", "")).strip(),
+                "contract_id": str(job.get("contract_id", "")).strip(),
+                "contract_type": str(job.get("contract_type", "")).strip(),
+                "frequency": str(job.get("frequency", "")).strip(),
+                "title": str(job.get("title", "")).strip(),
+                "description": str(job.get("description", "")).strip(),
                 "content_hash": content_hash,
                 "audio_path": str(audio_path),
+                "audio_url": audio_public_url(episode_id),
                 "tts": audio_config,
                 "fragment_manifest_hash": content_hash,
                 "fragments": fragment_results,
@@ -205,7 +258,7 @@ def render_audio_job(
     )
     rendered = dict(job)
     rendered["audio_path"] = str(audio_path)
-    rendered["audio_url"] = audio_public_url(str(job["entry_id"]))
+    rendered["audio_url"] = audio_public_url(episode_id)
     rendered["rendered"] = True
     rendered["content_hash"] = content_hash
     rendered["audio_fragments"] = fragments
