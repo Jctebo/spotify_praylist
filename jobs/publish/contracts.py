@@ -7,6 +7,8 @@ from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Tuple
 from zoneinfo import ZoneInfo
 
+from jobs.publish.fragments import audio_manifest_hash
+
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONTRACT_DIR = ROOT / "config" / "publish" / "contracts"
 DEFAULT_GITHUB_PAGES_BASE_URL = "https://jctebo.github.io/spotify_praylist"
@@ -479,6 +481,188 @@ def _entry_text_body(contract: PublishContract, entry: Dict[str, Any], *, target
     return str(entry.get("text", "")).strip()
 
 
+def _fragment_label_for_block(block: Dict[str, Any], text: str) -> str:
+    explicit = str(block.get("title") or block.get("heading") or block.get("label") or "").strip()
+    if explicit:
+        return explicit
+
+    kind = normalize_publish_key(block.get("kind"))
+    if kind == "monthly-template":
+        folder = str(block.get("folder", "")).strip()
+        folder_name = Path(folder).name if folder else ""
+        return _humanize_slug(folder_name) or "Monthly Intention"
+
+    if kind == "file":
+        path_text = str(block.get("path", "")).strip()
+        return _humanize_slug(Path(path_text).stem) if path_text else "Fragment"
+
+    if kind == "inline":
+        first_line = _first_non_empty_line(text)
+        if first_line and len(first_line) <= 80:
+            return first_line
+        return "Fragment"
+
+    first_line = _first_non_empty_line(text)
+    if first_line and len(first_line) <= 80:
+        return first_line
+    return "Fragment"
+
+
+def _fragment_path_segment(kind: str, *, index: Optional[int] = None, value: Optional[str] = None) -> str:
+    parts = [normalize_publish_key(kind) or "fragment"]
+    if index is not None:
+        parts.append(str(index))
+    if value:
+        parts.append(normalize_publish_key(value) or str(value).strip().lower())
+    return "-".join(part for part in parts if part)
+
+
+def _expand_audio_fragments_from_block(
+    block: Any,
+    *,
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    target_date: Optional[_dt.date],
+    path_parts: Sequence[str],
+) -> List[Dict[str, Any]]:
+    if isinstance(block, str):
+        text = block.strip()
+        if not text:
+            return []
+        fragment_key = "/".join((*path_parts, "inline")) if path_parts else "inline"
+        return [
+            {
+                "fragment_key": fragment_key,
+                "block_path": fragment_key,
+                "kind": "inline",
+                "label": _fragment_label_for_block({"kind": "inline", "text": text}, text),
+                "text": text,
+            }
+        ]
+
+    if not isinstance(block, dict):
+        raise RuntimeError(f"Publish entry '{entry.get('entry_id', '')}' uses an invalid block.")
+
+    kind = normalize_publish_key(block.get("kind"))
+    effective_date = target_date or _local_date_for_timezone(contract.timezone)
+
+    if kind == "sequence":
+        fragments: List[Dict[str, Any]] = []
+        for index, child in enumerate(block.get("blocks", []) or [], start=1):
+            child_segment = _fragment_path_segment("sequence", index=index)
+            fragments.extend(
+                _expand_audio_fragments_from_block(
+                    child,
+                    contract=contract,
+                    entry=entry,
+                    target_date=effective_date,
+                    path_parts=(*path_parts, child_segment),
+                )
+            )
+        return fragments
+
+    if kind == "repeat":
+        fragments = []
+        count = int(block.get("count", 0))
+        child = block.get("block")
+        for index in range(1, count + 1):
+            child_segment = _fragment_path_segment("repeat", index=index)
+            fragments.extend(
+                _expand_audio_fragments_from_block(
+                    child,
+                    contract=contract,
+                    entry=entry,
+                    target_date=effective_date,
+                    path_parts=(*path_parts, child_segment),
+                )
+            )
+        return fragments
+
+    if kind == "weekday-map":
+        weekday = evaluate_selector(block.get("selector", "weekday"), target_date=effective_date, timezone=contract.timezone, contract=contract, entry=entry)
+        mapping = block.get("map") or {}
+        chosen = mapping.get(weekday.lower()) or mapping.get(weekday.title())
+        if chosen is None:
+            raise RuntimeError(f"Publish entry '{entry.get('entry_id', '')}' has no weekday_map entry for '{weekday}'.")
+        child_segment = _fragment_path_segment("weekday-map", value=weekday)
+        return _expand_audio_fragments_from_block(
+            chosen,
+            contract=contract,
+            entry=entry,
+            target_date=effective_date,
+            path_parts=(*path_parts, child_segment),
+        )
+
+    if kind == "monthly-template":
+        month_name = evaluate_selector(block.get("selector", "current_calendar_month"), target_date=effective_date, timezone=contract.timezone, contract=contract, entry=entry)
+        text = resolve_block_content(block, contract=contract, entry=entry, target_date=effective_date)
+        if not text.strip():
+            return []
+        fragment_key = "/".join((*path_parts, _fragment_path_segment("monthly-template", value=month_name)))
+        return [
+            {
+                "fragment_key": fragment_key,
+                "block_path": fragment_key,
+                "kind": kind,
+                "label": _fragment_label_for_block(block, text),
+                "text": text,
+            }
+        ]
+
+    if kind in {"file", "inline"}:
+        text = resolve_block_content(block, contract=contract, entry=entry, target_date=effective_date)
+        if not text.strip():
+            return []
+        fragment_key = "/".join((*path_parts, _fragment_path_segment(kind)))
+        return [
+            {
+                "fragment_key": fragment_key,
+                "block_path": fragment_key,
+                "kind": kind,
+                "label": _fragment_label_for_block(block, text),
+                "text": text,
+            }
+        ]
+
+    raise RuntimeError(f"Publish entry '{entry.get('entry_id', '')}' uses unsupported block kind '{kind}'.")
+
+
+def expand_audio_fragments(
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    *,
+    target_date: Optional[_dt.date] = None,
+) -> List[Dict[str, Any]]:
+    fragments: List[Dict[str, Any]] = []
+    blocks = list(entry.get("blocks") or [])
+    effective_date = target_date or _local_date_for_timezone(contract.timezone)
+    if blocks:
+        for index, block in enumerate(blocks, start=1):
+            fragments.extend(
+                _expand_audio_fragments_from_block(
+                    block,
+                    contract=contract,
+                    entry=entry,
+                    target_date=effective_date,
+                    path_parts=(f"block-{index}",),
+                )
+            )
+        return fragments
+
+    text = str(entry.get("text", "")).strip()
+    if not text:
+        return []
+    return [
+        {
+            "fragment_key": f"entry-text/{entry['entry_id']}",
+            "block_path": f"entry-text/{entry['entry_id']}",
+            "kind": "inline",
+            "label": _fragment_label_for_block({"kind": "inline", "text": text}, text),
+            "text": text,
+        }
+    ]
+
+
 
 def _text_hash(text: str) -> str:
     import hashlib
@@ -625,8 +809,11 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
                 audio_config["speed"] = float(DEFAULT_AUDIO_SETTINGS["speed"])
             if not audio_config["enabled"]:
                 continue
+            audio_fragments = expand_audio_fragments(contract, entry, target_date=effective_date)
             text_body = _entry_text_body(contract, entry, target_date=effective_date)
             if not text_body.strip():
+                continue
+            if not audio_fragments:
                 continue
             jobs.append(
                 {
@@ -641,24 +828,16 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
                     "status": entry["status"],
                     "text": text_body,
                     "text_hash": _text_hash(text_body),
-                    "content_hash": _text_hash(
-                        json.dumps(
-                            {
-                                "entry_id": entry["entry_id"],
-                                "contract_id": contract.contract_id,
-                                "title": entry["title"],
-                                "date": str(entry.get("date", "daily")).strip() or "daily",
-                                "text": text_body,
-                                "tts": {
-                                    "model": audio_config.get("model", DEFAULT_AUDIO_SETTINGS["model"]),
-                                    "voice": audio_config.get("voice", DEFAULT_AUDIO_SETTINGS["voice"]),
-                                    "format": audio_config.get("format", DEFAULT_AUDIO_SETTINGS["format"]),
-                                    "speed": audio_config.get("speed", DEFAULT_AUDIO_SETTINGS["speed"]),
-                                },
-                            },
-                            sort_keys=True,
-                            separators=(",", ":"),
-                        )
+                    "audio_fragments": audio_fragments,
+                    "content_hash": audio_manifest_hash(
+                        {
+                            "entry_id": entry["entry_id"],
+                            "contract_id": contract.contract_id,
+                            "title": entry["title"],
+                            "date": str(entry.get("date", "daily")).strip() or "daily",
+                        },
+                        audio_fragments,
+                        audio_config,
                     ),
                     "audio_config": audio_config,
                     "notion_target": dict(contract.notion_target),

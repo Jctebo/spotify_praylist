@@ -41,6 +41,27 @@ class TestPublishContracts(unittest.TestCase):
             ["Opening Prayers", "Joyful Mysteries", "Closing Prayers"],
         )
 
+    def test_expand_audio_fragments_flattens_leaf_blocks_in_order(self):
+        contracts = self.mod.load_publish_contracts()
+        target_date = datetime.date(2026, 4, 6)
+        morning_contract = next(contract for contract in contracts if contract.contract_id == "morning-prayer")
+        entry = morning_contract.entries[0]
+
+        fragments = self.mod.expand_audio_fragments(morning_contract, entry, target_date=target_date)
+
+        self.assertEqual(len(fragments), 12)
+        self.assertEqual(fragments[0]["label"], "Morning Offering")
+        self.assertIn("April", fragments[4]["text"])
+        self.assertEqual(fragments[-1]["label"], "Intercessory Litany")
+        self.assertEqual(
+            [fragment["fragment_key"] for fragment in fragments[:3]],
+            [
+                "block-1/sequence-1/file",
+                "block-1/sequence-2/file",
+                "block-1/sequence-3/file",
+            ],
+        )
+
     def test_load_publish_contracts_rejects_duplicate_entry_ids(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

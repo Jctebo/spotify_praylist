@@ -1,5 +1,21 @@
 # Release Log
 
+## [0.1.5.4] - 2026-04-27
+
+### Added
+- Added leaf-fragment expansion for publish audio so Morning Prayer and similar contracts now carry ordered fragment metadata instead of a single whole-entry render blob.
+- Added a dedicated publish-audio fragment cache under `.cache/publish_audio/` with per-fragment hashing, cached silence generation, and ffmpeg assembly helpers.
+- Added regression coverage for fragment ordering, fragment hash invalidation, repeated leaf reuse, publish-output cache hits, and podcast-feed generation from fragment-assembled audio.
+
+### Changed
+- Reworked `jobs/publish/audio.py` to render fragments individually, reuse cached fragment audio, and assemble the final MP3 from cached pieces.
+- Updated `jobs/publish/contracts.py` so audio jobs derive their content hash from the fragment manifest instead of from one large concatenated text payload.
+- Updated `README.md` to document the fragment cache model and the new publish-audio helper module.
+
+### Fixed
+- Ensured identical spoken leaf text can reuse cached audio across reruns instead of calling TTS again for the whole prayer.
+- Kept the public publish outputs unchanged at `docs/audio/*.mp3` and `docs/podcast.xml`.
+
 ## [0.1.5.3] - 2026-04-26
 
 ### Added

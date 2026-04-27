@@ -1,8 +1,12 @@
 import importlib.util
 import os
+import subprocess
 import uuid
 from contextlib import contextmanager
 from pathlib import Path
+import tempfile
+
+import imageio_ffmpeg
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,3 +38,31 @@ def temp_env(values):
                 os.environ[key] = original[key]
             else:
                 os.environ.pop(key, None)
+
+
+def make_test_mp3_bytes(*, duration_seconds: float = 0.12, frequency: int = 440) -> bytes:
+    ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+    tmp_dir = ROOT / "artifacts" / "test_audio"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=tmp_dir) as temp_dir:
+        output_path = Path(temp_dir) / "test.mp3"
+        completed = subprocess.run(
+            [
+                ffmpeg,
+                "-y",
+                "-f",
+                "lavfi",
+                "-i",
+                f"sine=frequency={frequency}:duration={duration_seconds}",
+                "-q:a",
+                "0",
+                str(output_path),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if completed.returncode != 0:
+            stderr = str(completed.stderr or "").strip()
+            raise RuntimeError(stderr or f"ffmpeg failed with exit code {completed.returncode}.")
+        return output_path.read_bytes()
