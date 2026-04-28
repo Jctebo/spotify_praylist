@@ -101,6 +101,32 @@ class TestRefreshJobContractPath(unittest.TestCase):
         self.assertEqual(uri, "spotify:episode:morning")
         self.assertTrue(status["Morning Prayer (Monthly Podcast)"])
 
+    def test_daily_novenas_contract_routes_through_dedicated_show_slot(self):
+        contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
+        daily_novenas = contracts["daily-novenas"]
+        sp = Mock()
+        status = {}
+
+        with patch.object(
+            self.mod,
+            "daily_novenas_episode_uris",
+            return_value=["spotify:episode:one", "spotify:episode:two"],
+        ) as resolver_mock:
+            uris = self.mod.resolve_contract_uris(
+                sp,
+                daily_novenas,
+                "Monday",
+                datetime.date(2026, 4, 28),
+                status,
+                {"DAILY_NOVENAS": "show_new"},
+                {},
+                {},
+            )
+
+        resolver_mock.assert_called_once_with(sp, "show_new")
+        self.assertEqual(uris, ["spotify:episode:one", "spotify:episode:two"])
+        self.assertTrue(status["Daily Novenas"])
+
     def test_main_single_playlist_filter_uses_override_id(self):
         env = {
             "SPOTIFY_CLIENT_ID": "cid",

@@ -1,5 +1,18 @@
 # Release Log
 
+## [0.2.1.0] - 2026-04-28
+
+### Added
+- Added a dedicated `Daily Novenas` Spotify queue contract and resolver path that scans Ora Pro Nobis episodes for titles containing `Novena` and today’s date, then returns every matching episode URI in order.
+- Added regression coverage for contract loading, resolver routing, no-hit, single-hit, multi-hit, pagination, and queue flattening behavior.
+
+### Changed
+- Updated the Spotify playlist queue builder to flatten list-valued resolver output while preserving the existing one-URI behavior for all other contracts.
+- Added a dedicated `DAILY_NOVENAS` show slot in the Spotify resolver defaults so the new contract has its own lookup key.
+
+### Fixed
+- Enabled the `Daily Novenas` Notion row to resolve automatically from the existing Spotify refresh path instead of staying manual.
+
 ## [0.2.0.1] - 2026-04-28
 
 ### Changed
