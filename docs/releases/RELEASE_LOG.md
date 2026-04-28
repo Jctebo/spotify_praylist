@@ -1,5 +1,24 @@
 # Release Log
 
+## [0.2.0.0] - 2026-04-28
+
+### Added
+- Added a contract-first novena publishing system with a fresh `jobs/novena_contracts/` boundary for contract loading, validation, resolution, rendering, audio generation, sidecar writing, and RSS publishing.
+- Added `contracts/novenas/templates/standard-9-day.json` and a selector-based family contract in `contracts/novenas/families/standard-9-day.json` so the standard novena can auto-populate eligible celebrations from the liturgical calendar without enumerating feast ids.
+- Added `contracts/novenas/feast-days/most_sacred_heart_of_jesus.json` as an explicit feast override example that resolves from a canonical Romcal id.
+- Added `scripts/new_novena_contract.py` so authors can create or validate feast contracts from either a saint name or a Romcal id, and optionally auto-populate a selector family.
+- Added regression coverage for contract loading, selector resolution, audio sidecar writing, pipeline orchestration, and publish-pipeline compatibility.
+
+### Changed
+- Replaced the grouped explicit feast list for the standard novena with a selector-based family contract that auto-discovers eligible solemnities, feasts, memorials, and optional memorials from the liturgical calendar.
+- Updated the novena resolver to derive active novena windows from `today` plus contract metadata while suppressing duplicate selector output when an explicit override exists.
+- Kept the RSS rebuild deterministic from published audio artifacts and preserved the existing non-novena episodes.
+- Updated the release artifact and version tracker to reflect the shipped minor release.
+
+### Fixed
+- Prevented the standard novena from relying on an invalid weekday-of-Easter example as a feast trigger.
+- Ensured embedded templates still override `template_id` and that invalid contract shapes fail closed before audio generation.
+
 ## [0.1.5.7] - 2026-04-27
 
 ### Changed
