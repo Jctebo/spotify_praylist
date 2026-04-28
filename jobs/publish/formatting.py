@@ -8,6 +8,7 @@ from typing import Any, Dict, Mapping, Optional
 
 _TEMPLATE_FIELD_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _EPISODE_DATE_RE = re.compile(r"(?<!\d)(\d{4}-\d{2}-\d{2})(?!\d)")
+_RSS_GUID_SEPARATOR = "::"
 
 
 @dataclass(frozen=True)
@@ -132,3 +133,23 @@ def episode_date_from_episode_id(episode_id: str) -> Optional[_dt.date]:
         except Exception:
             continue
     return None
+
+
+def compose_rss_guid(episode_id: str, revision_token: str) -> str:
+    episode = str(episode_id or "").strip()
+    revision = str(revision_token or "").strip()
+    if not revision:
+        return episode
+    if not episode:
+        return revision
+    return f"{episode}{_RSS_GUID_SEPARATOR}{revision}"
+
+
+def split_rss_guid(rss_guid: str) -> tuple[str, str]:
+    text = str(rss_guid or "").strip()
+    if not text:
+        return "", ""
+    if _RSS_GUID_SEPARATOR in text:
+        episode_id, revision = text.split(_RSS_GUID_SEPARATOR, 1)
+        return episode_id.strip(), revision.strip()
+    return text, ""

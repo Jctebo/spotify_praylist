@@ -48,8 +48,8 @@ Optional variables:
 - `contracts/novenas/families/*.json`: selector-based family contracts that auto-populate eligible celebrations from the liturgical calendar
 - `contracts/novenas/feast-days/*.json`: explicit feast-day overrides keyed by Romcal ids
 - `scripts/new_novena_contract.py`: helper for authoring explicit feast contracts or selector-based family contracts
-- `.github/workflows/daily_novena_prayer.yml`: novena workflow that runs after `Publish Prayer Audio` completes successfully on `main`, plus manual dispatches
-- The novena workflow currently targets MP3, JSON sidecars, and RSS. Spotify playlist assignment and Notion updates stay out of scope for this release.
+- `.github/workflows/publish_audio.yml`: combined publish workflow that runs Morning Prayer audio and novena publishing together, with a manual bootstrap mode for seeding today and tomorrow once
+- The combined publish workflow currently targets MP3, JSON sidecars, and RSS. Spotify playlist assignment and Notion updates stay out of scope for this release.
 
 ### RSS Pages
 - Site root landing page: `https://jctebo.github.io/spotify_praylist/`
@@ -73,7 +73,7 @@ Optional variables:
 - `scripts/setup_notion_playlists.ps1`: legacy Notion playlist-registry helper, no longer on the active Spotify hot path
 - `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; scheduled runs are gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
-- `.github/workflows/daily_novena_prayer.yml`: disabled novena workflow placeholder kept out of the active rollout
+- `.github/workflows/publish_audio.yml`: combined publish workflow for Morning Prayer audio and novena publishing, scheduled daily and also available on manual dispatch with `novena_publish_mode=daily` as the default choice
 - `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with OneDrive sync and GitHub Pages export
 - `.github/workflows/liturgical_calendar_yearly_sync.yml`: Jan 1 + manual Liturgical Calendar population
 

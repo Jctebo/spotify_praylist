@@ -65,6 +65,25 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.assertTrue(Path(first["audio_path"]).exists())
             self.assertTrue(Path(first["audio_path"]).with_suffix(".json").exists())
             self.assertGreater(Path(first["audio_path"]).stat().st_size, 0)
+            self.assertEqual(first["rss_guid"], second["rss_guid"])
+
+    def test_render_audio_job_changes_guid_when_content_revision_changes(self):
+        contracts = self.contracts_mod.load_publish_contracts()
+        jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
+        job = jobs[0]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            cache_root = Path(tmpdir) / ".cache"
+            fake_renderer, _ = self._fake_renderer()
+
+            first = self.audio_mod.render_audio_job(job, renderer=fake_renderer, docs_root=docs_root, cache_root=cache_root)
+            revised_job = dict(job)
+            revised_job["content_hash"] = f"{job['content_hash']}-revision"
+            second = self.audio_mod.render_audio_job(revised_job, renderer=fake_renderer, docs_root=docs_root, cache_root=cache_root)
+
+            self.assertNotEqual(first["rss_guid"], second["rss_guid"])
+            self.assertTrue(second["rss_guid"].startswith("morning-prayer-2026-04-06::"))
 
     def test_build_rss_feed_contains_enclosure_and_guid(self):
         contracts = self.contracts_mod.load_publish_contracts()
@@ -81,7 +100,8 @@ class TestPublishAudioPipeline(unittest.TestCase):
             root = ET.fromstring(feed_xml)
             item = root.find("./channel/item")
         self.assertIsNotNone(item)
-        self.assertEqual(item.findtext("guid"), "morning-prayer-2026-04-06")
+        self.assertEqual(item.findtext("guid"), rendered["rss_guid"])
+        self.assertTrue((item.findtext("guid") or "").startswith("morning-prayer-2026-04-06::"))
         enclosure = item.find("enclosure")
         self.assertIsNotNone(enclosure)
         self.assertTrue(enclosure.get("url", "").endswith("/audio/morning-prayer-2026-04-06.mp3"))
@@ -152,7 +172,8 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.assertEqual(second["jobs"], 1)
             root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") for item in root.findall("./channel/item")]
-            self.assertEqual(guids, ["morning-prayer-2026-04-07", "morning-prayer-2026-04-06"])
+            self.assertTrue((guids[0] or "").startswith("morning-prayer-2026-04-07::"))
+            self.assertTrue((guids[1] or "").startswith("morning-prayer-2026-04-06::"))
 
     def test_load_published_audio_jobs_recovers_date_from_episode_suffix_without_audio_file(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -215,7 +236,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
             ET.SubElement(channel, "title").text = "Ora Pro Nobis"
             item = ET.SubElement(channel, "item")
             ET.SubElement(item, "title").text = "Morning Prayer"
-            ET.SubElement(item, "guid", isPermaLink="false").text = "morning-prayer-2026-04-06"
+            ET.SubElement(item, "guid", isPermaLink="false").text = "morning-prayer-2026-04-06::revision-a"
             ET.SubElement(item, "link").text = "https://example.com/audio/morning-prayer-2026-04-06.mp3"
             ET.SubElement(item, "description").text = "Morning prayer episode."
             ET.SubElement(item, "enclosure", url="https://example.com/audio/morning-prayer-2026-04-06.mp3", length="1234", type="audio/mpeg")
@@ -225,6 +246,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
 
         self.assertEqual(len(jobs), 1)
         self.assertEqual(jobs[0]["episode_id"], "morning-prayer-2026-04-06")
+        self.assertEqual(jobs[0]["rss_guid"], "morning-prayer-2026-04-06::revision-a")
         self.assertEqual(jobs[0]["published_date"], "2026-04-06")
         self.assertEqual(jobs[0]["audio_length"], 1234)
 

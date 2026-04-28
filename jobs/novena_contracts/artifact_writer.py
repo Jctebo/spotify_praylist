@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from jobs.publish.audio import audio_public_url
+from jobs.publish.formatting import compose_rss_guid
 
 from .contracts import NovenaRuntime
 
@@ -71,6 +72,7 @@ def write_novena_artifact(runtime: NovenaRuntime, rendered: Dict[str, Any], audi
         "audio_path": str(audio_result.get("audio_path", audio_output_path(episode_id, docs_root=root))),
         "audio_url": str(audio_result.get("audio_url", audio_public_url(episode_id))),
         "content_hash": str(audio_result.get("content_hash", rendered.get("content_hash", ""))).strip(),
+        "rss_guid": compose_rss_guid(episode_id, str(audio_result.get("content_hash", rendered.get("content_hash", ""))).strip()),
         "tts": dict(audio_result.get("audio_config") or runtime.publishing.get("audio") or {}),
         "publishing": dict(runtime.publishing),
         "generated_at": _dt.datetime.now(_dt.timezone.utc).isoformat(),

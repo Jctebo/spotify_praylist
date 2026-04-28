@@ -140,8 +140,39 @@ class TestNovenaPipeline(unittest.TestCase):
             self.assertEqual(len(jobs), 1)
             self.assertTrue((docs_root / "audio" / "2026-06-03-most_sacred_heart_of_jesus-day-1.mp3").exists())
             self.assertTrue((docs_root / "audio" / "2026-06-03-most_sacred_heart_of_jesus-day-1.json").exists())
-            self.assertEqual(feed_root.findtext("./channel/item/guid"), "2026-06-03-most_sacred_heart_of_jesus-day-1")
+            guid = feed_root.findtext("./channel/item/guid") or ""
+            self.assertTrue(guid.startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::"))
             self.assertEqual(feed_root.findtext("./channel/item/title"), "Day 1: Novena to The Most Sacred Heart of Jesus - trust in the Sacred Heart")
+
+    def test_pipeline_can_seed_today_and_tomorrow_together(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contracts_root = self._write_contracts(root)
+            docs_root = root / "docs"
+            cache_root = root / ".cache"
+
+            def fake_renderer(text, audio_config):
+                return make_test_mp3_bytes()
+
+            def fake_generate_text(prompt, context):
+                return f"generated::{prompt}"
+
+            result = pipeline_mod.run_novena_pipeline(
+                contract_dir=contracts_root,
+                docs_root=docs_root,
+                cache_root=cache_root,
+                publish_dates=[datetime.date(2026, 6, 3), datetime.date(2026, 6, 4)],
+                renderer=fake_renderer,
+                generate_text_fn=fake_generate_text,
+            )
+
+            root_xml = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
+            guids = [item.findtext("guid") or "" for item in root_xml.findall("./channel/item")]
+
+            self.assertEqual(result["active"], 2)
+            self.assertEqual(result["rendered"], 2)
+            self.assertTrue(any(guid.startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::") for guid in guids))
+            self.assertTrue(any(guid.startswith("2026-06-04-most_sacred_heart_of_jesus-day-2::") for guid in guids))
 
     def test_pipeline_preserves_existing_feed_items_when_rebuilding(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -197,5 +228,5 @@ class TestNovenaPipeline(unittest.TestCase):
             root_xml = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") for item in root_xml.findall("./channel/item")]
             self.assertIn("morning-prayer", guids)
-            self.assertIn("2026-06-03-most_sacred_heart_of_jesus-day-1", guids)
+            self.assertTrue(any((guid or "").startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::") for guid in guids))
             self.assertEqual(result["active"], 1)

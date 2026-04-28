@@ -21,7 +21,7 @@ from jobs.publish.fragments import (
     publish_audio_cache_root,
     render_fragment_audio,
 )
-from jobs.publish.formatting import episode_date_from_episode_id
+from jobs.publish.formatting import compose_rss_guid, episode_date_from_episode_id
 
 PUBLISH_DOCS_DIR = ROOT / "docs"
 DEFAULT_AUDIO_DIR = PUBLISH_DOCS_DIR / "audio"
@@ -149,6 +149,24 @@ def _payload_audio_length(payload: Dict[str, Any], *, sidecar_path: Path) -> int
     return 0
 
 
+def _iso_utc_now() -> str:
+    return _dt.datetime.now(_dt.timezone.utc).isoformat()
+
+
+def _job_audio_length(audio_path: Path, *, fallback: Any = None) -> int:
+    if audio_path.exists():
+        try:
+            size = audio_path.stat().st_size
+            if size > 0:
+                return size
+        except Exception:
+            pass
+    try:
+        return int(fallback)
+    except Exception:
+        return 0
+
+
 def load_published_audio_jobs(*, docs_root: Optional[Path] = None, base_url: Optional[str] = None) -> List[Dict[str, Any]]:
     root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
     audio_dir = root / "audio"
@@ -168,6 +186,9 @@ def load_published_audio_jobs(*, docs_root: Optional[Path] = None, base_url: Opt
             print(f"WARN skipping legacy published audio sidecar without published_date: {sidecar_path}", file=sys.stderr)
             continue
         audio_length = _payload_audio_length(payload, sidecar_path=sidecar_path)
+        content_hash = str(payload.get("content_hash", "")).strip()
+        generated_at = str(payload.get("generated_at", "")).strip()
+        rss_guid = str(payload.get("rss_guid", "")).strip() or compose_rss_guid(episode_id, content_hash)
         audio_path = str(payload.get("audio_path", "")).strip()
         if not audio_path:
             audio_path = str(audio_output_path(episode_id, docs_root=root))
@@ -188,6 +209,9 @@ def load_published_audio_jobs(*, docs_root: Optional[Path] = None, base_url: Opt
                 "audio_path": audio_path,
                 "audio_url": audio_public_url(episode_id, base_url=base_url),
                 "audio_length": audio_length,
+                "generated_at": generated_at,
+                "rss_guid": rss_guid,
+                "content_hash": content_hash,
                 "audio_config": dict(payload.get("tts") or {}),
                 "fragments": list(payload.get("fragments") or []),
             }
@@ -250,12 +274,17 @@ def render_audio_job(
                 }
             ]
     content_hash = str(job.get("content_hash", "")).strip() or content_hash_for_entry(job, audio_config)
+    generated_at = _iso_utc_now()
+    rss_guid = compose_rss_guid(episode_id, content_hash)
     if _is_current_audio_file(audio_path, sidecar_path, content_hash):
         rendered = dict(job)
         rendered["audio_path"] = str(audio_path)
         rendered["audio_url"] = audio_public_url(episode_id)
         rendered["rendered"] = False
         rendered["content_hash"] = content_hash
+        rendered["audio_length"] = _job_audio_length(audio_path, fallback=job.get("audio_length"))
+        rendered["generated_at"] = str(job.get("generated_at", "")).strip()
+        rendered["rss_guid"] = str(job.get("rss_guid", "")).strip() or rss_guid
         return rendered
 
     renderer = renderer or openai_tts_renderer
@@ -302,6 +331,8 @@ def render_audio_job(
                 "audio_path": str(audio_path),
                 "audio_url": audio_public_url(episode_id),
                 "audio_length": audio_length,
+                "generated_at": generated_at,
+                "rss_guid": rss_guid,
                 "tts": audio_config,
                 "fragment_manifest_hash": content_hash,
                 "fragments": fragment_results,
@@ -317,5 +348,7 @@ def render_audio_job(
     rendered["rendered"] = True
     rendered["content_hash"] = content_hash
     rendered["audio_length"] = audio_length
+    rendered["generated_at"] = generated_at
+    rendered["rss_guid"] = rss_guid
     rendered["audio_fragments"] = fragments
     return rendered

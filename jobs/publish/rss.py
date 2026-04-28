@@ -14,7 +14,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from jobs.publish.audio import github_pages_base_url, podcast_cover_art_public_url
-from jobs.publish.formatting import episode_date_from_episode_id
+from jobs.publish.formatting import compose_rss_guid, episode_date_from_episode_id, split_rss_guid
 
 RSS_CHANNEL_TITLE = "Ora Pro Nobis"
 RSS_CHANNEL_DESCRIPTION = dedent(
@@ -72,7 +72,8 @@ def _published_at(job: Dict[str, Any]) -> _dt.datetime:
 
 
 def _job_from_rss_item(item: ET.Element, *, feed_path: Path) -> Dict[str, Any] | None:
-    episode_id = str(item.findtext("guid", "") or "").strip()
+    rss_guid = str(item.findtext("guid", "") or "").strip()
+    episode_id, _revision = split_rss_guid(rss_guid)
     if not episode_id:
         link = str(item.findtext("link", "") or "").strip()
         if link:
@@ -106,6 +107,7 @@ def _job_from_rss_item(item: ET.Element, *, feed_path: Path) -> Dict[str, Any] |
     return {
         "entry_id": episode_id,
         "episode_id": episode_id,
+        "rss_guid": rss_guid or episode_id,
         "title": str(item.findtext("title", "") or "").strip() or episode_id,
         "description": str(item.findtext("description", "") or "").strip(),
         "published_date": published_date,
@@ -205,7 +207,8 @@ def build_rss_feed(
         title = str(job.get("title", "")).strip() or str(job.get("entry_id", "")).strip() or "Prayer Audio"
         ET.SubElement(item, "title").text = title
         episode_id = str(job.get("episode_id", "")).strip() or str(job.get("entry_id", "")).strip()
-        ET.SubElement(item, "guid", isPermaLink="false").text = episode_id
+        rss_guid = str(job.get("rss_guid", "")).strip() or compose_rss_guid(episode_id, job.get("content_hash"))
+        ET.SubElement(item, "guid", isPermaLink="false").text = rss_guid
         ET.SubElement(item, "link").text = str(job.get("audio_url", "")).strip()
         ET.SubElement(item, "description").text = str(job.get("description", "")).strip() or str(job.get("text", "")).strip()
         ET.SubElement(item, "pubDate").text = format_datetime(_published_at(job))

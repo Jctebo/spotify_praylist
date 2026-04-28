@@ -2,18 +2,17 @@ name: Publish Prayer Audio
 
 on:
   workflow_dispatch:
+    inputs:
+      novena_publish_mode:
+        description: Novena publish mode; bootstrap seeds today and tomorrow once, daily publishes tomorrow only
+        required: false
+        type: choice
+        options:
+          - daily
+          - bootstrap
+        default: daily
   schedule:
     - cron: "0 6 * * *" # daily 06:00 UTC
-  push:
-    branches:
-      - main
-  workflow_run:
-    workflows:
-      - Daily Spotify Playlist Refresh
-    types:
-      - completed
-    branches:
-      - main
 
 permissions:
   contents: read
@@ -22,7 +21,6 @@ permissions:
 
 jobs:
   publish-audio:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     env:
@@ -30,6 +28,7 @@ jobs:
       NOTION_PUBLISH_DATABASE_ID: ${{ secrets.NOTION_PUBLISH_DATABASE_ID }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       OAI_API_BASE_URL: https://api.openai.com/v1
+      NOVENA_PUBLISH_MODE: ${{ github.event.inputs.novena_publish_mode }}
       PUBLISH_GITHUB_PAGES_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
 
     steps:
@@ -46,6 +45,9 @@ jobs:
 
       - name: Publish audio files and RSS feed
         run: python -m jobs.publish.run_audio_pipeline
+
+      - name: Publish novena audio and RSS feed
+        run: python -m jobs.novena_contracts.pipeline
 
       - name: Configure GitHub Pages
         if: github.ref == 'refs/heads/main'
