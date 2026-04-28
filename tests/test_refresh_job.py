@@ -1019,6 +1019,149 @@ class TestRefreshJob(unittest.TestCase):
         self.assertIsNone(uri)
         self.assertIsNone(name)
 
+    def test_daily_novenas_episode_uris_returns_empty_when_no_match(self):
+        sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Day 7: Novena to Saint X - hope - April 27, 2026",
+                    "uri": "spotify:episode:skip",
+                },
+                {
+                    "name": "Day 9: Prayer to Saint Y - hope - April 28, 2026",
+                    "uri": "spotify:episode:skip-2",
+                },
+            ]
+        }
+
+        with patch.object(
+            self.mod,
+            "local_now",
+            return_value=datetime.datetime(2026, 4, 28, 6, 0, tzinfo=self.mod.RUNTIME_TZ),
+        ):
+            uris = self.mod.daily_novenas_episode_uris(sp, "show_new")
+
+        self.assertEqual(uris, [])
+        sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
+        sp.next.assert_not_called()
+
+    def test_daily_novenas_episode_uris_returns_single_match(self):
+        sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Day 8: Novena to Saint Y - hope - April 28, 2026",
+                    "uri": "spotify:episode:keep-1",
+                },
+                {
+                    "name": "Day 9: Prayer to Saint Y - hope - April 28, 2026",
+                    "uri": "spotify:episode:skip",
+                },
+            ]
+        }
+
+        with patch.object(
+            self.mod,
+            "local_now",
+            return_value=datetime.datetime(2026, 4, 28, 6, 0, tzinfo=self.mod.RUNTIME_TZ),
+        ):
+            uris = self.mod.daily_novenas_episode_uris(sp, "show_new")
+
+        self.assertEqual(uris, ["spotify:episode:keep-1"])
+        sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
+        sp.next.assert_not_called()
+
+    def test_daily_novenas_episode_uris_scans_all_pages_and_preserves_order(self):
+        sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Day 7: Novena to Saint X - hope - April 27, 2026",
+                    "uri": "spotify:episode:skip",
+                },
+                {
+                    "name": "Day 8: Novena to Saint Y - hope - April 28, 2026",
+                    "uri": "spotify:episode:keep-1",
+                },
+            ],
+            "next": "next_cursor",
+        }
+        sp.next.return_value = {
+            "items": [
+                {
+                    "name": "Day 9: Novena to Saint Z - hope - April 28, 2026",
+                    "uri": "spotify:episode:keep-2",
+                },
+                {
+                    "name": "Day 10: Novena to Saint Q - hope - April 28, 2026",
+                    "uri": "spotify:episode:keep-3",
+                },
+            ]
+        }
+
+        with patch.object(
+            self.mod,
+            "local_now",
+            return_value=datetime.datetime(2026, 4, 28, 6, 0, tzinfo=self.mod.RUNTIME_TZ),
+        ):
+            uris = self.mod.daily_novenas_episode_uris(sp, "show_new")
+
+        self.assertEqual(
+            uris,
+            ["spotify:episode:keep-1", "spotify:episode:keep-2", "spotify:episode:keep-3"],
+        )
+        sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
+        sp.next.assert_called_once()
+
+    def test_build_queue_for_playlist_definition_flattens_daily_novenas_matches(self):
+        playlist_definition = _playlist_definition(
+            self.mod,
+            "morning",
+            contracts=("daily-novenas", "rosary"),
+        )
+        contracts_by_key = {
+            "daily-novenas": _queue_contract(
+                self.mod,
+                "daily-novenas",
+                notion_name="Daily Novenas",
+                resolver="DAILY_NOVENAS",
+            ),
+            "rosary": _queue_contract(self.mod, "rosary", resolver="ROSARY"),
+        }
+        status = {}
+
+        def fake_resolve_contract_uris(
+            sp,
+            contract,
+            weekday,
+            current_date,
+            status_map,
+            shows_cfg,
+            fixed_cfg,
+            tokens_cfg,
+        ):
+            if contract.key == "daily-novenas":
+                return ["spotify:episode:one", "spotify:episode:two"]
+            return ["spotify:episode:three"]
+
+        with patch.object(self.mod, "resolve_contract_uris", side_effect=fake_resolve_contract_uris):
+            queue = self.mod.build_queue_for_playlist_definition(
+                object(),
+                playlist_definition,
+                "Wednesday",
+                datetime.date(2026, 4, 28),
+                status,
+                {"DAILY_NOVENAS": "show_new"},
+                {},
+                {},
+                ordered_contracts=tuple(contracts_by_key.values()),
+            )
+
+        self.assertEqual(
+            queue,
+            ["spotify:episode:one", "spotify:episode:two", "spotify:episode:three"],
+        )
+
     def test_main_refreshes_all_enabled_playlists_from_definitions(self):
         env = {
             "SPOTIFY_CLIENT_ID": "cid",

@@ -180,6 +180,13 @@ class TestSpotifyContracts(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "legacy field 'name'"):
                 self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
 
+    def test_load_spotify_queue_contracts_includes_daily_novenas_contract(self):
+        contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
+
+        self.assertIn("daily-novenas", contracts)
+        self.assertEqual(contracts["daily-novenas"].notion_name, "Daily Novenas")
+        self.assertEqual(contracts["daily-novenas"].resolver, "DAILY_NOVENAS")
+
     def test_load_spotify_playlist_definitions_matches_filter_with_identity_only_files(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

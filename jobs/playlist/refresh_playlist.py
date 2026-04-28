@@ -129,6 +129,7 @@ DEFAULT_SHOWS = {
     "DAILY_MASS_READINGS": "3IANujvjklSBVf6ioZd03N",
     "DAILY_TV_MASS": "2WwFQr9a6BX7YQ4pkoIijp",
     "MORNING_PRAYER_MONTHLY": "4PNxb0OazrkcEp3FAggRoD",
+    "DAILY_NOVENAS": "4PNxb0OazrkcEp3FAggRoD",
     "FRMIKE_SUNDAY": "1CK5AHgLneCo2sE17UOfdV",
     "BARRON_SUNDAY": "5G6vtvZBIQMpQ8TLgXLBiK",
     "SAINT_OF_DAY": "1skJeU3tBmO7ftJ2ugNyYd",
@@ -1995,6 +1996,58 @@ def monthly_morning_prayer_episode(sp: spotipy.Spotify, show_id: str) -> Tuple[O
     return None, None
 
 
+def title_contains_novena_and_today(name: str, dt: datetime.datetime) -> bool:
+    text = str(name or "").strip()
+    if not text or "novena" not in text.lower():
+        return False
+
+    month_full = dt.strftime("%B")
+    month_abbr = dt.strftime("%b")
+    day = dt.day
+    year = dt.strftime("%Y")
+    patterns = [
+        rf"\b{re.escape(month_full)}\s*[-,]?\s*0?{day}(?:st|nd|rd|th)?\s*,?\s*{re.escape(year)}\b",
+        rf"\b{re.escape(month_abbr)}\.?\s*[-,]?\s*0?{day}(?:st|nd|rd|th)?\s*,?\s*{re.escape(year)}\b",
+    ]
+    return any(re.search(pattern, text, re.IGNORECASE) for pattern in patterns)
+
+
+def daily_novenas_episode_uris(sp: spotipy.Spotify, show_id: str) -> List[str]:
+    now = local_now()
+    items: List[Dict[str, Any]] = []
+    seen_markers = set()
+    market = "US"
+    first = safe_call(sp.show_episodes, show_id, limit=50, market=market)
+    if not isinstance(first, dict):
+        return []
+    pages = [first]
+    while pages and pages[-1].get("next"):
+        next_page = safe_call(sp.next, pages[-1])
+        if not isinstance(next_page, dict):
+            break
+        pages.append(next_page)
+
+    for page in pages:
+        for ep in (page.get("items") or []):
+            if not isinstance(ep, dict):
+                continue
+            marker = ep.get("uri") or ep.get("id") or ep.get("name")
+            if marker in seen_markers:
+                continue
+            seen_markers.add(marker)
+            items.append(ep)
+
+    uris: List[str] = []
+    for ep in items:
+        name = str(ep.get("name", "")).strip()
+        uri = str(ep.get("uri", "")).strip()
+        if not uri or not name:
+            continue
+        if title_contains_novena_and_today(name, now):
+            uris.append(uri)
+    return uris
+
+
 def usccb_daily_mass_for_date(
     sp: spotipy.Spotify, show_id: str, dt: datetime.datetime
 ) -> Tuple[Optional[str], Optional[str]]:
@@ -2361,6 +2414,40 @@ def contract_runs_today(contract: SpotifyQueueContract, weekday: str) -> bool:
     return today in {day.lower() for day in contract.weekdays}
 
 
+def resolve_contract_uris(
+    sp: spotipy.Spotify,
+    contract: SpotifyQueueContract,
+    weekday: str,
+    current_date: datetime.date,
+    status: Dict[str, bool],
+    shows_cfg: Dict[str, Any],
+    fixed_cfg: Dict[str, Any],
+    tokens_cfg: Dict[str, Any],
+) -> List[str]:
+    if contract.spotify_url_normal and contract.spotify_uri_easter:
+        romcal_calendar = os.getenv("ROMCAL_CALENDAR", "general_roman").strip() or "general_roman"
+        romcal_locale = os.getenv("ROMCAL_LOCALE", "en").strip() or "en"
+        is_easter = is_easter_season_for_date(romcal_calendar, romcal_locale, current_date)
+        season_label = "easter" if is_easter else "ordinary"
+        status[f"Seasonal:{contract.notion_name}:{season_label}"] = True
+        primary_spec = contract.spotify_uri_easter if is_easter else contract.spotify_url_normal
+        uri = normalize_spotify_queue_uri(primary_spec) or None
+        return [uri] if uri else []
+
+    primary_spec = contract.spotify_uri or contract.resolver
+    if contract.key == "daily-novenas":
+        show_id = cfg_value(shows_cfg, "DAILY_NOVENAS", "shows")
+        uris = daily_novenas_episode_uris(sp, show_id) if show_id else []
+        status["Daily Novenas"] = bool(uris)
+        return uris
+
+    uri = resolve_spec_uri(sp, primary_spec, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
+    if not uri and contract.fallback_resolver:
+        uri = resolve_spec_uri(sp, contract.fallback_resolver, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
+        status[f"Fallback used:{contract.notion_name}"] = bool(uri)
+    return [normalize_spotify_queue_uri(uri)] if uri else []
+
+
 def resolve_contract_uri(
     sp: spotipy.Spotify,
     contract: SpotifyQueueContract,
@@ -2371,21 +2458,8 @@ def resolve_contract_uri(
     fixed_cfg: Dict[str, Any],
     tokens_cfg: Dict[str, Any],
 ) -> Optional[str]:
-    if contract.spotify_url_normal and contract.spotify_uri_easter:
-        romcal_calendar = os.getenv("ROMCAL_CALENDAR", "general_roman").strip() or "general_roman"
-        romcal_locale = os.getenv("ROMCAL_LOCALE", "en").strip() or "en"
-        is_easter = is_easter_season_for_date(romcal_calendar, romcal_locale, current_date)
-        season_label = "easter" if is_easter else "ordinary"
-        status[f"Seasonal:{contract.notion_name}:{season_label}"] = True
-        primary_spec = contract.spotify_uri_easter if is_easter else contract.spotify_url_normal
-        return normalize_spotify_queue_uri(primary_spec) or None
-
-    primary_spec = contract.spotify_uri or contract.resolver
-    uri = resolve_spec_uri(sp, primary_spec, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
-    if not uri and contract.fallback_resolver:
-        uri = resolve_spec_uri(sp, contract.fallback_resolver, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
-        status[f"Fallback used:{contract.notion_name}"] = bool(uri)
-    return normalize_spotify_queue_uri(uri) if uri else None
+    uris = resolve_contract_uris(sp, contract, weekday, current_date, status, shows_cfg, fixed_cfg, tokens_cfg)
+    return uris[0] if uris else None
 
 
 def build_queue_for_playlist_definition(
@@ -2409,9 +2483,9 @@ def build_queue_for_playlist_definition(
             continue
 
         eligible_contracts += 1
-        uri = resolve_contract_uri(sp, contract, weekday, current_date, status, shows_cfg, fixed_cfg, tokens_cfg)
-        if uri:
-            queue.append(uri)
+        uris = resolve_contract_uris(sp, contract, weekday, current_date, status, shows_cfg, fixed_cfg, tokens_cfg)
+        if uris:
+            queue.extend(uris)
         else:
             status[f"Unresolved:{contract.notion_name}"] = False
 
