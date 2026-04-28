@@ -1,0 +1,23 @@
+{
+  "template_id": "standard-9-day",
+  "sections": [
+    {
+      "key": "opening",
+      "title": "Opening Prayer",
+      "kind": "fixed",
+      "text": "In the name of the Father, and of the Son, and of the Holy Spirit. Amen."
+    },
+    {
+      "key": "petition",
+      "title": "Daily Petition",
+      "kind": "generated",
+      "prompt": "Write a reverent novena petition for day {day} of the novena to {saint_name}. Theme: {theme}."
+    },
+    {
+      "key": "closing",
+      "title": "Closing Prayer",
+      "kind": "fixed",
+      "text": "Lord Jesus Christ, draw our hearts nearer to your Sacred Heart and make us steadfast in prayer. Amen."
+    }
+  ]
+}

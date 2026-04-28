@@ -151,6 +151,7 @@ def load_published_audio_jobs(*, docs_root: Optional[Path] = None, base_url: Opt
             {
                 "entry_id": str(payload.get("entry_id", "")).strip() or episode_id,
                 "episode_id": episode_id,
+                "family_id": str(payload.get("family_id", "")).strip(),
                 "contract_id": str(payload.get("contract_id", "")).strip(),
                 "contract_type": str(payload.get("contract_type", "")).strip(),
                 "frequency": str(payload.get("frequency", "")).strip(),

@@ -1,0 +1,43 @@
+{
+  "contract": {
+    "id": "most_sacred_heart_of_jesus",
+    "type": "novena_feast_rule",
+    "saint": {
+      "id": "most_sacred_heart_of_jesus",
+      "name": "The Most Sacred Heart of Jesus"
+    },
+    "feast": {
+      "month": 6,
+      "day": 12,
+      "name": "The Most Sacred Heart of Jesus"
+    },
+    "novena": {
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "content_mode": "hybrid",
+      "template_id": "standard-9-day",
+      "ai_config": {
+        "themes": [
+          "trust in the Sacred Heart",
+          "mercy",
+          "reparation"
+        ]
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "model": "gpt-4o-mini-tts",
+        "voice": "alloy",
+        "format": "mp3",
+        "speed": 1.0
+      },
+      "rss": {
+        "enabled": true,
+        "feed_id": "ora-pro-nobis",
+        "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme}",
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}."
+      }
+    }
+  }
+}
