@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 import xml.etree.ElementTree as ET
 import tempfile
 import unittest
@@ -171,6 +172,67 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
 
             self.assertEqual(captured["target_date"], datetime.date.today() + datetime.timedelta(days=1))
+
+    def test_main_reset_mode_targets_today_and_tomorrow(self):
+        contracts = self.contracts_mod.load_publish_contracts()
+        captured = {"target_dates": None}
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            self.runner_mod.load_publish_contracts = lambda contract_dir=None: contracts
+
+            def fake_run_audio_pipeline(**kwargs):
+                captured["target_dates"] = list(kwargs.get("target_dates") or [])
+                return {
+                    "contracts": 1,
+                    "jobs": len(captured["target_dates"]),
+                    "rendered": len(captured["target_dates"]),
+                    "archived": 0,
+                    "feed_path": str(docs_root / "podcast.xml"),
+                    "cover_art_path": str(docs_root / "images" / "logo_ora_pro_nobis.png"),
+                    "rendered_jobs": [],
+                }
+
+            self.runner_mod.run_audio_pipeline = fake_run_audio_pipeline
+            original_mode = os.environ.get("PUBLISH_MODE")
+            os.environ["PUBLISH_MODE"] = "reset"
+            try:
+                rc = self.runner_mod.main()
+            finally:
+                if original_mode is None:
+                    os.environ.pop("PUBLISH_MODE", None)
+                else:
+                    os.environ["PUBLISH_MODE"] = original_mode
+
+        self.assertEqual(rc, 0)
+        today = datetime.date.today()
+        self.assertEqual(captured["target_dates"], [today, today + datetime.timedelta(days=1)])
+
+    def test_run_audio_pipeline_can_render_today_and_tomorrow_together(self):
+        contracts = self.contracts_mod.load_publish_contracts()
+        fake_renderer, _ = self._fake_renderer()
+        today = datetime.date.today()
+        tomorrow = today + datetime.timedelta(days=1)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            cache_root = Path(tmpdir) / ".cache"
+            self.runner_mod.load_publish_contracts = lambda contract_dir=None: contracts
+
+            result = self.runner_mod.run_audio_pipeline(
+                docs_root=docs_root,
+                renderer=fake_renderer,
+                cache_root=cache_root,
+                target_dates=[today, tomorrow],
+            )
+
+            root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
+            guids = [item.findtext("guid") or "" for item in root.findall("./channel/item")]
+
+            self.assertEqual(result["jobs"], 2)
+            self.assertEqual(result["rendered"], 2)
+            self.assertTrue(any(guid.startswith(f"morning-prayer-{today.isoformat()}::") for guid in guids))
+            self.assertTrue(any(guid.startswith(f"morning-prayer-{tomorrow.isoformat()}::") for guid in guids))
 
     def test_run_audio_pipeline_rebuilds_feed_from_archived_sidecars(self):
         contracts = self.contracts_mod.load_publish_contracts()

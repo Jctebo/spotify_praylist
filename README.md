@@ -48,7 +48,7 @@ Optional variables:
 - `contracts/novenas/families/*.json`: selector-based family contracts that auto-populate eligible celebrations from the liturgical calendar
 - `contracts/novenas/feast-days/*.json`: explicit feast-day overrides keyed by Romcal ids
 - `scripts/new_novena_contract.py`: helper for authoring explicit feast contracts or selector-based family contracts
-- `.github/workflows/publish_audio.yml`: combined publish workflow that runs Morning Prayer audio and novena publishing together, scheduled daily and also available on manual dispatch; `novena_publish_mode=daily` is the default choice, `bootstrap` seeds today and tomorrow without truncating the feed, and `reset` seeds today and tomorrow after clearing the existing feed
+- `.github/workflows/publish_audio.yml`: combined publish workflow that runs Morning Prayer audio and novena publishing together, scheduled daily and also available on manual dispatch; manual runs default to `reset`, `daily` publishes tomorrow only, `bootstrap` seeds today and tomorrow without truncating the feed, and `reset` seeds today and tomorrow after clearing the existing feed
 - The combined publish workflow currently targets MP3, JSON sidecars, and RSS. Spotify playlist assignment and Notion updates stay out of scope for this release.
 
 ### RSS Pages
@@ -73,7 +73,7 @@ Optional variables:
 - `scripts/setup_notion_playlists.ps1`: legacy Notion playlist-registry helper, no longer on the active Spotify hot path
 - `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; scheduled runs are gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
-- `.github/workflows/publish_audio.yml`: combined publish workflow for Morning Prayer audio and novena publishing, scheduled daily and also available on manual dispatch with `novena_publish_mode=daily` as the default choice
+- `.github/workflows/publish_audio.yml`: combined publish workflow for Morning Prayer audio and novena publishing, scheduled daily and also available on manual dispatch with `novena_publish_mode=reset` as the default choice
 - `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with OneDrive sync and GitHub Pages export
 - `.github/workflows/liturgical_calendar_yearly_sync.yml`: Jan 1 + manual Liturgical Calendar population
 

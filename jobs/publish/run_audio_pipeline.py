@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as _dt
+import os
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional, Sequence
@@ -24,6 +25,14 @@ from jobs.publish.rss import build_rss_feed, load_podcast_feed_jobs, write_podca
 
 def _default_target_date() -> _dt.date:
     return _dt.date.today() + _dt.timedelta(days=1)
+
+
+def _target_dates_for_mode(mode: str) -> list[_dt.date]:
+    today = _dt.date.today()
+    normalized = str(mode or "").strip().lower()
+    if normalized in {"bootstrap", "reset"}:
+        return [today, today + _dt.timedelta(days=1)]
+    return [today + _dt.timedelta(days=1)]
 
 
 def run_audio_pipeline(
@@ -68,9 +77,10 @@ def run_audio_pipeline(
 
 def main() -> int:
     try:
-        result = run_audio_pipeline(base_url=github_pages_base_url())
+        mode = str(os.environ.get("PUBLISH_MODE", "")).strip().lower()
+        result = run_audio_pipeline(base_url=github_pages_base_url(), target_dates=_target_dates_for_mode(mode))
         print(
-            f"audio_pipeline contracts={result['contracts']} jobs={result['jobs']} rendered={result['rendered']} feed_path={result['feed_path']}"
+            f"audio_pipeline mode={mode or 'daily'} contracts={result['contracts']} jobs={result['jobs']} rendered={result['rendered']} feed_path={result['feed_path']}"
         )
         return 0
     except Exception as exc:
