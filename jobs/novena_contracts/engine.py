@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+from difflib import SequenceMatcher
 from typing import Any, Callable, Dict, List, Mapping, Sequence
 
 from openai import OpenAI
@@ -18,6 +19,32 @@ OAI_MODEL = "OAI_MODEL"
 
 def _normalize_whitespace(text: str) -> str:
     return re.sub(r"\s+", " ", str(text or "").replace("\u00a0", " ")).strip()
+
+
+def _looks_like_prompt_echo(text: str, prompt_text: str, user_prompt_text: str) -> bool:
+    normalized = _normalize_whitespace(text)
+    if not normalized:
+        return True
+    lowered = normalized.lower()
+    prompt_lower = _normalize_whitespace(prompt_text).lower()
+    user_lower = _normalize_whitespace(user_prompt_text).lower()
+    if prompt_lower and lowered == prompt_lower:
+        return True
+    if user_lower and lowered == user_lower:
+        return True
+    if prompt_lower and prompt_lower in lowered:
+        return True
+    if user_lower and user_lower in lowered:
+        return True
+    if prompt_lower:
+        ratio = SequenceMatcher(None, lowered, prompt_lower).ratio()
+        if ratio >= 0.62 and len(lowered) <= max(len(prompt_lower), 1) * 2:
+            return True
+    if user_lower:
+        ratio = SequenceMatcher(None, lowered, user_lower).ratio()
+        if ratio >= 0.55 and len(lowered) <= max(len(user_lower), 1) * 2:
+            return True
+    return False
 
 
 def _openai_client() -> OpenAI:
@@ -67,7 +94,7 @@ def generate_text(prompt: str, context: Mapping[str, Any]) -> str:
             ],
         )
         text = _normalize_whitespace(str(getattr(response, "output_text", "") or ""))
-        if text and text != prompt_text and text != user_prompt_text:
+        if text and not _looks_like_prompt_echo(text, prompt_text, user_prompt_text):
             return text
     except Exception:
         pass
@@ -86,7 +113,7 @@ def generate_text(prompt: str, context: Mapping[str, Any]) -> str:
     text = _normalize_whitespace(str(getattr(getattr(choices[0], "message", None), "content", "") or ""))
     if not text:
         raise RuntimeError("Novena generation returned empty text.")
-    if text == prompt_text or text == user_prompt_text:
+    if _looks_like_prompt_echo(text, prompt_text, user_prompt_text):
         raise RuntimeError("Novena generation echoed the prompt instead of returning devotional text.")
     return text
 

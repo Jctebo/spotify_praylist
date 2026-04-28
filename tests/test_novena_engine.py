@@ -131,7 +131,7 @@ class TestNovenaEngine(unittest.TestCase):
             def create(self, **kwargs):
                 captured["responses_create"] = kwargs
                 user_prompt = kwargs["input"][1]["content"][0]["text"]
-                return type("Response", (), {"output_text": user_prompt})()
+                return type("Response", (), {"output_text": f"{user_prompt} Amen."})()
 
         class FakeChatCompletions:
             def create(self, **kwargs):
@@ -168,3 +168,47 @@ class TestNovenaEngine(unittest.TestCase):
 
         self.assertEqual(text, "fallback devotional text")
         self.assertIn("chat_create", captured)
+
+    def test_generate_text_rejects_prompt_like_chat_fallback(self):
+        class FakeResponses:
+            def create(self, **kwargs):
+                return type("Response", (), {"output_text": ""})()
+
+        class FakeChatCompletions:
+            def create(self, **kwargs):
+                user_prompt = kwargs["messages"][1]["content"]
+                return type(
+                    "Chat",
+                    (),
+                    {
+                        "choices": [
+                            type(
+                                "Choice",
+                                (),
+                                {"message": type("Message", (), {"content": f"{user_prompt} plus a prayer"})()},
+                            )()
+                        ]
+                    },
+                )()
+
+        class FakeClient:
+            def __init__(self, *args, **kwargs):
+                self.responses = FakeResponses()
+                self.chat = type("ChatNamespace", (), {"completions": FakeChatCompletions()})()
+
+        with mock.patch.dict(
+            engine_mod.os.environ,
+            {
+                "OPENAI_API_KEY": "test-key",
+                "OAI_API_BASE_URL": "https://api.openai.com/v1",
+                "OAI_MODEL": "gpt-test",
+            },
+            clear=False,
+        ), mock.patch.object(engine_mod, "OpenAI", FakeClient):
+            with self.assertRaises(RuntimeError) as ctx:
+                engine_mod.generate_text(
+                    "Compose the novena prayer.",
+                    {"saint_name": "Saint Example", "feast_name": "Example Feast", "day": 4, "theme": "hope"},
+                )
+
+        self.assertIn("echoed the prompt", str(ctx.exception))
