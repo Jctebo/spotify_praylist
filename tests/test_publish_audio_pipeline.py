@@ -178,6 +178,32 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertEqual(len(jobs), 1)
         self.assertEqual(jobs[0]["episode_id"], "morning-prayer-2026-04-06")
         self.assertEqual(jobs[0]["published_date"], "2026-04-06")
+        self.assertEqual(jobs[0]["audio_length"], 0)
+
+    def test_load_published_audio_jobs_recovers_length_from_sidecar(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            audio_dir = docs_root / "audio"
+            audio_dir.mkdir(parents=True, exist_ok=True)
+            (audio_dir / "morning-prayer-2026-04-06.json").write_text(
+                json.dumps(
+                    {
+                        "entry_id": "morning-prayer",
+                        "episode_id": "morning-prayer-2026-04-06",
+                        "title": "Morning Prayer",
+                        "description": "Morning prayer episode.",
+                        "audio_path": str(audio_dir / "morning-prayer-2026-04-06.mp3"),
+                        "audio_length": 1234,
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            jobs = self.audio_mod.load_published_audio_jobs(docs_root=docs_root)
+
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0]["audio_length"], 1234)
 
     def test_load_podcast_feed_jobs_recovers_date_from_episode_suffix_without_audio_file(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -192,6 +218,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
             ET.SubElement(item, "guid", isPermaLink="false").text = "morning-prayer-2026-04-06"
             ET.SubElement(item, "link").text = "https://example.com/audio/morning-prayer-2026-04-06.mp3"
             ET.SubElement(item, "description").text = "Morning prayer episode."
+            ET.SubElement(item, "enclosure", url="https://example.com/audio/morning-prayer-2026-04-06.mp3", length="1234", type="audio/mpeg")
             ET.ElementTree(feed_root).write(feed_path, encoding="utf-8", xml_declaration=True)
 
             jobs = self.rss_mod.load_podcast_feed_jobs(feed_path)
@@ -199,3 +226,26 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertEqual(len(jobs), 1)
         self.assertEqual(jobs[0]["episode_id"], "morning-prayer-2026-04-06")
         self.assertEqual(jobs[0]["published_date"], "2026-04-06")
+        self.assertEqual(jobs[0]["audio_length"], 1234)
+
+    def test_build_rss_feed_preserves_audio_length_when_audio_file_missing(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            docs_root.mkdir(parents=True, exist_ok=True)
+            job = {
+                "entry_id": "morning-prayer-2026-04-06",
+                "episode_id": "morning-prayer-2026-04-06",
+                "title": "Morning Prayer",
+                "description": "Morning prayer episode.",
+                "published_date": "2026-04-06",
+                "audio_path": str(docs_root / "audio" / "morning-prayer-2026-04-06.mp3"),
+                "audio_url": "https://example.com/audio/morning-prayer-2026-04-06.mp3",
+                "audio_length": 1234,
+            }
+
+            feed_xml = self.rss_mod.build_rss_feed([job], base_url="https://example.com")
+            root = ET.fromstring(feed_xml)
+            enclosure = root.find("./channel/item/enclosure")
+
+        self.assertIsNotNone(enclosure)
+        self.assertEqual(enclosure.get("length"), "1234")

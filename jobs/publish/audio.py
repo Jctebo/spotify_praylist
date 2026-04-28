@@ -127,6 +127,28 @@ def _is_current_audio_file(audio_path: Path, sidecar_path: Path, content_hash: s
     return str(payload.get("content_hash", "")).strip() == content_hash
 
 
+def _payload_audio_length(payload: Dict[str, Any], *, sidecar_path: Path) -> int:
+    for field_name in ("audio_length", "audio_length_bytes", "audio_bytes", "length"):
+        candidate = payload.get(field_name)
+        try:
+            length = int(candidate)
+        except Exception:
+            continue
+        if length > 0:
+            return length
+    audio_path = str(payload.get("audio_path", "")).strip()
+    if audio_path:
+        path = Path(audio_path)
+        if not path.is_absolute():
+            path = sidecar_path.parent / path
+        if path.exists():
+            try:
+                return path.stat().st_size
+            except Exception:
+                return 0
+    return 0
+
+
 def load_published_audio_jobs(*, docs_root: Optional[Path] = None, base_url: Optional[str] = None) -> List[Dict[str, Any]]:
     root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
     audio_dir = root / "audio"
@@ -145,6 +167,7 @@ def load_published_audio_jobs(*, docs_root: Optional[Path] = None, base_url: Opt
         if not published_date:
             print(f"WARN skipping legacy published audio sidecar without published_date: {sidecar_path}", file=sys.stderr)
             continue
+        audio_length = _payload_audio_length(payload, sidecar_path=sidecar_path)
         audio_path = str(payload.get("audio_path", "")).strip()
         if not audio_path:
             audio_path = str(audio_output_path(episode_id, docs_root=root))
@@ -164,6 +187,7 @@ def load_published_audio_jobs(*, docs_root: Optional[Path] = None, base_url: Opt
                 "content_hash": str(payload.get("content_hash", "")).strip(),
                 "audio_path": audio_path,
                 "audio_url": audio_public_url(episode_id, base_url=base_url),
+                "audio_length": audio_length,
                 "audio_config": dict(payload.get("tts") or {}),
                 "fragments": list(payload.get("fragments") or []),
             }
@@ -261,6 +285,7 @@ def render_audio_job(
         raw_audio = assemble_audio_fragments(fragment_paths, target_format, cache_root=fragment_root)
     if not raw_audio:
         raise RuntimeError(f"Audio assembly returned empty output for entry '{job.get('entry_id', '')}'.")
+    audio_length = len(raw_audio)
     audio_path.write_bytes(raw_audio)
     sidecar_path.write_text(
         json.dumps(
@@ -276,6 +301,7 @@ def render_audio_job(
                 "content_hash": content_hash,
                 "audio_path": str(audio_path),
                 "audio_url": audio_public_url(episode_id),
+                "audio_length": audio_length,
                 "tts": audio_config,
                 "fragment_manifest_hash": content_hash,
                 "fragments": fragment_results,
@@ -290,5 +316,6 @@ def render_audio_job(
     rendered["audio_url"] = audio_public_url(episode_id)
     rendered["rendered"] = True
     rendered["content_hash"] = content_hash
+    rendered["audio_length"] = audio_length
     rendered["audio_fragments"] = fragments
     return rendered

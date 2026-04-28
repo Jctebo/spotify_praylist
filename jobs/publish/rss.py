@@ -42,11 +42,25 @@ ET.register_namespace("itunes", RSS_ITUNES_NAMESPACE)
 
 
 
-def _audio_length_bytes(path_text: str) -> int:
-    path = Path(path_text)
-    if not path.exists():
+def _coerce_audio_length(value: Any) -> int:
+    try:
+        length = int(value)
+    except Exception:
         return 0
-    return path.stat().st_size
+    return length if length > 0 else 0
+
+
+def _audio_length_bytes(path_text: str, *, fallback: Any = None) -> int:
+    fallback_length = _coerce_audio_length(fallback)
+    path = Path(path_text)
+    if path.exists():
+        try:
+            size = path.stat().st_size
+            if size > 0:
+                return size
+        except Exception:
+            pass
+    return fallback_length
 
 
 def _published_at(job: Dict[str, Any]) -> _dt.datetime:
@@ -87,6 +101,8 @@ def _job_from_rss_item(item: ET.Element, *, feed_path: Path) -> Dict[str, Any] |
                 published_date = ""
     if not published_date:
         return None
+    enclosure = item.find("enclosure")
+    audio_length = _coerce_audio_length(enclosure.get("length") if enclosure is not None else 0)
     return {
         "entry_id": episode_id,
         "episode_id": episode_id,
@@ -95,6 +111,7 @@ def _job_from_rss_item(item: ET.Element, *, feed_path: Path) -> Dict[str, Any] |
         "published_date": published_date,
         "audio_path": str(feed_path.parent / "audio" / f"{episode_id}.mp3"),
         "audio_url": str(item.findtext("link", "") or "").strip(),
+        "audio_length": audio_length,
     }
 
 
@@ -196,11 +213,12 @@ def build_rss_feed(
         ET.SubElement(item, f"{{{RSS_ITUNES_NAMESPACE}}}author").text = author_name
         audio_path = str(job.get("audio_path", "")).strip()
         enclosure_url = str(job.get("audio_url", "")).strip()
+        audio_length = _audio_length_bytes(audio_path, fallback=job.get("audio_length"))
         enclosure = ET.SubElement(
             item,
             "enclosure",
             url=enclosure_url,
-            length=str(_audio_length_bytes(audio_path)),
+            length=str(audio_length),
             type=RSS_AUDIO_MIME,
         )
         if not enclosure.get("url"):
