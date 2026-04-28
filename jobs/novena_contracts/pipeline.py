@@ -81,3 +81,15 @@ def _render_description(runtime, context: Dict[str, Any]) -> str:
 
     pattern = str(runtime.publishing.get("rss", {}).get("episode_description_pattern", "Day {day} of the Novena to {saint_name} for {feast_name}."))
     return render_publish_template(pattern, context)
+
+
+def main() -> int:
+    result = run_novena_pipeline()
+    print(
+        f"novena_pipeline contracts={result['contracts']} active={result['active']} rendered={result['rendered']} feed_path={result['feed_path']}"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

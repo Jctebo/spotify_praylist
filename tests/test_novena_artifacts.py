@@ -3,6 +3,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from enum import Enum
 
 import jobs.novena_contracts.audio as audio_mod
 import jobs.novena_contracts.artifact_writer as artifact_writer_mod
@@ -12,12 +13,23 @@ from tests.test_helpers import make_test_mp3_bytes
 
 
 class TestNovenaArtifacts(unittest.TestCase):
+    class DummyColor(Enum):
+        GREEN = "green"
+
     def _runtime(self):
         return contracts_mod.NovenaRuntime(
             family_id="standard_9_day",
             contract_id="most_sacred_heart_of_jesus",
             saint={"id": "most_sacred_heart_of_jesus", "name": "The Most Sacred Heart of Jesus"},
-            feast={"month": 6, "day": 12, "name": "The Most Sacred Heart of Jesus", "feast_date": "2026-06-12", "start_date": "2026-06-03", "end_date": "2026-06-11"},
+            feast={
+                "month": 6,
+                "day": 12,
+                "name": "The Most Sacred Heart of Jesus",
+                "color": self.DummyColor.GREEN,
+                "feast_date": "2026-06-12",
+                "start_date": "2026-06-03",
+                "end_date": "2026-06-11",
+            },
             novena={"duration_days": 9, "start_offset_days": -9, "content_mode": "hybrid", "ai_config": {"themes": ["trust"]}},
             resolved_template=contracts_mod.TemplateSpec(
                 template_id="standard-9-day",
@@ -80,3 +92,4 @@ class TestNovenaArtifacts(unittest.TestCase):
             self.assertEqual(payload["audio"]["file"], "2026-06-03-most_sacred_heart_of_jesus-day-1.mp3")
             self.assertEqual(payload["template"]["source"], "template_id:standard-9-day")
             self.assertEqual(payload["content"]["sections"][1]["kind"], "generated")
+            self.assertEqual(payload["feast"]["color"], "green")

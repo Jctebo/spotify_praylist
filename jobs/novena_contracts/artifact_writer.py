@@ -2,12 +2,28 @@ from __future__ import annotations
 
 import datetime as _dt
 import json
+from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 from jobs.publish.audio import audio_public_url
 
 from .contracts import NovenaRuntime
+
+
+def _json_default(value: Any) -> Any:
+    if isinstance(value, Enum):
+        return value.value
+    if hasattr(value, "model_dump"):
+        dumped = value.model_dump()
+        if isinstance(dumped, dict):
+            return dumped
+    if hasattr(value, "isoformat"):
+        try:
+            return value.isoformat()
+        except Exception:
+            pass
+    return str(value)
 
 
 def audio_output_path(episode_id: str, *, docs_root: Optional[Path] = None) -> Path:
@@ -59,5 +75,5 @@ def write_novena_artifact(runtime: NovenaRuntime, rendered: Dict[str, Any], audi
         "publishing": dict(runtime.publishing),
         "generated_at": _dt.datetime.now(_dt.timezone.utc).isoformat(),
     }
-    sidecar_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+    sidecar_path.write_text(json.dumps(payload, indent=2, sort_keys=True, default=_json_default), encoding="utf-8")
     return sidecar_path
