@@ -3,7 +3,7 @@ from __future__ import annotations
 import datetime as _dt
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Sequence
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -34,9 +34,18 @@ def run_audio_pipeline(
     cache_root: Optional[Path] = None,
     base_url: Optional[str] = None,
     target_date: Optional[_dt.date] = None,
+    target_dates: Optional[Sequence[_dt.date]] = None,
 ) -> Dict[str, Any]:
     contracts = load_publish_contracts(contract_dir or DEFAULT_CONTRACT_DIR)
-    jobs = build_audio_jobs(contracts, target_date=target_date or _default_target_date())
+    if target_dates is not None:
+        dates = list(target_dates)
+    elif target_date is not None:
+        dates = [target_date]
+    else:
+        dates = [_default_target_date()]
+    jobs = []
+    for date_value in dates:
+        jobs.extend(build_audio_jobs(contracts, target_date=date_value))
     rendered_jobs = [render_audio_job(job, renderer=renderer, docs_root=docs_root, cache_root=cache_root) for job in jobs]
     cover_art_path = ensure_podcast_cover_art(docs_root=docs_root)
     feed_base_url = base_url or github_pages_base_url()
@@ -59,7 +68,7 @@ def run_audio_pipeline(
 
 def main() -> int:
     try:
-        result = run_audio_pipeline(base_url=github_pages_base_url(), target_date=_default_target_date())
+        result = run_audio_pipeline(base_url=github_pages_base_url())
         print(
             f"audio_pipeline contracts={result['contracts']} jobs={result['jobs']} rendered={result['rendered']} feed_path={result['feed_path']}"
         )

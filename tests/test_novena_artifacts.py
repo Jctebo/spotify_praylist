@@ -56,7 +56,7 @@ class TestNovenaArtifacts(unittest.TestCase):
                 "rss": {
                     "enabled": True,
                     "feed_id": "ora-pro-nobis",
-                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme}",
+                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
                     "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
                 },
             },
@@ -66,6 +66,8 @@ class TestNovenaArtifacts(unittest.TestCase):
     def test_audio_rendering_is_idempotent_and_writes_sidecar(self):
         runtime = self._runtime()
         rendered = engine_mod.render_novena(runtime, generate_text_fn=lambda prompt, context: f"{prompt} ({context['theme']})")
+        rendered["title"] = "Day 1: Novena to The Most Sacred Heart of Jesus - trust - June 3, 2026"
+        rendered["description"] = rendered["title"]
 
         with tempfile.TemporaryDirectory() as tmpdir:
             docs_root = Path(tmpdir) / "docs"
@@ -84,12 +86,13 @@ class TestNovenaArtifacts(unittest.TestCase):
 
             self.assertTrue(Path(first["audio_path"]).exists())
             self.assertTrue(Path(first["audio_path"]).with_suffix(".json").exists())
-            self.assertTrue(first["rendered"])
-            self.assertFalse(second["rendered"])
-            self.assertEqual(fake_renderer_calls["count"], 2)
-            self.assertEqual(payload["id"], "2026-06-03-most_sacred_heart_of_jesus-day-1")
-            self.assertEqual(payload["family_id"], "standard_9_day")
-            self.assertEqual(payload["audio"]["file"], "2026-06-03-most_sacred_heart_of_jesus-day-1.mp3")
-            self.assertEqual(payload["template"]["source"], "template_id:standard-9-day")
-            self.assertEqual(payload["content"]["sections"][1]["kind"], "generated")
-            self.assertEqual(payload["feast"]["color"], "green")
+        self.assertTrue(first["rendered"])
+        self.assertFalse(second["rendered"])
+        self.assertEqual(fake_renderer_calls["count"], 2)
+        self.assertEqual(payload["id"], "2026-06-03-most_sacred_heart_of_jesus-day-1")
+        self.assertEqual(payload["family_id"], "standard_9_day")
+        self.assertEqual(payload["audio"]["file"], "2026-06-03-most_sacred_heart_of_jesus-day-1.mp3")
+        self.assertEqual(payload["template"]["source"], "template_id:standard-9-day")
+        self.assertEqual(payload["content"]["sections"][1]["kind"], "generated")
+        self.assertEqual(payload["feast"]["color"], "green")
+        self.assertIn("June 3, 2026", payload["title"])

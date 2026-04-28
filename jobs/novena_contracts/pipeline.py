@@ -81,7 +81,7 @@ def run_novena_pipeline(
 def _render_title(runtime, context: Dict[str, Any]) -> str:
     from jobs.publish.formatting import render_publish_template
 
-    pattern = str(runtime.publishing.get("rss", {}).get("episode_title_pattern", "Day {day}: Novena to {saint_name} - {theme}"))
+    pattern = str(runtime.publishing.get("rss", {}).get("episode_title_pattern", "Day {day}: Novena to {saint_name} - {theme} - {date_display}"))
     return render_publish_template(pattern, context)
 
 

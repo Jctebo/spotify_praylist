@@ -35,7 +35,7 @@
       "rss": {
         "enabled": true,
         "feed_id": "ora-pro-nobis",
-        "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme}",
+        "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
         "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}."
       }
     }

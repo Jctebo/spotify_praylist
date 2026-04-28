@@ -56,7 +56,7 @@ class TestNovenaPipeline(unittest.TestCase):
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
-                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme}",
+                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
                                     "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
                                 },
                             },
@@ -83,13 +83,13 @@ class TestNovenaPipeline(unittest.TestCase):
                         },
                         "publishing": {
                             "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
-                            "rss": {
-                                "enabled": True,
-                                "feed_id": "ora-pro-nobis",
-                                "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme}",
-                                "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+                                "rss": {
+                                    "enabled": True,
+                                    "feed_id": "ora-pro-nobis",
+                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+                                    "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+                                },
                             },
-                        },
                     }
                 },
                 indent=2,
@@ -142,7 +142,10 @@ class TestNovenaPipeline(unittest.TestCase):
             self.assertTrue((docs_root / "audio" / "2026-06-03-most_sacred_heart_of_jesus-day-1.json").exists())
             guid = feed_root.findtext("./channel/item/guid") or ""
             self.assertTrue(guid.startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::"))
-            self.assertEqual(feed_root.findtext("./channel/item/title"), "Day 1: Novena to The Most Sacred Heart of Jesus - trust in the Sacred Heart")
+            self.assertEqual(
+                feed_root.findtext("./channel/item/title"),
+                "Day 1: Novena to The Most Sacred Heart of Jesus - trust in the Sacred Heart - June 3, 2026",
+            )
 
     def test_pipeline_can_seed_today_and_tomorrow_together(self):
         with tempfile.TemporaryDirectory() as tmpdir:
