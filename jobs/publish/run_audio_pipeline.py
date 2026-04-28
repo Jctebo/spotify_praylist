@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime as _dt
 import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -21,6 +22,9 @@ from jobs.publish.contracts import DEFAULT_CONTRACT_DIR, load_publish_contracts
 from jobs.publish.rss import build_rss_feed, load_podcast_feed_jobs, write_podcast_feed
 
 
+def _default_target_date() -> _dt.date:
+    return _dt.date.today() + _dt.timedelta(days=1)
+
 
 def run_audio_pipeline(
     *,
@@ -29,9 +33,10 @@ def run_audio_pipeline(
     renderer=None,
     cache_root: Optional[Path] = None,
     base_url: Optional[str] = None,
+    target_date: Optional[_dt.date] = None,
 ) -> Dict[str, Any]:
     contracts = load_publish_contracts(contract_dir or DEFAULT_CONTRACT_DIR)
-    jobs = build_audio_jobs(contracts)
+    jobs = build_audio_jobs(contracts, target_date=target_date or _default_target_date())
     rendered_jobs = [render_audio_job(job, renderer=renderer, docs_root=docs_root, cache_root=cache_root) for job in jobs]
     cover_art_path = ensure_podcast_cover_art(docs_root=docs_root)
     feed_base_url = base_url or github_pages_base_url()
@@ -52,10 +57,9 @@ def run_audio_pipeline(
     }
 
 
-
 def main() -> int:
     try:
-        result = run_audio_pipeline(base_url=github_pages_base_url())
+        result = run_audio_pipeline(base_url=github_pages_base_url(), target_date=_default_target_date())
         print(
             f"audio_pipeline contracts={result['contracts']} jobs={result['jobs']} rendered={result['rendered']} feed_path={result['feed_path']}"
         )

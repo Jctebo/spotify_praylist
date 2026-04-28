@@ -134,13 +134,14 @@ class TestPublishAudioPipeline(unittest.TestCase):
     def test_run_audio_pipeline_writes_feed(self):
         contracts = self.contracts_mod.load_publish_contracts()
         fake_renderer, _ = self._fake_renderer()
+        expected_date = datetime.date.today() + datetime.timedelta(days=1)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             docs_root = Path(tmpdir) / "docs"
             cache_root = Path(tmpdir) / ".cache"
             self.runner_mod.load_publish_contracts = lambda contract_dir=None: contracts
             self.runner_mod.build_audio_jobs = lambda contracts, target_date=None: self.audio_mod.build_audio_jobs(
-                contracts, target_date=datetime.date(2026, 4, 6)
+                contracts, target_date=target_date or expected_date
             )
             result = self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
 
@@ -148,8 +149,28 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.assertEqual(result["rendered"], 1)
             self.assertEqual(result["archived"], 1)
             self.assertTrue((docs_root / "podcast.xml").exists())
-            self.assertTrue((docs_root / "audio" / "morning-prayer-2026-04-06.mp3").exists())
+            self.assertTrue((docs_root / "audio" / f"morning-prayer-{expected_date.isoformat()}.mp3").exists())
             self.assertTrue((docs_root / "images" / "logo_ora_pro_nobis.png").exists())
+
+    def test_run_audio_pipeline_targets_next_day_by_default(self):
+        contracts = self.contracts_mod.load_publish_contracts()
+        fake_renderer, _ = self._fake_renderer()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            cache_root = Path(tmpdir) / ".cache"
+            captured = {"target_date": None}
+
+            self.runner_mod.load_publish_contracts = lambda contract_dir=None: contracts
+
+            def fake_build_audio_jobs(contracts, target_date=None):
+                captured["target_date"] = target_date
+                return self.audio_mod.build_audio_jobs(contracts, target_date=target_date)
+
+            self.runner_mod.build_audio_jobs = fake_build_audio_jobs
+            self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
+
+            self.assertEqual(captured["target_date"], datetime.date.today() + datetime.timedelta(days=1))
 
     def test_run_audio_pipeline_rebuilds_feed_from_archived_sidecars(self):
         contracts = self.contracts_mod.load_publish_contracts()
