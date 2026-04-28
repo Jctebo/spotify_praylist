@@ -18,7 +18,7 @@ from jobs.publish.audio import (
     render_audio_job,
 )
 from jobs.publish.contracts import DEFAULT_CONTRACT_DIR, load_publish_contracts
-from jobs.publish.rss import build_rss_feed, write_podcast_feed
+from jobs.publish.rss import build_rss_feed, load_podcast_feed_jobs, write_podcast_feed
 
 
 
@@ -28,20 +28,24 @@ def run_audio_pipeline(
     docs_root: Optional[Path] = None,
     renderer=None,
     cache_root: Optional[Path] = None,
+    base_url: Optional[str] = None,
 ) -> Dict[str, Any]:
     contracts = load_publish_contracts(contract_dir or DEFAULT_CONTRACT_DIR)
     jobs = build_audio_jobs(contracts)
     rendered_jobs = [render_audio_job(job, renderer=renderer, docs_root=docs_root, cache_root=cache_root) for job in jobs]
     cover_art_path = ensure_podcast_cover_art(docs_root=docs_root)
-    cover_art_url = podcast_cover_art_public_url(base_url=github_pages_base_url())
-    archived_jobs = load_published_audio_jobs(docs_root=docs_root, base_url=github_pages_base_url())
-    feed_xml = build_rss_feed([*rendered_jobs, *archived_jobs], base_url=github_pages_base_url(), cover_art_url=cover_art_url)
-    feed_path = write_podcast_feed(feed_xml, Path(docs_root) / "podcast.xml" if docs_root else DEFAULT_PODCAST_FEED_PATH)
+    feed_base_url = base_url or github_pages_base_url()
+    cover_art_url = podcast_cover_art_public_url(base_url=feed_base_url)
+    feed_path = Path(docs_root) / "podcast.xml" if docs_root else DEFAULT_PODCAST_FEED_PATH
+    archived_jobs = load_podcast_feed_jobs(feed_path, base_url=base_url)
+    local_sidecar_jobs = load_published_audio_jobs(docs_root=docs_root, base_url=base_url)
+    feed_xml = build_rss_feed([*rendered_jobs, *archived_jobs, *local_sidecar_jobs], base_url=feed_base_url, cover_art_url=cover_art_url)
+    feed_path = write_podcast_feed(feed_xml, feed_path)
     return {
         "contracts": len(contracts),
         "jobs": len(jobs),
         "rendered": len(rendered_jobs),
-        "archived": len(archived_jobs),
+        "archived": len(archived_jobs) + len(local_sidecar_jobs),
         "feed_path": str(feed_path),
         "cover_art_path": str(cover_art_path),
         "rendered_jobs": rendered_jobs,
@@ -51,7 +55,7 @@ def run_audio_pipeline(
 
 def main() -> int:
     try:
-        result = run_audio_pipeline()
+        result = run_audio_pipeline(base_url=github_pages_base_url())
         print(
             f"audio_pipeline contracts={result['contracts']} jobs={result['jobs']} rendered={result['rendered']} feed_path={result['feed_path']}"
         )

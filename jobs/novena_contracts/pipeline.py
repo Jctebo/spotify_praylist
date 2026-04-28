@@ -57,7 +57,7 @@ def run_novena_pipeline(
             }
         )
 
-    feed_path = publish_novena_rss(docs_root=root, base_url=base_url or github_pages_base_url())
+    feed_path = publish_novena_rss(docs_root=root, base_url=base_url)
     return {
         "contracts": len(contracts),
         "active": len(active),
@@ -84,7 +84,7 @@ def _render_description(runtime, context: Dict[str, Any]) -> str:
 
 
 def main() -> int:
-    result = run_novena_pipeline()
+    result = run_novena_pipeline(base_url=github_pages_base_url())
     print(
         f"novena_pipeline contracts={result['contracts']} active={result['active']} rendered={result['rendered']} feed_path={result['feed_path']}"
     )
