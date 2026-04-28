@@ -102,46 +102,47 @@ def resolve_active_novenas(
             rows = romcal_fetch_day("general_roman", "en", feast_date)
             if not rows:
                 continue
-            primary = rows[0]
-            rank = infer_celebration_rank(primary)
-            precedence = infer_precedence(primary)
-            if not devotional_output_is_eligible(rank, precedence):
-                continue
-            normalized_rank = str(rank).strip().lower()
-            if selector_ranks and normalized_rank not in selector_ranks:
-                continue
-            selected_id = celebration_id(primary) or " ".join(str(rank or "").split()).strip().lower().replace(" ", "_")
-            if not selected_id or selected_id in explicit_ids:
-                continue
-            start_date = feast_date + _dt.timedelta(days=int(contract.novena.start_offset_days))
-            end_date = start_date + _dt.timedelta(days=int(contract.novena.duration_days) - 1)
-            if not (start_date <= today <= end_date):
-                continue
-            feast = dict(primary)
-            feast.update(
-                {
+            for primary in rows:
+                rank = infer_celebration_rank(primary)
+                precedence = infer_precedence(primary)
+                if not devotional_output_is_eligible(rank, precedence):
+                    continue
+                normalized_rank = str(rank).strip().lower()
+                if selector_ranks and normalized_rank not in selector_ranks:
+                    continue
+                selected_id = celebration_id(primary) or " ".join(str(rank or "").split()).strip().lower().replace(" ", "_")
+                if not selected_id or selected_id in explicit_ids:
+                    continue
+                start_date = feast_date + _dt.timedelta(days=int(contract.novena.start_offset_days))
+                end_date = start_date + _dt.timedelta(days=int(contract.novena.duration_days) - 1)
+                if not (start_date <= today <= end_date):
+                    continue
+                feast = dict(primary)
+                feast.update(
+                    {
+                        "id": selected_id,
+                        "name": celebration_name(primary) or selected_id,
+                        "rank": rank,
+                        "precedence": precedence,
+                    }
+                )
+                saint = {
                     "id": selected_id,
                     "name": celebration_name(primary) or selected_id,
-                    "rank": rank,
-                    "precedence": precedence,
                 }
-            )
-            saint = {
-                "id": selected_id,
-                "name": celebration_name(primary) or selected_id,
-            }
-            resolved.append(
-                _runtime_from_contract(
-                    contract,
-                    contract_id=selected_id,
-                    feast_date=feast_date,
-                    start_date=start_date,
-                    end_date=end_date,
-                    today=today,
-                    saint=saint,
-                    feast=feast,
+                resolved.append(
+                    _runtime_from_contract(
+                        contract,
+                        contract_id=selected_id,
+                        feast_date=feast_date,
+                        start_date=start_date,
+                        end_date=end_date,
+                        today=today,
+                        saint=saint,
+                        feast=feast,
+                    )
                 )
-            )
+                break
     resolved.sort(key=lambda runtime: (runtime.feast.get("feast_date", ""), runtime.family_id, runtime.contract_id))
     return resolved
 

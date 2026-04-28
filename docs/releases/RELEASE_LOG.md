@@ -1,5 +1,15 @@
 # Release Log
 
+## [0.2.0.1] - 2026-04-28
+
+### Changed
+- Updated the novena resolver to scan all Romcal rows for a day instead of stopping at the first row, so selector-family novenas can still publish when an eligible memorial appears after an ineligible weekday.
+- Kept ordinary weekday rows excluded while preserving selector-rank and explicit-override filtering.
+
+### Fixed
+- Restored Saint Joseph the Worker novena publication on Friday when Romcal emits a weekday first and the optional memorial second.
+- Added regression coverage for the weekday-first / optional-memorial-second selection path.
+
 ## [0.2.0.0] - 2026-04-28
 
 ### Added
