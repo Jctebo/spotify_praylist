@@ -42,6 +42,14 @@ Optional variables:
 - `PUBLISH_GITHUB_PAGES_BASE_URL` to override the RSS enclosure base URL when publishing audio
 - `Publish Prayer Audio` now runs at `06:00 UTC`, before `Daily Spotify Playlist Refresh` runs at `07:00 UTC`, on `main`, on pushes to `main`, plus manual dispatches
 
+### Novena
+- `jobs/novena_contracts/pipeline.py`: contract-first novena publishing that resolves the active novena from today's date, renders content, writes a JSON sidecar, and rebuilds RSS
+- `contracts/novenas/templates/*.json`: reusable novena templates, including the shared `standard-9-day` template
+- `contracts/novenas/families/*.json`: selector-based family contracts that auto-populate eligible celebrations from the liturgical calendar
+- `contracts/novenas/feast-days/*.json`: explicit feast-day overrides keyed by Romcal ids
+- `scripts/new_novena_contract.py`: helper for authoring explicit feast contracts or selector-based family contracts
+- The novena workflow currently targets MP3, JSON sidecars, and RSS. Spotify playlist assignment and Notion updates stay out of scope for this release.
+
 ### RSS Pages
 - Site root landing page: `https://jctebo.github.io/spotify_praylist/`
 - Feed file: `docs/podcast.xml`
