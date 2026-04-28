@@ -13,11 +13,13 @@
 - Replaced the grouped explicit feast list for the standard novena with a selector-based family contract that auto-discovers eligible solemnities, feasts, memorials, and optional memorials from the liturgical calendar.
 - Updated the novena resolver to derive active novena windows from `today` plus contract metadata while suppressing duplicate selector output when an explicit override exists.
 - Kept the RSS rebuild deterministic from published audio artifacts and preserved the existing non-novena episodes.
+- Added a GitHub Actions novena workflow that runs immediately after `Publish Prayer Audio` on `main` and can also be triggered manually.
 - Updated the release artifact and version tracker to reflect the shipped minor release.
 
 ### Fixed
 - Prevented the standard novena from relying on an invalid weekday-of-Easter example as a feast trigger.
 - Ensured embedded templates still override `template_id` and that invalid contract shapes fail closed before audio generation.
+- Fixed novena sidecar serialization so Romcal enum values are written into JSON artifacts safely.
 
 ## [0.1.5.7] - 2026-04-27
 

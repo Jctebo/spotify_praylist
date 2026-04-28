@@ -48,6 +48,7 @@ Optional variables:
 - `contracts/novenas/families/*.json`: selector-based family contracts that auto-populate eligible celebrations from the liturgical calendar
 - `contracts/novenas/feast-days/*.json`: explicit feast-day overrides keyed by Romcal ids
 - `scripts/new_novena_contract.py`: helper for authoring explicit feast contracts or selector-based family contracts
+- `.github/workflows/daily_novena_prayer.yml`: novena workflow that runs after `Publish Prayer Audio` completes successfully on `main`, plus manual dispatches
 - The novena workflow currently targets MP3, JSON sidecars, and RSS. Spotify playlist assignment and Notion updates stay out of scope for this release.
 
 ### RSS Pages
