@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime as _dt
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -39,13 +40,18 @@ def _load_existing_feed_jobs(feed_path: Path, *, docs_root: Path, base_url: str)
             continue
         audio_path = docs_root / "audio" / f"{episode_id}.mp3"
         audio_url = str(item.findtext("link", "") or "").strip() or f"{base_url.rstrip('/')}/audio/{episode_id}.mp3"
+        published_date = _published_date_from_feed_item(item)
+        if not published_date:
+            published_date = _published_date_from_audio_path(audio_path)
+        if not published_date:
+            continue
         jobs.append(
             {
                 "entry_id": episode_id,
                 "episode_id": episode_id,
                 "title": str(item.findtext("title", "") or "").strip() or episode_id,
                 "description": str(item.findtext("description", "") or "").strip(),
-                "published_date": _published_date_from_feed_item(item),
+                "published_date": published_date,
                 "audio_path": str(audio_path),
                 "audio_url": audio_url,
             }
@@ -61,6 +67,15 @@ def _published_date_from_feed_item(item: ET.Element) -> str:
         from email.utils import parsedate_to_datetime
 
         return parsedate_to_datetime(raw).date().isoformat()
+    except Exception:
+        return ""
+
+
+def _published_date_from_audio_path(audio_path: Path) -> str:
+    if not audio_path.exists():
+        return ""
+    try:
+        return _dt.datetime.fromtimestamp(audio_path.stat().st_mtime, tz=_dt.timezone.utc).date().isoformat()
     except Exception:
         return ""
 

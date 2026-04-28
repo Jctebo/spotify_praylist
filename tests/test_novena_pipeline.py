@@ -7,7 +7,6 @@ from pathlib import Path
 
 import jobs.novena_contracts.pipeline as pipeline_mod
 from jobs.publish.audio import load_published_audio_jobs
-from jobs.publish.rss import build_rss_feed, write_podcast_feed
 from tests.test_helpers import make_test_mp3_bytes
 
 
@@ -169,21 +168,15 @@ class TestNovenaPipeline(unittest.TestCase):
                 ),
                 encoding="utf-8",
             )
-            existing_feed_xml = build_rss_feed(
-                [
-                    {
-                        "entry_id": "morning-prayer",
-                        "episode_id": "morning-prayer-2026-04-06",
-                        "title": "Morning Prayer for April 6, 2026",
-                        "description": "Morning prayer episode.",
-                        "published_date": "2026-04-06",
-                        "audio_path": str(existing_audio),
-                        "audio_url": "https://example.com/audio/morning-prayer-2026-04-06.mp3",
-                    }
-                ],
-                base_url="https://example.com",
-            )
-            write_podcast_feed(existing_feed_xml, docs_root / "podcast.xml")
+            feed_root = ET.Element("rss", version="2.0")
+            channel = ET.SubElement(feed_root, "channel")
+            ET.SubElement(channel, "title").text = "Ora Pro Nobis"
+            item = ET.SubElement(channel, "item")
+            ET.SubElement(item, "title").text = "Morning Prayer"
+            ET.SubElement(item, "guid", isPermaLink="false").text = "morning-prayer"
+            ET.SubElement(item, "link").text = "https://example.com/audio/morning-prayer.mp3"
+            ET.SubElement(item, "description").text = "Morning prayer episode."
+            ET.ElementTree(feed_root).write(docs_root / "podcast.xml", encoding="utf-8", xml_declaration=True)
 
             def fake_renderer(text, audio_config):
                 return make_test_mp3_bytes()
@@ -203,6 +196,6 @@ class TestNovenaPipeline(unittest.TestCase):
 
             root_xml = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") for item in root_xml.findall("./channel/item")]
-            self.assertIn("morning-prayer-2026-04-06", guids)
+            self.assertIn("morning-prayer", guids)
             self.assertIn("2026-06-03-most_sacred_heart_of_jesus-day-1", guids)
             self.assertEqual(result["active"], 1)
