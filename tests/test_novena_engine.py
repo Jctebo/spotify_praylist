@@ -1,5 +1,6 @@
 import datetime
 import unittest
+from unittest import mock
 
 import jobs.novena_contracts.contracts as contracts_mod
 import jobs.novena_contracts.engine as engine_mod
@@ -58,3 +59,112 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertEqual(len(rendered["audio_fragments"]), 3)
         self.assertEqual(calls[0][1]["saint_name"], "The Most Sacred Heart of Jesus")
         self.assertEqual(calls[0][1]["day"], 2)
+
+    def test_generate_text_calls_openai_with_context_and_returns_model_text(self):
+        captured = {}
+
+        class FakeResponses:
+            def create(self, **kwargs):
+                captured["responses_create"] = kwargs
+                return type("Response", (), {"output_text": "  O Sacred Heart, make our hearts like yours.  "})()
+
+        class FakeChatCompletions:
+            def create(self, **kwargs):
+                captured["chat_create"] = kwargs
+                return type(
+                    "Chat",
+                    (),
+                    {
+                        "choices": [
+                            type(
+                                "Choice",
+                                (),
+                                {"message": type("Message", (), {"content": "chat fallback text"})()},
+                            )()
+                        ]
+                    },
+                )()
+
+        class FakeClient:
+            def __init__(self, *args, **kwargs):
+                captured["client_kwargs"] = kwargs
+                self.responses = FakeResponses()
+                self.chat = type("ChatNamespace", (), {"completions": FakeChatCompletions()})()
+
+        with mock.patch.dict(
+            engine_mod.os.environ,
+            {
+                "OPENAI_API_KEY": "test-key",
+                "OAI_API_BASE_URL": "https://api.openai.com/v1",
+                "OAI_MODEL": "gpt-test",
+            },
+            clear=False,
+        ), mock.patch.object(engine_mod, "OpenAI", FakeClient):
+            text = engine_mod.generate_text(
+                "Compose the novena prayer for {saint_name} on day {day} with the theme {theme}.",
+                {"saint_name": "Saint Example", "feast_name": "Example Feast", "day": 4, "theme": "hope"},
+            )
+
+        self.assertEqual(text, "O Sacred Heart, make our hearts like yours.")
+        self.assertEqual(captured["client_kwargs"]["api_key"], "test-key")
+        self.assertEqual(captured["client_kwargs"]["base_url"], "https://api.openai.com/v1")
+        self.assertEqual(captured["responses_create"]["model"], "gpt-test")
+        self.assertEqual(captured["responses_create"]["temperature"], 0)
+        user_message = captured["responses_create"]["input"][1]["content"][0]["text"]
+        self.assertIn("Saint: Saint Example", user_message)
+        self.assertIn("Feast: Example Feast", user_message)
+        self.assertIn("Write the devotional section requested below:", user_message)
+        self.assertIn("Compose the novena prayer for", user_message)
+        self.assertNotIn("generated::", text)
+
+    def test_generate_text_requires_openai_api_key(self):
+        with mock.patch.dict(engine_mod.os.environ, {}, clear=True):
+            with self.assertRaises(RuntimeError) as ctx:
+                engine_mod.generate_text("Compose a prayer.", {"saint_name": "Saint Example"})
+
+        self.assertIn("OPENAI_API_KEY", str(ctx.exception))
+
+    def test_generate_text_rejects_prompt_echo_and_uses_fallback(self):
+        captured = {}
+
+        class FakeResponses:
+            def create(self, **kwargs):
+                captured["responses_create"] = kwargs
+                user_prompt = kwargs["input"][1]["content"][0]["text"]
+                return type("Response", (), {"output_text": user_prompt})()
+
+        class FakeChatCompletions:
+            def create(self, **kwargs):
+                captured["chat_create"] = kwargs
+                return type(
+                    "Chat",
+                    (),
+                    {
+                        "choices": [
+                            type(
+                                "Choice",
+                                (),
+                                {"message": type("Message", (), {"content": "fallback devotional text"})()},
+                            )()
+                        ]
+                    },
+                )()
+
+        class FakeClient:
+            def __init__(self, *args, **kwargs):
+                self.responses = FakeResponses()
+                self.chat = type("ChatNamespace", (), {"completions": FakeChatCompletions()})()
+
+        with mock.patch.dict(
+            engine_mod.os.environ,
+            {
+                "OPENAI_API_KEY": "test-key",
+                "OAI_API_BASE_URL": "https://api.openai.com/v1",
+                "OAI_MODEL": "gpt-test",
+            },
+            clear=False,
+        ), mock.patch.object(engine_mod, "OpenAI", FakeClient):
+            text = engine_mod.generate_text("Compose the novena prayer.", {"saint_name": "Saint Example"})
+
+        self.assertEqual(text, "fallback devotional text")
+        self.assertIn("chat_create", captured)

@@ -1,25 +1,94 @@
 from __future__ import annotations
 
+import os
+import re
 from typing import Any, Callable, Dict, List, Mapping, Sequence
+
+from openai import OpenAI
 
 from jobs.publish.formatting import render_publish_template
 
 from .contracts import NovenaRuntime, TemplateSection
 
 
+OPENAI_API_KEY = "OPENAI_API_KEY"
+OAI_API_BASE_URL = "OAI_API_BASE_URL"
+OAI_MODEL = "OAI_MODEL"
+
+
+def _normalize_whitespace(text: str) -> str:
+    return re.sub(r"\s+", " ", str(text or "").replace("\u00a0", " ")).strip()
+
+
+def _openai_client() -> OpenAI:
+    api_key = os.getenv(OPENAI_API_KEY, "").strip()
+    if not api_key:
+        raise RuntimeError("Missing required environment variable: OPENAI_API_KEY")
+    base_url = os.getenv(OAI_API_BASE_URL, "https://api.openai.com/v1").strip() or "https://api.openai.com/v1"
+    return OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
+
+
 def generate_text(prompt: str, context: Mapping[str, Any]) -> str:
-    prompt_text = " ".join(str(prompt or "").split())
-    saint_name = str(context.get("saint_name", "")).strip()
-    theme = str(context.get("theme", "")).strip()
-    day = str(context.get("day", "")).strip()
-    pieces = [prompt_text]
-    if saint_name:
-        pieces.append(f"For {saint_name}.")
-    if day:
-        pieces.append(f"Day {day}.")
-    if theme:
-        pieces.append(f"Theme: {theme}.")
-    return " ".join(piece for piece in pieces if piece).strip()
+    prompt_text = _normalize_whitespace(prompt)
+    if not prompt_text:
+        raise RuntimeError("Novena prompt rendered empty text.")
+    model = str(os.getenv(OAI_MODEL, "") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
+    saint_name = _normalize_whitespace(context.get("saint_name", ""))
+    feast_name = _normalize_whitespace(context.get("feast_name", ""))
+    day = _normalize_whitespace(context.get("day", ""))
+    theme = _normalize_whitespace(context.get("theme", ""))
+    client = _openai_client()
+    system_prompt = (
+        "You are a Catholic devotional writer for a novena podcast. "
+        "Return only the finished devotional prose. "
+        "Do not repeat the prompt, do not quote instructions, and do not add commentary."
+    )
+    user_prompt = "\n".join(
+        line
+        for line in (
+            f"Saint: {saint_name}" if saint_name else "",
+            f"Feast: {feast_name}" if feast_name else "",
+            f"Day: {day}" if day else "",
+            f"Theme: {theme}" if theme else "",
+            "",
+            "Write the devotional section requested below:",
+            prompt_text,
+        )
+        if line or line == ""
+    ).strip()
+    user_prompt_text = _normalize_whitespace(user_prompt)
+    try:
+        response = client.responses.create(
+            model=model,
+            temperature=0,
+            input=[
+                {"role": "system", "content": [{"type": "input_text", "text": system_prompt}]},
+                {"role": "user", "content": [{"type": "input_text", "text": user_prompt}]},
+            ],
+        )
+        text = _normalize_whitespace(str(getattr(response, "output_text", "") or ""))
+        if text and text != prompt_text and text != user_prompt_text:
+            return text
+    except Exception:
+        pass
+
+    chat = client.chat.completions.create(
+        model=model,
+        temperature=0,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+    )
+    choices = getattr(chat, "choices", None) or []
+    if not choices:
+        raise RuntimeError("Novena generation returned no choices.")
+    text = _normalize_whitespace(str(getattr(getattr(choices[0], "message", None), "content", "") or ""))
+    if not text:
+        raise RuntimeError("Novena generation returned empty text.")
+    if text == prompt_text or text == user_prompt_text:
+        raise RuntimeError("Novena generation echoed the prompt instead of returning devotional text.")
+    return text
 
 
 def _section_to_fragment(runtime: NovenaRuntime, section: Dict[str, Any], *, index: int) -> Dict[str, Any]:
