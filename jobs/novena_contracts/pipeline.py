@@ -97,11 +97,17 @@ def main() -> int:
     anchor_today = _dt.date.today()
     if mode == "bootstrap":
         publish_dates = [anchor_today, anchor_today + _dt.timedelta(days=1)]
+        reset_feed = False
+    elif mode == "reset":
+        publish_dates = [anchor_today, anchor_today + _dt.timedelta(days=1)]
+        reset_feed = True
     elif mode == "today":
         publish_dates = [anchor_today]
+        reset_feed = False
     else:
         publish_dates = [anchor_today + _dt.timedelta(days=1)]
-    result = run_novena_pipeline(base_url=github_pages_base_url(), publish_dates=publish_dates, reset_feed=False)
+        reset_feed = False
+    result = run_novena_pipeline(base_url=github_pages_base_url(), publish_dates=publish_dates, reset_feed=reset_feed)
     print(
         f"novena_pipeline mode={mode} publish_dates={','.join(result.get('publish_dates') or [])} contracts={result['contracts']} active={result['active']} rendered={result['rendered']} feed_path={result['feed_path']}"
     )

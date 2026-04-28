@@ -174,6 +174,47 @@ class TestNovenaPipeline(unittest.TestCase):
             self.assertTrue(any(guid.startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::") for guid in guids))
             self.assertTrue(any(guid.startswith("2026-06-04-most_sacred_heart_of_jesus-day-2::") for guid in guids))
 
+    def test_pipeline_reset_truncates_existing_feed_items(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contracts_root = self._write_contracts(root)
+            docs_root = root / "docs"
+            cache_root = root / ".cache"
+            docs_root.mkdir(parents=True, exist_ok=True)
+            feed_root = ET.Element("rss", version="2.0")
+            channel = ET.SubElement(feed_root, "channel")
+            ET.SubElement(channel, "title").text = "Ora Pro Nobis"
+            item = ET.SubElement(channel, "item")
+            ET.SubElement(item, "title").text = "Morning Prayer"
+            ET.SubElement(item, "guid", isPermaLink="false").text = "morning-prayer"
+            ET.SubElement(item, "link").text = "https://example.com/audio/morning-prayer.mp3"
+            ET.SubElement(item, "description").text = "Morning prayer episode."
+            ET.ElementTree(feed_root).write(docs_root / "podcast.xml", encoding="utf-8", xml_declaration=True)
+
+            def fake_renderer(text, audio_config):
+                return make_test_mp3_bytes()
+
+            def fake_generate_text(prompt, context):
+                return f"generated::{prompt}"
+
+            result = pipeline_mod.run_novena_pipeline(
+                contract_dir=contracts_root,
+                docs_root=docs_root,
+                cache_root=cache_root,
+                publish_dates=[datetime.date(2026, 6, 3), datetime.date(2026, 6, 4)],
+                renderer=fake_renderer,
+                generate_text_fn=fake_generate_text,
+                reset_feed=True,
+            )
+
+            root_xml = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
+            guids = [item.findtext("guid") or "" for item in root_xml.findall("./channel/item")]
+
+            self.assertEqual(result["active"], 2)
+            self.assertNotIn("morning-prayer", guids)
+            self.assertTrue(any(guid.startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::") for guid in guids))
+            self.assertTrue(any(guid.startswith("2026-06-04-most_sacred_heart_of_jesus-day-2::") for guid in guids))
+
     def test_pipeline_preserves_existing_feed_items_when_rebuilding(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
