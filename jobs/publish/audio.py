@@ -4,6 +4,7 @@ import json
 import os
 import sys
 import shutil
+import datetime as _dt
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
@@ -139,9 +140,10 @@ def load_published_audio_jobs(*, docs_root: Optional[Path] = None, base_url: Opt
         episode_id = str(payload.get("episode_id", "")).strip()
         if not episode_id:
             continue
-        published_date = str(payload.get("published_date", "")).strip()
+        published_date = _published_date_from_payload(payload, sidecar_path=sidecar_path)
         if not published_date:
-            raise RuntimeError(f"Published audio sidecar '{sidecar_path}' is missing required field 'published_date'.")
+            print(f"WARN skipping legacy published audio sidecar without published_date: {sidecar_path}", file=sys.stderr)
+            continue
         audio_path = str(payload.get("audio_path", "")).strip()
         if not audio_path:
             audio_path = str(audio_output_path(episode_id, docs_root=root))
@@ -166,6 +168,36 @@ def load_published_audio_jobs(*, docs_root: Optional[Path] = None, base_url: Opt
             }
         )
     return jobs
+
+
+def _published_date_from_payload(payload: Dict[str, Any], *, sidecar_path: Path) -> str:
+    for field_name in ("published_date", "date", "published"):
+        candidate = str(payload.get(field_name, "")).strip()
+        if candidate:
+            try:
+                return _dt.date.fromisoformat(candidate).isoformat()
+            except Exception:
+                pass
+    episode_id = str(payload.get("episode_id", "")).strip()
+    if episode_id:
+        parts = episode_id.split("-", 3)
+        if len(parts) >= 3:
+            candidate = "-".join(parts[:3])
+            try:
+                return _dt.date.fromisoformat(candidate).isoformat()
+            except Exception:
+                pass
+    audio_path = str(payload.get("audio_path", "")).strip()
+    if audio_path:
+        path = Path(audio_path)
+        if not path.is_absolute():
+            path = sidecar_path.parent / path
+        if path.exists():
+            try:
+                return _dt.datetime.fromtimestamp(path.stat().st_mtime, tz=_dt.timezone.utc).date().isoformat()
+            except Exception:
+                return ""
+    return ""
 
 
 

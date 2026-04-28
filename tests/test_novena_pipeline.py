@@ -155,6 +155,20 @@ class TestNovenaPipeline(unittest.TestCase):
             audio_dir.mkdir(parents=True, exist_ok=True)
             existing_audio = audio_dir / "morning-prayer-2026-04-06.mp3"
             existing_audio.write_bytes(make_test_mp3_bytes())
+            (audio_dir / "morning-prayer.json").write_text(
+                json.dumps(
+                    {
+                        "entry_id": "morning-prayer",
+                        "episode_id": "morning-prayer",
+                        "title": "Morning Prayer",
+                        "description": "Morning prayer episode.",
+                        "audio_path": str(existing_audio),
+                        "audio_url": "https://example.com/audio/morning-prayer.mp3",
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
             existing_feed_xml = build_rss_feed(
                 [
                     {
