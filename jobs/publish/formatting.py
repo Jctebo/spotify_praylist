@@ -7,6 +7,7 @@ from string import Formatter
 from typing import Any, Dict, Mapping, Optional
 
 _TEMPLATE_FIELD_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+_EPISODE_DATE_RE = re.compile(r"(?<!\d)(\d{4}-\d{2}-\d{2})(?!\d)")
 
 
 @dataclass(frozen=True)
@@ -118,3 +119,16 @@ def derive_episode_id(*, context: Mapping[str, Any], template: Any = None) -> st
     if not value:
         raise RuntimeError("Derived episode id rendered empty.")
     return value
+
+
+def episode_date_from_episode_id(episode_id: str) -> Optional[_dt.date]:
+    text = str(episode_id or "").strip()
+    if not text:
+        return None
+    matches = list(_EPISODE_DATE_RE.finditer(text))
+    for match in reversed(matches):
+        try:
+            return _dt.date.fromisoformat(match.group(1))
+        except Exception:
+            continue
+    return None

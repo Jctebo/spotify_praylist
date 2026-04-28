@@ -21,6 +21,7 @@ from jobs.publish.fragments import (
     publish_audio_cache_root,
     render_fragment_audio,
 )
+from jobs.publish.formatting import episode_date_from_episode_id
 
 PUBLISH_DOCS_DIR = ROOT / "docs"
 DEFAULT_AUDIO_DIR = PUBLISH_DOCS_DIR / "audio"
@@ -179,14 +180,9 @@ def _published_date_from_payload(payload: Dict[str, Any], *, sidecar_path: Path)
             except Exception:
                 pass
     episode_id = str(payload.get("episode_id", "")).strip()
-    if episode_id:
-        parts = episode_id.split("-", 3)
-        if len(parts) >= 3:
-            candidate = "-".join(parts[:3])
-            try:
-                return _dt.date.fromisoformat(candidate).isoformat()
-            except Exception:
-                pass
+    parsed = episode_date_from_episode_id(episode_id)
+    if parsed is not None:
+        return parsed.isoformat()
     audio_path = str(payload.get("audio_path", "")).strip()
     if audio_path:
         path = Path(audio_path)

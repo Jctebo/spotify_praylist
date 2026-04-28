@@ -1,4 +1,5 @@
 import datetime
+import json
 import xml.etree.ElementTree as ET
 import tempfile
 import unittest
@@ -152,3 +153,49 @@ class TestPublishAudioPipeline(unittest.TestCase):
             root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") for item in root.findall("./channel/item")]
             self.assertEqual(guids, ["morning-prayer-2026-04-07", "morning-prayer-2026-04-06"])
+
+    def test_load_published_audio_jobs_recovers_date_from_episode_suffix_without_audio_file(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            audio_dir = docs_root / "audio"
+            audio_dir.mkdir(parents=True, exist_ok=True)
+            (audio_dir / "morning-prayer-2026-04-06.json").write_text(
+                json.dumps(
+                    {
+                        "entry_id": "morning-prayer",
+                        "episode_id": "morning-prayer-2026-04-06",
+                        "title": "Morning Prayer",
+                        "description": "Morning prayer episode.",
+                        "audio_path": str(audio_dir / "morning-prayer-2026-04-06.mp3"),
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            jobs = self.audio_mod.load_published_audio_jobs(docs_root=docs_root)
+
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0]["episode_id"], "morning-prayer-2026-04-06")
+        self.assertEqual(jobs[0]["published_date"], "2026-04-06")
+
+    def test_load_podcast_feed_jobs_recovers_date_from_episode_suffix_without_audio_file(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            docs_root.mkdir(parents=True, exist_ok=True)
+            feed_path = docs_root / "podcast.xml"
+            feed_root = ET.Element("rss", version="2.0")
+            channel = ET.SubElement(feed_root, "channel")
+            ET.SubElement(channel, "title").text = "Ora Pro Nobis"
+            item = ET.SubElement(channel, "item")
+            ET.SubElement(item, "title").text = "Morning Prayer"
+            ET.SubElement(item, "guid", isPermaLink="false").text = "morning-prayer-2026-04-06"
+            ET.SubElement(item, "link").text = "https://example.com/audio/morning-prayer-2026-04-06.mp3"
+            ET.SubElement(item, "description").text = "Morning prayer episode."
+            ET.ElementTree(feed_root).write(feed_path, encoding="utf-8", xml_declaration=True)
+
+            jobs = self.rss_mod.load_podcast_feed_jobs(feed_path)
+
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0]["episode_id"], "morning-prayer-2026-04-06")
+        self.assertEqual(jobs[0]["published_date"], "2026-04-06")

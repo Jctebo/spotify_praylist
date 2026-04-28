@@ -14,6 +14,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from jobs.publish.audio import github_pages_base_url, podcast_cover_art_public_url
+from jobs.publish.formatting import episode_date_from_episode_id
 
 RSS_CHANNEL_TITLE = "Ora Pro Nobis"
 RSS_CHANNEL_DESCRIPTION = dedent(
@@ -64,7 +65,19 @@ def _job_from_rss_item(item: ET.Element, *, feed_path: Path) -> Dict[str, Any] |
             episode_id = Path(link).stem.strip()
     if not episode_id:
         return None
-    published_date = str(item.findtext("pubDate", "") or "").strip()
+    raw_pub_date = str(item.findtext("pubDate", "") or "").strip()
+    published_date = ""
+    if raw_pub_date:
+        try:
+            from email.utils import parsedate_to_datetime
+
+            published_date = parsedate_to_datetime(raw_pub_date).date().isoformat()
+        except Exception:
+            published_date = ""
+    else:
+        parsed_date = episode_date_from_episode_id(episode_id)
+        if parsed_date is not None:
+            published_date = parsed_date.isoformat()
     if not published_date:
         audio_path = feed_path.parent / "audio" / f"{episode_id}.mp3"
         if audio_path.exists():
@@ -72,13 +85,6 @@ def _job_from_rss_item(item: ET.Element, *, feed_path: Path) -> Dict[str, Any] |
                 published_date = _dt.datetime.fromtimestamp(audio_path.stat().st_mtime, tz=_dt.timezone.utc).date().isoformat()
             except Exception:
                 published_date = ""
-    else:
-        try:
-            from email.utils import parsedate_to_datetime
-
-            published_date = parsedate_to_datetime(published_date).date().isoformat()
-        except Exception:
-            published_date = ""
     if not published_date:
         return None
     return {
