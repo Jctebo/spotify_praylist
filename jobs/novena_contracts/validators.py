@@ -86,28 +86,124 @@ def validate_template_payload(payload: Dict[str, Any], *, source: str) -> None:
     sections = payload.get("sections")
     if not isinstance(sections, list) or not sections:
         raise RuntimeError(f"Invalid template in {source}: missing or empty 'sections' array.")
-    seen_keys: set[str] = set()
-    for index, section in enumerate(sections, start=1):
-        if not isinstance(section, dict):
-            raise RuntimeError(f"Invalid template in {source}: section {index} must be an object.")
-        key = _normalize_token(section.get("key") or section.get("id") or section.get("title"))
-        if not key:
-            raise RuntimeError(f"Invalid template in {source}: section {index} is missing a key.")
-        if key in seen_keys:
-            raise RuntimeError(f"Invalid template in {source}: duplicate section key '{key}'.")
-        seen_keys.add(key)
-        title = str(section.get("title", "")).strip()
-        kind = str(section.get("kind", "")).strip().lower()
-        if not title:
-            raise RuntimeError(f"Invalid template in {source}: section '{key}' is missing a title.")
-        if kind not in {"fixed", "generated"}:
-            raise RuntimeError(f"Invalid template in {source}: section '{key}' uses unsupported kind '{kind}'.")
-        if kind == "fixed":
-            if not str(section.get("text", "")).strip():
-                raise RuntimeError(f"Invalid template in {source}: fixed section '{key}' is missing text.")
-        else:
-            if not str(section.get("prompt", "")).strip():
-                raise RuntimeError(f"Invalid template in {source}: generated section '{key}' is missing prompt.")
+
+    def _validate_parts(parts: Any, *, label: str) -> None:
+        if parts is None:
+            return
+        if not isinstance(parts, list):
+            raise RuntimeError(f"Invalid template in {source}: {label} parts must be an array when present.")
+        for index, part in enumerate(parts, start=1):
+            if not isinstance(part, dict):
+                raise RuntimeError(f"Invalid template in {source}: {label} part {index} must be an object.")
+            part_kind = str(part.get("kind", "")).strip().lower()
+            if part_kind not in {"text", "fragment"}:
+                raise RuntimeError(f"Invalid template in {source}: {label} part {index} uses unsupported kind '{part_kind}'.")
+            if part_kind == "text":
+                if not str(part.get("text", "")).strip():
+                    raise RuntimeError(f"Invalid template in {source}: {label} part {index} is missing text.")
+            else:
+                if not str(part.get("fragment_key", "")).strip():
+                    raise RuntimeError(f"Invalid template in {source}: {label} part {index} is missing fragment_key.")
+                repeat = part.get("repeat", 1)
+                try:
+                    repeat_count = int(repeat)
+                except Exception as exc:
+                    raise RuntimeError(f"Invalid template in {source}: {label} part {index} repeat must be an integer.") from exc
+                if repeat_count <= 0:
+                    raise RuntimeError(f"Invalid template in {source}: {label} part {index} repeat must be greater than zero.")
+
+    def _validate_section_list(items: Sequence[Dict[str, Any]], *, label: str, allow_parts: bool = False) -> None:
+        seen_keys: set[str] = set()
+        for index, section in enumerate(items, start=1):
+            if not isinstance(section, dict):
+                raise RuntimeError(f"Invalid template in {source}: {label} {index} must be an object.")
+            key = _normalize_token(section.get("key") or section.get("id") or section.get("title"))
+            if not key:
+                raise RuntimeError(f"Invalid template in {source}: {label} {index} is missing a key.")
+            if key in seen_keys:
+                raise RuntimeError(f"Invalid template in {source}: duplicate {label} key '{key}'.")
+            seen_keys.add(key)
+            title = str(section.get("title", "")).strip()
+            kind = str(section.get("kind", "")).strip().lower()
+            if not title:
+                raise RuntimeError(f"Invalid template in {source}: {label} '{key}' is missing a title.")
+            if kind not in {"fixed", "generated"}:
+                raise RuntimeError(f"Invalid template in {source}: {label} '{key}' uses unsupported kind '{kind}'.")
+            parts = section.get("parts")
+            if parts is not None and not allow_parts:
+                raise RuntimeError(f"Invalid template in {source}: {label} '{key}' does not support parts.")
+            _validate_parts(parts, label=f"{label} '{key}'")
+            if kind == "fixed":
+                if not str(section.get("text", "")).strip() and not parts:
+                    raise RuntimeError(f"Invalid template in {source}: fixed {label} '{key}' is missing text.")
+            else:
+                if not str(section.get("prompt", "")).strip():
+                    raise RuntimeError(f"Invalid template in {source}: generated {label} '{key}' is missing prompt.")
+            days = section.get("days")
+            if days is not None:
+                if not isinstance(days, list):
+                    raise RuntimeError(f"Invalid template in {source}: {label} '{key}' days must be an array when present.")
+                normalized_days: list[int] = []
+                for day_index, day_value in enumerate(days, start=1):
+                    try:
+                        day_number = int(day_value)
+                    except Exception as exc:
+                        raise RuntimeError(
+                            f"Invalid template in {source}: {label} '{key}' day {day_index} must be an integer."
+                        ) from exc
+                    if day_number <= 0:
+                        raise RuntimeError(
+                            f"Invalid template in {source}: {label} '{key}' day {day_index} must be greater than zero."
+                        )
+                    normalized_days.append(day_number)
+                if len(set(normalized_days)) != len(normalized_days):
+                    raise RuntimeError(f"Invalid template in {source}: {label} '{key}' days must not repeat.")
+
+    _validate_section_list(sections, label="section")
+    blocks = payload.get("blocks")
+    if blocks is not None:
+        if not isinstance(blocks, list):
+            raise RuntimeError(f"Invalid template in {source}: blocks must be an array when present.")
+        _validate_section_list(blocks, label="block", allow_parts=True)
+    fragments = payload.get("fragments")
+    if fragments is not None:
+        if not isinstance(fragments, list):
+            raise RuntimeError(f"Invalid template in {source}: fragments must be an array when present.")
+        _validate_section_list(fragments, label="fragment")
+        fragment_keys: set[str] = set()
+        for index, fragment in enumerate(fragments, start=1):
+            if not isinstance(fragment, dict):
+                continue
+            fragment_key = _normalize_token(fragment.get("key") or fragment.get("id") or fragment.get("title"))
+            if not fragment_key:
+                raise RuntimeError(f"Invalid template in {source}: fragment {index} is missing a key.")
+            if fragment_key in fragment_keys:
+                raise RuntimeError(f"Invalid template in {source}: duplicate fragment key '{fragment_key}'.")
+            fragment_keys.add(fragment_key)
+
+        def _validate_fragment_references(items: Sequence[Dict[str, Any]], *, label: str) -> None:
+            for index, section in enumerate(items, start=1):
+                if not isinstance(section, dict):
+                    continue
+                parts = section.get("parts")
+                if not isinstance(parts, list):
+                    continue
+                for part_index, part in enumerate(parts, start=1):
+                    if not isinstance(part, dict):
+                        continue
+                    if str(part.get("kind", "")).strip().lower() != "fragment":
+                        continue
+                    fragment_key = _normalize_token(part.get("fragment_key"))
+                    if not fragment_key:
+                        continue
+                    if fragment_key not in fragment_keys:
+                        raise RuntimeError(
+                            f"Invalid template in {source}: {label} {index} part {part_index} references unknown fragment '{fragment_key}'."
+                        )
+
+        _validate_fragment_references(sections, label="section")
+        if isinstance(blocks, list):
+            _validate_fragment_references(blocks, label="block")
 
 
 def _validate_feast_record(
@@ -172,6 +268,9 @@ def validate_novena_contract(payload: Dict[str, Any], *, source: str, template_d
         raise RuntimeError(f"Invalid novena contract in {source}: missing contract id.")
     if str(contract.get("type", "")).strip() != "novena_feast_rule":
         raise RuntimeError(f"Invalid novena contract in {source}: type must be 'novena_feast_rule'.")
+    enabled = contract.get("enabled", True)
+    if not isinstance(enabled, bool):
+        raise RuntimeError(f"Invalid novena contract in {source}: enabled must be a boolean when present.")
 
     saint = contract.get("saint")
     if saint is not None and not isinstance(saint, dict):

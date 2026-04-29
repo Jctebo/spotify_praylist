@@ -1,0 +1,213 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_joan_of_arc",
+    "feast": {
+      "day": 30,
+      "mode": "fixed",
+      "month": 5,
+      "name": "St. Joan of Arc"
+    },
+    "id": "st_joan_of_arc",
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Joan of Arc Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Saint Joan of Arc, patroness of France, I ask you now to fight this battle with me by prayer, just as you led your troops to victory in battle. You, who were filled with the Holy Spirit and chosen by God, help me this day with the favor I ask Pause here to mention your request. Grant me by your divine and powerful intercession, the courage and strength I need to endure this constant fight. Oh St Joan, help me to be victorious in the tasks God presents to me. I thank you and ask you for your continuing protection of God\u2019s people. Saint Joan of Arc, Pious daughter of the Church: Pray for me."
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "fragments": [
+          {
+            "key": "our_father",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Our Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.",
+            "title": "Our Father"
+          },
+          {
+            "key": "hail_mary",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Hail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.",
+            "title": "Hail Mary"
+          },
+          {
+            "key": "glory_be",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Glory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.",
+            "title": "Glory Be"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Joan of Arc Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint Joan of Arc, patroness of France, I ask you now to fight this battle with me by prayer, just as you led your troops to victory in battle. You, who were filled with the Holy Spirit and chosen by God, help me this day with the favor I ask Pause here to mention your request. Grant me by your divine and powerful intercession, the courage and strength I need to endure this constant fight. Oh St Joan, help me to be victorious in the tasks God presents to me. I thank you and ask you for your continuing protection of God\u2019s people. Saint Joan of Arc, Pious daughter of the Church: Pray for me.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint Joan of Arc, patroness of France, I ask you now to fight this battle with me by prayer, just as you led your troops to victory in battle. You, who were filled with the Holy Spirit and chosen by God, help me this day with the favor I ask Pause here to mention your request. Grant me by your divine and powerful intercession, the courage and strength I need to endure this constant fight. Oh St Joan, help me to be victorious in the tasks God presents to me. I thank you and ask you for your continuing protection of God\u2019s people. Saint Joan of Arc, Pious daughter of the Church: Pray for me.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint Joan of Arc, patroness of France, I ask you now to fight this battle with me by prayer, just as you led your troops to victory in battle. You, who were filled with the Holy Spirit and chosen by God, help me this day with the favor I ask Pause here to mention your request. Grant me by your divine and powerful intercession, the courage and strength I need to endure this constant fight. Oh St Joan, help me to be victorious in the tasks God presents to me. I thank you and ask you for your continuing protection of God\u2019s people. Saint Joan of Arc, Pious daughter of the Church: Pray for me.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint Joan of Arc, patroness of France, I ask you now to fight this battle with me by prayer, just as you led your troops to victory in battle. You, who were filled with the Holy Spirit and chosen by God, help me this day with the favor I ask Pause here to mention your request. Grant me by your divine and powerful intercession, the courage and strength I need to endure this constant fight. Oh St Joan, help me to be victorious in the tasks God presents to me. I thank you and ask you for your continuing protection of God\u2019s people. Saint Joan of Arc, Pious daughter of the Church: Pray for me.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint Joan of Arc, patroness of France, I ask you now to fight this battle with me by prayer, just as you led your troops to victory in battle. You, who were filled with the Holy Spirit and chosen by God, help me this day with the favor I ask Pause here to mention your request. Grant me by your divine and powerful intercession, the courage and strength I need to endure this constant fight. Oh St Joan, help me to be victorious in the tasks God presents to me. I thank you and ask you for your continuing protection of God\u2019s people. Saint Joan of Arc, Pious daughter of the Church: Pray for me.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint Joan of Arc, patroness of France, I ask you now to fight this battle with me by prayer, just as you led your troops to victory in battle. You, who were filled with the Holy Spirit and chosen by God, help me this day with the favor I ask Pause here to mention your request. Grant me by your divine and powerful intercession, the courage and strength I need to endure this constant fight. Oh St Joan, help me to be victorious in the tasks God presents to me. I thank you and ask you for your continuing protection of God\u2019s people. Saint Joan of Arc, Pious daughter of the Church: Pray for me.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint Joan of Arc, patroness of France, I ask you now to fight this battle with me by prayer, just as you led your troops to victory in battle. You, who were filled with the Holy Spirit and chosen by God, help me this day with the favor I ask Pause here to mention your request. Grant me by your divine and powerful intercession, the courage and strength I need to endure this constant fight. Oh St Joan, help me to be victorious in the tasks God presents to me. I thank you and ask you for your continuing protection of God\u2019s people. Saint Joan of Arc, Pious daughter of the Church: Pray for me.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint Joan of Arc, patroness of France, I ask you now to fight this battle with me by prayer, just as you led your troops to victory in battle. You, who were filled with the Holy Spirit and chosen by God, help me this day with the favor I ask Pause here to mention your request. Grant me by your divine and powerful intercession, the courage and strength I need to endure this constant fight. Oh St Joan, help me to be victorious in the tasks God presents to me. I thank you and ask you for your continuing protection of God\u2019s people. Saint Joan of Arc, Pious daughter of the Church: Pray for me.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint Joan of Arc, patroness of France, I ask you now to fight this battle with me by prayer, just as you led your troops to victory in battle. You, who were filled with the Holy Spirit and chosen by God, help me this day with the favor I ask Pause here to mention your request. Grant me by your divine and powerful intercession, the courage and strength I need to endure this constant fight. Oh St Joan, help me to be victorious in the tasks God presents to me. I thank you and ask you for your continuing protection of God\u2019s people. Saint Joan of Arc, Pious daughter of the Church: Pray for me.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_joan_of_arc"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "model": "gpt-4o-mini-tts",
+        "speed": 1.0,
+        "voice": "alloy"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_joan_of_arc",
+      "name": "St. Joan of Arc"
+    },
+    "type": "novena_feast_rule"
+  }
+}

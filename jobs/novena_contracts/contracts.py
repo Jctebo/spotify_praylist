@@ -30,6 +30,9 @@ class TemplateSection:
     kind: str
     text: str = ""
     prompt: str = ""
+    notes: str = ""
+    days: Tuple[int, ...] = field(default_factory=tuple)
+    parts: Tuple[Dict[str, Any], ...] = field(default_factory=tuple)
 
     def to_dict(self) -> Dict[str, Any]:
         payload = {"key": self.key, "title": self.title, "kind": self.kind}
@@ -37,6 +40,32 @@ class TemplateSection:
             payload["text"] = self.text
         if self.prompt:
             payload["prompt"] = self.prompt
+        if self.notes:
+            payload["notes"] = self.notes
+        if self.days:
+            payload["days"] = list(self.days)
+        if self.parts:
+            payload["parts"] = [dict(part) for part in self.parts]
+        return payload
+
+
+@dataclass(frozen=True)
+class TemplateFragment:
+    key: str
+    title: str
+    kind: str
+    text: str
+    notes: str = ""
+
+    def to_dict(self) -> Dict[str, Any]:
+        payload = {
+            "key": self.key,
+            "title": self.title,
+            "kind": self.kind,
+            "text": self.text,
+        }
+        if self.notes:
+            payload["notes"] = self.notes
         return payload
 
 
@@ -45,13 +74,20 @@ class TemplateSpec:
     template_id: str
     sections: Tuple[TemplateSection, ...]
     source: str
+    blocks: Tuple[TemplateSection, ...] = field(default_factory=tuple)
+    fragments: Tuple[TemplateFragment, ...] = field(default_factory=tuple)
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
+        payload = {
             "source": self.source,
             "template_id": self.template_id,
             "sections": [section.to_dict() for section in self.sections],
         }
+        if self.blocks:
+            payload["blocks"] = [block.to_dict() for block in self.blocks]
+        if self.fragments:
+            payload["fragments"] = [fragment.to_dict() for fragment in self.fragments]
+        return payload
 
 
 @dataclass(frozen=True)
@@ -139,6 +175,7 @@ class NovenaContract:
     novena: NovenaRule
     publishing: PublishingRule
     source_path: Path
+    enabled: bool = True
 
     def to_dict(self) -> Dict[str, Any]:
         payload = {
@@ -146,6 +183,7 @@ class NovenaContract:
                 "family_id": self.family_id,
                 "id": self.contract_id,
                 "type": self.contract_type,
+                "enabled": self.enabled,
                 "saint": dict(self.saint),
                 "novena": self.novena.to_dict(),
                 "publishing": self.publishing.to_dict(),
@@ -190,17 +228,43 @@ class NovenaRuntime:
 def _payload_to_template_spec(payload: Dict[str, Any], *, source: str, source_kind: str) -> TemplateSpec:
     validate_template_payload(payload, source=source)
     template_id = str(payload.get("template_id") or Path(source).stem).strip()
-    sections = tuple(
-        TemplateSection(
-            key=_normalize_token(section.get("key") or section.get("id") or section.get("title")),
-            title=str(section.get("title", "")).strip(),
-            kind=str(section.get("kind", "")).strip().lower(),
-            text=str(section.get("text", "")).strip(),
-            prompt=str(section.get("prompt", "")).strip(),
+    def _read_sections(items: Sequence[Dict[str, Any]]) -> Tuple[TemplateSection, ...]:
+        return tuple(
+            TemplateSection(
+                key=_normalize_token(section.get("key") or section.get("id") or section.get("title")),
+                title=str(section.get("title", "")).strip(),
+                kind=str(section.get("kind", "")).strip().lower(),
+                text=str(section.get("text", "")).strip(),
+                prompt=str(section.get("prompt", "")).strip(),
+                notes=str(section.get("notes", "")).strip(),
+                days=tuple(
+                    int(day)
+                    for day in section.get("days", [])
+                    if str(day).strip()
+                ),
+                parts=tuple(
+                    dict(part)
+                    for part in section.get("parts", [])
+                    if isinstance(part, dict)
+                ),
+            )
+            for section in items
         )
-        for section in payload.get("sections", [])
+
+    sections = _read_sections(tuple(payload.get("sections", [])))
+    blocks = _read_sections(tuple(payload.get("blocks", []))) if isinstance(payload.get("blocks"), list) else tuple()
+    fragments = tuple(
+        TemplateFragment(
+            key=_normalize_token(fragment.get("key") or fragment.get("id") or fragment.get("title")),
+            title=str(fragment.get("title", "")).strip(),
+            kind=str(fragment.get("kind", "")).strip().lower(),
+            text=str(fragment.get("text", "")).strip(),
+            notes=str(fragment.get("notes", "")).strip(),
+        )
+        for fragment in payload.get("fragments", [])
+        if isinstance(fragment, dict)
     )
-    return TemplateSpec(template_id=template_id, sections=sections, source=source_kind)
+    return TemplateSpec(template_id=template_id, sections=sections, source=source_kind, blocks=blocks, fragments=fragments)
 
 
 def _template_matches_content_mode(template_spec: TemplateSpec, content_mode: str) -> bool:
@@ -380,6 +444,7 @@ def _feast_payload_to_rule(
 
 def _contract_entries_from_payload(payload: Dict[str, Any], *, source: Path, template_dir: Path) -> List[NovenaContract]:
     contract = payload["contract"]
+    enabled = bool(contract.get("enabled", True))
     novena_payload = dict(contract["novena"])
     publishing_payload = dict(contract["publishing"])
     template_spec = _build_template_spec(contract, source=source, template_dir=template_dir)
@@ -405,6 +470,7 @@ def _contract_entries_from_payload(payload: Dict[str, Any], *, source: Path, tem
                 family_id=family_id,
                 contract_id=family_id,
                 contract_type=str(contract["type"]).strip(),
+                enabled=enabled,
                 saint=dict(shared_saint or {}),
                 selector=_selector_payload_to_rule(selector_payload, source=source),
                 feast=None,
@@ -436,6 +502,7 @@ def _contract_entries_from_payload(payload: Dict[str, Any], *, source: Path, tem
                 family_id=family_id,
                 contract_id=entry_id,
                 contract_type=str(contract["type"]).strip(),
+                enabled=enabled,
                 saint=dict(saint_payload or {}),
                 selector=None,
                 feast=feast,
@@ -469,11 +536,12 @@ def load_novena_contracts(contract_dir: Optional[Path] = None) -> List[NovenaCon
         entries = _contract_entries_from_payload(payload, source=contract_path, template_dir=template_dir)
         for contract in entries:
             normalized_id = contract.contract_id
-            if normalized_id in seen_ids:
+            if contract.enabled and normalized_id in seen_ids:
                 raise RuntimeError(
                     f"Duplicate novena contract id '{normalized_id}' in '{seen_ids[normalized_id]}' and '{contract_path}'."
                 )
-            seen_ids[normalized_id] = contract_path
+            if contract.enabled:
+                seen_ids[normalized_id] = contract_path
             contracts.append(contract)
 
     contracts.sort(key=lambda contract: (contract.contract_id, contract.source_path.name))

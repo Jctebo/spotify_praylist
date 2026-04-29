@@ -218,6 +218,81 @@ class TestNovenaPipeline(unittest.TestCase):
             self.assertTrue(any(guid.startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::") for guid in guids))
             self.assertTrue(any(guid.startswith("2026-06-04-most_sacred_heart_of_jesus-day-2::") for guid in guids))
 
+    def test_pipeline_skips_disabled_novena_contracts(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contracts_root = root / "contracts" / "novenas"
+            contract_dir = contracts_root / "feast-days"
+            contract_dir.mkdir(parents=True, exist_ok=True)
+            template_dir = contracts_root / "templates"
+            template_dir.mkdir(parents=True, exist_ok=True)
+            (template_dir / "standard-9-day.json").write_text(
+                json.dumps(
+                    {
+                        "template_id": "standard-9-day",
+                        "sections": [
+                            {"key": "opening", "title": "Opening Prayer", "kind": "fixed", "text": "Pray with {saint_name}."},
+                            {"key": "petition", "title": "Daily Petition", "kind": "generated", "prompt": "Day {day} petition for {theme}."},
+                            {"key": "closing", "title": "Closing Prayer", "kind": "fixed", "text": "Amen."},
+                        ],
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            (contract_dir / "disabled.json").write_text(
+                json.dumps(
+                    {
+                        "contract": {
+                            "id": "most_sacred_heart_of_jesus",
+                            "type": "novena_feast_rule",
+                            "enabled": False,
+                            "saint": {"id": "most_sacred_heart_of_jesus", "name": "The Most Sacred Heart of Jesus"},
+                            "feast": {"month": 6, "day": 12, "name": "The Most Sacred Heart of Jesus"},
+                            "novena": {
+                                "duration_days": 9,
+                                "start_offset_days": -9,
+                                "content_mode": "hybrid",
+                                "template_id": "standard-9-day",
+                            },
+                            "publishing": {
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "rss": {
+                                    "enabled": True,
+                                    "feed_id": "ora-pro-nobis",
+                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+                                    "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+                                },
+                            },
+                        }
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            docs_root = root / "docs"
+            cache_root = root / ".cache"
+
+            def fake_renderer(text, audio_config):
+                return make_test_mp3_bytes()
+
+            def fake_generate_text(prompt, context):
+                return f"generated::{prompt}"
+
+            result = pipeline_mod.run_novena_pipeline(
+                contract_dir=contracts_root,
+                docs_root=docs_root,
+                cache_root=cache_root,
+                today=datetime.date(2026, 6, 3),
+                renderer=fake_renderer,
+                generate_text_fn=fake_generate_text,
+            )
+
+            self.assertEqual(result["contracts"], 1)
+            self.assertEqual(result["active"], 0)
+            self.assertEqual(result["rendered"], 0)
+            self.assertFalse((docs_root / "podcast.xml").exists())
+
     def test_pipeline_preserves_existing_feed_items_when_rebuilding(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

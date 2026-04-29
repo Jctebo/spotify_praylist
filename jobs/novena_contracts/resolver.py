@@ -73,9 +73,11 @@ def resolve_active_novenas(
 ) -> List[NovenaRuntime]:
     resolved: List[NovenaRuntime] = []
     loaded = list(_resolve_contracts(contracts, contract_dir))
-    explicit_ids = {contract.contract_id for contract in loaded if contract.feast is not None}
+    explicit_ids = {contract.contract_id for contract in loaded if contract.feast is not None and contract.enabled}
 
     for contract in loaded:
+        if not contract.enabled:
+            continue
         if contract.feast is None or contract.selector is not None:
             continue
         feast_date, start_date, end_date = _active_window(contract.feast, contract.novena.to_dict(), today)
@@ -94,6 +96,8 @@ def resolve_active_novenas(
             )
 
     for contract in loaded:
+        if not contract.enabled:
+            continue
         if contract.selector is None:
             continue
         feast_window_start, feast_window_end = _selector_window(contract.novena.to_dict(), today)

@@ -40,6 +40,247 @@ class TestNovenaContracts(unittest.TestCase):
             ("solemnity", "feast", "memorial", "optional_memorial"),
         )
 
+    def test_load_novena_contracts_defaults_enabled_when_missing(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contract_dir = root / "feast-days"
+            contract_dir.mkdir(parents=True, exist_ok=True)
+            (contract_dir / "sample.json").write_text(
+                json.dumps(
+                    {
+                        "contract": {
+                            "id": "sample",
+                            "type": "novena_feast_rule",
+                            "saint": {"id": "sample", "name": "Sample"},
+                            "feast": {"month": 6, "day": 12, "name": "Sample"},
+                            "novena": {
+                                "duration_days": 9,
+                                "start_offset_days": -9,
+                                "content_mode": "fixed",
+                                "template": {
+                                    "template_id": "embedded-fixed",
+                                    "sections": [
+                                        {"key": "opening", "title": "Opening", "kind": "fixed", "text": "Pray.", "days": [1]},
+                                    ],
+                                    "blocks": [
+                                        {"key": "opening", "title": "Opening", "kind": "fixed", "text": "Pray.", "days": [1]},
+                                    ],
+                                },
+                            },
+                            "publishing": {
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "rss": {
+                                    "enabled": True,
+                                    "feed_id": "ora-pro-nobis",
+                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+                                    "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+                                },
+                            },
+                        }
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            contracts = self.contracts_mod.load_novena_contracts(root)
+
+        contract = contracts[0]
+        self.assertTrue(contract.enabled)
+        self.assertEqual(contract.to_dict()["contract"]["enabled"], True)
+
+    def test_load_novena_contracts_preserves_disabled_flag(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contract_dir = root / "feast-days"
+            contract_dir.mkdir(parents=True, exist_ok=True)
+            (contract_dir / "sample.json").write_text(
+                json.dumps(
+                    {
+                        "contract": {
+                            "id": "sample",
+                            "type": "novena_feast_rule",
+                            "enabled": False,
+                            "saint": {"id": "sample", "name": "Sample"},
+                            "feast": {"month": 6, "day": 12, "name": "Sample"},
+                            "novena": {
+                                "duration_days": 9,
+                                "start_offset_days": -9,
+                                "content_mode": "fixed",
+                                "template": {
+                                    "template_id": "embedded-fixed",
+                                    "sections": [
+                                        {"key": "opening", "title": "Opening", "kind": "fixed", "text": "Pray."},
+                                    ],
+                                },
+                            },
+                            "publishing": {
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "rss": {
+                                    "enabled": True,
+                                    "feed_id": "ora-pro-nobis",
+                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+                                    "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+                                },
+                            },
+                        }
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            contracts = self.contracts_mod.load_novena_contracts(root)
+
+        contract = contracts[0]
+        self.assertFalse(contract.enabled)
+        self.assertFalse(contract.to_dict()["contract"]["enabled"])
+
+    def test_load_novena_contracts_preserves_embedded_template_notes(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contract_dir = root / "feast-days"
+            contract_dir.mkdir(parents=True, exist_ok=True)
+            (contract_dir / "sample.json").write_text(
+                json.dumps(
+                    {
+                        "contract": {
+                            "id": "sample",
+                            "type": "novena_feast_rule",
+                            "saint": {"id": "sample", "name": "Sample"},
+                            "feast": {"month": 6, "day": 12, "name": "Sample"},
+                            "novena": {
+                                "duration_days": 9,
+                                "start_offset_days": -9,
+                                "content_mode": "fixed",
+                                "template": {
+                                    "template_id": "embedded-fixed",
+                                    "sections": [
+                                        {
+                                            "key": "opening",
+                                            "title": "Opening",
+                                            "kind": "fixed",
+                                            "text": "Pray.",
+                                            "notes": "expanded repetition instruction into three explicit spoken recitations",
+                                            "days": [1],
+                                        },
+                                    ],
+                                    "blocks": [
+                                        {
+                                            "key": "opening",
+                                            "title": "Opening",
+                                            "kind": "fixed",
+                                            "text": "Pray.",
+                                            "notes": "expanded repetition instruction into three explicit spoken recitations",
+                                            "days": [1],
+                                        },
+                                    ],
+                                },
+                            },
+                            "publishing": {
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "rss": {
+                                    "enabled": True,
+                                    "feed_id": "ora-pro-nobis",
+                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+                                    "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+                                },
+                            },
+                        }
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            contracts = self.contracts_mod.load_novena_contracts(root)
+
+        contract = contracts[0]
+        self.assertEqual(contract.novena.template.sections[0].notes, "expanded repetition instruction into three explicit spoken recitations")
+        self.assertEqual(contract.novena.template.sections[0].days, (1,))
+        self.assertEqual(contract.novena.template.blocks[0].days, (1,))
+        self.assertEqual(
+            contract.to_dict()["contract"]["novena"]["template"]["sections"][0]["notes"],
+            "expanded repetition instruction into three explicit spoken recitations",
+        )
+        self.assertEqual(contract.to_dict()["contract"]["novena"]["template"]["blocks"][0]["days"], [1])
+
+    def test_load_novena_contracts_preserves_embedded_template_fragments(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contract_dir = root / "feast-days"
+            contract_dir.mkdir(parents=True, exist_ok=True)
+            (contract_dir / "sample.json").write_text(
+                json.dumps(
+                    {
+                        "contract": {
+                            "id": "sample",
+                            "type": "novena_feast_rule",
+                            "saint": {"id": "sample", "name": "Sample"},
+                            "feast": {"month": 6, "day": 12, "name": "Sample"},
+                            "novena": {
+                                "duration_days": 9,
+                                "start_offset_days": -9,
+                                "content_mode": "fixed",
+                                "template": {
+                                    "template_id": "embedded-fixed",
+                                    "sections": [
+                                        {
+                                            "key": "opening",
+                                            "title": "Opening",
+                                            "kind": "fixed",
+                                            "text": "Pray.",
+                                            "days": [1],
+                                        },
+                                    ],
+                                    "blocks": [
+                                        {
+                                            "key": "opening",
+                                            "title": "Opening",
+                                            "kind": "fixed",
+                                            "parts": [
+                                                {"kind": "text", "text": "Pray."},
+                                                {"kind": "fragment", "fragment_key": "our_father", "repeat": 3},
+                                            ],
+                                            "days": [1],
+                                        },
+                                    ],
+                                    "fragments": [
+                                        {
+                                            "key": "our_father",
+                                            "title": "Our Father",
+                                            "kind": "fixed",
+                                            "text": "Our Father text.",
+                                        },
+                                    ],
+                                },
+                            },
+                            "publishing": {
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "rss": {
+                                    "enabled": True,
+                                    "feed_id": "ora-pro-nobis",
+                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+                                    "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+                                },
+                            },
+                        }
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            contracts = self.contracts_mod.load_novena_contracts(root)
+
+        contract = contracts[0]
+        self.assertEqual(contract.novena.template.fragments[0].key, "our_father")
+        self.assertEqual(contract.novena.template.blocks[0].parts[1]["fragment_key"], "our_father")
+        self.assertEqual(
+            contract.to_dict()["contract"]["novena"]["template"]["fragments"][0]["title"],
+            "Our Father",
+        )
+
     def test_resolve_romcal_identifier_normalizes_saint_name(self):
         resolved = self.validators_mod.resolve_romcal_identifier("Most Sacred Heart of Jesus")
 

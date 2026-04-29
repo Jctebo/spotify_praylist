@@ -1,5 +1,6 @@
 spotipy
 requests
+beautifulsoup4
 romcal==4.0.0b6
 openai
 catholic-mass-readings

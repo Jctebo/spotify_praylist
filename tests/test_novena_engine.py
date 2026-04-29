@@ -60,6 +60,133 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertEqual(calls[0][1]["saint_name"], "The Most Sacred Heart of Jesus")
         self.assertEqual(calls[0][1]["day"], 2)
 
+    def test_render_novena_uses_compact_blocks_for_reusable_tts_fragments(self):
+        runtime = contracts_mod.NovenaRuntime(
+            family_id="our_lady_of_fatima",
+            contract_id="our_lady_of_fatima",
+            saint={"id": "our_lady_of_fatima", "name": "Our Lady of Fatima"},
+            feast={"month": 5, "day": 13, "name": "Our Lady of Fatima"},
+            novena={"duration_days": 9, "start_offset_days": -9, "content_mode": "fixed"},
+            resolved_template=contracts_mod.TemplateSpec(
+                template_id="url-import-our_lady_of_fatima",
+                source="embedded",
+                sections=(
+                    contracts_mod.TemplateSection(
+                        key="introduction",
+                        title="Introduction",
+                        kind="fixed",
+                        text="You can pray the full novena below.",
+                    ),
+                    contracts_mod.TemplateSection(
+                        key="day-1",
+                        title="Day 1",
+                        kind="fixed",
+                        text="Day 1 prayer text.",
+                    ),
+                ),
+                blocks=(
+                    contracts_mod.TemplateSection(
+                        key="introduction",
+                        title="Introduction",
+                        kind="fixed",
+                        text="You can pray the full novena below.",
+                    ),
+                    contracts_mod.TemplateSection(
+                        key="days-1-9",
+                        title="Days 1-9",
+                        kind="fixed",
+                        text="Common prayer text.",
+                        days=(1, 2, 3, 4, 5, 6, 7, 8, 9),
+                    ),
+                ),
+            ),
+            date=datetime.date(2026, 5, 4),
+            active_day=4,
+            publishing={"audio": {"enabled": True}, "rss": {"enabled": True}},
+            source_path=contracts_mod.DEFAULT_FEAST_DIR / "our_lady_of_fatima.json",
+        )
+
+        rendered = engine_mod.render_novena(runtime, generate_text_fn=lambda prompt, context: f"{prompt} ({context['day']})")
+
+        self.assertEqual(len(rendered["audio_fragments"]), 2)
+        self.assertEqual(rendered["audio_fragments"][0]["label"], "Welcome to Day 4")
+        self.assertEqual(rendered["audio_fragments"][1]["label"], "Days 1-9")
+        self.assertEqual(rendered["audio_fragments"][1]["days"], [1, 2, 3, 4, 5, 6, 7, 8, 9])
+        self.assertIn("Welcome to Day 4 of the Novena to Our Lady of Fatima.", rendered["content"]["text"])
+        self.assertIn("Common prayer text.", rendered["content"]["text"])
+
+    def test_render_novena_expands_fragment_parts_from_library(self):
+        runtime = contracts_mod.NovenaRuntime(
+            family_id="our_lady_of_fatima",
+            contract_id="our_lady_of_fatima",
+            saint={"id": "our_lady_of_fatima", "name": "Our Lady of Fatima"},
+            feast={"month": 5, "day": 13, "name": "Our Lady of Fatima"},
+            novena={"duration_days": 9, "start_offset_days": -9, "content_mode": "fixed"},
+            resolved_template=contracts_mod.TemplateSpec(
+                template_id="url-import-our_lady_of_fatima",
+                source="embedded",
+                sections=(
+                    contracts_mod.TemplateSection(
+                        key="introduction",
+                        title="Introduction",
+                        kind="fixed",
+                        text="You can pray the full novena below.",
+                    ),
+                ),
+                blocks=(
+                    contracts_mod.TemplateSection(
+                        key="days-1-9",
+                        title="Days 1-9",
+                        kind="fixed",
+                        days=(1, 2, 3, 4, 5, 6, 7, 8, 9),
+                        parts=(
+                            {"kind": "text", "text": "You are going to say the following 3 times:"},
+                            {"kind": "fragment", "fragment_key": "our_father", "repeat": 3},
+                            {"kind": "fragment", "fragment_key": "hail_mary", "repeat": 3},
+                            {"kind": "fragment", "fragment_key": "glory_be", "repeat": 3},
+                        ),
+                    ),
+                ),
+                fragments=(
+                    contracts_mod.TemplateFragment(
+                        key="our_father",
+                        title="Our Father",
+                        kind="fixed",
+                        text="Our Father text.",
+                    ),
+                    contracts_mod.TemplateFragment(
+                        key="hail_mary",
+                        title="Hail Mary",
+                        kind="fixed",
+                        text="Hail Mary text.",
+                    ),
+                    contracts_mod.TemplateFragment(
+                        key="glory_be",
+                        title="Glory Be",
+                        kind="fixed",
+                        text="Glory Be text.",
+                    ),
+                ),
+            ),
+            date=datetime.date(2026, 5, 4),
+            active_day=4,
+            publishing={"audio": {"enabled": True}, "rss": {"enabled": True}},
+            source_path=contracts_mod.DEFAULT_FEAST_DIR / "our_lady_of_fatima.json",
+        )
+
+        rendered = engine_mod.render_novena(runtime, generate_text_fn=lambda prompt, context: f"{prompt} ({context['day']})")
+
+        self.assertEqual(len(rendered["audio_fragments"]), 11)
+        self.assertEqual(rendered["audio_fragments"][0]["label"], "Welcome to Day 4")
+        self.assertEqual(rendered["audio_fragments"][1]["label"], "Text")
+        self.assertEqual(rendered["audio_fragments"][2]["source_fragment_key"], "our_father")
+        self.assertEqual(rendered["audio_fragments"][2]["text"], "Our Father text.")
+        self.assertEqual(rendered["audio_fragments"][4]["source_fragment_key"], "our_father")
+        self.assertEqual(rendered["audio_fragments"][5]["source_fragment_key"], "hail_mary")
+        self.assertEqual(rendered["audio_fragments"][8]["source_fragment_key"], "glory_be")
+        self.assertIn("You are going to say the following 3 times:", rendered["content"]["text"])
+        self.assertIn("Our Father text.", rendered["content"]["text"])
+
     def test_generate_text_calls_openai_with_context_and_returns_model_text(self):
         captured = {}
 

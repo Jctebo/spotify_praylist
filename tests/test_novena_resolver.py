@@ -1,6 +1,7 @@
 import datetime
 import unittest
 from unittest.mock import patch
+from pathlib import Path
 
 import jobs.novena_contracts.contracts as contracts_mod
 import jobs.novena_contracts.resolver as resolver_mod
@@ -55,6 +56,7 @@ class TestNovenaResolver(unittest.TestCase):
         self.assertEqual(
             ids,
             [
+                "corpus_christi",
                 "boniface_of_mainz_bishop",
                 "norbert_of_xanten_bishop",
                 "most_holy_body_and_blood_of_christ",
@@ -67,6 +69,54 @@ class TestNovenaResolver(unittest.TestCase):
         self.assertEqual(len(explicit), 1)
         self.assertEqual(explicit[0].family_id, "most_sacred_heart_of_jesus")
         self.assertEqual(explicit[0].active_day, 1)
+
+    def test_resolve_active_novenas_ignores_disabled_explicit_feast_overrides(self):
+        disabled_feast = contracts_mod.NovenaContract(
+            family_id="disabled_catherine_override",
+            contract_id="catherine_of_siena_virgin",
+            contract_type="novena_feast_rule",
+            enabled=False,
+            saint={"id": "catherine_of_siena_virgin", "name": "Saint Catherine of Siena"},
+            selector=None,
+            feast=contracts_mod.FeastRule(
+                entry_id="catherine_of_siena_virgin",
+                mode="fixed",
+                month=4,
+                day=29,
+                name="Saint Catherine of Siena",
+            ),
+            novena=contracts_mod.NovenaRule(
+                duration_days=9,
+                start_offset_days=-9,
+                content_mode="hybrid",
+                template_id="standard-9-day",
+            ),
+            publishing=contracts_mod.PublishingRule(audio={"enabled": True}, rss={"enabled": True}),
+            source_path=Path("disabled.json"),
+        )
+        selector_family = contracts_mod.NovenaContract(
+            family_id="standard_9_day",
+            contract_id="standard_9_day",
+            contract_type="novena_feast_rule",
+            enabled=True,
+            saint={},
+            selector=contracts_mod.SelectorRule(mode="auto", ranks=("solemnity", "feast", "memorial", "optional_memorial")),
+            feast=None,
+            novena=contracts_mod.NovenaRule(
+                duration_days=9,
+                start_offset_days=-9,
+                content_mode="hybrid",
+                template_id="standard-9-day",
+            ),
+            publishing=contracts_mod.PublishingRule(audio={"enabled": True}, rss={"enabled": True}),
+            source_path=Path("selector.json"),
+        )
+
+        active = resolver_mod.resolve_active_novenas(datetime.date(2026, 4, 28), contracts=[disabled_feast, selector_family])
+        ids = [runtime.contract_id for runtime in active]
+
+        self.assertIn("catherine_of_siena_virgin", ids)
+        self.assertNotIn("disabled_catherine_override", [runtime.family_id for runtime in active])
 
     def test_resolve_active_novenas_scans_past_weekday_rows_for_optional_memorials(self):
         contracts = contracts_mod.load_novena_contracts()

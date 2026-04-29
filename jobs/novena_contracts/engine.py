@@ -3,13 +3,13 @@ from __future__ import annotations
 import os
 import re
 from difflib import SequenceMatcher
-from typing import Any, Callable, Dict, List, Mapping, Sequence
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from openai import OpenAI
 
 from jobs.publish.formatting import render_publish_template
 
-from .contracts import NovenaRuntime, TemplateSection
+from .contracts import NovenaRuntime, TemplateFragment, TemplateSection
 
 
 OPENAI_API_KEY = "OPENAI_API_KEY"
@@ -45,6 +45,35 @@ def _looks_like_prompt_echo(text: str, prompt_text: str, user_prompt_text: str) 
         if ratio >= 0.55 and len(lowered) <= max(len(user_lower), 1) * 2:
             return True
     return False
+
+
+def _normalize_day_list(days: Sequence[Any]) -> Tuple[int, ...]:
+    normalized: List[int] = []
+    for value in days:
+        try:
+            day = int(value)
+        except Exception:
+            continue
+        if day > 0 and day not in normalized:
+            normalized.append(day)
+    return tuple(sorted(normalized))
+
+
+def _format_day_span(days: Sequence[int]) -> str:
+    normalized = _normalize_day_list(days)
+    if not normalized:
+        return ""
+    spans: List[str] = []
+    start = normalized[0]
+    previous = normalized[0]
+    for day in normalized[1:]:
+        if day == previous + 1:
+            previous = day
+            continue
+        spans.append(f"{start}-{previous}" if start != previous else f"{start}")
+        start = previous = day
+    spans.append(f"{start}-{previous}" if start != previous else f"{start}")
+    return ", ".join(spans)
 
 
 def _openai_client() -> OpenAI:
@@ -129,6 +158,129 @@ def _section_to_fragment(runtime: NovenaRuntime, section: Dict[str, Any], *, ind
     }
 
 
+def _intro_fragment(runtime: NovenaRuntime, context: Mapping[str, Any]) -> Dict[str, Any]:
+    episode_id = f"{runtime.date.isoformat()}-{runtime.contract_id}-day-{runtime.active_day}"
+    saint_name = str(context.get("saint_name", runtime.saint.get("name", runtime.contract_id))).strip()
+    title = f"Welcome to Day {runtime.active_day}"
+    return {
+        "fragment_key": f"{episode_id}/intro",
+        "block_path": "intro",
+        "kind": "fixed",
+        "label": title,
+        "text": f"Welcome to Day {runtime.active_day} of the Novena to {saint_name}.",
+    }
+
+
+def _render_template_section(
+    section: TemplateSection,
+    context: Mapping[str, Any],
+    *,
+    generate_text_fn: Callable[[str, Mapping[str, Any]], str],
+) -> str:
+    if section.kind == "fixed":
+        return render_publish_template(section.text, context).strip()
+    if section.kind == "generated":
+        prompt = render_publish_template(section.prompt, context)
+        return generate_text_fn(prompt, context).strip()
+    raise RuntimeError(f"Unsupported novena section kind '{section.kind}'.")
+
+
+def _section_fragment_from_template(
+    runtime: NovenaRuntime,
+    section: TemplateSection,
+    context: Mapping[str, Any],
+    *,
+    generate_text_fn: Callable[[str, Mapping[str, Any]], str],
+) -> Optional[Dict[str, Any]]:
+    days = _normalize_day_list(section.days or ())
+    if days and runtime.active_day not in days:
+        return None
+    if not days:
+        return None
+    episode_id = f"{runtime.date.isoformat()}-{runtime.contract_id}-day-{runtime.active_day}"
+    label = section.title or section.key or "Section"
+    if len(days) > 1:
+        label = f"Days {_format_day_span(days)}"
+    text = _render_template_section(section, context, generate_text_fn=generate_text_fn)
+    return {
+        "fragment_key": f"{episode_id}/block-{section.key}",
+        "block_path": f"block-{section.key}",
+        "kind": section.kind,
+        "label": label,
+        "text": text,
+        "days": list(days),
+    }
+
+
+def _fragment_lookup(runtime: NovenaRuntime) -> Dict[str, TemplateFragment]:
+    lookup: Dict[str, TemplateFragment] = {}
+    for fragment in runtime.resolved_template.fragments or ():
+        if fragment.key:
+            lookup[fragment.key] = fragment
+    return lookup
+
+
+def _part_repeat_count(part: Mapping[str, Any]) -> int:
+    try:
+        repeat = int(part.get("repeat", 1) or 1)
+    except Exception:
+        repeat = 1
+    return repeat if repeat > 0 else 1
+
+
+def _render_part_text(
+    part: Mapping[str, Any],
+    context: Mapping[str, Any],
+    fragment_lookup: Mapping[str, TemplateFragment],
+) -> Tuple[str, str]:
+    part_kind = str(part.get("kind", "")).strip().lower()
+    if part_kind == "fragment":
+        fragment_key = str(part.get("fragment_key", "")).strip()
+        fragment = fragment_lookup.get(fragment_key)
+        if fragment is None:
+            raise RuntimeError(f"Missing canonical fragment reference '{fragment_key}'.")
+        label = str(part.get("label", "")).strip() or fragment.title or fragment.key
+        text = render_publish_template(fragment.text, context).strip()
+        return label or fragment.key or fragment_key, text
+    label = str(part.get("label", "")).strip() or str(part.get("title", "")).strip() or "Text"
+    return label, render_publish_template(str(part.get("text", "")).strip(), context).strip()
+
+
+def _block_parts_to_fragments(
+    runtime: NovenaRuntime,
+    block: TemplateSection,
+    context: Mapping[str, Any],
+    fragment_lookup: Mapping[str, TemplateFragment],
+) -> List[Dict[str, Any]]:
+    days = _normalize_day_list(block.days or ())
+    episode_id = f"{runtime.date.isoformat()}-{runtime.contract_id}-day-{runtime.active_day}"
+    fragments: List[Dict[str, Any]] = []
+    parts = list(block.parts or ())
+    for part_index, part in enumerate(parts, start=1):
+        label, text = _render_part_text(part, context, fragment_lookup)
+        repeat = _part_repeat_count(part)
+        part_kind = str(part.get("kind", "")).strip().lower()
+        source_fragment_key = str(part.get("fragment_key", "")).strip() if part_kind == "fragment" else ""
+        for repeat_index in range(1, repeat + 1):
+            fragment_key = f"{episode_id}/block-{block.key}/part-{part_index}"
+            if repeat > 1:
+                fragment_key = f"{fragment_key}/repeat-{repeat_index}"
+            fragments.append(
+                {
+                    "fragment_key": fragment_key,
+                    "block_path": f"block-{block.key}/part-{part_index}",
+                    "kind": part_kind or block.kind,
+                    "label": label,
+                    "text": text,
+                    "days": list(days),
+                    "repeat_index": repeat_index,
+                    "repeat_count": repeat,
+                    "source_fragment_key": source_fragment_key,
+                }
+            )
+    return fragments
+
+
 def render_novena(
     runtime: NovenaRuntime,
     *,
@@ -137,13 +289,7 @@ def render_novena(
     context = runtime_context(runtime)
     rendered_sections: List[Dict[str, Any]] = []
     for index, section in enumerate(runtime.resolved_template.sections, start=1):
-        if section.kind == "fixed":
-            text = render_publish_template(section.text, context)
-        elif section.kind == "generated":
-            prompt = render_publish_template(section.prompt, context)
-            text = generate_text_fn(prompt, context)
-        else:
-            raise RuntimeError(f"Unsupported novena section kind '{section.kind}'.")
+        text = _render_template_section(section, context, generate_text_fn=generate_text_fn)
         rendered_sections.append(
             {
                 "key": section.key,
@@ -152,8 +298,21 @@ def render_novena(
                 "text": text.strip(),
             }
         )
-    fragments = [_section_to_fragment(runtime, section, index=index) for index, section in enumerate(rendered_sections, start=1)]
-    text_body = "\n\n".join(section["text"] for section in rendered_sections if str(section.get("text", "")).strip()).strip()
+    compact_blocks = list(runtime.resolved_template.blocks or ())
+    fragment_lookup = _fragment_lookup(runtime)
+    audio_fragments: List[Dict[str, Any]] = []
+    if compact_blocks and any(_normalize_day_list(block.days or ()) for block in compact_blocks):
+        audio_fragments.append(_intro_fragment(runtime, context))
+        for block in compact_blocks:
+            if block.parts:
+                audio_fragments.extend(_block_parts_to_fragments(runtime, block, context, fragment_lookup))
+            else:
+                fragment = _section_fragment_from_template(runtime, block, context, generate_text_fn=generate_text_fn)
+                if fragment is not None:
+                    audio_fragments.append(fragment)
+    else:
+        audio_fragments = [_section_to_fragment(runtime, section, index=index) for index, section in enumerate(rendered_sections, start=1)]
+    text_body = "\n\n".join(fragment["text"] for fragment in audio_fragments if str(fragment.get("text", "")).strip()).strip()
     return {
         "family_id": runtime.family_id,
         "contract_id": runtime.contract_id,
@@ -168,7 +327,7 @@ def render_novena(
             "sections": rendered_sections,
             "text": text_body,
         },
-        "audio_fragments": fragments,
+        "audio_fragments": audio_fragments,
     }
 
 

@@ -1,0 +1,199 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "corpus_christi",
+    "feast": {
+      "day": 4,
+      "mode": "fixed",
+      "month": 6,
+      "name": "Corpus Christi"
+    },
+    "id": "corpus_christi",
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Corpus Christi Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section; reused canonical prayer fragment 'our_father'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "I thank You, Jesus, my Divine Redeemer, for coming upon the earth for our sake, and for instituting the adorable Sacrament of the Holy Eucharist in order to remain with us until the end of the world. I thank You for hiding beneath the Eucharistic species Your infinite majesty and beauty, which Your Angels delight to behold, so that I might have courage to approach the throne of Your Mercy. I thank You, most loving Jesus, for having made Yourself my food, and for uniting me to Yourself with so much love in this wonderful Sacrament that I may live in You. I thank You, my Jesus, for giving Yourself to me in this Blessed Sacrament, and so enriching It with the treasures of Your love that You have no greater gift to give me. I thank You not only for becoming my food but also for offering Yourself as a continual sacrifice to Your Eternal Father for my salvation. I thank You, Divine Priest, for offering Yourself as a Sacrifice daily upon our altars in adoration and homage to the Most Blessed Trinity, and for making amends for our poor and miserable adorations. I thank You for renewing in this daily Sacrifice the actual Sacrifice of the Cross offered on Calvary, in which You satisfy Divine justice for us poor sinners. I thank You, dear Jesus, for having become the priceless Victim to merit for me the fullness of heavenly favors. Awaken in me such confidence in You that their fullness may descend ever more fruitfully upon my soul. I thank You for offering Yourself in thanksgiving to God for all His benefits, spiritual and temporal, which He has bestowed upon me. In union with Your offering of Yourself to Your Father in the Holy Sacrifice of the Mass, I ask for this special favor, Pause here to mention your request. If it be Your holy Will, grant my request. Through You I also hope to receive the grace of perseverance in Your love and faithful service, a holy death, and a happy eternity with You in Heaven. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "O Lord, You have given us this Sacred Banquet, in which Christ is received, the memory of His Passion is renewed, the mind is filled with grace, and a pledge of future glory is given to us. You have given us bread from Heaven, Having all sweetness within. Let us pray, God"
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": ", for Your glory and our salvation You appointed Jesus Christ eternal High Priest. May the people He gained for You by His Blood come to share in the power of His Cross and Resurrection by celebrating His Memorial in this Eucharist, for He lives and reigns with You and the Holy Spirit, one God, forever. Amen. O Jesus, since You have left us a remembrance of Your Passion beneath the veils of this Sacrament, grant us, we pray, so to venerate the sacred mysteries of Your Body and Blood that we may always enjoy the fruits of Your Redemption, for You live and reign forever. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "fragments": [
+          {
+            "key": "our_father",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Our Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.",
+            "title": "Our Father"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Corpus Christi Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nI thank You, Jesus, my Divine Redeemer, for coming upon the earth for our sake, and for instituting the adorable Sacrament of the Holy Eucharist in order to remain with us until the end of the world. I thank You for hiding beneath the Eucharistic species Your infinite majesty and beauty, which Your Angels delight to behold, so that I might have courage to approach the throne of Your Mercy. I thank You, most loving Jesus, for having made Yourself my food, and for uniting me to Yourself with so much love in this wonderful Sacrament that I may live in You. I thank You, my Jesus, for giving Yourself to me in this Blessed Sacrament, and so enriching It with the treasures of Your love that You have no greater gift to give me. I thank You not only for becoming my food but also for offering Yourself as a continual sacrifice to Your Eternal Father for my salvation. I thank You, Divine Priest, for offering Yourself as a Sacrifice daily upon our altars in adoration and homage to the Most Blessed Trinity, and for making amends for our poor and miserable adorations. I thank You for renewing in this daily Sacrifice the actual Sacrifice of the Cross offered on Calvary, in which You satisfy Divine justice for us poor sinners. I thank You, dear Jesus, for having become the priceless Victim to merit for me the fullness of heavenly favors. Awaken in me such confidence in You that their fullness may descend ever more fruitfully upon my soul. I thank You for offering Yourself in thanksgiving to God for all His benefits, spiritual and temporal, which He has bestowed upon me. In union with Your offering of Yourself to Your Father in the Holy Sacrifice of the Mass, I ask for this special favor, Pause here to mention your request. If it be Your holy Will, grant my request. Through You I also hope to receive the grace of perseverance in Your love and faithful service, a holy death, and a happy eternity with You in Heaven. Amen.\n\nO Lord, You have given us this Sacred Banquet, in which Christ is received, the memory of His Passion is renewed, the mind is filled with grace, and a pledge of future glory is given to us. You have given us bread from Heaven, Having all sweetness within. Let us pray, God\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\n, for Your glory and our salvation You appointed Jesus Christ eternal High Priest. May the people He gained for You by His Blood come to share in the power of His Cross and Resurrection by celebrating His Memorial in this Eucharist, for He lives and reigns with You and the Holy Spirit, one God, forever. Amen. O Jesus, since You have left us a remembrance of Your Passion beneath the veils of this Sacrament, grant us, we pray, so to venerate the sacred mysteries of Your Body and Blood that we may always enjoy the fruits of Your Redemption, for You live and reign forever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nI thank You, Jesus, my Divine Redeemer, for coming upon the earth for our sake, and for instituting the adorable Sacrament of the Holy Eucharist in order to remain with us until the end of the world. I thank You for hiding beneath the Eucharistic species Your infinite majesty and beauty, which Your Angels delight to behold, so that I might have courage to approach the throne of Your Mercy. I thank You, most loving Jesus, for having made Yourself my food, and for uniting me to Yourself with so much love in this wonderful Sacrament that I may live in You. I thank You, my Jesus, for giving Yourself to me in this Blessed Sacrament, and so enriching It with the treasures of Your love that You have no greater gift to give me. I thank You not only for becoming my food but also for offering Yourself as a continual sacrifice to Your Eternal Father for my salvation. I thank You, Divine Priest, for offering Yourself as a Sacrifice daily upon our altars in adoration and homage to the Most Blessed Trinity, and for making amends for our poor and miserable adorations. I thank You for renewing in this daily Sacrifice the actual Sacrifice of the Cross offered on Calvary, in which You satisfy Divine justice for us poor sinners. I thank You, dear Jesus, for having become the priceless Victim to merit for me the fullness of heavenly favors. Awaken in me such confidence in You that their fullness may descend ever more fruitfully upon my soul. I thank You for offering Yourself in thanksgiving to God for all His benefits, spiritual and temporal, which He has bestowed upon me. In union with Your offering of Yourself to Your Father in the Holy Sacrifice of the Mass, I ask for this special favor, Pause here to mention your request. If it be Your holy Will, grant my request. Through You I also hope to receive the grace of perseverance in Your love and faithful service, a holy death, and a happy eternity with You in Heaven. Amen.\n\nO Lord, You have given us this Sacred Banquet, in which Christ is received, the memory of His Passion is renewed, the mind is filled with grace, and a pledge of future glory is given to us. You have given us bread from Heaven, Having all sweetness within. Let us pray, God\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\n, for Your glory and our salvation You appointed Jesus Christ eternal High Priest. May the people He gained for You by His Blood come to share in the power of His Cross and Resurrection by celebrating His Memorial in this Eucharist, for He lives and reigns with You and the Holy Spirit, one God, forever. Amen. O Jesus, since You have left us a remembrance of Your Passion beneath the veils of this Sacrament, grant us, we pray, so to venerate the sacred mysteries of Your Body and Blood that we may always enjoy the fruits of Your Redemption, for You live and reign forever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nI thank You, Jesus, my Divine Redeemer, for coming upon the earth for our sake, and for instituting the adorable Sacrament of the Holy Eucharist in order to remain with us until the end of the world. I thank You for hiding beneath the Eucharistic species Your infinite majesty and beauty, which Your Angels delight to behold, so that I might have courage to approach the throne of Your Mercy. I thank You, most loving Jesus, for having made Yourself my food, and for uniting me to Yourself with so much love in this wonderful Sacrament that I may live in You. I thank You, my Jesus, for giving Yourself to me in this Blessed Sacrament, and so enriching It with the treasures of Your love that You have no greater gift to give me. I thank You not only for becoming my food but also for offering Yourself as a continual sacrifice to Your Eternal Father for my salvation. I thank You, Divine Priest, for offering Yourself as a Sacrifice daily upon our altars in adoration and homage to the Most Blessed Trinity, and for making amends for our poor and miserable adorations. I thank You for renewing in this daily Sacrifice the actual Sacrifice of the Cross offered on Calvary, in which You satisfy Divine justice for us poor sinners. I thank You, dear Jesus, for having become the priceless Victim to merit for me the fullness of heavenly favors. Awaken in me such confidence in You that their fullness may descend ever more fruitfully upon my soul. I thank You for offering Yourself in thanksgiving to God for all His benefits, spiritual and temporal, which He has bestowed upon me. In union with Your offering of Yourself to Your Father in the Holy Sacrifice of the Mass, I ask for this special favor, Pause here to mention your request. If it be Your holy Will, grant my request. Through You I also hope to receive the grace of perseverance in Your love and faithful service, a holy death, and a happy eternity with You in Heaven. Amen.\n\nO Lord, You have given us this Sacred Banquet, in which Christ is received, the memory of His Passion is renewed, the mind is filled with grace, and a pledge of future glory is given to us. You have given us bread from Heaven, Having all sweetness within. Let us pray, God\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\n, for Your glory and our salvation You appointed Jesus Christ eternal High Priest. May the people He gained for You by His Blood come to share in the power of His Cross and Resurrection by celebrating His Memorial in this Eucharist, for He lives and reigns with You and the Holy Spirit, one God, forever. Amen. O Jesus, since You have left us a remembrance of Your Passion beneath the veils of this Sacrament, grant us, we pray, so to venerate the sacred mysteries of Your Body and Blood that we may always enjoy the fruits of Your Redemption, for You live and reign forever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nI thank You, Jesus, my Divine Redeemer, for coming upon the earth for our sake, and for instituting the adorable Sacrament of the Holy Eucharist in order to remain with us until the end of the world. I thank You for hiding beneath the Eucharistic species Your infinite majesty and beauty, which Your Angels delight to behold, so that I might have courage to approach the throne of Your Mercy. I thank You, most loving Jesus, for having made Yourself my food, and for uniting me to Yourself with so much love in this wonderful Sacrament that I may live in You. I thank You, my Jesus, for giving Yourself to me in this Blessed Sacrament, and so enriching It with the treasures of Your love that You have no greater gift to give me. I thank You not only for becoming my food but also for offering Yourself as a continual sacrifice to Your Eternal Father for my salvation. I thank You, Divine Priest, for offering Yourself as a Sacrifice daily upon our altars in adoration and homage to the Most Blessed Trinity, and for making amends for our poor and miserable adorations. I thank You for renewing in this daily Sacrifice the actual Sacrifice of the Cross offered on Calvary, in which You satisfy Divine justice for us poor sinners. I thank You, dear Jesus, for having become the priceless Victim to merit for me the fullness of heavenly favors. Awaken in me such confidence in You that their fullness may descend ever more fruitfully upon my soul. I thank You for offering Yourself in thanksgiving to God for all His benefits, spiritual and temporal, which He has bestowed upon me. In union with Your offering of Yourself to Your Father in the Holy Sacrifice of the Mass, I ask for this special favor, Pause here to mention your request. If it be Your holy Will, grant my request. Through You I also hope to receive the grace of perseverance in Your love and faithful service, a holy death, and a happy eternity with You in Heaven. Amen.\n\nO Lord, You have given us this Sacred Banquet, in which Christ is received, the memory of His Passion is renewed, the mind is filled with grace, and a pledge of future glory is given to us. You have given us bread from Heaven, Having all sweetness within. Let us pray, God\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\n, for Your glory and our salvation You appointed Jesus Christ eternal High Priest. May the people He gained for You by His Blood come to share in the power of His Cross and Resurrection by celebrating His Memorial in this Eucharist, for He lives and reigns with You and the Holy Spirit, one God, forever. Amen. O Jesus, since You have left us a remembrance of Your Passion beneath the veils of this Sacrament, grant us, we pray, so to venerate the sacred mysteries of Your Body and Blood that we may always enjoy the fruits of Your Redemption, for You live and reign forever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nI thank You, Jesus, my Divine Redeemer, for coming upon the earth for our sake, and for instituting the adorable Sacrament of the Holy Eucharist in order to remain with us until the end of the world. I thank You for hiding beneath the Eucharistic species Your infinite majesty and beauty, which Your Angels delight to behold, so that I might have courage to approach the throne of Your Mercy. I thank You, most loving Jesus, for having made Yourself my food, and for uniting me to Yourself with so much love in this wonderful Sacrament that I may live in You. I thank You, my Jesus, for giving Yourself to me in this Blessed Sacrament, and so enriching It with the treasures of Your love that You have no greater gift to give me. I thank You not only for becoming my food but also for offering Yourself as a continual sacrifice to Your Eternal Father for my salvation. I thank You, Divine Priest, for offering Yourself as a Sacrifice daily upon our altars in adoration and homage to the Most Blessed Trinity, and for making amends for our poor and miserable adorations. I thank You for renewing in this daily Sacrifice the actual Sacrifice of the Cross offered on Calvary, in which You satisfy Divine justice for us poor sinners. I thank You, dear Jesus, for having become the priceless Victim to merit for me the fullness of heavenly favors. Awaken in me such confidence in You that their fullness may descend ever more fruitfully upon my soul. I thank You for offering Yourself in thanksgiving to God for all His benefits, spiritual and temporal, which He has bestowed upon me. In union with Your offering of Yourself to Your Father in the Holy Sacrifice of the Mass, I ask for this special favor, Pause here to mention your request. If it be Your holy Will, grant my request. Through You I also hope to receive the grace of perseverance in Your love and faithful service, a holy death, and a happy eternity with You in Heaven. Amen.\n\nO Lord, You have given us this Sacred Banquet, in which Christ is received, the memory of His Passion is renewed, the mind is filled with grace, and a pledge of future glory is given to us. You have given us bread from Heaven, Having all sweetness within. Let us pray, God\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\n, for Your glory and our salvation You appointed Jesus Christ eternal High Priest. May the people He gained for You by His Blood come to share in the power of His Cross and Resurrection by celebrating His Memorial in this Eucharist, for He lives and reigns with You and the Holy Spirit, one God, forever. Amen. O Jesus, since You have left us a remembrance of Your Passion beneath the veils of this Sacrament, grant us, we pray, so to venerate the sacred mysteries of Your Body and Blood that we may always enjoy the fruits of Your Redemption, for You live and reign forever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nI thank You, Jesus, my Divine Redeemer, for coming upon the earth for our sake, and for instituting the adorable Sacrament of the Holy Eucharist in order to remain with us until the end of the world. I thank You for hiding beneath the Eucharistic species Your infinite majesty and beauty, which Your Angels delight to behold, so that I might have courage to approach the throne of Your Mercy. I thank You, most loving Jesus, for having made Yourself my food, and for uniting me to Yourself with so much love in this wonderful Sacrament that I may live in You. I thank You, my Jesus, for giving Yourself to me in this Blessed Sacrament, and so enriching It with the treasures of Your love that You have no greater gift to give me. I thank You not only for becoming my food but also for offering Yourself as a continual sacrifice to Your Eternal Father for my salvation. I thank You, Divine Priest, for offering Yourself as a Sacrifice daily upon our altars in adoration and homage to the Most Blessed Trinity, and for making amends for our poor and miserable adorations. I thank You for renewing in this daily Sacrifice the actual Sacrifice of the Cross offered on Calvary, in which You satisfy Divine justice for us poor sinners. I thank You, dear Jesus, for having become the priceless Victim to merit for me the fullness of heavenly favors. Awaken in me such confidence in You that their fullness may descend ever more fruitfully upon my soul. I thank You for offering Yourself in thanksgiving to God for all His benefits, spiritual and temporal, which He has bestowed upon me. In union with Your offering of Yourself to Your Father in the Holy Sacrifice of the Mass, I ask for this special favor, Pause here to mention your request. If it be Your holy Will, grant my request. Through You I also hope to receive the grace of perseverance in Your love and faithful service, a holy death, and a happy eternity with You in Heaven. Amen.\n\nO Lord, You have given us this Sacred Banquet, in which Christ is received, the memory of His Passion is renewed, the mind is filled with grace, and a pledge of future glory is given to us. You have given us bread from Heaven, Having all sweetness within. Let us pray, God\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\n, for Your glory and our salvation You appointed Jesus Christ eternal High Priest. May the people He gained for You by His Blood come to share in the power of His Cross and Resurrection by celebrating His Memorial in this Eucharist, for He lives and reigns with You and the Holy Spirit, one God, forever. Amen. O Jesus, since You have left us a remembrance of Your Passion beneath the veils of this Sacrament, grant us, we pray, so to venerate the sacred mysteries of Your Body and Blood that we may always enjoy the fruits of Your Redemption, for You live and reign forever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nI thank You, Jesus, my Divine Redeemer, for coming upon the earth for our sake, and for instituting the adorable Sacrament of the Holy Eucharist in order to remain with us until the end of the world. I thank You for hiding beneath the Eucharistic species Your infinite majesty and beauty, which Your Angels delight to behold, so that I might have courage to approach the throne of Your Mercy. I thank You, most loving Jesus, for having made Yourself my food, and for uniting me to Yourself with so much love in this wonderful Sacrament that I may live in You. I thank You, my Jesus, for giving Yourself to me in this Blessed Sacrament, and so enriching It with the treasures of Your love that You have no greater gift to give me. I thank You not only for becoming my food but also for offering Yourself as a continual sacrifice to Your Eternal Father for my salvation. I thank You, Divine Priest, for offering Yourself as a Sacrifice daily upon our altars in adoration and homage to the Most Blessed Trinity, and for making amends for our poor and miserable adorations. I thank You for renewing in this daily Sacrifice the actual Sacrifice of the Cross offered on Calvary, in which You satisfy Divine justice for us poor sinners. I thank You, dear Jesus, for having become the priceless Victim to merit for me the fullness of heavenly favors. Awaken in me such confidence in You that their fullness may descend ever more fruitfully upon my soul. I thank You for offering Yourself in thanksgiving to God for all His benefits, spiritual and temporal, which He has bestowed upon me. In union with Your offering of Yourself to Your Father in the Holy Sacrifice of the Mass, I ask for this special favor, Pause here to mention your request. If it be Your holy Will, grant my request. Through You I also hope to receive the grace of perseverance in Your love and faithful service, a holy death, and a happy eternity with You in Heaven. Amen.\n\nO Lord, You have given us this Sacred Banquet, in which Christ is received, the memory of His Passion is renewed, the mind is filled with grace, and a pledge of future glory is given to us. You have given us bread from Heaven, Having all sweetness within. Let us pray, God\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\n, for Your glory and our salvation You appointed Jesus Christ eternal High Priest. May the people He gained for You by His Blood come to share in the power of His Cross and Resurrection by celebrating His Memorial in this Eucharist, for He lives and reigns with You and the Holy Spirit, one God, forever. Amen. O Jesus, since You have left us a remembrance of Your Passion beneath the veils of this Sacrament, grant us, we pray, so to venerate the sacred mysteries of Your Body and Blood that we may always enjoy the fruits of Your Redemption, for You live and reign forever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nI thank You, Jesus, my Divine Redeemer, for coming upon the earth for our sake, and for instituting the adorable Sacrament of the Holy Eucharist in order to remain with us until the end of the world. I thank You for hiding beneath the Eucharistic species Your infinite majesty and beauty, which Your Angels delight to behold, so that I might have courage to approach the throne of Your Mercy. I thank You, most loving Jesus, for having made Yourself my food, and for uniting me to Yourself with so much love in this wonderful Sacrament that I may live in You. I thank You, my Jesus, for giving Yourself to me in this Blessed Sacrament, and so enriching It with the treasures of Your love that You have no greater gift to give me. I thank You not only for becoming my food but also for offering Yourself as a continual sacrifice to Your Eternal Father for my salvation. I thank You, Divine Priest, for offering Yourself as a Sacrifice daily upon our altars in adoration and homage to the Most Blessed Trinity, and for making amends for our poor and miserable adorations. I thank You for renewing in this daily Sacrifice the actual Sacrifice of the Cross offered on Calvary, in which You satisfy Divine justice for us poor sinners. I thank You, dear Jesus, for having become the priceless Victim to merit for me the fullness of heavenly favors. Awaken in me such confidence in You that their fullness may descend ever more fruitfully upon my soul. I thank You for offering Yourself in thanksgiving to God for all His benefits, spiritual and temporal, which He has bestowed upon me. In union with Your offering of Yourself to Your Father in the Holy Sacrifice of the Mass, I ask for this special favor, Pause here to mention your request. If it be Your holy Will, grant my request. Through You I also hope to receive the grace of perseverance in Your love and faithful service, a holy death, and a happy eternity with You in Heaven. Amen.\n\nO Lord, You have given us this Sacred Banquet, in which Christ is received, the memory of His Passion is renewed, the mind is filled with grace, and a pledge of future glory is given to us. You have given us bread from Heaven, Having all sweetness within. Let us pray, God\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\n, for Your glory and our salvation You appointed Jesus Christ eternal High Priest. May the people He gained for You by His Blood come to share in the power of His Cross and Resurrection by celebrating His Memorial in this Eucharist, for He lives and reigns with You and the Holy Spirit, one God, forever. Amen. O Jesus, since You have left us a remembrance of Your Passion beneath the veils of this Sacrament, grant us, we pray, so to venerate the sacred mysteries of Your Body and Blood that we may always enjoy the fruits of Your Redemption, for You live and reign forever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nI thank You, Jesus, my Divine Redeemer, for coming upon the earth for our sake, and for instituting the adorable Sacrament of the Holy Eucharist in order to remain with us until the end of the world. I thank You for hiding beneath the Eucharistic species Your infinite majesty and beauty, which Your Angels delight to behold, so that I might have courage to approach the throne of Your Mercy. I thank You, most loving Jesus, for having made Yourself my food, and for uniting me to Yourself with so much love in this wonderful Sacrament that I may live in You. I thank You, my Jesus, for giving Yourself to me in this Blessed Sacrament, and so enriching It with the treasures of Your love that You have no greater gift to give me. I thank You not only for becoming my food but also for offering Yourself as a continual sacrifice to Your Eternal Father for my salvation. I thank You, Divine Priest, for offering Yourself as a Sacrifice daily upon our altars in adoration and homage to the Most Blessed Trinity, and for making amends for our poor and miserable adorations. I thank You for renewing in this daily Sacrifice the actual Sacrifice of the Cross offered on Calvary, in which You satisfy Divine justice for us poor sinners. I thank You, dear Jesus, for having become the priceless Victim to merit for me the fullness of heavenly favors. Awaken in me such confidence in You that their fullness may descend ever more fruitfully upon my soul. I thank You for offering Yourself in thanksgiving to God for all His benefits, spiritual and temporal, which He has bestowed upon me. In union with Your offering of Yourself to Your Father in the Holy Sacrifice of the Mass, I ask for this special favor, Pause here to mention your request. If it be Your holy Will, grant my request. Through You I also hope to receive the grace of perseverance in Your love and faithful service, a holy death, and a happy eternity with You in Heaven. Amen.\n\nO Lord, You have given us this Sacred Banquet, in which Christ is received, the memory of His Passion is renewed, the mind is filled with grace, and a pledge of future glory is given to us. You have given us bread from Heaven, Having all sweetness within. Let us pray, God\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\n, for Your glory and our salvation You appointed Jesus Christ eternal High Priest. May the people He gained for You by His Blood come to share in the power of His Cross and Resurrection by celebrating His Memorial in this Eucharist, for He lives and reigns with You and the Holy Spirit, one God, forever. Amen. O Jesus, since You have left us a remembrance of Your Passion beneath the veils of this Sacrament, grant us, we pray, so to venerate the sacred mysteries of Your Body and Blood that we may always enjoy the fruits of Your Redemption, for You live and reign forever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-corpus_christi"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "model": "gpt-4o-mini-tts",
+        "speed": 1.0,
+        "voice": "alloy"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "corpus_christi",
+      "name": "Corpus Christi"
+    },
+    "type": "novena_feast_rule"
+  }
+}
