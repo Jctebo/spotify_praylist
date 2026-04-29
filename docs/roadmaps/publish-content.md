@@ -332,3 +332,7 @@
 ## Recommended Next Step
 - Move Release 1, Repeated Daily Prayer Contracts, into `/plan-astack` first.
 - That release establishes the contract language needed by novena scheduling, Notion text output, storage, RSS, Spotify podcasts, and podcast resolvers.
+
+
+## Draft List
+- Getting Gender Right when referring to Saints. I had Saint Catherine and it said his contribitions. I want to avoid using prononouns at all in the Saint Intros on their feast day. 
