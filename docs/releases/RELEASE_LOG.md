@@ -1,5 +1,24 @@
 # Release Log
 
+## [0.3.0.0] - 2026-04-29
+
+### Added
+- Added a Catholic Novena App URL importer with `single` and `bulk` modes that generates validated novena override drafts from live pages.
+- Added a top-level novena contract `enabled` flag so uncertain imports can be written disabled and skipped by the runtime.
+- Added a canonical prayer fragment library so repeated `Our Father`, `Hail Mary`, and `Glory Be` text can be reused instead of inlined repeatedly.
+- Added compact day-block parts and day-tagged shared blocks so repeated novena days can share one reusable prayer block.
+- Added single and bulk import reports under `artifacts/novena-url-overrides/` for review of enabled, disabled, skipped, and failed imports.
+
+### Changed
+- Updated the novena runtime to skip disabled contracts and to prefer compact reusable blocks for audio fragment generation.
+- Updated imported traditional novenas to publish with a `Traditional Novena to {saint_name} Day {day}` title pattern.
+- Updated the novena importer to normalize instruction-heavy sections for TTS, including placeholder prompts and canonical prayer expansion.
+- Updated README and release documentation to describe the new importer, fragment compaction, and disabled-contract behavior.
+
+### Fixed
+- Prevented repeated prayer blocks from being rewritten multiple times by caching normalized novena sections and canonical prayer fragments.
+- Kept disabled feast drafts loadable for review without letting them suppress valid active novena contracts.
+
 ## [0.2.1.0] - 2026-04-28
 
 ### Added

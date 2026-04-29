@@ -48,6 +48,13 @@ Optional variables:
 - `contracts/novenas/families/*.json`: selector-based family contracts that auto-populate eligible celebrations from the liturgical calendar
 - `contracts/novenas/feast-days/*.json`: explicit feast-day overrides keyed by Romcal ids
 - `scripts/new_novena_contract.py`: helper for authoring explicit feast contracts or selector-based family contracts
+- `scripts/new_novena_url_contract.py`: local URL importer for Catholic Novena App pages; `single` imports one novena page and `bulk` walks the catalog page, writing generated drafts plus reports under `artifacts/novena-url-overrides/`
+- The URL importer pulls the live prayer body from the novena page and embeds it into `novena.template`; repeated novena days are compacted into shared blocks, and canonical prayers such as `Our Father`, `Hail Mary`, and `Glory Be` are stored once in a fragment library so the TTS renderer can reuse them across days
+- The URL importer can optionally normalize instruction-heavy sections with OpenAI for TTS-friendly output; those rewrites are recorded on each section as `notes`
+- Before the model runs, the importer expands canonical prayer names like `Our Father`, `Hail Mary`, and `Glory Be` from the repo's Rosary text templates, then compacts identical day blocks into shared blocks tagged with the day numbers they cover so the TTS renderer can reuse one prayer block behind a small day-specific intro
+- Imported traditional novenas publish with a `Traditional Novena to {saint_name} Day {day}` episode title so they stay distinct from the existing auto-generated novena titles
+- For local OpenAI runs, copy `config/local/openai.env.example` to `config/local/openai.env` and fill in `OPENAI_API_KEY`; the importer will read that file automatically, and you can override the path with `OPENAI_API_KEY_FILE`
+- Novena contracts now support a top-level `enabled` flag; `enabled: false` contracts stay loadable for review but are skipped by the novena runtime
 - `.github/workflows/publish_audio.yml`: combined publish workflow that runs Morning Prayer audio and novena publishing together, scheduled daily and also available on manual dispatch; manual runs default to `reset`, `daily` publishes tomorrow only, `bootstrap` seeds today and tomorrow without truncating the feed, and `reset` seeds today and tomorrow after clearing the existing feed
 - The combined publish workflow currently targets MP3, JSON sidecars, and RSS. Spotify playlist assignment and Notion updates stay out of scope for this release.
 

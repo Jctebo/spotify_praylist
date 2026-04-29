@@ -335,4 +335,4 @@
 
 
 ## Draft List
-- Getting Gender Right when referring to Saints. I had Saint Catherine and it said his contribitions. I want to avoid using prononouns at all in the Saint Intros on their feast day. 
+- Getting Gender Right when referring to Saints. I had Saint Catherine and it said his contribitions. I want to avoid using prononouns at all in the Saint Intros on their feast day.
