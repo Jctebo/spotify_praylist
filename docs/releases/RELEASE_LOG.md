@@ -1,5 +1,18 @@
 # Release Log
 
+## [0.3.0.3] - 2026-05-01
+
+### Added
+- Added GitHub Actions cache restore/save around the publish audio fragment cache so warmed fragments and silence assets persist across runs.
+- Added regression coverage for restored fragment-cache reuse in a fresh workspace and workflow-text assertions for the new cache steps.
+
+### Changed
+- Updated the publish audio workflow to restore the fragment cache after checkout and save a new snapshot after publishing completes.
+- Clarified the README to say GitHub Actions persists the publish audio fragment cache across workflow runs.
+
+### Fixed
+- Prevented the publish audio cache from behaving like a one-shot local-only optimization by making restores broad and saves snapshot-based.
+
 ## [0.3.0.2] - 2026-05-01
 
 ### Changed
