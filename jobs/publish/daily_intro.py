@@ -3,14 +3,19 @@ from __future__ import annotations
 import asyncio
 import os
 import re
-from typing import Any, Dict, List, NamedTuple, Optional, Sequence
+from functools import lru_cache
+from pathlib import Path
+from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
 from catholic_mass_readings import USCCB, models
 from openai import OpenAI
 
 from jobs.novena.liturgical_helpers import celebration_name, romcal_fetch_day
 
+ROOT = Path(__file__).resolve().parents[2]
+DEFAULT_OPENAI_ENV_FILE = ROOT / "config" / "local" / "openai.env"
 OPENAI_API_KEY = "OPENAI_API_KEY"
+OPENAI_API_KEY_FILE = "OPENAI_API_KEY_FILE"
 OAI_API_BASE_URL = "OAI_API_BASE_URL"
 OAI_MODEL = "OAI_MODEL"
 ROMCAL_CALENDAR = "ROMCAL_CALENDAR"
@@ -43,11 +48,54 @@ def _join_with_and(items: Sequence[str]) -> str:
     return ", ".join(cleaned[:-1]) + f", and {cleaned[-1]}"
 
 
-def _require_env(name: str) -> str:
-    value = os.getenv(name, "").strip()
-    if not value:
-        raise RuntimeError(f"Missing required environment variable: {name}")
-    return value
+@lru_cache(maxsize=8)
+def _load_env_file(path_text: str) -> Dict[str, str]:
+    path = Path(path_text)
+    if not path.exists():
+        return {}
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return {}
+    values: Dict[str, str] = {}
+    for raw_line in lines:
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if line.startswith("export "):
+            line = line[7:].lstrip()
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip("\"").strip("'")
+        if key:
+            values[key] = value
+    return values
+
+
+def _resolve_openai_settings(*, api_key: str = "", base_url: str = "", model: str = "") -> Tuple[str, str, str]:
+    configured_path = os.getenv(OPENAI_API_KEY_FILE, "").strip()
+    env_path = configured_path or str(DEFAULT_OPENAI_ENV_FILE)
+    file_values = _load_env_file(env_path)
+    resolved_api_key = (
+        str(api_key or "").strip()
+        or os.getenv(OPENAI_API_KEY, "").strip()
+        or file_values.get(OPENAI_API_KEY, "").strip()
+    )
+    resolved_base_url = (
+        str(base_url or "").strip()
+        or os.getenv(OAI_API_BASE_URL, "").strip()
+        or file_values.get(OAI_API_BASE_URL, "").strip()
+        or "https://api.openai.com/v1"
+    )
+    resolved_model = (
+        str(model or "").strip()
+        or os.getenv(OAI_MODEL, "").strip()
+        or file_values.get(OAI_MODEL, "").strip()
+        or "gpt-4.1-mini"
+    )
+    return resolved_api_key, resolved_base_url, resolved_model
 
 
 def _resolve_calendar(calendar: Optional[str]) -> str:
@@ -143,8 +191,9 @@ def fetch_daily_gospel_context(
 
 
 def _openai_client() -> OpenAI:
-    api_key = _require_env(OPENAI_API_KEY)
-    base_url = os.getenv(OAI_API_BASE_URL, "https://api.openai.com/v1").strip() or "https://api.openai.com/v1"
+    api_key, base_url, _ = _resolve_openai_settings()
+    if not api_key:
+        raise RuntimeError(f"Missing required environment variable: {OPENAI_API_KEY}")
     return OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
 
 

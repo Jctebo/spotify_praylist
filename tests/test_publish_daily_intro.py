@@ -1,6 +1,9 @@
 import datetime
+import tempfile
 import unittest
+from pathlib import Path
 from types import SimpleNamespace
+from unittest import mock
 
 from catholic_mass_readings import models
 
@@ -82,3 +85,31 @@ class TestPublishDailyIntro(unittest.TestCase):
             self.mod.build_daily_intro_text(datetime.date(2026, 4, 27))
 
         self.assertIn("three sentences", str(ctx.exception))
+
+    def test_resolve_openai_settings_reads_local_env_file(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            local_env = Path(tmpdir) / "openai.env"
+            local_env.write_text(
+                "\n".join(
+                    [
+                        "OPENAI_API_KEY=local-test-key",
+                        "OAI_API_BASE_URL=https://example.invalid/v1",
+                        "OAI_MODEL=gpt-local-mini",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            with mock.patch.dict(
+                self.mod.os.environ,
+                {"OPENAI_API_KEY": "", "OPENAI_API_KEY_FILE": str(local_env)},
+                clear=False,
+            ):
+                resolved = self.mod._resolve_openai_settings()
+
+        self.assertEqual(
+            resolved,
+            ("local-test-key", "https://example.invalid/v1", "gpt-local-mini"),
+        )
+
