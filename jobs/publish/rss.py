@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as _dt
+import logging
 from email.utils import format_datetime
 import sys
 import xml.etree.ElementTree as ET
@@ -15,6 +16,8 @@ if str(ROOT) not in sys.path:
 
 from jobs.publish.audio import github_pages_base_url, podcast_cover_art_public_url
 from jobs.publish.formatting import compose_rss_guid, episode_date_from_episode_id, split_rss_guid
+
+logger = logging.getLogger(__name__)
 
 RSS_CHANNEL_TITLE = "Ora Pro Nobis"
 RSS_CHANNEL_DESCRIPTION = dedent(
@@ -61,6 +64,20 @@ def _audio_length_bytes(path_text: str, *, fallback: Any = None) -> int:
         except Exception:
             pass
     return fallback_length
+
+
+def _episode_id_list(jobs: Sequence[Dict[str, Any]], *, limit: int = 8) -> str:
+    episode_ids = [
+        str(job.get("episode_id", "")).strip() or str(job.get("entry_id", "")).strip()
+        for job in jobs
+        if str(job.get("episode_id", "")).strip() or str(job.get("entry_id", "")).strip()
+    ]
+    if not episode_ids:
+        return "-"
+    if len(episode_ids) <= limit:
+        return ",".join(episode_ids)
+    remaining = len(episode_ids) - limit
+    return f"{','.join(episode_ids[:limit])},...(+{remaining} more)"
 
 
 def _published_at(job: Dict[str, Any]) -> _dt.datetime:
@@ -117,36 +134,95 @@ def _job_from_rss_item(item: ET.Element, *, feed_path: Path) -> Dict[str, Any] |
     }
 
 
-def load_podcast_feed_jobs(feed_path: Path, *, base_url: str | None = None) -> List[Dict[str, Any]]:
+def _jobs_from_rss_root(root: ET.Element, *, feed_path: Path) -> List[Dict[str, Any]]:
     jobs: List[Dict[str, Any]] = []
-    seen_episode_ids: set[str] = set()
-
-    def _append_items(root: ET.Element) -> None:
-        for item in root.findall("./channel/item"):
-            job = _job_from_rss_item(item, feed_path=feed_path)
-            if job is None:
-                continue
-            episode_id = str(job.get("episode_id", "")).strip()
-            if not episode_id or episode_id in seen_episode_ids:
-                continue
-            seen_episode_ids.add(episode_id)
+    for item in root.findall("./channel/item"):
+        job = _job_from_rss_item(item, feed_path=feed_path)
+        if job is not None:
             jobs.append(job)
+    return jobs
 
-    if feed_path.exists():
-        try:
-            _append_items(ET.fromstring(feed_path.read_text(encoding="utf-8")))
-        except Exception:
-            pass
 
-    remote_base = str(base_url or "").strip().rstrip("/")
-    if remote_base:
-        remote_feed_url = f"{remote_base}/podcast.xml"
+def _merge_jobs(target: List[Dict[str, Any]], source_jobs: Sequence[Dict[str, Any]], *, source_label: str, feed_ref: str) -> None:
+    accepted: List[Dict[str, Any]] = []
+    seen_episode_ids = {str(job.get("episode_id", "")).strip() for job in target if str(job.get("episode_id", "")).strip()}
+    for job in source_jobs:
+        episode_id = str(job.get("episode_id", "")).strip()
+        if not episode_id or episode_id in seen_episode_ids:
+            continue
+        seen_episode_ids.add(episode_id)
+        job_copy = dict(job)
+        target.append(job_copy)
+        accepted.append(job_copy)
+    logger.info(
+        "rss_load source=%s ref=%s items=%d accepted=%d episode_ids=%s",
+        source_label,
+        feed_ref,
+        len(source_jobs),
+        len(accepted),
+        _episode_id_list(accepted),
+    )
+
+
+def load_podcast_feed_jobs(
+    feed_path: Path,
+    *,
+    base_url: str | None = None,
+    remote_feed_url: str | None = None,
+    include_local: bool = True,
+    require_remote: bool = False,
+) -> List[Dict[str, Any]]:
+    jobs: List[Dict[str, Any]] = []
+    remote_ref = str(remote_feed_url or "").strip()
+    if not remote_ref:
+        remote_base = str(base_url or "").strip().rstrip("/")
+        remote_ref = f"{remote_base}/podcast.xml" if remote_base else ""
+    logger.info(
+        "rss_load start feed_path=%s base_url=%s remote_feed_url=%s include_local=%s require_remote=%s",
+        feed_path,
+        str(base_url or "").strip() or "-",
+        remote_ref or "-",
+        include_local,
+        require_remote,
+    )
+
+    if include_local and feed_path.exists():
         try:
-            response = requests.get(remote_feed_url, timeout=20)
+            local_jobs = _jobs_from_rss_root(ET.fromstring(feed_path.read_text(encoding="utf-8")), feed_path=feed_path)
+            _merge_jobs(jobs, local_jobs, source_label="local", feed_ref=str(feed_path))
+        except Exception as exc:
+            logger.warning("rss_load source=local ref=%s status=error error=%s", feed_path, exc)
+    elif include_local:
+        logger.info("rss_load source=local ref=%s status=missing", feed_path)
+    else:
+        logger.info("rss_load source=local status=skipped")
+
+    remote_jobs: List[Dict[str, Any]] = []
+    if remote_ref:
+        try:
+            response = requests.get(remote_ref, timeout=20)
+        except Exception as exc:
+            logger.warning("rss_load source=remote ref=%s status=error error=%s", remote_ref, exc)
+        else:
             if response.ok:
-                _append_items(ET.fromstring(response.text))
-        except Exception:
-            pass
+                try:
+                    remote_jobs = _jobs_from_rss_root(ET.fromstring(response.text), feed_path=feed_path)
+                    _merge_jobs(jobs, remote_jobs, source_label="remote", feed_ref=remote_ref)
+                except Exception as exc:
+                    logger.warning("rss_load source=remote ref=%s status=parse_error error=%s", remote_ref, exc)
+            else:
+                logger.warning(
+                    "rss_load source=remote ref=%s status=http_error code=%s",
+                    remote_ref,
+                    response.status_code,
+                )
+    else:
+        logger.info("rss_load source=remote status=skipped")
+
+    logger.info("rss_load merged ref=%s items=%d episode_ids=%s", feed_path, len(jobs), _episode_id_list(jobs))
+
+    if require_remote and not remote_jobs:
+        raise RuntimeError(f"Unable to recover podcast archive from remote feed: {remote_ref or 'unconfigured'}")
 
     return jobs
 
@@ -201,6 +277,14 @@ def build_rss_feed(
             str(job.get("episode_id", "")).strip() or str(job.get("entry_id", "")).strip(),
         ),
         reverse=True,
+    )
+    logger.info(
+        "rss_build base_url=%s incoming=%d unique=%d deduped=%d episode_ids=%s",
+        link,
+        len(jobs),
+        len(unique_jobs),
+        len(jobs) - len(unique_jobs),
+        _episode_id_list(sorted_jobs),
     )
     for job in sorted_jobs:
         item = ET.SubElement(channel, "item")

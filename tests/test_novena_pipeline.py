@@ -189,9 +189,10 @@ class TestNovenaPipeline(unittest.TestCase):
             ET.SubElement(channel, "title").text = "Ora Pro Nobis"
             item = ET.SubElement(channel, "item")
             ET.SubElement(item, "title").text = "Morning Prayer"
-            ET.SubElement(item, "guid", isPermaLink="false").text = "morning-prayer"
-            ET.SubElement(item, "link").text = "https://example.com/audio/morning-prayer.mp3"
+            ET.SubElement(item, "guid", isPermaLink="false").text = "morning-prayer-2026-04-06::revision-a"
+            ET.SubElement(item, "link").text = "https://example.com/audio/morning-prayer-2026-04-06.mp3"
             ET.SubElement(item, "description").text = "Morning prayer episode."
+            ET.SubElement(item, "pubDate").text = "Mon, 06 Apr 2026 12:00:00 +0000"
             ET.ElementTree(feed_root).write(docs_root / "podcast.xml", encoding="utf-8", xml_declaration=True)
 
             def fake_renderer(text, audio_config):
@@ -300,32 +301,15 @@ class TestNovenaPipeline(unittest.TestCase):
             docs_root = root / "docs"
             cache_root = root / ".cache"
             docs_root.mkdir(parents=True, exist_ok=True)
-            audio_dir = docs_root / "audio"
-            audio_dir.mkdir(parents=True, exist_ok=True)
-            existing_audio = audio_dir / "morning-prayer-2026-04-06.mp3"
-            existing_audio.write_bytes(make_test_mp3_bytes())
-            (audio_dir / "morning-prayer.json").write_text(
-                json.dumps(
-                    {
-                        "entry_id": "morning-prayer",
-                        "episode_id": "morning-prayer",
-                        "title": "Morning Prayer",
-                        "description": "Morning prayer episode.",
-                        "audio_path": str(existing_audio),
-                        "audio_url": "https://example.com/audio/morning-prayer.mp3",
-                    },
-                    indent=2,
-                ),
-                encoding="utf-8",
-            )
             feed_root = ET.Element("rss", version="2.0")
             channel = ET.SubElement(feed_root, "channel")
             ET.SubElement(channel, "title").text = "Ora Pro Nobis"
             item = ET.SubElement(channel, "item")
             ET.SubElement(item, "title").text = "Morning Prayer"
-            ET.SubElement(item, "guid", isPermaLink="false").text = "morning-prayer"
-            ET.SubElement(item, "link").text = "https://example.com/audio/morning-prayer.mp3"
+            ET.SubElement(item, "guid", isPermaLink="false").text = "morning-prayer-2026-04-06::revision-a"
+            ET.SubElement(item, "link").text = "https://example.com/audio/morning-prayer-2026-04-06.mp3"
             ET.SubElement(item, "description").text = "Morning prayer episode."
+            ET.SubElement(item, "pubDate").text = "Mon, 06 Apr 2026 12:00:00 +0000"
             ET.ElementTree(feed_root).write(docs_root / "podcast.xml", encoding="utf-8", xml_declaration=True)
 
             def fake_renderer(text, audio_config):
@@ -346,6 +330,6 @@ class TestNovenaPipeline(unittest.TestCase):
 
             root_xml = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") for item in root_xml.findall("./channel/item")]
-            self.assertIn("morning-prayer", guids)
+            self.assertTrue(any((guid or "").startswith("morning-prayer-2026-04-06::") for guid in guids))
             self.assertTrue(any((guid or "").startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::") for guid in guids))
             self.assertEqual(result["active"], 1)

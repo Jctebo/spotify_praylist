@@ -38,9 +38,10 @@ Optional variables:
 - `jobs/publish/run_audio_pipeline.py`: contract-driven audio publication that writes date-scoped `docs/audio/<episode_id>.mp3` files and refreshes `docs/podcast.xml`
 - `jobs/publish/fragments.py`: fragment cache and ffmpeg assembly helpers used by the publish audio path
 - publish audio caches leaf fragments under `.cache/publish_audio/` so unchanged spoken blocks can be reused across reruns
-- publish audio archives one JSON sidecar per episode under `docs/audio/` so the RSS feed can be rebuilt from historical episodes on rerun
+- publish audio still writes one JSON sidecar per episode under `docs/audio/`, but reruns now rebuild from `docs/podcast.xml` rather than treating sidecars as the archive source
 - `config/publish/images/logo_ora_pro_nobis.png`: podcast cover art copied into the published `docs/images/` tree
 - `PUBLISH_GITHUB_PAGES_BASE_URL` to override the RSS enclosure base URL when publishing audio
+- `PUBLISH_PODCAST_FEED_URL` to override the remote `podcast.xml` archive URL when publishing audio
 - `Publish Prayer Audio` now runs at `06:00 UTC`, before `Daily Spotify Playlist Refresh` runs at `07:00 UTC`, on `main`, on pushes to `main`, plus manual dispatches
 
 ### Novena

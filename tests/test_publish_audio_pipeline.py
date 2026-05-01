@@ -1,9 +1,11 @@
 import datetime
 import json
 import os
+import shutil
 import xml.etree.ElementTree as ET
 import tempfile
 import unittest
+from types import SimpleNamespace
 from pathlib import Path
 
 from tests.test_helpers import load_module, make_test_mp3_bytes
@@ -17,6 +19,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.audio_mod = load_module("jobs/publish/audio.py")
         self.rss_mod = load_module("jobs/publish/rss.py")
         self.runner_mod = load_module("jobs/publish/run_audio_pipeline.py")
+        self.runner_mod.load_podcast_feed_jobs = lambda *args, **kwargs: []
         stub = lambda date_value, **kwargs: (
             "Today the Church celebrates Saint Example. Praise be to God for his mercy. "
             "In today's Gospel, Jesus calls his sheep by name."
@@ -148,7 +151,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
 
             self.assertEqual(result["jobs"], 1)
             self.assertEqual(result["rendered"], 1)
-            self.assertEqual(result["archived"], 1)
+            self.assertEqual(result["archived"], 0)
             self.assertTrue((docs_root / "podcast.xml").exists())
             self.assertTrue((docs_root / "audio" / f"morning-prayer-{expected_date.isoformat()}.mp3").exists())
             self.assertTrue((docs_root / "images" / "logo_ora_pro_nobis.png").exists())
@@ -241,7 +244,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.assertTrue(any(guid.startswith(f"morning-prayer-{today.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"morning-prayer-{tomorrow.isoformat()}::") for guid in guids))
 
-    def test_run_audio_pipeline_rebuilds_feed_from_archived_sidecars(self):
+    def test_run_audio_pipeline_rebuilds_feed_from_existing_feed_only(self):
         contracts = self.contracts_mod.load_publish_contracts()
         fake_renderer, _ = self._fake_renderer()
 
@@ -253,17 +256,112 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.runner_mod.build_audio_jobs = lambda contracts, target_date=None: self.audio_mod.build_audio_jobs(
                 contracts, target_date=date_state["value"]
             )
+            self.runner_mod.load_podcast_feed_jobs = lambda *args, **kwargs: [
+                {
+                    "entry_id": "morning-prayer-2026-04-06",
+                    "episode_id": "morning-prayer-2026-04-06",
+                    "title": "Morning Prayer",
+                    "description": "Morning prayer episode.",
+                    "published_date": "2026-04-06",
+                    "audio_path": str(docs_root / "audio" / "morning-prayer-2026-04-06.mp3"),
+                    "audio_url": "https://example.com/audio/morning-prayer-2026-04-06.mp3",
+                    "audio_length": 1234,
+                    "rss_guid": "morning-prayer-2026-04-06::revision-a",
+                }
+            ]
 
             first = self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
+            shutil.rmtree(docs_root / "audio", ignore_errors=True)
             date_state["value"] = datetime.date(2026, 4, 7)
             second = self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
 
             self.assertEqual(first["jobs"], 1)
             self.assertEqual(second["jobs"], 1)
+            self.assertEqual(first["archived"], 1)
+            self.assertEqual(second["archived"], 1)
             root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") for item in root.findall("./channel/item")]
             self.assertTrue((guids[0] or "").startswith("morning-prayer-2026-04-07::"))
             self.assertTrue((guids[1] or "").startswith("morning-prayer-2026-04-06::"))
+
+    def test_load_podcast_feed_jobs_uses_remote_archive_when_local_is_ignored(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            docs_root.mkdir(parents=True, exist_ok=True)
+            feed_path = docs_root / "podcast.xml"
+            feed_root = ET.Element("rss", version="2.0")
+            channel = ET.SubElement(feed_root, "channel")
+            ET.SubElement(channel, "title").text = "Ora Pro Nobis"
+            local_item = ET.SubElement(channel, "item")
+            ET.SubElement(local_item, "title").text = "Local Morning Prayer"
+            ET.SubElement(local_item, "guid", isPermaLink="false").text = "local-prayer-2026-04-05::revision-a"
+            ET.SubElement(local_item, "link").text = "https://example.com/audio/local-prayer-2026-04-05.mp3"
+            ET.SubElement(local_item, "description").text = "Local feed item."
+            ET.ElementTree(feed_root).write(feed_path, encoding="utf-8", xml_declaration=True)
+
+            remote_root = ET.Element("rss", version="2.0")
+            remote_channel = ET.SubElement(remote_root, "channel")
+            ET.SubElement(remote_channel, "title").text = "Ora Pro Nobis"
+            remote_item = ET.SubElement(remote_channel, "item")
+            ET.SubElement(remote_item, "title").text = "Remote Morning Prayer"
+            ET.SubElement(remote_item, "guid", isPermaLink="false").text = "remote-prayer-2026-04-06::revision-b"
+            ET.SubElement(remote_item, "link").text = "https://example.com/audio/remote-prayer-2026-04-06.mp3"
+            ET.SubElement(remote_item, "description").text = "Remote feed item."
+            remote_xml = ET.tostring(remote_root, encoding="unicode")
+
+            original_get = self.rss_mod.requests.get
+
+            def fake_get(url, timeout=20):
+                return SimpleNamespace(ok=True, status_code=200, text=remote_xml)
+
+            self.rss_mod.requests.get = fake_get
+            try:
+                jobs = self.rss_mod.load_podcast_feed_jobs(
+                    feed_path,
+                    base_url="https://example.com",
+                    remote_feed_url="https://example.com/podcast.xml",
+                    include_local=False,
+                    require_remote=True,
+                )
+            finally:
+                self.rss_mod.requests.get = original_get
+
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0]["episode_id"], "remote-prayer-2026-04-06")
+        self.assertEqual(jobs[0]["title"], "Remote Morning Prayer")
+
+    def test_load_podcast_feed_jobs_fails_when_remote_archive_cannot_be_recovered(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            docs_root.mkdir(parents=True, exist_ok=True)
+            feed_path = docs_root / "podcast.xml"
+            feed_root = ET.Element("rss", version="2.0")
+            channel = ET.SubElement(feed_root, "channel")
+            ET.SubElement(channel, "title").text = "Ora Pro Nobis"
+            local_item = ET.SubElement(channel, "item")
+            ET.SubElement(local_item, "title").text = "Local Morning Prayer"
+            ET.SubElement(local_item, "guid", isPermaLink="false").text = "local-prayer-2026-04-05::revision-a"
+            ET.SubElement(local_item, "link").text = "https://example.com/audio/local-prayer-2026-04-05.mp3"
+            ET.SubElement(local_item, "description").text = "Local feed item."
+            ET.ElementTree(feed_root).write(feed_path, encoding="utf-8", xml_declaration=True)
+
+            original_get = self.rss_mod.requests.get
+
+            def fake_get(url, timeout=20):
+                return SimpleNamespace(ok=False, status_code=404, text="")
+
+            self.rss_mod.requests.get = fake_get
+            try:
+                with self.assertRaises(RuntimeError):
+                    self.rss_mod.load_podcast_feed_jobs(
+                        feed_path,
+                        base_url="https://example.com",
+                        remote_feed_url="https://example.com/podcast.xml",
+                        include_local=False,
+                        require_remote=True,
+                    )
+            finally:
+                self.rss_mod.requests.get = original_get
 
     def test_load_published_audio_jobs_recovers_date_from_episode_suffix_without_audio_file(self):
         with tempfile.TemporaryDirectory() as tmpdir:
