@@ -29,14 +29,21 @@ DEFAULT_PODCAST_FEED_PATH = PUBLISH_DOCS_DIR / "podcast.xml"
 DEFAULT_PODCAST_COVER_ART_SOURCE = ROOT / "config" / "publish" / "images" / "logo_ora_pro_nobis.png"
 DEFAULT_PODCAST_COVER_ART_RELATIVE_PATH = Path("images") / DEFAULT_PODCAST_COVER_ART_SOURCE.name
 PUBLISH_GITHUB_PAGES_BASE_URL = "PUBLISH_GITHUB_PAGES_BASE_URL"
+PUBLISH_PODCAST_FEED_URL = "PUBLISH_PODCAST_FEED_URL"
 OPENAI_API_KEY = "OPENAI_API_KEY"
 OAI_API_BASE_URL = "OAI_API_BASE_URL"
+DEFAULT_PODCAST_FEED_PUBLIC_URL = "https://jctebo.github.io/spotify_praylist/podcast.xml"
 
 
 
 def github_pages_base_url() -> str:
     configured = os.getenv(PUBLISH_GITHUB_PAGES_BASE_URL, "").strip()
     return configured or DEFAULT_GITHUB_PAGES_BASE_URL
+
+
+def podcast_feed_public_url() -> str:
+    configured = os.getenv(PUBLISH_PODCAST_FEED_URL, "").strip()
+    return configured or DEFAULT_PODCAST_FEED_PUBLIC_URL
 
 
 

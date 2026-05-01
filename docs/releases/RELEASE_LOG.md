@@ -1,5 +1,16 @@
 # Release Log
 
+## [0.3.0.2] - 2026-05-01
+
+### Changed
+- Simplified the audio publish archive path so it now recovers history from the remote `podcast.xml` feed only and treats the local checkout feed as an intra-run handoff, not a cross-run archive.
+- Updated the novena RSS path to keep using the current in-workspace feed as a same-run handoff after audio writes it.
+- Added the `PUBLISH_PODCAST_FEED_URL` override so the remote archive URL is explicit and stable.
+
+### Fixed
+- Prevented daily audio publishes from silently rebuilding a truncated feed when the archive cannot be recovered, by failing closed instead of falling back to an empty local archive.
+- Preserved older episodes in the published podcast feed by treating the deployed `podcast.xml` as the durable source of truth.
+
 ## [0.3.0.1] - 2026-05-01
 
 ### Changed
