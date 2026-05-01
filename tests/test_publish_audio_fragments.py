@@ -1,5 +1,6 @@
 import datetime
 import tempfile
+import shutil
 import unittest
 from pathlib import Path
 
@@ -97,3 +98,86 @@ class TestPublishAudioFragments(unittest.TestCase):
             self.assertEqual(calls["count"], 1)
             self.assertTrue(Path(first["audio_path"]).exists())
             self.assertGreater(Path(first["audio_path"]).stat().st_size, 0)
+
+    def test_render_audio_job_reuses_restored_fragment_and_silence_cache(self):
+        mp3_bytes = make_test_mp3_bytes()
+        calls = {"count": 0}
+
+        def renderer(text, audio_config):
+            calls["count"] += 1
+            return mp3_bytes
+
+        job = {
+            "entry_id": "repeat-test",
+            "contract_id": "test-contract",
+            "title": "Repeat Test",
+            "date": "daily",
+            "text": "Repeat Test",
+            "audio_config": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "audio_fragments": [
+                {
+                    "fragment_key": "block-1/repeat-1/file",
+                    "block_path": "block-1/repeat-1/file",
+                    "kind": "file",
+                    "label": "Repeated Prayer",
+                    "text": "Repeated prayer text.",
+                },
+                {
+                    "fragment_key": "block-1/repeat-2/file",
+                    "block_path": "block-1/repeat-2/file",
+                    "kind": "file",
+                    "label": "Repeated Prayer",
+                    "text": "Repeated prayer text.",
+                },
+                {
+                    "fragment_key": "block-1/repeat-3/file",
+                    "block_path": "block-1/repeat-3/file",
+                    "kind": "file",
+                    "label": "Repeated Prayer",
+                    "text": "Repeated prayer text.",
+                },
+            ],
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            cache_root = Path(tmpdir) / ".cache"
+
+            first = self.audio_mod.render_audio_job(job, renderer=renderer, docs_root=docs_root, cache_root=cache_root)
+            self.assertTrue(first["rendered"])
+            self.assertEqual(calls["count"], 1)
+
+            silence_path = self.fragments_mod._silence_cache_path(
+                cache_root,
+                "mp3",
+                self.fragments_mod.DEFAULT_FRAGMENT_SILENCE_MS,
+            )
+            self.assertTrue(silence_path.exists())
+
+            restored_cache_root = Path(tmpdir) / "restored-cache"
+            restored_cache_root.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(cache_root / "fragments", restored_cache_root / "fragments")
+            shutil.copytree(cache_root / "silence", restored_cache_root / "silence")
+
+            def unexpected_renderer(text, audio_config):
+                raise AssertionError("renderer should not be called when the fragment cache is restored")
+
+            def unexpected_ffmpeg(*args, **kwargs):
+                raise AssertionError("ffmpeg should not run when the silence cache is restored")
+
+            original_run_ffmpeg = self.fragments_mod._run_ffmpeg
+            self.fragments_mod._run_ffmpeg = unexpected_ffmpeg
+            try:
+                second = self.audio_mod.render_audio_job(
+                    job,
+                    renderer=unexpected_renderer,
+                    docs_root=Path(tmpdir) / "docs-restored",
+                    cache_root=restored_cache_root,
+                )
+            finally:
+                self.fragments_mod._run_ffmpeg = original_run_ffmpeg
+
+            self.assertTrue(second["rendered"])
+            self.assertEqual(calls["count"], 1)
+            self.assertTrue((Path(tmpdir) / "docs-restored" / "audio" / "repeat-test.mp3").exists())
+            self.assertTrue((restored_cache_root / "silence").exists())

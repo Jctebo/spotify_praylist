@@ -218,6 +218,20 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertIn("Manual runs default to daily.", workflow_text)
         self.assertNotIn("default: reset", workflow_text)
 
+    def test_publish_audio_workflow_restores_and_saves_fragment_cache(self):
+        workflow_text = Path(".github/workflows/publish_audio.yml").read_text(encoding="utf-8")
+
+        self.assertIn("Restore publish audio cache", workflow_text)
+        self.assertIn("Save publish audio cache", workflow_text)
+        self.assertIn("actions/cache/restore@v4", workflow_text)
+        self.assertIn("actions/cache/save@v4", workflow_text)
+        self.assertIn(".cache/publish_audio/fragments", workflow_text)
+        self.assertIn(".cache/publish_audio/silence", workflow_text)
+        self.assertIn("restore-keys: |", workflow_text)
+        self.assertIn("publish-audio-${{ runner.os }}-py311-fragments-v1-", workflow_text)
+        self.assertIn("publish-audio-${{ runner.os }}-py311-fragments-v1-${{ github.run_id }}-${{ hashFiles('requirements.txt') }}", workflow_text)
+        self.assertIn("publish-audio-${{ runner.os }}-py311-fragments-v1-${{ hashFiles('requirements.txt') }}", workflow_text)
+
     def test_run_audio_pipeline_can_render_today_and_tomorrow_together(self):
         contracts = self.contracts_mod.load_publish_contracts()
         fake_renderer, _ = self._fake_renderer()
