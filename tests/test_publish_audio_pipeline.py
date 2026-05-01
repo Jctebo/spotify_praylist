@@ -208,6 +208,13 @@ class TestPublishAudioPipeline(unittest.TestCase):
         today = datetime.date.today()
         self.assertEqual(captured["target_dates"], [today, today + datetime.timedelta(days=1)])
 
+    def test_publish_audio_workflow_dispatch_defaults_to_daily(self):
+        workflow_text = Path(".github/workflows/publish_audio.yml").read_text(encoding="utf-8")
+
+        self.assertIn("default: daily", workflow_text)
+        self.assertIn("Manual runs default to daily.", workflow_text)
+        self.assertNotIn("default: reset", workflow_text)
+
     def test_run_audio_pipeline_can_render_today_and_tomorrow_together(self):
         contracts = self.contracts_mod.load_publish_contracts()
         fake_renderer, _ = self._fake_renderer()

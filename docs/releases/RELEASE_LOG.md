@@ -1,5 +1,15 @@
 # Release Log
 
+## [0.3.0.1] - 2026-05-01
+
+### Changed
+- Updated the `Publish Prayer Audio` manual dispatch default to `daily` so the combined publish workflow starts in the append-safe mode instead of destructive reset mode.
+- Clarified the README and workflow description to distinguish the safe daily publish path from explicit archive truncation via `reset`.
+
+### Fixed
+- Prevented manual publish runs from silently starting in `reset`, which could truncate the feed archive and make older episodes disappear.
+- Added regression coverage that guards the workflow default and keeps the existing feed-preservation behavior under test.
+
 ## [0.3.0.0] - 2026-04-29
 
 ### Added
