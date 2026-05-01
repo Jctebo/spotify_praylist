@@ -4,14 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       novena_publish_mode:
-        description: Publish mode; daily publishes tomorrow only, bootstrap seeds today and tomorrow once, reset seeds today and tomorrow and truncates the novena feed. Manual runs default to reset.
+        description: Publish mode; daily publishes tomorrow only, bootstrap seeds today and tomorrow once, reset seeds today and tomorrow and truncates the novena feed. Manual runs default to daily.
         required: false
         type: choice
         options:
           - daily
           - bootstrap
           - reset
-        default: reset
+        default: daily
   schedule:
     - cron: "0 6 * * *" # daily 06:00 UTC
 
