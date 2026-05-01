@@ -143,7 +143,7 @@ class TestNovenaUrlImport(unittest.TestCase):
         self.assertEqual(draft.payload["contract"]["feast"]["day"], 10)
         self.assertEqual(
             draft.payload["contract"]["publishing"]["rss"]["episode_title_pattern"],
-            "Traditional Novena to {saint_name} Day {day}",
+            "Traditional Novena to {saint_name} Day {day} - {date_display}",
         )
         sections = draft.payload["contract"]["novena"]["template"]["sections"]
         blocks = draft.payload["contract"]["novena"]["template"]["blocks"]

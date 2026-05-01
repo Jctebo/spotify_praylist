@@ -177,6 +177,66 @@ class TestNovenaPipeline(unittest.TestCase):
             self.assertTrue(any(guid.startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::") for guid in guids))
             self.assertTrue(any(guid.startswith("2026-06-04-most_sacred_heart_of_jesus-day-2::") for guid in guids))
 
+    def test_pipeline_renders_traditional_novena_title_with_publish_date_suffix(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contracts_root = self._write_contracts(root)
+            (contracts_root / "feast-days" / "most_sacred_heart_of_jesus.json").unlink()
+            (contracts_root / "feast-days" / "st_damien_of_molokai.json").write_text(
+                json.dumps(
+                    {
+                        "contract": {
+                            "id": "st_damien_of_molokai",
+                            "type": "novena_feast_rule",
+                            "saint": {"id": "st_damien_of_molokai", "name": "St Damien of Molokai"},
+                            "feast": {"month": 6, "day": 12, "name": "St Damien of Molokai"},
+                            "novena": {
+                                "duration_days": 9,
+                                "start_offset_days": -9,
+                                "content_mode": "hybrid",
+                                "template_id": "standard-9-day",
+                                "ai_config": {"themes": ["trust in suffering"]},
+                            },
+                            "publishing": {
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "rss": {
+                                    "enabled": True,
+                                    "feed_id": "ora-pro-nobis",
+                                    "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+                                    "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+                                },
+                            },
+                        }
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            docs_root = root / "docs"
+            cache_root = root / ".cache"
+
+            def fake_renderer(text, audio_config):
+                return make_test_mp3_bytes()
+
+            def fake_generate_text(prompt, context):
+                return f"generated::{prompt}"
+
+            result = pipeline_mod.run_novena_pipeline(
+                contract_dir=contracts_root,
+                docs_root=docs_root,
+                cache_root=cache_root,
+                today=datetime.date(2026, 6, 4),
+                renderer=fake_renderer,
+                generate_text_fn=fake_generate_text,
+            )
+
+            feed_root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
+            title = feed_root.findtext("./channel/item/title") or ""
+
+            self.assertEqual(result["active"], 1)
+            self.assertTrue(title.endswith(" - June 4, 2026"))
+            self.assertEqual(title, "Traditional Novena to St Damien of Molokai Day 2 - June 4, 2026")
+
     def test_pipeline_reset_truncates_existing_feed_items(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
