@@ -1,5 +1,13 @@
 # Release Log
 
+## [0.3.0.4] - 2026-05-01
+
+### Changed
+- Updated traditional novena RSS item titles to end with the publish date suffix so imported and checked-in traditional novenas now render like `Traditional Novena to St Damien of Molokai Day 2 - May 2, 2026`.
+
+### Fixed
+- Prevented traditional novena feed items from continuing to publish without the visible publish-date suffix in the RSS title.
+
 ## [0.3.0.3] - 2026-05-01
 
 ### Added
