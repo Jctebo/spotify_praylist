@@ -1,5 +1,21 @@
 # Release Log
 
+## [0.3.1.0] - 2026-05-02
+
+### Added
+- Added a Gospel-free Morning Prayer daily intro fallback so the opening block can still render when the Gospel lookup is unavailable.
+- Added block-level `skip_if_missing` handling for optional publish blocks that should disappear instead of failing the run when upstream data is missing.
+- Added regression coverage for the daily-intro USCCB fallback path, the Gospel-free daily intro path, and optional monthly-template skipping.
+
+### Changed
+- Hardened the daily Gospel lookup to retry the USCCB library path and fall back to direct HTML parsing when the live edge blocks the request.
+- Updated the Morning Prayer contract metadata to opt into the Gospel-free daily intro fallback.
+- Updated publish contract resolution so skipped optional blocks are logged and omitted cleanly from text and audio output.
+
+### Fixed
+- Prevented transient USCCB 403/challenge responses from failing the Morning Prayer publish outright.
+- Prevented optional dynamic blocks from aborting the publish when they are explicitly marked to skip missing data.
+
 ## [0.3.0.4] - 2026-05-01
 
 ### Changed
