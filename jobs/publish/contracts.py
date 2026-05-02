@@ -227,10 +227,14 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
         normalized["text"] = str(normalized.get("text", ""))
     elif kind == "daily-intro":
         normalized["title"] = str(normalized.get("title", "")).strip()
-        normalized["calendar"] = str(normalized.get("calendar", "")).strip()
-        normalized["locale"] = str(normalized.get("locale", "")).strip()
-        normalized["prompt_model"] = str(normalized.get("prompt_model", "")).strip()
-        normalized["allow_missing_gospel"] = _normalize_bool(normalized.get("allow_missing_gospel", False))
+        if "calendar" in normalized:
+            normalized["calendar"] = str(normalized.get("calendar", "")).strip()
+        if "locale" in normalized:
+            normalized["locale"] = str(normalized.get("locale", "")).strip()
+        if "prompt_model" in normalized:
+            normalized["prompt_model"] = str(normalized.get("prompt_model", "")).strip()
+        if "allow_missing_gospel" in normalized:
+            normalized["allow_missing_gospel"] = _normalize_bool(normalized.get("allow_missing_gospel", False))
     else:
         raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' uses unsupported block kind '{kind}'.")
     normalized["skip_if_missing"] = _normalize_bool(normalized.get("skip_if_missing", False))
@@ -507,6 +511,16 @@ def resolve_block_content(
             locale = str(intro_config.get("locale") or "").strip() or None
             prompt_model = str(intro_config.get("prompt_model") or "").strip() or None
             allow_missing_gospel = _normalize_bool(intro_config.get("allow_missing_gospel", False))
+            print(
+                "INFO daily_intro resolved "
+                f"entry={entry.get('entry_id', '')} "
+                f"block={_block_display_name(block)} "
+                f"calendar={calendar or '-'} "
+                f"locale={locale or '-'} "
+                f"prompt_model={prompt_model or '-'} "
+                f"allow_missing_gospel={str(allow_missing_gospel).lower()}",
+                file=sys.stderr,
+            )
             return build_daily_intro_text(
                 effective_date,
                 calendar=calendar,
