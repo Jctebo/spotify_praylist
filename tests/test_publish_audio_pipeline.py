@@ -502,6 +502,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertIn("Published audio archive", archive_html)
         self.assertIn("morning-prayer-2026-04-06.mp3", archive_html)
         self.assertIn("morning-prayer-2026-04-06.json", archive_html)
+        self.assertIn("https://example.com/audio/morning-prayer-2026-04-06.json", archive_html)
 
     def test_load_podcast_feed_jobs_recovers_date_from_episode_suffix_without_audio_file(self):
         with tempfile.TemporaryDirectory() as tmpdir:

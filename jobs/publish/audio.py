@@ -335,7 +335,7 @@ def _archive_index_html(manifest: Dict[str, Any], *, base_url: Optional[str] = N
         episode_id = _html_escape(str(item.get("episode_id", "")).strip())
         published_date = _html_escape(str(item.get("published_date", "")).strip())
         audio_href = _html_escape(str(item.get("audio_filename", "")).strip() or f"{episode_id}.mp3")
-        sidecar_href = _html_escape(str(item.get("sidecar_path", "")).strip() or f"{episode_id}.json")
+        sidecar_href = _html_escape(str(item.get("sidecar_url", "")).strip() or f"{episode_id}.json")
         audio_length = _html_escape(str(item.get("audio_length", "")).strip() or "-")
         rows.append(
             f"""
