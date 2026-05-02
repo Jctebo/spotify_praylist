@@ -379,9 +379,11 @@ def _split_sentences(text: str) -> List[str]:
 
 def _validate_daily_intro(text: str, *, allow_missing_gospel: bool = False) -> str:
     sentences = _split_sentences(text)
-    expected_count = 2 if allow_missing_gospel else 3
-    if len(sentences) != expected_count:
-        raise RuntimeError(f"Daily intro must contain exactly {expected_count} sentences, got {len(sentences)}.")
+    if allow_missing_gospel:
+        if not sentences:
+            raise RuntimeError("Daily intro must contain at least one sentence when the Gospel is omitted.")
+    elif len(sentences) != 3:
+        raise RuntimeError(f"Daily intro must contain exactly 3 sentences, got {len(sentences)}.")
     if not sentences[0].lower().startswith("today the church celebrates"):
         raise RuntimeError("Daily intro must begin with a liturgical celebration sentence.")
     if not allow_missing_gospel and not sentences[2].lower().startswith("in today's gospel"):

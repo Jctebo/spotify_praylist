@@ -509,3 +509,10 @@
 ## Notes
 - This file initializes the `docs/releases/` contract from the prior `release/releaselog.md` source.
 - Historical context still exists in git history if deeper detail is needed.
+
+## [0.3.1.3] - 2026-05-02
+
+### Fixed
+- Relaxed the Gospel-free daily intro validator so a three-sentence OpenAI response no longer aborts Morning Prayer.
+- Kept the Gospel-present path strict at exactly three sentences.
+- Added regression coverage for the tolerant Gospel-free fallback path.
