@@ -48,6 +48,64 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(contracts[1].entries[0]["entry_id"], "rosary")
         self.assertTrue(contracts[0].entries[0]["audio_config"]["enabled"])
         self.assertFalse(contracts[1].entries[0]["audio_config"]["enabled"])
+        self.assertFalse(contracts[0].entries[0]["blocks"][0]["skip_if_missing"])
+        self.assertTrue(contracts[0].metadata["daily_intro"]["allow_missing_gospel"])
+
+    def test_build_text_jobs_skips_missing_monthly_template_when_flagged(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contracts_dir = root / "config" / "publish" / "contracts"
+            templates_dir = root / "config" / "publish" / "templates" / "sample"
+            contracts_dir.mkdir(parents=True, exist_ok=True)
+            templates_dir.mkdir(parents=True, exist_ok=True)
+            (templates_dir / "opening.txt").write_text("Opening line", encoding="utf-8")
+            (templates_dir / "closing.txt").write_text("Closing line", encoding="utf-8")
+            (templates_dir / "may.txt").write_text("May line", encoding="utf-8")
+
+            payload = {
+                "contract": {
+                    "id": "sample",
+                    "type": "daily-prayer",
+                    "frequency": "daily",
+                    "timezone": "America/Chicago",
+                    "version": "1",
+                },
+                "entries": [
+                    {
+                        "entry_id": "sample-entry",
+                        "date": "daily",
+                        "title": "Sample Entry",
+                        "status": "approved",
+                        "text": "Sample Entry",
+                        "blocks": [
+                            {
+                                "kind": "sequence",
+                                "title": "Calendar Sequence",
+                                "blocks": [
+                                    {"kind": "file", "path": "config/publish/templates/sample/opening.txt"},
+                                    {
+                                        "kind": "monthly_template",
+                                        "folder": "config/publish/templates/sample",
+                                        "selector": "current_calendar_month",
+                                        "skip_if_missing": True,
+                                    },
+                                    {"kind": "file", "path": "config/publish/templates/sample/closing.txt"},
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+            (contracts_dir / "sample.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+            with mock.patch.object(self.mod, "ROOT", root):
+                contracts = self.mod.load_publish_contracts(contracts_dir)
+                jobs = self.mod.build_text_jobs(contracts, target_date=datetime.date(2026, 4, 6))
+
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0]["text"], "Opening line\n\nClosing line")
+        self.assertEqual([section["title"] for section in jobs[0]["sections"]], ["Calendar Sequence"])
+        self.assertNotIn("May line", jobs[0]["text"])
 
     def test_resolve_text_jobs_uses_weekday_and_month_selectors(self):
         contracts = self.mod.load_publish_contracts()
