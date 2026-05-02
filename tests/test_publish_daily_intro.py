@@ -117,13 +117,21 @@ class TestPublishDailyIntro(unittest.TestCase):
         captured = {}
         def fake_prompt(model, prompt):
             captured["prompt"] = prompt
-            return "Today the Church celebrates Saint Example. Praise be to God for his mercy."
+            return (
+                "Today the Church celebrates Saint Example. "
+                "Praise be to God for his mercy. "
+                "We thank God for this day. "
+                "May his peace be with us all."
+            )
 
         self.mod._call_openai_prompt = fake_prompt
 
         text = self.mod.build_daily_intro_text(datetime.date(2026, 4, 27), allow_missing_gospel=True)
 
-        self.assertEqual(text, "Today the Church celebrates Saint Example. Praise be to God for his mercy.")
+        self.assertEqual(
+            text,
+            "Today the Church celebrates Saint Example. Praise be to God for his mercy. We thank God for this day. May his peace be with us all.",
+        )
         self.assertIn("Write exactly two sentences", captured["prompt"])
         self.assertNotIn("Gospel citation:", captured["prompt"])
         self.assertNotIn("Gospel text:", captured["prompt"])
