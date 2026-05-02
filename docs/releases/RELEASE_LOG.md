@@ -516,3 +516,10 @@
 - Relaxed the Gospel-free daily intro validator so a three-sentence OpenAI response no longer aborts Morning Prayer.
 - Kept the Gospel-present path strict at exactly three sentences.
 - Added regression coverage for the tolerant Gospel-free fallback path.
+
+## [0.3.1.4] - 2026-05-02
+
+### Fixed
+- Removed the remaining Gospel-free daily intro validation guard.
+- Let the Gospel-free intro return an empty string if the model does so.
+- Kept the Gospel-present path strict at exactly three sentences.
