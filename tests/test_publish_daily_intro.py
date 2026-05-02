@@ -136,6 +136,16 @@ class TestPublishDailyIntro(unittest.TestCase):
         self.assertNotIn("Gospel citation:", captured["prompt"])
         self.assertNotIn("Gospel text:", captured["prompt"])
 
+    def test_build_daily_intro_text_allows_empty_output_when_gospel_missing(self):
+        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
+        self.mod._fetch_mass_with_retry = lambda date_value: None
+        self.mod._fetch_usccb_html = lambda date_value: (_ for _ in ()).throw(self.mod.DailyIntroMissingDataError("missing"))
+        self.mod._call_openai_prompt = lambda model, prompt: ""
+
+        text = self.mod.build_daily_intro_text(datetime.date(2026, 4, 27), allow_missing_gospel=True)
+
+        self.assertEqual(text, "")
+
     def test_build_daily_intro_text_rejects_invalid_openai_shape(self):
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
         self.mod.asyncio.run = lambda coro: self._fake_asyncio_run(coro)
