@@ -523,3 +523,10 @@
 - Removed the remaining Gospel-free daily intro validation guard.
 - Let the Gospel-free intro return an empty string if the model does so.
 - Kept the Gospel-present path strict at exactly three sentences.
+
+## [0.3.1.5] - 2026-05-02
+
+### Fixed
+- Fixed the archive dashboard so the JSON sidecar link points at the published GitHub Pages URL.
+- Kept the MP3 link behavior unchanged.
+- Added regression coverage for the rendered sidecar href.
