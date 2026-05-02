@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime as _dt
 import json
 import re
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Tuple
 from zoneinfo import ZoneInfo
@@ -10,6 +11,7 @@ from zoneinfo import ZoneInfo
 from jobs.publish.daily_intro import build_daily_intro_text
 from jobs.publish.formatting import build_publish_context, derive_episode_id, render_publish_template
 from jobs.publish.fragments import audio_manifest_hash
+from jobs.publish.errors import PublishMissingDataError
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONTRACT_DIR = ROOT / "config" / "publish" / "contracts"
@@ -97,6 +99,18 @@ def _optional_dict(payload: Dict[str, Any], field_name: str, default: Optional[D
     if not isinstance(value, dict):
         raise RuntimeError(f"Expected '{field_name}' to be a JSON object.")
     return dict(value)
+
+
+def _normalize_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        raw = value.strip().lower()
+        if raw in {"1", "true", "yes", "y", "on"}:
+            return True
+        if raw in {"0", "false", "no", "n", "off"}:
+            return False
+    return bool(value)
 
 
 
@@ -216,8 +230,10 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
         normalized["calendar"] = str(normalized.get("calendar", "")).strip()
         normalized["locale"] = str(normalized.get("locale", "")).strip()
         normalized["prompt_model"] = str(normalized.get("prompt_model", "")).strip()
+        normalized["allow_missing_gospel"] = _normalize_bool(normalized.get("allow_missing_gospel", False))
     else:
         raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' uses unsupported block kind '{kind}'.")
+    normalized["skip_if_missing"] = _normalize_bool(normalized.get("skip_if_missing", False))
     return normalized
 
 
@@ -428,8 +444,12 @@ def _read_text_file(path_text: str) -> str:
     if not path.is_absolute():
         path = ROOT / path
     if not path.exists():
-        raise RuntimeError(f"Publish template file not found: {path}")
+        raise PublishMissingDataError(f"Publish template file not found: {path}")
     return path.read_text(encoding="utf-8").strip()
+
+
+def _block_display_name(block: Dict[str, Any]) -> str:
+    return str(block.get("title") or block.get("heading") or block.get("label") or block.get("kind") or "block").strip()
 
 
 
@@ -447,45 +467,62 @@ def resolve_block_content(
 
     kind = normalize_publish_key(block.get("kind"))
     effective_date = target_date or _local_date_for_timezone(contract.timezone)
+    skip_if_missing = _normalize_bool(block.get("skip_if_missing", False))
 
-    if kind == "inline":
-        return str(block.get("text", "")).strip()
-    if kind == "file":
-        return _read_text_file(str(block.get("path", "")).strip())
-    if kind == "monthly-template":
-        month_name = evaluate_selector(block.get("selector", "current_calendar_month"), target_date=effective_date, timezone=contract.timezone, contract=contract, entry=entry)
-        folder = str(block.get("folder", "")).strip()
-        template_path = Path(folder)
-        if not template_path.is_absolute():
-            template_path = ROOT / template_path
-        template_file = template_path / f"{month_name}.txt"
-        return _read_text_file(str(template_file))
-    if kind == "weekday-map":
-        weekday = evaluate_selector(block.get("selector", "weekday"), target_date=effective_date, timezone=contract.timezone, contract=contract, entry=entry)
-        mapping = block.get("map") or {}
-        chosen = mapping.get(weekday.lower()) or mapping.get(weekday.title())
-        if chosen is None:
-            raise RuntimeError(f"Publish entry '{entry.get('entry_id', '')}' has no weekday_map entry for '{weekday}'.")
-        return resolve_block_content(chosen, contract=contract, entry=entry, target_date=effective_date)
-    if kind == "sequence":
-        children = [resolve_block_content(child, contract=contract, entry=entry, target_date=effective_date) for child in block.get("blocks", [])]
-        children = [child for child in children if child.strip()]
-        separator = str(block.get("separator", "\n\n"))
-        return separator.join(children).strip()
-    if kind == "repeat":
-        repeated = resolve_block_content(block.get("block"), contract=contract, entry=entry, target_date=effective_date)
-        separator = str(block.get("separator", "\n"))
-        count = int(block.get("count", 0))
-        return separator.join(repeated for _ in range(count)).strip()
-    if kind == "daily-intro":
-        metadata = dict(contract.metadata or {})
-        intro_config = dict(metadata.get("daily_intro") or {}) if isinstance(metadata.get("daily_intro"), dict) else {}
-        intro_config.update({k: v for k, v in block.items() if k not in {"kind", "title"}})
-        calendar = str(intro_config.get("calendar") or "").strip() or None
-        locale = str(intro_config.get("locale") or "").strip() or None
-        prompt_model = str(intro_config.get("prompt_model") or "").strip() or None
-        return build_daily_intro_text(effective_date, calendar=calendar, locale=locale, prompt_model=prompt_model)
-    raise RuntimeError(f"Publish entry '{entry.get('entry_id', '')}' uses unsupported block kind '{kind}'.")
+    try:
+        if kind == "inline":
+            return str(block.get("text", "")).strip()
+        if kind == "file":
+            return _read_text_file(str(block.get("path", "")).strip())
+        if kind == "monthly-template":
+            month_name = evaluate_selector(block.get("selector", "current_calendar_month"), target_date=effective_date, timezone=contract.timezone, contract=contract, entry=entry)
+            folder = str(block.get("folder", "")).strip()
+            template_path = Path(folder)
+            if not template_path.is_absolute():
+                template_path = ROOT / template_path
+            template_file = template_path / f"{month_name}.txt"
+            return _read_text_file(str(template_file))
+        if kind == "weekday-map":
+            weekday = evaluate_selector(block.get("selector", "weekday"), target_date=effective_date, timezone=contract.timezone, contract=contract, entry=entry)
+            mapping = block.get("map") or {}
+            chosen = mapping.get(weekday.lower()) or mapping.get(weekday.title())
+            if chosen is None:
+                raise PublishMissingDataError(f"Publish entry '{entry.get('entry_id', '')}' has no weekday_map entry for '{weekday}'.")
+            return resolve_block_content(chosen, contract=contract, entry=entry, target_date=effective_date)
+        if kind == "sequence":
+            children = [resolve_block_content(child, contract=contract, entry=entry, target_date=effective_date) for child in block.get("blocks", [])]
+            children = [child for child in children if child.strip()]
+            separator = str(block.get("separator", "\n\n"))
+            return separator.join(children).strip()
+        if kind == "repeat":
+            repeated = resolve_block_content(block.get("block"), contract=contract, entry=entry, target_date=effective_date)
+            separator = str(block.get("separator", "\n"))
+            count = int(block.get("count", 0))
+            return separator.join(repeated for _ in range(count)).strip()
+        if kind == "daily-intro":
+            metadata = dict(contract.metadata or {})
+            intro_config = dict(metadata.get("daily_intro") or {}) if isinstance(metadata.get("daily_intro"), dict) else {}
+            intro_config.update({k: v for k, v in block.items() if k not in {"kind", "title"}})
+            calendar = str(intro_config.get("calendar") or "").strip() or None
+            locale = str(intro_config.get("locale") or "").strip() or None
+            prompt_model = str(intro_config.get("prompt_model") or "").strip() or None
+            allow_missing_gospel = _normalize_bool(intro_config.get("allow_missing_gospel", False))
+            return build_daily_intro_text(
+                effective_date,
+                calendar=calendar,
+                locale=locale,
+                prompt_model=prompt_model,
+                allow_missing_gospel=allow_missing_gospel,
+            )
+        raise RuntimeError(f"Publish entry '{entry.get('entry_id', '')}' uses unsupported block kind '{kind}'.")
+    except PublishMissingDataError as exc:
+        if skip_if_missing:
+            print(
+                f"WARN skipping missing publish block entry={entry.get('entry_id', '')} kind={kind} block={_block_display_name(block)} reason={exc}",
+                file=sys.stderr,
+            )
+            return ""
+        raise
 
 
 

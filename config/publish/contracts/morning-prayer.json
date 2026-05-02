@@ -35,7 +35,8 @@
       "daily_intro": {
         "calendar": "general_roman",
         "locale": "en",
-        "prompt_model": "gpt-4.1-mini"
+        "prompt_model": "gpt-4.1-mini",
+        "allow_missing_gospel": true
       }
     }
   },
