@@ -1,4 +1,5 @@
 import datetime
+import io
 import json
 import tempfile
 import unittest
@@ -11,10 +12,16 @@ from tests.test_helpers import load_module
 class TestPublishContracts(unittest.TestCase):
     def setUp(self):
         self.mod = load_module("jobs/publish/contracts.py")
-        self.mod.build_daily_intro_text = lambda date_value, **kwargs: (
-            "Today the Church celebrates Saint Example. Praise be to God for his mercy. "
-            "In today's Gospel, Jesus calls his sheep by name."
-        )
+        self.calls = []
+
+        def fake_build_daily_intro_text(date_value, **kwargs):
+            self.calls.append((date_value, dict(kwargs)))
+            return (
+                "Today the Church celebrates Saint Example. Praise be to God for his mercy. "
+                "In today's Gospel, Jesus calls his sheep by name."
+            )
+
+        self.mod.build_daily_intro_text = fake_build_daily_intro_text
 
     def test_render_publish_template_and_episode_id_are_date_scoped(self):
         contracts = self.mod.load_publish_contracts()
@@ -50,6 +57,80 @@ class TestPublishContracts(unittest.TestCase):
         self.assertFalse(contracts[1].entries[0]["audio_config"]["enabled"])
         self.assertFalse(contracts[0].entries[0]["blocks"][0]["skip_if_missing"])
         self.assertTrue(contracts[0].metadata["daily_intro"]["allow_missing_gospel"])
+        self.assertNotIn("allow_missing_gospel", contracts[0].entries[0]["blocks"][0])
+
+    def test_build_text_jobs_uses_metadata_allow_missing_gospel_when_block_omits_it(self):
+        contracts = self.mod.load_publish_contracts()
+        target_date = datetime.date(2026, 4, 6)
+
+        stderr = io.StringIO()
+        with mock.patch.object(self.mod.sys, "stderr", stderr):
+            jobs = self.mod.build_text_jobs(contracts, target_date=target_date)
+
+        morning = next(job for job in jobs if job["entry_id"] == "morning-prayer")
+        self.assertIn("Today the Church celebrates", morning["text"])
+        self.assertGreaterEqual(len(self.calls), 1)
+        self.assertTrue(any(call[1]["allow_missing_gospel"] for call in self.calls))
+        self.assertTrue(all(call[1]["allow_missing_gospel"] for call in self.calls))
+        self.assertTrue(any(call[1]["calendar"] == "general_roman" for call in self.calls))
+        self.assertTrue(any(call[1]["locale"] == "en" for call in self.calls))
+        self.assertTrue(any(call[1]["prompt_model"] == "gpt-4.1-mini" for call in self.calls))
+        self.assertIn("allow_missing_gospel=true", stderr.getvalue())
+
+    def test_build_text_jobs_allows_explicit_daily_intro_override(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contracts_dir = root / "config" / "publish" / "contracts"
+            contracts_dir.mkdir(parents=True, exist_ok=True)
+
+            payload = {
+                "contract": {
+                    "id": "sample",
+                    "type": "daily-prayer",
+                    "frequency": "daily",
+                    "timezone": "America/Chicago",
+                    "version": "1",
+                    "metadata": {
+                        "daily_intro": {
+                            "calendar": "general_roman",
+                            "locale": "en",
+                            "prompt_model": "gpt-4.1-mini",
+                            "allow_missing_gospel": True,
+                        }
+                    },
+                },
+                "entries": [
+                    {
+                        "entry_id": "sample-entry",
+                        "date": "daily",
+                        "title": "Sample Entry",
+                        "status": "approved",
+                        "text": "Sample Entry",
+                        "blocks": [
+                            {
+                                "kind": "daily_intro",
+                                "title": "Daily Intro",
+                                "allow_missing_gospel": False,
+                            }
+                        ],
+                    }
+                ],
+            }
+            (contracts_dir / "sample.json").write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+            with mock.patch.object(self.mod, "ROOT", root):
+                contracts = self.mod.load_publish_contracts(contracts_dir)
+                stderr = io.StringIO()
+                with mock.patch.object(self.mod.sys, "stderr", stderr):
+                    jobs = self.mod.build_text_jobs(contracts, target_date=datetime.date(2026, 4, 6))
+
+        self.assertEqual(len(jobs), 1)
+        self.assertFalse(contracts[0].entries[0]["blocks"][0]["allow_missing_gospel"])
+        self.assertGreaterEqual(len(self.calls), 1)
+        self.assertTrue(any(not call[1]["allow_missing_gospel"] for call in self.calls))
+        self.assertTrue(all(not call[1]["allow_missing_gospel"] for call in self.calls))
+        self.assertIn("allow_missing_gospel=false", stderr.getvalue())
+        self.assertIn("Daily Intro", stderr.getvalue())
 
     def test_build_text_jobs_skips_missing_monthly_template_when_flagged(self):
         with tempfile.TemporaryDirectory() as tmpdir:

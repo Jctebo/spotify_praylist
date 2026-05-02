@@ -1,5 +1,19 @@
 # Release Log
 
+## [0.3.1.2] - 2026-05-02
+
+### Added
+- Added a resolver trace for Morning Prayer's merged daily-intro settings so CI can confirm the active Gospel fallback flag.
+- Added regression coverage proving contract-level `daily_intro` metadata survives block normalization unless the block explicitly overrides it.
+
+### Changed
+- Updated daily-intro block normalization so contract-level `calendar`, `locale`, `prompt_model`, and `allow_missing_gospel` values are preserved unless explicitly set on the block.
+- Added `gh` to the dev container image so the GitHub CLI is available in fresh local container rebuilds.
+
+### Fixed
+- Prevented Morning Prayer's Gospel fallback from being lost when the daily-intro block omitted its own `allow_missing_gospel` value.
+- Prevented the same normalization step from blanking out the contract-level `calendar`, `locale`, and `prompt_model` defaults.
+
 ## [0.3.1.1] - 2026-05-02
 
 ### Added
