@@ -5,6 +5,7 @@ import os
 import sys
 import shutil
 import datetime as _dt
+from html import escape as _html_escape
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
@@ -26,6 +27,8 @@ from jobs.publish.formatting import compose_rss_guid, episode_date_from_episode_
 PUBLISH_DOCS_DIR = ROOT / "docs"
 DEFAULT_AUDIO_DIR = PUBLISH_DOCS_DIR / "audio"
 DEFAULT_PODCAST_FEED_PATH = PUBLISH_DOCS_DIR / "podcast.xml"
+DEFAULT_AUDIO_ARCHIVE_INDEX_PATH = DEFAULT_AUDIO_DIR / "index.html"
+DEFAULT_AUDIO_ARCHIVE_MANIFEST_PATH = DEFAULT_AUDIO_DIR / "index.json"
 DEFAULT_PODCAST_COVER_ART_SOURCE = ROOT / "config" / "publish" / "images" / "logo_ora_pro_nobis.png"
 DEFAULT_PODCAST_COVER_ART_RELATIVE_PATH = Path("images") / DEFAULT_PODCAST_COVER_ART_SOURCE.name
 PUBLISH_GITHUB_PAGES_BASE_URL = "PUBLISH_GITHUB_PAGES_BASE_URL"
@@ -134,7 +137,12 @@ def _is_current_audio_file(audio_path: Path, sidecar_path: Path, content_hash: s
     return str(payload.get("content_hash", "")).strip() == content_hash
 
 
-def _payload_audio_length(payload: Dict[str, Any], *, sidecar_path: Path) -> int:
+def _payload_audio_length(
+    payload: Dict[str, Any],
+    *,
+    sidecar_path: Path,
+    audio_path: Optional[Path] = None,
+) -> int:
     for field_name in ("audio_length", "audio_length_bytes", "audio_bytes", "length"):
         candidate = payload.get(field_name)
         try:
@@ -143,9 +151,15 @@ def _payload_audio_length(payload: Dict[str, Any], *, sidecar_path: Path) -> int
             continue
         if length > 0:
             return length
-    audio_path = str(payload.get("audio_path", "")).strip()
-    if audio_path:
-        path = Path(audio_path)
+    candidate_path = Path(audio_path) if audio_path else None
+    if candidate_path and candidate_path.exists():
+        try:
+            return candidate_path.stat().st_size
+        except Exception:
+            return 0
+    stored_audio_path = str(payload.get("audio_path", "")).strip()
+    if stored_audio_path:
+        path = Path(stored_audio_path)
         if not path.is_absolute():
             path = sidecar_path.parent / path
         if path.exists():
@@ -174,11 +188,17 @@ def _job_audio_length(audio_path: Path, *, fallback: Any = None) -> int:
         return 0
 
 
-def load_published_audio_jobs(*, docs_root: Optional[Path] = None, base_url: Optional[str] = None) -> List[Dict[str, Any]]:
+def load_published_audio_jobs(
+    *,
+    docs_root: Optional[Path] = None,
+    base_url: Optional[str] = None,
+    exclude_episode_ids: Optional[Sequence[str]] = None,
+) -> List[Dict[str, Any]]:
     root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
     audio_dir = root / "audio"
     if not audio_dir.exists():
         return []
+    excluded = {str(value).strip() for value in (exclude_episode_ids or []) if str(value).strip()}
     jobs: List[Dict[str, Any]] = []
     for sidecar_path in sorted(audio_dir.glob("*.json")):
         try:
@@ -192,13 +212,24 @@ def load_published_audio_jobs(*, docs_root: Optional[Path] = None, base_url: Opt
         if not published_date:
             print(f"WARN skipping legacy published audio sidecar without published_date: {sidecar_path}", file=sys.stderr)
             continue
-        audio_length = _payload_audio_length(payload, sidecar_path=sidecar_path)
         content_hash = str(payload.get("content_hash", "")).strip()
         generated_at = str(payload.get("generated_at", "")).strip()
         rss_guid = str(payload.get("rss_guid", "")).strip() or compose_rss_guid(episode_id, content_hash)
-        audio_path = str(payload.get("audio_path", "")).strip()
-        if not audio_path:
-            audio_path = str(audio_output_path(episode_id, docs_root=root))
+        resolved_audio_path = audio_output_path(episode_id, docs_root=root)
+        if not resolved_audio_path.exists():
+            audio_path = str(payload.get("audio_path", "")).strip()
+            if not audio_path:
+                audio_path = str(resolved_audio_path)
+            candidate_audio_path = Path(audio_path)
+            if not candidate_audio_path.is_absolute():
+                candidate_audio_path = sidecar_path.parent / candidate_audio_path
+            resolved_audio_path = candidate_audio_path
+        if not resolved_audio_path.exists():
+            print(f"WARN skipping published audio sidecar without audio file: {sidecar_path}", file=sys.stderr)
+            continue
+        audio_length = _payload_audio_length(payload, sidecar_path=sidecar_path, audio_path=resolved_audio_path)
+        if episode_id in excluded:
+            continue
         title = str(payload.get("title", "")).strip() or str(payload.get("entry_id", "")).strip() or episode_id
         description = str(payload.get("description", "")).strip() or title
         jobs.append(
@@ -213,7 +244,7 @@ def load_published_audio_jobs(*, docs_root: Optional[Path] = None, base_url: Opt
                 "description": description,
                 "published_date": published_date,
                 "content_hash": str(payload.get("content_hash", "")).strip(),
-                "audio_path": audio_path,
+                "audio_path": str(audio_output_path(episode_id, docs_root=root)),
                 "audio_url": audio_public_url(episode_id, base_url=base_url),
                 "audio_length": audio_length,
                 "generated_at": generated_at,
@@ -223,7 +254,399 @@ def load_published_audio_jobs(*, docs_root: Optional[Path] = None, base_url: Opt
                 "fragments": list(payload.get("fragments") or []),
             }
         )
+    jobs.sort(
+        key=lambda job: (
+            str(job.get("published_date", "")).strip(),
+            str(job.get("episode_id", "")).strip() or str(job.get("entry_id", "")).strip(),
+        ),
+        reverse=True,
+    )
     return jobs
+
+
+def _audio_archive_item_path(root: Path, job: Dict[str, Any]) -> Path:
+    episode_id = str(job.get("episode_id", "")).strip() or str(job.get("entry_id", "")).strip()
+    if not episode_id:
+        raise RuntimeError("Archive item is missing an episode_id.")
+    return audio_output_path(episode_id, docs_root=root)
+
+
+def build_audio_archive_manifest(
+    jobs: Sequence[Dict[str, Any]],
+    *,
+    docs_root: Optional[Path] = None,
+    base_url: Optional[str] = None,
+) -> Dict[str, Any]:
+    root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
+    site_base = str(base_url or github_pages_base_url()).strip().rstrip("/")
+    items: List[Dict[str, Any]] = []
+    for job in jobs:
+        episode_id = str(job.get("episode_id", "")).strip() or str(job.get("entry_id", "")).strip()
+        if not episode_id:
+            continue
+        audio_path = _audio_archive_item_path(root, job)
+        sidecar_path = audio_path.with_suffix(".json")
+        if not audio_path.exists() or not sidecar_path.exists():
+            print(
+                f"WARN skipping archive entry without complete files: {sidecar_path if sidecar_path.exists() else audio_path}",
+                file=sys.stderr,
+            )
+            continue
+        items.append(
+            {
+                "entry_id": str(job.get("entry_id", "")).strip() or episode_id,
+                "episode_id": episode_id,
+                "title": str(job.get("title", "")).strip() or episode_id,
+                "description": str(job.get("description", "")).strip() or str(job.get("title", "")).strip() or episode_id,
+                "published_date": str(job.get("published_date", "")).strip(),
+                "generated_at": str(job.get("generated_at", "")).strip(),
+                "rss_guid": str(job.get("rss_guid", "")).strip() or compose_rss_guid(episode_id, job.get("content_hash")),
+                "content_hash": str(job.get("content_hash", "")).strip(),
+                "audio_length": int(job.get("audio_length") or 0),
+                "audio_url": audio_public_url(episode_id, base_url=site_base),
+                "audio_path": audio_path.relative_to(root).as_posix(),
+                "audio_filename": audio_path.name,
+                "sidecar_path": sidecar_path.relative_to(root).as_posix(),
+                "sidecar_url": f"{site_base}/audio/{sidecar_path.name}",
+            }
+        )
+    items.sort(
+        key=lambda item: (
+            str(item.get("published_date", "")).strip(),
+            str(item.get("episode_id", "")).strip(),
+        ),
+        reverse=True,
+    )
+    return {
+        "generated_at": _iso_utc_now(),
+        "count": len(items),
+        "items": items,
+    }
+
+
+def _archive_index_html(manifest: Dict[str, Any], *, base_url: Optional[str] = None) -> str:
+    site_base = str(base_url or github_pages_base_url()).strip().rstrip("/")
+    items = list(manifest.get("items") or [])
+    count = int(manifest.get("count") or len(items))
+    generated_at = str(manifest.get("generated_at", "")).strip() or _iso_utc_now()
+    rows = []
+    for item in items:
+        title = _html_escape(str(item.get("title", "")).strip() or str(item.get("episode_id", "")).strip())
+        episode_id = _html_escape(str(item.get("episode_id", "")).strip())
+        published_date = _html_escape(str(item.get("published_date", "")).strip())
+        audio_href = _html_escape(str(item.get("audio_filename", "")).strip() or f"{episode_id}.mp3")
+        sidecar_href = _html_escape(str(item.get("sidecar_path", "")).strip() or f"{episode_id}.json")
+        audio_length = _html_escape(str(item.get("audio_length", "")).strip() or "-")
+        rows.append(
+            f"""
+            <tr>
+              <td>
+                <strong>{title}</strong>
+                <div class=\"meta\">{episode_id}</div>
+              </td>
+              <td>{published_date}</td>
+              <td><a href=\"{audio_href}\">MP3</a></td>
+              <td><a href=\"{sidecar_href}\">JSON</a></td>
+              <td>{audio_length}</td>
+            </tr>
+            """
+        )
+    empty_state = (
+        """
+        <div class=\"empty\">
+          <h2>Archive not seeded yet</h2>
+          <p>The publish workflow has not restored any historical audio artifacts into this workspace yet.</p>
+        </div>
+        """
+        if not rows
+        else ""
+    )
+    table = (
+        f"""
+        <table>
+          <thead>
+            <tr>
+              <th>Episode</th>
+              <th>Published</th>
+              <th>Audio</th>
+              <th>Sidecar</th>
+              <th>Bytes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {''.join(rows)}
+          </tbody>
+        </table>
+        """
+        if rows
+        else ""
+    )
+    feed_href = _html_escape(f"{site_base}/podcast.xml")
+    root_href = _html_escape(site_base or "/")
+    return f"""<!doctype html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"utf-8\">
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
+  <meta name=\"color-scheme\" content=\"light\">
+  <title>Spotify Praylist Archive</title>
+  <style>
+    :root {{
+      --bg: #f7f1e8;
+      --bg-alt: #efe2cf;
+      --card: rgba(255, 255, 255, 0.84);
+      --card-border: rgba(83, 62, 40, 0.12);
+      --ink: #2d231a;
+      --muted: #665646;
+      --accent: #8d4d2f;
+      --accent-soft: #f3d2bf;
+      --shadow: 0 24px 70px rgba(68, 45, 28, 0.12);
+    }}
+
+    * {{ box-sizing: border-box; }}
+
+    html, body {{
+      margin: 0;
+      min-height: 100%;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(205, 143, 108, 0.18), transparent 34%),
+        radial-gradient(circle at 80% 10%, rgba(141, 77, 47, 0.12), transparent 28%),
+        linear-gradient(180deg, var(--bg), var(--bg-alt));
+      font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+    }}
+
+    main {{
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 48px 20px 72px;
+    }}
+
+    .hero {{
+      padding: 32px;
+      border-radius: 28px;
+      border: 1px solid var(--card-border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.7));
+      box-shadow: var(--shadow);
+    }}
+
+    .eyebrow {{
+      margin: 0 0 10px;
+      color: var(--accent);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-size: 0.76rem;
+    }}
+
+    h1 {{
+      margin: 0;
+      font-size: clamp(2.4rem, 6vw, 4.8rem);
+      line-height: 0.96;
+      letter-spacing: -0.04em;
+    }}
+
+    .lede {{
+      max-width: 70ch;
+      margin: 14px 0 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 1.04rem;
+    }}
+
+    .links {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }}
+
+    .link {{
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(141, 77, 47, 0.16);
+      background: rgba(255, 255, 255, 0.84);
+      color: var(--ink);
+      text-decoration: none;
+    }}
+
+    .stats {{
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-top: 18px;
+    }}
+
+    .stat {{
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(141, 77, 47, 0.12);
+    }}
+
+    .stat label {{
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }}
+
+    .stat code {{
+      font-size: 0.92rem;
+      color: var(--ink);
+      word-break: break-word;
+    }}
+
+    .panel {{
+      margin-top: 20px;
+      padding: 22px;
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      background: var(--card);
+      box-shadow: 0 14px 40px rgba(68, 45, 28, 0.08);
+    }}
+
+    .panel h2 {{
+      margin: 0 0 8px;
+      font-size: 1.15rem;
+    }}
+
+    .panel p {{
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }}
+
+    table {{
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      overflow: hidden;
+    }}
+
+    th, td {{
+      padding: 14px 10px;
+      text-align: left;
+      border-bottom: 1px solid rgba(83, 62, 40, 0.12);
+      vertical-align: top;
+    }}
+
+    th {{
+      font-size: 0.77rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }}
+
+    td .meta {{
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }}
+
+    .empty {{
+      padding: 24px;
+      border-radius: 18px;
+      border: 1px dashed rgba(141, 77, 47, 0.22);
+      background: rgba(255, 255, 255, 0.6);
+    }}
+
+    .empty h2 {{
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+    }}
+
+    .empty p {{
+      margin: 0;
+      color: var(--muted);
+    }}
+
+    footer {{
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }}
+
+    @media (max-width: 820px) {{
+      main {{
+        padding: 24px 14px 44px;
+      }}
+
+      .hero {{
+        padding: 22px;
+        border-radius: 22px;
+      }}
+
+      .stats {{
+        grid-template-columns: 1fr;
+      }}
+    }}
+  </style>
+</head>
+<body>
+  <main>
+    <section class=\"hero\">
+      <p class=\"eyebrow\">GitHub Pages archive</p>
+      <h1>Published audio archive</h1>
+      <p class=\"lede\">
+        This page mirrors the published audio files that ship with the podcast feed.
+        It is rebuilt from the local archive snapshot so future runs can restore the same files
+        without depending on the remote feed being available first.
+      </p>
+      <div class=\"links\">
+        <a class=\"link\" href=\"{feed_href}\">Open feed XML</a>
+        <a class=\"link\" href=\"{root_href}/\">Go to site root</a>
+      </div>
+      <div class=\"stats\">
+        <div class=\"stat\">
+          <label>Archive items</label>
+          <code>{count}</code>
+        </div>
+        <div class=\"stat\">
+          <label>Generated at</label>
+          <code>{_html_escape(generated_at)}</code>
+        </div>
+        <div class=\"stat\">
+          <label>Archive path</label>
+          <code>/audio/</code>
+        </div>
+      </div>
+    </section>
+
+    <section class=\"panel\">
+      <h2>Episode listing</h2>
+      <p>Each row points to the MP3 enclosure and its JSON sidecar.</p>
+      {empty_state}
+      {table}
+    </section>
+
+    <footer>
+      The archive dashboard is static and published with the rest of <code>docs/</code>.
+    </footer>
+  </main>
+</body>
+</html>
+"""
+
+
+def write_audio_archive_index(*, docs_root: Optional[Path] = None, base_url: Optional[str] = None) -> Dict[str, Any]:
+    root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
+    audio_dir = root / "audio"
+    audio_dir.mkdir(parents=True, exist_ok=True)
+    jobs = load_published_audio_jobs(docs_root=root, base_url=base_url)
+    manifest = build_audio_archive_manifest(jobs, docs_root=root, base_url=base_url)
+    manifest_path = audio_dir / "index.json"
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
+    html_path = audio_dir / "index.html"
+    html_path.write_text(_archive_index_html(manifest, base_url=base_url), encoding="utf-8")
+    return {
+        "archive_index_path": str(html_path),
+        "archive_manifest_path": str(manifest_path),
+        "archive_items": len(manifest["items"]),
+    }
 
 
 def _published_date_from_payload(payload: Dict[str, Any], *, sidecar_path: Path) -> str:

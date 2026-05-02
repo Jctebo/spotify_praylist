@@ -1,5 +1,20 @@
 # Release Log
 
+## [0.3.1.1] - 2026-05-02
+
+### Added
+- Added an archive-backed podcast rebuild path that restores and scans `docs/audio/` JSON sidecars and MP3 files before regenerating `podcast.xml`.
+- Added a public archive dashboard at `docs/audio/index.html` plus a machine-readable manifest at `docs/audio/index.json`.
+
+### Changed
+- Updated the publish audio workflow to restore and save the published audio archive snapshot with GitHub Actions cache.
+- Updated the root Pages landing page to link directly to the archive dashboard.
+- Updated the README to describe the local archive snapshot and archive dashboard flow.
+
+### Fixed
+- Prevented podcast archive rebuilds from depending on the remote `podcast.xml` file as the only durable history source.
+- Prevented the Pages root from being a dead end by keeping the static landing page linked to the archive.
+
 ## [0.3.1.0] - 2026-05-02
 
 ### Added
