@@ -16,9 +16,11 @@ from jobs.publish.audio import (
     build_audio_jobs,
     ensure_podcast_cover_art,
     github_pages_base_url,
+    load_published_audio_jobs,
     podcast_feed_public_url,
     podcast_cover_art_public_url,
     render_audio_job,
+    write_audio_archive_index,
 )
 from jobs.publish.contracts import DEFAULT_CONTRACT_DIR, load_publish_contracts
 from jobs.publish.rss import build_rss_feed, load_podcast_feed_jobs, write_podcast_feed
@@ -90,26 +92,37 @@ def run_audio_pipeline(
         len(jobs),
         _episode_id_list(rendered_jobs),
     )
-    archived_jobs = load_podcast_feed_jobs(
-        feed_path,
-        base_url=base_url,
-        remote_feed_url=remote_feed_url,
-        include_local=False,
-        require_remote=True,
+    archived_jobs = load_published_audio_jobs(
+        docs_root=docs_root,
+        base_url=feed_base_url,
+        exclude_episode_ids=[str(job.get("episode_id", "")).strip() for job in rendered_jobs],
     )
+    archive_source = "local"
+    if not archived_jobs and remote_feed_url:
+        archived_jobs = load_podcast_feed_jobs(
+            feed_path,
+            base_url=base_url,
+            remote_feed_url=remote_feed_url,
+            include_local=False,
+            require_remote=False,
+        )
+        archive_source = "remote" if archived_jobs else "empty"
     logger.info(
-        "audio_pipeline archive feed_path=%s archived=%d archived_ids=%s",
+        "audio_pipeline archive source=%s feed_path=%s archived=%d archived_ids=%s",
+        archive_source,
         feed_path,
         len(archived_jobs),
         _episode_id_list(archived_jobs),
     )
     feed_xml = build_rss_feed([*rendered_jobs, *archived_jobs], base_url=feed_base_url, cover_art_url=cover_art_url)
     feed_path = write_podcast_feed(feed_xml, feed_path)
+    archive_index = write_audio_archive_index(docs_root=docs_root, base_url=feed_base_url)
     logger.info(
-        "audio_pipeline write feed_path=%s rendered=%d archived=%d",
+        "audio_pipeline write feed_path=%s rendered=%d archived=%d archive_items=%d",
         feed_path,
         len(rendered_jobs),
         len(archived_jobs),
+        archive_index["archive_items"],
     )
     return {
         "contracts": len(contracts),
@@ -118,6 +131,8 @@ def run_audio_pipeline(
         "archived": len(archived_jobs),
         "feed_path": str(feed_path),
         "cover_art_path": str(cover_art_path),
+        "archive_index_path": archive_index["archive_index_path"],
+        "archive_manifest_path": archive_index["archive_manifest_path"],
         "rendered_jobs": rendered_jobs,
     }
 

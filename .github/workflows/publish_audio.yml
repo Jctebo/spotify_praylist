@@ -49,6 +49,15 @@ jobs:
           restore-keys: |
             publish-audio-${{ runner.os }}-py311-fragments-v1-
 
+      - name: Restore published audio archive
+        id: published_audio_archive_restore
+        uses: actions/cache/restore@v4
+        with:
+          path: docs/audio
+          key: publish-audio-archive-${{ runner.os }}-v1-${{ github.run_id }}
+          restore-keys: |
+            publish-audio-archive-${{ runner.os }}-v1-
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -71,6 +80,13 @@ jobs:
             .cache/publish_audio/fragments
             .cache/publish_audio/silence
           key: publish-audio-${{ runner.os }}-py311-fragments-v1-${{ github.run_id }}-${{ hashFiles('requirements.txt') }}
+
+      - name: Save published audio archive
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: docs/audio
+          key: publish-audio-archive-${{ runner.os }}-v1-${{ github.run_id }}
 
       - name: Configure GitHub Pages
         if: github.ref == 'refs/heads/main'
