@@ -108,7 +108,7 @@ def main() -> int:
     parser.add_argument("--start-offset-days", default=-9, type=int)
     parser.add_argument("--theme", action="append", default=[], help="AI theme to include; may be repeated.")
     parser.add_argument("--feed-id", default="ora-pro-nobis")
-    parser.add_argument("--title-pattern", default="Day {day}: Novena to {saint_name} - {theme}")
+    parser.add_argument("--title-pattern", default="Short-Form Novena to {saint_name} Day {day} - {date_display}")
     parser.add_argument("--description-pattern", default="Day {day} of the Novena to {saint_name} for {feast_name}.")
     parser.add_argument("--audio-model", default="gpt-4o-mini-tts")
     parser.add_argument("--audio-voice", default="alloy")

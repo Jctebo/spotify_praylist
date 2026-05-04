@@ -18,7 +18,7 @@ DEFAULT_AUDIO_CONFIG = {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "a
 DEFAULT_RSS_CONFIG = {
     "enabled": True,
     "feed_id": "ora-pro-nobis",
-    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+    "episode_title_pattern": "Short-Form Novena to {saint_name} Day {day} - {date_display}",
     "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
 }
 
