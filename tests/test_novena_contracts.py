@@ -40,6 +40,22 @@ class TestNovenaContracts(unittest.TestCase):
             ("solemnity", "feast", "memorial", "optional_memorial"),
         )
 
+    def test_load_novena_contracts_reads_short_form_fatima_fixture(self):
+        contracts = self.contracts_mod.load_novena_contracts()
+        contract = next(item for item in contracts if item.contract_id == "our_lady_of_fatima_short_form")
+
+        self.assertEqual(contract.family_id, "our_lady_of_fatima_short_form")
+        self.assertEqual(contract.saint["name"], "Our Lady of Fatima")
+        self.assertEqual(contract.feast.month, 5)
+        self.assertEqual(contract.feast.day, 13)
+        self.assertEqual(contract.novena.template.template_id, "standard-9-day")
+        self.assertEqual(contract.novena.content_mode, "hybrid")
+        self.assertEqual(
+            contract.publishing.rss["episode_title_pattern"],
+            "Short-Form Novena to {saint_name} Day {day} - {date_display}",
+        )
+        self.assertEqual(contract.novena.ai_config["themes"], ["reparation", "peace", "trust in the Immaculate Heart"])
+
     def test_load_novena_contracts_defaults_enabled_when_missing(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -72,7 +88,7 @@ class TestNovenaContracts(unittest.TestCase):
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
-                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+                                    "episode_title_pattern": "Short-Form Novena to {saint_name} Day {day} - {date_display}",
                                     "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
                                 },
                             },
@@ -119,7 +135,7 @@ class TestNovenaContracts(unittest.TestCase):
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
-                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+                                    "episode_title_pattern": "Short-Form Novena to {saint_name} Day {day} - {date_display}",
                                     "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
                                 },
                             },
@@ -182,7 +198,7 @@ class TestNovenaContracts(unittest.TestCase):
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
-                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+                                    "episode_title_pattern": "Short-Form Novena to {saint_name} Day {day} - {date_display}",
                                     "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
                                 },
                             },
@@ -260,7 +276,7 @@ class TestNovenaContracts(unittest.TestCase):
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
-                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+                                    "episode_title_pattern": "Short-Form Novena to {saint_name} Day {day} - {date_display}",
                                     "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
                                 },
                             },
@@ -305,7 +321,7 @@ class TestNovenaContracts(unittest.TestCase):
             start_offset_days=-9,
             theme=["trust in the Sacred Heart"],
             feed_id="ora-pro-nobis",
-            title_pattern="Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+            title_pattern="Short-Form Novena to {saint_name} Day {day} - {date_display}",
             description_pattern="Day {day} of the Novena to {saint_name} for {feast_name}.",
             audio_model="gpt-4o-mini-tts",
             audio_voice="alloy",
@@ -338,7 +354,7 @@ class TestNovenaContracts(unittest.TestCase):
             start_offset_days=-9,
             theme=[],
             feed_id="ora-pro-nobis",
-            title_pattern="Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+            title_pattern="Short-Form Novena to {saint_name} Day {day} - {date_display}",
             description_pattern="Day {day} of the Novena to {saint_name} for {feast_name}.",
             audio_model="gpt-4o-mini-tts",
             audio_voice="alloy",
@@ -371,7 +387,7 @@ class TestNovenaContracts(unittest.TestCase):
             start_offset_days=-9,
             theme=[],
             feed_id="ora-pro-nobis",
-            title_pattern="Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+            title_pattern="Short-Form Novena to {saint_name} Day {day} - {date_display}",
             description_pattern="Day {day} of the Novena to {saint_name} for {feast_name}.",
             audio_model="gpt-4o-mini-tts",
             audio_voice="alloy",
@@ -406,7 +422,7 @@ class TestNovenaContracts(unittest.TestCase):
             start_offset_days=-9,
             theme=[],
             feed_id="ora-pro-nobis",
-            title_pattern="Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+            title_pattern="Short-Form Novena to {saint_name} Day {day} - {date_display}",
             description_pattern="Day {day} of the Novena to {saint_name} for {feast_name}.",
             audio_model="gpt-4o-mini-tts",
             audio_voice="alloy",
@@ -471,7 +487,7 @@ class TestNovenaContracts(unittest.TestCase):
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
-                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+                                    "episode_title_pattern": "Short-Form Novena to {saint_name} Day {day} - {date_display}",
                                     "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
                                 },
                             },

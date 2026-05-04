@@ -1,26 +1,24 @@
 {
   "contract": {
-    "id": "most_sacred_heart_of_jesus",
-    "type": "novena_feast_rule",
-    "saint": {
-      "id": "most_sacred_heart_of_jesus",
-      "name": "The Most Sacred Heart of Jesus"
-    },
+    "enabled": true,
+    "family_id": "our_lady_of_fatima_short_form",
     "feast": {
-      "month": 6,
-      "day": 12,
-      "name": "The Most Sacred Heart of Jesus"
+      "day": 13,
+      "mode": "fixed",
+      "month": 5,
+      "name": "Our Lady of Fatima"
     },
+    "id": "our_lady_of_fatima_short_form",
     "novena": {
+      "content_mode": "hybrid",
       "duration_days": 9,
       "start_offset_days": -9,
-      "content_mode": "hybrid",
       "template_id": "standard-9-day",
       "ai_config": {
         "themes": [
-          "trust in the Sacred Heart",
-          "mercy",
-          "reparation"
+          "reparation",
+          "peace",
+          "trust in the Immaculate Heart"
         ]
       }
     },
@@ -38,6 +36,11 @@
         "episode_title_pattern": "Short-Form Novena to {saint_name} Day {day} - {date_display}",
         "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}."
       }
-    }
+    },
+    "saint": {
+      "id": "our_lady_of_fatima",
+      "name": "Our Lady of Fatima"
+    },
+    "type": "novena_feast_rule"
   }
 }

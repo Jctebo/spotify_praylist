@@ -70,6 +70,27 @@ class TestNovenaResolver(unittest.TestCase):
         self.assertEqual(explicit[0].family_id, "most_sacred_heart_of_jesus")
         self.assertEqual(explicit[0].active_day, 1)
 
+    def test_resolve_active_novenas_keeps_traditional_and_short_form_fatima_separate(self):
+        contracts = contracts_mod.load_novena_contracts()
+        active = resolver_mod.resolve_active_novenas(datetime.date(2026, 5, 4), contracts=contracts)
+
+        ids = [runtime.contract_id for runtime in active if runtime.contract_id in {"our_lady_of_fatima", "our_lady_of_fatima_short_form"}]
+        by_id = {runtime.contract_id: runtime for runtime in active}
+
+        self.assertEqual(
+            ids,
+            [
+                "our_lady_of_fatima",
+                "our_lady_of_fatima_short_form",
+            ],
+        )
+        self.assertEqual(by_id["our_lady_of_fatima"].family_id, "our_lady_of_fatima")
+        self.assertEqual(by_id["our_lady_of_fatima_short_form"].family_id, "our_lady_of_fatima_short_form")
+        self.assertEqual(by_id["our_lady_of_fatima"].active_day, 1)
+        self.assertEqual(by_id["our_lady_of_fatima_short_form"].active_day, 1)
+        self.assertEqual(by_id["our_lady_of_fatima"].feast["feast_date"], "2026-05-13")
+        self.assertEqual(by_id["our_lady_of_fatima_short_form"].feast["feast_date"], "2026-05-13")
+
     def test_resolve_active_novenas_ignores_disabled_explicit_feast_overrides(self):
         disabled_feast = contracts_mod.NovenaContract(
             family_id="disabled_catherine_override",

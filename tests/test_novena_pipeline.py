@@ -5,6 +5,7 @@ import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+import jobs.novena_contracts.contracts as contracts_mod
 import jobs.novena_contracts.pipeline as pipeline_mod
 from jobs.publish.audio import load_published_audio_jobs
 from tests.test_helpers import make_test_mp3_bytes
@@ -56,7 +57,7 @@ class TestNovenaPipeline(unittest.TestCase):
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
-                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+                                    "episode_title_pattern": "Short-Form Novena to {saint_name} Day {day} - {date_display}",
                                     "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
                                 },
                             },
@@ -86,7 +87,7 @@ class TestNovenaPipeline(unittest.TestCase):
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
-                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+                                    "episode_title_pattern": "Short-Form Novena to {saint_name} Day {day} - {date_display}",
                                     "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
                                 },
                             },
@@ -144,7 +145,7 @@ class TestNovenaPipeline(unittest.TestCase):
             self.assertTrue(guid.startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::"))
             self.assertEqual(
                 feed_root.findtext("./channel/item/title"),
-                "Day 1: Novena to The Most Sacred Heart of Jesus - trust in the Sacred Heart - June 3, 2026",
+                "Short-Form Novena to The Most Sacred Heart of Jesus Day 1 - June 3, 2026",
             )
 
     def test_pipeline_can_seed_today_and_tomorrow_together(self):
@@ -237,6 +238,61 @@ class TestNovenaPipeline(unittest.TestCase):
             self.assertTrue(title.endswith(" - June 4, 2026"))
             self.assertEqual(title, "Traditional Novena to St Damien of Molokai Day 2 - June 4, 2026")
 
+    def test_pipeline_publishes_traditional_and_short_form_fatima_titles(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contracts_root = root / "contracts" / "novenas"
+            template_dir = contracts_root / "templates"
+            feast_dir = contracts_root / "feast-days"
+            template_dir.mkdir(parents=True, exist_ok=True)
+            feast_dir.mkdir(parents=True, exist_ok=True)
+
+            for source, target in (
+                (contracts_mod.DEFAULT_TEMPLATE_DIR / "standard-9-day.json", template_dir / "standard-9-day.json"),
+                (contracts_mod.DEFAULT_FEAST_DIR / "our_lady_of_fatima.json", feast_dir / "our_lady_of_fatima.json"),
+                (
+                    contracts_mod.DEFAULT_FEAST_DIR / "our_lady_of_fatima_short_form.json",
+                    feast_dir / "our_lady_of_fatima_short_form.json",
+                ),
+            ):
+                target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+
+            docs_root = root / "docs"
+            cache_root = root / ".cache"
+
+            def fake_renderer(text, audio_config):
+                return make_test_mp3_bytes()
+
+            def fake_generate_text(prompt, context):
+                return f"generated::{prompt}"
+
+            result = pipeline_mod.run_novena_pipeline(
+                contract_dir=contracts_root,
+                docs_root=docs_root,
+                cache_root=cache_root,
+                today=datetime.date(2026, 5, 4),
+                renderer=fake_renderer,
+                generate_text_fn=fake_generate_text,
+            )
+
+            jobs = load_published_audio_jobs(docs_root=docs_root)
+            feed_root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
+            titles = [item.findtext("./title") or "" for item in feed_root.findall("./channel/item")]
+
+            self.assertEqual(result["active"], 2)
+            self.assertEqual(result["rendered"], 2)
+            self.assertEqual(len(jobs), 2)
+            self.assertIn("Traditional Novena to Our Lady of Fatima Day 1 - May 4, 2026", titles)
+            self.assertIn("Short-Form Novena to Our Lady of Fatima Day 1 - May 4, 2026", titles)
+            self.assertTrue((docs_root / "audio" / "2026-05-04-our_lady_of_fatima-day-1.mp3").exists())
+            self.assertTrue((docs_root / "audio" / "2026-05-04-our_lady_of_fatima_short_form-day-1.mp3").exists())
+            self.assertTrue(
+                any(job["episode_id"] == "2026-05-04-our_lady_of_fatima-day-1" for job in jobs)
+            )
+            self.assertTrue(
+                any(job["episode_id"] == "2026-05-04-our_lady_of_fatima_short_form-day-1" for job in jobs)
+            )
+
     def test_pipeline_reset_truncates_existing_feed_items(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -321,7 +377,7 @@ class TestNovenaPipeline(unittest.TestCase):
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
-                                    "episode_title_pattern": "Day {day}: Novena to {saint_name} - {theme} - {date_display}",
+                                    "episode_title_pattern": "Short-Form Novena to {saint_name} Day {day} - {date_display}",
                                     "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
                                 },
                             },

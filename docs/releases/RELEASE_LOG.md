@@ -1,5 +1,18 @@
 # Release Log
 
+## [0.3.1.6] - 2026-05-04
+
+### Added
+- Added a dedicated short-form novena contract for Our Lady of Fatima so the traditional feast-day novena and the AI-generated companion can publish side by side.
+
+### Changed
+- Standardized AI-generated novena RSS titles to use the `Short-Form Novena to {saint_name} Day {day} - {date_display}` pattern across the shared novena defaults and checked-in AI-generated feast contracts.
+- Updated the novena contract generator default title pattern to emit the new short-form wording for future AI-generated novena contracts.
+
+### Fixed
+- Prevented the short-form Fatima novena from collapsing into the traditional Fatima novena by giving each contract a distinct identity and feed item id.
+- Kept the traditional Fatima novena title wording unchanged while adding explicit regression coverage for both Fatima variants.
+
 ## [0.3.1.2] - 2026-05-02
 
 ### Added
