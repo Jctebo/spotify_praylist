@@ -107,10 +107,6 @@
             },
             {
               "kind": "file",
-              "path": "config/publish/templates/morning-prayer/petition-church.txt"
-            },
-            {
-              "kind": "file",
               "path": "config/publish/templates/morning-prayer/petition-sanctification-of-the-church.txt"
             },
             {
