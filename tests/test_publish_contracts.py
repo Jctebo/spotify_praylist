@@ -218,7 +218,7 @@ class TestPublishContracts(unittest.TestCase):
 
         fragments = self.mod.expand_audio_fragments(morning_contract, entry, target_date=target_date)
 
-        self.assertEqual(len(fragments), 13)
+        self.assertEqual(len(fragments), 12)
         self.assertEqual(fragments[0]["label"], "Daily Intro")
         self.assertEqual(fragments[0]["kind"], "daily-intro")
         self.assertEqual(fragments[1]["label"], "Morning Offering")

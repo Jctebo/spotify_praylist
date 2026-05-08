@@ -187,6 +187,33 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertIn("You are going to say the following 3 times:", rendered["content"]["text"])
         self.assertIn("Our Father text.", rendered["content"]["text"])
 
+    def test_render_novena_traditional_fatima_uses_single_three_prayer_cycle(self):
+        contracts = contracts_mod.load_novena_contracts()
+        contract = next(item for item in contracts if item.contract_id == "our_lady_of_fatima")
+        runtime = contracts_mod.NovenaRuntime(
+            family_id=contract.family_id,
+            contract_id=contract.contract_id,
+            saint=dict(contract.saint),
+            feast=contract.feast.to_dict() if contract.feast is not None else {},
+            novena=contract.novena.to_dict(),
+            resolved_template=contract.novena.template,
+            date=datetime.date(2026, 5, 4),
+            active_day=1,
+            publishing=contract.publishing.to_dict(),
+            source_path=contract.source_path,
+        )
+
+        rendered = engine_mod.render_novena(runtime, generate_text_fn=lambda prompt, context: f"{prompt} ({context['day']})")
+        text = rendered["content"]["text"]
+
+        self.assertEqual(text.count("Our Father, who art in heaven, hallowed be thy name."), 3)
+        self.assertEqual(text.count("Hail Mary, full of grace, the Lord is with thee."), 3)
+        self.assertEqual(text.count("Glory be to the Father, and to the Son, and to the Holy Spirit."), 3)
+        self.assertEqual(text.count("You are going to say the following 3 times: Our Father"), 1)
+        self.assertEqual(text.count("You are going to say the following 3 times: Hail Mary"), 1)
+        self.assertEqual(text.count("You are going to say the following 3 times: Glory Be"), 1)
+        self.assertEqual(len(rendered["audio_fragments"]), 16)
+
     def test_generate_text_calls_openai_with_context_and_returns_model_text(self):
         captured = {}
 

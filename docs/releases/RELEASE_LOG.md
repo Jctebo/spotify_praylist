@@ -1,5 +1,15 @@
 # Release Log
 
+## [0.3.1.7] - 2026-05-08
+
+### Changed
+- Removed the duplicate `petition-church` block from the Morning Prayer publish contract and aligned the publish test coverage with the resulting 12-fragment shape.
+- Restored the Daily Examen Spotify queue contract to a valid `spotify:episode:` URI and removed the unused labor/parents sidecar contracts.
+
+### Fixed
+- Reduced the traditional Our Lady of Fatima novena daily block to one `Our Father` / `Hail Mary` / `Glory Be` cycle, each repeated three times.
+- Added regression coverage that keeps the traditional Fatima contract shape and render output at exactly three of each canonical prayer.
+
 ## [0.3.1.6] - 2026-05-04
 
 ### Added

@@ -56,6 +56,27 @@ class TestNovenaContracts(unittest.TestCase):
         )
         self.assertEqual(contract.novena.ai_config["themes"], ["reparation", "peace", "trust in the Immaculate Heart"])
 
+    def test_load_novena_contracts_reads_traditional_fatima_fixture_with_single_cycle(self):
+        contracts = self.contracts_mod.load_novena_contracts()
+        contract = next(item for item in contracts if item.contract_id == "our_lady_of_fatima")
+        block = contract.novena.template.blocks[1]
+        fragment_parts = [part for part in block.parts if part.get("kind") == "fragment"]
+
+        self.assertEqual(len(block.parts), 9)
+        self.assertEqual(
+            [part["fragment_key"] for part in fragment_parts],
+            ["our_father", "hail_mary", "glory_be"],
+        )
+        self.assertEqual([part.get("repeat", 1) for part in fragment_parts], [3, 3, 3])
+        self.assertEqual(
+            [part["text"] for part in block.parts if part.get("kind") == "text" and "You are going to say the following 3 times:" in part.get("text", "")],
+            [
+                "You are going to say the following 3 times: Our Father",
+                "You are going to say the following 3 times: Hail Mary",
+                "You are going to say the following 3 times: Glory Be",
+            ],
+        )
+
     def test_load_novena_contracts_defaults_enabled_when_missing(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
