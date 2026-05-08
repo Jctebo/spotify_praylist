@@ -74,33 +74,6 @@
               },
               {
                 "kind": "text",
-                "text": "You are going to say the following 3 times: Our Father"
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment",
-                "repeat": 3
-              },
-              {
-                "kind": "text",
-                "text": "You are going to say the following 3 times: Hail Mary"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment",
-                "repeat": 3
-              },
-              {
-                "kind": "text",
-                "text": "You are going to say the following 3 times: Glory Be"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment",
-                "repeat": 3
-              },
-              {
-                "kind": "text",
                 "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
