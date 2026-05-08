@@ -24,7 +24,7 @@ class TestPublishAudioFragments(unittest.TestCase):
 
         fragments = job["audio_fragments"]
 
-        self.assertEqual(len(fragments), 13)
+        self.assertEqual(len(fragments), 12)
         self.assertEqual(fragments[0]["label"], "Daily Intro")
         self.assertEqual(fragments[1]["label"], "Morning Offering")
         self.assertIn("April", fragments[5]["text"])

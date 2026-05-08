@@ -17,11 +17,7 @@
       "content_mode": "hybrid",
       "template_id": "standard-9-day",
       "ai_config": {
-        "themes": [
-          "trust in the Sacred Heart",
-          "mercy",
-          "reparation"
-        ]
+        "theme_prompt": "Create a 9-day outline for the Novena to {saint_name}. Return nine distinct daily focus lines rooted in the life and mystery of Christ's Sacred Heart, moving from hidden life and tenderness to mercy, compassion, the Passion, the Eucharist, reparation, consolation, and the reign of Christ in homes and families."
       }
     },
     "publishing": {

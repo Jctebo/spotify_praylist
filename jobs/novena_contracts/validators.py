@@ -316,6 +316,21 @@ def validate_novena_contract(payload: Dict[str, Any], *, source: str, template_d
         themes = ai_config.get("themes")
         if not isinstance(themes, list) or any(not str(item).strip() for item in themes):
             raise RuntimeError(f"Invalid novena contract in {source}: ai_config.themes must be an array of text.")
+    short_form_template_id = template_id
+    if not short_form_template_id and isinstance(template, dict):
+        short_form_template_id = str(template.get("template_id", "")).strip()
+    if short_form_template_id == "standard-9-day":
+        focus_prompt = str((ai_config or {}).get("theme_prompt", "")).strip()
+        themes = list((ai_config or {}).get("themes") or [])
+        normalized_themes = [str(item).strip() for item in themes if str(item).strip()]
+        if not focus_prompt and not normalized_themes:
+            raise RuntimeError(
+                f"Invalid novena contract in {source}: short-form standard-9-day contracts must define a theme_prompt or a legacy themes list."
+            )
+        if normalized_themes and len({item.lower() for item in normalized_themes}) != len(normalized_themes):
+            raise RuntimeError(
+                f"Invalid novena contract in {source}: ai_config.themes must not repeat when present."
+            )
 
     publishing = contract.get("publishing")
     if not isinstance(publishing, dict):

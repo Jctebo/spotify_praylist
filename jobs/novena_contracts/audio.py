@@ -61,6 +61,7 @@ def render_novena_audio_job(
     renderer: Optional[Callable[[str, Dict[str, Any]], bytes]] = None,
     docs_root: Optional[Path] = None,
     cache_root: Optional[Path] = None,
+    write_sidecar: bool = True,
 ) -> Dict[str, Any]:
     root = Path(docs_root) if docs_root else Path(__file__).resolve().parents[2] / "docs"
     episode_id = str(job.get("episode_id", "")).strip()
@@ -88,6 +89,17 @@ def render_novena_audio_job(
     fragment_root = publish_audio_cache_root(cache_root)
     fragment_paths = []
     fragment_results = []
+    if audio_path.exists():
+        rendered = dict(job)
+        rendered.update(
+            {
+                "audio_path": str(audio_path),
+                "audio_url": audio_public_url(episode_id),
+                "rendered": False,
+                "content_hash": content_hash,
+            }
+        )
+        return rendered
     for fragment in fragments:
         rendered_fragment = render_fragment_audio(fragment, audio_config, renderer, cache_root=fragment_root)
         fragment_paths.append(Path(rendered_fragment["audio_path"]))
@@ -116,30 +128,31 @@ def render_novena_audio_job(
     if not raw_audio:
         raise RuntimeError(f"Audio assembly returned empty output for novena '{episode_id}'.")
     audio_path.write_bytes(raw_audio)
-    sidecar_path.write_text(
-        json.dumps(
-            {
-                "entry_id": job.get("entry_id", ""),
-                "episode_id": episode_id,
-                "family_id": str(job.get("family_id", "")).strip(),
-                "published_date": str(job.get("published_date", "")).strip(),
-                "contract_id": str(job.get("contract_id", "")).strip(),
-                "contract_type": str(job.get("contract_type", "")).strip(),
-                "frequency": str(job.get("frequency", "")).strip(),
-                "title": str(job.get("title", "")).strip(),
-                "description": str(job.get("description", "")).strip(),
-                "content_hash": content_hash,
-                "audio_path": str(audio_path),
-                "audio_url": audio_public_url(episode_id),
-                "tts": audio_config,
-                "fragment_manifest_hash": content_hash,
-                "fragments": fragment_results,
-            },
-            indent=2,
-            sort_keys=True,
-        ),
-        encoding="utf-8",
-    )
+    if write_sidecar:
+        sidecar_path.write_text(
+            json.dumps(
+                {
+                    "entry_id": job.get("entry_id", ""),
+                    "episode_id": episode_id,
+                    "family_id": str(job.get("family_id", "")).strip(),
+                    "published_date": str(job.get("published_date", "")).strip(),
+                    "contract_id": str(job.get("contract_id", "")).strip(),
+                    "contract_type": str(job.get("contract_type", "")).strip(),
+                    "frequency": str(job.get("frequency", "")).strip(),
+                    "title": str(job.get("title", "")).strip(),
+                    "description": str(job.get("description", "")).strip(),
+                    "content_hash": content_hash,
+                    "audio_path": str(audio_path),
+                    "audio_url": audio_public_url(episode_id),
+                    "tts": audio_config,
+                    "fragment_manifest_hash": content_hash,
+                    "fragments": fragment_results,
+                },
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
     rendered = dict(job)
     rendered.update(
         {
