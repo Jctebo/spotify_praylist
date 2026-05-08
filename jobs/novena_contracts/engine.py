@@ -92,11 +92,13 @@ def generate_text(prompt: str, context: Mapping[str, Any]) -> str:
     saint_name = _normalize_whitespace(context.get("saint_name", ""))
     feast_name = _normalize_whitespace(context.get("feast_name", ""))
     day = _normalize_whitespace(context.get("day", ""))
-    theme = _normalize_whitespace(context.get("theme", ""))
+    daily_focus = _normalize_whitespace(context.get("daily_focus", "")) or _normalize_whitespace(context.get("theme", ""))
     client = _openai_client()
     system_prompt = (
         "You are a Catholic devotional writer for a novena podcast. "
         "Return only the finished devotional prose. "
+        "Always begin with a 1-2 sentence introduction to the saint before moving into the prayer. "
+        "Make the day's focus distinct, rooted in one unique part of the saint's life, and avoid repeating other days. "
         "Do not repeat the prompt, do not quote instructions, and do not add commentary."
     )
     user_prompt = "\n".join(
@@ -105,7 +107,7 @@ def generate_text(prompt: str, context: Mapping[str, Any]) -> str:
             f"Saint: {saint_name}" if saint_name else "",
             f"Feast: {feast_name}" if feast_name else "",
             f"Day: {day}" if day else "",
-            f"Theme: {theme}" if theme else "",
+            f"Daily focus: {daily_focus}" if daily_focus else "",
             "",
             "Write the devotional section requested below:",
             prompt_text,
@@ -332,8 +334,9 @@ def render_novena(
 
 
 def runtime_context(runtime: NovenaRuntime) -> Dict[str, Any]:
-    themes = list(runtime.novena.get("ai_config", {}).get("themes") or [])
-    theme = themes[(runtime.active_day - 1) % len(themes)] if themes else runtime.feast.get("name", runtime.saint.get("name", runtime.contract_id))
+    ai_config = runtime.novena.get("ai_config") or {}
+    themes = [str(item).strip() for item in ai_config.get("themes") or [] if str(item).strip()]
+    theme = themes[(runtime.active_day - 1) % len(themes)] if themes else str(runtime.feast.get("name", runtime.saint.get("name", runtime.contract_id))).strip()
     saint_name = str(runtime.saint.get("name", runtime.contract_id)).strip()
     feast_name = str(runtime.feast.get("name", runtime.contract_id)).strip()
     context = {
@@ -347,6 +350,7 @@ def runtime_context(runtime: NovenaRuntime) -> Dict[str, Any]:
         "feast_name": feast_name,
         "feast": dict(runtime.feast),
         "theme": theme,
+        "daily_focus": theme,
         "themes": themes,
         "themes_text": ", ".join(str(item).strip() for item in themes if str(item).strip()),
         "date": runtime.date,

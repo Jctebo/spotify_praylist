@@ -17,11 +17,7 @@
       "content_mode": "hybrid",
       "template_id": "standard-9-day",
       "ai_config": {
-        "themes": [
-          "new life in the risen Christ",
-          "hope",
-          "joy"
-        ]
+        "theme_prompt": "Create a 9-day saint-life outline for {saint_name}. Return nine distinct daily focus lines, each rooted in a different stage or witness of the saint's life, so the arc moves from call and formation through prayer, trial, charity, fidelity, hidden sacrifice, hope, and final perseverance."
       }
     },
     "publishing": {

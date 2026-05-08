@@ -81,6 +81,9 @@ def build_contract_payload(args: argparse.Namespace) -> Dict[str, Any]:
         contract["contract"]["feast"] = feast_payload
     if args.template_id:
         contract["contract"]["novena"]["template_id"] = args.template_id
+    theme_prompt = str(getattr(args, "theme_prompt", "") or "").strip()
+    if theme_prompt:
+        contract["contract"]["novena"]["ai_config"]["theme_prompt"] = theme_prompt
     if args.embedded_template_file:
         contract["contract"]["novena"]["template"] = _read_json(Path(args.embedded_template_file))
     return contract
@@ -106,7 +109,17 @@ def main() -> int:
     parser.add_argument("--content-mode", default="hybrid", choices=["fixed", "ai_generated", "hybrid"])
     parser.add_argument("--duration-days", default=9, type=int)
     parser.add_argument("--start-offset-days", default=-9, type=int)
-    parser.add_argument("--theme", action="append", default=[], help="AI theme to include; may be repeated.")
+    parser.add_argument(
+        "--theme",
+        action="append",
+        default=[],
+        help="Legacy AI daily-focus line to include; short-form standard-9-day contracts should prefer --theme-prompt.",
+    )
+    parser.add_argument(
+        "--theme-prompt",
+        default="",
+        help="Prompt seed used to generate the 9 unique short-form daily focuses for standard-9-day contracts.",
+    )
     parser.add_argument("--feed-id", default="ora-pro-nobis")
     parser.add_argument("--title-pattern", default="Short-Form Novena to {saint_name} Day {day} - {date_display}")
     parser.add_argument("--description-pattern", default="Day {day} of the Novena to {saint_name} for {feast_name}.")
@@ -121,6 +134,11 @@ def main() -> int:
 
     if not args.auto_populate and not args.feast_romcal_id and (not str(args.month).strip() or not str(args.day).strip()):
         raise RuntimeError("Fixed feast contracts require --month and --day, or provide --feast-romcal-id for movable feasts.")
+    if str(args.template_id).strip() == "standard-9-day":
+        theme_prompt = str(getattr(args, "theme_prompt", "") or "").strip()
+        themes = [str(item).strip() for item in args.theme if str(item).strip()]
+        if not theme_prompt and (len(themes) != 9 or len({item.lower() for item in themes}) != 9):
+            raise RuntimeError("Short-form standard-9-day contracts require either --theme-prompt or exactly 9 unique --theme values.")
 
     payload = build_contract_payload(args)
     validate_novena_contract(payload, source="<cli>", template_dir=DEFAULT_CONTRACT_DIR / "templates")

@@ -225,6 +225,9 @@ def load_published_audio_jobs(
                 candidate_audio_path = sidecar_path.parent / candidate_audio_path
             resolved_audio_path = candidate_audio_path
         if not resolved_audio_path.exists():
+            audio_block = payload.get("audio") or {}
+            if isinstance(audio_block, dict) and not bool(audio_block.get("rendered", True)):
+                continue
             print(f"WARN skipping published audio sidecar without audio file: {sidecar_path}", file=sys.stderr)
             continue
         audio_length = _payload_audio_length(payload, sidecar_path=sidecar_path, audio_path=resolved_audio_path)

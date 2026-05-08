@@ -40,6 +40,8 @@ def write_novena_artifact(runtime: NovenaRuntime, rendered: Dict[str, Any], audi
     episode_id = str(rendered.get("episode_id") or f"{runtime.date.isoformat()}-{runtime.contract_id}-day-{runtime.active_day}").strip()
     root = Path(docs_root) if docs_root else Path(__file__).resolve().parents[2] / "docs"
     sidecar_path = audio_sidecar_path(episode_id, docs_root=root)
+    if sidecar_path.exists():
+        return sidecar_path
     sidecar_path.parent.mkdir(parents=True, exist_ok=True)
     title = str(rendered.get("title", "")).strip()
     description = str(rendered.get("description", "")).strip() or title

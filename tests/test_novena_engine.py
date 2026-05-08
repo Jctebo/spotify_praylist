@@ -53,6 +53,7 @@ class TestNovenaEngine(unittest.TestCase):
         rendered = engine_mod.render_novena(runtime, generate_text_fn=fake_generate_text)
 
         self.assertEqual(rendered["context"]["theme"], "mercy")
+        self.assertEqual(rendered["context"]["daily_focus"], "mercy")
         self.assertEqual(rendered["content"]["sections"][0]["text"], "Pray for The Most Sacred Heart of Jesus on June 4, 2026.")
         self.assertEqual(rendered["content"]["sections"][1]["text"], "generated::Compose day 2 for mercy.")
         self.assertEqual(rendered["content"]["sections"][2]["text"], "Amen for The Most Sacred Heart of Jesus.")
@@ -256,7 +257,7 @@ class TestNovenaEngine(unittest.TestCase):
         ), mock.patch.object(engine_mod, "OpenAI", FakeClient):
             text = engine_mod.generate_text(
                 "Compose the novena prayer for {saint_name} on day {day} with the theme {theme}.",
-                {"saint_name": "Saint Example", "feast_name": "Example Feast", "day": 4, "theme": "hope"},
+                {"saint_name": "Saint Example", "feast_name": "Example Feast", "day": 4, "theme": "hope", "daily_focus": "hope"},
             )
 
         self.assertEqual(text, "O Sacred Heart, make our hearts like yours.")
@@ -264,9 +265,12 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertEqual(captured["client_kwargs"]["base_url"], "https://api.openai.com/v1")
         self.assertEqual(captured["responses_create"]["model"], "gpt-test")
         self.assertEqual(captured["responses_create"]["temperature"], 0)
+        system_message = captured["responses_create"]["input"][0]["content"][0]["text"]
         user_message = captured["responses_create"]["input"][1]["content"][0]["text"]
+        self.assertIn("1-2 sentence introduction to the saint", system_message)
         self.assertIn("Saint: Saint Example", user_message)
         self.assertIn("Feast: Example Feast", user_message)
+        self.assertIn("Daily focus: hope", user_message)
         self.assertIn("Write the devotional section requested below:", user_message)
         self.assertIn("Compose the novena prayer for", user_message)
         self.assertNotIn("generated::", text)

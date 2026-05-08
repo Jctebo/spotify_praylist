@@ -1,5 +1,15 @@
 # Release Log
 
+## [0.3.1.8] - 2026-05-08
+
+### Changed
+- Reworked the short-form novena path so the first eligible run seeds the remaining days up front, while only the publishable day renders audio.
+- Replaced the short-form hard-coded daily theme lists with saint-specific prompt-driven outlines so each novena can carry its own 9-day life arc.
+
+### Fixed
+- Made novena sidecars write-once so reruns reuse the seeded JSON instead of calling the LLM again for the outline.
+- Added regression coverage for the short-form seeding flow, prompt wording, placeholder sidecar handling, and publish-audio skipping behavior.
+
 ## [0.3.1.7] - 2026-05-08
 
 ### Changed

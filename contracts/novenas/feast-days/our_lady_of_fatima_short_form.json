@@ -15,11 +15,7 @@
       "start_offset_days": -9,
       "template_id": "standard-9-day",
       "ai_config": {
-        "themes": [
-          "reparation",
-          "peace",
-          "trust in the Immaculate Heart"
-        ]
+        "theme_prompt": "Create a 9-day outline for the Novena to {saint_name}. Return nine distinct daily focus lines rooted in the Fatima apparitions, the children's simple faith, the Rosary, penance, sacrifice for sinners, the Immaculate Heart of Mary, perseverance under misunderstanding, prayer for peace, and entrusting the world to Mary."
       }
     },
     "publishing": {

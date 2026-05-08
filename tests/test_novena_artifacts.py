@@ -9,6 +9,7 @@ import jobs.novena_contracts.audio as audio_mod
 import jobs.novena_contracts.artifact_writer as artifact_writer_mod
 import jobs.novena_contracts.contracts as contracts_mod
 import jobs.novena_contracts.engine as engine_mod
+from jobs.publish.audio import load_published_audio_jobs
 from tests.test_helpers import make_test_mp3_bytes
 
 
@@ -79,8 +80,20 @@ class TestNovenaArtifacts(unittest.TestCase):
                 fake_renderer_calls["count"] += 1
                 return make_test_mp3_bytes()
 
-            first = audio_mod.render_novena_audio_job(job, renderer=fake_renderer, docs_root=docs_root, cache_root=cache_root)
-            second = audio_mod.render_novena_audio_job(job, renderer=fake_renderer, docs_root=docs_root, cache_root=cache_root)
+            first = audio_mod.render_novena_audio_job(
+                job,
+                renderer=fake_renderer,
+                docs_root=docs_root,
+                cache_root=cache_root,
+                write_sidecar=False,
+            )
+            second = audio_mod.render_novena_audio_job(
+                job,
+                renderer=fake_renderer,
+                docs_root=docs_root,
+                cache_root=cache_root,
+                write_sidecar=False,
+            )
             sidecar = artifact_writer_mod.write_novena_artifact(runtime, rendered, first, docs_root=docs_root)
             payload = json.loads(sidecar.read_text(encoding="utf-8"))
 
@@ -96,3 +109,31 @@ class TestNovenaArtifacts(unittest.TestCase):
         self.assertEqual(payload["content"]["sections"][1]["kind"], "generated")
         self.assertEqual(payload["feast"]["color"], "green")
         self.assertIn("June 3, 2026", payload["title"])
+
+    def test_placeholder_sidecar_is_skipped_from_published_audio_jobs(self):
+        runtime = self._runtime()
+        rendered = engine_mod.render_novena(runtime, generate_text_fn=lambda prompt, context: f"{prompt} ({context['theme']})")
+        rendered["title"] = "Short-Form Novena to The Most Sacred Heart of Jesus Day 1 - June 3, 2026"
+        rendered["description"] = rendered["title"]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            docs_root.mkdir(parents=True, exist_ok=True)
+            sidecar = artifact_writer_mod.write_novena_artifact(
+                runtime,
+                rendered,
+                {
+                    "episode_id": "2026-06-03-most_sacred_heart_of_jesus-day-1",
+                    "entry_id": "2026-06-03-most_sacred_heart_of_jesus-day-1",
+                    "audio_path": str(docs_root / "audio" / "2026-06-03-most_sacred_heart_of_jesus-day-1.mp3"),
+                    "audio_url": "https://example.com/audio/2026-06-03-most_sacred_heart_of_jesus-day-1.mp3",
+                    "audio_config": dict(runtime.publishing.get("audio") or {}),
+                    "content_hash": "placeholder-hash",
+                    "rendered": False,
+                },
+                docs_root=docs_root,
+            )
+
+            jobs = load_published_audio_jobs(docs_root=docs_root)
+            self.assertTrue(sidecar.exists())
+            self.assertEqual(jobs, [])

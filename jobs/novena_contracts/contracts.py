@@ -363,6 +363,16 @@ def _normalize_rss_config(config: Any) -> Dict[str, Any]:
     return rss
 
 
+def _select_daily_focus(runtime: NovenaRuntime) -> tuple[str, list[str]]:
+    ai_config = runtime.novena.get("ai_config") or {}
+    themes = [str(item).strip() for item in ai_config.get("themes") or [] if str(item).strip()]
+    if themes:
+        focus = themes[(runtime.active_day - 1) % len(themes)]
+    else:
+        focus = str(runtime.feast.get("name", runtime.saint.get("name", runtime.contract_id))).strip() or runtime.contract_id
+    return focus, themes
+
+
 def _build_context_for_patterns(runtime: NovenaRuntime) -> Dict[str, Any]:
     entry = {"entry_id": runtime.contract_id, "title": runtime.saint.get("name", runtime.contract_id)}
     context = build_publish_context(
@@ -374,8 +384,7 @@ def _build_context_for_patterns(runtime: NovenaRuntime) -> Dict[str, Any]:
         entry=entry,
         target_date=runtime.date,
     )
-    themes = list(runtime.novena.get("ai_config", {}).get("themes") or [])
-    theme = themes[(runtime.active_day - 1) % len(themes)] if themes else runtime.feast.get("name", runtime.saint.get("name", runtime.contract_id))
+    theme, themes = _select_daily_focus(runtime)
     context.update(
         {
             "day": runtime.active_day,
@@ -387,6 +396,7 @@ def _build_context_for_patterns(runtime: NovenaRuntime) -> Dict[str, Any]:
             "feast_name": runtime.feast.get("name", runtime.contract_id),
             "feast": dict(runtime.feast),
             "theme": theme,
+            "daily_focus": theme,
             "themes": themes,
             "themes_text": ", ".join(str(item).strip() for item in themes if str(item).strip()),
         }

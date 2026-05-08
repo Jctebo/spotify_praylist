@@ -12,6 +12,16 @@ from tests.test_helpers import make_test_mp3_bytes
 
 
 class TestNovenaPipeline(unittest.TestCase):
+    def _short_form_theme_prompt(self):
+        return "Create a 9-day saint-life outline for {saint_name}. Return nine distinct daily focus lines, each rooted in a different stage or witness of the saint's life."
+
+    def _fake_generate_text(self, prompt, context):
+        if "JSON array of 9 strings" in prompt or "unique daily focus lines" in prompt:
+            saint_name = str(context.get("saint_name", "Saint")).strip() or "Saint"
+            outline = [f"{saint_name} focus {index}" for index in range(1, 10)]
+            return json.dumps(outline)
+        return f"generated::{prompt}"
+
     def _write_contracts(self, root: Path, *, include_selector_family: bool = False) -> Path:
         contracts_root = root / "contracts" / "novenas"
         template_dir = contracts_root / "templates"
@@ -50,7 +60,7 @@ class TestNovenaPipeline(unittest.TestCase):
                                 "start_offset_days": -9,
                                 "content_mode": "hybrid",
                                 "template_id": "standard-9-day",
-                                "ai_config": {"themes": ["trust in the Sacred Heart"]},
+                                "ai_config": {"theme_prompt": self._short_form_theme_prompt()},
                             },
                             "publishing": {
                                 "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
@@ -80,7 +90,7 @@ class TestNovenaPipeline(unittest.TestCase):
                             "start_offset_days": -9,
                             "content_mode": "hybrid",
                             "template_id": "standard-9-day",
-                            "ai_config": {"themes": ["trust in the Sacred Heart"]},
+                            "ai_config": {"theme_prompt": self._short_form_theme_prompt()},
                         },
                         "publishing": {
                             "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
@@ -106,13 +116,15 @@ class TestNovenaPipeline(unittest.TestCase):
             docs_root = root / "docs"
             cache_root = root / ".cache"
             renderer_calls = {"count": 0}
+            generate_calls = {"count": 0}
 
             def fake_renderer(text, audio_config):
                 renderer_calls["count"] += 1
                 return make_test_mp3_bytes()
 
             def fake_generate_text(prompt, context):
-                return f"generated::{prompt}"
+                generate_calls["count"] += 1
+                return self._fake_generate_text(prompt, context)
 
             first = pipeline_mod.run_novena_pipeline(
                 contract_dir=contracts_root,
@@ -122,6 +134,7 @@ class TestNovenaPipeline(unittest.TestCase):
                 renderer=fake_renderer,
                 generate_text_fn=fake_generate_text,
             )
+            calls_after_first = generate_calls["count"]
             second = pipeline_mod.run_novena_pipeline(
                 contract_dir=contracts_root,
                 docs_root=docs_root,
@@ -135,10 +148,16 @@ class TestNovenaPipeline(unittest.TestCase):
             feed_root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             self.assertEqual(first["active"], 1)
             self.assertEqual(second["active"], 1)
-            self.assertEqual(first["rendered"], 1)
-            self.assertEqual(second["rendered"], 1)
+            self.assertEqual(first["rendered"], 9)
+            self.assertEqual(second["rendered"], 9)
+            self.assertEqual(first["audio"], 1)
+            self.assertEqual(second["audio"], 1)
+            self.assertEqual(len(first["seeded_items"]), 9)
             self.assertEqual(renderer_calls["count"], 3)
+            self.assertEqual(generate_calls["count"], calls_after_first)
             self.assertEqual(len(jobs), 1)
+            self.assertEqual(len(list((docs_root / "audio").glob("*.json"))), 9)
+            self.assertEqual(len(list((docs_root / "audio").glob("*.mp3"))), 1)
             self.assertTrue((docs_root / "audio" / "2026-06-03-most_sacred_heart_of_jesus-day-1.mp3").exists())
             self.assertTrue((docs_root / "audio" / "2026-06-03-most_sacred_heart_of_jesus-day-1.json").exists())
             guid = feed_root.findtext("./channel/item/guid") or ""
@@ -159,7 +178,7 @@ class TestNovenaPipeline(unittest.TestCase):
                 return make_test_mp3_bytes()
 
             def fake_generate_text(prompt, context):
-                return f"generated::{prompt}"
+                return self._fake_generate_text(prompt, context)
 
             result = pipeline_mod.run_novena_pipeline(
                 contract_dir=contracts_root,
@@ -174,7 +193,9 @@ class TestNovenaPipeline(unittest.TestCase):
             guids = [item.findtext("guid") or "" for item in root_xml.findall("./channel/item")]
 
             self.assertEqual(result["active"], 2)
-            self.assertEqual(result["rendered"], 2)
+            self.assertEqual(result["rendered"], 9)
+            self.assertEqual(result["audio"], 2)
+            self.assertEqual(len(list((docs_root / "audio").glob("*.json"))), 9)
             self.assertTrue(any(guid.startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::") for guid in guids))
             self.assertTrue(any(guid.startswith("2026-06-04-most_sacred_heart_of_jesus-day-2::") for guid in guids))
 
@@ -196,7 +217,7 @@ class TestNovenaPipeline(unittest.TestCase):
                                 "start_offset_days": -9,
                                 "content_mode": "hybrid",
                                 "template_id": "standard-9-day",
-                                "ai_config": {"themes": ["trust in suffering"]},
+                                "ai_config": {"theme_prompt": self._short_form_theme_prompt()},
                             },
                             "publishing": {
                                 "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
@@ -220,7 +241,7 @@ class TestNovenaPipeline(unittest.TestCase):
                 return make_test_mp3_bytes()
 
             def fake_generate_text(prompt, context):
-                return f"generated::{prompt}"
+                return self._fake_generate_text(prompt, context)
 
             result = pipeline_mod.run_novena_pipeline(
                 contract_dir=contracts_root,
@@ -264,7 +285,7 @@ class TestNovenaPipeline(unittest.TestCase):
                 return make_test_mp3_bytes()
 
             def fake_generate_text(prompt, context):
-                return f"generated::{prompt}"
+                return self._fake_generate_text(prompt, context)
 
             result = pipeline_mod.run_novena_pipeline(
                 contract_dir=contracts_root,
@@ -280,7 +301,8 @@ class TestNovenaPipeline(unittest.TestCase):
             titles = [item.findtext("./title") or "" for item in feed_root.findall("./channel/item")]
 
             self.assertEqual(result["active"], 2)
-            self.assertEqual(result["rendered"], 2)
+            self.assertEqual(result["rendered"], 10)
+            self.assertEqual(result["audio"], 2)
             self.assertEqual(len(jobs), 2)
             self.assertIn("Traditional Novena to Our Lady of Fatima Day 1 - May 4, 2026", titles)
             self.assertIn("Short-Form Novena to Our Lady of Fatima Day 1 - May 4, 2026", titles)
@@ -315,7 +337,7 @@ class TestNovenaPipeline(unittest.TestCase):
                 return make_test_mp3_bytes()
 
             def fake_generate_text(prompt, context):
-                return f"generated::{prompt}"
+                return self._fake_generate_text(prompt, context)
 
             result = pipeline_mod.run_novena_pipeline(
                 contract_dir=contracts_root,
@@ -371,6 +393,7 @@ class TestNovenaPipeline(unittest.TestCase):
                                 "start_offset_days": -9,
                                 "content_mode": "hybrid",
                                 "template_id": "standard-9-day",
+                                "ai_config": {"theme_prompt": self._short_form_theme_prompt()},
                             },
                             "publishing": {
                                 "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
@@ -394,7 +417,7 @@ class TestNovenaPipeline(unittest.TestCase):
                 return make_test_mp3_bytes()
 
             def fake_generate_text(prompt, context):
-                return f"generated::{prompt}"
+                return self._fake_generate_text(prompt, context)
 
             result = pipeline_mod.run_novena_pipeline(
                 contract_dir=contracts_root,
@@ -432,7 +455,7 @@ class TestNovenaPipeline(unittest.TestCase):
                 return make_test_mp3_bytes()
 
             def fake_generate_text(prompt, context):
-                return f"generated::{prompt}"
+                return self._fake_generate_text(prompt, context)
 
             result = pipeline_mod.run_novena_pipeline(
                 contract_dir=contracts_root,
