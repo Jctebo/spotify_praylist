@@ -1,5 +1,15 @@
 # Release Log
 
+## [0.3.1.13] - 2026-05-09
+
+### Changed
+- Canonicalized the Morning Prayer ElevenLabs publish contract so the repo keeps a single Morning Prayer contract file at `config/publish/contracts/morning-prayer.json`.
+- Removed the duplicate `config/publish/contracts/morning-prayer-elevenlabs.json` sibling file and updated the publish test suite to expect the renamed canonical contract.
+
+### Fixed
+- Prevented the Morning Prayer ElevenLabs variant from living under two checked-in filenames at once, which made the publish contract set harder to reason about.
+- Prevented the publish contract and audio pipeline tests from drifting away from the canonical Morning Prayer file name.
+
 ## [0.3.1.12] - 2026-05-09
 
 ### Added

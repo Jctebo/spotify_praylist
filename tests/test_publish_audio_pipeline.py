@@ -44,14 +44,11 @@ class TestPublishAudioPipeline(unittest.TestCase):
         contracts = self.contracts_mod.load_publish_contracts()
         jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
 
-        self.assertEqual(len(jobs), 2)
-        self.assertEqual([job["entry_id"] for job in jobs], ["morning-prayer", "morning-prayer-elevenlabs"])
-        self.assertEqual(jobs[0]["entry_id"], "morning-prayer")
-        self.assertEqual(jobs[1]["entry_id"], "morning-prayer-elevenlabs")
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual([job["entry_id"] for job in jobs], ["morning-prayer-elevenlabs"])
+        self.assertEqual(jobs[0]["entry_id"], "morning-prayer-elevenlabs")
         self.assertTrue(jobs[0]["audio_config"]["enabled"])
-        self.assertTrue(jobs[1]["audio_config"]["enabled"])
         self.assertGreater(len(jobs[0]["audio_fragments"]), 0)
-        self.assertGreater(len(jobs[1]["audio_fragments"]), 0)
 
     def test_render_audio_job_skips_when_hash_matches(self):
         contracts = self.contracts_mod.load_publish_contracts()
@@ -112,7 +109,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
             second = self.audio_mod.render_audio_job(revised_job, renderer=fake_renderer, docs_root=docs_root, cache_root=cache_root)
 
             self.assertNotEqual(first["rss_guid"], second["rss_guid"])
-            self.assertTrue(second["rss_guid"].startswith("morning-prayer-2026-04-06::"))
+            self.assertTrue(second["rss_guid"].startswith("morning-prayer-elevenlabs-2026-04-06::"))
 
     def test_build_rss_feed_contains_enclosure_and_guid(self):
         contracts = self.contracts_mod.load_publish_contracts()
@@ -130,11 +127,11 @@ class TestPublishAudioPipeline(unittest.TestCase):
             item = root.find("./channel/item")
         self.assertIsNotNone(item)
         self.assertEqual(item.findtext("guid"), rendered["rss_guid"])
-        self.assertTrue((item.findtext("guid") or "").startswith("morning-prayer-2026-04-06::"))
+        self.assertTrue((item.findtext("guid") or "").startswith("morning-prayer-elevenlabs-2026-04-06::"))
         enclosure = item.find("enclosure")
         self.assertIsNotNone(enclosure)
-        self.assertTrue(enclosure.get("url", "").endswith("/audio/morning-prayer-2026-04-06.mp3"))
-        self.assertIn("Morning Prayer for April 6, 2026", item.findtext("title") or "")
+        self.assertTrue(enclosure.get("url", "").endswith("/audio/morning-prayer-elevenlabs-2026-04-06.mp3"))
+        self.assertIn("Morning Prayer - April 6, 2026", item.findtext("title") or "")
         self.assertIn("Morning Prayer for April 6, 2026", item.findtext("description") or "")
         self.assertEqual(root.findtext("./channel/title"), "Ora Pro Nobis")
         self.assertEqual(
@@ -177,13 +174,11 @@ class TestPublishAudioPipeline(unittest.TestCase):
             feed_root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             titles = [item.findtext("title") or "" for item in feed_root.findall("./channel/item")]
 
-            self.assertEqual(result["jobs"], 2)
-            self.assertEqual(result["rendered"], 2)
+            self.assertEqual(result["jobs"], 1)
+            self.assertEqual(result["rendered"], 1)
             self.assertEqual(result["archived"], 0)
             self.assertTrue((docs_root / "podcast.xml").exists())
-            self.assertTrue((docs_root / "audio" / f"morning-prayer-{expected_date.isoformat()}.mp3").exists())
             self.assertTrue((docs_root / "audio" / f"morning-prayer-elevenlabs-{expected_date.isoformat()}.mp3").exists())
-            self.assertTrue(any("Morning Prayer for" in title for title in titles))
             self.assertTrue(any(title.startswith("Morning Prayer - ") for title in titles))
             self.assertTrue((docs_root / "images" / "logo_ora_pro_nobis.png").exists())
 
@@ -204,7 +199,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.runner_mod.load_published_audio_jobs = fake_load_published_audio_jobs
             result = self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
 
-        self.assertEqual(result["jobs"], 2)
+        self.assertEqual(result["jobs"], 1)
         self.assertEqual(result["archived"], 0)
         self.assertEqual(Path(captured["kwargs"]["docs_root"]).name, "docs")
         self.assertIn("github.io", str(captured["kwargs"]["base_url"]))
@@ -212,7 +207,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
     def test_run_audio_pipeline_rebuilds_feed_from_local_archive_snapshot(self):
         contracts = self.contracts_mod.load_publish_contracts()
         fake_renderer, _ = self._fake_renderer()
-        archived_episode_id = "morning-prayer-2026-04-06"
+        archived_episode_id = "morning-prayer-elevenlabs-2026-04-06"
         current_target_date = datetime.date(2026, 4, 7)
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -223,7 +218,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
             archive_sidecar.write_text(
                 json.dumps(
                     {
-                        "entry_id": "morning-prayer",
+                        "entry_id": "morning-prayer-elevenlabs",
                         "episode_id": archived_episode_id,
                         "title": "Morning Prayer",
                         "description": "Archived morning prayer episode.",
@@ -254,14 +249,13 @@ class TestPublishAudioPipeline(unittest.TestCase):
             archive_manifest = json.loads((audio_dir / "index.json").read_text(encoding="utf-8"))
             archive_html = (audio_dir / "index.html").read_text(encoding="utf-8")
 
-        self.assertEqual(result["jobs"], 2)
-        self.assertEqual(result["rendered"], 2)
+        self.assertEqual(result["jobs"], 1)
+        self.assertEqual(result["rendered"], 1)
         self.assertEqual(result["archived"], 1)
-        self.assertEqual(len(guids), 3)
-        self.assertTrue(any(guid.startswith(f"morning-prayer-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"{archived_episode_id}::") for guid in guids))
-        self.assertEqual(archive_manifest["count"], 3)
+        self.assertEqual(len(guids), 2)
+        self.assertEqual(archive_manifest["count"], 2)
         self.assertIn("Published audio archive", archive_html)
         self.assertIn(f"{archived_episode_id}.mp3", archive_html)
 
@@ -420,11 +414,9 @@ class TestPublishAudioPipeline(unittest.TestCase):
             root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") or "" for item in root.findall("./channel/item")]
 
-            self.assertEqual(result["jobs"], 4)
-            self.assertEqual(result["rendered"], 4)
-            self.assertTrue(any(guid.startswith(f"morning-prayer-{today.isoformat()}::") for guid in guids))
+            self.assertEqual(result["jobs"], 2)
+            self.assertEqual(result["rendered"], 2)
             self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{today.isoformat()}::") for guid in guids))
-            self.assertTrue(any(guid.startswith(f"morning-prayer-{tomorrow.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{tomorrow.isoformat()}::") for guid in guids))
 
     def test_run_audio_pipeline_rebuilds_feed_from_local_archive_only(self):
@@ -437,11 +429,11 @@ class TestPublishAudioPipeline(unittest.TestCase):
             cache_root = Path(tmpdir) / ".cache"
             audio_dir = docs_root / "audio"
             audio_dir.mkdir(parents=True, exist_ok=True)
-            archived_episode_id = "morning-prayer-2026-04-06"
+            archived_episode_id = "morning-prayer-elevenlabs-2026-04-06"
             (audio_dir / f"{archived_episode_id}.json").write_text(
                 json.dumps(
                     {
-                        "entry_id": "morning-prayer",
+                        "entry_id": "morning-prayer-elevenlabs",
                         "episode_id": archived_episode_id,
                         "title": "Morning Prayer",
                         "description": "Morning prayer episode.",
@@ -468,10 +460,9 @@ class TestPublishAudioPipeline(unittest.TestCase):
             root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") or "" for item in root.findall("./channel/item")]
 
-        self.assertEqual(result["jobs"], 2)
+        self.assertEqual(result["jobs"], 1)
         self.assertEqual(result["archived"], 1)
-        self.assertEqual(len(guids), 3)
-        self.assertTrue(any(guid.startswith(f"morning-prayer-{current_target_date.isoformat()}::") for guid in guids))
+        self.assertEqual(len(guids), 2)
         self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"{archived_episode_id}::") for guid in guids))
 
@@ -480,14 +471,14 @@ class TestPublishAudioPipeline(unittest.TestCase):
             docs_root = Path(tmpdir) / "docs"
             audio_dir = docs_root / "audio"
             audio_dir.mkdir(parents=True, exist_ok=True)
-            (audio_dir / "morning-prayer-2026-04-06.json").write_text(
+            (audio_dir / "morning-prayer-elevenlabs-2026-04-06.json").write_text(
                 json.dumps(
                     {
-                        "entry_id": "morning-prayer",
-                        "episode_id": "morning-prayer-2026-04-06",
+                        "entry_id": "morning-prayer-elevenlabs",
+                        "episode_id": "morning-prayer-elevenlabs-2026-04-06",
                         "title": "Morning Prayer",
                         "description": "Morning prayer episode.",
-                        "audio_path": str(audio_dir / "morning-prayer-2026-04-06.mp3"),
+                        "audio_path": str(audio_dir / "morning-prayer-elevenlabs-2026-04-06.mp3"),
                     },
                     indent=2,
                 ),
@@ -503,25 +494,25 @@ class TestPublishAudioPipeline(unittest.TestCase):
             docs_root = Path(tmpdir) / "docs"
             audio_dir = docs_root / "audio"
             audio_dir.mkdir(parents=True, exist_ok=True)
-            (audio_dir / "morning-prayer-2026-04-06.json").write_text(
+            (audio_dir / "morning-prayer-elevenlabs-2026-04-06.json").write_text(
                 json.dumps(
                     {
-                        "entry_id": "morning-prayer",
-                        "episode_id": "morning-prayer-2026-04-06",
+                        "entry_id": "morning-prayer-elevenlabs",
+                        "episode_id": "morning-prayer-elevenlabs-2026-04-06",
                         "title": "Morning Prayer",
                         "description": "Morning prayer episode.",
-                        "audio_path": "/tmp/old-workspace/docs/audio/morning-prayer-2026-04-06.mp3",
+                        "audio_path": "/tmp/old-workspace/docs/audio/morning-prayer-elevenlabs-2026-04-06.mp3",
                     },
                     indent=2,
                 ),
                 encoding="utf-8",
             )
-            (audio_dir / "morning-prayer-2026-04-06.mp3").write_bytes(make_test_mp3_bytes())
+            (audio_dir / "morning-prayer-elevenlabs-2026-04-06.mp3").write_bytes(make_test_mp3_bytes())
 
             jobs = self.audio_mod.load_published_audio_jobs(docs_root=docs_root)
 
         self.assertEqual(len(jobs), 1)
-        self.assertEqual(jobs[0]["episode_id"], "morning-prayer-2026-04-06")
+        self.assertEqual(jobs[0]["episode_id"], "morning-prayer-elevenlabs-2026-04-06")
         self.assertEqual(jobs[0]["published_date"], "2026-04-06")
         self.assertGreater(jobs[0]["audio_length"], 0)
 
@@ -530,21 +521,21 @@ class TestPublishAudioPipeline(unittest.TestCase):
             docs_root = Path(tmpdir) / "docs"
             audio_dir = docs_root / "audio"
             audio_dir.mkdir(parents=True, exist_ok=True)
-            (audio_dir / "morning-prayer-2026-04-06.json").write_text(
+            (audio_dir / "morning-prayer-elevenlabs-2026-04-06.json").write_text(
                 json.dumps(
                     {
-                        "entry_id": "morning-prayer",
-                        "episode_id": "morning-prayer-2026-04-06",
+                        "entry_id": "morning-prayer-elevenlabs",
+                        "episode_id": "morning-prayer-elevenlabs-2026-04-06",
                         "title": "Morning Prayer",
                         "description": "Morning prayer episode.",
-                        "audio_path": str(audio_dir / "morning-prayer-2026-04-06.mp3"),
+                        "audio_path": str(audio_dir / "morning-prayer-elevenlabs-2026-04-06.mp3"),
                         "audio_length": 1234,
                     },
                     indent=2,
                 ),
                 encoding="utf-8",
             )
-            (audio_dir / "morning-prayer-2026-04-06.mp3").write_bytes(make_test_mp3_bytes())
+            (audio_dir / "morning-prayer-elevenlabs-2026-04-06.mp3").write_bytes(make_test_mp3_bytes())
 
             jobs = self.audio_mod.load_published_audio_jobs(docs_root=docs_root)
 
@@ -556,26 +547,26 @@ class TestPublishAudioPipeline(unittest.TestCase):
             docs_root = Path(tmpdir) / "docs"
             audio_dir = docs_root / "audio"
             audio_dir.mkdir(parents=True, exist_ok=True)
-            sidecar_path = audio_dir / "morning-prayer-2026-04-06.json"
+            sidecar_path = audio_dir / "morning-prayer-elevenlabs-2026-04-06.json"
             sidecar_path.write_text(
                 json.dumps(
                     {
-                        "entry_id": "morning-prayer",
-                        "episode_id": "morning-prayer-2026-04-06",
+                        "entry_id": "morning-prayer-elevenlabs",
+                        "episode_id": "morning-prayer-elevenlabs-2026-04-06",
                         "title": "Morning Prayer",
                         "description": "Morning prayer episode.",
                         "published_date": "2026-04-06",
                         "generated_at": "2026-04-06T06:00:00+00:00",
-                        "rss_guid": "morning-prayer-2026-04-06::revision-a",
+                        "rss_guid": "morning-prayer-elevenlabs-2026-04-06::revision-a",
                         "content_hash": "archive-hash",
-                        "audio_path": str(audio_dir / "morning-prayer-2026-04-06.mp3"),
+                        "audio_path": str(audio_dir / "morning-prayer-elevenlabs-2026-04-06.mp3"),
                         "audio_length": 1234,
                     },
                     indent=2,
                 ),
                 encoding="utf-8",
             )
-            (audio_dir / "morning-prayer-2026-04-06.mp3").write_bytes(make_test_mp3_bytes())
+            (audio_dir / "morning-prayer-elevenlabs-2026-04-06.mp3").write_bytes(make_test_mp3_bytes())
 
             result = self.audio_mod.write_audio_archive_index(docs_root=docs_root, base_url="https://example.com")
             manifest = json.loads((audio_dir / "index.json").read_text(encoding="utf-8"))
@@ -583,11 +574,11 @@ class TestPublishAudioPipeline(unittest.TestCase):
 
         self.assertEqual(result["archive_items"], 1)
         self.assertEqual(manifest["count"], 1)
-        self.assertEqual(manifest["items"][0]["episode_id"], "morning-prayer-2026-04-06")
+        self.assertEqual(manifest["items"][0]["episode_id"], "morning-prayer-elevenlabs-2026-04-06")
         self.assertIn("Published audio archive", archive_html)
-        self.assertIn("morning-prayer-2026-04-06.mp3", archive_html)
-        self.assertIn("morning-prayer-2026-04-06.json", archive_html)
-        self.assertIn("https://example.com/audio/morning-prayer-2026-04-06.json", archive_html)
+        self.assertIn("morning-prayer-elevenlabs-2026-04-06.mp3", archive_html)
+        self.assertIn("morning-prayer-elevenlabs-2026-04-06.json", archive_html)
+        self.assertIn("https://example.com/audio/morning-prayer-elevenlabs-2026-04-06.json", archive_html)
 
     def test_load_podcast_feed_jobs_recovers_date_from_episode_suffix_without_audio_file(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -599,17 +590,17 @@ class TestPublishAudioPipeline(unittest.TestCase):
             ET.SubElement(channel, "title").text = "Ora Pro Nobis"
             item = ET.SubElement(channel, "item")
             ET.SubElement(item, "title").text = "Morning Prayer"
-            ET.SubElement(item, "guid", isPermaLink="false").text = "morning-prayer-2026-04-06::revision-a"
-            ET.SubElement(item, "link").text = "https://example.com/audio/morning-prayer-2026-04-06.mp3"
+            ET.SubElement(item, "guid", isPermaLink="false").text = "morning-prayer-elevenlabs-2026-04-06::revision-a"
+            ET.SubElement(item, "link").text = "https://example.com/audio/morning-prayer-elevenlabs-2026-04-06.mp3"
             ET.SubElement(item, "description").text = "Morning prayer episode."
-            ET.SubElement(item, "enclosure", url="https://example.com/audio/morning-prayer-2026-04-06.mp3", length="1234", type="audio/mpeg")
+            ET.SubElement(item, "enclosure", url="https://example.com/audio/morning-prayer-elevenlabs-2026-04-06.mp3", length="1234", type="audio/mpeg")
             ET.ElementTree(feed_root).write(feed_path, encoding="utf-8", xml_declaration=True)
 
             jobs = self.rss_mod.load_podcast_feed_jobs(feed_path)
 
         self.assertEqual(len(jobs), 1)
-        self.assertEqual(jobs[0]["episode_id"], "morning-prayer-2026-04-06")
-        self.assertEqual(jobs[0]["rss_guid"], "morning-prayer-2026-04-06::revision-a")
+        self.assertEqual(jobs[0]["episode_id"], "morning-prayer-elevenlabs-2026-04-06")
+        self.assertEqual(jobs[0]["rss_guid"], "morning-prayer-elevenlabs-2026-04-06::revision-a")
         self.assertEqual(jobs[0]["published_date"], "2026-04-06")
         self.assertEqual(jobs[0]["audio_length"], 1234)
 
@@ -618,13 +609,13 @@ class TestPublishAudioPipeline(unittest.TestCase):
             docs_root = Path(tmpdir) / "docs"
             docs_root.mkdir(parents=True, exist_ok=True)
             job = {
-                "entry_id": "morning-prayer-2026-04-06",
-                "episode_id": "morning-prayer-2026-04-06",
+                "entry_id": "morning-prayer-elevenlabs-2026-04-06",
+                "episode_id": "morning-prayer-elevenlabs-2026-04-06",
                 "title": "Morning Prayer",
                 "description": "Morning prayer episode.",
                 "published_date": "2026-04-06",
-                "audio_path": str(docs_root / "audio" / "morning-prayer-2026-04-06.mp3"),
-                "audio_url": "https://example.com/audio/morning-prayer-2026-04-06.mp3",
+                "audio_path": str(docs_root / "audio" / "morning-prayer-elevenlabs-2026-04-06.mp3"),
+                "audio_url": "https://example.com/audio/morning-prayer-elevenlabs-2026-04-06.mp3",
                 "audio_length": 1234,
             }
 

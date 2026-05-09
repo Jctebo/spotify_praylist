@@ -21,7 +21,7 @@ class TestPublishAudioFragments(unittest.TestCase):
     def test_expand_audio_fragments_preserves_order_and_selector_resolution(self):
         contracts = self.contracts_mod.load_publish_contracts()
         jobs = self.contracts_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
-        job = next(item for item in jobs if item["entry_id"] == "morning-prayer")
+        job = next(item for item in jobs if item["entry_id"] == "morning-prayer-elevenlabs")
 
         fragments = job["audio_fragments"]
 
