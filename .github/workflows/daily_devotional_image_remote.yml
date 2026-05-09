@@ -45,6 +45,15 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Restore published audio archive
+        id: published_audio_archive_restore
+        uses: actions/cache/restore@v4
+        with:
+          path: docs/audio
+          key: publish-audio-archive-${{ runner.os }}-v1-${{ github.run_id }}
+          restore-keys: |
+            publish-audio-archive-${{ runner.os }}-v1-
+
       - name: Install rclone
         shell: bash
         run: |
@@ -141,6 +150,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          rm -rf "${GITHUB_WORKSPACE}/pages"
+          mkdir -p "${GITHUB_WORKSPACE}/pages"
+          cp -a "${GITHUB_WORKSPACE}/docs/." "${GITHUB_WORKSPACE}/pages/"
           python sync/build_devotional_public_tree.py \
             --source-root "${GITHUB_WORKSPACE}/onedrive_sync/DCIM" \
             --target-root "${GITHUB_WORKSPACE}/pages/devotional/DCIM"

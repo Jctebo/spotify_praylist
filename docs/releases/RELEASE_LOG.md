@@ -1,5 +1,10 @@
 # Release Log
 
+## [0.3.1.9] - 2026-05-09
+
+### Fixed
+- Preserved the podcast homepage and feed when the devotional image workflow publishes its GitHub Pages artifact by seeding the Pages tree from `docs/` before overlaying devotional images.
+
 ## [0.3.1.8] - 2026-05-08
 
 ### Changed
