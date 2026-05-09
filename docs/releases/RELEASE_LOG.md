@@ -1,5 +1,20 @@
 # Release Log
 
+## [0.3.1.12] - 2026-05-09
+
+### Added
+- Added a `bootstrap-no-cache` publish mode that seeds today and tomorrow while forcing the audio publish path to rebuild instead of reusing cached episodes or fragments.
+- Added regression coverage for the no-cache publish mode across the audio runner and novena runner so the combined workflow stays aligned.
+
+### Changed
+- Updated the publish audio workflow dispatch copy and options to advertise `bootstrap-no-cache` alongside `daily`, `bootstrap`, and `reset`.
+- Updated the publish audio runner to treat `bootstrap-no-cache` like `bootstrap` for date selection while enabling the rebuild override at runtime.
+- Updated the novena runner and README so the combined publish workflow documentation reflects the new mode.
+
+### Fixed
+- Prevented bootstrap-style reruns from sticking to cached audio when a fresh rebuild is needed for the same publish window.
+- Prevented the novena half of the combined publish workflow from silently falling back to `daily` behavior when `bootstrap-no-cache` is selected.
+
 ## [0.3.1.11] - 2026-05-09
 
 ### Added
