@@ -49,12 +49,24 @@ class TestPublishContracts(unittest.TestCase):
     def test_load_publish_contracts_reads_rewritten_contracts(self):
         contracts = self.mod.load_publish_contracts()
 
-        self.assertEqual([contract.contract_id for contract in contracts], ["morning-prayer", "rosary"])
-        self.assertEqual([contract.frequency for contract in contracts], ["daily", "daily"])
+        self.assertEqual([contract.contract_id for contract in contracts], ["morning-prayer", "morning-prayer-elevenlabs", "rosary"])
+        self.assertEqual([contract.frequency for contract in contracts], ["daily", "daily", "daily"])
         self.assertEqual(contracts[0].entries[0]["entry_id"], "morning-prayer")
-        self.assertEqual(contracts[1].entries[0]["entry_id"], "rosary")
+        self.assertEqual(contracts[1].entries[0]["entry_id"], "morning-prayer-elevenlabs")
+        self.assertEqual(contracts[2].entries[0]["entry_id"], "rosary")
         self.assertTrue(contracts[0].entries[0]["audio_config"]["enabled"])
-        self.assertFalse(contracts[1].entries[0]["audio_config"]["enabled"])
+        self.assertFalse(contracts[1].entries[0]["text_config"]["enabled"])
+        self.assertTrue(contracts[1].entries[0]["audio_config"]["enabled"])
+        self.assertEqual(contracts[1].metadata["title_template"], "Morning Prayer - {date:%B %-d, %Y}")
+        self.assertEqual(
+            contracts[1].metadata["description_template"],
+            "Morning Prayer for {date:%B %-d, %Y}. The daily opening block follows the liturgical day and the day's Gospel.",
+        )
+        self.assertEqual(contracts[1].entries[0]["audio_config"]["providers"][0]["provider"], "elevenlabs")
+        self.assertEqual(contracts[1].entries[0]["audio_config"]["providers"][0]["voice_id"], "2NfTQuOn6dRQvgKuC2le")
+        self.assertEqual(contracts[1].entries[0]["audio_config"]["providers"][0]["model_id"], "eleven_multilingual_v2")
+        self.assertEqual(contracts[1].entries[0]["audio_config"]["providers"][1]["provider"], "openai")
+        self.assertFalse(contracts[2].entries[0]["audio_config"]["enabled"])
         self.assertFalse(contracts[0].entries[0]["blocks"][0]["skip_if_missing"])
         self.assertTrue(contracts[0].metadata["daily_intro"]["allow_missing_gospel"])
         self.assertNotIn("allow_missing_gospel", contracts[0].entries[0]["blocks"][0])

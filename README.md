@@ -40,6 +40,7 @@ Optional variables:
 - publish audio caches leaf fragments under `.cache/publish_audio/` so unchanged spoken blocks can be reused across reruns, and GitHub Actions persists that cache across workflow runs
 - publish audio writes one JSON sidecar per episode under `docs/audio/`, and reruns now rebuild the feed from the local `docs/audio/` archive snapshot rather than the remote published feed
 - the publish workflow also writes `docs/audio/index.html` and `docs/audio/index.json` so GitHub Pages exposes a browsable archive dashboard alongside the feed
+- `scripts/run_morning_prayer_elevenlabs_local.py`: step-by-step local smoke helper that loads `config/local/elevenlabs.env`, renders only the Morning Prayer ElevenLabs variant, and writes local feed/archive artifacts under `artifacts/local/elevenlabs/`
 - `config/publish/images/logo_ora_pro_nobis.png`: podcast cover art copied into the published `docs/images/` tree
 - `PUBLISH_GITHUB_PAGES_BASE_URL` to override the RSS enclosure base URL when publishing audio
 - `PUBLISH_PODCAST_FEED_URL` to override the remote `podcast.xml` archive URL when publishing audio

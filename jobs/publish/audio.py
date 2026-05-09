@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sys
 import shutil
@@ -10,6 +11,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
 from openai import OpenAI
+import requests
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -20,6 +22,7 @@ from jobs.publish.fragments import (
     assemble_audio_fragments,
     audio_manifest_hash,
     publish_audio_cache_root,
+    normalize_audio_settings,
     render_fragment_audio,
 )
 from jobs.publish.formatting import compose_rss_guid, episode_date_from_episode_id
@@ -35,7 +38,10 @@ PUBLISH_GITHUB_PAGES_BASE_URL = "PUBLISH_GITHUB_PAGES_BASE_URL"
 PUBLISH_PODCAST_FEED_URL = "PUBLISH_PODCAST_FEED_URL"
 OPENAI_API_KEY = "OPENAI_API_KEY"
 OAI_API_BASE_URL = "OAI_API_BASE_URL"
+ELEVENLABS_API_BASE_URL = "https://api.elevenlabs.io/v1"
 DEFAULT_PODCAST_FEED_PUBLIC_URL = "https://jctebo.github.io/spotify_praylist/podcast.xml"
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -124,6 +130,110 @@ def openai_tts_renderer(text: str, audio_config: Dict[str, Any]) -> bytes:
     if not raw:
         raise RuntimeError("OpenAI audio generation returned empty content.")
     return raw
+
+
+def _provider_name(audio_config: Dict[str, Any]) -> str:
+    return str(audio_config.get("provider", "")).strip().lower()
+
+
+def _base_provider_config(audio_config: Dict[str, Any]) -> Dict[str, Any]:
+    return {
+        "provider": "openai",
+        "api_key_env": OPENAI_API_KEY,
+        "model": str(audio_config.get("model", "gpt-4o-mini-tts")).strip() or "gpt-4o-mini-tts",
+        "voice": str(audio_config.get("voice", "alloy")).strip() or "alloy",
+        "format": str(audio_config.get("format", "mp3")).strip().lower() or "mp3",
+        "speed": float(audio_config.get("speed", 1.0)),
+    }
+
+
+def _provider_preferences(audio_config: Dict[str, Any]) -> List[Dict[str, Any]]:
+    providers = audio_config.get("providers")
+    if isinstance(providers, list) and providers:
+        return [dict(provider) for provider in providers if isinstance(provider, dict)]
+    return [_base_provider_config(audio_config)]
+
+
+def _effective_provider_audio_config(audio_config: Dict[str, Any], provider_config: Dict[str, Any]) -> Dict[str, Any]:
+    effective = dict(audio_config)
+    effective.pop("providers", None)
+    effective.update(provider_config)
+    effective["provider"] = _provider_name(effective) or _provider_name(provider_config) or "openai"
+    effective["format"] = str(effective.get("format", audio_config.get("format", "mp3"))).strip().lower() or "mp3"
+    try:
+        effective["speed"] = float(effective.get("speed", audio_config.get("speed", 1.0)))
+    except Exception:
+        effective["speed"] = 1.0
+    if effective["provider"] == "openai":
+        effective["model"] = str(effective.get("model", "gpt-4o-mini-tts")).strip() or "gpt-4o-mini-tts"
+        effective["voice"] = str(effective.get("voice", "alloy")).strip() or "alloy"
+        effective.pop("voice_settings", None)
+        effective.pop("voice_id", None)
+        effective.pop("model_id", None)
+    elif effective["provider"] == "elevenlabs":
+        effective["api_key_env"] = str(effective.get("api_key_env", "ELEVENLABS_API_KEY")).strip() or "ELEVENLABS_API_KEY"
+        effective["voice_id"] = str(effective.get("voice_id", "")).strip()
+        effective["model_id"] = str(effective.get("model_id", "")).strip() or "eleven_multilingual_v2"
+        voice_settings = effective.get("voice_settings")
+        if isinstance(voice_settings, dict):
+            voice_settings = dict(voice_settings)
+        else:
+            voice_settings = {}
+        voice_settings.setdefault("speed", effective["speed"])
+        effective["voice_settings"] = voice_settings
+    return effective
+
+
+def _elevenlabs_output_format(audio_format: str) -> str:
+    fmt = str(audio_format or "").strip().lower() or "mp3"
+    if fmt == "mp3":
+        return "mp3_44100_128"
+    raise RuntimeError(f"Unsupported ElevenLabs audio format '{audio_format}'.")
+
+
+def elevenlabs_tts_renderer(text: str, audio_config: Dict[str, Any]) -> bytes:
+    api_key_env = str(audio_config.get("api_key_env", "ELEVENLABS_API_KEY")).strip() or "ELEVENLABS_API_KEY"
+    api_key = os.getenv(api_key_env, "").strip()
+    if not api_key:
+        raise RuntimeError(f"Missing required environment variable: {api_key_env}")
+    voice_id = str(audio_config.get("voice_id", "")).strip()
+    if not voice_id:
+        raise RuntimeError("Missing required ElevenLabs voice_id.")
+    model_id = str(audio_config.get("model_id", "")).strip() or "eleven_multilingual_v2"
+    payload: Dict[str, Any] = {
+        "text": str(text or ""),
+        "model_id": model_id,
+    }
+    voice_settings = audio_config.get("voice_settings")
+    if isinstance(voice_settings, dict) and voice_settings:
+        payload["voice_settings"] = {key: value for key, value in dict(voice_settings).items() if value is not None}
+    response = requests.post(
+        f"{ELEVENLABS_API_BASE_URL}/text-to-speech/{voice_id}",
+        params={"output_format": _elevenlabs_output_format(audio_config.get("format", "mp3"))},
+        headers={
+            "xi-api-key": api_key,
+            "Content-Type": "application/json",
+            "Accept": "audio/mpeg",
+        },
+        json=payload,
+        timeout=120,
+    )
+    response.raise_for_status()
+    raw = bytes(response.content)
+    if not raw:
+        raise RuntimeError("ElevenLabs audio generation returned empty content.")
+    return raw
+
+
+def _renderer_for_provider(provider_audio_config: Dict[str, Any], renderer):
+    if renderer is not None:
+        return renderer
+    provider = _provider_name(provider_audio_config)
+    if provider in {"", "openai"}:
+        return openai_tts_renderer
+    if provider == "elevenlabs":
+        return elevenlabs_tts_renderer
+    raise RuntimeError(f"Unsupported audio provider '{provider}'.")
 
 
 
@@ -720,68 +830,94 @@ def render_audio_job(
         rendered["rss_guid"] = str(job.get("rss_guid", "")).strip() or rss_guid
         return rendered
 
-    renderer = renderer or openai_tts_renderer
     fragment_root = publish_audio_cache_root(cache_root)
-    fragment_paths: List[Path] = []
-    fragment_results: List[Dict[str, Any]] = []
-    for fragment in fragments:
-        rendered_fragment = render_fragment_audio(fragment, audio_config, renderer, cache_root=fragment_root)
-        fragment_paths.append(Path(rendered_fragment["audio_path"]))
-        fragment_results.append(
-            {
-                "fragment_key": str(fragment.get("fragment_key", "")).strip(),
-                "block_path": str(fragment.get("block_path", "")).strip(),
-                "kind": str(fragment.get("kind", "")).strip(),
-                "label": str(fragment.get("label", "")).strip(),
-                "text": str(fragment.get("text", "")).strip(),
-                "fragment_hash": rendered_fragment["fragment_hash"],
-                "audio_path": str(rendered_fragment["audio_path"]),
-                "rendered": bool(rendered_fragment.get("rendered", False)),
-            }
-        )
+    provider_configs = _provider_preferences(audio_config)
+    errors: List[str] = []
+    last_error: Optional[Exception] = None
 
-    target_format = str(audio_config.get("format", "mp3")).strip().lower() or "mp3"
-    if len(fragment_paths) == 1 and fragment_paths[0].suffix.lower().lstrip(".") == target_format:
-        raw_audio = fragment_paths[0].read_bytes()
-    else:
-        raw_audio = assemble_audio_fragments(fragment_paths, target_format, cache_root=fragment_root)
-    if not raw_audio:
-        raise RuntimeError(f"Audio assembly returned empty output for entry '{job.get('entry_id', '')}'.")
-    audio_length = len(raw_audio)
-    audio_path.write_bytes(raw_audio)
-    sidecar_path.write_text(
-        json.dumps(
-            {
-                "entry_id": job.get("entry_id", ""),
-                "episode_id": episode_id,
-                "published_date": str(job.get("published_date", "")).strip(),
-                "contract_id": str(job.get("contract_id", "")).strip(),
-                "contract_type": str(job.get("contract_type", "")).strip(),
-                "frequency": str(job.get("frequency", "")).strip(),
-                "title": str(job.get("title", "")).strip(),
-                "description": str(job.get("description", "")).strip(),
-                "content_hash": content_hash,
-                "audio_path": str(audio_path),
-                "audio_url": audio_public_url(episode_id),
-                "audio_length": audio_length,
-                "generated_at": generated_at,
-                "rss_guid": rss_guid,
-                "tts": audio_config,
-                "fragment_manifest_hash": content_hash,
-                "fragments": fragment_results,
-            },
-            indent=2,
-            sort_keys=True,
-        ),
-        encoding="utf-8",
-    )
-    rendered = dict(job)
-    rendered["audio_path"] = str(audio_path)
-    rendered["audio_url"] = audio_public_url(episode_id)
-    rendered["rendered"] = True
-    rendered["content_hash"] = content_hash
-    rendered["audio_length"] = audio_length
-    rendered["generated_at"] = generated_at
-    rendered["rss_guid"] = rss_guid
-    rendered["audio_fragments"] = fragments
-    return rendered
+    for provider_config in provider_configs:
+        effective_audio_config = _effective_provider_audio_config(audio_config, provider_config)
+        provider_renderer = _renderer_for_provider(effective_audio_config, renderer)
+        provider_name = _provider_name(effective_audio_config) or "openai"
+        fragment_paths: List[Path] = []
+        fragment_results: List[Dict[str, Any]] = []
+        try:
+            for fragment in fragments:
+                rendered_fragment = render_fragment_audio(
+                    fragment,
+                    effective_audio_config,
+                    provider_renderer,
+                    cache_root=fragment_root,
+                )
+                fragment_paths.append(Path(rendered_fragment["audio_path"]))
+                fragment_results.append(
+                    {
+                        "fragment_key": str(fragment.get("fragment_key", "")).strip(),
+                        "block_path": str(fragment.get("block_path", "")).strip(),
+                        "kind": str(fragment.get("kind", "")).strip(),
+                        "label": str(fragment.get("label", "")).strip(),
+                        "text": str(fragment.get("text", "")).strip(),
+                        "fragment_hash": rendered_fragment["fragment_hash"],
+                        "audio_path": str(rendered_fragment["audio_path"]),
+                        "rendered": bool(rendered_fragment.get("rendered", False)),
+                    }
+                )
+
+            target_format = str(effective_audio_config.get("format", "mp3")).strip().lower() or "mp3"
+            if len(fragment_paths) == 1 and fragment_paths[0].suffix.lower().lstrip(".") == target_format:
+                raw_audio = fragment_paths[0].read_bytes()
+            else:
+                raw_audio = assemble_audio_fragments(fragment_paths, target_format, cache_root=fragment_root)
+            if not raw_audio:
+                raise RuntimeError(f"Audio assembly returned empty output for entry '{job.get('entry_id', '')}'.")
+            audio_length = len(raw_audio)
+            audio_path.write_bytes(raw_audio)
+            fragment_manifest_hash = audio_manifest_hash(job, fragments, effective_audio_config)
+            rendered_audio_config = normalize_audio_settings(effective_audio_config)
+            sidecar_path.write_text(
+                json.dumps(
+                    {
+                        "entry_id": job.get("entry_id", ""),
+                        "episode_id": episode_id,
+                        "published_date": str(job.get("published_date", "")).strip(),
+                        "contract_id": str(job.get("contract_id", "")).strip(),
+                        "contract_type": str(job.get("contract_type", "")).strip(),
+                        "frequency": str(job.get("frequency", "")).strip(),
+                        "title": str(job.get("title", "")).strip(),
+                        "description": str(job.get("description", "")).strip(),
+                        "content_hash": content_hash,
+                        "audio_path": str(audio_path),
+                        "audio_url": audio_public_url(episode_id),
+                        "audio_length": audio_length,
+                        "generated_at": generated_at,
+                        "rss_guid": rss_guid,
+                        "tts": rendered_audio_config,
+                        "fragment_manifest_hash": fragment_manifest_hash,
+                        "fragments": fragment_results,
+                    },
+                    indent=2,
+                    sort_keys=True,
+                ),
+                encoding="utf-8",
+            )
+            rendered = dict(job)
+            rendered["audio_path"] = str(audio_path)
+            rendered["audio_url"] = audio_public_url(episode_id)
+            rendered["rendered"] = True
+            rendered["content_hash"] = content_hash
+            rendered["audio_length"] = audio_length
+            rendered["generated_at"] = generated_at
+            rendered["rss_guid"] = rss_guid
+            rendered["audio_fragments"] = fragments
+            rendered["audio_config"] = rendered_audio_config
+            rendered["fragment_manifest_hash"] = fragment_manifest_hash
+            rendered["provider"] = provider_name
+            return rendered
+        except Exception as exc:
+            last_error = exc
+            errors.append(f"{provider_name}: {exc}")
+            logger.warning("Audio provider failed episode=%s provider=%s error=%s", episode_id, provider_name, exc)
+            continue
+
+    error_message = "; ".join(errors) or "no audio providers were configured."
+    raise RuntimeError(f"All audio providers failed for entry '{job.get('entry_id', '')}': {error_message}") from last_error
