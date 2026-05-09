@@ -19,6 +19,21 @@ def publish_audio_cache_root(cache_root: Optional[Path] = None) -> Path:
     return Path(cache_root) if cache_root else DEFAULT_PUBLISH_AUDIO_CACHE_DIR
 
 
+def _normalize_tts_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        normalized: Dict[str, Any] = {}
+        for key in sorted(value.keys(), key=lambda item: str(item)):
+            if str(key).strip() == "api_key_env":
+                continue
+            normalized[str(key)] = _normalize_tts_value(value[key])
+        return normalized
+    if isinstance(value, list):
+        return [_normalize_tts_value(item) for item in value]
+    if isinstance(value, tuple):
+        return [_normalize_tts_value(item) for item in value]
+    return value
+
+
 def normalize_audio_settings(audio_config: Dict[str, Any]) -> Dict[str, Any]:
     settings = {
         "model": str(audio_config.get("model", "gpt-4o-mini-tts")).strip() or "gpt-4o-mini-tts",
@@ -29,6 +44,18 @@ def normalize_audio_settings(audio_config: Dict[str, Any]) -> Dict[str, Any]:
         settings["speed"] = float(audio_config.get("speed", 1.0))
     except Exception:
         settings["speed"] = 1.0
+    provider = str(audio_config.get("provider", "")).strip().lower()
+    if provider:
+        settings["provider"] = provider
+    if "voice_id" in audio_config:
+        settings["voice_id"] = str(audio_config.get("voice_id", "")).strip()
+    if "model_id" in audio_config:
+        settings["model_id"] = str(audio_config.get("model_id", "")).strip()
+    if "voice_settings" in audio_config and isinstance(audio_config.get("voice_settings"), dict):
+        settings["voice_settings"] = _normalize_tts_value(dict(audio_config.get("voice_settings") or {}))
+    providers = audio_config.get("providers")
+    if isinstance(providers, list) and providers:
+        settings["providers"] = [_normalize_tts_value(dict(provider)) if isinstance(provider, dict) else provider for provider in providers]
     return settings
 
 

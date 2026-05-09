@@ -1,5 +1,20 @@
 # Release Log
 
+## [0.3.1.10] - 2026-05-09
+
+### Added
+- Added a sibling Morning Prayer variant that can render through an ordered TTS provider preference list with a custom ElevenLabs voice as a first-class option.
+- Added a step-by-step local helper for smoke testing the Morning Prayer ElevenLabs variant against `config/local/elevenlabs.env`.
+
+### Changed
+- Updated publish contract normalization to understand ordered provider objects and carry provider-specific ElevenLabs fields without breaking the existing Morning Prayer contract.
+- Extended audio fragment hashing and render fallback so provider identity and tuning stay cache-safe while ElevenLabs can fail over to the next configured provider.
+- Kept the Morning Prayer ElevenLabs title and description plain while making the contract and episode identity distinct under the hood.
+
+### Fixed
+- Prevented OpenAI and ElevenLabs renders from colliding in cache identity or sidecar metadata.
+- Added regression coverage for contract loading, provider fallback, cache separation, and distinct feed identity between the default and ElevenLabs Morning Prayer variants.
+
 ## [0.3.1.9] - 2026-05-09
 
 ### Fixed

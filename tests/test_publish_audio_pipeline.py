@@ -44,10 +44,14 @@ class TestPublishAudioPipeline(unittest.TestCase):
         contracts = self.contracts_mod.load_publish_contracts()
         jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
 
-        self.assertEqual(len(jobs), 1)
+        self.assertEqual(len(jobs), 2)
+        self.assertEqual([job["entry_id"] for job in jobs], ["morning-prayer", "morning-prayer-elevenlabs"])
         self.assertEqual(jobs[0]["entry_id"], "morning-prayer")
+        self.assertEqual(jobs[1]["entry_id"], "morning-prayer-elevenlabs")
         self.assertTrue(jobs[0]["audio_config"]["enabled"])
+        self.assertTrue(jobs[1]["audio_config"]["enabled"])
         self.assertGreater(len(jobs[0]["audio_fragments"]), 0)
+        self.assertGreater(len(jobs[1]["audio_fragments"]), 0)
 
     def test_render_audio_job_skips_when_hash_matches(self):
         contracts = self.contracts_mod.load_publish_contracts()
@@ -149,12 +153,17 @@ class TestPublishAudioPipeline(unittest.TestCase):
                 contracts, target_date=target_date or expected_date
             )
             result = self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
+            feed_root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
+            titles = [item.findtext("title") or "" for item in feed_root.findall("./channel/item")]
 
-            self.assertEqual(result["jobs"], 1)
-            self.assertEqual(result["rendered"], 1)
+            self.assertEqual(result["jobs"], 2)
+            self.assertEqual(result["rendered"], 2)
             self.assertEqual(result["archived"], 0)
             self.assertTrue((docs_root / "podcast.xml").exists())
             self.assertTrue((docs_root / "audio" / f"morning-prayer-{expected_date.isoformat()}.mp3").exists())
+            self.assertTrue((docs_root / "audio" / f"morning-prayer-elevenlabs-{expected_date.isoformat()}.mp3").exists())
+            self.assertTrue(any("Morning Prayer for" in title for title in titles))
+            self.assertTrue(any(title.startswith("Morning Prayer - ") for title in titles))
             self.assertTrue((docs_root / "images" / "logo_ora_pro_nobis.png").exists())
 
     def test_run_audio_pipeline_uses_local_archive_snapshot(self):
@@ -174,7 +183,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.runner_mod.load_published_audio_jobs = fake_load_published_audio_jobs
             result = self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
 
-        self.assertEqual(result["jobs"], 1)
+        self.assertEqual(result["jobs"], 2)
         self.assertEqual(result["archived"], 0)
         self.assertEqual(Path(captured["kwargs"]["docs_root"]).name, "docs")
         self.assertIn("github.io", str(captured["kwargs"]["base_url"]))
@@ -224,12 +233,14 @@ class TestPublishAudioPipeline(unittest.TestCase):
             archive_manifest = json.loads((audio_dir / "index.json").read_text(encoding="utf-8"))
             archive_html = (audio_dir / "index.html").read_text(encoding="utf-8")
 
-        self.assertEqual(result["jobs"], 1)
-        self.assertEqual(result["rendered"], 1)
+        self.assertEqual(result["jobs"], 2)
+        self.assertEqual(result["rendered"], 2)
         self.assertEqual(result["archived"], 1)
+        self.assertEqual(len(guids), 3)
         self.assertTrue(any(guid.startswith(f"morning-prayer-{current_target_date.isoformat()}::") for guid in guids))
+        self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"{archived_episode_id}::") for guid in guids))
-        self.assertEqual(archive_manifest["count"], 2)
+        self.assertEqual(archive_manifest["count"], 3)
         self.assertIn("Published audio archive", archive_html)
         self.assertIn(f"{archived_episode_id}.mp3", archive_html)
 
@@ -338,10 +349,12 @@ class TestPublishAudioPipeline(unittest.TestCase):
             root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") or "" for item in root.findall("./channel/item")]
 
-            self.assertEqual(result["jobs"], 2)
-            self.assertEqual(result["rendered"], 2)
+            self.assertEqual(result["jobs"], 4)
+            self.assertEqual(result["rendered"], 4)
             self.assertTrue(any(guid.startswith(f"morning-prayer-{today.isoformat()}::") for guid in guids))
+            self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{today.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"morning-prayer-{tomorrow.isoformat()}::") for guid in guids))
+            self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{tomorrow.isoformat()}::") for guid in guids))
 
     def test_run_audio_pipeline_rebuilds_feed_from_local_archive_only(self):
         contracts = self.contracts_mod.load_publish_contracts()
@@ -384,10 +397,11 @@ class TestPublishAudioPipeline(unittest.TestCase):
             root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") or "" for item in root.findall("./channel/item")]
 
-        self.assertEqual(result["jobs"], 1)
+        self.assertEqual(result["jobs"], 2)
         self.assertEqual(result["archived"], 1)
-        self.assertEqual(len(guids), 2)
+        self.assertEqual(len(guids), 3)
         self.assertTrue(any(guid.startswith(f"morning-prayer-{current_target_date.isoformat()}::") for guid in guids))
+        self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"{archived_episode_id}::") for guid in guids))
 
     def test_load_published_audio_jobs_skips_sidecars_without_audio_file(self):

@@ -123,6 +123,58 @@ def _optional_list(payload: Dict[str, Any], field_name: str) -> List[Any]:
     return list(value)
 
 
+def _normalize_provider_config(provider: Any, path: Path, entry_id: str, index: int) -> Dict[str, Any]:
+    if not isinstance(provider, dict):
+        raise RuntimeError(
+            f"Publish entry '{entry_id}' in '{path}' has an invalid provider at index {index}; expected an object."
+        )
+    normalized = dict(provider)
+    provider_name = normalize_publish_key(normalized.get("provider"))
+    if not provider_name:
+        raise RuntimeError(
+            f"Publish entry '{entry_id}' in '{path}' has a provider at index {index} without a 'provider' field."
+        )
+    normalized["provider"] = provider_name
+    api_key_env = str(normalized.get("api_key_env", "")).strip()
+    if not api_key_env:
+        if provider_name == "openai":
+            api_key_env = "OPENAI_API_KEY"
+        elif provider_name == "elevenlabs":
+            api_key_env = "ELEVENLABS_API_KEY"
+    normalized["api_key_env"] = api_key_env
+
+    if provider_name == "openai":
+        normalized["model"] = str(normalized.get("model", DEFAULT_AUDIO_SETTINGS["model"])).strip() or DEFAULT_AUDIO_SETTINGS["model"]
+        normalized["voice"] = str(normalized.get("voice", DEFAULT_AUDIO_SETTINGS["voice"])).strip() or DEFAULT_AUDIO_SETTINGS["voice"]
+    if provider_name == "elevenlabs":
+        voice_id = str(normalized.get("voice_id", "")).strip()
+        if not voice_id:
+            raise RuntimeError(
+                f"Publish entry '{entry_id}' in '{path}' has an ElevenLabs provider at index {index} without 'voice_id'."
+            )
+        normalized["voice_id"] = voice_id
+        model_id = str(normalized.get("model_id", "")).strip()
+        if not model_id:
+            raise RuntimeError(
+                f"Publish entry '{entry_id}' in '{path}' has an ElevenLabs provider at index {index} without 'model_id'."
+            )
+        normalized["model_id"] = model_id
+        if "voice_settings" in normalized:
+            voice_settings = normalized.get("voice_settings") or {}
+            if not isinstance(voice_settings, dict):
+                raise RuntimeError(
+                    f"Publish entry '{entry_id}' in '{path}' has an ElevenLabs provider at index {index} with invalid 'voice_settings'."
+                )
+            normalized["voice_settings"] = dict(voice_settings)
+
+    normalized["format"] = str(normalized.get("format", DEFAULT_AUDIO_SETTINGS["format"])).strip().lower() or DEFAULT_AUDIO_SETTINGS["format"]
+    try:
+        normalized["speed"] = float(normalized.get("speed", DEFAULT_AUDIO_SETTINGS["speed"]))
+    except Exception:
+        normalized["speed"] = float(DEFAULT_AUDIO_SETTINGS["speed"])
+    return normalized
+
+
 
 def _normalize_frequency(value: Any, path: Path) -> str:
     frequency = str(value or "").strip().lower()
@@ -161,7 +213,7 @@ def _normalize_text_config(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 
-def _normalize_audio_config(payload: Dict[str, Any]) -> Dict[str, Any]:
+def _normalize_audio_config(payload: Dict[str, Any], path: Path, entry_id: str) -> Dict[str, Any]:
     audio_config = dict(payload.get("audio_config") or {}) if isinstance(payload.get("audio_config"), dict) else {}
     for key, value in DEFAULT_AUDIO_SETTINGS.items():
         if key not in audio_config:
@@ -174,6 +226,16 @@ def _normalize_audio_config(payload: Dict[str, Any]) -> Dict[str, Any]:
         audio_config["speed"] = float(audio_config.get("speed", DEFAULT_AUDIO_SETTINGS["speed"]))
     except Exception:
         audio_config["speed"] = float(DEFAULT_AUDIO_SETTINGS["speed"])
+    providers = audio_config.get("providers")
+    if providers is not None:
+        if not isinstance(providers, list):
+            raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' has an invalid 'providers' list.")
+        if not providers:
+            raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' has an empty 'providers' list.")
+        audio_config["providers"] = [
+            _normalize_provider_config(provider, path, entry_id, index)
+            for index, provider in enumerate(providers, start=1)
+        ]
     return audio_config
 
 
@@ -253,7 +315,7 @@ def _normalize_entry(entry: Any, path: Path) -> Dict[str, Any]:
     normalized["status"] = _normalize_status(entry.get("status"), path, entry_id)
     normalized["text"] = _optional_text(entry, "text") or normalized["title"]
     normalized["text_config"] = _normalize_text_config(entry)
-    normalized["audio_config"] = _normalize_audio_config(entry)
+    normalized["audio_config"] = _normalize_audio_config(entry, path, entry_id)
     blocks = _optional_list(entry, "blocks")
     normalized["blocks"] = [_normalize_block(block, path, entry_id) for block in blocks]
     if not normalized["blocks"] and not normalized["text"]:
