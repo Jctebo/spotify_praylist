@@ -328,6 +328,11 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertIn("docs/audio", workflow_text)
         self.assertIn("publish-audio-archive-${{ runner.os }}-v1-", workflow_text)
 
+    def test_publish_audio_workflow_exports_elevenlabs_secret(self):
+        workflow_text = Path(".github/workflows/publish_audio.yml").read_text(encoding="utf-8")
+
+        self.assertIn("ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}", workflow_text)
+
     def test_run_audio_pipeline_can_render_today_and_tomorrow_together(self):
         contracts = self.contracts_mod.load_publish_contracts()
         fake_renderer, _ = self._fake_renderer()

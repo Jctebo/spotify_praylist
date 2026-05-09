@@ -28,6 +28,7 @@ jobs:
       NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
       NOTION_PUBLISH_DATABASE_ID: ${{ secrets.NOTION_PUBLISH_DATABASE_ID }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
       OAI_API_BASE_URL: https://api.openai.com/v1
       PUBLISH_MODE: ${{ github.event.inputs.novena_publish_mode }}
       NOVENA_PUBLISH_MODE: ${{ github.event.inputs.novena_publish_mode }}
