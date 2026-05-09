@@ -1,5 +1,16 @@
 # Release Log
 
+## [0.3.1.11] - 2026-05-09
+
+### Added
+- Added a regression check that keeps the publish audio workflow exporting `ELEVENLABS_API_KEY` for the Morning Prayer ElevenLabs variant.
+
+### Changed
+- Documented the ElevenLabs secret requirement in the README so local runs and GitHub Actions both make the runtime dependency explicit.
+
+### Fixed
+- Prevented the Morning Prayer ElevenLabs variant from failing in GitHub Actions when the secret exists in repository settings but was not exported into the job environment.
+
 ## [0.3.1.10] - 2026-05-09
 
 ### Added
