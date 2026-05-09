@@ -26,7 +26,7 @@ class TestPublishContracts(unittest.TestCase):
     def test_render_publish_template_and_episode_id_are_date_scoped(self):
         contracts = self.mod.load_publish_contracts()
         target_date = datetime.date(2026, 4, 6)
-        morning_contract = next(contract for contract in contracts if contract.contract_id == "morning-prayer")
+        morning_contract = next(contract for contract in contracts if contract.contract_id == "morning-prayer-elevenlabs")
         entry = morning_contract.entries[0]
 
         context = self.mod.build_publish_context(
@@ -41,32 +41,31 @@ class TestPublishContracts(unittest.TestCase):
         rendered_title = self.mod.render_publish_template(morning_contract.metadata["title_template"], context)
         rendered_description = self.mod.render_publish_template(morning_contract.metadata["description_template"], context)
 
-        self.assertEqual(rendered_title, "Morning Prayer for April 6, 2026")
+        self.assertEqual(rendered_title, "Morning Prayer - April 6, 2026")
         self.assertIn("April 6, 2026", rendered_description)
-        self.assertEqual(context["episode_id"], "morning-prayer-2026-04-06")
-        self.assertEqual(self.mod.derive_episode_id(context=context, template=morning_contract.metadata["episode_id_template"]), "morning-prayer-2026-04-06")
+        self.assertEqual(context["episode_id"], "morning-prayer-elevenlabs-2026-04-06")
+        self.assertEqual(self.mod.derive_episode_id(context=context, template=morning_contract.metadata["episode_id_template"]), "morning-prayer-elevenlabs-2026-04-06")
 
     def test_load_publish_contracts_reads_rewritten_contracts(self):
         contracts = self.mod.load_publish_contracts()
 
-        self.assertEqual([contract.contract_id for contract in contracts], ["morning-prayer", "morning-prayer-elevenlabs", "rosary"])
-        self.assertEqual([contract.frequency for contract in contracts], ["daily", "daily", "daily"])
-        self.assertEqual(contracts[0].entries[0]["entry_id"], "morning-prayer")
-        self.assertEqual(contracts[1].entries[0]["entry_id"], "morning-prayer-elevenlabs")
-        self.assertEqual(contracts[2].entries[0]["entry_id"], "rosary")
+        self.assertEqual([contract.contract_id for contract in contracts], ["morning-prayer-elevenlabs", "rosary"])
+        self.assertEqual([contract.frequency for contract in contracts], ["daily", "daily"])
+        self.assertEqual(contracts[0].entries[0]["entry_id"], "morning-prayer-elevenlabs")
+        self.assertEqual(contracts[1].entries[0]["entry_id"], "rosary")
         self.assertTrue(contracts[0].entries[0]["audio_config"]["enabled"])
-        self.assertFalse(contracts[1].entries[0]["text_config"]["enabled"])
-        self.assertTrue(contracts[1].entries[0]["audio_config"]["enabled"])
-        self.assertEqual(contracts[1].metadata["title_template"], "Morning Prayer - {date:%B %-d, %Y}")
+        self.assertTrue(contracts[0].entries[0]["text_config"]["enabled"])
+        self.assertTrue(contracts[0].entries[0]["audio_config"]["enabled"])
+        self.assertEqual(contracts[0].metadata["title_template"], "Morning Prayer - {date:%B %-d, %Y}")
         self.assertEqual(
-            contracts[1].metadata["description_template"],
+            contracts[0].metadata["description_template"],
             "Morning Prayer for {date:%B %-d, %Y}. The daily opening block follows the liturgical day and the day's Gospel.",
         )
-        self.assertEqual(contracts[1].entries[0]["audio_config"]["providers"][0]["provider"], "elevenlabs")
-        self.assertEqual(contracts[1].entries[0]["audio_config"]["providers"][0]["voice_id"], "2NfTQuOn6dRQvgKuC2le")
-        self.assertEqual(contracts[1].entries[0]["audio_config"]["providers"][0]["model_id"], "eleven_multilingual_v2")
-        self.assertEqual(contracts[1].entries[0]["audio_config"]["providers"][1]["provider"], "openai")
-        self.assertFalse(contracts[2].entries[0]["audio_config"]["enabled"])
+        self.assertEqual(contracts[0].entries[0]["audio_config"]["providers"][0]["provider"], "elevenlabs")
+        self.assertEqual(contracts[0].entries[0]["audio_config"]["providers"][0]["voice_id"], "2NfTQuOn6dRQvgKuC2le")
+        self.assertEqual(contracts[0].entries[0]["audio_config"]["providers"][0]["model_id"], "eleven_multilingual_v2")
+        self.assertEqual(contracts[0].entries[0]["audio_config"]["providers"][1]["provider"], "openai")
+        self.assertFalse(contracts[1].entries[0]["audio_config"]["enabled"])
         self.assertFalse(contracts[0].entries[0]["blocks"][0]["skip_if_missing"])
         self.assertTrue(contracts[0].metadata["daily_intro"]["allow_missing_gospel"])
         self.assertNotIn("allow_missing_gospel", contracts[0].entries[0]["blocks"][0])
@@ -79,7 +78,7 @@ class TestPublishContracts(unittest.TestCase):
         with mock.patch.object(self.mod.sys, "stderr", stderr):
             jobs = self.mod.build_text_jobs(contracts, target_date=target_date)
 
-        morning = next(job for job in jobs if job["entry_id"] == "morning-prayer")
+        morning = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
         self.assertIn("Today the Church celebrates", morning["text"])
         self.assertGreaterEqual(len(self.calls), 1)
         self.assertTrue(any(call[1]["allow_missing_gospel"] for call in self.calls))
@@ -206,10 +205,10 @@ class TestPublishContracts(unittest.TestCase):
         jobs = self.mod.build_text_jobs(contracts, target_date=target_date)
 
         self.assertEqual(len(jobs), 2)
-        morning = next(job for job in jobs if job["entry_id"] == "morning-prayer")
+        morning = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
         rosary = next(job for job in jobs if job["entry_id"] == "rosary")
-        self.assertEqual(morning["title"], "Morning Prayer for April 6, 2026")
-        self.assertEqual(morning["episode_id"], "morning-prayer-2026-04-06")
+        self.assertEqual(morning["title"], "Morning Prayer - April 6, 2026")
+        self.assertEqual(morning["episode_id"], "morning-prayer-elevenlabs-2026-04-06")
         self.assertIn("Today the Church celebrates", morning["text"])
         self.assertIn("April", morning["text"])
         self.assertIn("Joyful Mysteries", rosary["text"])
@@ -225,7 +224,7 @@ class TestPublishContracts(unittest.TestCase):
     def test_expand_audio_fragments_flattens_leaf_blocks_in_order(self):
         contracts = self.mod.load_publish_contracts()
         target_date = datetime.date(2026, 4, 6)
-        morning_contract = next(contract for contract in contracts if contract.contract_id == "morning-prayer")
+        morning_contract = next(contract for contract in contracts if contract.contract_id == "morning-prayer-elevenlabs")
         entry = morning_contract.entries[0]
 
         fragments = self.mod.expand_audio_fragments(morning_contract, entry, target_date=target_date)

@@ -1,6 +1,6 @@
 {
   "contract": {
-    "id": "morning-prayer",
+    "id": "morning-prayer-elevenlabs",
     "type": "daily-prayer",
     "frequency": "daily",
     "timezone": "America/Chicago",
@@ -29,7 +29,7 @@
       "feed_path": "docs/podcast.xml"
     },
     "metadata": {
-      "title_template": "Morning Prayer for {date:%B %-d, %Y}",
+      "title_template": "Morning Prayer - {date:%B %-d, %Y}",
       "description_template": "Morning Prayer for {date:%B %-d, %Y}. The daily opening block follows the liturgical day and the day's Gospel.",
       "episode_id_template": "{entry_id}-{date_iso}",
       "daily_intro": {
@@ -42,7 +42,7 @@
   },
   "entries": [
     {
-      "entry_id": "morning-prayer",
+      "entry_id": "morning-prayer-elevenlabs",
       "date": "daily",
       "title": "Morning Prayer",
       "status": "approved",
@@ -55,7 +55,32 @@
         "model": "gpt-4o-mini-tts",
         "voice": "alloy",
         "format": "mp3",
-        "speed": 1.0
+        "speed": 1.0,
+        "providers": [
+          {
+            "provider": "elevenlabs",
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "voice_id": "2NfTQuOn6dRQvgKuC2le",
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+              "stability": 0.5,
+              "similarity_boost": 0.75,
+              "use_speaker_boost": true,
+              "style": 0,
+              "speed": 1.0
+            },
+            "format": "mp3",
+            "speed": 1.0
+          },
+          {
+            "provider": "openai",
+            "api_key_env": "OPENAI_API_KEY",
+            "model": "gpt-4o-mini-tts",
+            "voice": "alloy",
+            "format": "mp3",
+            "speed": 1.0
+          }
+        ]
       },
       "blocks": [
         {
