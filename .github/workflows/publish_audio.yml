@@ -4,12 +4,13 @@ on:
   workflow_dispatch:
     inputs:
       novena_publish_mode:
-        description: Publish mode; daily publishes tomorrow only, bootstrap seeds today and tomorrow once, reset seeds today and tomorrow and truncates the novena feed. Manual runs default to daily.
+        description: Publish mode; daily publishes tomorrow only, bootstrap seeds today and tomorrow once, bootstrap-no-cache does the same but rebuilds audio without cache, and reset seeds today and tomorrow and truncates the novena feed. Manual runs default to daily.
         required: false
         type: choice
         options:
           - daily
           - bootstrap
+          - bootstrap-no-cache
           - reset
         default: daily
   schedule:
@@ -29,6 +30,7 @@ jobs:
       NOTION_PUBLISH_DATABASE_ID: ${{ secrets.NOTION_PUBLISH_DATABASE_ID }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+      PUBLISH_AUDIO_FORCE_REBUILD: ${{ github.event.inputs.novena_publish_mode == 'bootstrap-no-cache' }}
       OAI_API_BASE_URL: https://api.openai.com/v1
       PUBLISH_MODE: ${{ github.event.inputs.novena_publish_mode }}
       NOVENA_PUBLISH_MODE: ${{ github.event.inputs.novena_publish_mode }}

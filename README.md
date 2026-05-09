@@ -60,7 +60,7 @@ Optional variables:
 - Imported traditional novenas publish with a `Traditional Novena to {saint_name} Day {day} - {date_display}` episode title so they stay distinct from the existing auto-generated novena titles while showing the publish date in the RSS title
 - For local OpenAI runs, copy `config/local/openai.env.example` to `config/local/openai.env` and fill in `OPENAI_API_KEY`; the importer will read that file automatically, and you can override the path with `OPENAI_API_KEY_FILE`
 - Novena contracts now support a top-level `enabled` flag; `enabled: false` contracts stay loadable for review but are skipped by the novena runtime
-- `.github/workflows/publish_audio.yml`: combined publish workflow that runs Morning Prayer audio and novena publishing together, scheduled daily and also available on manual dispatch; manual runs default to `daily`, which publishes tomorrow's slice and preserves the existing feed, `bootstrap` seeds today and tomorrow without truncating the feed, and `reset` seeds today and tomorrow after clearing the existing feed
+- `.github/workflows/publish_audio.yml`: combined publish workflow that runs Morning Prayer audio and novena publishing together, scheduled daily and also available on manual dispatch; manual runs default to `daily`, which publishes tomorrow's slice and preserves the existing feed, `bootstrap` seeds today and tomorrow without truncating the feed, `bootstrap-no-cache` seeds today and tomorrow while forcing a rebuild of the audio outputs, and `reset` seeds today and tomorrow after clearing the existing feed
 - The combined publish workflow currently targets MP3, JSON sidecars, and RSS. Spotify playlist assignment and Notion updates stay out of scope for this release.
 
 ### RSS Pages
@@ -85,7 +85,7 @@ Optional variables:
 - `scripts/setup_notion_playlists.ps1`: legacy Notion playlist-registry helper, no longer on the active Spotify hot path
 - `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; scheduled runs are gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
-- `.github/workflows/publish_audio.yml`: combined publish workflow for Morning Prayer audio and novena publishing, scheduled daily and also available on manual dispatch with `novena_publish_mode=daily` as the default choice
+- `.github/workflows/publish_audio.yml`: combined publish workflow for Morning Prayer audio and novena publishing, scheduled daily and also available on manual dispatch with `novena_publish_mode=daily` as the default choice; `bootstrap-no-cache` is available for a bootstrap-style publish that rebuilds audio without using the cache
 - `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with OneDrive sync and GitHub Pages export
 - `.github/workflows/liturgical_calendar_yearly_sync.yml`: Jan 1 + manual Liturgical Calendar population
 

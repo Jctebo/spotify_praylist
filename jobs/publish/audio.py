@@ -36,6 +36,7 @@ DEFAULT_PODCAST_COVER_ART_SOURCE = ROOT / "config" / "publish" / "images" / "log
 DEFAULT_PODCAST_COVER_ART_RELATIVE_PATH = Path("images") / DEFAULT_PODCAST_COVER_ART_SOURCE.name
 PUBLISH_GITHUB_PAGES_BASE_URL = "PUBLISH_GITHUB_PAGES_BASE_URL"
 PUBLISH_PODCAST_FEED_URL = "PUBLISH_PODCAST_FEED_URL"
+PUBLISH_AUDIO_FORCE_REBUILD = "PUBLISH_AUDIO_FORCE_REBUILD"
 OPENAI_API_KEY = "OPENAI_API_KEY"
 OAI_API_BASE_URL = "OAI_API_BASE_URL"
 ELEVENLABS_API_BASE_URL = "https://api.elevenlabs.io/v1"
@@ -74,6 +75,13 @@ def audio_public_url(episode_id: str, *, base_url: Optional[str] = None) -> str:
 def podcast_cover_art_public_url(*, base_url: Optional[str] = None) -> str:
     url_root = (base_url or github_pages_base_url()).rstrip("/")
     return f"{url_root}/{DEFAULT_PODCAST_COVER_ART_RELATIVE_PATH.as_posix()}"
+
+
+def _env_flag(name: str, *, default: bool = False) -> bool:
+    raw = str(os.getenv(name, "")).strip().lower()
+    if not raw:
+        return default
+    return raw in {"1", "true", "yes", "on"}
 
 
 def ensure_podcast_cover_art(*, docs_root: Optional[Path] = None, source_path: Optional[Path] = None) -> Path:
@@ -819,7 +827,7 @@ def render_audio_job(
     content_hash = str(job.get("content_hash", "")).strip() or content_hash_for_entry(job, audio_config)
     generated_at = _iso_utc_now()
     rss_guid = compose_rss_guid(episode_id, content_hash)
-    if _is_current_audio_file(audio_path, sidecar_path, content_hash):
+    if not _env_flag(PUBLISH_AUDIO_FORCE_REBUILD) and _is_current_audio_file(audio_path, sidecar_path, content_hash):
         rendered = dict(job)
         rendered["audio_path"] = str(audio_path)
         rendered["audio_url"] = audio_public_url(episode_id)
@@ -834,6 +842,7 @@ def render_audio_job(
     provider_configs = _provider_preferences(audio_config)
     errors: List[str] = []
     last_error: Optional[Exception] = None
+    force_rebuild = _env_flag(PUBLISH_AUDIO_FORCE_REBUILD)
 
     for provider_config in provider_configs:
         effective_audio_config = _effective_provider_audio_config(audio_config, provider_config)
@@ -848,6 +857,7 @@ def render_audio_job(
                     effective_audio_config,
                     provider_renderer,
                     cache_root=fragment_root,
+                    force_rebuild=force_rebuild,
                 )
                 fragment_paths.append(Path(rendered_fragment["audio_path"]))
                 fragment_results.append(

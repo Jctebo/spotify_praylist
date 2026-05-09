@@ -35,7 +35,7 @@ def _default_target_date() -> _dt.date:
 def _target_dates_for_mode(mode: str) -> list[_dt.date]:
     today = _dt.date.today()
     normalized = str(mode or "").strip().lower()
-    if normalized in {"bootstrap", "reset"}:
+    if normalized in {"bootstrap", "bootstrap-no-cache", "reset"}:
         return [today, today + _dt.timedelta(days=1)]
     return [today + _dt.timedelta(days=1)]
 
@@ -141,6 +141,8 @@ def main() -> int:
     try:
         logging.basicConfig(level=logging.INFO, format="%(message)s")
         mode = str(os.environ.get("PUBLISH_MODE", "")).strip().lower()
+        if mode == "bootstrap-no-cache":
+            os.environ["PUBLISH_AUDIO_FORCE_REBUILD"] = "true"
         result = run_audio_pipeline(
             base_url=github_pages_base_url(),
             target_dates=_target_dates_for_mode(mode),
