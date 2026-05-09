@@ -188,6 +188,7 @@ def render_fragment_audio(
     renderer,
     *,
     cache_root: Optional[Path] = None,
+    force_rebuild: bool = False,
 ) -> Dict[str, Any]:
     settings = normalize_audio_settings(audio_config)
     root = publish_audio_cache_root(cache_root)
@@ -196,7 +197,7 @@ def render_fragment_audio(
     sidecar_path = fragment_sidecar_path(audio_path)
     audio_path.parent.mkdir(parents=True, exist_ok=True)
 
-    if audio_path.exists():
+    if not force_rebuild and audio_path.exists():
         if not sidecar_path.exists():
             sidecar_path.write_text(
                 json.dumps(_fragment_sidecar_payload(fragment, settings, fragment_hash, audio_path), indent=2, sort_keys=True),

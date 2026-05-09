@@ -8,7 +8,7 @@ import unittest
 from types import SimpleNamespace
 from pathlib import Path
 
-from tests.test_helpers import load_module, make_test_mp3_bytes
+from tests.test_helpers import load_module, make_test_mp3_bytes, temp_env
 
 
 class TestPublishAudioPipeline(unittest.TestCase):
@@ -73,6 +73,27 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.assertTrue(Path(first["audio_path"]).exists())
             self.assertTrue(Path(first["audio_path"]).with_suffix(".json").exists())
             self.assertGreater(Path(first["audio_path"]).stat().st_size, 0)
+            self.assertEqual(first["rss_guid"], second["rss_guid"])
+
+    def test_render_audio_job_force_rebuild_ignores_existing_cache(self):
+        contracts = self.contracts_mod.load_publish_contracts()
+        jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
+        job = jobs[0]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            cache_root = Path(tmpdir) / ".cache"
+            fake_renderer, calls = self._fake_renderer()
+
+            with temp_env({"PUBLISH_AUDIO_FORCE_REBUILD": "true"}):
+                first = self.audio_mod.render_audio_job(job, renderer=fake_renderer, docs_root=docs_root, cache_root=cache_root)
+                second = self.audio_mod.render_audio_job(job, renderer=fake_renderer, docs_root=docs_root, cache_root=cache_root)
+
+            self.assertTrue(first["rendered"])
+            self.assertTrue(second["rendered"])
+            self.assertEqual(calls["count"], len(job["audio_fragments"]) * 2)
+            self.assertTrue(Path(first["audio_path"]).exists())
+            self.assertTrue(Path(second["audio_path"]).exists())
             self.assertEqual(first["rss_guid"], second["rss_guid"])
 
     def test_render_audio_job_changes_guid_when_content_revision_changes(self):
@@ -299,12 +320,56 @@ class TestPublishAudioPipeline(unittest.TestCase):
         today = datetime.date.today()
         self.assertEqual(captured["target_dates"], [today, today + datetime.timedelta(days=1)])
 
+    def test_main_bootstrap_no_cache_mode_targets_today_and_tomorrow(self):
+        contracts = self.contracts_mod.load_publish_contracts()
+        captured = {"target_dates": None, "force_rebuild": None}
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            self.runner_mod.load_publish_contracts = lambda contract_dir=None: contracts
+
+            def fake_run_audio_pipeline(**kwargs):
+                captured["target_dates"] = list(kwargs.get("target_dates") or [])
+                captured["force_rebuild"] = os.environ.get("PUBLISH_AUDIO_FORCE_REBUILD")
+                return {
+                    "contracts": 1,
+                    "jobs": len(captured["target_dates"]),
+                    "rendered": len(captured["target_dates"]),
+                    "archived": 0,
+                    "feed_path": str(docs_root / "podcast.xml"),
+                    "cover_art_path": str(docs_root / "images" / "logo_ora_pro_nobis.png"),
+                    "rendered_jobs": [],
+                }
+
+            self.runner_mod.run_audio_pipeline = fake_run_audio_pipeline
+            original_mode = os.environ.get("PUBLISH_MODE")
+            original_force = os.environ.get("PUBLISH_AUDIO_FORCE_REBUILD")
+            os.environ["PUBLISH_MODE"] = "bootstrap-no-cache"
+            os.environ.pop("PUBLISH_AUDIO_FORCE_REBUILD", None)
+            try:
+                rc = self.runner_mod.main()
+            finally:
+                if original_mode is None:
+                    os.environ.pop("PUBLISH_MODE", None)
+                else:
+                    os.environ["PUBLISH_MODE"] = original_mode
+                if original_force is None:
+                    os.environ.pop("PUBLISH_AUDIO_FORCE_REBUILD", None)
+                else:
+                    os.environ["PUBLISH_AUDIO_FORCE_REBUILD"] = original_force
+
+        self.assertEqual(rc, 0)
+        today = datetime.date.today()
+        self.assertEqual(captured["target_dates"], [today, today + datetime.timedelta(days=1)])
+        self.assertEqual(captured["force_rebuild"], "true")
+
     def test_publish_audio_workflow_dispatch_defaults_to_daily(self):
         workflow_text = Path(".github/workflows/publish_audio.yml").read_text(encoding="utf-8")
 
         self.assertIn("default: daily", workflow_text)
         self.assertIn("Manual runs default to daily.", workflow_text)
         self.assertNotIn("default: reset", workflow_text)
+        self.assertIn("bootstrap-no-cache", workflow_text)
 
     def test_publish_audio_workflow_restores_and_saves_fragment_cache(self):
         workflow_text = Path(".github/workflows/publish_audio.yml").read_text(encoding="utf-8")
@@ -332,6 +397,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
         workflow_text = Path(".github/workflows/publish_audio.yml").read_text(encoding="utf-8")
 
         self.assertIn("ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}", workflow_text)
+        self.assertIn("PUBLISH_AUDIO_FORCE_REBUILD: ${{ github.event.inputs.novena_publish_mode == 'bootstrap-no-cache' }}", workflow_text)
 
     def test_run_audio_pipeline_can_render_today_and_tomorrow_together(self):
         contracts = self.contracts_mod.load_publish_contracts()

@@ -8,7 +8,7 @@ from pathlib import Path
 import jobs.novena_contracts.contracts as contracts_mod
 import jobs.novena_contracts.pipeline as pipeline_mod
 from jobs.publish.audio import load_published_audio_jobs
-from tests.test_helpers import make_test_mp3_bytes
+from tests.test_helpers import make_test_mp3_bytes, temp_env
 
 
 class TestNovenaPipeline(unittest.TestCase):
@@ -356,6 +356,34 @@ class TestNovenaPipeline(unittest.TestCase):
             self.assertNotIn("morning-prayer", guids)
             self.assertTrue(any(guid.startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::") for guid in guids))
             self.assertTrue(any(guid.startswith("2026-06-04-most_sacred_heart_of_jesus-day-2::") for guid in guids))
+
+    def test_main_bootstrap_no_cache_mode_targets_today_and_tomorrow(self):
+        captured = {"publish_dates": None, "reset_feed": None}
+
+        original_run = pipeline_mod.run_novena_pipeline
+
+        def fake_run_novena_pipeline(**kwargs):
+            captured["publish_dates"] = list(kwargs.get("publish_dates") or [])
+            captured["reset_feed"] = kwargs.get("reset_feed")
+            return {
+                "contracts": 1,
+                "active": 1,
+                "rendered": 1,
+                "feed_path": "/tmp/podcast.xml",
+                "publish_dates": [date.isoformat() for date in captured["publish_dates"]],
+            }
+
+        with temp_env({"NOVENA_PUBLISH_MODE": "bootstrap-no-cache"}):
+            pipeline_mod.run_novena_pipeline = fake_run_novena_pipeline
+            try:
+                rc = pipeline_mod.main()
+            finally:
+                pipeline_mod.run_novena_pipeline = original_run
+
+        self.assertEqual(rc, 0)
+        today = datetime.date.today()
+        self.assertEqual(captured["publish_dates"], [today, today + datetime.timedelta(days=1)])
+        self.assertFalse(captured["reset_feed"])
 
     def test_pipeline_skips_disabled_novena_contracts(self):
         with tempfile.TemporaryDirectory() as tmpdir:

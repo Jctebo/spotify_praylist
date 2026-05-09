@@ -426,7 +426,7 @@ def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     mode = str(os.environ.get("NOVENA_PUBLISH_MODE", "daily")).strip().lower()
     anchor_today = _dt.date.today()
-    if mode == "bootstrap":
+    if mode in {"bootstrap", "bootstrap-no-cache"}:
         publish_dates = [anchor_today, anchor_today + _dt.timedelta(days=1)]
         reset_feed = False
     elif mode == "reset":
