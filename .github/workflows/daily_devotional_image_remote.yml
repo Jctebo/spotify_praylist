@@ -156,6 +156,26 @@ jobs:
           python sync/build_devotional_public_tree.py \
             --source-root "${GITHUB_WORKSPACE}/onedrive_sync/DCIM" \
             --target-root "${GITHUB_WORKSPACE}/pages/devotional/DCIM"
+          python - <<'PY'
+          import os
+          from pathlib import Path
+
+          from jobs.publish.audio import github_pages_base_url, podcast_cover_art_public_url
+          from jobs.publish.rss import build_rss_feed, load_published_audio_jobs, write_podcast_feed
+
+          pages_root = Path(os.environ["GITHUB_WORKSPACE"]) / "pages"
+          base_url = github_pages_base_url()
+          jobs = load_published_audio_jobs(docs_root=pages_root, base_url=base_url)
+          if not jobs:
+              raise RuntimeError("No published audio archive items were restored; refusing to publish a blank podcast feed.")
+          feed_xml = build_rss_feed(
+              jobs,
+              base_url=base_url,
+              cover_art_url=podcast_cover_art_public_url(base_url=base_url),
+          )
+          write_podcast_feed(feed_xml, pages_root / "podcast.xml")
+          print(f"Rebuilt podcast.xml from {len(jobs)} archive item(s).")
+          PY
 
       - name: Configure GitHub Pages
         if: github.ref == 'refs/heads/main'

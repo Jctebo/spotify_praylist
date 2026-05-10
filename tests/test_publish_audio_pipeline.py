@@ -393,6 +393,14 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertIn("ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}", workflow_text)
         self.assertIn("PUBLISH_AUDIO_FORCE_REBUILD: ${{ github.event.inputs.novena_publish_mode == 'bootstrap-no-cache' }}", workflow_text)
 
+    def test_daily_devotional_image_workflow_rebuilds_podcast_feed_from_archive(self):
+        workflow_text = Path(".github/workflows/daily_devotional_image_remote.yml").read_text(encoding="utf-8")
+
+        self.assertIn("Rebuilt podcast.xml from", workflow_text)
+        self.assertIn("load_published_audio_jobs", workflow_text)
+        self.assertIn("refusing to publish a blank podcast feed", workflow_text)
+        self.assertIn("podcast_cover_art_public_url", workflow_text)
+
     def test_run_audio_pipeline_can_render_today_and_tomorrow_together(self):
         contracts = self.contracts_mod.load_publish_contracts()
         fake_renderer, _ = self._fake_renderer()
