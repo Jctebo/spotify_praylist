@@ -1,5 +1,16 @@
 {
   "key": "daily-novenas",
   "notion_name": "Daily Novenas",
-  "resolver": "DAILY_NOVENAS"
+  "spotify_episode_lookup": {
+    "show_id": "4PNxb0OazrkcEp3FAggRoD",
+    "required_name_terms": ["novena"],
+    "date_formats": [
+      "{month_name} {day}, {year}",
+      "{month_name} {day_ordinal}, {year}",
+      "{month_short} {day}, {year}",
+      "{month_short}. {day}, {year}",
+      "{month_short} {day_ordinal}, {year}",
+      "{month_short}. {day_ordinal}, {year}"
+    ]
+  }
 }

@@ -73,7 +73,7 @@ Optional variables:
 ## Files
 - `jobs/playlist/refresh_playlist.py`: active Spotify refresh runtime with Notion-owned membership/order
 - `jobs/playlist/spotify_contracts.py`: loader and validation for `config/spotify/contracts/*.json` and `config/spotify/playlists/*.json`
-- `config/spotify/contracts/*.json`: one resolver-backed or fixed-URI queue contract per file, plus the three Marian Antiphon seasonal contracts
+- `config/spotify/contracts/*.json`: one resolver-backed, fixed-URI, or `spotify_episode_lookup` queue contract per file, plus the three Marian Antiphon seasonal contracts
 - `config/spotify/playlists/*.json`: thin playlist definitions with playlist identity only
 - `config/legacy/playlist_config.json`: legacy reference config kept off the active runtime path
 - `config/custom_tts/morning-prayer.json`: canonical Morning Prayer custom TTS contract for the active page-audio surface
@@ -99,9 +99,18 @@ Queue contract files in `config/spotify/contracts/` own:
 - `key`
 - `notion_name`, the exact Notion row title used for membership matching
 - exactly one of `resolver` or `spotify_uri` for ordinary contracts
+- `spotify_episode_lookup` for date-scoped podcast episode matching by show id, required name terms, and ordered date formats
+- resolver names are exact; the runtime does not rewrite legacy alias names before dispatch
 - the three Marian Antiphon contracts are the seasonal exception: morning and evening use the singing Angelus track, midday uses the spoken Angelus episode, and all three switch to Regina Caeli during Easter; the runtime normalizes those Spotify values into queue-safe `spotify:` URIs
 - optional `fallback_resolver`
 - optional `weekdays`
+
+`spotify_episode_lookup` contracts:
+- own the Spotify show id directly in the contract file
+- match episode `name` only
+- require every configured name term to be present
+- try the configured date formats in order until one matches the episode title
+- return every matching episode URI for the day
 
 Playlist definition files in `config/spotify/playlists/` own:
 - `key`
@@ -175,6 +184,7 @@ Expected behavior:
 - loads and validates playlist definitions, queue contracts, and Notion membership before touching Spotify
 - applies contract-level weekday gating such as Sunday-only or Friday-only items
 - resolves each contract through its explicit `resolver` or `spotify_uri`, with Marian Antiphon switching between `spotify_url_normal` and `spotify_uri_easter` during Easter season
+- resolves `spotify_episode_lookup` contracts by matching the show id, required name terms, and configured date variants against Spotify episode titles
 - replaces each selected playlist contents with the resolved queue
 - prints one summary per playlist: `playlist`, `playlist_id`, and `tracks_written`, plus `source=notion_membership`
 - exits non-zero on invalid contracts, invalid playlist definitions, missing Notion access, invalid single-playlist overrides, or unresolved selected runs

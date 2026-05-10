@@ -1,6 +1,7 @@
 import datetime
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
 import requests
@@ -38,6 +39,7 @@ def _queue_contract(
     spotify_url_normal="",
     spotify_uri_easter="",
     weekdays=(),
+    spotify_episode_lookup=None,
 ):
     display_name = notion_name or key.title()
     return mod.SpotifyQueueContract(
@@ -49,6 +51,7 @@ def _queue_contract(
         spotify_url_normal=spotify_url_normal,
         spotify_uri_easter=spotify_uri_easter,
         weekdays=tuple(weekdays),
+        spotify_episode_lookup=spotify_episode_lookup,
         source_path=Path(f"config/spotify/contracts/{key}.json"),
     )
 
@@ -953,125 +956,100 @@ class TestRefreshJob(unittest.TestCase):
         self.assertTrue(status["Fr. Mike Sunday Homily"])
         self.assertTrue(status["Bp. Barron Sunday Sermon"])
 
-    def test_resolve_item_uri_uses_configured_morning_prayer_show_id(self):
+    def test_resolve_spec_uri_does_not_alias_legacy_resolver_names(self):
         status = {}
         sp = object()
 
-        with patch.object(
-            self.mod,
-            "monthly_morning_prayer_episode",
-            return_value=("spotify:episode:morning", "Morning Prayer for April 27, 2026"),
-        ) as resolver_mock:
-            uri = self.mod.resolve_item_uri(
+        with patch.object(self.mod, "resolve_item_uri", return_value="spotify:episode:resolved") as resolve_mock:
+            uri = self.mod.resolve_spec_uri(
                 sp,
-                "MORNING_PRAYER_MONTHLY",
+                "DO_INVITATORY",
                 "Wednesday",
                 status,
-                {"MORNING_PRAYER_MONTHLY": "show_new"},
+                {"INVITATORY": "show_inv"},
                 {},
                 {},
             )
 
-        resolver_mock.assert_called_once_with(sp, "show_new")
-        self.assertEqual(uri, "spotify:episode:morning")
-        self.assertTrue(status["Morning Prayer (Monthly Podcast)"])
+        self.assertEqual(uri, "spotify:episode:resolved")
+        resolve_mock.assert_called_once_with(
+            sp,
+            "DO_INVITATORY",
+            "Wednesday",
+            status,
+            {"INVITATORY": "show_inv"},
+            {},
+            {},
+        )
 
-    def test_monthly_morning_prayer_episode_matches_date_scoped_title(self):
+    def test_spotify_episode_lookup_uris_matches_canonical_date(self):
         sp = Mock()
         sp.show_episodes.return_value = {
             "items": [
                 {
                     "name": "Morning Prayer for April 27, 2026",
                     "uri": "spotify:episode:morning",
-                }
-            ]
-        }
-
-        with patch.object(
-            self.mod,
-            "local_now",
-            return_value=datetime.datetime(2026, 4, 27, 6, 0, tzinfo=self.mod.RUNTIME_TZ),
-        ):
-            uri, name = self.mod.monthly_morning_prayer_episode(sp, "show_new")
-
-        self.assertEqual(uri, "spotify:episode:morning")
-        self.assertEqual(name, "Morning Prayer for April 27, 2026")
-        sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
-
-    def test_monthly_morning_prayer_episode_rejects_old_month_year_title(self):
-        sp = Mock()
-        sp.show_episodes.return_value = {
-            "items": [
+                },
                 {
-                    "name": "Morning Prayer - April 2026",
+                    "name": "Morning Prayer for April 26, 2026",
                     "uri": "spotify:episode:old",
-                }
-            ]
-        }
-
-        with patch.object(
-            self.mod,
-            "local_now",
-            return_value=datetime.datetime(2026, 4, 27, 6, 0, tzinfo=self.mod.RUNTIME_TZ),
-        ):
-            uri, name = self.mod.monthly_morning_prayer_episode(sp, "show_new")
-
-        self.assertIsNone(uri)
-        self.assertIsNone(name)
-
-    def test_daily_novenas_episode_uris_returns_empty_when_no_match(self):
-        sp = Mock()
-        sp.show_episodes.return_value = {
-            "items": [
-                {
-                    "name": "Day 7: Novena to Saint X - hope - April 27, 2026",
-                    "uri": "spotify:episode:skip",
-                },
-                {
-                    "name": "Day 9: Prayer to Saint Y - hope - April 28, 2026",
-                    "uri": "spotify:episode:skip-2",
                 },
             ]
         }
 
-        with patch.object(
-            self.mod,
-            "local_now",
-            return_value=datetime.datetime(2026, 4, 28, 6, 0, tzinfo=self.mod.RUNTIME_TZ),
-        ):
-            uris = self.mod.daily_novenas_episode_uris(sp, "show_new")
+        uris = self.mod.spotify_episode_lookup_uris(
+            sp,
+            "show_new",
+            ("Morning Prayer",),
+            ("{month_name} {day}, {year}",),
+            datetime.date(2026, 4, 27),
+        )
 
-        self.assertEqual(uris, [])
+        self.assertEqual(uris, ["spotify:episode:morning"])
         sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
         sp.next.assert_not_called()
 
-    def test_daily_novenas_episode_uris_returns_single_match(self):
+    def test_spotify_episode_lookup_uris_tries_alternate_dates_pages_and_dedupes(self):
         sp = Mock()
         sp.show_episodes.return_value = {
             "items": [
                 {
-                    "name": "Day 8: Novena to Saint Y - hope - April 28, 2026",
+                    "name": "Daily Novena - Apr. 28, 2026",
                     "uri": "spotify:episode:keep-1",
                 },
                 {
-                    "name": "Day 9: Prayer to Saint Y - hope - April 28, 2026",
+                    "name": "Daily Novena - April 27, 2026",
                     "uri": "spotify:episode:skip",
+                },
+            ],
+            "next": "next_cursor",
+        }
+        sp.next.return_value = {
+            "items": [
+                {
+                    "name": "Daily Novena - April 28, 2026",
+                    "uri": "spotify:episode:keep-1",
+                },
+                {
+                    "name": "Daily Novena - April 28, 2026",
+                    "uri": "spotify:episode:keep-2",
                 },
             ]
         }
 
-        with patch.object(
-            self.mod,
-            "local_now",
-            return_value=datetime.datetime(2026, 4, 28, 6, 0, tzinfo=self.mod.RUNTIME_TZ),
-        ):
-            uris = self.mod.daily_novenas_episode_uris(sp, "show_new")
+        uris = self.mod.spotify_episode_lookup_uris(
+            sp,
+            "show_new",
+            ("novena",),
+            ("{month_name} {day}, {year}", "{month_short}. {day}, {year}"),
+            datetime.date(2026, 4, 28),
+        )
 
-        self.assertEqual(uris, ["spotify:episode:keep-1"])
+        self.assertEqual(uris, ["spotify:episode:keep-1", "spotify:episode:keep-2"])
         sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
-        sp.next.assert_not_called()
+        sp.next.assert_called_once()
 
-    def test_daily_novenas_episode_uris_scans_all_pages_and_preserves_order(self):
+    def test_spotify_episode_lookup_uris_scans_all_pages_and_preserves_order(self):
         sp = Mock()
         sp.show_episodes.return_value = {
             "items": [
@@ -1098,13 +1076,13 @@ class TestRefreshJob(unittest.TestCase):
                 },
             ]
         }
-
-        with patch.object(
-            self.mod,
-            "local_now",
-            return_value=datetime.datetime(2026, 4, 28, 6, 0, tzinfo=self.mod.RUNTIME_TZ),
-        ):
-            uris = self.mod.daily_novenas_episode_uris(sp, "show_new")
+        uris = self.mod.spotify_episode_lookup_uris(
+            sp,
+            "show_new",
+            ("novena",),
+            ("{month_name} {day}, {year}",),
+            datetime.date(2026, 4, 28),
+        )
 
         self.assertEqual(
             uris,
@@ -1112,6 +1090,45 @@ class TestRefreshJob(unittest.TestCase):
         )
         sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
         sp.next.assert_called_once()
+
+    def test_resolve_contract_uris_uses_spotify_episode_lookup(self):
+        lookup = SimpleNamespace(
+            show_id="show_new",
+            required_name_terms=("Morning Prayer",),
+            date_formats=("{month_name} {day}, {year}",),
+        )
+        contract = _queue_contract(
+            self.mod,
+            "morning-prayer",
+            notion_name="Morning Prayer",
+            spotify_episode_lookup=lookup,
+        )
+        sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Morning Prayer for April 27, 2026",
+                    "uri": "spotify:episode:morning",
+                }
+            ]
+        }
+        status = {}
+
+        uris = self.mod.resolve_contract_uris(
+            sp,
+            contract,
+            "Wednesday",
+            datetime.date(2026, 4, 27),
+            status,
+            {},
+            {},
+            {},
+        )
+
+        self.assertEqual(uris, ["spotify:episode:morning"])
+        self.assertTrue(status["Morning Prayer"])
+        sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
+        sp.next.assert_not_called()
 
     def test_build_queue_for_playlist_definition_flattens_daily_novenas_matches(self):
         playlist_definition = _playlist_definition(
@@ -1124,7 +1141,11 @@ class TestRefreshJob(unittest.TestCase):
                 self.mod,
                 "daily-novenas",
                 notion_name="Daily Novenas",
-                resolver="DAILY_NOVENAS",
+                spotify_episode_lookup=SimpleNamespace(
+                    show_id="show_new",
+                    required_name_terms=("novena",),
+                    date_formats=("{month_name} {day}, {year}",),
+                ),
             ),
             "rosary": _queue_contract(self.mod, "rosary", resolver="ROSARY"),
         }
@@ -1151,7 +1172,7 @@ class TestRefreshJob(unittest.TestCase):
                 "Wednesday",
                 datetime.date(2026, 4, 28),
                 status,
-                {"DAILY_NOVENAS": "show_new"},
+                {},
                 {},
                 {},
                 ordered_contracts=tuple(contracts_by_key.values()),

@@ -128,11 +128,47 @@ class TestSpotifyContracts(unittest.TestCase):
                 {
                     "key": "broken",
                     "notion_name": "Broken",
+                    "resolver": "MORNING",
+                    "spotify_episode_lookup": {
+                        "show_id": "show_123",
+                        "required_name_terms": ["Morning Prayer"],
+                        "date_formats": ["{month_name} {day}, {year}"],
+                    },
+                },
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "cannot mix 'spotify_episode_lookup'"):
+                self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            contract_dir = Path(tmpdir)
+            _write_json(
+                contract_dir / "broken.json",
+                {
+                    "key": "broken",
+                    "notion_name": "Broken",
                     "spotify_uri": "https://open.spotify.com/track/abc123",
                 },
             )
 
             with self.assertRaisesRegex(RuntimeError, "invalid 'spotify_uri'"):
+                self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            contract_dir = Path(tmpdir)
+            _write_json(
+                contract_dir / "broken.json",
+                {
+                    "key": "broken",
+                    "notion_name": "Broken",
+                    "spotify_episode_lookup": {
+                        "required_name_terms": ["Morning Prayer"],
+                        "date_formats": ["{month_name} {day}, {year}"],
+                    },
+                },
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "missing required field 'show_id'"):
                 self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -185,7 +221,46 @@ class TestSpotifyContracts(unittest.TestCase):
 
         self.assertIn("daily-novenas", contracts)
         self.assertEqual(contracts["daily-novenas"].notion_name, "Daily Novenas")
-        self.assertEqual(contracts["daily-novenas"].resolver, "DAILY_NOVENAS")
+        self.assertEqual(contracts["daily-novenas"].resolver, "")
+        lookup = contracts["daily-novenas"].spotify_episode_lookup
+        self.assertIsNotNone(lookup)
+        self.assertEqual(lookup.show_id, "4PNxb0OazrkcEp3FAggRoD")
+        self.assertEqual(lookup.required_name_terms, ("novena",))
+        self.assertEqual(
+            lookup.date_formats,
+            (
+                "{month_name} {day}, {year}",
+                "{month_name} {day_ordinal}, {year}",
+                "{month_short} {day}, {year}",
+                "{month_short}. {day}, {year}",
+                "{month_short} {day_ordinal}, {year}",
+                "{month_short}. {day_ordinal}, {year}",
+            ),
+        )
+
+    def test_load_spotify_queue_contracts_accepts_episode_lookup_shape(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            contract_dir = Path(tmpdir)
+            _write_json(
+                contract_dir / "lookup.json",
+                {
+                    "key": "lookup",
+                    "notion_name": "Lookup",
+                    "spotify_episode_lookup": {
+                        "show_id": "show_123",
+                        "required_name_terms": ["Morning Prayer", "April"],
+                        "date_formats": ["{month_name} {day}, {year}"],
+                    },
+                },
+            )
+
+            contracts = self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
+
+        lookup = {contract.key: contract for contract in contracts}["lookup"].spotify_episode_lookup
+        self.assertIsNotNone(lookup)
+        self.assertEqual(lookup.show_id, "show_123")
+        self.assertEqual(lookup.required_name_terms, ("Morning Prayer", "April"))
+        self.assertEqual(lookup.date_formats, ("{month_name} {day}, {year}",))
 
     def test_load_spotify_queue_contracts_includes_daily_examen_episode_contract(self):
         contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
