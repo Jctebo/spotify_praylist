@@ -638,7 +638,7 @@ Optional variables:
 - `DEVOTIONAL_MANIFEST_NAME` (default `images_manifest.json`)
 - `DEVOTIONAL_ROOT_MANIFEST_NAME` (default `devotional_image_library.json`)
 - `DEVOTIONAL_PROMPT_MODEL` (default `gpt-5-mini`)
-- `DEVOTIONAL_IMAGE_MODEL` (default `gpt-image-1`)
+- `DEVOTIONAL_IMAGE_MODEL` (default `gpt-image-2`)
 - `DEVOTIONAL_IMAGE_SIZE` (default `1024x1536`, phone portrait)
 - `DEVOTIONAL_IMAGE_SIZE_WIDE` (default `1536x1024`, widescreen)
 - `DEVOTIONAL_IMAGE_QUALITY` (default `high`)
