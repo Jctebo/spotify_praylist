@@ -160,8 +160,12 @@ jobs:
           import os
           from pathlib import Path
 
-          from jobs.publish.audio import github_pages_base_url, podcast_cover_art_public_url
-          from jobs.publish.rss import build_rss_feed, load_published_audio_jobs, write_podcast_feed
+          from jobs.publish.audio import (
+              github_pages_base_url,
+              load_published_audio_jobs,
+              podcast_cover_art_public_url,
+          )
+          from jobs.publish.rss import build_rss_feed, write_podcast_feed
 
           pages_root = Path(os.environ["GITHUB_WORKSPACE"]) / "pages"
           base_url = github_pages_base_url()

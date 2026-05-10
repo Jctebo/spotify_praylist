@@ -397,7 +397,8 @@ class TestPublishAudioPipeline(unittest.TestCase):
         workflow_text = Path(".github/workflows/daily_devotional_image_remote.yml").read_text(encoding="utf-8")
 
         self.assertIn("Rebuilt podcast.xml from", workflow_text)
-        self.assertIn("load_published_audio_jobs", workflow_text)
+        self.assertIn("from jobs.publish.audio import (", workflow_text)
+        self.assertIn("load_published_audio_jobs,", workflow_text)
         self.assertIn("refusing to publish a blank podcast feed", workflow_text)
         self.assertIn("podcast_cover_art_public_url", workflow_text)
 

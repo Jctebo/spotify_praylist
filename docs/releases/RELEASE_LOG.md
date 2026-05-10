@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.3.1.14] - 2026-05-10
+
+### Fixed
+- Corrected the devotional image GitHub Pages workflow so the inline podcast-feed rebuild imports `load_published_audio_jobs` from `jobs.publish.audio` instead of `jobs.publish.rss`.
+- Prevented the devotional image deployment from failing with an `ImportError` when it rebuilds `podcast.xml` from the archived audio snapshot.
+
 ## [0.3.1.13] - 2026-05-09
 
 ### Changed
