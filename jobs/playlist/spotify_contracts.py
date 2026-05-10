@@ -20,6 +20,12 @@ VALID_WEEKDAYS = (
 VALID_WEEKDAY_LOOKUP = {name.lower(): name for name in VALID_WEEKDAYS}
 
 
+class SpotifyEpisodeLookupContract(NamedTuple):
+    show_id: str
+    required_name_terms: Tuple[str, ...]
+    date_formats: Tuple[str, ...]
+
+
 class SpotifyQueueContract(NamedTuple):
     key: str
     notion_name: str
@@ -29,7 +35,8 @@ class SpotifyQueueContract(NamedTuple):
     spotify_url_normal: str
     spotify_uri_easter: str
     weekdays: Tuple[str, ...]
-    source_path: Path
+    spotify_episode_lookup: Optional[SpotifyEpisodeLookupContract] = None
+    source_path: Path = Path()
 
 
 class SpotifyPlaylistDefinition(NamedTuple):
@@ -119,6 +126,29 @@ def _optional_text(payload: Dict[str, Any], field_name: str) -> str:
     return str(payload.get(field_name, "")).strip()
 
 
+def _load_text_list(payload: Dict[str, Any], field_name: str, contract_path: Path, label: str) -> Tuple[str, ...]:
+    raw_value = payload.get(field_name)
+    if raw_value is None:
+        return ()
+    if not isinstance(raw_value, list):
+        raise RuntimeError(
+            f"{label} '{contract_path}' has invalid '{field_name}'; expected a JSON array of strings."
+        )
+    values: List[str] = []
+    seen = set()
+    for raw_item in raw_value:
+        item = str(raw_item or "").strip()
+        if not item:
+            raise RuntimeError(
+                f"{label} '{contract_path}' has invalid '{field_name}'; entries must be non-empty strings."
+            )
+        if item in seen:
+            continue
+        seen.add(item)
+        values.append(item)
+    return tuple(values)
+
+
 def _load_contract_weekdays(payload: Dict[str, Any], contract_path: Path) -> Tuple[str, ...]:
     raw_weekdays = payload.get("weekdays")
     if raw_weekdays is None:
@@ -172,11 +202,45 @@ def load_spotify_queue_contracts(contract_dir: Optional[Path] = None) -> List[Sp
         spotify_url_normal = _optional_text(payload, "spotify_url_normal")
         spotify_uri_easter = _optional_text(payload, "spotify_uri_easter")
         weekdays = _load_contract_weekdays(payload, contract_path)
+        spotify_episode_lookup: Optional[SpotifyEpisodeLookupContract] = None
+        lookup_payload = payload.get("spotify_episode_lookup")
 
         if not key:
             raise RuntimeError(f"Spotify queue contract '{contract_path}' has an invalid 'key'.")
         has_seasonal_fields = bool(spotify_url_normal or spotify_uri_easter)
-        if has_seasonal_fields:
+        if lookup_payload is not None:
+            if not isinstance(lookup_payload, dict):
+                raise RuntimeError(
+                    f"Spotify queue contract '{contract_path}' has invalid 'spotify_episode_lookup'; expected an object."
+                )
+            if resolver or fallback_resolver or spotify_uri or spotify_url_normal or spotify_uri_easter:
+                raise RuntimeError(
+                    f"Spotify queue contract '{contract_path}' cannot mix 'spotify_episode_lookup' with "
+                    "'resolver', 'fallback_resolver', 'spotify_uri', 'spotify_url_normal', or 'spotify_uri_easter'."
+                )
+            show_id = _require_text(lookup_payload, "show_id", contract_path, "Spotify episode lookup")
+            required_name_terms = _load_text_list(
+                lookup_payload, "required_name_terms", contract_path, "Spotify episode lookup"
+            )
+            date_formats = _load_text_list(lookup_payload, "date_formats", contract_path, "Spotify episode lookup")
+            if not show_id:
+                raise RuntimeError(
+                    f"Spotify episode lookup '{contract_path}' must define a non-empty 'show_id'."
+                )
+            if not required_name_terms:
+                raise RuntimeError(
+                    f"Spotify episode lookup '{contract_path}' must define a non-empty 'required_name_terms'."
+                )
+            if not date_formats:
+                raise RuntimeError(
+                    f"Spotify episode lookup '{contract_path}' must define a non-empty 'date_formats'."
+                )
+            spotify_episode_lookup = SpotifyEpisodeLookupContract(
+                show_id=show_id,
+                required_name_terms=required_name_terms,
+                date_formats=date_formats,
+            )
+        elif has_seasonal_fields:
             if not spotify_url_normal or not spotify_uri_easter:
                 raise RuntimeError(
                     f"Spotify queue contract '{contract_path}' must define both 'spotify_url_normal' and 'spotify_uri_easter'."
@@ -230,6 +294,7 @@ def load_spotify_queue_contracts(contract_dir: Optional[Path] = None) -> List[Sp
                 spotify_url_normal=spotify_url_normal,
                 spotify_uri_easter=spotify_uri_easter,
                 weekdays=weekdays,
+                spotify_episode_lookup=spotify_episode_lookup,
                 source_path=contract_path,
             )
         )

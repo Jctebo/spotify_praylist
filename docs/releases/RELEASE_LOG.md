@@ -1,5 +1,22 @@
 # Release Log
 
+## [0.3.2.0] - 2026-05-10
+
+### Added
+- Added a reusable `spotify_episode_lookup` contract mode for Spotify queue files, with required name-term matching and ordered date-format fallbacks.
+
+### Changed
+- Migrated Morning Prayer and Daily Novenas onto contract-owned Spotify show ids and the shared episode lookup path.
+- Removed the hidden Morning Prayer monthly and Daily Novenas helper code paths so the generic lookup helper is now the only active resolver for those contracts.
+- Removed silent resolver alias rewriting so resolver names are dispatched exactly as written.
+
+### Fixed
+- Prevented Morning Prayer and Daily Novenas from depending on legacy resolver-specific show slots or helper wrappers.
+- Tightened contract validation and regression coverage around lookup contracts, pagination, deduping, and multi-match queue flattening.
+
+### Removed
+- Removed `config/spotify/contracts/morning-prayer-monthly.json`.
+
 ## [0.3.1.14] - 2026-05-10
 
 ### Fixed

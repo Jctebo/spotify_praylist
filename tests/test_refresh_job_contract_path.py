@@ -19,6 +19,7 @@ def _queue_contract(
     spotify_url_normal="",
     spotify_uri_easter="",
     weekdays=(),
+    spotify_episode_lookup=None,
 ):
     return mod.SpotifyQueueContract(
         key=key,
@@ -29,6 +30,7 @@ def _queue_contract(
         spotify_url_normal=spotify_url_normal,
         spotify_uri_easter=spotify_uri_easter,
         weekdays=tuple(weekdays),
+        spotify_episode_lookup=spotify_episode_lookup,
         source_path=Path(f"config/spotify/contracts/{key}.json"),
     )
 
@@ -70,7 +72,9 @@ class TestRefreshJobContractPath(unittest.TestCase):
     def test_morning_prayer_contract_file_still_resolves_date_scoped_episode(self):
         contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
         morning_prayer = contracts["morning-prayer"]
-        self.assertEqual(morning_prayer.resolver, "MORNING_PRAYER_MONTHLY")
+        lookup = morning_prayer.spotify_episode_lookup
+        self.assertIsNotNone(lookup)
+        self.assertEqual(lookup.show_id, "4PNxb0OazrkcEp3FAggRoD")
 
         sp = Mock()
         sp.show_episodes.return_value = {
@@ -83,49 +87,56 @@ class TestRefreshJobContractPath(unittest.TestCase):
         }
         status = {}
 
-        with patch.object(
-            self.mod,
-            "local_now",
-            return_value=datetime.datetime(2026, 4, 27, 6, 0, tzinfo=self.mod.RUNTIME_TZ),
-        ):
-            uri = self.mod.resolve_spec_uri(
-                sp,
-                morning_prayer.resolver,
-                "Monday",
-                status,
-                {"MORNING_PRAYER_MONTHLY": "4PNxb0OazrkcEp3FAggRoD"},
-                {},
-                {},
-            )
+        uris = self.mod.resolve_contract_uris(
+            sp,
+            morning_prayer,
+            "Monday",
+            datetime.date(2026, 4, 27),
+            status,
+            {},
+            {},
+            {},
+        )
 
-        self.assertEqual(uri, "spotify:episode:morning")
-        self.assertTrue(status["Morning Prayer (Monthly Podcast)"])
+        self.assertEqual(uris, ["spotify:episode:morning"])
+        self.assertTrue(status["Morning Prayer"])
+        sp.show_episodes.assert_called_once_with(lookup.show_id, limit=50, market="US")
 
     def test_daily_novenas_contract_routes_through_dedicated_show_slot(self):
         contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
         daily_novenas = contracts["daily-novenas"]
+        lookup = daily_novenas.spotify_episode_lookup
+        self.assertIsNotNone(lookup)
+        self.assertEqual(lookup.show_id, "4PNxb0OazrkcEp3FAggRoD")
         sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Daily Novena - April 28, 2026",
+                    "uri": "spotify:episode:one",
+                },
+                {
+                    "name": "Daily Mass - April 28, 2026",
+                    "uri": "spotify:episode:skip",
+                },
+            ]
+        }
         status = {}
 
-        with patch.object(
-            self.mod,
-            "daily_novenas_episode_uris",
-            return_value=["spotify:episode:one", "spotify:episode:two"],
-        ) as resolver_mock:
-            uris = self.mod.resolve_contract_uris(
-                sp,
-                daily_novenas,
-                "Monday",
-                datetime.date(2026, 4, 28),
-                status,
-                {"DAILY_NOVENAS": "show_new"},
-                {},
-                {},
-            )
+        uris = self.mod.resolve_contract_uris(
+            sp,
+            daily_novenas,
+            "Monday",
+            datetime.date(2026, 4, 28),
+            status,
+            {},
+            {},
+            {},
+        )
 
-        resolver_mock.assert_called_once_with(sp, "show_new")
-        self.assertEqual(uris, ["spotify:episode:one", "spotify:episode:two"])
+        self.assertEqual(uris, ["spotify:episode:one"])
         self.assertTrue(status["Daily Novenas"])
+        sp.show_episodes.assert_called_once_with(lookup.show_id, limit=50, market="US")
 
     def test_main_single_playlist_filter_uses_override_id(self):
         env = {

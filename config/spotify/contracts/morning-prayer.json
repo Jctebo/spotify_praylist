@@ -1,5 +1,13 @@
 {
   "key": "morning-prayer",
   "notion_name": "Morning Prayer",
-  "resolver": "MORNING_PRAYER_MONTHLY"
+  "spotify_episode_lookup": {
+    "show_id": "4PNxb0OazrkcEp3FAggRoD",
+    "required_name_terms": ["Morning Prayer"],
+    "date_formats": [
+      "{month_name} {day}, {year}",
+      "{month_short} {day}, {year}",
+      "{month_short}. {day}, {year}"
+    ]
+  }
 }

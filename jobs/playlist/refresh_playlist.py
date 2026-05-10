@@ -128,8 +128,6 @@ DEFAULT_SHOWS = {
     "LBS_EXEGESIS": "753FVUsio4Y6GjFvbGpvF0",
     "DAILY_MASS_READINGS": "3IANujvjklSBVf6ioZd03N",
     "DAILY_TV_MASS": "2WwFQr9a6BX7YQ4pkoIijp",
-    "MORNING_PRAYER_MONTHLY": "4PNxb0OazrkcEp3FAggRoD",
-    "DAILY_NOVENAS": "4PNxb0OazrkcEp3FAggRoD",
     "FRMIKE_SUNDAY": "1CK5AHgLneCo2sE17UOfdV",
     "BARRON_SUNDAY": "5G6vtvZBIQMpQ8TLgXLBiK",
     "SAINT_OF_DAY": "1skJeU3tBmO7ftJ2ugNyYd",
@@ -169,14 +167,6 @@ def load_prayer_order_contract():
 
 
 prayer_order_contract = load_prayer_order_contract()
-
-# Allow resolver aliases from Notion rows while keeping canonical internal keys.
-RESOLVER_ALIASES = {
-    "DO_INVITATORY": "INVITATORY",
-    "SING_THE_HOURS_MORNING": "STH_MORNING",
-    "DIVINE_OFFICE_MORNING": "DO_MORNING",
-}
-
 
 def require_env(name: str) -> str:
     value = os.getenv(name, "").strip()
@@ -1970,56 +1960,65 @@ def do_date_aware(sp: spotipy.Spotify, show_id: str, terms) -> Tuple[Optional[st
     return None, None
 
 
-def monthly_morning_prayer_episode(sp: spotipy.Spotify, show_id: str) -> Tuple[Optional[str], Optional[str]]:
-    now = local_now()
-    target = f"Morning Prayer for {now.strftime('%B')} {now.day}, {now.year}"
+def _episode_name_normalized(value: str) -> str:
+    return re.sub(r"\s+", " ", str(value or "").strip()).casefold()
 
-    res = safe_call(sp.show_episodes, show_id, limit=50, market="US")
-    if not isinstance(res, dict):
-        return None, None
-    items = list(res.get("items") or [])
-    if res.get("next"):
-        res2 = safe_call(sp.next, res)
-        if isinstance(res2, dict):
-            items += list(res2.get("items") or [])
 
-    for ep in items:
-        if not isinstance(ep, dict):
+def _episode_day_ordinal(day: int) -> str:
+    if 10 <= day % 100 <= 20:
+        suffix = "th"
+    else:
+        suffix = {1: "st", 2: "nd", 3: "rd"}.get(day % 10, "th")
+    return f"{day}{suffix}"
+
+
+def _episode_date_render_context(dt: datetime.date) -> Dict[str, str]:
+    return {
+        "year": str(dt.year),
+        "month": str(dt.month),
+        "month_zero": f"{dt.month:02d}",
+        "month_name": dt.strftime("%B"),
+        "month_short": dt.strftime("%b"),
+        "day": str(dt.day),
+        "day_zero": f"{dt.day:02d}",
+        "day_ordinal": _episode_day_ordinal(dt.day),
+        "date_iso": dt.isoformat(),
+    }
+
+
+def _render_episode_date_pattern(pattern: str, dt: datetime.date) -> str:
+    template = str(pattern or "").strip()
+    if not template:
+        return ""
+    try:
+        rendered = template.format(**_episode_date_render_context(dt))
+    except KeyError as exc:
+        missing = str(exc).strip("'")
+        raise RuntimeError(f"Invalid Spotify episode lookup date format '{template}': unknown placeholder '{missing}'.")
+    return re.sub(r"\s+", " ", rendered).strip()
+
+
+def _episode_date_candidates(date_formats: Tuple[str, ...], dt: datetime.date) -> List[str]:
+    candidates: List[str] = []
+    seen = set()
+    for pattern in date_formats:
+        rendered = _render_episode_date_pattern(pattern, dt)
+        if not rendered:
             continue
-        name = str(ep.get("name", "")).strip()
-        if not name:
+        key = rendered.casefold()
+        if key in seen:
             continue
-        if re.sub(r"\s+", " ", name).strip().casefold() == target.casefold():
-            uri = ep.get("uri")
-            if uri:
-                return uri, name
-    return None, None
+        seen.add(key)
+        candidates.append(key)
+    return candidates
 
 
-def title_contains_novena_and_today(name: str, dt: datetime.datetime) -> bool:
-    text = str(name or "").strip()
-    if not text or "novena" not in text.lower():
-        return False
-
-    month_full = dt.strftime("%B")
-    month_abbr = dt.strftime("%b")
-    day = dt.day
-    year = dt.strftime("%Y")
-    patterns = [
-        rf"\b{re.escape(month_full)}\s*[-,]?\s*0?{day}(?:st|nd|rd|th)?\s*,?\s*{re.escape(year)}\b",
-        rf"\b{re.escape(month_abbr)}\.?\s*[-,]?\s*0?{day}(?:st|nd|rd|th)?\s*,?\s*{re.escape(year)}\b",
-    ]
-    return any(re.search(pattern, text, re.IGNORECASE) for pattern in patterns)
-
-
-def daily_novenas_episode_uris(sp: spotipy.Spotify, show_id: str) -> List[str]:
-    now = local_now()
+def _collect_spotify_show_episodes(sp: spotipy.Spotify, show_id: str, market: Optional[str] = "US") -> List[Dict[str, Any]]:
     items: List[Dict[str, Any]] = []
     seen_markers = set()
-    market = "US"
     first = safe_call(sp.show_episodes, show_id, limit=50, market=market)
     if not isinstance(first, dict):
-        return []
+        return items
     pages = [first]
     while pages and pages[-1].get("next"):
         next_page = safe_call(sp.next, pages[-1])
@@ -2036,15 +2035,36 @@ def daily_novenas_episode_uris(sp: spotipy.Spotify, show_id: str) -> List[str]:
                 continue
             seen_markers.add(marker)
             items.append(ep)
+    return items
 
+
+def spotify_episode_lookup_uris(
+    sp: spotipy.Spotify,
+    show_id: str,
+    required_name_terms: Tuple[str, ...],
+    date_formats: Tuple[str, ...],
+    current_date: datetime.date,
+    market: Optional[str] = "US",
+) -> List[str]:
+    required_terms = tuple(_episode_name_normalized(term) for term in required_name_terms if str(term or "").strip())
+    if not required_terms:
+        return []
+    date_candidates = _episode_date_candidates(date_formats, current_date)
+    if not date_candidates:
+        return []
+
+    episodes = _collect_spotify_show_episodes(sp, show_id, market=market)
     uris: List[str] = []
-    for ep in items:
-        name = str(ep.get("name", "")).strip()
+    for ep in episodes:
+        name = _episode_name_normalized(ep.get("name", ""))
         uri = str(ep.get("uri", "")).strip()
-        if not uri or not name:
+        if not name or not uri:
             continue
-        if title_contains_novena_and_today(name, now):
-            uris.append(uri)
+        if not all(term in name for term in required_terms):
+            continue
+        if not any(candidate in name for candidate in date_candidates):
+            continue
+        uris.append(uri)
     return uris
 
 
@@ -2358,11 +2378,6 @@ def resolve_item_uri(
         status["Midafternoon Prayer"] = bool(uri)
         return uri
 
-    if key == "MORNING_PRAYER_MONTHLY":
-        uri, _ = monthly_morning_prayer_episode(sp, cfg_value(shows_cfg, "MORNING_PRAYER_MONTHLY", "shows"))
-        status["Morning Prayer (Monthly Podcast)"] = bool(uri)
-        return uri
-
     if key == "ROSARY":
         mystery = rosary_mystery_for_weekday(weekday)
         uri, _ = episode_title_contains(sp, cfg_value(shows_cfg, "BARRON_ROSARY", "shows"), mystery)
@@ -2395,7 +2410,6 @@ def resolve_spec_uri(
     key = re.sub(r"[^A-Za-z0-9]+", "_", raw).strip("_").upper()
     if not key:
         return None
-    key = RESOLVER_ALIASES.get(key, key)
     return resolve_item_uri(sp, key, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
 
 
@@ -2434,12 +2448,19 @@ def resolve_contract_uris(
         uri = normalize_spotify_queue_uri(primary_spec) or None
         return [uri] if uri else []
 
-    primary_spec = contract.spotify_uri or contract.resolver
-    if contract.key == "daily-novenas":
-        show_id = cfg_value(shows_cfg, "DAILY_NOVENAS", "shows")
-        uris = daily_novenas_episode_uris(sp, show_id) if show_id else []
-        status["Daily Novenas"] = bool(uris)
+    if contract.spotify_episode_lookup:
+        lookup = contract.spotify_episode_lookup
+        uris = spotify_episode_lookup_uris(
+            sp,
+            lookup.show_id,
+            lookup.required_name_terms,
+            lookup.date_formats,
+            current_date,
+        )
+        status[contract.notion_name] = bool(uris)
         return uris
+
+    primary_spec = contract.spotify_uri or contract.resolver
 
     uri = resolve_spec_uri(sp, primary_spec, weekday, status, shows_cfg, fixed_cfg, tokens_cfg)
     if not uri and contract.fallback_resolver:
