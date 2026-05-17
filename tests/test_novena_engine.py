@@ -188,6 +188,54 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertIn("You are going to say the following 3 times:", rendered["content"]["text"])
         self.assertIn("Our Father text.", rendered["content"]["text"])
 
+    def test_render_novena_skips_part_blocks_for_other_days(self):
+        runtime = contracts_mod.NovenaRuntime(
+            family_id="holy_spirit",
+            contract_id="holy_spirit",
+            saint={"id": "holy_spirit", "name": "Holy Spirit"},
+            feast={"month": 5, "day": 24, "name": "Pentecost Sunday"},
+            novena={"duration_days": 9, "start_offset_days": -9, "content_mode": "fixed"},
+            resolved_template=contracts_mod.TemplateSpec(
+                template_id="url-import-holy_spirit",
+                source="embedded",
+                sections=(
+                    contracts_mod.TemplateSection(
+                        key="introduction",
+                        title="Introduction",
+                        kind="fixed",
+                        text="You can pray the full novena below.",
+                    ),
+                ),
+                blocks=(
+                    contracts_mod.TemplateSection(
+                        key="day-1",
+                        title="Day 1",
+                        kind="fixed",
+                        days=(1,),
+                        parts=({"kind": "text", "text": "Day 1 prayer text."},),
+                    ),
+                    contracts_mod.TemplateSection(
+                        key="day-2",
+                        title="Day 2",
+                        kind="fixed",
+                        days=(2,),
+                        parts=({"kind": "text", "text": "Day 2 prayer text."},),
+                    ),
+                ),
+            ),
+            date=datetime.date(2026, 5, 16),
+            active_day=2,
+            publishing={"audio": {"enabled": True}, "rss": {"enabled": True}},
+            source_path=contracts_mod.DEFAULT_FEAST_DIR / "holy_spirit.json",
+        )
+
+        rendered = engine_mod.render_novena(runtime, generate_text_fn=lambda prompt, context: f"{prompt} ({context['day']})")
+
+        self.assertEqual(len(rendered["audio_fragments"]), 2)
+        self.assertEqual(rendered["audio_fragments"][0]["label"], "Welcome to Day 2")
+        self.assertEqual(rendered["audio_fragments"][1]["text"], "Day 2 prayer text.")
+        self.assertNotIn("Day 1 prayer text.", rendered["content"]["text"])
+
     def test_render_novena_traditional_fatima_uses_single_three_prayer_cycle(self):
         contracts = contracts_mod.load_novena_contracts()
         contract = next(item for item in contracts if item.contract_id == "our_lady_of_fatima")
@@ -214,6 +262,29 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertEqual(text.count("You are going to say the following 3 times: Hail Mary"), 1)
         self.assertEqual(text.count("You are going to say the following 3 times: Glory Be"), 1)
         self.assertEqual(len(rendered["audio_fragments"]), 16)
+
+    def test_render_novena_holy_spirit_uses_once_once_and_seven_glory_be_sequence(self):
+        contracts = contracts_mod.load_novena_contracts()
+        contract = next(item for item in contracts if item.contract_id == "pentecost_sunday")
+        runtime = contracts_mod.NovenaRuntime(
+            family_id=contract.family_id,
+            contract_id=contract.contract_id,
+            saint=dict(contract.saint),
+            feast=contract.feast.to_dict() if contract.feast is not None else {},
+            novena=contract.novena.to_dict(),
+            resolved_template=contract.novena.template,
+            date=datetime.date(2026, 5, 15),
+            active_day=1,
+            publishing=contract.publishing.to_dict(),
+            source_path=contract.source_path,
+        )
+
+        rendered = engine_mod.render_novena(runtime, generate_text_fn=lambda prompt, context: f"{prompt} ({context['day']})")
+        text = rendered["content"]["text"]
+
+        self.assertEqual(text.count("Our Father, who art in heaven, hallowed be thy name."), 1)
+        self.assertEqual(text.count("Hail Mary, full of grace, the Lord is with thee."), 1)
+        self.assertEqual(text.count("Glory be to the Father, and to the Son, and to the Holy Spirit."), 7)
 
     def test_generate_text_calls_openai_with_context_and_returns_model_text(self):
         captured = {}

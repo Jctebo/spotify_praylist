@@ -82,6 +82,16 @@ class TestNovenaContracts(unittest.TestCase):
             ],
         )
 
+    def test_load_novena_contracts_reads_pentecost_fixture_with_one_one_seven_pattern(self):
+        contracts = self.contracts_mod.load_novena_contracts()
+        contract = next(item for item in contracts if item.contract_id == "pentecost_sunday")
+        block = contract.novena.template.blocks[1]
+        fragment_parts = [part for part in block.parts if part.get("kind") == "fragment"]
+
+        self.assertEqual([part["fragment_key"] for part in fragment_parts], ["our_father", "hail_mary", "glory_be"])
+        self.assertEqual([part.get("repeat", 1) for part in fragment_parts], [1, 1, 7])
+        self.assertIn("Glory be to the Father SEVEN TIMES.", [part["text"] for part in block.parts if part.get("kind") == "text"])
+
     def test_load_novena_contracts_defaults_enabled_when_missing(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

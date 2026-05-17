@@ -49,12 +49,13 @@
                 "kind": "fragment"
               },
               {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
+                "kind": "text",
+                "text": "Glory be to the Father SEVEN TIMES."
               },
               {
-                "kind": "text",
-                "text": "to the Father SEVEN TIMES."
+                "fragment_key": "glory_be",
+                "kind": "fragment",
+                "repeat": 7
               },
               {
                 "kind": "text",
@@ -96,12 +97,13 @@
                 "kind": "fragment"
               },
               {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
+                "kind": "text",
+                "text": "Glory be to the Father SEVEN TIMES."
               },
               {
-                "kind": "text",
-                "text": "to the Father SEVEN TIMES."
+                "fragment_key": "glory_be",
+                "kind": "fragment",
+                "repeat": 7
               },
               {
                 "kind": "text",
@@ -143,12 +145,13 @@
                 "kind": "fragment"
               },
               {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
+                "kind": "text",
+                "text": "Glory be to the Father SEVEN TIMES."
               },
               {
-                "kind": "text",
-                "text": "to the Father SEVEN TIMES."
+                "fragment_key": "glory_be",
+                "kind": "fragment",
+                "repeat": 7
               },
               {
                 "kind": "text",
@@ -190,12 +193,13 @@
                 "kind": "fragment"
               },
               {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
+                "kind": "text",
+                "text": "Glory be to the Father SEVEN TIMES."
               },
               {
-                "kind": "text",
-                "text": "to the Father SEVEN TIMES."
+                "fragment_key": "glory_be",
+                "kind": "fragment",
+                "repeat": 7
               },
               {
                 "kind": "text",
@@ -237,12 +241,13 @@
                 "kind": "fragment"
               },
               {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
+                "kind": "text",
+                "text": "Glory be to the Father SEVEN TIMES."
               },
               {
-                "kind": "text",
-                "text": "to the Father SEVEN TIMES."
+                "fragment_key": "glory_be",
+                "kind": "fragment",
+                "repeat": 7
               },
               {
                 "kind": "text",
@@ -284,12 +289,13 @@
                 "kind": "fragment"
               },
               {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
+                "kind": "text",
+                "text": "Glory be to the Father SEVEN TIMES."
               },
               {
-                "kind": "text",
-                "text": "to the Father SEVEN TIMES."
+                "fragment_key": "glory_be",
+                "kind": "fragment",
+                "repeat": 7
               },
               {
                 "kind": "text",
@@ -331,12 +337,13 @@
                 "kind": "fragment"
               },
               {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
+                "kind": "text",
+                "text": "Glory be to the Father SEVEN TIMES."
               },
               {
-                "kind": "text",
-                "text": "to the Father SEVEN TIMES."
+                "fragment_key": "glory_be",
+                "kind": "fragment",
+                "repeat": 7
               },
               {
                 "kind": "text",
@@ -378,12 +385,13 @@
                 "kind": "fragment"
               },
               {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
+                "kind": "text",
+                "text": "Glory be to the Father SEVEN TIMES."
               },
               {
-                "kind": "text",
-                "text": "to the Father SEVEN TIMES."
+                "fragment_key": "glory_be",
+                "kind": "fragment",
+                "repeat": 7
               },
               {
                 "kind": "text",
@@ -425,12 +433,13 @@
                 "kind": "fragment"
               },
               {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
+                "kind": "text",
+                "text": "Glory be to the Father SEVEN TIMES."
               },
               {
-                "kind": "text",
-                "text": "to the Father SEVEN TIMES."
+                "fragment_key": "glory_be",
+                "kind": "fragment",
+                "repeat": 7
               },
               {
                 "kind": "text",

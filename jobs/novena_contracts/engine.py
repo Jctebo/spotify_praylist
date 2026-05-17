@@ -306,6 +306,9 @@ def render_novena(
     if compact_blocks and any(_normalize_day_list(block.days or ()) for block in compact_blocks):
         audio_fragments.append(_intro_fragment(runtime, context))
         for block in compact_blocks:
+            block_days = _normalize_day_list(block.days or ())
+            if block_days and runtime.active_day not in block_days:
+                continue
             if block.parts:
                 audio_fragments.extend(_block_parts_to_fragments(runtime, block, context, fragment_lookup))
             else:
