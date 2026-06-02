@@ -1,5 +1,18 @@
 # Release Log
 
+## [0.3.2.5] - 2026-06-02
+
+### Added
+- Added a lay-member Auxilium Christianorum publish contract that assembles a daily episode from reusable prayer templates, weekday-specific prayers, a recurring Litany of the Most Precious Blood, and a conclusion.
+- Added deterministic `liturgical_announcement` publish blocks backed by Romcal celebration data for date and Church calendar context without an OpenAI dependency.
+- Added ordered `resume_markers` to generated text/audio jobs and persisted audio sidecars so consuming surfaces can resume within daily episodes.
+
+### Changed
+- Documented the Auxilium publish contract, lay-member-only content boundary, reusable announcement block, resume markers, and deferred Spotify migration in the README.
+
+### Fixed
+- Made full unittest discovery portable on Windows by avoiding hard-coded POSIX path separator assumptions in novena and page-audio tests.
+
 ## [0.3.2.4] - 2026-06-02
 
 ### Added
