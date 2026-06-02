@@ -215,6 +215,41 @@ class TestRefreshJobContractPath(unittest.TestCase):
         self.assertTrue(status["Marian Antiphon (Midday)"])
         sp.show_episodes.assert_called_once_with(lookup.show_id, limit=50, market="US")
 
+    def test_auxilium_contract_file_resolves_generated_daily_episode(self):
+        contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
+        contract = contracts["auxilium-christianorum"]
+        lookup = contract.spotify_episode_lookup
+        self.assertIsNotNone(lookup)
+        sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Auxilium Christianorum - April 6, 2026",
+                    "uri": "spotify:episode:auxilium",
+                },
+                {
+                    "name": "Auxilium Christianorum - April 5, 2026",
+                    "uri": "spotify:episode:old-auxilium",
+                },
+            ]
+        }
+        status = {}
+
+        uris = self.mod.resolve_contract_uris(
+            sp,
+            contract,
+            "Monday",
+            datetime.date(2026, 4, 6),
+            status,
+            {},
+            {},
+            {},
+        )
+
+        self.assertEqual(uris, ["spotify:episode:auxilium"])
+        self.assertTrue(status["Auxillium Christianorum"])
+        sp.show_episodes.assert_called_once_with(lookup.show_id, limit=50, market="US")
+
     def test_main_single_playlist_filter_uses_override_id(self):
         env = {
             "SPOTIFY_CLIENT_ID": "cid",
