@@ -1,5 +1,14 @@
 # Release Log
 
+## [0.3.2.6] - 2026-06-02
+
+### Changed
+- Migrated the Auxilium Christianorum Spotify queue contract to resolve the generated Ora Pro Nobis daily episode by title and date from the Ora Pro Nobis show.
+- Updated README guidance so Auxilium Christianorum Spotify integration is no longer documented as deferred migration work.
+
+### Fixed
+- Prevented Auxilium Christianorum playlist refreshes from depending on the legacy weekday-only external-show resolver when the generated Ora Pro Nobis daily episode is available.
+
 ## [0.3.2.5] - 2026-06-02
 
 ### Added

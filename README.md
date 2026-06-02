@@ -121,7 +121,7 @@ Queue contract files in `config/spotify/contracts/` own:
 - try the active search's configured date formats in order until one matches the episode title
 - stop at the first search that returns matches, then return every matching episode URI for the day
 
-Auxilium Christianorum Spotify playlist integration remains on the existing Spotify queue contract and legacy resolver in this release. The generated Ora Pro Nobis daily episode is published first; moving `config/spotify/contracts/auxilium-christianorum.json` to date-scoped episode lookup is deferred until the generated titles and sidecars have settled.
+Auxilium Christianorum Spotify playlist integration resolves the generated Ora Pro Nobis daily episode by title and date from the Ora Pro Nobis show. The Spotify queue contract keeps the current Notion row title `Auxillium Christianorum` for membership matching, while its episode lookup targets titles such as `Auxilium Christianorum - April 6, 2026`.
 
 Playlist definition files in `config/spotify/playlists/` own:
 - `key`

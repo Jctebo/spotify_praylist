@@ -387,6 +387,25 @@ class TestSpotifyContracts(unittest.TestCase):
                 [("Marian Antiphon",), ("Angelus",), ("Regina Caeli",)],
             )
 
+    def test_load_spotify_queue_contracts_includes_auxilium_lookup_contract(self):
+        contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
+        contract = contracts["auxilium-christianorum"]
+        lookup = contract.spotify_episode_lookup
+
+        self.assertEqual(contract.notion_name, "Auxillium Christianorum")
+        self.assertEqual(contract.resolver, "")
+        self.assertIsNotNone(lookup)
+        self.assertEqual(lookup.show_id, "4PNxb0OazrkcEp3FAggRoD")
+        self.assertEqual(lookup.required_name_terms, ("Auxilium Christianorum",))
+        self.assertEqual(
+            lookup.date_formats,
+            (
+                "{month_name} {day}, {year}",
+                "{month_short} {day}, {year}",
+                "{month_short}. {day}, {year}",
+            ),
+        )
+
     def test_load_spotify_queue_contracts_includes_daily_examen_episode_contract(self):
         contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
 
