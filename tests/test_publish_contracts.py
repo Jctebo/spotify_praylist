@@ -65,6 +65,14 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual([contract.frequency for contract in contracts], ["daily", "daily", "daily", "daily"])
         self.assertEqual(contracts_by_id["marian-antiphon-angelus"].season, "ordinary")
         self.assertEqual(contracts_by_id["marian-antiphon-regina-caeli"].season, "easter")
+        self.assertEqual(
+            contracts_by_id["marian-antiphon-angelus"].metadata["title_template"],
+            "Marian Antiphon - Angelus - {date_display}",
+        )
+        self.assertEqual(
+            contracts_by_id["marian-antiphon-regina-caeli"].metadata["title_template"],
+            "Marian Antiphon - Regina Caeli - {date_display}",
+        )
         self.assertEqual(contracts_by_id["marian-antiphon-angelus"].entries[0]["entry_id"], "marian-antiphon-angelus")
         self.assertEqual(contracts_by_id["marian-antiphon-regina-caeli"].entries[0]["entry_id"], "marian-antiphon-regina-caeli")
         self.assertFalse(contracts_by_id["marian-antiphon-angelus"].entries[0]["text_config"]["enabled"])
@@ -105,6 +113,12 @@ class TestPublishContracts(unittest.TestCase):
 
         self.assertEqual({job["entry_id"] for job in easter_jobs}, {"morning-prayer-elevenlabs", "marian-antiphon-regina-caeli"})
         self.assertEqual({job["entry_id"] for job in ordinary_jobs}, {"morning-prayer-elevenlabs", "marian-antiphon-angelus"})
+        easter_marian = next(job for job in easter_jobs if job["entry_id"] == "marian-antiphon-regina-caeli")
+        ordinary_marian = next(job for job in ordinary_jobs if job["entry_id"] == "marian-antiphon-angelus")
+        self.assertEqual(easter_marian["title"], "Marian Antiphon - Regina Caeli - April 6, 2026")
+        self.assertEqual(ordinary_marian["title"], "Marian Antiphon - Angelus - June 2, 2026")
+        self.assertEqual(easter_marian["episode_id"], "marian-antiphon-regina-caeli-2026-04-06")
+        self.assertEqual(ordinary_marian["episode_id"], "marian-antiphon-angelus-2026-06-02")
 
     def test_build_text_jobs_uses_metadata_allow_missing_gospel_when_block_omits_it(self):
         contracts = self.mod.load_publish_contracts()

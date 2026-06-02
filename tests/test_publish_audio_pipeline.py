@@ -183,7 +183,13 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.assertTrue((docs_root / "podcast.xml").exists())
             self.assertTrue((docs_root / "audio" / f"morning-prayer-elevenlabs-{expected_date.isoformat()}.mp3").exists())
             self.assertTrue(any(title.startswith("Morning Prayer - ") for title in titles))
-            self.assertTrue(any(title.startswith("Angelus - ") or title.startswith("Regina Caeli - ") for title in titles))
+            self.assertTrue(
+                any(
+                    title.startswith("Marian Antiphon - Angelus - ")
+                    or title.startswith("Marian Antiphon - Regina Caeli - ")
+                    for title in titles
+                )
+            )
             self.assertTrue((docs_root / "images" / "logo_ora_pro_nobis.png").exists())
 
     def test_run_audio_pipeline_uses_local_archive_snapshot(self):

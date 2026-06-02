@@ -1,6 +1,21 @@
 {
   "key": "angelus-evening",
   "notion_name": "Marian Antiphon (Evening)",
-  "spotify_url_normal": "spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
-  "spotify_uri_easter": "spotify:episode:68xFE8g1JRFu62osp0tLNg"
+  "spotify_episode_lookup": {
+    "show_id": "4PNxb0OazrkcEp3FAggRoD",
+    "searches": [
+      {
+        "required_name_terms": ["Marian Antiphon"],
+        "date_formats": ["{month_name} {day}, {year}"]
+      },
+      {
+        "required_name_terms": ["Angelus"],
+        "date_formats": ["{month_name} {day}, {year}"]
+      },
+      {
+        "required_name_terms": ["Regina Caeli"],
+        "date_formats": ["{month_name} {day}, {year}"]
+      }
+    ]
+  }
 }

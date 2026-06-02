@@ -138,6 +138,83 @@ class TestRefreshJobContractPath(unittest.TestCase):
         self.assertTrue(status["Daily Novenas"])
         sp.show_episodes.assert_called_once_with(lookup.show_id, limit=50, market="US")
 
+    def test_angelus_contract_files_resolve_daily_marian_antiphon_episode(self):
+        contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
+
+        for key, notion_name in (
+            ("angelus-morning", "Marian Antiphon  (Morning)"),
+            ("angelus-midday", "Marian Antiphon (Midday)"),
+            ("angelus-evening", "Marian Antiphon (Evening)"),
+        ):
+            contract = contracts[key]
+            lookup = contract.spotify_episode_lookup
+            self.assertIsNotNone(lookup)
+            self.assertEqual(lookup.show_id, "4PNxb0OazrkcEp3FAggRoD")
+            self.assertEqual(
+                [search.required_name_terms for search in lookup.searches],
+                [("Marian Antiphon",), ("Angelus",), ("Regina Caeli",)],
+            )
+            sp = Mock()
+            sp.show_episodes.return_value = {
+                "items": [
+                    {
+                        "name": "Marian Antiphon - Angelus - April 28, 2026",
+                        "uri": f"spotify:episode:{key}",
+                    }
+                ]
+            }
+            status = {}
+
+            uris = self.mod.resolve_contract_uris(
+                sp,
+                contract,
+                "Tuesday",
+                datetime.date(2026, 4, 28),
+                status,
+                {},
+                {},
+                {},
+            )
+
+            self.assertEqual(uris, [f"spotify:episode:{key}"])
+            self.assertTrue(status[notion_name])
+            sp.show_episodes.assert_called_once_with(lookup.show_id, limit=50, market="US")
+
+    def test_angelus_contract_files_fall_back_to_legacy_titles(self):
+        contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
+        contract = contracts["angelus-midday"]
+        lookup = contract.spotify_episode_lookup
+        self.assertIsNotNone(lookup)
+        sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Angelus - April 28, 2026",
+                    "uri": "spotify:episode:angelus",
+                },
+                {
+                    "name": "Regina Caeli - April 28, 2026",
+                    "uri": "spotify:episode:regina-caeli",
+                },
+            ]
+        }
+        status = {}
+
+        uris = self.mod.resolve_contract_uris(
+            sp,
+            contract,
+            "Tuesday",
+            datetime.date(2026, 4, 28),
+            status,
+            {},
+            {},
+            {},
+        )
+
+        self.assertEqual(uris, ["spotify:episode:angelus"])
+        self.assertTrue(status["Marian Antiphon (Midday)"])
+        sp.show_episodes.assert_called_once_with(lookup.show_id, limit=50, market="US")
+
     def test_main_single_playlist_filter_uses_override_id(self):
         env = {
             "SPOTIFY_CLIENT_ID": "cid",

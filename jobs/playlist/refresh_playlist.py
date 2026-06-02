@@ -20,6 +20,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from jobs.playlist.spotify_contracts import (
+    SpotifyEpisodeLookupContract,
+    SpotifyEpisodeLookupSearch,
     SpotifyPlaylistDefinition,
     SpotifyQueueContract,
     load_spotify_playlist_definitions,
@@ -2038,13 +2040,11 @@ def _collect_spotify_show_episodes(sp: spotipy.Spotify, show_id: str, market: Op
     return items
 
 
-def spotify_episode_lookup_uris(
-    sp: spotipy.Spotify,
-    show_id: str,
+def _spotify_episode_search_matches(
+    episodes: List[Dict[str, Any]],
     required_name_terms: Tuple[str, ...],
     date_formats: Tuple[str, ...],
     current_date: datetime.date,
-    market: Optional[str] = "US",
 ) -> List[str]:
     required_terms = tuple(_episode_name_normalized(term) for term in required_name_terms if str(term or "").strip())
     if not required_terms:
@@ -2053,7 +2053,6 @@ def spotify_episode_lookup_uris(
     if not date_candidates:
         return []
 
-    episodes = _collect_spotify_show_episodes(sp, show_id, market=market)
     uris: List[str] = []
     for ep in episodes:
         name = _episode_name_normalized(ep.get("name", ""))
@@ -2066,6 +2065,50 @@ def spotify_episode_lookup_uris(
             continue
         uris.append(uri)
     return uris
+
+
+def spotify_episode_lookup_search_uris(
+    sp: spotipy.Spotify,
+    show_id: str,
+    searches: Tuple[SpotifyEpisodeLookupSearch, ...],
+    current_date: datetime.date,
+    market: Optional[str] = "US",
+) -> List[str]:
+    if not searches:
+        return []
+    episodes = _collect_spotify_show_episodes(sp, show_id, market=market)
+    for search in searches:
+        uris = _spotify_episode_search_matches(
+            episodes,
+            search.required_name_terms,
+            search.date_formats,
+            current_date,
+        )
+        if uris:
+            return uris
+    return []
+
+
+def spotify_episode_lookup_uris(
+    sp: spotipy.Spotify,
+    show_id: str,
+    required_name_terms: Tuple[str, ...],
+    date_formats: Tuple[str, ...],
+    current_date: datetime.date,
+    market: Optional[str] = "US",
+) -> List[str]:
+    return spotify_episode_lookup_search_uris(
+        sp,
+        show_id,
+        (
+            SpotifyEpisodeLookupSearch(
+                required_name_terms=required_name_terms,
+                date_formats=date_formats,
+            ),
+        ),
+        current_date,
+        market=market,
+    )
 
 
 def usccb_daily_mass_for_date(
@@ -2450,11 +2493,10 @@ def resolve_contract_uris(
 
     if contract.spotify_episode_lookup:
         lookup = contract.spotify_episode_lookup
-        uris = spotify_episode_lookup_uris(
+        uris = spotify_episode_lookup_search_uris(
             sp,
             lookup.show_id,
-            lookup.required_name_terms,
-            lookup.date_formats,
+            lookup.searches,
             current_date,
         )
         status[contract.notion_name] = bool(uris)
