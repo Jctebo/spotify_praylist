@@ -408,6 +408,16 @@ class TestNovenaContracts(unittest.TestCase):
 
         self.assertEqual(resolved.isoformat(), "2026-05-07")
 
+    def test_resolve_romcal_date_handles_sacred_heart_alias(self):
+        resolved = self.validators_mod.resolve_romcal_date("sacred_heart_of_jesus", year=2026)
+
+        self.assertEqual(resolved.isoformat(), "2026-06-12")
+
+    def test_resolve_romcal_date_derives_immaculate_heart_from_sacred_heart(self):
+        resolved = self.validators_mod.resolve_romcal_date("immaculate_heart_of_mary", year=2026)
+
+        self.assertEqual(resolved.isoformat(), "2026-06-13")
+
     def test_build_contract_payload_uses_normalized_romcal_id(self):
         args = argparse.Namespace(
             id="Most Sacred Heart of Jesus",

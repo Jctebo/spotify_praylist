@@ -63,12 +63,23 @@ class TestNovenaResolver(unittest.TestCase):
                 "ephrem_the_syrian_deacon",
                 "barnabas_apostle",
                 "most_sacred_heart_of_jesus",
+                "sacred_heart_of_jesus",
             ],
         )
         explicit = [runtime for runtime in active if runtime.contract_id == "most_sacred_heart_of_jesus"]
         self.assertEqual(len(explicit), 1)
         self.assertEqual(explicit[0].family_id, "most_sacred_heart_of_jesus")
         self.assertEqual(explicit[0].active_day, 1)
+
+    def test_resolve_active_novenas_derives_immaculate_heart_feast_date(self):
+        contracts = contracts_mod.load_novena_contracts()
+        active = resolver_mod.resolve_active_novenas(datetime.date(2026, 6, 4), contracts=contracts)
+        immaculate = [runtime for runtime in active if runtime.contract_id == "immaculate_heart_of_mary"]
+
+        self.assertEqual(len(immaculate), 1)
+        self.assertEqual(immaculate[0].feast["feast_date"], "2026-06-13")
+        self.assertEqual(immaculate[0].feast["start_date"], "2026-06-04")
+        self.assertEqual(immaculate[0].active_day, 1)
 
     def test_resolve_active_novenas_keeps_traditional_and_short_form_fatima_separate(self):
         contracts = contracts_mod.load_novena_contracts()

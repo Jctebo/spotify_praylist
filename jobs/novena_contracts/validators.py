@@ -10,6 +10,12 @@ from typing import Any, Dict, Iterable, Optional, Sequence
 from romcal import Romcal, get_bundled_resources
 
 ALLOWED_SELECTOR_RANKS = frozenset({"solemnity", "feast", "memorial", "optional_memorial"})
+ROMCAL_IDENTIFIER_ALIASES = {
+    "sacred_heart_of_jesus": "most_sacred_heart_of_jesus",
+}
+DERIVED_ROMCAL_DATE_OFFSETS = {
+    "immaculate_heart_of_mary": ("most_sacred_heart_of_jesus", 1),
+}
 
 
 def _normalize_token(value: Any) -> str:
@@ -51,6 +57,9 @@ def resolve_romcal_identifier(value: Any, *, years: Optional[Iterable[int]] = No
     candidate = str(value or "").strip()
     if not candidate:
         raise RuntimeError("Missing romcal identifier.")
+    normalized_candidate = _normalize_token(candidate)
+    if normalized_candidate in ROMCAL_IDENTIFIER_ALIASES:
+        return ROMCAL_IDENTIFIER_ALIASES[normalized_candidate]
     search_years = tuple(sorted(set(int(year) for year in (years or ()) if str(year).strip())))
     if not search_years:
         from datetime import date
@@ -62,10 +71,11 @@ def resolve_romcal_identifier(value: Any, *, years: Optional[Iterable[int]] = No
         resolved = index.get(normal)
         if resolved:
             return resolved
-    return _normalize_token(candidate)
+    return normalized_candidate
 
 
 def resolve_romcal_date(value: Any, *, year: int) -> Optional[_dt.date]:
+    original_identifier = _normalize_token(value)
     identifier = resolve_romcal_identifier(value, years=(year,))
     calendar = _romcal().liturgical_calendar(year)
     for date_key, days in calendar.items():
@@ -73,6 +83,12 @@ def resolve_romcal_date(value: Any, *, year: int) -> Optional[_dt.date]:
         for day in days:
             if day.id == identifier:
                 return date_value
+    derived = DERIVED_ROMCAL_DATE_OFFSETS.get(original_identifier)
+    if derived is not None:
+        base_identifier, offset_days = derived
+        base_date = resolve_romcal_date(base_identifier, year=year)
+        if base_date is not None:
+            return base_date + _dt.timedelta(days=offset_days)
     return None
 
 
