@@ -181,7 +181,7 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertEqual(contract["key"], "morning-prayer")
         self.assertEqual(contract["output_type"], "page_audio")
-        self.assertEqual(contract["path"], "config/custom_tts/morning-prayer.json")
+        self.assertEqual(str(contract["path"]).replace("\\", "/"), "config/custom_tts/morning-prayer.json")
         self.assertEqual(
             contract["output_path"],
             "C:/Users/jcteb/OneDrive/Praylist Audio/Playlist Audio/Morning",
@@ -216,7 +216,7 @@ class TestPageAudioJob(unittest.TestCase):
 
         self.assertEqual(contract["key"], "morning-prayer")
         self.assertEqual(contract["output_type"], "page_audio")
-        self.assertEqual(contract["path"], "config/custom_tts/morning-prayer.json")
+        self.assertEqual(str(contract["path"]).replace("\\", "/"), "config/custom_tts/morning-prayer.json")
         self.assertEqual(
             contract["output_path"],
             "C:/Users/jcteb/OneDrive/Praylist Audio/Playlist Audio/Morning",

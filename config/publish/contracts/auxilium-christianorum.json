@@ -1,0 +1,155 @@
+{
+  "contract": {
+    "id": "auxilium-christianorum",
+    "type": "daily-prayer",
+    "frequency": "daily",
+    "timezone": "America/Chicago",
+    "version": "1",
+    "metadata": {
+      "title_template": "Auxilium Christianorum - {date_display}",
+      "description_template": "Auxilium Christianorum lay-member daily prayers for {date_display}. The episode announces the liturgical day, then follows the daily prayer sequence from the official lay-member prayer PDF.",
+      "episode_id_template": "auxilium-christianorum-{date_iso}",
+      "source": "Auxilium Christianorum lay-member daily prayer PDF, copyright 2012 Auxilium Christianorum.",
+      "liturgical_announcement": {
+        "calendar": "general_roman",
+        "locale": "en",
+        "include_season": true
+      }
+    }
+  },
+  "entries": [
+    {
+      "entry_id": "auxilium-christianorum",
+      "date": "daily",
+      "title": "Auxilium Christianorum",
+      "status": "approved",
+      "text": "Auxilium Christianorum",
+      "text_config": {
+        "enabled": true
+      },
+      "audio_config": {
+        "enabled": true,
+        "model": "gpt-4o-mini-tts",
+        "voice": "alloy",
+        "format": "mp3",
+        "speed": 1.0,
+        "providers": [
+          {
+            "provider": "elevenlabs",
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "voice_id": "2NfTQuOn6dRQvgKuC2le",
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+              "stability": 0.5,
+              "similarity_boost": 0.75,
+              "use_speaker_boost": true,
+              "style": 0,
+              "speed": 1.0
+            },
+            "format": "mp3",
+            "speed": 1.0
+          },
+          {
+            "provider": "openai",
+            "api_key_env": "OPENAI_API_KEY",
+            "model": "gpt-4o-mini-tts",
+            "voice": "alloy",
+            "format": "mp3",
+            "speed": 1.0
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "kind": "liturgical_announcement",
+          "title": "Liturgical Announcement"
+        },
+        {
+          "kind": "sequence",
+          "title": "Opening Prayers",
+          "blocks": [
+            {
+              "kind": "file",
+              "path": "config/publish/templates/auxilium-christianorum/daily-offering.txt"
+            },
+            {
+              "kind": "file",
+              "path": "config/publish/templates/auxilium-christianorum/st-michael-prayer.txt"
+            },
+            {
+              "kind": "file",
+              "path": "config/publish/templates/auxilium-christianorum/guardian-angel-prayer.txt"
+            },
+            {
+              "kind": "file",
+              "path": "config/publish/templates/rosary/our-father.txt"
+            },
+            {
+              "kind": "file",
+              "path": "config/publish/templates/rosary/hail-mary.txt"
+            },
+            {
+              "kind": "file",
+              "path": "config/publish/templates/rosary/glory-be.txt"
+            }
+          ]
+        },
+        {
+          "kind": "sequence",
+          "title": "Litany of the Most Precious Blood",
+          "blocks": [
+            {
+              "kind": "file",
+              "path": "config/publish/templates/auxilium-christianorum/litany-most-precious-blood.txt"
+            }
+          ]
+        },
+        {
+          "kind": "weekday_map",
+          "title": "Weekday Prayer",
+          "selector": "weekday",
+          "map": {
+            "sunday": {
+              "kind": "file",
+              "path": "config/publish/templates/auxilium-christianorum/sunday.txt"
+            },
+            "monday": {
+              "kind": "file",
+              "path": "config/publish/templates/auxilium-christianorum/monday.txt"
+            },
+            "tuesday": {
+              "kind": "file",
+              "path": "config/publish/templates/auxilium-christianorum/tuesday.txt"
+            },
+            "wednesday": {
+              "kind": "file",
+              "path": "config/publish/templates/auxilium-christianorum/wednesday.txt"
+            },
+            "thursday": {
+              "kind": "file",
+              "path": "config/publish/templates/auxilium-christianorum/thursday.txt"
+            },
+            "friday": {
+              "kind": "file",
+              "path": "config/publish/templates/auxilium-christianorum/friday.txt"
+            },
+            "saturday": {
+              "kind": "file",
+              "path": "config/publish/templates/auxilium-christianorum/saturday.txt"
+            }
+          }
+        },
+        {
+          "kind": "sequence",
+          "title": "Conclusion",
+          "blocks": [
+            {
+              "kind": "file",
+              "path": "config/publish/templates/auxilium-christianorum/conclusion.txt"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

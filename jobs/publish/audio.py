@@ -373,6 +373,7 @@ def load_published_audio_jobs(
                 "content_hash": content_hash,
                 "audio_config": dict(payload.get("tts") or {}),
                 "fragments": list(payload.get("fragments") or []),
+                "resume_markers": list(payload.get("resume_markers") or []),
             }
         )
     jobs.sort(
@@ -836,6 +837,7 @@ def render_audio_job(
         rendered["audio_length"] = _job_audio_length(audio_path, fallback=job.get("audio_length"))
         rendered["generated_at"] = str(job.get("generated_at", "")).strip()
         rendered["rss_guid"] = str(job.get("rss_guid", "")).strip() or rss_guid
+        rendered["resume_markers"] = list(job.get("resume_markers") or [])
         return rendered
 
     fragment_root = publish_audio_cache_root(cache_root)
@@ -904,6 +906,7 @@ def render_audio_job(
                         "tts": rendered_audio_config,
                         "fragment_manifest_hash": fragment_manifest_hash,
                         "fragments": fragment_results,
+                        "resume_markers": list(job.get("resume_markers") or []),
                     },
                     indent=2,
                     sort_keys=True,
@@ -919,6 +922,7 @@ def render_audio_job(
             rendered["generated_at"] = generated_at
             rendered["rss_guid"] = rss_guid
             rendered["audio_fragments"] = fragments
+            rendered["resume_markers"] = list(job.get("resume_markers") or [])
             rendered["audio_config"] = rendered_audio_config
             rendered["fragment_manifest_hash"] = fragment_manifest_hash
             rendered["provider"] = provider_name

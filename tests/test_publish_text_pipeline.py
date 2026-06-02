@@ -7,10 +7,15 @@ from tests.test_helpers import load_module
 
 class FakeNotionClient:
     def __init__(self):
-        self.pages = {"Morning Prayer - April 6, 2026": "page-1", "Daily Rosary": "page-2"}
+        self.pages = {
+            "Morning Prayer - April 6, 2026": "page-1",
+            "Daily Rosary": "page-2",
+            "Auxilium Christianorum - April 6, 2026": "page-3",
+        }
         self.page_children = {}
         self.page_children["page-1"] = []
         self.page_children["page-2"] = []
+        self.page_children["page-3"] = []
         self.updated = []
         self.queries = []
 
@@ -69,6 +74,10 @@ class TestPublishTextPipeline(unittest.TestCase):
             "Today the Church celebrates Saint Example. Praise be to God for his mercy. "
             "In today's Gospel, Jesus calls his sheep by name."
         )
+        self.contracts_mod.build_liturgical_announcement_text = lambda date_value, **kwargs: (
+            f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "
+            "Today the Church celebrates Saint Example."
+        )
 
     def test_upsert_text_jobs_updates_existing_pages_by_title(self):
         contracts = self.contracts_mod.load_publish_contracts()
@@ -79,10 +88,10 @@ class TestPublishTextPipeline(unittest.TestCase):
         second = self.notion_mod.upsert_text_jobs_to_notion(jobs, client=client)
 
         self.assertEqual(first["created"], 0)
-        self.assertEqual(first["updated"], 2)
+        self.assertEqual(first["updated"], 3)
         self.assertEqual(second["created"], 0)
-        self.assertEqual(second["updated"], 2)
-        self.assertEqual(set(client.pages.keys()), {"Morning Prayer - April 6, 2026", "Daily Rosary"})
+        self.assertEqual(second["updated"], 3)
+        self.assertEqual(set(client.pages.keys()), {"Morning Prayer - April 6, 2026", "Daily Rosary", "Auxilium Christianorum - April 6, 2026"})
         self.assertEqual([_toggle_title(block) for block in client.page_children["page-1"]], [
             "Daily Intro",
             "Opening Prayers",
@@ -93,6 +102,13 @@ class TestPublishTextPipeline(unittest.TestCase):
             "Opening Prayers",
             "Joyful Mysteries",
             "Closing Prayers",
+        ])
+        self.assertEqual([_toggle_title(block) for block in client.page_children["page-3"]], [
+            "Liturgical Announcement",
+            "Opening Prayers",
+            "Litany of the Most Precious Blood",
+            "Weekday Prayer",
+            "Conclusion",
         ])
         self.assertTrue(all(child["type"] == "paragraph" for child in client.page_children["page-1"][0]["toggle"]["children"]))
         self.assertTrue(all(child["type"] == "paragraph" for child in client.page_children["page-2"][1]["toggle"]["children"]))
@@ -112,6 +128,6 @@ class TestPublishTextPipeline(unittest.TestCase):
 
         result = self.runner_mod.run_text_pipeline()
 
-        self.assertEqual(result["jobs"], 2)
+        self.assertEqual(result["jobs"], 3)
         self.assertEqual(result["created"], 0)
-        self.assertEqual(result["updated"], 2)
+        self.assertEqual(result["updated"], 3)

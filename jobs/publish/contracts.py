@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 
 from jobs.publish.daily_intro import build_daily_intro_text
 from jobs.publish.formatting import build_publish_context, derive_episode_id, render_publish_template
+from jobs.publish.liturgical_announcement import build_liturgical_announcement_text
 from jobs.publish.fragments import audio_manifest_hash
 from jobs.publish.errors import PublishMissingDataError
 from jobs.novena.liturgical_helpers import is_easter_season_for_date
@@ -326,6 +327,14 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
             normalized["prompt_model"] = str(normalized.get("prompt_model", "")).strip()
         if "allow_missing_gospel" in normalized:
             normalized["allow_missing_gospel"] = _normalize_bool(normalized.get("allow_missing_gospel", False))
+    elif kind == "liturgical-announcement":
+        normalized["title"] = str(normalized.get("title", "")).strip()
+        if "calendar" in normalized:
+            normalized["calendar"] = str(normalized.get("calendar", "")).strip()
+        if "locale" in normalized:
+            normalized["locale"] = str(normalized.get("locale", "")).strip()
+        if "include_season" in normalized:
+            normalized["include_season"] = _normalize_bool(normalized.get("include_season", False))
     else:
         raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' uses unsupported block kind '{kind}'.")
     normalized["skip_if_missing"] = _normalize_bool(normalized.get("skip_if_missing", False))
@@ -436,6 +445,8 @@ def _validate_entry_blocks(blocks: Sequence[Dict[str, Any]], path: Path, entry_i
         elif kind == "inline":
             continue
         elif kind == "daily-intro":
+            continue
+        elif kind == "liturgical-announcement":
             continue
         else:
             raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' uses unsupported block kind '{kind}'.")
@@ -644,6 +655,32 @@ def resolve_block_content(
                 prompt_model=prompt_model,
                 allow_missing_gospel=allow_missing_gospel,
             )
+        if kind == "liturgical-announcement":
+            metadata = dict(contract.metadata or {})
+            announcement_config = (
+                dict(metadata.get("liturgical_announcement") or {})
+                if isinstance(metadata.get("liturgical_announcement"), dict)
+                else {}
+            )
+            announcement_config.update({k: v for k, v in block.items() if k not in {"kind", "title"}})
+            calendar = str(announcement_config.get("calendar") or "").strip() or None
+            locale = str(announcement_config.get("locale") or "").strip() or None
+            include_season = _normalize_bool(announcement_config.get("include_season", False))
+            print(
+                "INFO liturgical_announcement resolved "
+                f"entry={entry.get('entry_id', '')} "
+                f"block={_block_display_name(block)} "
+                f"calendar={calendar or '-'} "
+                f"locale={locale or '-'} "
+                f"include_season={str(include_season).lower()}",
+                file=sys.stderr,
+            )
+            return build_liturgical_announcement_text(
+                effective_date,
+                calendar=calendar,
+                locale=locale,
+                include_season=include_season,
+            )
         raise RuntimeError(f"Publish entry '{entry.get('entry_id', '')}' uses unsupported block kind '{kind}'.")
     except PublishMissingDataError as exc:
         if skip_if_missing:
@@ -682,6 +719,9 @@ def _fragment_label_for_block(block: Dict[str, Any], text: str) -> str:
 
     if kind == "daily-intro":
         return explicit or "Daily Intro"
+
+    if kind == "liturgical-announcement":
+        return explicit or "Liturgical Announcement"
 
     if kind == "inline":
         first_line = _first_non_empty_line(text)
@@ -796,7 +836,7 @@ def _expand_audio_fragments_from_block(
             }
         ]
 
-    if kind in {"file", "inline", "daily-intro"}:
+    if kind in {"file", "inline", "daily-intro", "liturgical-announcement"}:
         text = resolve_block_content(block, contract=contract, entry=entry, target_date=effective_date)
         if not text.strip():
             return []
@@ -904,6 +944,9 @@ def _section_title_for_block(block: Dict[str, Any], text: str, *, index: int, to
     if kind == "daily-intro":
         return explicit or "Daily Intro"
 
+    if kind == "liturgical-announcement":
+        return explicit or "Liturgical Announcement"
+
     if kind == "inline":
         first_line = _first_non_empty_line(text)
         if first_line and len(first_line) <= 80:
@@ -929,6 +972,46 @@ def _build_text_sections(contract: PublishContract, entry: Dict[str, Any], *, ta
             }
         )
     return sections
+
+
+def build_resume_markers(
+    *,
+    sections: Optional[Sequence[Dict[str, Any]]] = None,
+    fragments: Optional[Sequence[Dict[str, Any]]] = None,
+) -> List[Dict[str, Any]]:
+    markers: List[Dict[str, Any]] = []
+    if fragments is not None:
+        for order, fragment in enumerate(fragments, start=1):
+            fragment_key = str(fragment.get("fragment_key", "")).strip()
+            label = str(fragment.get("label", "")).strip() or fragment_key or f"Fragment {order}"
+            marker_id = normalize_publish_key(fragment_key or label or f"fragment-{order}") or f"fragment-{order}"
+            markers.append(
+                {
+                    "marker_id": marker_id,
+                    "order": order,
+                    "source": "audio_fragment",
+                    "label": label,
+                    "kind": str(fragment.get("kind", "")).strip(),
+                    "fragment_key": fragment_key,
+                    "block_path": str(fragment.get("block_path", "")).strip(),
+                }
+            )
+        return markers
+
+    for order, section in enumerate(sections or [], start=1):
+        title = str(section.get("title", "")).strip() or f"Section {order}"
+        marker_id = normalize_publish_key(f"section-{order}-{title}") or f"section-{order}"
+        markers.append(
+            {
+                "marker_id": marker_id,
+                "order": order,
+                "source": "text_section",
+                "label": title,
+                "kind": str(section.get("kind", "")).strip(),
+                "section_index": order - 1,
+            }
+        )
+    return markers
 
 
 def _render_entry_metadata(
@@ -1004,6 +1087,7 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
                     "text": text_body,
                     "text_hash": _text_hash(text_body),
                     "sections": sections,
+                    "resume_markers": build_resume_markers(sections=sections),
                     "text_config": text_config,
                     "audio_config": dict(entry.get("audio_config") or {}),
                     "notion_target": dict(contract.notion_target),
@@ -1068,6 +1152,7 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
                 "text": text_body,
                 "text_hash": _text_hash(text_body),
                 "audio_fragments": audio_fragments,
+                "resume_markers": build_resume_markers(fragments=audio_fragments),
                 "content_hash": "",
                 "audio_config": audio_config,
                 "notion_target": dict(contract.notion_target),

@@ -22,6 +22,10 @@ class TestPublishContracts(unittest.TestCase):
             )
 
         self.mod.build_daily_intro_text = fake_build_daily_intro_text
+        self.mod.build_liturgical_announcement_text = lambda date_value, **kwargs: (
+            f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "
+            "Today the Church celebrates Saint Example."
+        )
 
     def test_render_publish_template_and_episode_id_are_date_scoped(self):
         contracts = self.mod.load_publish_contracts()
@@ -56,13 +60,18 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(
             [contract.contract_id for contract in contracts],
             [
+                "auxilium-christianorum",
                 "marian-antiphon-angelus",
                 "marian-antiphon-regina-caeli",
                 "morning-prayer-elevenlabs",
                 "rosary",
             ],
         )
-        self.assertEqual([contract.frequency for contract in contracts], ["daily", "daily", "daily", "daily"])
+        self.assertEqual([contract.frequency for contract in contracts], ["daily", "daily", "daily", "daily", "daily"])
+        self.assertEqual(contracts_by_id["auxilium-christianorum"].metadata["title_template"], "Auxilium Christianorum - {date_display}")
+        self.assertTrue(contracts_by_id["auxilium-christianorum"].entries[0]["text_config"]["enabled"])
+        self.assertTrue(contracts_by_id["auxilium-christianorum"].entries[0]["audio_config"]["enabled"])
+        self.assertEqual(contracts_by_id["auxilium-christianorum"].entries[0]["blocks"][0]["kind"], "liturgical-announcement")
         self.assertEqual(contracts_by_id["marian-antiphon-angelus"].season, "ordinary")
         self.assertEqual(contracts_by_id["marian-antiphon-regina-caeli"].season, "easter")
         self.assertEqual(
@@ -111,8 +120,8 @@ class TestPublishContracts(unittest.TestCase):
         easter_jobs = self.mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
         ordinary_jobs = self.mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 6, 2))
 
-        self.assertEqual({job["entry_id"] for job in easter_jobs}, {"morning-prayer-elevenlabs", "marian-antiphon-regina-caeli"})
-        self.assertEqual({job["entry_id"] for job in ordinary_jobs}, {"morning-prayer-elevenlabs", "marian-antiphon-angelus"})
+        self.assertEqual({job["entry_id"] for job in easter_jobs}, {"auxilium-christianorum", "morning-prayer-elevenlabs", "marian-antiphon-regina-caeli"})
+        self.assertEqual({job["entry_id"] for job in ordinary_jobs}, {"auxilium-christianorum", "morning-prayer-elevenlabs", "marian-antiphon-angelus"})
         easter_marian = next(job for job in easter_jobs if job["entry_id"] == "marian-antiphon-regina-caeli")
         ordinary_marian = next(job for job in ordinary_jobs if job["entry_id"] == "marian-antiphon-angelus")
         self.assertEqual(easter_marian["title"], "Marian Antiphon - Regina Caeli - April 6, 2026")
@@ -254,12 +263,24 @@ class TestPublishContracts(unittest.TestCase):
         target_date = datetime.date(2026, 4, 6)  # Monday in April
         jobs = self.mod.build_text_jobs(contracts, target_date=target_date)
 
-        self.assertEqual(len(jobs), 2)
+        self.assertEqual(len(jobs), 3)
         morning = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
         rosary = next(job for job in jobs if job["entry_id"] == "rosary")
+        auxilium = next(job for job in jobs if job["entry_id"] == "auxilium-christianorum")
         self.assertEqual(morning["title"], "Morning Prayer - April 6, 2026")
         self.assertEqual(morning["episode_id"], "morning-prayer-elevenlabs-2026-04-06")
         self.assertIn("Today the Church celebrates", morning["text"])
+        self.assertIn("Today is Monday, April 6, 2026", auxilium["text"])
+        self.assertIn("In Thy name, Lord Jesus Christ", auxilium["text"])
+        self.assertNotIn("O Glorious Queen of Heaven and Earth", auxilium["text"])
+        self.assertEqual(auxilium["title"], "Auxilium Christianorum - April 6, 2026")
+        self.assertEqual(auxilium["episode_id"], "auxilium-christianorum-2026-04-06")
+        self.assertEqual(
+            [section["title"] for section in auxilium["sections"]],
+            ["Liturgical Announcement", "Opening Prayers", "Litany of the Most Precious Blood", "Weekday Prayer", "Conclusion"],
+        )
+        self.assertEqual(auxilium["resume_markers"][0]["label"], "Liturgical Announcement")
+        self.assertEqual(auxilium["resume_markers"][0]["source"], "text_section")
         self.assertIn("April", morning["text"])
         self.assertIn("Joyful Mysteries", rosary["text"])
         self.assertEqual(
@@ -270,6 +291,40 @@ class TestPublishContracts(unittest.TestCase):
             [section["title"] for section in rosary["sections"]],
             ["Opening Prayers", "Joyful Mysteries", "Closing Prayers"],
         )
+
+    def test_auxilium_weekday_map_selects_each_weekday_prayer(self):
+        contracts = self.mod.load_publish_contracts()
+        auxilium_contract = next(contract for contract in contracts if contract.contract_id == "auxilium-christianorum")
+        expected = {
+            datetime.date(2026, 4, 5): "O Glorious Queen of Heaven and Earth",
+            datetime.date(2026, 4, 6): "In Thy name, Lord Jesus Christ",
+            datetime.date(2026, 4, 7): "Lord Jesus Christ, we beg Thee",
+            datetime.date(2026, 4, 8): "render all spirits impotent",
+            datetime.date(2026, 4, 9): "From anxiety, sadness and obsessions",
+            datetime.date(2026, 4, 10): "Litany of Humility",
+            datetime.date(2026, 4, 11): "O God and Father of our Lord Jesus Christ",
+        }
+
+        for target_date, phrase in expected.items():
+            with self.subTest(target_date=target_date):
+                jobs = self.mod.build_text_jobs([auxilium_contract], target_date=target_date)
+                self.assertEqual(len(jobs), 1)
+                self.assertIn(phrase, jobs[0]["text"])
+
+    def test_auxilium_audio_fragments_include_resume_markers(self):
+        contracts = self.mod.load_publish_contracts()
+        auxilium_contract = next(contract for contract in contracts if contract.contract_id == "auxilium-christianorum")
+
+        jobs = self.mod.build_audio_jobs([auxilium_contract], target_date=datetime.date(2026, 4, 6))
+
+        self.assertEqual(len(jobs), 1)
+        job = jobs[0]
+        self.assertEqual(job["audio_fragments"][0]["kind"], "liturgical-announcement")
+        self.assertEqual(job["audio_fragments"][0]["label"], "Liturgical Announcement")
+        self.assertTrue(any("weekday-map-monday" in fragment["fragment_key"] for fragment in job["audio_fragments"]))
+        self.assertEqual(len(job["resume_markers"]), len(job["audio_fragments"]))
+        self.assertEqual(job["resume_markers"][0]["source"], "audio_fragment")
+        self.assertEqual(job["resume_markers"][0]["fragment_key"], job["audio_fragments"][0]["fragment_key"])
 
     def test_expand_audio_fragments_flattens_leaf_blocks_in_order(self):
         contracts = self.mod.load_publish_contracts()
