@@ -1,0 +1,165 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_benedict",
+    "feast": {
+      "day": 11,
+      "mode": "fixed",
+      "month": 7,
+      "name": "St. Benedict"
+    },
+    "id": "st_benedict",
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Benedict Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious St. Benedict, sublime model of all virtues, pure vessel of God\u2019s grace! Behold me, humbly kneeling at thy feet. I implore thy loving heart to pray for me before the throne of God. To thee I have recourse in all the dangers which daily surround me. Shield me against my enemies, inspire me to imitate thee in all things. May thy blessing be with me always, so that I may shun whatever God forbids and avoid the occasions of sin. Graciously obtain for me from God those favors and graces of which I stand so much in need, in the trials, miseries and afflictions of life. Thy heart was always so full of love, compassion, and mercy toward those who were afflicted or troubled in any way. Thou didst never dismiss without consolation and assistance anyone who had recourse to thee. I therefore invoke thy powerful intercession, in the confident hope that thou wilt hear my prayers and obtain for me the special grace and favor I so earnestly implore Pause here to mention your request. if it be for the greater glory of God and the welfare of my soul.\n\nHelp me, O great St. Benedict, to live and die as a faithful child of God, to be ever submissive to His holy will, and to attain the eternal happiness of heaven. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Benedict Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious St. Benedict, sublime model of all virtues, pure vessel of God\u2019s grace! Behold me, humbly kneeling at thy feet. I implore thy loving heart to pray for me before the throne of God. To thee I have recourse in all the dangers which daily surround me. Shield me against my enemies, inspire me to imitate thee in all things. May thy blessing be with me always, so that I may shun whatever God forbids and avoid the occasions of sin. Graciously obtain for me from God those favors and graces of which I stand so much in need, in the trials, miseries and afflictions of life. Thy heart was always so full of love, compassion, and mercy toward those who were afflicted or troubled in any way. Thou didst never dismiss without consolation and assistance anyone who had recourse to thee. I therefore invoke thy powerful intercession, in the confident hope that thou wilt hear my prayers and obtain for me the special grace and favor I so earnestly implore Pause here to mention your request. if it be for the greater glory of God and the welfare of my soul.\n\nHelp me, O great St. Benedict, to live and die as a faithful child of God, to be ever submissive to His holy will, and to attain the eternal happiness of heaven. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious St. Benedict, sublime model of all virtues, pure vessel of God\u2019s grace! Behold me, humbly kneeling at thy feet. I implore thy loving heart to pray for me before the throne of God. To thee I have recourse in all the dangers which daily surround me. Shield me against my enemies, inspire me to imitate thee in all things. May thy blessing be with me always, so that I may shun whatever God forbids and avoid the occasions of sin. Graciously obtain for me from God those favors and graces of which I stand so much in need, in the trials, miseries and afflictions of life. Thy heart was always so full of love, compassion, and mercy toward those who were afflicted or troubled in any way. Thou didst never dismiss without consolation and assistance anyone who had recourse to thee. I therefore invoke thy powerful intercession, in the confident hope that thou wilt hear my prayers and obtain for me the special grace and favor I so earnestly implore Pause here to mention your request. if it be for the greater glory of God and the welfare of my soul.\n\nHelp me, O great St. Benedict, to live and die as a faithful child of God, to be ever submissive to His holy will, and to attain the eternal happiness of heaven. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious St. Benedict, sublime model of all virtues, pure vessel of God\u2019s grace! Behold me, humbly kneeling at thy feet. I implore thy loving heart to pray for me before the throne of God. To thee I have recourse in all the dangers which daily surround me. Shield me against my enemies, inspire me to imitate thee in all things. May thy blessing be with me always, so that I may shun whatever God forbids and avoid the occasions of sin. Graciously obtain for me from God those favors and graces of which I stand so much in need, in the trials, miseries and afflictions of life. Thy heart was always so full of love, compassion, and mercy toward those who were afflicted or troubled in any way. Thou didst never dismiss without consolation and assistance anyone who had recourse to thee. I therefore invoke thy powerful intercession, in the confident hope that thou wilt hear my prayers and obtain for me the special grace and favor I so earnestly implore Pause here to mention your request. if it be for the greater glory of God and the welfare of my soul.\n\nHelp me, O great St. Benedict, to live and die as a faithful child of God, to be ever submissive to His holy will, and to attain the eternal happiness of heaven. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious St. Benedict, sublime model of all virtues, pure vessel of God\u2019s grace! Behold me, humbly kneeling at thy feet. I implore thy loving heart to pray for me before the throne of God. To thee I have recourse in all the dangers which daily surround me. Shield me against my enemies, inspire me to imitate thee in all things. May thy blessing be with me always, so that I may shun whatever God forbids and avoid the occasions of sin. Graciously obtain for me from God those favors and graces of which I stand so much in need, in the trials, miseries and afflictions of life. Thy heart was always so full of love, compassion, and mercy toward those who were afflicted or troubled in any way. Thou didst never dismiss without consolation and assistance anyone who had recourse to thee. I therefore invoke thy powerful intercession, in the confident hope that thou wilt hear my prayers and obtain for me the special grace and favor I so earnestly implore Pause here to mention your request. if it be for the greater glory of God and the welfare of my soul.\n\nHelp me, O great St. Benedict, to live and die as a faithful child of God, to be ever submissive to His holy will, and to attain the eternal happiness of heaven. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious St. Benedict, sublime model of all virtues, pure vessel of God\u2019s grace! Behold me, humbly kneeling at thy feet. I implore thy loving heart to pray for me before the throne of God. To thee I have recourse in all the dangers which daily surround me. Shield me against my enemies, inspire me to imitate thee in all things. May thy blessing be with me always, so that I may shun whatever God forbids and avoid the occasions of sin. Graciously obtain for me from God those favors and graces of which I stand so much in need, in the trials, miseries and afflictions of life. Thy heart was always so full of love, compassion, and mercy toward those who were afflicted or troubled in any way. Thou didst never dismiss without consolation and assistance anyone who had recourse to thee. I therefore invoke thy powerful intercession, in the confident hope that thou wilt hear my prayers and obtain for me the special grace and favor I so earnestly implore Pause here to mention your request. if it be for the greater glory of God and the welfare of my soul.\n\nHelp me, O great St. Benedict, to live and die as a faithful child of God, to be ever submissive to His holy will, and to attain the eternal happiness of heaven. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious St. Benedict, sublime model of all virtues, pure vessel of God\u2019s grace! Behold me, humbly kneeling at thy feet. I implore thy loving heart to pray for me before the throne of God. To thee I have recourse in all the dangers which daily surround me. Shield me against my enemies, inspire me to imitate thee in all things. May thy blessing be with me always, so that I may shun whatever God forbids and avoid the occasions of sin. Graciously obtain for me from God those favors and graces of which I stand so much in need, in the trials, miseries and afflictions of life. Thy heart was always so full of love, compassion, and mercy toward those who were afflicted or troubled in any way. Thou didst never dismiss without consolation and assistance anyone who had recourse to thee. I therefore invoke thy powerful intercession, in the confident hope that thou wilt hear my prayers and obtain for me the special grace and favor I so earnestly implore Pause here to mention your request. if it be for the greater glory of God and the welfare of my soul.\n\nHelp me, O great St. Benedict, to live and die as a faithful child of God, to be ever submissive to His holy will, and to attain the eternal happiness of heaven. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious St. Benedict, sublime model of all virtues, pure vessel of God\u2019s grace! Behold me, humbly kneeling at thy feet. I implore thy loving heart to pray for me before the throne of God. To thee I have recourse in all the dangers which daily surround me. Shield me against my enemies, inspire me to imitate thee in all things. May thy blessing be with me always, so that I may shun whatever God forbids and avoid the occasions of sin. Graciously obtain for me from God those favors and graces of which I stand so much in need, in the trials, miseries and afflictions of life. Thy heart was always so full of love, compassion, and mercy toward those who were afflicted or troubled in any way. Thou didst never dismiss without consolation and assistance anyone who had recourse to thee. I therefore invoke thy powerful intercession, in the confident hope that thou wilt hear my prayers and obtain for me the special grace and favor I so earnestly implore Pause here to mention your request. if it be for the greater glory of God and the welfare of my soul.\n\nHelp me, O great St. Benedict, to live and die as a faithful child of God, to be ever submissive to His holy will, and to attain the eternal happiness of heaven. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious St. Benedict, sublime model of all virtues, pure vessel of God\u2019s grace! Behold me, humbly kneeling at thy feet. I implore thy loving heart to pray for me before the throne of God. To thee I have recourse in all the dangers which daily surround me. Shield me against my enemies, inspire me to imitate thee in all things. May thy blessing be with me always, so that I may shun whatever God forbids and avoid the occasions of sin. Graciously obtain for me from God those favors and graces of which I stand so much in need, in the trials, miseries and afflictions of life. Thy heart was always so full of love, compassion, and mercy toward those who were afflicted or troubled in any way. Thou didst never dismiss without consolation and assistance anyone who had recourse to thee. I therefore invoke thy powerful intercession, in the confident hope that thou wilt hear my prayers and obtain for me the special grace and favor I so earnestly implore Pause here to mention your request. if it be for the greater glory of God and the welfare of my soul.\n\nHelp me, O great St. Benedict, to live and die as a faithful child of God, to be ever submissive to His holy will, and to attain the eternal happiness of heaven. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious St. Benedict, sublime model of all virtues, pure vessel of God\u2019s grace! Behold me, humbly kneeling at thy feet. I implore thy loving heart to pray for me before the throne of God. To thee I have recourse in all the dangers which daily surround me. Shield me against my enemies, inspire me to imitate thee in all things. May thy blessing be with me always, so that I may shun whatever God forbids and avoid the occasions of sin. Graciously obtain for me from God those favors and graces of which I stand so much in need, in the trials, miseries and afflictions of life. Thy heart was always so full of love, compassion, and mercy toward those who were afflicted or troubled in any way. Thou didst never dismiss without consolation and assistance anyone who had recourse to thee. I therefore invoke thy powerful intercession, in the confident hope that thou wilt hear my prayers and obtain for me the special grace and favor I so earnestly implore Pause here to mention your request. if it be for the greater glory of God and the welfare of my soul.\n\nHelp me, O great St. Benedict, to live and die as a faithful child of God, to be ever submissive to His holy will, and to attain the eternal happiness of heaven. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_benedict"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "model": "gpt-4o-mini-tts",
+        "speed": 1.0,
+        "voice": "alloy"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_benedict",
+      "name": "St. Benedict"
+    },
+    "type": "novena_feast_rule"
+  }
+}

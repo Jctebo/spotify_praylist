@@ -1,0 +1,217 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "blessed_stanley_rother",
+    "feast": {
+      "day": 28,
+      "mode": "fixed",
+      "month": 7,
+      "name": "Blessed Stanley Rother"
+    },
+    "id": "blessed_stanley_rother",
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Blessed Stanley Rother Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "O faithful shepherd, Blessed Stanley Rother, as priest and missionary, you tilled the soil with your hands and invited Christ Jesus to till the soil of your soul. You became a sign of love of Christ the Good Shepherd for your people, and blessed their lives by your ministry. You stood firm and did not run from danger, bringing glory to God and His Church in your martyrdom. Blessed Stanley, obtain from the heart of Jesus Pause here to mention your request. And pray for me, that I too may be a sign of Christ\u2019s love among His people. Teach me to faithfully till the soil of this life in the reality given to me by your Father, unafraid to stay with those God has given me, no matter the cost. Through Christ our Lord. Amen."
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "Blessed Stanley Rother, pray for us!"
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "fragments": [
+          {
+            "key": "our_father",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Our Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.",
+            "title": "Our Father"
+          },
+          {
+            "key": "hail_mary",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Hail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.",
+            "title": "Hail Mary"
+          },
+          {
+            "key": "glory_be",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Glory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.",
+            "title": "Glory Be"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Blessed Stanley Rother Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful shepherd, Blessed Stanley Rother, as priest and missionary, you tilled the soil with your hands and invited Christ Jesus to till the soil of your soul. You became a sign of love of Christ the Good Shepherd for your people, and blessed their lives by your ministry. You stood firm and did not run from danger, bringing glory to God and His Church in your martyrdom. Blessed Stanley, obtain from the heart of Jesus Pause here to mention your request. And pray for me, that I too may be a sign of Christ\u2019s love among His people. Teach me to faithfully till the soil of this life in the reality given to me by your Father, unafraid to stay with those God has given me, no matter the cost. Through Christ our Lord. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nBlessed Stanley Rother, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful shepherd, Blessed Stanley Rother, as priest and missionary, you tilled the soil with your hands and invited Christ Jesus to till the soil of your soul. You became a sign of love of Christ the Good Shepherd for your people, and blessed their lives by your ministry. You stood firm and did not run from danger, bringing glory to God and His Church in your martyrdom. Blessed Stanley, obtain from the heart of Jesus Pause here to mention your request. And pray for me, that I too may be a sign of Christ\u2019s love among His people. Teach me to faithfully till the soil of this life in the reality given to me by your Father, unafraid to stay with those God has given me, no matter the cost. Through Christ our Lord. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nBlessed Stanley Rother, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful shepherd, Blessed Stanley Rother, as priest and missionary, you tilled the soil with your hands and invited Christ Jesus to till the soil of your soul. You became a sign of love of Christ the Good Shepherd for your people, and blessed their lives by your ministry. You stood firm and did not run from danger, bringing glory to God and His Church in your martyrdom. Blessed Stanley, obtain from the heart of Jesus Pause here to mention your request. And pray for me, that I too may be a sign of Christ\u2019s love among His people. Teach me to faithfully till the soil of this life in the reality given to me by your Father, unafraid to stay with those God has given me, no matter the cost. Through Christ our Lord. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nBlessed Stanley Rother, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful shepherd, Blessed Stanley Rother, as priest and missionary, you tilled the soil with your hands and invited Christ Jesus to till the soil of your soul. You became a sign of love of Christ the Good Shepherd for your people, and blessed their lives by your ministry. You stood firm and did not run from danger, bringing glory to God and His Church in your martyrdom. Blessed Stanley, obtain from the heart of Jesus Pause here to mention your request. And pray for me, that I too may be a sign of Christ\u2019s love among His people. Teach me to faithfully till the soil of this life in the reality given to me by your Father, unafraid to stay with those God has given me, no matter the cost. Through Christ our Lord. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nBlessed Stanley Rother, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful shepherd, Blessed Stanley Rother, as priest and missionary, you tilled the soil with your hands and invited Christ Jesus to till the soil of your soul. You became a sign of love of Christ the Good Shepherd for your people, and blessed their lives by your ministry. You stood firm and did not run from danger, bringing glory to God and His Church in your martyrdom. Blessed Stanley, obtain from the heart of Jesus Pause here to mention your request. And pray for me, that I too may be a sign of Christ\u2019s love among His people. Teach me to faithfully till the soil of this life in the reality given to me by your Father, unafraid to stay with those God has given me, no matter the cost. Through Christ our Lord. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nBlessed Stanley Rother, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful shepherd, Blessed Stanley Rother, as priest and missionary, you tilled the soil with your hands and invited Christ Jesus to till the soil of your soul. You became a sign of love of Christ the Good Shepherd for your people, and blessed their lives by your ministry. You stood firm and did not run from danger, bringing glory to God and His Church in your martyrdom. Blessed Stanley, obtain from the heart of Jesus Pause here to mention your request. And pray for me, that I too may be a sign of Christ\u2019s love among His people. Teach me to faithfully till the soil of this life in the reality given to me by your Father, unafraid to stay with those God has given me, no matter the cost. Through Christ our Lord. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nBlessed Stanley Rother, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful shepherd, Blessed Stanley Rother, as priest and missionary, you tilled the soil with your hands and invited Christ Jesus to till the soil of your soul. You became a sign of love of Christ the Good Shepherd for your people, and blessed their lives by your ministry. You stood firm and did not run from danger, bringing glory to God and His Church in your martyrdom. Blessed Stanley, obtain from the heart of Jesus Pause here to mention your request. And pray for me, that I too may be a sign of Christ\u2019s love among His people. Teach me to faithfully till the soil of this life in the reality given to me by your Father, unafraid to stay with those God has given me, no matter the cost. Through Christ our Lord. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nBlessed Stanley Rother, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful shepherd, Blessed Stanley Rother, as priest and missionary, you tilled the soil with your hands and invited Christ Jesus to till the soil of your soul. You became a sign of love of Christ the Good Shepherd for your people, and blessed their lives by your ministry. You stood firm and did not run from danger, bringing glory to God and His Church in your martyrdom. Blessed Stanley, obtain from the heart of Jesus Pause here to mention your request. And pray for me, that I too may be a sign of Christ\u2019s love among His people. Teach me to faithfully till the soil of this life in the reality given to me by your Father, unafraid to stay with those God has given me, no matter the cost. Through Christ our Lord. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nBlessed Stanley Rother, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful shepherd, Blessed Stanley Rother, as priest and missionary, you tilled the soil with your hands and invited Christ Jesus to till the soil of your soul. You became a sign of love of Christ the Good Shepherd for your people, and blessed their lives by your ministry. You stood firm and did not run from danger, bringing glory to God and His Church in your martyrdom. Blessed Stanley, obtain from the heart of Jesus Pause here to mention your request. And pray for me, that I too may be a sign of Christ\u2019s love among His people. Teach me to faithfully till the soil of this life in the reality given to me by your Father, unafraid to stay with those God has given me, no matter the cost. Through Christ our Lord. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nBlessed Stanley Rother, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-blessed_stanley_rother"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "model": "gpt-4o-mini-tts",
+        "speed": 1.0,
+        "voice": "alloy"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "blessed_stanley_rother",
+      "name": "Blessed Stanley Rother"
+    },
+    "type": "novena_feast_rule"
+  }
+}

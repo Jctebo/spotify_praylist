@@ -54,6 +54,51 @@ def _detail_page_html(*, title: str, subject: str, starts: str, feast: str) -> s
 """
 
 
+def _live_layout_detail_page_html(*, title: str, subject: str, starts: str, feast: str) -> str:
+    return f"""
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>{title}</title>
+    <meta property="og:title" content="{title}">
+  </head>
+  <body>
+    <div class="initial-content">
+      <div id="main" role="main" class="novena-layout">
+        <article class="page novena-page">
+          <div class="page__inner-wrap">
+            <section class="page__content">
+              <div class="notice--info">
+                <table style="border-bottom: 0">
+                  <tr><td>Novena Starts:</td><td>{starts}</td></tr>
+                  <tr><td width="150">Feastday:</td><td width="300">{feast}</td></tr>
+                  <tr><td>Birth:</td><td>480</td></tr>
+                  <tr><td>Death:</td><td>547</td></tr>
+                </table>
+                <p class="notice__patron">Patron saint of Example patronage.</p>
+              </div>
+              <div class="novena-hero" id="branch-start">
+                <div class="novena-hero__card">
+                  <h1 class="novena-hero__title">{title}</h1>
+                  <p class="novena-hero__excerpt">{subject} excerpt.</p>
+                </div>
+              </div>
+              <p>You can pray the full {subject} below.</p>
+              <h2 id="day-1">Day 1</h2>
+              <p>In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.</p>
+              <p>Day 1 prayer text for {subject}.</p>
+              <h2 id="day-2">Day 2</h2>
+              <p>Day 2 prayer text for {subject}.</p>
+            </section>
+          </div>
+        </article>
+      </div>
+    </div>
+  </body>
+</html>
+"""
+
+
 def _repeated_canonical_prayer_page_html(*, title: str, subject: str, starts: str, feast: str) -> str:
     day_sections = []
     for day in range(1, 10):
@@ -185,6 +230,25 @@ class TestNovenaUrlImport(unittest.TestCase):
         self.assertTrue(any("movable feast resolved" in issue for issue in draft.issues))
         self.assertTrue(expected_contract_id)
         self.assertEqual(len(draft.payload["contract"]["novena"]["template"]["sections"]), 10)
+
+    def test_single_import_parses_current_live_layout_without_facts_heading(self):
+        url = "https://catholicnovenaapp.com/novenas/st-benedict-novena/"
+        html = _live_layout_detail_page_html(
+            title="St. Benedict Novena",
+            subject="St. Benedict Novena",
+            starts="July 2",
+            feast="July 11",
+        )
+
+        report = importer_mod.import_single_url(url, fetcher=lambda _: html, dry_run=True)
+        draft = report.entries[0]
+
+        self.assertEqual(draft.status, "written")
+        self.assertTrue(draft.enabled)
+        self.assertEqual(draft.feast_mode, "fixed")
+        self.assertEqual(draft.payload["contract"]["feast"]["month"], 7)
+        self.assertEqual(draft.payload["contract"]["feast"]["day"], 11)
+        self.assertEqual(draft.payload["contract"]["novena"]["template"]["sections"][1]["title"], "Day 1")
 
     def test_single_import_maps_pentecost_alias_to_pentecost_sunday(self):
         url = "https://catholicnovenaapp.com/novenas/holy-spirit-novena/"

@@ -27,7 +27,7 @@ Optional variables:
 ## Publish Pipelines
 ### Text
 - `jobs/publish/run_text_pipeline.py`: contract-driven Notion text publication for `config/publish/contracts/*.json`
-- `config/publish/contracts/*.json`: shared Morning Prayer and Rosary publish contracts with a single entry-based schema
+- `config/publish/contracts/*.json`: shared Morning Prayer, Marian Antiphon, and Rosary publish contracts with a single entry-based schema
 - `config/publish/templates/...`: reusable prayer text assets and Rosary mystery text assets referenced by the contracts
 - `jobs/notion/generate_page_audio.py`: archived page-audio runtime retained only for older Morning Prayer workflows
 - `NOTION_PUBLISH_DATABASE_ID` or `NOTION_DATABASE_NAME` for the new publish-text Notion target, which upserts page titles on the `Opus Dei` database and writes the prayer text into the page body
@@ -40,12 +40,13 @@ Optional variables:
 - publish audio caches leaf fragments under `.cache/publish_audio/` so unchanged spoken blocks can be reused across reruns, and GitHub Actions persists that cache across workflow runs
 - publish audio writes one JSON sidecar per episode under `docs/audio/`, and reruns now rebuild the feed from the local `docs/audio/` archive snapshot rather than the remote published feed
 - the publish workflow also writes `docs/audio/index.html` and `docs/audio/index.json` so GitHub Pages exposes a browsable archive dashboard alongside the feed
+- Marian Antiphon publish audio contracts are season-gated: the ordinary-season Angelus contract and the Easter-season Regina Caeli contract each render their own daily episode while reusing the shared daily intro and sign-of-cross templates
 - `scripts/run_morning_prayer_elevenlabs_local.py`: step-by-step local smoke helper that loads `config/local/elevenlabs.env`, renders only the Morning Prayer ElevenLabs variant, and writes local feed/archive artifacts under `artifacts/local/elevenlabs/`
 - `ELEVENLABS_API_KEY` for the Morning Prayer ElevenLabs variant in local runs or GitHub Actions
 - `config/publish/images/logo_ora_pro_nobis.png`: podcast cover art copied into the published `docs/images/` tree
 - `PUBLISH_GITHUB_PAGES_BASE_URL` to override the RSS enclosure base URL when publishing audio
 - `PUBLISH_PODCAST_FEED_URL` to override the remote `podcast.xml` archive URL when publishing audio
-- `Publish Prayer Audio` now runs at `06:00 UTC`, before `Daily Spotify Playlist Refresh` runs at `07:00 UTC`, on `main`, on pushes to `main`, plus manual dispatches
+- `Publish Prayer Audio` now runs at `06:00 UTC`, and `Daily Spotify Playlist Refresh` runs at `05:00 UTC`, `13:00 UTC`, and `21:00 UTC`, on `main`, on pushes to `main`, plus manual dispatches
 
 ### Novena
 - `jobs/novena_contracts/pipeline.py`: contract-first novena publishing that resolves the active novena from today's date, renders content, writes a JSON sidecar, and rebuilds RSS
@@ -54,12 +55,14 @@ Optional variables:
 - `contracts/novenas/feast-days/*.json`: explicit feast-day overrides keyed by Romcal ids
 - `scripts/new_novena_contract.py`: helper for authoring explicit feast contracts or selector-based family contracts
 - `scripts/new_novena_url_contract.py`: local URL importer for Catholic Novena App pages; `single` imports one novena page and `bulk` walks the catalog page, writing generated drafts plus reports under `artifacts/novena-url-overrides/`
+- `scripts/run_traditional_novena_import_local.py`: local batch runner that defaults to the July and August Traditional Novena catalog slices and writes month-specific bulk reports under `artifacts/novena-url-overrides/traditional-novena-july-august/`
 - The URL importer pulls the live prayer body from the novena page and embeds it into `novena.template`; repeated novena days are compacted into shared blocks, and canonical prayers such as `Our Father`, `Hail Mary`, and `Glory Be` are stored once in a fragment library so the TTS renderer can reuse them across days
 - The URL importer can optionally normalize instruction-heavy sections with OpenAI for TTS-friendly output; those rewrites are recorded on each section as `notes`
 - Before the model runs, the importer expands canonical prayer names like `Our Father`, `Hail Mary`, and `Glory Be` from the repo's Rosary text templates, then compacts identical day blocks into shared blocks tagged with the day numbers they cover so the TTS renderer can reuse one prayer block behind a small day-specific intro
 - Imported traditional novenas publish with a `Traditional Novena to {saint_name} Day {day} - {date_display}` episode title so they stay distinct from the existing auto-generated novena titles while showing the publish date in the RSS title
 - For local OpenAI runs, copy `config/local/openai.env.example` to `config/local/openai.env` and fill in `OPENAI_API_KEY`; the importer will read that file automatically, and you can override the path with `OPENAI_API_KEY_FILE`
 - Novena contracts now support a top-level `enabled` flag; `enabled: false` contracts stay loadable for review but are skipped by the novena runtime
+- Run the July/August traditional novena import locally with `python scripts/run_traditional_novena_import_local.py`; pass repeated `--month` values if you need a different batch window.
 - `.github/workflows/publish_audio.yml`: combined publish workflow that runs Morning Prayer audio and novena publishing together, scheduled daily and also available on manual dispatch; manual runs default to `daily`, which publishes tomorrow's slice and preserves the existing feed, `bootstrap` seeds today and tomorrow without truncating the feed, `bootstrap-no-cache` seeds today and tomorrow while forcing a rebuild of the audio outputs, and `reset` seeds today and tomorrow after clearing the existing feed
 - The combined publish workflow currently targets MP3, JSON sidecars, and RSS. Spotify playlist assignment and Notion updates stay out of scope for this release.
 
@@ -83,7 +86,7 @@ Optional variables:
 - `scripts/setup_spotify.ps1`: Spotify credential wizard that also updates `config/spotify/playlists/*.json`
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` with optional single-playlist targeting
 - `scripts/setup_notion_playlists.ps1`: legacy Notion playlist-registry helper, no longer on the active Spotify hot path
-- `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; scheduled runs are gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
+- `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; scheduled runs are gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED` and now run three times per day
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
 - `.github/workflows/publish_audio.yml`: combined publish workflow for Morning Prayer audio and novena publishing, scheduled daily and also available on manual dispatch with `novena_publish_mode=daily` as the default choice; `bootstrap-no-cache` is available for a bootstrap-style publish that rebuilds audio without using the cache
 - `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with OneDrive sync and GitHub Pages export

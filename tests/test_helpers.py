@@ -1,6 +1,7 @@
 import importlib.util
 import os
 import subprocess
+import sys
 import uuid
 from contextlib import contextmanager
 from pathlib import Path
@@ -19,6 +20,7 @@ def load_module(rel_path: str):
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Unable to load module at {module_path}")
     module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
     spec.loader.exec_module(module)
     return module
 

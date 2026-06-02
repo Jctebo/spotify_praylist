@@ -1,5 +1,20 @@
 # Release Log
 
+## [0.3.2.3] - 2026-06-02
+
+### Added
+- Added a reusable July/August traditional novena batch runner plus local script so the seasonal import sweep can run in one command with month-specific reports.
+- Added season-gated Marian Antiphon publish-audio contracts for Angelus in ordinary time and Regina Caeli during Easter Season.
+- Added a tighter Spotify refresh cadence so the daily playlist refresh now runs three times per day.
+
+### Changed
+- Updated the Catholic Novena App importer to parse the current live `notice--info` facts layout instead of the older wrapper.
+- Updated the README, release artifacts, and regression coverage to document the new novena import workflow, Marian Antiphon audio surface, and refresh cadence.
+
+### Fixed
+- Prevented the traditional novena importer from failing on the live Catholic Novena App page shape.
+- Prevented Marian Antiphon audio from collapsing into a single season-agnostic source by making the feed items season-aware and date-scoped.
+
 ## [0.3.2.0] - 2026-05-10
 
 ### Added

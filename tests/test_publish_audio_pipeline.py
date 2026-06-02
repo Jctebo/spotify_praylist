@@ -44,16 +44,19 @@ class TestPublishAudioPipeline(unittest.TestCase):
         contracts = self.contracts_mod.load_publish_contracts()
         jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
 
-        self.assertEqual(len(jobs), 1)
-        self.assertEqual([job["entry_id"] for job in jobs], ["morning-prayer-elevenlabs"])
-        self.assertEqual(jobs[0]["entry_id"], "morning-prayer-elevenlabs")
-        self.assertTrue(jobs[0]["audio_config"]["enabled"])
-        self.assertGreater(len(jobs[0]["audio_fragments"]), 0)
+        self.assertEqual(len(jobs), 2)
+        self.assertEqual({job["entry_id"] for job in jobs}, {"morning-prayer-elevenlabs", "marian-antiphon-regina-caeli"})
+        morning_job = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
+        regina_job = next(job for job in jobs if job["entry_id"] == "marian-antiphon-regina-caeli")
+        self.assertTrue(morning_job["audio_config"]["enabled"])
+        self.assertTrue(regina_job["audio_config"]["enabled"])
+        self.assertGreater(len(morning_job["audio_fragments"]), 0)
+        self.assertGreater(len(regina_job["audio_fragments"]), 0)
 
     def test_render_audio_job_skips_when_hash_matches(self):
         contracts = self.contracts_mod.load_publish_contracts()
         jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
-        job = jobs[0]
+        job = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
 
         with tempfile.TemporaryDirectory() as tmpdir:
             docs_root = Path(tmpdir) / "docs"
@@ -75,7 +78,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
     def test_render_audio_job_force_rebuild_ignores_existing_cache(self):
         contracts = self.contracts_mod.load_publish_contracts()
         jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
-        job = jobs[0]
+        job = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
 
         with tempfile.TemporaryDirectory() as tmpdir:
             docs_root = Path(tmpdir) / "docs"
@@ -96,7 +99,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
     def test_render_audio_job_changes_guid_when_content_revision_changes(self):
         contracts = self.contracts_mod.load_publish_contracts()
         jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
-        job = jobs[0]
+        job = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
 
         with tempfile.TemporaryDirectory() as tmpdir:
             docs_root = Path(tmpdir) / "docs"
@@ -114,7 +117,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
     def test_build_rss_feed_contains_enclosure_and_guid(self):
         contracts = self.contracts_mod.load_publish_contracts()
         jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
-        job = jobs[0]
+        job = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
 
         with tempfile.TemporaryDirectory() as tmpdir:
             docs_root = Path(tmpdir) / "docs"
@@ -174,12 +177,13 @@ class TestPublishAudioPipeline(unittest.TestCase):
             feed_root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             titles = [item.findtext("title") or "" for item in feed_root.findall("./channel/item")]
 
-            self.assertEqual(result["jobs"], 1)
-            self.assertEqual(result["rendered"], 1)
+            self.assertEqual(result["jobs"], 2)
+            self.assertEqual(result["rendered"], 2)
             self.assertEqual(result["archived"], 0)
             self.assertTrue((docs_root / "podcast.xml").exists())
             self.assertTrue((docs_root / "audio" / f"morning-prayer-elevenlabs-{expected_date.isoformat()}.mp3").exists())
             self.assertTrue(any(title.startswith("Morning Prayer - ") for title in titles))
+            self.assertTrue(any(title.startswith("Angelus - ") or title.startswith("Regina Caeli - ") for title in titles))
             self.assertTrue((docs_root / "images" / "logo_ora_pro_nobis.png").exists())
 
     def test_run_audio_pipeline_uses_local_archive_snapshot(self):
@@ -199,7 +203,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.runner_mod.load_published_audio_jobs = fake_load_published_audio_jobs
             result = self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
 
-        self.assertEqual(result["jobs"], 1)
+        self.assertEqual(result["jobs"], 2)
         self.assertEqual(result["archived"], 0)
         self.assertEqual(Path(captured["kwargs"]["docs_root"]).name, "docs")
         self.assertIn("github.io", str(captured["kwargs"]["base_url"]))
@@ -249,13 +253,14 @@ class TestPublishAudioPipeline(unittest.TestCase):
             archive_manifest = json.loads((audio_dir / "index.json").read_text(encoding="utf-8"))
             archive_html = (audio_dir / "index.html").read_text(encoding="utf-8")
 
-        self.assertEqual(result["jobs"], 1)
-        self.assertEqual(result["rendered"], 1)
+        self.assertEqual(result["jobs"], 2)
+        self.assertEqual(result["rendered"], 2)
         self.assertEqual(result["archived"], 1)
         self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{current_target_date.isoformat()}::") for guid in guids))
+        self.assertTrue(any(guid.startswith(f"marian-antiphon-regina-caeli-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"{archived_episode_id}::") for guid in guids))
-        self.assertEqual(len(guids), 2)
-        self.assertEqual(archive_manifest["count"], 2)
+        self.assertEqual(len(guids), 3)
+        self.assertEqual(archive_manifest["count"], 3)
         self.assertIn("Published audio archive", archive_html)
         self.assertIn(f"{archived_episode_id}.mp3", archive_html)
 
@@ -405,7 +410,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
     def test_run_audio_pipeline_can_render_today_and_tomorrow_together(self):
         contracts = self.contracts_mod.load_publish_contracts()
         fake_renderer, _ = self._fake_renderer()
-        today = datetime.date.today()
+        today = datetime.date(2026, 6, 2)
         tomorrow = today + datetime.timedelta(days=1)
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -423,10 +428,12 @@ class TestPublishAudioPipeline(unittest.TestCase):
             root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") or "" for item in root.findall("./channel/item")]
 
-            self.assertEqual(result["jobs"], 2)
-            self.assertEqual(result["rendered"], 2)
+            self.assertEqual(result["jobs"], 4)
+            self.assertEqual(result["rendered"], 4)
             self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{today.isoformat()}::") for guid in guids))
+            self.assertTrue(any(guid.startswith(f"marian-antiphon-angelus-{today.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{tomorrow.isoformat()}::") for guid in guids))
+            self.assertTrue(any(guid.startswith(f"marian-antiphon-angelus-{tomorrow.isoformat()}::") for guid in guids))
 
     def test_run_audio_pipeline_rebuilds_feed_from_local_archive_only(self):
         contracts = self.contracts_mod.load_publish_contracts()
@@ -469,10 +476,11 @@ class TestPublishAudioPipeline(unittest.TestCase):
             root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") or "" for item in root.findall("./channel/item")]
 
-        self.assertEqual(result["jobs"], 1)
+        self.assertEqual(result["jobs"], 2)
         self.assertEqual(result["archived"], 1)
-        self.assertEqual(len(guids), 2)
+        self.assertEqual(len(guids), 3)
         self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{current_target_date.isoformat()}::") for guid in guids))
+        self.assertTrue(any(guid.startswith(f"marian-antiphon-regina-caeli-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"{archived_episode_id}::") for guid in guids))
 
     def test_load_published_audio_jobs_skips_sidecars_without_audio_file(self):

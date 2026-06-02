@@ -415,10 +415,18 @@ def _extract_title(html_text: str) -> str:
 
 
 def _extract_detail_facts(html_text: str) -> Dict[str, str]:
-    match = FACTS_BLOCK_RE.search(html_text)
-    if not match:
-        raise RuntimeError("Unable to find novena facts block.")
-    table_html = match.group("table")
+    soup = BeautifulSoup(html_text, "html.parser")
+    facts_block = soup.select_one("div.notice--info")
+    if facts_block is not None:
+        table = facts_block.find("table")
+        if table is None:
+            raise RuntimeError("Unable to find novena facts block.")
+        table_html = str(table)
+    else:
+        match = FACTS_BLOCK_RE.search(html_text)
+        if not match:
+            raise RuntimeError("Unable to find novena facts block.")
+        table_html = match.group("table")
     facts: Dict[str, str] = {}
     for row in ROW_RE.finditer(table_html):
         label = _extract_text(row.group("label")).lower().rstrip(":")

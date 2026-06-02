@@ -61,16 +61,25 @@ def build_publish_context(
     version: str,
     entry: Mapping[str, Any],
     target_date: Optional[_dt.date] = None,
+    season: str = "",
 ) -> Dict[str, Any]:
     effective_date = _normalize_date(target_date)
     entry_id = str(entry.get("entry_id", "")).strip()
     entry_title = str(entry.get("title", "")).strip()
+    normalized_season = str(season or "").strip().lower()
+    season_label = ""
+    if normalized_season == "easter":
+        season_label = "Easter Season"
+    elif normalized_season == "ordinary":
+        season_label = "Ordinary Time"
     return {
         "contract_id": str(contract_id or "").strip(),
         "contract_type": str(contract_type or "").strip(),
         "frequency": str(frequency or "").strip(),
         "timezone": str(timezone or "").strip(),
         "version": str(version or "").strip(),
+        "season": normalized_season,
+        "season_label": season_label,
         "entry_id": entry_id,
         "entry_title": entry_title,
         "title": entry_title,

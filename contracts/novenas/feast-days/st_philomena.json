@@ -1,0 +1,237 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_philomena",
+    "feast": {
+      "day": 11,
+      "mode": "fixed",
+      "month": 8,
+      "name": "St. Philomena"
+    },
+    "id": "st_philomena",
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Philomena Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nIllustrious Virgin and Martyr, St. Philomena, behold me prostrate before the throne whereupon it has pleased the Most Holy Trinity to place you. Full of confidence in your protection, I entreat you to intercede for me with God, from the heights of Heaven deign to cast a glance upon your humble client! Spouse of Christ, sustain me in suffering, fortify me in temptation, protect me in the dangers surrounding me, and obtain for me the graces necessary to me. Above all, assist me at the hour of my death. St. Philomena, powerful with God, pray for us. Amen.\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO great St. Philomena, glorious Virgin and Martyr, wonder-worker of our age, obtain for me purity of body and soul, purity of heart and desire, purity of thought and affection. Through your patience under multiple sufferings, obtain for me a submissive acceptance of all the afflictions it may please God to send me and as you did miraculously escape unhurt from the waters of the Tiber, into which you were cast by order of your persecutor, so may I pass through the waters of tribulation without detriment to my soul. Amen.\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO pure Virgin and holy martyr, cast a look of pity from Heaven on your devoted servant, comfort me in affliction, assist me in danger, above all come to my aid in the hour of death. Watch over the interests of the Church of God, pray for its exaltation and prosperity, the extension of the faith, for the Pope, for the clergy, for the perseverance of the just, the conversion of sinners, and the relief of the souls in purgatory, especially those dear to me. O great saint, whose triumph we celebrate on earth, intercede for me, that I may one day behold the crown of glory bestowed on you in Heaven, and eternally praise Him who so liberally rewards for all eternity the sufferings endured for His love during this short life. Amen.\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO St. Philomena, Virgin and Martyr, whom God glorifies by so many miracles, whom the Vicar of Jesus Christ has named the Protectress of the living rosary and the children of Mary, manifest, more and more plainly from the heights of Heaven, that a voice holy as yours cannot be denied and that we have the right to rely upon your aid. Obtain for us the grace to be faithful to Jesus Christ, even to death. You became known by your miracles. May you intercede for me before the throne of God. Amen.\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO Virgin and Martyr, St. Philomena, you made a vow of virginity and you stood by it till death offering your life to Jesus. Your purity was your perfection. I pray to you to help me in my struggle to be chaste and pure. This is a difficult thing to do now, with the influence of the media that tell us that sex, even outside of marriage, is good and recommendable. May your example inspire me and the young people especially to regard their bodies as temples of the Holy Spirit. May I learn to clothe myself modestly and simply so that I may lead people to live this virtue. Amen.\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO Virgin and Martyr, St. Philomena, you were patient in your endurance to all the sufferings and sacrifices. You did so because you viewed that all the glories of this world are pure vanity. You were not attached to anything or anyone. You have your eyes always set on eternity. Help us to live this virtue of detachment so that we may be ready to do anything that Jesus asks of us. Help us put distance to the happiness and successes of this life so that we may also learn to look forward to the happiness of heaven. We ask you, dear saint, to help us develop a heart that is attached only to God. Amen\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO St. Philomena, you received help from Jesus and special grace of perseverance when you were tortured and put to death. That special grace was the gift of courage. Your bold declaration to die for your faith is a proof that God will not abandon his children. At times, I doubt God\u2019s place in my own life; in times of difficulties, I easily complain of his absence. Make me understand that God takes care of me, anticipates my needs and protects me from danger. Help me to trust God and put myself entirely in his hands. Amen\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO dear St. Philomena, you lived during the most terrible time of the Church, when Christians were hunted like animals. But like the first Christians, you found solace being with your brothers and sisters with whom you broke bread, sharing in the Eucharist in the catacombs. You received the Body and Blood of Jesus with devotion, knowing that He alone would be able to help you weather the persecutions. I implore you, my dear saint, to help me love the Eucharist, to receive Jesus daily through the Holy Communion. Bless also my brothers and sisters, especially the sick, who are unable to receive Jesus daily. May Jesus\u2019 presence enable them to accept the sufferings they are passing through. Amen\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO dear St. Philomena, you encountered Christians who, due to terrible tortures, were unable to remain strong and who renounced their faith temporarily, or who, faced with physical pain, surrendered holy books to the Roman soldiers. You welcomed these Christians and understood their weaknesses. You did not condemn them nor stay away from them. You continued to pray for them and with them. I pray, my dear saint, that you will also help me develop the spirit of understanding that will prevent me from condemning people. Inspire me always to work for unity and peace in our communities especially in our parishes. Amen.\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Philomena Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nIllustrious Virgin and Martyr, St. Philomena, behold me prostrate before the throne whereupon it has pleased the Most Holy Trinity to place you. Full of confidence in your protection, I entreat you to intercede for me with God, from the heights of Heaven deign to cast a glance upon your humble client! Spouse of Christ, sustain me in suffering, fortify me in temptation, protect me in the dangers surrounding me, and obtain for me the graces necessary to me. Above all, assist me at the hour of my death. St. Philomena, powerful with God, pray for us. Amen.\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO great St. Philomena, glorious Virgin and Martyr, wonder-worker of our age, obtain for me purity of body and soul, purity of heart and desire, purity of thought and affection. Through your patience under multiple sufferings, obtain for me a submissive acceptance of all the afflictions it may please God to send me and as you did miraculously escape unhurt from the waters of the Tiber, into which you were cast by order of your persecutor, so may I pass through the waters of tribulation without detriment to my soul. Amen.\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO pure Virgin and holy martyr, cast a look of pity from Heaven on your devoted servant, comfort me in affliction, assist me in danger, above all come to my aid in the hour of death. Watch over the interests of the Church of God, pray for its exaltation and prosperity, the extension of the faith, for the Pope, for the clergy, for the perseverance of the just, the conversion of sinners, and the relief of the souls in purgatory, especially those dear to me. O great saint, whose triumph we celebrate on earth, intercede for me, that I may one day behold the crown of glory bestowed on you in Heaven, and eternally praise Him who so liberally rewards for all eternity the sufferings endured for His love during this short life. Amen.\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO St. Philomena, Virgin and Martyr, whom God glorifies by so many miracles, whom the Vicar of Jesus Christ has named the Protectress of the living rosary and the children of Mary, manifest, more and more plainly from the heights of Heaven, that a voice holy as yours cannot be denied and that we have the right to rely upon your aid. Obtain for us the grace to be faithful to Jesus Christ, even to death. You became known by your miracles. May you intercede for me before the throne of God. Amen.\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO Virgin and Martyr, St. Philomena, you made a vow of virginity and you stood by it till death offering your life to Jesus. Your purity was your perfection. I pray to you to help me in my struggle to be chaste and pure. This is a difficult thing to do now, with the influence of the media that tell us that sex, even outside of marriage, is good and recommendable. May your example inspire me and the young people especially to regard their bodies as temples of the Holy Spirit. May I learn to clothe myself modestly and simply so that I may lead people to live this virtue. Amen.\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO Virgin and Martyr, St. Philomena, you were patient in your endurance to all the sufferings and sacrifices. You did so because you viewed that all the glories of this world are pure vanity. You were not attached to anything or anyone. You have your eyes always set on eternity. Help us to live this virtue of detachment so that we may be ready to do anything that Jesus asks of us. Help us put distance to the happiness and successes of this life so that we may also learn to look forward to the happiness of heaven. We ask you, dear saint, to help us develop a heart that is attached only to God. Amen\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO St. Philomena, you received help from Jesus and special grace of perseverance when you were tortured and put to death. That special grace was the gift of courage. Your bold declaration to die for your faith is a proof that God will not abandon his children. At times, I doubt God\u2019s place in my own life; in times of difficulties, I easily complain of his absence. Make me understand that God takes care of me, anticipates my needs and protects me from danger. Help me to trust God and put myself entirely in his hands. Amen\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO dear St. Philomena, you lived during the most terrible time of the Church, when Christians were hunted like animals. But like the first Christians, you found solace being with your brothers and sisters with whom you broke bread, sharing in the Eucharist in the catacombs. You received the Body and Blood of Jesus with devotion, knowing that He alone would be able to help you weather the persecutions. I implore you, my dear saint, to help me love the Eucharist, to receive Jesus daily through the Holy Communion. Bless also my brothers and sisters, especially the sick, who are unable to receive Jesus daily. May Jesus\u2019 presence enable them to accept the sufferings they are passing through. Amen\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO faithful Virgin and glorious Martyr, St. Philomena, who works so many miracles on behalf of the poor and sorrowing, have pity on me. You know the multitude and diversity of my needs. Behold me at your feet, full of misery, but full of hope. I entreat your charity, O great saint! Graciously hear me and obtain from God a favorable answer to the request which I now humbly lay before you Pause here to mention your request. I am firmly convinced that through your merits, through the scorn, the sufferings and the death you endured, united to the merits of the Passion and death of Jesus, your Spouse, I shall obtain what I ask of you, and in the joy of my heart I will bless God, who is admirable in his Saints. Amen. (From the \u201cNovena to St. Philomena\u201d by The Society of St. Paul)\n\nO dear St. Philomena, you encountered Christians who, due to terrible tortures, were unable to remain strong and who renounced their faith temporarily, or who, faced with physical pain, surrendered holy books to the Roman soldiers. You welcomed these Christians and understood their weaknesses. You did not condemn them nor stay away from them. You continued to pray for them and with them. I pray, my dear saint, that you will also help me develop the spirit of understanding that will prevent me from condemning people. Inspire me always to work for unity and peace in our communities especially in our parishes. Amen.\n\nSaint Philomena, Pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_philomena"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "model": "gpt-4o-mini-tts",
+        "speed": 1.0,
+        "voice": "alloy"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_philomena",
+      "name": "St. Philomena"
+    },
+    "type": "novena_feast_rule"
+  }
+}
