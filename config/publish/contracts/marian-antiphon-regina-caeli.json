@@ -1,0 +1,85 @@
+{
+  "contract": {
+    "id": "marian-antiphon-regina-caeli",
+    "type": "daily-prayer",
+    "frequency": "daily",
+    "timezone": "America/Chicago",
+    "version": "1",
+    "season": "easter",
+    "metadata": {
+      "title_template": "Regina Caeli - {date_display}",
+      "description_template": "Regina Caeli for {date_display} during {season_label}. The daily intro announces the day, then the prayer begins with the sign of the cross.",
+      "episode_id_template": "marian-antiphon-regina-caeli-{date_iso}",
+      "daily_intro": {
+        "calendar": "general_roman",
+        "locale": "en",
+        "prompt_model": "gpt-4.1-mini",
+        "allow_missing_gospel": true
+      }
+    }
+  },
+  "entries": [
+    {
+      "entry_id": "marian-antiphon-regina-caeli",
+      "date": "daily",
+      "title": "Regina Caeli",
+      "status": "approved",
+      "text": "Regina Caeli",
+      "text_config": {
+        "enabled": false
+      },
+      "audio_config": {
+        "enabled": true,
+        "model": "gpt-4o-mini-tts",
+        "voice": "alloy",
+        "format": "mp3",
+        "speed": 1.0,
+        "providers": [
+          {
+            "provider": "elevenlabs",
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "voice_id": "2NfTQuOn6dRQvgKuC2le",
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+              "stability": 0.5,
+              "similarity_boost": 0.75,
+              "use_speaker_boost": true,
+              "style": 0,
+              "speed": 1.0
+            },
+            "format": "mp3",
+            "speed": 1.0
+          },
+          {
+            "provider": "openai",
+            "api_key_env": "OPENAI_API_KEY",
+            "model": "gpt-4o-mini-tts",
+            "voice": "alloy",
+            "format": "mp3",
+            "speed": 1.0
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "kind": "daily_intro",
+          "title": "Daily Intro"
+        },
+        {
+          "kind": "sequence",
+          "title": "Regina Caeli Prayer",
+          "blocks": [
+            {
+              "kind": "file",
+              "path": "config/publish/templates/rosary/sign-of-cross.txt"
+            },
+            {
+              "kind": "file",
+              "path": "config/publish/templates/marian-antiphon/regina-caeli.txt"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "our_lady_of_monte_berico",
+    "feast": {
+      "day": 22,
+      "mode": "fixed",
+      "month": 8,
+      "name": "Our Lady of Monte Berico"
+    },
+    "id": "our_lady_of_monte_berico",
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of Monte Berico Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Most Holy Virgin, Mother of God and my Mother Mary, I thank you that you have deigned to appear on Monte Berico and I thank you for all the graces you grant here to those who turn to you. Nobody ever prayed to you in vain. I, too, resort to you and beg you for the Passion and Death of Jesus and for your pains: welcome me, o\u2019 merciful Mother, under your mantle, which is a maternal mantle; grant me the particular grace that I ask of You Pause here to mention your request. and protect me from all evil and especially from sin which is the greatest evil. Oh make, oh Mary, my Mother, that I always enjoy your loving protection in life and even more in death and then come to see you in heaven and to thank and bless you forever. Amen. Madonna of Monte Berico, pray for us.\n\nO sweet Virgin, pious mother of love, Like this Ave rising from the heart. Ave, ave, ave, Maria Ave, ave, ave, Maria. O Virgin, shine as a star in the sky, Motherly defend your faithful children. Ave, ave, ave Maria Ave, ave, ave, Maria.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of Monte Berico Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Most Holy Virgin, Mother of God and my Mother Mary, I thank you that you have deigned to appear on Monte Berico and I thank you for all the graces you grant here to those who turn to you. Nobody ever prayed to you in vain. I, too, resort to you and beg you for the Passion and Death of Jesus and for your pains: welcome me, o\u2019 merciful Mother, under your mantle, which is a maternal mantle; grant me the particular grace that I ask of You Pause here to mention your request. and protect me from all evil and especially from sin which is the greatest evil. Oh make, oh Mary, my Mother, that I always enjoy your loving protection in life and even more in death and then come to see you in heaven and to thank and bless you forever. Amen. Madonna of Monte Berico, pray for us.\n\nO sweet Virgin, pious mother of love, Like this Ave rising from the heart. Ave, ave, ave, Maria Ave, ave, ave, Maria. O Virgin, shine as a star in the sky, Motherly defend your faithful children. Ave, ave, ave Maria Ave, ave, ave, Maria.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Most Holy Virgin, Mother of God and my Mother Mary, I thank you that you have deigned to appear on Monte Berico and I thank you for all the graces you grant here to those who turn to you. Nobody ever prayed to you in vain. I, too, resort to you and beg you for the Passion and Death of Jesus and for your pains: welcome me, o\u2019 merciful Mother, under your mantle, which is a maternal mantle; grant me the particular grace that I ask of You Pause here to mention your request. and protect me from all evil and especially from sin which is the greatest evil. Oh make, oh Mary, my Mother, that I always enjoy your loving protection in life and even more in death and then come to see you in heaven and to thank and bless you forever. Amen. Madonna of Monte Berico, pray for us.\n\nO sweet Virgin, pious mother of love, Like this Ave rising from the heart. Ave, ave, ave, Maria Ave, ave, ave, Maria. O Virgin, shine as a star in the sky, Motherly defend your faithful children. Ave, ave, ave Maria Ave, ave, ave, Maria.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Most Holy Virgin, Mother of God and my Mother Mary, I thank you that you have deigned to appear on Monte Berico and I thank you for all the graces you grant here to those who turn to you. Nobody ever prayed to you in vain. I, too, resort to you and beg you for the Passion and Death of Jesus and for your pains: welcome me, o\u2019 merciful Mother, under your mantle, which is a maternal mantle; grant me the particular grace that I ask of You Pause here to mention your request. and protect me from all evil and especially from sin which is the greatest evil. Oh make, oh Mary, my Mother, that I always enjoy your loving protection in life and even more in death and then come to see you in heaven and to thank and bless you forever. Amen. Madonna of Monte Berico, pray for us.\n\nO sweet Virgin, pious mother of love, Like this Ave rising from the heart. Ave, ave, ave, Maria Ave, ave, ave, Maria. O Virgin, shine as a star in the sky, Motherly defend your faithful children. Ave, ave, ave Maria Ave, ave, ave, Maria.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Most Holy Virgin, Mother of God and my Mother Mary, I thank you that you have deigned to appear on Monte Berico and I thank you for all the graces you grant here to those who turn to you. Nobody ever prayed to you in vain. I, too, resort to you and beg you for the Passion and Death of Jesus and for your pains: welcome me, o\u2019 merciful Mother, under your mantle, which is a maternal mantle; grant me the particular grace that I ask of You Pause here to mention your request. and protect me from all evil and especially from sin which is the greatest evil. Oh make, oh Mary, my Mother, that I always enjoy your loving protection in life and even more in death and then come to see you in heaven and to thank and bless you forever. Amen. Madonna of Monte Berico, pray for us.\n\nO sweet Virgin, pious mother of love, Like this Ave rising from the heart. Ave, ave, ave, Maria Ave, ave, ave, Maria. O Virgin, shine as a star in the sky, Motherly defend your faithful children. Ave, ave, ave Maria Ave, ave, ave, Maria.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Most Holy Virgin, Mother of God and my Mother Mary, I thank you that you have deigned to appear on Monte Berico and I thank you for all the graces you grant here to those who turn to you. Nobody ever prayed to you in vain. I, too, resort to you and beg you for the Passion and Death of Jesus and for your pains: welcome me, o\u2019 merciful Mother, under your mantle, which is a maternal mantle; grant me the particular grace that I ask of You Pause here to mention your request. and protect me from all evil and especially from sin which is the greatest evil. Oh make, oh Mary, my Mother, that I always enjoy your loving protection in life and even more in death and then come to see you in heaven and to thank and bless you forever. Amen. Madonna of Monte Berico, pray for us.\n\nO sweet Virgin, pious mother of love, Like this Ave rising from the heart. Ave, ave, ave, Maria Ave, ave, ave, Maria. O Virgin, shine as a star in the sky, Motherly defend your faithful children. Ave, ave, ave Maria Ave, ave, ave, Maria.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Most Holy Virgin, Mother of God and my Mother Mary, I thank you that you have deigned to appear on Monte Berico and I thank you for all the graces you grant here to those who turn to you. Nobody ever prayed to you in vain. I, too, resort to you and beg you for the Passion and Death of Jesus and for your pains: welcome me, o\u2019 merciful Mother, under your mantle, which is a maternal mantle; grant me the particular grace that I ask of You Pause here to mention your request. and protect me from all evil and especially from sin which is the greatest evil. Oh make, oh Mary, my Mother, that I always enjoy your loving protection in life and even more in death and then come to see you in heaven and to thank and bless you forever. Amen. Madonna of Monte Berico, pray for us.\n\nO sweet Virgin, pious mother of love, Like this Ave rising from the heart. Ave, ave, ave, Maria Ave, ave, ave, Maria. O Virgin, shine as a star in the sky, Motherly defend your faithful children. Ave, ave, ave Maria Ave, ave, ave, Maria.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Most Holy Virgin, Mother of God and my Mother Mary, I thank you that you have deigned to appear on Monte Berico and I thank you for all the graces you grant here to those who turn to you. Nobody ever prayed to you in vain. I, too, resort to you and beg you for the Passion and Death of Jesus and for your pains: welcome me, o\u2019 merciful Mother, under your mantle, which is a maternal mantle; grant me the particular grace that I ask of You Pause here to mention your request. and protect me from all evil and especially from sin which is the greatest evil. Oh make, oh Mary, my Mother, that I always enjoy your loving protection in life and even more in death and then come to see you in heaven and to thank and bless you forever. Amen. Madonna of Monte Berico, pray for us.\n\nO sweet Virgin, pious mother of love, Like this Ave rising from the heart. Ave, ave, ave, Maria Ave, ave, ave, Maria. O Virgin, shine as a star in the sky, Motherly defend your faithful children. Ave, ave, ave Maria Ave, ave, ave, Maria.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Most Holy Virgin, Mother of God and my Mother Mary, I thank you that you have deigned to appear on Monte Berico and I thank you for all the graces you grant here to those who turn to you. Nobody ever prayed to you in vain. I, too, resort to you and beg you for the Passion and Death of Jesus and for your pains: welcome me, o\u2019 merciful Mother, under your mantle, which is a maternal mantle; grant me the particular grace that I ask of You Pause here to mention your request. and protect me from all evil and especially from sin which is the greatest evil. Oh make, oh Mary, my Mother, that I always enjoy your loving protection in life and even more in death and then come to see you in heaven and to thank and bless you forever. Amen. Madonna of Monte Berico, pray for us.\n\nO sweet Virgin, pious mother of love, Like this Ave rising from the heart. Ave, ave, ave, Maria Ave, ave, ave, Maria. O Virgin, shine as a star in the sky, Motherly defend your faithful children. Ave, ave, ave Maria Ave, ave, ave, Maria.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Most Holy Virgin, Mother of God and my Mother Mary, I thank you that you have deigned to appear on Monte Berico and I thank you for all the graces you grant here to those who turn to you. Nobody ever prayed to you in vain. I, too, resort to you and beg you for the Passion and Death of Jesus and for your pains: welcome me, o\u2019 merciful Mother, under your mantle, which is a maternal mantle; grant me the particular grace that I ask of You Pause here to mention your request. and protect me from all evil and especially from sin which is the greatest evil. Oh make, oh Mary, my Mother, that I always enjoy your loving protection in life and even more in death and then come to see you in heaven and to thank and bless you forever. Amen. Madonna of Monte Berico, pray for us.\n\nO sweet Virgin, pious mother of love, Like this Ave rising from the heart. Ave, ave, ave, Maria Ave, ave, ave, Maria. O Virgin, shine as a star in the sky, Motherly defend your faithful children. Ave, ave, ave Maria Ave, ave, ave, Maria.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-our_lady_of_monte_berico"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "model": "gpt-4o-mini-tts",
+        "speed": 1.0,
+        "voice": "alloy"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "our_lady_of_monte_berico",
+      "name": "Our Lady of Monte Berico"
+    },
+    "type": "novena_feast_rule"
+  }
+}

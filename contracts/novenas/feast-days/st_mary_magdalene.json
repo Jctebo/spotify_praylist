@@ -1,0 +1,165 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_mary_magdalene",
+    "feast": {
+      "day": 22,
+      "mode": "fixed",
+      "month": 7,
+      "name": "St. Mary Magdalene"
+    },
+    "id": "st_mary_magdalene",
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Mary Magdalene Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena Pause here to mention your request. and that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. St. Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master, R. That we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Mary Magdalene Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena Pause here to mention your request. and that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. St. Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master, R. That we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena Pause here to mention your request. and that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. St. Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master, R. That we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena Pause here to mention your request. and that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. St. Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master, R. That we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena Pause here to mention your request. and that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. St. Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master, R. That we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena Pause here to mention your request. and that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. St. Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master, R. That we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena Pause here to mention your request. and that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. St. Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master, R. That we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena Pause here to mention your request. and that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. St. Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master, R. That we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena Pause here to mention your request. and that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. St. Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master, R. That we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena Pause here to mention your request. and that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. St. Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master, R. That we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_mary_magdalene"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "model": "gpt-4o-mini-tts",
+        "speed": 1.0,
+        "voice": "alloy"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_mary_magdalene",
+      "name": "St. Mary Magdalene"
+    },
+    "type": "novena_feast_rule"
+  }
+}

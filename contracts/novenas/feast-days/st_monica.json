@@ -1,0 +1,275 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_monica",
+    "feast": {
+      "day": 27,
+      "mode": "fixed",
+      "month": 8,
+      "name": "St. Monica"
+    },
+    "id": "st_monica",
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Monica Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for all God\u2019s people who have left the Church. May the Holy Spirit open their ears and hearts so they may hear this invitation to come home.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for those who were baptized Catholic, but were not blessed with families to guide them to spiritual maturity. May the Holy Spirit guide them back to the Catholic Church.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for those who have been hurt by someone in the Church. May those of us in the Church today be a source of healing.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for those who reject the Church\u2019s God-given teachings. May the Holy Spirit open their hearts and minds to the truth and wisdom of those teachings.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Exemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray."
+              },
+              {
+                "kind": "text",
+                "text": "Today we pray for those whose sins make them feel unworthy to come to God. May they repent with hope and feel the warm embrace of"
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "\u2019s loving forgiveness."
+              },
+              {
+                "kind": "text",
+                "text": "Dear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for all those children who have grown up and, like St. Augustine as a young man, rejected Christ and His Church. May the grace of God and our prayers draw them back to the Church.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for those who are resisting Your call due to pressures from friends and family members. May the Holy Spirit give them strength in their convictions and may the Holy Spirit fill the hearts of their friends and family with love and support.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for those who feel abandoned by God. May they come to see God working in their lives, restore their faith in Him, and come home to His Church.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for those who are ready to come home and just need to be invited. May the Holy Spirit open our hearts and eyes to them that we may be the inviting and welcoming presence they seek.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "fragments": [
+          {
+            "key": "our_father",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Our Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.",
+            "title": "Our Father"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Monica Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for all God\u2019s people who have left the Church. May the Holy Spirit open their ears and hearts so they may hear this invitation to come home.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for those who were baptized Catholic, but were not blessed with families to guide them to spiritual maturity. May the Holy Spirit guide them back to the Catholic Church.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for those who have been hurt by someone in the Church. May those of us in the Church today be a source of healing.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for those who reject the Church\u2019s God-given teachings. May the Holy Spirit open their hearts and minds to the truth and wisdom of those teachings.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for those whose sins make them feel unworthy to come to God. May they repent with hope and feel the warm embrace of\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\n\u2019s loving forgiveness.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for all those children who have grown up and, like St. Augustine as a young man, rejected Christ and His Church. May the grace of God and our prayers draw them back to the Church.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for those who are resisting Your call due to pressures from friends and family members. May the Holy Spirit give them strength in their convictions and may the Holy Spirit fill the hearts of their friends and family with love and support.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for those who feel abandoned by God. May they come to see God working in their lives, restore their faith in Him, and come home to His Church.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nExemplary Mother of the Great Augustine, you perserveringly pursued your wayward son not with wild threats but with prayerful cries to heaven. Intercede for all mothers in our day so that they may learn to draw their children to God. Teach them how to remain close to their children, even the prodigal sons and daughters who have sadly gone astray.\n\nToday we pray for those who are ready to come home and just need to be invited. May the Holy Spirit open our hearts and eyes to them that we may be the inviting and welcoming presence they seek.\n\nDear St Monica, troubled wife and mother, many sorrows pierced your heart during your lifetime. Yet you never despaired or lost faith. With confidence, persistence and profound faith, you prayed daily for the conversion of your beloved husband, Patricius and your beloved son, Augustine. Grant me that same fortitude, patience and trust in the Lord. Intercede for me, dear St. Monica, that God may favorably hear my plea for Pause here to mention your request. And grant me the grace to accept his will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_monica"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "model": "gpt-4o-mini-tts",
+        "speed": 1.0,
+        "voice": "alloy"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_monica",
+      "name": "St. Monica"
+    },
+    "type": "novena_feast_rule"
+  }
+}

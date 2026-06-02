@@ -37,38 +37,74 @@ class TestPublishContracts(unittest.TestCase):
             version=morning_contract.version,
             entry=entry,
             target_date=target_date,
+            season="easter",
         )
         rendered_title = self.mod.render_publish_template(morning_contract.metadata["title_template"], context)
         rendered_description = self.mod.render_publish_template(morning_contract.metadata["description_template"], context)
 
         self.assertEqual(rendered_title, "Morning Prayer - April 6, 2026")
         self.assertIn("April 6, 2026", rendered_description)
+        self.assertEqual(context["season"], "easter")
+        self.assertEqual(context["season_label"], "Easter Season")
         self.assertEqual(context["episode_id"], "morning-prayer-elevenlabs-2026-04-06")
         self.assertEqual(self.mod.derive_episode_id(context=context, template=morning_contract.metadata["episode_id_template"]), "morning-prayer-elevenlabs-2026-04-06")
 
     def test_load_publish_contracts_reads_rewritten_contracts(self):
         contracts = self.mod.load_publish_contracts()
+        contracts_by_id = {contract.contract_id: contract for contract in contracts}
 
-        self.assertEqual([contract.contract_id for contract in contracts], ["morning-prayer-elevenlabs", "rosary"])
-        self.assertEqual([contract.frequency for contract in contracts], ["daily", "daily"])
-        self.assertEqual(contracts[0].entries[0]["entry_id"], "morning-prayer-elevenlabs")
-        self.assertEqual(contracts[1].entries[0]["entry_id"], "rosary")
-        self.assertTrue(contracts[0].entries[0]["audio_config"]["enabled"])
-        self.assertTrue(contracts[0].entries[0]["text_config"]["enabled"])
-        self.assertTrue(contracts[0].entries[0]["audio_config"]["enabled"])
-        self.assertEqual(contracts[0].metadata["title_template"], "Morning Prayer - {date:%B %-d, %Y}")
         self.assertEqual(
-            contracts[0].metadata["description_template"],
+            [contract.contract_id for contract in contracts],
+            [
+                "marian-antiphon-angelus",
+                "marian-antiphon-regina-caeli",
+                "morning-prayer-elevenlabs",
+                "rosary",
+            ],
+        )
+        self.assertEqual([contract.frequency for contract in contracts], ["daily", "daily", "daily", "daily"])
+        self.assertEqual(contracts_by_id["marian-antiphon-angelus"].season, "ordinary")
+        self.assertEqual(contracts_by_id["marian-antiphon-regina-caeli"].season, "easter")
+        self.assertEqual(contracts_by_id["marian-antiphon-angelus"].entries[0]["entry_id"], "marian-antiphon-angelus")
+        self.assertEqual(contracts_by_id["marian-antiphon-regina-caeli"].entries[0]["entry_id"], "marian-antiphon-regina-caeli")
+        self.assertFalse(contracts_by_id["marian-antiphon-angelus"].entries[0]["text_config"]["enabled"])
+        self.assertFalse(contracts_by_id["marian-antiphon-regina-caeli"].entries[0]["text_config"]["enabled"])
+        self.assertTrue(contracts_by_id["marian-antiphon-angelus"].entries[0]["audio_config"]["enabled"])
+        self.assertTrue(contracts_by_id["marian-antiphon-regina-caeli"].entries[0]["audio_config"]["enabled"])
+        self.assertTrue(contracts_by_id["morning-prayer-elevenlabs"].entries[0]["text_config"]["enabled"])
+        self.assertEqual(contracts_by_id["morning-prayer-elevenlabs"].metadata["title_template"], "Morning Prayer - {date:%B %-d, %Y}")
+        self.assertEqual(
+            contracts_by_id["morning-prayer-elevenlabs"].metadata["description_template"],
             "Morning Prayer for {date:%B %-d, %Y}. The daily opening block follows the liturgical day and the day's Gospel.",
         )
-        self.assertEqual(contracts[0].entries[0]["audio_config"]["providers"][0]["provider"], "elevenlabs")
-        self.assertEqual(contracts[0].entries[0]["audio_config"]["providers"][0]["voice_id"], "2NfTQuOn6dRQvgKuC2le")
-        self.assertEqual(contracts[0].entries[0]["audio_config"]["providers"][0]["model_id"], "eleven_multilingual_v2")
-        self.assertEqual(contracts[0].entries[0]["audio_config"]["providers"][1]["provider"], "openai")
-        self.assertFalse(contracts[1].entries[0]["audio_config"]["enabled"])
-        self.assertFalse(contracts[0].entries[0]["blocks"][0]["skip_if_missing"])
-        self.assertTrue(contracts[0].metadata["daily_intro"]["allow_missing_gospel"])
-        self.assertNotIn("allow_missing_gospel", contracts[0].entries[0]["blocks"][0])
+        self.assertEqual(
+            contracts_by_id["morning-prayer-elevenlabs"].entries[0]["audio_config"]["providers"][0]["provider"],
+            "elevenlabs",
+        )
+        self.assertEqual(
+            contracts_by_id["morning-prayer-elevenlabs"].entries[0]["audio_config"]["providers"][0]["voice_id"],
+            "2NfTQuOn6dRQvgKuC2le",
+        )
+        self.assertEqual(
+            contracts_by_id["morning-prayer-elevenlabs"].entries[0]["audio_config"]["providers"][0]["model_id"],
+            "eleven_multilingual_v2",
+        )
+        self.assertEqual(
+            contracts_by_id["morning-prayer-elevenlabs"].entries[0]["audio_config"]["providers"][1]["provider"],
+            "openai",
+        )
+        self.assertFalse(contracts_by_id["rosary"].entries[0]["audio_config"]["enabled"])
+        self.assertFalse(contracts_by_id["morning-prayer-elevenlabs"].entries[0]["blocks"][0]["skip_if_missing"])
+        self.assertTrue(contracts_by_id["morning-prayer-elevenlabs"].metadata["daily_intro"]["allow_missing_gospel"])
+        self.assertNotIn("allow_missing_gospel", contracts_by_id["morning-prayer-elevenlabs"].entries[0]["blocks"][0])
+
+    def test_build_audio_jobs_routes_marian_antiphons_by_season(self):
+        contracts = self.mod.load_publish_contracts()
+        easter_jobs = self.mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
+        ordinary_jobs = self.mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 6, 2))
+
+        self.assertEqual({job["entry_id"] for job in easter_jobs}, {"morning-prayer-elevenlabs", "marian-antiphon-regina-caeli"})
+        self.assertEqual({job["entry_id"] for job in ordinary_jobs}, {"morning-prayer-elevenlabs", "marian-antiphon-angelus"})
 
     def test_build_text_jobs_uses_metadata_allow_missing_gospel_when_block_omits_it(self):
         contracts = self.mod.load_publish_contracts()

@@ -12,6 +12,7 @@ from jobs.publish.daily_intro import build_daily_intro_text
 from jobs.publish.formatting import build_publish_context, derive_episode_id, render_publish_template
 from jobs.publish.fragments import audio_manifest_hash
 from jobs.publish.errors import PublishMissingDataError
+from jobs.novena.liturgical_helpers import is_easter_season_for_date
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONTRACT_DIR = ROOT / "config" / "publish" / "contracts"
@@ -41,6 +42,13 @@ DEFAULT_AUDIO_SETTINGS = {
 
 VALID_STATUS_VALUES = {"approved", "skipped"}
 VALID_SELECTOR_VALUES = {"current_calendar_month", "weekday", "date", "entry_id", "title", "contract_id"}
+VALID_SEASON_VALUES = {"easter", "ordinary"}
+SEASON_ALIASES = {
+    "ordinary_time": "ordinary",
+    "ordinary-time": "ordinary",
+    "easter_time": "easter",
+    "easter-time": "easter",
+}
 
 
 class PublishContract(NamedTuple):
@@ -49,6 +57,7 @@ class PublishContract(NamedTuple):
     frequency: str
     timezone: str
     version: str
+    season: str
     notion_target: Dict[str, Any]
     audio_target: Dict[str, Any]
     metadata: Dict[str, Any]
@@ -189,6 +198,26 @@ def _normalize_timezone(value: Any, path: Path) -> str:
     if not timezone:
         raise RuntimeError(f"Publish contract '{path}' is missing required field 'timezone'.")
     return timezone
+
+
+def _normalize_season(value: Any, path: Path) -> str:
+    season = str(value or "").strip().lower().replace(" ", "_").replace("-", "_")
+    if not season:
+        return ""
+    season = SEASON_ALIASES.get(season, season)
+    if season not in VALID_SEASON_VALUES:
+        valid = ", ".join(sorted(VALID_SEASON_VALUES))
+        raise RuntimeError(f"Publish contract '{path}' has invalid 'season' '{season}'. Use one of: {valid}.")
+    return season
+
+
+def _season_label_for_value(season: str) -> str:
+    normalized = str(season or "").strip().lower()
+    if normalized == "easter":
+        return "Easter Season"
+    if normalized == "ordinary":
+        return "Ordinary Time"
+    return ""
 
 
 
@@ -354,6 +383,7 @@ def validate_publish_contract(contract: Dict[str, Any], *, source: str, source_p
     _normalize_frequency(contract_root.get("frequency"), Path(source))
     _normalize_timezone(contract_root.get("timezone"), Path(source))
     _require_text(contract_root, "version", Path(source), "Publish contract")
+    _normalize_season(contract_root.get("season"), Path(source))
     entries = contract.get("entries")
     if not isinstance(entries, list) or not entries:
         raise RuntimeError(f"Invalid publish contract '{source}': missing or empty 'entries' array.")
@@ -454,6 +484,7 @@ def load_publish_contracts(contract_dir: Optional[Path] = None) -> List[PublishC
                 frequency=_normalize_frequency(contract_root.get("frequency"), contract_path),
                 timezone=_normalize_timezone(contract_root.get("timezone"), contract_path),
                 version=_require_text(contract_root, "version", contract_path, "Publish contract"),
+                season=_normalize_season(contract_root.get("season"), contract_path),
                 notion_target=_normalize_target(contract_root),
                 audio_target=_normalize_audio_target(contract_root),
                 metadata=dict(contract_root.get("metadata") or {}),
@@ -473,6 +504,29 @@ def _local_date_for_timezone(timezone: str) -> _dt.date:
     except Exception:
         zone = _dt.timezone.utc
     return _dt.datetime.now(zone).date()
+
+
+def _contract_liturgical_context(contract: PublishContract) -> Tuple[str, str]:
+    metadata = dict(contract.metadata or {})
+    daily_intro = metadata.get("daily_intro")
+    if not isinstance(daily_intro, dict):
+        daily_intro = {}
+    calendar = str(daily_intro.get("calendar") or metadata.get("calendar") or "general_roman").strip() or "general_roman"
+    locale = str(daily_intro.get("locale") or metadata.get("locale") or "en").strip() or "en"
+    return calendar, locale
+
+
+def _contract_matches_target_date(contract: PublishContract, target_date: _dt.date) -> bool:
+    season = str(contract.season or "").strip().lower()
+    if not season:
+        return True
+    calendar, locale = _contract_liturgical_context(contract)
+    is_easter = is_easter_season_for_date(calendar, locale, target_date)
+    if season == "easter":
+        return is_easter
+    if season == "ordinary":
+        return not is_easter
+    return True
 
 
 
@@ -884,6 +938,7 @@ def _render_entry_metadata(
     target_date: Optional[_dt.date] = None,
 ) -> Dict[str, Any]:
     effective_date = target_date or _local_date_for_timezone(contract.timezone)
+    season = str(contract.season or "").strip().lower()
     context = build_publish_context(
         contract_id=contract.contract_id,
         contract_type=contract.contract_type,
@@ -892,7 +947,10 @@ def _render_entry_metadata(
         version=contract.version,
         entry=entry,
         target_date=effective_date,
+        season=season,
     )
+    if season:
+        context["season_label"] = _season_label_for_value(season)
     metadata = dict(contract.metadata or {})
     title_template = str(metadata.get("title_template") or metadata.get("title") or "").strip()
     description_template = str(metadata.get("description_template") or metadata.get("description") or "").strip()
@@ -916,6 +974,8 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
     jobs: List[Dict[str, Any]] = []
     for contract in contracts:
         effective_date = target_date or _local_date_for_timezone(contract.timezone)
+        if not _contract_matches_target_date(contract, effective_date):
+            continue
         for entry in contract.entries:
             if entry.get("status") != "approved":
                 continue
@@ -965,6 +1025,8 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
     jobs: List[Dict[str, Any]] = []
     for contract in contracts:
         effective_date = target_date or _local_date_for_timezone(contract.timezone)
+        if not _contract_matches_target_date(contract, effective_date):
+            continue
         for entry in contract.entries:
             if entry.get("status") != "approved":
                 continue

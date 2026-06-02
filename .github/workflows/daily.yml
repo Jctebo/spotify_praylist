@@ -8,7 +8,9 @@ on:
         required: false
         type: string
   schedule:
-    - cron: "0 7 * * *" # daily 01:00 CST / 02:00 CDT
+    - cron: "0 5 * * *" # daily 05:00 UTC
+    - cron: "0 13 * * *" # daily 13:00 UTC
+    - cron: "0 21 * * *" # daily 21:00 UTC
 
 jobs:
   refresh:

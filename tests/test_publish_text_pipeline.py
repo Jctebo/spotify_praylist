@@ -7,7 +7,7 @@ from tests.test_helpers import load_module
 
 class FakeNotionClient:
     def __init__(self):
-        self.pages = {"Morning Prayer for April 6, 2026": "page-1", "Daily Rosary": "page-2"}
+        self.pages = {"Morning Prayer - April 6, 2026": "page-1", "Daily Rosary": "page-2"}
         self.page_children = {}
         self.page_children["page-1"] = []
         self.page_children["page-2"] = []
@@ -82,7 +82,7 @@ class TestPublishTextPipeline(unittest.TestCase):
         self.assertEqual(first["updated"], 2)
         self.assertEqual(second["created"], 0)
         self.assertEqual(second["updated"], 2)
-        self.assertEqual(set(client.pages.keys()), {"Morning Prayer for April 6, 2026", "Daily Rosary"})
+        self.assertEqual(set(client.pages.keys()), {"Morning Prayer - April 6, 2026", "Daily Rosary"})
         self.assertEqual([_toggle_title(block) for block in client.page_children["page-1"]], [
             "Daily Intro",
             "Opening Prayers",

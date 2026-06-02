@@ -1,0 +1,165 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "14_holy_helpers",
+    "feast": {
+      "day": 8,
+      "mode": "fixed",
+      "month": 8,
+      "name": "14 Holy Helpers"
+    },
+    "id": "14_holy_helpers",
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Fourteen Holy Helpers Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Fourteen Holy Helpers, select friends of God, I honor thee as mighty intercessors, and come with filial confidence to thee in my needs, for the relief of which I have undertaken to make in this novena. Help me by thy intercession to placate God\u2019s divine and just wrath, which I have provoked by my many sins, and aid me in amending my life and doing penance. Because you persevered till death, you gained the crown of eternal life. Remember the dangers that surround us in this vale of tears and intercede for us in all our needs and adversities. Pause here to mention your request.\n\nGreat princes of heaven, Holy Helpers, who sacrificed to God all your earthly possessions, wealth, preferment, and even life, and who now are crowned in heaven in the secure enjoyment of eternal bliss and glory, have compassion on me, a poor sinner in this vale of tears, and obtain for me from God, for Whom you gave up all things and Who loves you as His servants, the strength to bear patiently all the trials of this life, to overcome all temptations, and to persevere in God\u2019s service to the end, that one day I too may be received into your company, to praise and glorify Him, the supreme Lord, Whose beatific vision you enjoy, and Whom you praise and glorify forever. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Fourteen Holy Helpers Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Fourteen Holy Helpers, select friends of God, I honor thee as mighty intercessors, and come with filial confidence to thee in my needs, for the relief of which I have undertaken to make in this novena. Help me by thy intercession to placate God\u2019s divine and just wrath, which I have provoked by my many sins, and aid me in amending my life and doing penance. Because you persevered till death, you gained the crown of eternal life. Remember the dangers that surround us in this vale of tears and intercede for us in all our needs and adversities. Pause here to mention your request.\n\nGreat princes of heaven, Holy Helpers, who sacrificed to God all your earthly possessions, wealth, preferment, and even life, and who now are crowned in heaven in the secure enjoyment of eternal bliss and glory, have compassion on me, a poor sinner in this vale of tears, and obtain for me from God, for Whom you gave up all things and Who loves you as His servants, the strength to bear patiently all the trials of this life, to overcome all temptations, and to persevere in God\u2019s service to the end, that one day I too may be received into your company, to praise and glorify Him, the supreme Lord, Whose beatific vision you enjoy, and Whom you praise and glorify forever. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Fourteen Holy Helpers, select friends of God, I honor thee as mighty intercessors, and come with filial confidence to thee in my needs, for the relief of which I have undertaken to make in this novena. Help me by thy intercession to placate God\u2019s divine and just wrath, which I have provoked by my many sins, and aid me in amending my life and doing penance. Because you persevered till death, you gained the crown of eternal life. Remember the dangers that surround us in this vale of tears and intercede for us in all our needs and adversities. Pause here to mention your request.\n\nGreat princes of heaven, Holy Helpers, who sacrificed to God all your earthly possessions, wealth, preferment, and even life, and who now are crowned in heaven in the secure enjoyment of eternal bliss and glory, have compassion on me, a poor sinner in this vale of tears, and obtain for me from God, for Whom you gave up all things and Who loves you as His servants, the strength to bear patiently all the trials of this life, to overcome all temptations, and to persevere in God\u2019s service to the end, that one day I too may be received into your company, to praise and glorify Him, the supreme Lord, Whose beatific vision you enjoy, and Whom you praise and glorify forever. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Fourteen Holy Helpers, select friends of God, I honor thee as mighty intercessors, and come with filial confidence to thee in my needs, for the relief of which I have undertaken to make in this novena. Help me by thy intercession to placate God\u2019s divine and just wrath, which I have provoked by my many sins, and aid me in amending my life and doing penance. Because you persevered till death, you gained the crown of eternal life. Remember the dangers that surround us in this vale of tears and intercede for us in all our needs and adversities. Pause here to mention your request.\n\nGreat princes of heaven, Holy Helpers, who sacrificed to God all your earthly possessions, wealth, preferment, and even life, and who now are crowned in heaven in the secure enjoyment of eternal bliss and glory, have compassion on me, a poor sinner in this vale of tears, and obtain for me from God, for Whom you gave up all things and Who loves you as His servants, the strength to bear patiently all the trials of this life, to overcome all temptations, and to persevere in God\u2019s service to the end, that one day I too may be received into your company, to praise and glorify Him, the supreme Lord, Whose beatific vision you enjoy, and Whom you praise and glorify forever. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Fourteen Holy Helpers, select friends of God, I honor thee as mighty intercessors, and come with filial confidence to thee in my needs, for the relief of which I have undertaken to make in this novena. Help me by thy intercession to placate God\u2019s divine and just wrath, which I have provoked by my many sins, and aid me in amending my life and doing penance. Because you persevered till death, you gained the crown of eternal life. Remember the dangers that surround us in this vale of tears and intercede for us in all our needs and adversities. Pause here to mention your request.\n\nGreat princes of heaven, Holy Helpers, who sacrificed to God all your earthly possessions, wealth, preferment, and even life, and who now are crowned in heaven in the secure enjoyment of eternal bliss and glory, have compassion on me, a poor sinner in this vale of tears, and obtain for me from God, for Whom you gave up all things and Who loves you as His servants, the strength to bear patiently all the trials of this life, to overcome all temptations, and to persevere in God\u2019s service to the end, that one day I too may be received into your company, to praise and glorify Him, the supreme Lord, Whose beatific vision you enjoy, and Whom you praise and glorify forever. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Fourteen Holy Helpers, select friends of God, I honor thee as mighty intercessors, and come with filial confidence to thee in my needs, for the relief of which I have undertaken to make in this novena. Help me by thy intercession to placate God\u2019s divine and just wrath, which I have provoked by my many sins, and aid me in amending my life and doing penance. Because you persevered till death, you gained the crown of eternal life. Remember the dangers that surround us in this vale of tears and intercede for us in all our needs and adversities. Pause here to mention your request.\n\nGreat princes of heaven, Holy Helpers, who sacrificed to God all your earthly possessions, wealth, preferment, and even life, and who now are crowned in heaven in the secure enjoyment of eternal bliss and glory, have compassion on me, a poor sinner in this vale of tears, and obtain for me from God, for Whom you gave up all things and Who loves you as His servants, the strength to bear patiently all the trials of this life, to overcome all temptations, and to persevere in God\u2019s service to the end, that one day I too may be received into your company, to praise and glorify Him, the supreme Lord, Whose beatific vision you enjoy, and Whom you praise and glorify forever. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Fourteen Holy Helpers, select friends of God, I honor thee as mighty intercessors, and come with filial confidence to thee in my needs, for the relief of which I have undertaken to make in this novena. Help me by thy intercession to placate God\u2019s divine and just wrath, which I have provoked by my many sins, and aid me in amending my life and doing penance. Because you persevered till death, you gained the crown of eternal life. Remember the dangers that surround us in this vale of tears and intercede for us in all our needs and adversities. Pause here to mention your request.\n\nGreat princes of heaven, Holy Helpers, who sacrificed to God all your earthly possessions, wealth, preferment, and even life, and who now are crowned in heaven in the secure enjoyment of eternal bliss and glory, have compassion on me, a poor sinner in this vale of tears, and obtain for me from God, for Whom you gave up all things and Who loves you as His servants, the strength to bear patiently all the trials of this life, to overcome all temptations, and to persevere in God\u2019s service to the end, that one day I too may be received into your company, to praise and glorify Him, the supreme Lord, Whose beatific vision you enjoy, and Whom you praise and glorify forever. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Fourteen Holy Helpers, select friends of God, I honor thee as mighty intercessors, and come with filial confidence to thee in my needs, for the relief of which I have undertaken to make in this novena. Help me by thy intercession to placate God\u2019s divine and just wrath, which I have provoked by my many sins, and aid me in amending my life and doing penance. Because you persevered till death, you gained the crown of eternal life. Remember the dangers that surround us in this vale of tears and intercede for us in all our needs and adversities. Pause here to mention your request.\n\nGreat princes of heaven, Holy Helpers, who sacrificed to God all your earthly possessions, wealth, preferment, and even life, and who now are crowned in heaven in the secure enjoyment of eternal bliss and glory, have compassion on me, a poor sinner in this vale of tears, and obtain for me from God, for Whom you gave up all things and Who loves you as His servants, the strength to bear patiently all the trials of this life, to overcome all temptations, and to persevere in God\u2019s service to the end, that one day I too may be received into your company, to praise and glorify Him, the supreme Lord, Whose beatific vision you enjoy, and Whom you praise and glorify forever. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Fourteen Holy Helpers, select friends of God, I honor thee as mighty intercessors, and come with filial confidence to thee in my needs, for the relief of which I have undertaken to make in this novena. Help me by thy intercession to placate God\u2019s divine and just wrath, which I have provoked by my many sins, and aid me in amending my life and doing penance. Because you persevered till death, you gained the crown of eternal life. Remember the dangers that surround us in this vale of tears and intercede for us in all our needs and adversities. Pause here to mention your request.\n\nGreat princes of heaven, Holy Helpers, who sacrificed to God all your earthly possessions, wealth, preferment, and even life, and who now are crowned in heaven in the secure enjoyment of eternal bliss and glory, have compassion on me, a poor sinner in this vale of tears, and obtain for me from God, for Whom you gave up all things and Who loves you as His servants, the strength to bear patiently all the trials of this life, to overcome all temptations, and to persevere in God\u2019s service to the end, that one day I too may be received into your company, to praise and glorify Him, the supreme Lord, Whose beatific vision you enjoy, and Whom you praise and glorify forever. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Fourteen Holy Helpers, select friends of God, I honor thee as mighty intercessors, and come with filial confidence to thee in my needs, for the relief of which I have undertaken to make in this novena. Help me by thy intercession to placate God\u2019s divine and just wrath, which I have provoked by my many sins, and aid me in amending my life and doing penance. Because you persevered till death, you gained the crown of eternal life. Remember the dangers that surround us in this vale of tears and intercede for us in all our needs and adversities. Pause here to mention your request.\n\nGreat princes of heaven, Holy Helpers, who sacrificed to God all your earthly possessions, wealth, preferment, and even life, and who now are crowned in heaven in the secure enjoyment of eternal bliss and glory, have compassion on me, a poor sinner in this vale of tears, and obtain for me from God, for Whom you gave up all things and Who loves you as His servants, the strength to bear patiently all the trials of this life, to overcome all temptations, and to persevere in God\u2019s service to the end, that one day I too may be received into your company, to praise and glorify Him, the supreme Lord, Whose beatific vision you enjoy, and Whom you praise and glorify forever. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-14_holy_helpers"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "model": "gpt-4o-mini-tts",
+        "speed": 1.0,
+        "voice": "alloy"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "14_holy_helpers",
+      "name": "14 Holy Helpers"
+    },
+    "type": "novena_feast_rule"
+  }
+}
