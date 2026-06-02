@@ -7,7 +7,7 @@
     "version": "1",
     "season": "easter",
     "metadata": {
-      "title_template": "Regina Caeli - {date_display}",
+      "title_template": "Marian Antiphon - Regina Caeli - {date_display}",
       "description_template": "Regina Caeli for {date_display} during {season_label}. The daily intro announces the day, then the prayer begins with the sign of the cross.",
       "episode_id_template": "marian-antiphon-regina-caeli-{date_iso}",
       "daily_intro": {

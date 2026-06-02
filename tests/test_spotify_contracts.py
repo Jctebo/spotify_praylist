@@ -225,6 +225,7 @@ class TestSpotifyContracts(unittest.TestCase):
         lookup = contracts["daily-novenas"].spotify_episode_lookup
         self.assertIsNotNone(lookup)
         self.assertEqual(lookup.show_id, "4PNxb0OazrkcEp3FAggRoD")
+        self.assertEqual(len(lookup.searches), 1)
         self.assertEqual(lookup.required_name_terms, ("novena",))
         self.assertEqual(
             lookup.date_formats,
@@ -259,8 +260,132 @@ class TestSpotifyContracts(unittest.TestCase):
         lookup = {contract.key: contract for contract in contracts}["lookup"].spotify_episode_lookup
         self.assertIsNotNone(lookup)
         self.assertEqual(lookup.show_id, "show_123")
+        self.assertEqual(len(lookup.searches), 1)
         self.assertEqual(lookup.required_name_terms, ("Morning Prayer", "April"))
         self.assertEqual(lookup.date_formats, ("{month_name} {day}, {year}",))
+
+    def test_load_spotify_queue_contracts_accepts_ordered_episode_lookup_searches(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            contract_dir = Path(tmpdir)
+            _write_json(
+                contract_dir / "lookup.json",
+                {
+                    "key": "lookup",
+                    "notion_name": "Lookup",
+                    "spotify_episode_lookup": {
+                        "show_id": "show_123",
+                        "searches": [
+                            {
+                                "required_name_terms": ["Marian Antiphon"],
+                                "date_formats": ["{month_name} {day}, {year}"],
+                            },
+                            {
+                                "required_name_terms": ["Angelus"],
+                                "date_formats": ["{month_short}. {day}, {year}"],
+                            },
+                        ],
+                    },
+                },
+            )
+
+            contracts = self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
+
+        lookup = {contract.key: contract for contract in contracts}["lookup"].spotify_episode_lookup
+        self.assertIsNotNone(lookup)
+        self.assertEqual(lookup.show_id, "show_123")
+        self.assertEqual(
+            lookup.searches,
+            (
+                self.mod.SpotifyEpisodeLookupSearch(
+                    required_name_terms=("Marian Antiphon",),
+                    date_formats=("{month_name} {day}, {year}",),
+                ),
+                self.mod.SpotifyEpisodeLookupSearch(
+                    required_name_terms=("Angelus",),
+                    date_formats=("{month_short}. {day}, {year}",),
+                ),
+            ),
+        )
+        self.assertEqual(lookup.required_name_terms, ("Marian Antiphon",))
+        self.assertEqual(lookup.date_formats, ("{month_name} {day}, {year}",))
+
+    def test_load_spotify_queue_contracts_rejects_invalid_episode_lookup_searches(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            contract_dir = Path(tmpdir)
+            _write_json(
+                contract_dir / "broken.json",
+                {
+                    "key": "broken",
+                    "notion_name": "Broken",
+                    "spotify_episode_lookup": {
+                        "show_id": "show_123",
+                        "searches": [],
+                    },
+                },
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "non-empty 'searches'"):
+                self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            contract_dir = Path(tmpdir)
+            _write_json(
+                contract_dir / "broken.json",
+                {
+                    "key": "broken",
+                    "notion_name": "Broken",
+                    "spotify_episode_lookup": {
+                        "show_id": "show_123",
+                        "required_name_terms": ["Marian Antiphon"],
+                        "date_formats": ["{month_name} {day}, {year}"],
+                        "searches": [
+                            {
+                                "required_name_terms": ["Angelus"],
+                                "date_formats": ["{month_name} {day}, {year}"],
+                            }
+                        ],
+                    },
+                },
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "cannot mix 'searches'"):
+                self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            contract_dir = Path(tmpdir)
+            _write_json(
+                contract_dir / "broken.json",
+                {
+                    "key": "broken",
+                    "notion_name": "Broken",
+                    "spotify_episode_lookup": {
+                        "show_id": "show_123",
+                        "searches": [
+                            {
+                                "required_name_terms": [],
+                                "date_formats": ["{month_name} {day}, {year}"],
+                            }
+                        ],
+                    },
+                },
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "required_name_terms"):
+                self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
+
+    def test_load_spotify_queue_contracts_includes_angelus_lookup_contracts(self):
+        contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
+
+        for key in ("angelus-morning", "angelus-midday", "angelus-evening"):
+            lookup = contracts[key].spotify_episode_lookup
+            self.assertIsNotNone(lookup)
+            self.assertEqual(lookup.show_id, "4PNxb0OazrkcEp3FAggRoD")
+            self.assertEqual(contracts[key].spotify_url_normal, "")
+            self.assertEqual(contracts[key].spotify_uri_easter, "")
+            self.assertEqual(
+                [search.required_name_terms for search in lookup.searches],
+                [("Marian Antiphon",), ("Angelus",), ("Regina Caeli",)],
+            )
 
     def test_load_spotify_queue_contracts_includes_daily_examen_episode_contract(self):
         contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}

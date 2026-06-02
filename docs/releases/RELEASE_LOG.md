@@ -1,5 +1,16 @@
 # Release Log
 
+## [0.3.2.4] - 2026-06-02
+
+### Added
+- Added ordered `spotify_episode_lookup.searches` support so a Spotify queue contract can try multiple title/date search profiles and stop at the first successful match.
+- Added regression coverage for ordered lookup validation, first-success resolver behavior, checked-in Angelus contract resolution, and Marian Antiphon publish title output.
+
+### Changed
+- Migrated the three Angelus Spotify contracts to resolve the daily Ora Pro Nobis Marian Antiphon episode instead of fixed seasonal Spotify URIs.
+- Updated future Angelus and Regina Caeli publish-audio titles to include `Marian Antiphon`, giving the Spotify resolver one durable title marker across both seasons.
+- Updated README guidance for ordered Spotify episode lookup searches and the new Ora Pro Nobis Marian Antiphon contract behavior.
+
 ## [0.3.2.3] - 2026-06-02
 
 ### Added

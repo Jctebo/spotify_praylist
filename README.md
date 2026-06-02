@@ -40,7 +40,7 @@ Optional variables:
 - publish audio caches leaf fragments under `.cache/publish_audio/` so unchanged spoken blocks can be reused across reruns, and GitHub Actions persists that cache across workflow runs
 - publish audio writes one JSON sidecar per episode under `docs/audio/`, and reruns now rebuild the feed from the local `docs/audio/` archive snapshot rather than the remote published feed
 - the publish workflow also writes `docs/audio/index.html` and `docs/audio/index.json` so GitHub Pages exposes a browsable archive dashboard alongside the feed
-- Marian Antiphon publish audio contracts are season-gated: the ordinary-season Angelus contract and the Easter-season Regina Caeli contract each render their own daily episode while reusing the shared daily intro and sign-of-cross templates
+- Marian Antiphon publish audio contracts are season-gated: the ordinary-season Angelus contract and the Easter-season Regina Caeli contract each render their own daily episode while reusing the shared daily intro and sign-of-cross templates; both episode titles include `Marian Antiphon` so Spotify lookup can target one durable title marker across seasons
 - `scripts/run_morning_prayer_elevenlabs_local.py`: step-by-step local smoke helper that loads `config/local/elevenlabs.env`, renders only the Morning Prayer ElevenLabs variant, and writes local feed/archive artifacts under `artifacts/local/elevenlabs/`
 - `ELEVENLABS_API_KEY` for the Morning Prayer ElevenLabs variant in local runs or GitHub Actions
 - `config/publish/images/logo_ora_pro_nobis.png`: podcast cover art copied into the published `docs/images/` tree
@@ -76,7 +76,7 @@ Optional variables:
 ## Files
 - `jobs/playlist/refresh_playlist.py`: active Spotify refresh runtime with Notion-owned membership/order
 - `jobs/playlist/spotify_contracts.py`: loader and validation for `config/spotify/contracts/*.json` and `config/spotify/playlists/*.json`
-- `config/spotify/contracts/*.json`: one resolver-backed, fixed-URI, or `spotify_episode_lookup` queue contract per file, plus the three Marian Antiphon seasonal contracts
+- `config/spotify/contracts/*.json`: one resolver-backed, fixed-URI, or `spotify_episode_lookup` queue contract per file; the three Marian Antiphon Spotify contracts resolve the daily Ora Pro Nobis episode through ordered lookup searches
 - `config/spotify/playlists/*.json`: thin playlist definitions with playlist identity only
 - `config/legacy/playlist_config.json`: legacy reference config kept off the active runtime path
 - `config/custom_tts/morning-prayer.json`: canonical Morning Prayer custom TTS contract for the active page-audio surface
@@ -102,18 +102,20 @@ Queue contract files in `config/spotify/contracts/` own:
 - `key`
 - `notion_name`, the exact Notion row title used for membership matching
 - exactly one of `resolver` or `spotify_uri` for ordinary contracts
-- `spotify_episode_lookup` for date-scoped podcast episode matching by show id, required name terms, and ordered date formats
+- `spotify_episode_lookup` for date-scoped podcast episode matching by show id, required name terms, ordered date formats, and optional ordered search profiles
 - resolver names are exact; the runtime does not rewrite legacy alias names before dispatch
-- the three Marian Antiphon contracts are the seasonal exception: morning and evening use the singing Angelus track, midday uses the spoken Angelus episode, and all three switch to Regina Caeli during Easter; the runtime normalizes those Spotify values into queue-safe `spotify:` URIs
+- the three Marian Antiphon contracts target the Ora Pro Nobis show and try `Marian Antiphon` first, then legacy `Angelus` and `Regina Caeli` title searches for transition coverage
 - optional `fallback_resolver`
 - optional `weekdays`
 
 `spotify_episode_lookup` contracts:
 - own the Spotify show id directly in the contract file
 - match episode `name` only
-- require every configured name term to be present
-- try the configured date formats in order until one matches the episode title
-- return every matching episode URI for the day
+- support the flat `required_name_terms` plus `date_formats` shape for one search
+- support `searches` for multiple ordered searches, each with its own `required_name_terms` and `date_formats`
+- require every configured name term in the active search to be present
+- try the active search's configured date formats in order until one matches the episode title
+- stop at the first search that returns matches, then return every matching episode URI for the day
 
 Playlist definition files in `config/spotify/playlists/` own:
 - `key`
@@ -186,8 +188,8 @@ Expected behavior:
 - refreshes the Spotify access token each run
 - loads and validates playlist definitions, queue contracts, and Notion membership before touching Spotify
 - applies contract-level weekday gating such as Sunday-only or Friday-only items
-- resolves each contract through its explicit `resolver` or `spotify_uri`, with Marian Antiphon switching between `spotify_url_normal` and `spotify_uri_easter` during Easter season
-- resolves `spotify_episode_lookup` contracts by matching the show id, required name terms, and configured date variants against Spotify episode titles
+- resolves each contract through its explicit `resolver`, `spotify_uri`, or `spotify_episode_lookup`
+- resolves `spotify_episode_lookup` contracts by matching the show id, ordered search profiles, required name terms, and configured date variants against Spotify episode titles
 - replaces each selected playlist contents with the resolved queue
 - prints one summary per playlist: `playlist`, `playlist_id`, and `tracks_written`, plus `source=notion_membership`
 - exits non-zero on invalid contracts, invalid playlist definitions, missing Notion access, invalid single-playlist overrides, or unresolved selected runs

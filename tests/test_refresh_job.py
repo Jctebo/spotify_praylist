@@ -1091,11 +1091,122 @@ class TestRefreshJob(unittest.TestCase):
         sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
         sp.next.assert_called_once()
 
+    def test_spotify_episode_lookup_search_uris_uses_first_successful_search(self):
+        sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Marian Antiphon - Angelus - April 28, 2026",
+                    "uri": "spotify:episode:primary",
+                },
+                {
+                    "name": "Angelus - April 28, 2026",
+                    "uri": "spotify:episode:fallback",
+                },
+            ]
+        }
+
+        uris = self.mod.spotify_episode_lookup_search_uris(
+            sp,
+            "show_new",
+            (
+                self.mod.SpotifyEpisodeLookupSearch(
+                    required_name_terms=("Marian Antiphon",),
+                    date_formats=("{month_name} {day}, {year}",),
+                ),
+                self.mod.SpotifyEpisodeLookupSearch(
+                    required_name_terms=("Angelus",),
+                    date_formats=("{month_name} {day}, {year}",),
+                ),
+            ),
+            datetime.date(2026, 4, 28),
+        )
+
+        self.assertEqual(uris, ["spotify:episode:primary"])
+        sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
+        sp.next.assert_not_called()
+
+    def test_spotify_episode_lookup_search_uris_falls_back_in_order(self):
+        sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Angelus - April 28, 2026",
+                    "uri": "spotify:episode:angelus",
+                },
+                {
+                    "name": "Regina Caeli - April 28, 2026",
+                    "uri": "spotify:episode:regina-caeli",
+                },
+            ]
+        }
+
+        uris = self.mod.spotify_episode_lookup_search_uris(
+            sp,
+            "show_new",
+            (
+                self.mod.SpotifyEpisodeLookupSearch(
+                    required_name_terms=("Marian Antiphon",),
+                    date_formats=("{month_name} {day}, {year}",),
+                ),
+                self.mod.SpotifyEpisodeLookupSearch(
+                    required_name_terms=("Angelus",),
+                    date_formats=("{month_name} {day}, {year}",),
+                ),
+                self.mod.SpotifyEpisodeLookupSearch(
+                    required_name_terms=("Regina Caeli",),
+                    date_formats=("{month_name} {day}, {year}",),
+                ),
+            ),
+            datetime.date(2026, 4, 28),
+        )
+
+        self.assertEqual(uris, ["spotify:episode:angelus"])
+        sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
+
+    def test_spotify_episode_lookup_search_uris_does_not_merge_later_searches(self):
+        sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Angelus - April 28, 2026",
+                    "uri": "spotify:episode:angelus",
+                },
+                {
+                    "name": "Regina Caeli - April 28, 2026",
+                    "uri": "spotify:episode:regina-caeli",
+                },
+            ]
+        }
+
+        uris = self.mod.spotify_episode_lookup_search_uris(
+            sp,
+            "show_new",
+            (
+                self.mod.SpotifyEpisodeLookupSearch(
+                    required_name_terms=("Angelus",),
+                    date_formats=("{month_name} {day}, {year}",),
+                ),
+                self.mod.SpotifyEpisodeLookupSearch(
+                    required_name_terms=("Regina Caeli",),
+                    date_formats=("{month_name} {day}, {year}",),
+                ),
+            ),
+            datetime.date(2026, 4, 28),
+        )
+
+        self.assertEqual(uris, ["spotify:episode:angelus"])
+        sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
+
     def test_resolve_contract_uris_uses_spotify_episode_lookup(self):
-        lookup = SimpleNamespace(
+        lookup = self.mod.SpotifyEpisodeLookupContract(
             show_id="show_new",
-            required_name_terms=("Morning Prayer",),
-            date_formats=("{month_name} {day}, {year}",),
+            searches=(
+                self.mod.SpotifyEpisodeLookupSearch(
+                    required_name_terms=("Morning Prayer",),
+                    date_formats=("{month_name} {day}, {year}",),
+                ),
+            ),
         )
         contract = _queue_contract(
             self.mod,
