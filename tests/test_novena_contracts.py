@@ -92,6 +92,15 @@ class TestNovenaContracts(unittest.TestCase):
         self.assertEqual([part.get("repeat", 1) for part in fragment_parts], [1, 1, 7])
         self.assertIn("Glory be to the Father SEVEN TIMES.", [part["text"] for part in block.parts if part.get("kind") == "text"])
 
+    def test_load_novena_contracts_has_unique_feast_day_contract_ids(self):
+        contracts = self.contracts_mod.load_novena_contracts()
+        contract_ids = [contract.contract_id for contract in contracts if contract.enabled]
+
+        self.assertEqual(len(contract_ids), len(set(contract_ids)))
+        self.assertIn("pentecost_sunday", contract_ids)
+        self.assertIn("sacred_heart_of_jesus", contract_ids)
+        self.assertIn("immaculate_heart_of_mary", contract_ids)
+
     def test_load_novena_contracts_defaults_enabled_when_missing(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
