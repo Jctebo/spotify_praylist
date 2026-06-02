@@ -517,7 +517,7 @@ class TestNovenaContracts(unittest.TestCase):
         self.assertNotIn("feast", payload["contract"])
         self.assertEqual(payload["contract"]["selector"]["mode"], "auto")
         self.assertEqual(output_path.name, "standard_9_day.json")
-        self.assertTrue(str(output_path).endswith("contracts/novenas/families/standard_9_day.json"))
+        self.assertTrue(output_path.as_posix().endswith("contracts/novenas/families/standard_9_day.json"))
 
     def test_helper_script_writes_expected_filename(self):
         args = argparse.Namespace(
@@ -547,7 +547,7 @@ class TestNovenaContracts(unittest.TestCase):
         output_path = self.script_mod._default_output_path(args, payload)
 
         self.assertEqual(output_path.name, "most_sacred_heart_of_jesus.json")
-        self.assertTrue(str(output_path).endswith("contracts/novenas/feast-days/most_sacred_heart_of_jesus.json"))
+        self.assertTrue(output_path.as_posix().endswith("contracts/novenas/feast-days/most_sacred_heart_of_jesus.json"))
 
     def test_validate_novena_contract_rejects_mode_mismatch(self):
         with tempfile.TemporaryDirectory() as tmpdir:

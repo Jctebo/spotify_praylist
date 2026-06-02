@@ -182,3 +182,34 @@ class TestPublishDailyIntro(unittest.TestCase):
             resolved,
             ("local-test-key", "https://example.invalid/v1", "gpt-local-mini"),
         )
+
+
+class TestLiturgicalAnnouncement(unittest.TestCase):
+    def setUp(self):
+        self.mod = load_module("jobs/publish/liturgical_announcement.py")
+
+    def test_build_liturgical_announcement_text_is_deterministic(self):
+        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [
+            {"name": "Saint Example", "season": "ordinary_time"},
+            {"name": "Saint Optional"},
+        ]
+
+        text = self.mod.build_liturgical_announcement_text(
+            datetime.date(2026, 6, 2),
+            calendar="general_roman",
+            locale="en",
+            include_season=True,
+        )
+
+        self.assertEqual(
+            text,
+            "Today is Tuesday, June 2, 2026. Today the Church celebrates Saint Example and Saint Optional. Liturgical season: Ordinary Time.",
+        )
+
+    def test_build_liturgical_announcement_text_rejects_missing_rows(self):
+        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: []
+
+        with self.assertRaises(self.mod.DailyIntroMissingDataError) as ctx:
+            self.mod.build_liturgical_announcement_text(datetime.date(2026, 6, 2))
+
+        self.assertIn("Romcal returned no celebrations", str(ctx.exception))

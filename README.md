@@ -27,8 +27,10 @@ Optional variables:
 ## Publish Pipelines
 ### Text
 - `jobs/publish/run_text_pipeline.py`: contract-driven Notion text publication for `config/publish/contracts/*.json`
-- `config/publish/contracts/*.json`: shared Morning Prayer, Marian Antiphon, and Rosary publish contracts with a single entry-based schema
+- `config/publish/contracts/*.json`: shared Morning Prayer, Auxilium Christianorum, Marian Antiphon, and Rosary publish contracts with a single entry-based schema
 - `config/publish/templates/...`: reusable prayer text assets and Rosary mystery text assets referenced by the contracts
+- `config/publish/contracts/auxilium-christianorum.json`: Ora Pro Nobis Auxilium Christianorum lay-member daily episode contract built from reusable prayer templates and a weekday-specific prayer map
+- `config/publish/templates/auxilium-christianorum/*.txt`: source-attributed lay-member Auxilium Christianorum prayer templates from the official daily prayer PDF; priest-only prayers are intentionally excluded
 - `jobs/notion/generate_page_audio.py`: archived page-audio runtime retained only for older Morning Prayer workflows
 - `NOTION_PUBLISH_DATABASE_ID` or `NOTION_DATABASE_NAME` for the new publish-text Notion target, which upserts page titles on the `Opus Dei` database and writes the prayer text into the page body
 - For local OpenAI runs, copy `config/local/openai.env.example` to `config/local/openai.env` and fill in `OPENAI_API_KEY`; the publish-text helper will read that file automatically, and you can override the path with `OPENAI_API_KEY_FILE`
@@ -38,8 +40,9 @@ Optional variables:
 - `jobs/publish/run_audio_pipeline.py`: contract-driven audio publication that writes date-scoped `docs/audio/<episode_id>.mp3` files and refreshes `docs/podcast.xml`
 - `jobs/publish/fragments.py`: fragment cache and ffmpeg assembly helpers used by the publish audio path
 - publish audio caches leaf fragments under `.cache/publish_audio/` so unchanged spoken blocks can be reused across reruns, and GitHub Actions persists that cache across workflow runs
-- publish audio writes one JSON sidecar per episode under `docs/audio/`, and reruns now rebuild the feed from the local `docs/audio/` archive snapshot rather than the remote published feed
+- publish audio writes one JSON sidecar per episode under `docs/audio/`, including ordered `resume_markers` for fragment-level resume/bookmark surfaces; reruns now rebuild the feed from the local `docs/audio/` archive snapshot rather than the remote published feed
 - the publish workflow also writes `docs/audio/index.html` and `docs/audio/index.json` so GitHub Pages exposes a browsable archive dashboard alongside the feed
+- Auxilium Christianorum publishes as its own daily Ora Pro Nobis episode with a deterministic liturgical announcement, the lay-member every-day prayers, the correct weekday prayer, the Litany of the Most Precious Blood, and the daily conclusion
 - Marian Antiphon publish audio contracts are season-gated: the ordinary-season Angelus contract and the Easter-season Regina Caeli contract each render their own daily episode while reusing the shared daily intro and sign-of-cross templates; both episode titles include `Marian Antiphon` so Spotify lookup can target one durable title marker across seasons
 - `scripts/run_morning_prayer_elevenlabs_local.py`: step-by-step local smoke helper that loads `config/local/elevenlabs.env`, renders only the Morning Prayer ElevenLabs variant, and writes local feed/archive artifacts under `artifacts/local/elevenlabs/`
 - `ELEVENLABS_API_KEY` for the Morning Prayer ElevenLabs variant in local runs or GitHub Actions
@@ -82,6 +85,7 @@ Optional variables:
 - `config/custom_tts/morning-prayer.json`: canonical Morning Prayer custom TTS contract for the active page-audio surface
 - `config/legacy/page_audio/*.json`, `config/legacy/rosary.json`, and `config/legacy/auxilium_daily_text.json`: discontinued top-level page-audio contracts retained only as archives; the active runtime no longer loads them
 - `jobs/publish/*.py`: new generic publish boundary for Notion text and GitHub Pages audio outputs
+- `jobs/publish/liturgical_announcement.py`: deterministic Romcal-backed liturgical/date announcement block used by Auxilium Christianorum without requiring OpenAI or Gospel text
 - `jobs/publish/fragments.py`: fragment-level cache and assembly helpers for publish audio
 - `scripts/setup_spotify.ps1`: Spotify credential wizard that also updates `config/spotify/playlists/*.json`
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` with optional single-playlist targeting
@@ -116,6 +120,8 @@ Queue contract files in `config/spotify/contracts/` own:
 - require every configured name term in the active search to be present
 - try the active search's configured date formats in order until one matches the episode title
 - stop at the first search that returns matches, then return every matching episode URI for the day
+
+Auxilium Christianorum Spotify playlist integration remains on the existing Spotify queue contract and legacy resolver in this release. The generated Ora Pro Nobis daily episode is published first; moving `config/spotify/contracts/auxilium-christianorum.json` to date-scoped episode lookup is deferred until the generated titles and sidecars have settled.
 
 Playlist definition files in `config/spotify/playlists/` own:
 - `key`

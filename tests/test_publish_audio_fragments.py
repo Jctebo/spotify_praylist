@@ -17,6 +17,10 @@ class TestPublishAudioFragments(unittest.TestCase):
             "Today the Church celebrates Saint Example. Praise be to God for his mercy. "
             "In today's Gospel, Jesus calls his sheep by name."
         )
+        self.contracts_mod.build_liturgical_announcement_text = lambda date_value, **kwargs: (
+            f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "
+            "Today the Church celebrates Saint Example."
+        )
 
     def test_expand_audio_fragments_preserves_order_and_selector_resolution(self):
         contracts = self.contracts_mod.load_publish_contracts()

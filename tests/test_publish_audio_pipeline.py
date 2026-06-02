@@ -24,8 +24,14 @@ class TestPublishAudioPipeline(unittest.TestCase):
             "Today the Church celebrates Saint Example. Praise be to God for his mercy. "
             "In today's Gospel, Jesus calls his sheep by name."
         )
+        announcement_stub = lambda date_value, **kwargs: (
+            f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "
+            "Today the Church celebrates Saint Example."
+        )
         self.contracts_mod.build_daily_intro_text = stub
         package_contracts.build_daily_intro_text = stub
+        self.contracts_mod.build_liturgical_announcement_text = announcement_stub
+        package_contracts.build_liturgical_announcement_text = announcement_stub
 
     def _normalize(self, text):
         return " ".join(str(text or "").split())
@@ -44,14 +50,18 @@ class TestPublishAudioPipeline(unittest.TestCase):
         contracts = self.contracts_mod.load_publish_contracts()
         jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
 
-        self.assertEqual(len(jobs), 2)
-        self.assertEqual({job["entry_id"] for job in jobs}, {"morning-prayer-elevenlabs", "marian-antiphon-regina-caeli"})
+        self.assertEqual(len(jobs), 3)
+        self.assertEqual({job["entry_id"] for job in jobs}, {"auxilium-christianorum", "morning-prayer-elevenlabs", "marian-antiphon-regina-caeli"})
         morning_job = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
         regina_job = next(job for job in jobs if job["entry_id"] == "marian-antiphon-regina-caeli")
+        auxilium_job = next(job for job in jobs if job["entry_id"] == "auxilium-christianorum")
         self.assertTrue(morning_job["audio_config"]["enabled"])
         self.assertTrue(regina_job["audio_config"]["enabled"])
+        self.assertTrue(auxilium_job["audio_config"]["enabled"])
         self.assertGreater(len(morning_job["audio_fragments"]), 0)
         self.assertGreater(len(regina_job["audio_fragments"]), 0)
+        self.assertGreater(len(auxilium_job["audio_fragments"]), 0)
+        self.assertEqual(auxilium_job["resume_markers"][0]["source"], "audio_fragment")
 
     def test_render_audio_job_skips_when_hash_matches(self):
         contracts = self.contracts_mod.load_publish_contracts()
@@ -71,7 +81,11 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.assertFalse(second["rendered"])
             self.assertEqual(calls["count"], first_calls)
             self.assertTrue(Path(first["audio_path"]).exists())
-            self.assertTrue(Path(first["audio_path"]).with_suffix(".json").exists())
+            sidecar_path = Path(first["audio_path"]).with_suffix(".json")
+            self.assertTrue(sidecar_path.exists())
+            sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            self.assertEqual(sidecar["resume_markers"][0]["source"], "audio_fragment")
+            self.assertEqual(sidecar["resume_markers"][0]["fragment_key"], first["audio_fragments"][0]["fragment_key"])
             self.assertGreater(Path(first["audio_path"]).stat().st_size, 0)
             self.assertEqual(first["rss_guid"], second["rss_guid"])
 
@@ -177,11 +191,13 @@ class TestPublishAudioPipeline(unittest.TestCase):
             feed_root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             titles = [item.findtext("title") or "" for item in feed_root.findall("./channel/item")]
 
-            self.assertEqual(result["jobs"], 2)
-            self.assertEqual(result["rendered"], 2)
+            self.assertEqual(result["jobs"], 3)
+            self.assertEqual(result["rendered"], 3)
             self.assertEqual(result["archived"], 0)
             self.assertTrue((docs_root / "podcast.xml").exists())
+            self.assertTrue((docs_root / "audio" / f"auxilium-christianorum-{expected_date.isoformat()}.mp3").exists())
             self.assertTrue((docs_root / "audio" / f"morning-prayer-elevenlabs-{expected_date.isoformat()}.mp3").exists())
+            self.assertTrue(any(title.startswith("Auxilium Christianorum - ") for title in titles))
             self.assertTrue(any(title.startswith("Morning Prayer - ") for title in titles))
             self.assertTrue(
                 any(
@@ -209,7 +225,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.runner_mod.load_published_audio_jobs = fake_load_published_audio_jobs
             result = self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
 
-        self.assertEqual(result["jobs"], 2)
+        self.assertEqual(result["jobs"], 3)
         self.assertEqual(result["archived"], 0)
         self.assertEqual(Path(captured["kwargs"]["docs_root"]).name, "docs")
         self.assertIn("github.io", str(captured["kwargs"]["base_url"]))
@@ -259,14 +275,15 @@ class TestPublishAudioPipeline(unittest.TestCase):
             archive_manifest = json.loads((audio_dir / "index.json").read_text(encoding="utf-8"))
             archive_html = (audio_dir / "index.html").read_text(encoding="utf-8")
 
-        self.assertEqual(result["jobs"], 2)
-        self.assertEqual(result["rendered"], 2)
+        self.assertEqual(result["jobs"], 3)
+        self.assertEqual(result["rendered"], 3)
         self.assertEqual(result["archived"], 1)
+        self.assertTrue(any(guid.startswith(f"auxilium-christianorum-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"marian-antiphon-regina-caeli-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"{archived_episode_id}::") for guid in guids))
-        self.assertEqual(len(guids), 3)
-        self.assertEqual(archive_manifest["count"], 3)
+        self.assertEqual(len(guids), 4)
+        self.assertEqual(archive_manifest["count"], 4)
         self.assertIn("Published audio archive", archive_html)
         self.assertIn(f"{archived_episode_id}.mp3", archive_html)
 
@@ -434,10 +451,12 @@ class TestPublishAudioPipeline(unittest.TestCase):
             root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") or "" for item in root.findall("./channel/item")]
 
-            self.assertEqual(result["jobs"], 4)
-            self.assertEqual(result["rendered"], 4)
+            self.assertEqual(result["jobs"], 6)
+            self.assertEqual(result["rendered"], 6)
+            self.assertTrue(any(guid.startswith(f"auxilium-christianorum-{today.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{today.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"marian-antiphon-angelus-{today.isoformat()}::") for guid in guids))
+            self.assertTrue(any(guid.startswith(f"auxilium-christianorum-{tomorrow.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{tomorrow.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"marian-antiphon-angelus-{tomorrow.isoformat()}::") for guid in guids))
 
@@ -482,9 +501,10 @@ class TestPublishAudioPipeline(unittest.TestCase):
             root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") or "" for item in root.findall("./channel/item")]
 
-        self.assertEqual(result["jobs"], 2)
+        self.assertEqual(result["jobs"], 3)
         self.assertEqual(result["archived"], 1)
-        self.assertEqual(len(guids), 3)
+        self.assertEqual(len(guids), 4)
+        self.assertTrue(any(guid.startswith(f"auxilium-christianorum-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"marian-antiphon-regina-caeli-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"{archived_episode_id}::") for guid in guids))
