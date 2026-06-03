@@ -1,5 +1,22 @@
 # Release Log
 
+## [0.3.3.0] - 2026-06-02
+
+### Added
+- Added a generated Ora Pro Nobis Daily Rosary episode with traditional weekday mystery selection, five full decades, and short per-mystery reflections with deterministic fallbacks.
+- Added a `rosary_decades` publish block that keeps repeated standard prayers as cacheable fixed fragments while generating only daily reflection fragments.
+- Added regression coverage for Rosary mystery parsing, reflection fallback behavior, full text assembly, audio fragment cache reuse, resume markers, and Spotify lookup.
+- Added role-aware publish audio fragments so short versicle/response lines can use role-specific voices while preserving cache-safe hashes and sidecar metadata.
+
+### Changed
+- Migrated `daily-rosary` Spotify integration to resolve the generated Ora Pro Nobis episode by `Daily Rosary` title and publish date.
+- Documented Daily Rosary audio publishing and clarified the older page-audio Rosary output mode as archived.
+- Normalized Auxilium Christianorum response markers into clean spoken fragments: printed `V.` and `R.` labels are omitted, response boundaries become natural pauses, and response fragments can use a distinct voice.
+
+### Fixed
+- Prevented Auxilium Christianorum generated audio from speaking source response labels aloud.
+- Hardened the daily-intro OpenAI local-env test so shell-level `OAI_API_BASE_URL` and `OAI_MODEL` values do not override the test fixture.
+
 ## [0.3.2.6] - 2026-06-02
 
 ### Changed

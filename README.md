@@ -43,6 +43,8 @@ Optional variables:
 - publish audio writes one JSON sidecar per episode under `docs/audio/`, including ordered `resume_markers` for fragment-level resume/bookmark surfaces; reruns now rebuild the feed from the local `docs/audio/` archive snapshot rather than the remote published feed
 - the publish workflow also writes `docs/audio/index.html` and `docs/audio/index.json` so GitHub Pages exposes a browsable archive dashboard alongside the feed
 - Auxilium Christianorum publishes as its own daily Ora Pro Nobis episode with a deterministic liturgical announcement, the lay-member every-day prayers, the correct weekday prayer, the Litany of the Most Precious Blood, and the daily conclusion
+- Auxilium Christianorum response markers are normalized into clean spoken fragments: printed `V.` and `R.` labels are omitted, response boundaries become normal fragment pauses, and short versicle/response fragments can use role-specific TTS voices
+- Daily Rosary publishes as its own date-scoped Ora Pro Nobis episode with the traditional weekday mysteries, five full decades, one short daily reflection per mystery, deterministic fallback reflections, and cached canonical prayer fragments for repeated prayers such as `Our Father`, `Hail Mary`, `Glory Be`, and `Fatima Prayer`
 - Marian Antiphon publish audio contracts are season-gated: the ordinary-season Angelus contract and the Easter-season Regina Caeli contract each render their own daily episode while reusing the shared daily intro and sign-of-cross templates; both episode titles include `Marian Antiphon` so Spotify lookup can target one durable title marker across seasons
 - `scripts/run_morning_prayer_elevenlabs_local.py`: step-by-step local smoke helper that loads `config/local/elevenlabs.env`, renders only the Morning Prayer ElevenLabs variant, and writes local feed/archive artifacts under `artifacts/local/elevenlabs/`
 - `ELEVENLABS_API_KEY` for the Morning Prayer ElevenLabs variant in local runs or GitHub Actions
@@ -122,6 +124,8 @@ Queue contract files in `config/spotify/contracts/` own:
 - stop at the first search that returns matches, then return every matching episode URI for the day
 
 Auxilium Christianorum Spotify playlist integration resolves the generated Ora Pro Nobis daily episode by title and date from the Ora Pro Nobis show. The Spotify queue contract keeps the current Notion row title `Auxillium Christianorum` for membership matching, while its episode lookup targets titles such as `Auxilium Christianorum - April 6, 2026`.
+
+Daily Rosary Spotify playlist integration resolves the generated Ora Pro Nobis daily episode by title and date from the Ora Pro Nobis show. Its episode lookup targets titles such as `Daily Rosary - April 6, 2026`.
 
 Playlist definition files in `config/spotify/playlists/` own:
 - `key`
@@ -568,7 +572,7 @@ Audio output row shape:
 - `Weekday Map` for outputs that vary by weekday, like the fragment-based rosary
 - `Enabled`
 
-Rosary output mode:
+Archived Rosary page-audio output mode:
 - `Output Mode = rosary`
 - `config/legacy/rosary.json` is the legacy Rosary contract source of truth
 - `config/content/rosary/` holds the actual Rosary prayer text files and the meditation prompt template

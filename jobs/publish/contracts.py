@@ -11,6 +11,7 @@ from zoneinfo import ZoneInfo
 from jobs.publish.daily_intro import build_daily_intro_text
 from jobs.publish.formatting import build_publish_context, derive_episode_id, render_publish_template
 from jobs.publish.liturgical_announcement import build_liturgical_announcement_text
+from jobs.publish.rosary_reflections import build_rosary_reflection_set
 from jobs.publish.fragments import audio_manifest_hash
 from jobs.publish.errors import PublishMissingDataError
 from jobs.novena.liturgical_helpers import is_easter_season_for_date
@@ -266,6 +267,41 @@ def _normalize_audio_config(payload: Dict[str, Any], path: Path, entry_id: str) 
             _normalize_provider_config(provider, path, entry_id, index)
             for index, provider in enumerate(providers, start=1)
         ]
+    role_overrides = audio_config.get("role_overrides")
+    if role_overrides is not None:
+        if not isinstance(role_overrides, dict):
+            raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' has an invalid 'role_overrides' object.")
+        normalized_overrides: Dict[str, Any] = {}
+        for role_name, override in role_overrides.items():
+            normalized_role = normalize_publish_key(role_name)
+            if not normalized_role:
+                raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' has a role override without a valid role name.")
+            if not isinstance(override, dict):
+                raise RuntimeError(
+                    f"Publish entry '{entry_id}' in '{path}' has an invalid role override for '{role_name}'; expected an object."
+                )
+            normalized_override = dict(override)
+            override_providers = normalized_override.get("providers")
+            if override_providers is not None:
+                if not isinstance(override_providers, list) or not override_providers:
+                    raise RuntimeError(
+                        f"Publish entry '{entry_id}' in '{path}' has an invalid providers list for role '{role_name}'."
+                    )
+                normalized_override["providers"] = [
+                    _normalize_provider_config(provider, path, entry_id, index)
+                    for index, provider in enumerate(override_providers, start=1)
+                ]
+            elif "provider" in normalized_override:
+                normalized_override = _normalize_provider_config(normalized_override, path, entry_id, 1)
+            if "format" in normalized_override:
+                normalized_override["format"] = str(normalized_override.get("format", audio_config["format"])).strip().lower() or audio_config["format"]
+            if "speed" in normalized_override:
+                try:
+                    normalized_override["speed"] = float(normalized_override.get("speed", audio_config["speed"]))
+                except Exception:
+                    normalized_override["speed"] = float(audio_config["speed"])
+            normalized_overrides[normalized_role] = normalized_override
+        audio_config["role_overrides"] = normalized_overrides
     return audio_config
 
 
@@ -315,8 +351,12 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
         if not file_path:
             raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' has a file block without 'path'.")
         normalized["path"] = file_path
+        if "audio_role" in normalized:
+            normalized["audio_role"] = normalize_publish_key(normalized.get("audio_role"))
     elif kind == "inline":
         normalized["text"] = str(normalized.get("text", ""))
+        if "audio_role" in normalized:
+            normalized["audio_role"] = normalize_publish_key(normalized.get("audio_role"))
     elif kind == "daily-intro":
         normalized["title"] = str(normalized.get("title", "")).strip()
         if "calendar" in normalized:
@@ -335,6 +375,39 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
             normalized["locale"] = str(normalized.get("locale", "")).strip()
         if "include_season" in normalized:
             normalized["include_season"] = _normalize_bool(normalized.get("include_season", False))
+    elif kind == "rosary-decades":
+        mysteries = normalized.get("mysteries")
+        if not isinstance(mysteries, dict):
+            raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' has a rosary_decades block without a 'mysteries' object.")
+        mapping = mysteries.get("map") or mysteries.get("values")
+        if not isinstance(mapping, dict) or not mapping:
+            raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' has a rosary_decades block without mystery map values.")
+        normalized["mysteries"] = {
+            "selector": str(mysteries.get("selector", "weekday")).strip().lower() or "weekday",
+            "map": {str(key).strip().lower(): str(value).strip() for key, value in mapping.items()},
+        }
+        prayers = normalized.get("prayers")
+        if not isinstance(prayers, dict):
+            raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' has a rosary_decades block without a 'prayers' object.")
+        required_prayers = ("our_father", "hail_mary", "glory_be", "fatima_prayer")
+        normalized_prayers = {}
+        for prayer_name in required_prayers:
+            prayer_path = str(prayers.get(prayer_name, "")).strip()
+            if not prayer_path:
+                raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' has a rosary_decades block missing prayer '{prayer_name}'.")
+            normalized_prayers[prayer_name] = prayer_path
+        normalized["prayers"] = normalized_prayers
+        normalized["hail_mary_count"] = int(normalized.get("hail_mary_count", 10))
+        if normalized["hail_mary_count"] <= 0:
+            raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' has an invalid rosary_decades hail_mary_count.")
+        if "calendar" in normalized:
+            normalized["calendar"] = str(normalized.get("calendar", "")).strip()
+        if "locale" in normalized:
+            normalized["locale"] = str(normalized.get("locale", "")).strip()
+        if "prompt_model" in normalized:
+            normalized["prompt_model"] = str(normalized.get("prompt_model", "")).strip()
+        if "allow_missing_gospel" in normalized:
+            normalized["allow_missing_gospel"] = _normalize_bool(normalized.get("allow_missing_gospel", True))
     else:
         raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' uses unsupported block kind '{kind}'.")
     normalized["skip_if_missing"] = _normalize_bool(normalized.get("skip_if_missing", False))
@@ -448,6 +521,17 @@ def _validate_entry_blocks(blocks: Sequence[Dict[str, Any]], path: Path, entry_i
             continue
         elif kind == "liturgical-announcement":
             continue
+        elif kind == "rosary-decades":
+            mysteries = block.get("mysteries") or {}
+            mapping = mysteries.get("map") or {}
+            for file_path in list(mapping.values()) + list((block.get("prayers") or {}).values()):
+                resolved_path = Path(str(file_path).strip())
+                if not resolved_path.is_absolute():
+                    resolved_path = ROOT / resolved_path
+                if not resolved_path.exists():
+                    raise RuntimeError(
+                        f"Publish entry '{entry_id}' in '{path}' references missing rosary template file '{resolved_path}'."
+                    )
         else:
             raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' uses unsupported block kind '{kind}'.")
 
@@ -583,6 +667,106 @@ def _block_display_name(block: Dict[str, Any]) -> str:
     return str(block.get("title") or block.get("heading") or block.get("label") or block.get("kind") or "block").strip()
 
 
+def _season_for_date(contract: PublishContract, target_date: _dt.date) -> str:
+    season = str(contract.season or "").strip().lower()
+    if season:
+        return season
+    metadata = dict(contract.metadata or {})
+    config = dict(metadata.get("rosary_reflections") or {}) if isinstance(metadata.get("rosary_reflections"), dict) else {}
+    calendar = str(config.get("calendar") or metadata.get("calendar") or "general_roman").strip() or "general_roman"
+    locale = str(config.get("locale") or metadata.get("locale") or "en").strip() or "en"
+    return "easter" if is_easter_season_for_date(calendar, locale, target_date) else "ordinary"
+
+
+def _selected_rosary_mystery_text(
+    block: Dict[str, Any],
+    *,
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    target_date: _dt.date,
+) -> str:
+    mysteries = block.get("mysteries") or {}
+    selector = str(mysteries.get("selector") or "weekday").strip().lower() or "weekday"
+    selected = evaluate_selector(selector, target_date=target_date, timezone=contract.timezone, contract=contract, entry=entry)
+    mapping = mysteries.get("map") or {}
+    path_text = str(mapping.get(str(selected).lower()) or mapping.get(str(selected).title()) or "").strip()
+    if not path_text:
+        raise PublishMissingDataError(f"Publish entry '{entry.get('entry_id', '')}' has no rosary mystery entry for '{selected}'.")
+    return _read_text_file(path_text)
+
+
+def _rosary_reflection_config(block: Dict[str, Any], contract: PublishContract) -> Dict[str, Any]:
+    metadata = dict(contract.metadata or {})
+    config = dict(metadata.get("rosary_reflections") or {}) if isinstance(metadata.get("rosary_reflections"), dict) else {}
+    for key in ("calendar", "locale", "prompt_model", "allow_missing_gospel"):
+        if key in block:
+            config[key] = block.get(key)
+    config["allow_missing_gospel"] = _normalize_bool(config.get("allow_missing_gospel", True))
+    return config
+
+
+def _build_rosary_reflection_set(
+    block: Dict[str, Any],
+    *,
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    target_date: _dt.date,
+):
+    config = _rosary_reflection_config(block, contract)
+    mystery_text = _selected_rosary_mystery_text(block, contract=contract, entry=entry, target_date=target_date)
+    return build_rosary_reflection_set(
+        target_date,
+        mystery_text,
+        calendar=str(config.get("calendar") or "").strip() or None,
+        locale=str(config.get("locale") or "").strip() or None,
+        prompt_model=str(config.get("prompt_model") or "").strip() or None,
+        allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
+        season=_season_for_date(contract, target_date),
+    )
+
+
+def _read_rosary_prayer_text(block: Dict[str, Any], prayer_name: str) -> str:
+    prayers = block.get("prayers") or {}
+    path_text = str(prayers.get(prayer_name, "")).strip()
+    if not path_text:
+        raise PublishMissingDataError(f"Rosary decades block is missing prayer '{prayer_name}'.")
+    return _read_text_file(path_text)
+
+
+def _rosary_decade_heading(number: int, title: str) -> str:
+    labels = {1: "First", 2: "Second", 3: "Third", 4: "Fourth", 5: "Fifth"}
+    return f"The {labels.get(number, str(number))} Mystery: {title}"
+
+
+def _resolve_rosary_decades_content(
+    block: Dict[str, Any],
+    *,
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    target_date: _dt.date,
+) -> str:
+    reflection_set = _build_rosary_reflection_set(block, contract=contract, entry=entry, target_date=target_date)
+    our_father = _read_rosary_prayer_text(block, "our_father")
+    hail_mary = _read_rosary_prayer_text(block, "hail_mary")
+    glory_be = _read_rosary_prayer_text(block, "glory_be")
+    fatima_prayer = _read_rosary_prayer_text(block, "fatima_prayer")
+    hail_mary_count = int(block.get("hail_mary_count", 10))
+
+    decades = [reflection_set.mystery_set_title]
+    for mystery, reflection in zip(reflection_set.mysteries, reflection_set.reflections):
+        decade_parts = [
+            _rosary_decade_heading(mystery.number, mystery.title),
+            f"Fruit of the Mystery: {mystery.fruit}",
+            f"Reflection: {reflection}",
+            our_father,
+            "\n".join(hail_mary for _ in range(hail_mary_count)),
+            glory_be,
+            fatima_prayer,
+        ]
+        decades.append("\n\n".join(part for part in decade_parts if str(part).strip()))
+    return "\n\n".join(decades).strip()
+
+
 
 def resolve_block_content(
     block: Any,
@@ -630,6 +814,8 @@ def resolve_block_content(
             separator = str(block.get("separator", "\n"))
             count = int(block.get("count", 0))
             return separator.join(repeated for _ in range(count)).strip()
+        if kind == "rosary-decades":
+            return _resolve_rosary_decades_content(block, contract=contract, entry=entry, target_date=effective_date)
         if kind == "daily-intro":
             metadata = dict(contract.metadata or {})
             intro_config = dict(metadata.get("daily_intro") or {}) if isinstance(metadata.get("daily_intro"), dict) else {}
@@ -744,6 +930,137 @@ def _fragment_path_segment(kind: str, *, index: Optional[int] = None, value: Opt
     return "-".join(part for part in parts if part)
 
 
+def _fragment_audio_role(block: Dict[str, Any]) -> str:
+    return normalize_publish_key(block.get("audio_role"))
+
+
+def _fragment_payload(
+    *,
+    fragment_key: str,
+    kind: str,
+    label: str,
+    text: str,
+    block: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    fragment: Dict[str, Any] = {
+        "fragment_key": fragment_key,
+        "block_path": fragment_key,
+        "kind": kind,
+        "label": label,
+        "text": text,
+    }
+    if block:
+        audio_role = _fragment_audio_role(block)
+        if audio_role:
+            fragment["audio_role"] = audio_role
+    return fragment
+
+
+def _rosary_prayer_fragment(
+    *,
+    block: Dict[str, Any],
+    prayer_name: str,
+    fragment_key: str,
+    label: str,
+) -> Dict[str, Any]:
+    text = _read_rosary_prayer_text(block, prayer_name)
+    return _fragment_payload(
+        fragment_key=fragment_key,
+        kind="file",
+        label=label,
+        text=text,
+        block={"kind": "file", "path": str((block.get("prayers") or {}).get(prayer_name, "")).strip()},
+    )
+
+
+def _expand_rosary_decade_audio_fragments(
+    block: Dict[str, Any],
+    *,
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    target_date: _dt.date,
+    path_parts: Sequence[str],
+) -> List[Dict[str, Any]]:
+    reflection_set = _build_rosary_reflection_set(block, contract=contract, entry=entry, target_date=target_date)
+    fragments: List[Dict[str, Any]] = []
+    hail_mary_count = int(block.get("hail_mary_count", 10))
+    for mystery, reflection in zip(reflection_set.mysteries, reflection_set.reflections):
+        decade_segment = _fragment_path_segment("decade", index=mystery.number, value=mystery.title)
+        decade_path = (*path_parts, decade_segment)
+        announcement = "\n".join(
+            [
+                _rosary_decade_heading(mystery.number, mystery.title),
+                f"Fruit of the Mystery: {mystery.fruit}",
+                f"Reflection: {reflection}",
+            ]
+        )
+        fragments.append(
+            _fragment_payload(
+                fragment_key="/".join((*decade_path, "reflection")),
+                kind="rosary-reflection",
+                label=_rosary_decade_heading(mystery.number, mystery.title),
+                text=announcement,
+            )
+        )
+        fragments.append(
+            _rosary_prayer_fragment(
+                block=block,
+                prayer_name="our_father",
+                fragment_key="/".join((*decade_path, "our-father")),
+                label="Our Father",
+            )
+        )
+        for index in range(1, hail_mary_count + 1):
+            fragments.append(
+                _rosary_prayer_fragment(
+                    block=block,
+                    prayer_name="hail_mary",
+                    fragment_key="/".join((*decade_path, f"hail-mary-{index}")),
+                    label="Hail Mary",
+                )
+            )
+        fragments.append(
+            _rosary_prayer_fragment(
+                block=block,
+                prayer_name="glory_be",
+                fragment_key="/".join((*decade_path, "glory-be")),
+                label="Glory Be",
+            )
+        )
+        fragments.append(
+            _rosary_prayer_fragment(
+                block=block,
+                prayer_name="fatima_prayer",
+                fragment_key="/".join((*decade_path, "fatima-prayer")),
+                label="Fatima Prayer",
+            )
+        )
+    return fragments
+
+
+def effective_audio_config_for_fragment(audio_config: Dict[str, Any], fragment: Dict[str, Any]) -> Dict[str, Any]:
+    effective = dict(audio_config)
+    role_overrides = effective.pop("role_overrides", None)
+    audio_role = normalize_publish_key(fragment.get("audio_role"))
+    if audio_role and isinstance(role_overrides, dict):
+        override = role_overrides.get(audio_role)
+        if isinstance(override, dict):
+            effective.update(dict(override))
+    return effective
+
+
+def attach_effective_audio_configs(
+    fragments: Sequence[Dict[str, Any]],
+    audio_config: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+    enriched: List[Dict[str, Any]] = []
+    for fragment in fragments:
+        row = dict(fragment)
+        row["effective_audio_config"] = effective_audio_config_for_fragment(audio_config, row)
+        enriched.append(row)
+    return enriched
+
+
 def _expand_audio_fragments_from_block(
     block: Any,
     *,
@@ -758,13 +1075,12 @@ def _expand_audio_fragments_from_block(
             return []
         fragment_key = "/".join((*path_parts, "inline")) if path_parts else "inline"
         return [
-            {
-                "fragment_key": fragment_key,
-                "block_path": fragment_key,
-                "kind": "inline",
-                "label": _fragment_label_for_block({"kind": "inline", "text": text}, text),
-                "text": text,
-            }
+            _fragment_payload(
+                fragment_key=fragment_key,
+                kind="inline",
+                label=_fragment_label_for_block({"kind": "inline", "text": text}, text),
+                text=text,
+            )
         ]
 
     if not isinstance(block, dict):
@@ -827,14 +1143,23 @@ def _expand_audio_fragments_from_block(
             return []
         fragment_key = "/".join((*path_parts, _fragment_path_segment("monthly-template", value=month_name)))
         return [
-            {
-                "fragment_key": fragment_key,
-                "block_path": fragment_key,
-                "kind": kind,
-                "label": _fragment_label_for_block(block, text),
-                "text": text,
-            }
+            _fragment_payload(
+                fragment_key=fragment_key,
+                kind=kind,
+                label=_fragment_label_for_block(block, text),
+                text=text,
+                block=block,
+            )
         ]
+
+    if kind == "rosary-decades":
+        return _expand_rosary_decade_audio_fragments(
+            block,
+            contract=contract,
+            entry=entry,
+            target_date=effective_date,
+            path_parts=path_parts,
+        )
 
     if kind in {"file", "inline", "daily-intro", "liturgical-announcement"}:
         text = resolve_block_content(block, contract=contract, entry=entry, target_date=effective_date)
@@ -842,13 +1167,13 @@ def _expand_audio_fragments_from_block(
             return []
         fragment_key = "/".join((*path_parts, _fragment_path_segment(kind)))
         return [
-            {
-                "fragment_key": fragment_key,
-                "block_path": fragment_key,
-                "kind": kind,
-                "label": _fragment_label_for_block(block, text),
-                "text": text,
-            }
+            _fragment_payload(
+                fragment_key=fragment_key,
+                kind=kind,
+                label=_fragment_label_for_block(block, text),
+                text=text,
+                block=block,
+            )
         ]
 
     raise RuntimeError(f"Publish entry '{entry.get('entry_id', '')}' uses unsupported block kind '{kind}'.")
@@ -928,6 +1253,12 @@ def _section_title_for_block(block: Dict[str, Any], text: str, *, index: int, to
         if first_line and len(first_line) <= 80:
             return first_line
         return "Mysteries"
+
+    if kind == "rosary-decades":
+        first_line = _first_non_empty_line(text)
+        if first_line and len(first_line) <= 80:
+            return first_line
+        return "Rosary Decades"
 
     if kind == "monthly-template":
         folder = str(block.get("folder", "")).strip()
@@ -1130,7 +1461,10 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
             if not audio_config["enabled"]:
                 continue
             rendered_metadata = _render_entry_metadata(contract, entry, target_date=effective_date)
-            audio_fragments = expand_audio_fragments(contract, entry, target_date=effective_date)
+            audio_fragments = attach_effective_audio_configs(
+                expand_audio_fragments(contract, entry, target_date=effective_date),
+                audio_config,
+            )
             text_body = _entry_text_body(contract, entry, target_date=effective_date)
             if not text_body.strip():
                 continue

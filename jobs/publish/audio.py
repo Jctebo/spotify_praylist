@@ -21,6 +21,7 @@ from jobs.publish.contracts import DEFAULT_GITHUB_PAGES_BASE_URL, ROOT, build_au
 from jobs.publish.fragments import (
     assemble_audio_fragments,
     audio_manifest_hash,
+    effective_fragment_audio_config,
     publish_audio_cache_root,
     normalize_audio_settings,
     render_fragment_audio,
@@ -242,6 +243,50 @@ def _renderer_for_provider(provider_audio_config: Dict[str, Any], renderer):
     if provider == "elevenlabs":
         return elevenlabs_tts_renderer
     raise RuntimeError(f"Unsupported audio provider '{provider}'.")
+
+
+def _render_fragment_with_provider_fallback(
+    fragment: Dict[str, Any],
+    audio_config: Dict[str, Any],
+    renderer,
+    *,
+    cache_root: Path,
+    force_rebuild: bool,
+) -> Dict[str, Any]:
+    provider_configs = _provider_preferences(audio_config)
+    errors: List[str] = []
+    last_error: Optional[Exception] = None
+    for provider_config in provider_configs:
+        effective_audio_config = _effective_provider_audio_config(audio_config, provider_config)
+        provider_renderer = _renderer_for_provider(effective_audio_config, renderer)
+        provider_name = _provider_name(effective_audio_config) or "openai"
+        try:
+            rendered_fragment = render_fragment_audio(
+                fragment,
+                effective_audio_config,
+                provider_renderer,
+                cache_root=cache_root,
+                force_rebuild=force_rebuild,
+            )
+            return {
+                "provider": provider_name,
+                "audio_config": effective_audio_config,
+                **rendered_fragment,
+            }
+        except Exception as exc:
+            last_error = exc
+            errors.append(f"{provider_name}: {exc}")
+            logger.warning(
+                "Audio provider failed fragment=%s provider=%s error=%s",
+                fragment.get("fragment_key", ""),
+                provider_name,
+                exc,
+            )
+            continue
+    error_message = "; ".join(errors) or "no audio providers were configured."
+    raise RuntimeError(
+        f"All audio providers failed for fragment '{fragment.get('fragment_key', '')}': {error_message}"
+    ) from last_error
 
 
 
@@ -841,97 +886,101 @@ def render_audio_job(
         return rendered
 
     fragment_root = publish_audio_cache_root(cache_root)
-    provider_configs = _provider_preferences(audio_config)
     errors: List[str] = []
     last_error: Optional[Exception] = None
     force_rebuild = _env_flag(PUBLISH_AUDIO_FORCE_REBUILD)
 
-    for provider_config in provider_configs:
-        effective_audio_config = _effective_provider_audio_config(audio_config, provider_config)
-        provider_renderer = _renderer_for_provider(effective_audio_config, renderer)
-        provider_name = _provider_name(effective_audio_config) or "openai"
-        fragment_paths: List[Path] = []
-        fragment_results: List[Dict[str, Any]] = []
-        try:
-            for fragment in fragments:
-                rendered_fragment = render_fragment_audio(
-                    fragment,
-                    effective_audio_config,
-                    provider_renderer,
-                    cache_root=fragment_root,
-                    force_rebuild=force_rebuild,
-                )
-                fragment_paths.append(Path(rendered_fragment["audio_path"]))
-                fragment_results.append(
-                    {
-                        "fragment_key": str(fragment.get("fragment_key", "")).strip(),
-                        "block_path": str(fragment.get("block_path", "")).strip(),
-                        "kind": str(fragment.get("kind", "")).strip(),
-                        "label": str(fragment.get("label", "")).strip(),
-                        "text": str(fragment.get("text", "")).strip(),
-                        "fragment_hash": rendered_fragment["fragment_hash"],
-                        "audio_path": str(rendered_fragment["audio_path"]),
-                        "rendered": bool(rendered_fragment.get("rendered", False)),
-                    }
-                )
-
-            target_format = str(effective_audio_config.get("format", "mp3")).strip().lower() or "mp3"
-            if len(fragment_paths) == 1 and fragment_paths[0].suffix.lower().lstrip(".") == target_format:
-                raw_audio = fragment_paths[0].read_bytes()
-            else:
-                raw_audio = assemble_audio_fragments(fragment_paths, target_format, cache_root=fragment_root)
-            if not raw_audio:
-                raise RuntimeError(f"Audio assembly returned empty output for entry '{job.get('entry_id', '')}'.")
-            audio_length = len(raw_audio)
-            audio_path.write_bytes(raw_audio)
-            fragment_manifest_hash = audio_manifest_hash(job, fragments, effective_audio_config)
-            rendered_audio_config = normalize_audio_settings(effective_audio_config)
-            sidecar_path.write_text(
-                json.dumps(
-                    {
-                        "entry_id": job.get("entry_id", ""),
-                        "episode_id": episode_id,
-                        "published_date": str(job.get("published_date", "")).strip(),
-                        "contract_id": str(job.get("contract_id", "")).strip(),
-                        "contract_type": str(job.get("contract_type", "")).strip(),
-                        "frequency": str(job.get("frequency", "")).strip(),
-                        "title": str(job.get("title", "")).strip(),
-                        "description": str(job.get("description", "")).strip(),
-                        "content_hash": content_hash,
-                        "audio_path": str(audio_path),
-                        "audio_url": audio_public_url(episode_id),
-                        "audio_length": audio_length,
-                        "generated_at": generated_at,
-                        "rss_guid": rss_guid,
-                        "tts": rendered_audio_config,
-                        "fragment_manifest_hash": fragment_manifest_hash,
-                        "fragments": fragment_results,
-                        "resume_markers": list(job.get("resume_markers") or []),
-                    },
-                    indent=2,
-                    sort_keys=True,
-                ),
-                encoding="utf-8",
+    fragment_paths: List[Path] = []
+    fragment_results: List[Dict[str, Any]] = []
+    rendered_providers: List[str] = []
+    try:
+        for fragment in fragments:
+            fragment_audio_config = effective_fragment_audio_config(fragment, audio_config)
+            rendered_fragment = _render_fragment_with_provider_fallback(
+                fragment,
+                fragment_audio_config,
+                renderer,
+                cache_root=fragment_root,
+                force_rebuild=force_rebuild,
             )
-            rendered = dict(job)
-            rendered["audio_path"] = str(audio_path)
-            rendered["audio_url"] = audio_public_url(episode_id)
-            rendered["rendered"] = True
-            rendered["content_hash"] = content_hash
-            rendered["audio_length"] = audio_length
-            rendered["generated_at"] = generated_at
-            rendered["rss_guid"] = rss_guid
-            rendered["audio_fragments"] = fragments
-            rendered["resume_markers"] = list(job.get("resume_markers") or [])
-            rendered["audio_config"] = rendered_audio_config
-            rendered["fragment_manifest_hash"] = fragment_manifest_hash
-            rendered["provider"] = provider_name
-            return rendered
-        except Exception as exc:
-            last_error = exc
-            errors.append(f"{provider_name}: {exc}")
-            logger.warning("Audio provider failed episode=%s provider=%s error=%s", episode_id, provider_name, exc)
-            continue
+            rendered_effective_config = dict(rendered_fragment["audio_config"])
+            fragment_paths.append(Path(rendered_fragment["audio_path"]))
+            provider_name = str(rendered_fragment.get("provider", "")).strip() or "openai"
+            rendered_providers.append(provider_name)
+            fragment_results.append(
+                {
+                    "fragment_key": str(fragment.get("fragment_key", "")).strip(),
+                    "block_path": str(fragment.get("block_path", "")).strip(),
+                    "kind": str(fragment.get("kind", "")).strip(),
+                    "label": str(fragment.get("label", "")).strip(),
+                    "text": str(fragment.get("text", "")).strip(),
+                    "audio_role": str(fragment.get("audio_role", "")).strip(),
+                    "tts": normalize_audio_settings(rendered_effective_config),
+                    "fragment_hash": rendered_fragment["fragment_hash"],
+                    "audio_path": str(rendered_fragment["audio_path"]),
+                    "rendered": bool(rendered_fragment.get("rendered", False)),
+                }
+            )
+
+        target_format = str(audio_config.get("format", "mp3")).strip().lower() or "mp3"
+        if len(fragment_paths) == 1 and fragment_paths[0].suffix.lower().lstrip(".") == target_format:
+            raw_audio = fragment_paths[0].read_bytes()
+        else:
+            raw_audio = assemble_audio_fragments(fragment_paths, target_format, cache_root=fragment_root)
+        if not raw_audio:
+            raise RuntimeError(f"Audio assembly returned empty output for entry '{job.get('entry_id', '')}'.")
+        audio_length = len(raw_audio)
+        audio_path.write_bytes(raw_audio)
+        rendered_audio_config = normalize_audio_settings(audio_config)
+        fragment_manifest_hash = audio_manifest_hash(job, fragments, audio_config)
+        provider_name = rendered_providers[0] if len(set(rendered_providers)) == 1 else "mixed"
+        if provider_name != "mixed":
+            rendered_audio_config["provider"] = provider_name
+        sidecar_path.write_text(
+            json.dumps(
+                {
+                    "entry_id": job.get("entry_id", ""),
+                    "episode_id": episode_id,
+                    "published_date": str(job.get("published_date", "")).strip(),
+                    "contract_id": str(job.get("contract_id", "")).strip(),
+                    "contract_type": str(job.get("contract_type", "")).strip(),
+                    "frequency": str(job.get("frequency", "")).strip(),
+                    "title": str(job.get("title", "")).strip(),
+                    "description": str(job.get("description", "")).strip(),
+                    "content_hash": content_hash,
+                    "audio_path": str(audio_path),
+                    "audio_url": audio_public_url(episode_id),
+                    "audio_length": audio_length,
+                    "generated_at": generated_at,
+                    "rss_guid": rss_guid,
+                    "tts": rendered_audio_config,
+                    "fragment_manifest_hash": fragment_manifest_hash,
+                    "fragments": fragment_results,
+                    "resume_markers": list(job.get("resume_markers") or []),
+                },
+                indent=2,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
+        rendered = dict(job)
+        rendered["audio_path"] = str(audio_path)
+        rendered["audio_url"] = audio_public_url(episode_id)
+        rendered["rendered"] = True
+        rendered["content_hash"] = content_hash
+        rendered["audio_length"] = audio_length
+        rendered["generated_at"] = generated_at
+        rendered["rss_guid"] = rss_guid
+        rendered["audio_fragments"] = fragments
+        rendered["resume_markers"] = list(job.get("resume_markers") or [])
+        rendered["audio_config"] = rendered_audio_config
+        rendered["fragment_manifest_hash"] = fragment_manifest_hash
+        rendered["provider"] = provider_name
+        return rendered
+    except Exception as exc:
+        last_error = exc
+        errors.append(str(exc))
+        logger.warning("Audio rendering failed episode=%s error=%s", episode_id, exc)
 
     error_message = "; ".join(errors) or "no audio providers were configured."
     raise RuntimeError(f"All audio providers failed for entry '{job.get('entry_id', '')}': {error_message}") from last_error
