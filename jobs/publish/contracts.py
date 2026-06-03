@@ -756,7 +756,7 @@ def _resolve_rosary_decades_content(
     for mystery, reflection in zip(reflection_set.mysteries, reflection_set.reflections):
         decade_parts = [
             _rosary_decade_heading(mystery.number, mystery.title),
-            f"Fruit of the Mystery: {mystery.fruit}",
+            f"Fruit of the Mystery: {mystery.fruit}.",
             f"Reflection: {reflection}",
             our_father,
             "\n".join(hail_mary for _ in range(hail_mary_count)),
@@ -990,7 +990,8 @@ def _expand_rosary_decade_audio_fragments(
         announcement = "\n".join(
             [
                 _rosary_decade_heading(mystery.number, mystery.title),
-                f"Fruit of the Mystery: {mystery.fruit}",
+                f"Fruit of the Mystery: {mystery.fruit}.",
+                "",
                 f"Reflection: {reflection}",
             ]
         )

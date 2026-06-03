@@ -332,6 +332,8 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(job["episode_id"], "daily-rosary-2026-04-06")
         fragments = job["audio_fragments"]
         self.assertTrue(any(fragment["kind"] == "rosary-reflection" for fragment in fragments))
+        reflection_fragment = next(fragment for fragment in fragments if fragment["kind"] == "rosary-reflection")
+        self.assertIn(".\n\nReflection:", reflection_fragment["text"])
         hail_mary_fragments = [fragment for fragment in fragments if fragment["label"] == "Hail Mary"]
         decade_hail_mary_fragments = [fragment for fragment in hail_mary_fragments if "/decade-" in fragment["fragment_key"]]
         our_father_fragments = [fragment for fragment in fragments if fragment["label"] == "Our Father"]

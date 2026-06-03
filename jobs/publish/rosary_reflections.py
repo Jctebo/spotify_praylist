@@ -11,7 +11,7 @@ from openai import OpenAI
 from jobs.publish.daily_intro import OAI_MODEL, _normalize_whitespace, _resolve_openai_settings, fetch_daily_gospel_context
 
 
-MAX_REFLECTION_CHARS = 280
+MAX_REFLECTION_CHARS = 650
 
 
 @dataclass(frozen=True)
@@ -55,15 +55,25 @@ def parse_rosary_mysteries(text: str) -> tuple[str, tuple[RosaryMystery, ...]]:
 
 
 def fallback_rosary_reflections(mysteries: Sequence[RosaryMystery], season: Optional[str] = None) -> tuple[str, ...]:
-    season_phrase = "today"
     normalized_season = str(season or "").strip().lower()
-    if normalized_season == "easter":
-        season_phrase = "in this Easter season"
     reflections = []
     for mystery in mysteries:
-        reflections.append(
-            f"As we contemplate {mystery.title}, we ask for the grace of {mystery.fruit.lower()} {season_phrase}."
-        )
+        fruit = mystery.fruit.lower()
+        if normalized_season == "easter":
+            reflection = (
+                f"{mystery.title} shows the light of the risen Christ breaking into ordinary fear and waiting. "
+                f"In this Easter season, the mystery of {mystery.title} teaches us to recognize hope where God is already at work. "
+                f"The fruit of this mystery is {fruit}, the grace that lets the heart answer God with trust. "
+                f"As we pray {mystery.title}, we ask for {fruit} to take root in this decade and in our day."
+            )
+        else:
+            reflection = (
+                f"{mystery.title} places before us a concrete moment in the life of Jesus and Mary. "
+                f"In Ordinary Time, the mystery of {mystery.title} teaches us to meet grace in the steady duties of the day. "
+                f"The fruit of this mystery is {fruit}, the grace that shapes how we listen, choose, and love. "
+                f"As we pray {mystery.title}, we ask for {fruit} to become visible in this decade and in our daily life."
+            )
+        reflections.append(reflection)
     return tuple(reflections)
 
 
@@ -91,6 +101,7 @@ def build_rosary_reflections(
     allow_missing_gospel: bool = True,
     season: Optional[str] = None,
 ) -> tuple[str, ...]:
+    model = str(prompt_model or os.getenv(OAI_MODEL, "") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
     try:
         context = fetch_daily_gospel_context(
             date_value,
@@ -99,21 +110,20 @@ def build_rosary_reflections(
             allow_missing_gospel=allow_missing_gospel,
         )
     except Exception as exc:
-        print(f"WARN rosary_reflections using fallback reason=gospel_context_unavailable detail={exc}", file=sys.stderr)
-        return fallback_rosary_reflections(mysteries, season=season)
+        print(f"WARN rosary_reflections gospel_context_unavailable detail={exc}", file=sys.stderr)
+        return _build_seasonal_or_generic_reflections(date_value, mysteries, model=model, season=season)
 
     if not str(getattr(context, "gospel_text", "") or "").strip():
-        print("INFO rosary_reflections using fallback reason=missing_gospel_text", file=sys.stderr)
-        return fallback_rosary_reflections(mysteries, season=season)
+        print("INFO rosary_reflections missing_gospel_text; trying season_only_generation", file=sys.stderr)
+        return _build_seasonal_or_generic_reflections(date_value, mysteries, model=model, season=season)
 
-    model = str(prompt_model or os.getenv(OAI_MODEL, "") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
     prompt = _build_prompt(date_value, context, mysteries)
     try:
         rendered = _call_openai_reflections(model, prompt)
         return validate_rosary_reflections(rendered, mysteries)
     except Exception as exc:
-        print(f"WARN rosary_reflections using fallback reason=generation_invalid detail={exc}", file=sys.stderr)
-        return fallback_rosary_reflections(mysteries, season=season)
+        print(f"WARN rosary_reflections gospel_generation_invalid detail={exc}; trying season_only_generation", file=sys.stderr)
+        return _build_seasonal_or_generic_reflections(date_value, mysteries, model=model, season=season)
 
 
 def build_rosary_reflection_set(
@@ -146,17 +156,36 @@ def _normalize_reflection_line(value: Any) -> str:
     return line
 
 
+def _season_label(season: Optional[str]) -> str:
+    normalized = str(season or "").strip().lower()
+    if normalized == "easter":
+        return "Easter season"
+    return "Ordinary Time"
+
+
+def _reflection_style_rules() -> str:
+    return f"""
+Each line must:
+- Stay under {MAX_REFLECTION_CHARS} characters.
+- Be one paragraph of 4 sentences.
+- Describe what the mystery is in 1-2 sentences.
+- Describe the fruit of the mystery in 1 sentence.
+- Repeat the mystery title and the fruit naturally at least once in the reflection.
+- Be reverent, warm, and suitable for spoken prayer.
+- Return plain text only, with one reflection per line and no numbering.
+""".strip()
+
+
 def _build_prompt(date_value, context: Any, mysteries: Sequence[RosaryMystery]) -> str:
     mystery_lines = "\n".join(f"{mystery.number}. {mystery.title} - {mystery.fruit}" for mystery in mysteries)
     return f"""
-Write exactly five short Catholic Rosary decade reflections, one line per mystery.
+Write exactly five Catholic Rosary decade reflections, one line per mystery.
 
-Each line must:
-- Stay under {MAX_REFLECTION_CHARS} characters.
+{_reflection_style_rules()}
+
+Additional Gospel rule:
 - Connect the listed mystery and fruit to today's Gospel.
 - Avoid adding details not present in the Gospel text.
-- Be reverent, warm, and suitable for spoken prayer.
-- Return plain text only, with one reflection per line and no numbering.
 
 Date: {date_value.isoformat()}
 Liturgical context: {getattr(context, "celebration_clause", "")}
@@ -169,6 +198,39 @@ Gospel text:
 """.strip()
 
 
+def _build_season_prompt(date_value, mysteries: Sequence[RosaryMystery], *, season: Optional[str] = None) -> str:
+    mystery_lines = "\n".join(f"{mystery.number}. {mystery.title} - {mystery.fruit}" for mystery in mysteries)
+    return f"""
+Write exactly five Catholic Rosary decade reflections, one line per mystery.
+
+{_reflection_style_rules()}
+
+Additional season rule:
+- Since Gospel text is unavailable, connect each mystery and fruit to the liturgical season instead.
+- Season: {_season_label(season)}.
+
+Date: {date_value.isoformat()}
+Mysteries:
+{mystery_lines}
+""".strip()
+
+
+def _build_seasonal_or_generic_reflections(
+    date_value,
+    mysteries: Sequence[RosaryMystery],
+    *,
+    model: str,
+    season: Optional[str] = None,
+) -> tuple[str, ...]:
+    prompt = _build_season_prompt(date_value, mysteries, season=season)
+    try:
+        rendered = _call_openai_reflections(model, prompt)
+        return validate_rosary_reflections(rendered, mysteries)
+    except Exception as exc:
+        print(f"WARN rosary_reflections using generic_fallback reason=season_generation_invalid detail={exc}", file=sys.stderr)
+        return fallback_rosary_reflections(mysteries, season=season)
+
+
 def _call_openai_reflections(model: str, prompt: str) -> str:
     api_key, base_url, resolved_model = _resolve_openai_settings(model=model)
     if not api_key:
@@ -177,7 +239,7 @@ def _call_openai_reflections(model: str, prompt: str) -> str:
     system = "Return plain text only. Exactly five lines. No markdown, no bullets, no numbering, no commentary."
     response = client.responses.create(
         model=resolved_model or model,
-        temperature=0,
+        temperature=0.4,
         input=[
             {"role": "system", "content": [{"type": "input_text", "text": system}]},
             {"role": "user", "content": [{"type": "input_text", "text": _normalize_whitespace(prompt)}]},
