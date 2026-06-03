@@ -1,5 +1,17 @@
 # Release Log
 
+## [0.3.4.1] - 2026-06-03
+
+### Added
+- Added shared Daily Rosary day-context resolution for weekday mystery set, feast/memorial focus, Gospel focus, liturgical season fallback, and mystery-fruit fallback.
+- Added a generated Daily Rosary intro block before the opening prayers, with deterministic fallback when OpenAI, Gospel, or calendar context is unavailable.
+- Added regression coverage for optional memorial priority, focus fallback ordering, Rosary intro rendering, expanded Rosary titles, text/audio section order, and Spotify lookup compatibility.
+
+### Changed
+- Updated Daily Rosary text/audio titles to include the selected mystery set and short daily focus label, for example `Daily Rosary - Joyful Mysteries - Saint Example - April 6, 2026`.
+- Updated decade reflection generation so feast days, including optional memorials, orient the reflections before Gospel or season context.
+- Kept Spotify Daily Rosary lookup broad by matching `Daily Rosary` plus the date instead of variable mystery or focus terms.
+
 ## [0.3.4.0] - 2026-06-03
 
 ### Changed

@@ -27,7 +27,36 @@ class TestPublishContracts(unittest.TestCase):
             f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "
             "Today the Church celebrates Saint Example."
         )
+        self.mod.build_rosary_day_context = self._fake_rosary_day_context
+        self.mod.build_rosary_intro_text = lambda date_value, mystery_set_title, mysteries, **kwargs: (
+            "Today is Monday, April 6, 2026, in the Easter season. "
+            "For today's rosary, we will focus on the feast of Saint Example. "
+            f"As we pray the {mystery_set_title}, we ask for grace."
+        )
         self.mod.build_rosary_reflection_set = self._fake_rosary_reflection_set
+
+    def _fake_rosary_day_context(self, date_value, mystery_text, **kwargs):
+        lines = [line.strip() for line in mystery_text.splitlines() if line.strip()]
+        mysteries = []
+        for line in lines[1:]:
+            number, rest = line.split(".", 1)
+            title, fruit = rest.split(" - ", 1)
+            mysteries.append(SimpleNamespace(number=int(number), title=title.strip(), fruit=fruit.strip()))
+        return SimpleNamespace(
+            date=date_value,
+            mystery_set_title=lines[0],
+            mysteries=tuple(mysteries),
+            focus_source="feast",
+            focus_title="Saint Example",
+            focus_prompt_label="the feast of Saint Example",
+            celebration_clause="Saint Example",
+            season_label="Easter season",
+            feast_names=("Saint Example",),
+            gospel_citation="John 10:1-10",
+            gospel_text="Jesus calls his sheep by name.",
+            calendar="general_roman",
+            locale="en",
+        )
 
     def _fake_rosary_reflection_set(self, date_value, mystery_text, **kwargs):
         lines = [line.strip() for line in mystery_text.splitlines() if line.strip()]
@@ -41,6 +70,7 @@ class TestPublishContracts(unittest.TestCase):
             mysteries=tuple(mysteries),
             reflections=tuple(f"Reflection for {mystery.title}." for mystery in mysteries),
             source="generated",
+            day_context=self._fake_rosary_day_context(date_value, mystery_text),
         )
 
     def test_render_publish_template_and_episode_id_are_date_scoped(self):
@@ -126,7 +156,10 @@ class TestPublishContracts(unittest.TestCase):
             contracts_by_id["morning-prayer-elevenlabs"].entries[0]["audio_config"]["providers"][1]["provider"],
             "openai",
         )
-        self.assertEqual(contracts_by_id["rosary"].metadata["title_template"], "Daily Rosary - {date_display}")
+        self.assertEqual(
+            contracts_by_id["rosary"].metadata["title_template"],
+            "Daily Rosary - {rosary_mystery_set_title} - {rosary_focus_title} - {date_display}",
+        )
         self.assertTrue(contracts_by_id["rosary"].entries[0]["audio_config"]["enabled"])
         self.assertFalse(contracts_by_id["morning-prayer-elevenlabs"].entries[0]["blocks"][0]["skip_if_missing"])
         self.assertTrue(contracts_by_id["morning-prayer-elevenlabs"].metadata["daily_intro"]["allow_missing_gospel"])
@@ -309,7 +342,9 @@ class TestPublishContracts(unittest.TestCase):
         self.assertIn("Joyful Mysteries", rosary["text"])
         self.assertIn("The First Mystery: The Annunciation", rosary["text"])
         self.assertIn("Reflection for The Annunciation.", rosary["text"])
-        self.assertEqual(rosary["title"], "Daily Rosary - April 6, 2026")
+        self.assertEqual(rosary["title"], "Daily Rosary - Joyful Mysteries - Saint Example - April 6, 2026")
+        self.assertEqual(rosary["render_context"]["rosary_mystery_set_title"], "Joyful Mysteries")
+        self.assertEqual(rosary["render_context"]["rosary_focus_title"], "Saint Example")
         self.assertEqual(rosary["episode_id"], "daily-rosary-2026-04-06")
         self.assertEqual(
             [section["title"] for section in morning["sections"]],
@@ -317,7 +352,7 @@ class TestPublishContracts(unittest.TestCase):
         )
         self.assertEqual(
             [section["title"] for section in rosary["sections"]],
-            ["Opening Prayers", "Joyful Mysteries", "Closing Prayers"],
+            ["Rosary Intro", "Opening Prayers", "Joyful Mysteries", "Closing Prayers"],
         )
 
     def test_rosary_audio_fragments_use_cached_standard_prayers(self):
@@ -328,9 +363,11 @@ class TestPublishContracts(unittest.TestCase):
 
         self.assertEqual(len(jobs), 1)
         job = jobs[0]
-        self.assertEqual(job["title"], "Daily Rosary - April 6, 2026")
+        self.assertEqual(job["title"], "Daily Rosary - Joyful Mysteries - Saint Example - April 6, 2026")
         self.assertEqual(job["episode_id"], "daily-rosary-2026-04-06")
         fragments = job["audio_fragments"]
+        self.assertEqual(fragments[0]["kind"], "rosary-intro")
+        self.assertEqual(fragments[0]["label"], "Rosary Intro")
         self.assertTrue(any(fragment["kind"] == "rosary-reflection" for fragment in fragments))
         reflection_fragment = next(fragment for fragment in fragments if fragment["kind"] == "rosary-reflection")
         self.assertIn(".\n\nReflection:", reflection_fragment["text"])

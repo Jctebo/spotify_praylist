@@ -1009,6 +1009,33 @@ class TestRefreshJob(unittest.TestCase):
         sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
         sp.next.assert_not_called()
 
+    def test_spotify_episode_lookup_uris_matches_expanded_daily_rosary_title(self):
+        sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Daily Rosary - Joyful Mysteries - Saint Example - April 6, 2026",
+                    "uri": "spotify:episode:rosary",
+                },
+                {
+                    "name": "Daily Rosary - Joyful Mysteries - Saint Example - April 5, 2026",
+                    "uri": "spotify:episode:old",
+                },
+            ]
+        }
+
+        uris = self.mod.spotify_episode_lookup_uris(
+            sp,
+            "show_new",
+            ("Daily Rosary",),
+            ("{month_name} {day}, {year}",),
+            datetime.date(2026, 4, 6),
+        )
+
+        self.assertEqual(uris, ["spotify:episode:rosary"])
+        sp.show_episodes.assert_called_once_with("show_new", limit=50, market="US")
+        sp.next.assert_not_called()
+
     def test_spotify_episode_lookup_uris_tries_alternate_dates_pages_and_dedupes(self):
         sp = Mock()
         sp.show_episodes.return_value = {
