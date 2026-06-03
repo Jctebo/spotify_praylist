@@ -406,6 +406,25 @@ class TestSpotifyContracts(unittest.TestCase):
             ),
         )
 
+    def test_load_spotify_queue_contracts_includes_daily_rosary_lookup_contract(self):
+        contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
+        contract = contracts["daily-rosary"]
+        lookup = contract.spotify_episode_lookup
+
+        self.assertEqual(contract.notion_name, "Daily Rosary")
+        self.assertEqual(contract.resolver, "")
+        self.assertIsNotNone(lookup)
+        self.assertEqual(lookup.show_id, "4PNxb0OazrkcEp3FAggRoD")
+        self.assertEqual(lookup.required_name_terms, ("Daily Rosary",))
+        self.assertEqual(
+            lookup.date_formats,
+            (
+                "{month_name} {day}, {year}",
+                "{month_short} {day}, {year}",
+                "{month_short}. {day}, {year}",
+            ),
+        )
+
     def test_load_spotify_queue_contracts_includes_daily_examen_episode_contract(self):
         contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
 

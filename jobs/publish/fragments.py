@@ -59,15 +59,24 @@ def normalize_audio_settings(audio_config: Dict[str, Any]) -> Dict[str, Any]:
     return settings
 
 
+def effective_fragment_audio_config(fragment: Dict[str, Any], audio_config: Dict[str, Any]) -> Dict[str, Any]:
+    configured = fragment.get("effective_audio_config")
+    if isinstance(configured, dict):
+        return dict(configured)
+    return dict(audio_config)
+
+
 def _hash_payload(payload: Dict[str, Any]) -> str:
     text = json.dumps(payload, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
 def fragment_content_hash(fragment: Dict[str, Any], audio_config: Dict[str, Any]) -> str:
+    effective_audio_config = effective_fragment_audio_config(fragment, audio_config)
     payload = {
         "text": str(fragment.get("text", "")).strip(),
-        "tts": normalize_audio_settings(audio_config),
+        "audio_role": str(fragment.get("audio_role", "")).strip(),
+        "tts": normalize_audio_settings(effective_audio_config),
     }
     return _hash_payload(payload)
 

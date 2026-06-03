@@ -1,5 +1,13 @@
 {
   "key": "daily-rosary",
   "notion_name": "Daily Rosary",
-  "resolver": "ROSARY"
+  "spotify_episode_lookup": {
+    "show_id": "4PNxb0OazrkcEp3FAggRoD",
+    "required_name_terms": ["Daily Rosary"],
+    "date_formats": [
+      "{month_name} {day}, {year}",
+      "{month_short} {day}, {year}",
+      "{month_short}. {day}, {year}"
+    ]
+  }
 }

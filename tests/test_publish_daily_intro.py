@@ -173,7 +173,12 @@ class TestPublishDailyIntro(unittest.TestCase):
 
             with mock.patch.dict(
                 self.mod.os.environ,
-                {"OPENAI_API_KEY": "", "OPENAI_API_KEY_FILE": str(local_env)},
+                {
+                    "OPENAI_API_KEY": "",
+                    "OPENAI_API_KEY_FILE": str(local_env),
+                    "OAI_API_BASE_URL": "",
+                    "OAI_MODEL": "",
+                },
                 clear=False,
             ):
                 resolved = self.mod._resolve_openai_settings()

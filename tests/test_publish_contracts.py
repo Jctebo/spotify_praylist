@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest import mock
 
 from tests.test_helpers import load_module
@@ -25,6 +26,21 @@ class TestPublishContracts(unittest.TestCase):
         self.mod.build_liturgical_announcement_text = lambda date_value, **kwargs: (
             f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "
             "Today the Church celebrates Saint Example."
+        )
+        self.mod.build_rosary_reflection_set = self._fake_rosary_reflection_set
+
+    def _fake_rosary_reflection_set(self, date_value, mystery_text, **kwargs):
+        lines = [line.strip() for line in mystery_text.splitlines() if line.strip()]
+        mysteries = []
+        for line in lines[1:]:
+            number, rest = line.split(".", 1)
+            title, fruit = rest.split(" - ", 1)
+            mysteries.append(SimpleNamespace(number=int(number), title=title.strip(), fruit=fruit.strip()))
+        return SimpleNamespace(
+            mystery_set_title=lines[0],
+            mysteries=tuple(mysteries),
+            reflections=tuple(f"Reflection for {mystery.title}." for mystery in mysteries),
+            source="generated",
         )
 
     def test_render_publish_template_and_episode_id_are_date_scoped(self):
@@ -110,7 +126,8 @@ class TestPublishContracts(unittest.TestCase):
             contracts_by_id["morning-prayer-elevenlabs"].entries[0]["audio_config"]["providers"][1]["provider"],
             "openai",
         )
-        self.assertFalse(contracts_by_id["rosary"].entries[0]["audio_config"]["enabled"])
+        self.assertEqual(contracts_by_id["rosary"].metadata["title_template"], "Daily Rosary - {date_display}")
+        self.assertTrue(contracts_by_id["rosary"].entries[0]["audio_config"]["enabled"])
         self.assertFalse(contracts_by_id["morning-prayer-elevenlabs"].entries[0]["blocks"][0]["skip_if_missing"])
         self.assertTrue(contracts_by_id["morning-prayer-elevenlabs"].metadata["daily_intro"]["allow_missing_gospel"])
         self.assertNotIn("allow_missing_gospel", contracts_by_id["morning-prayer-elevenlabs"].entries[0]["blocks"][0])
@@ -120,8 +137,8 @@ class TestPublishContracts(unittest.TestCase):
         easter_jobs = self.mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
         ordinary_jobs = self.mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 6, 2))
 
-        self.assertEqual({job["entry_id"] for job in easter_jobs}, {"auxilium-christianorum", "morning-prayer-elevenlabs", "marian-antiphon-regina-caeli"})
-        self.assertEqual({job["entry_id"] for job in ordinary_jobs}, {"auxilium-christianorum", "morning-prayer-elevenlabs", "marian-antiphon-angelus"})
+        self.assertEqual({job["entry_id"] for job in easter_jobs}, {"auxilium-christianorum", "morning-prayer-elevenlabs", "marian-antiphon-regina-caeli", "rosary"})
+        self.assertEqual({job["entry_id"] for job in ordinary_jobs}, {"auxilium-christianorum", "morning-prayer-elevenlabs", "marian-antiphon-angelus", "rosary"})
         easter_marian = next(job for job in easter_jobs if job["entry_id"] == "marian-antiphon-regina-caeli")
         ordinary_marian = next(job for job in ordinary_jobs if job["entry_id"] == "marian-antiphon-angelus")
         self.assertEqual(easter_marian["title"], "Marian Antiphon - Regina Caeli - April 6, 2026")
@@ -271,6 +288,13 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(morning["episode_id"], "morning-prayer-elevenlabs-2026-04-06")
         self.assertIn("Today the Church celebrates", morning["text"])
         self.assertIn("Today is Monday, April 6, 2026", auxilium["text"])
+        self.assertIn("Our help is in the name of the Lord.", auxilium["text"])
+        self.assertIn("Who made heaven and earth.", auxilium["text"])
+        self.assertIn("Thou hast redeemed us with Thy Blood, O Lord.", auxilium["text"])
+        self.assertIn("And made of us a kingdom for our God.", auxilium["text"])
+        self.assertIn("Amen.", auxilium["text"])
+        self.assertNotIn("V.", auxilium["text"])
+        self.assertNotIn("R.", auxilium["text"])
         self.assertIn("In Thy name, Lord Jesus Christ", auxilium["text"])
         self.assertNotIn("O Glorious Queen of Heaven and Earth", auxilium["text"])
         self.assertEqual(auxilium["title"], "Auxilium Christianorum - April 6, 2026")
@@ -283,6 +307,10 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(auxilium["resume_markers"][0]["source"], "text_section")
         self.assertIn("April", morning["text"])
         self.assertIn("Joyful Mysteries", rosary["text"])
+        self.assertIn("The First Mystery: The Annunciation", rosary["text"])
+        self.assertIn("Reflection for The Annunciation.", rosary["text"])
+        self.assertEqual(rosary["title"], "Daily Rosary - April 6, 2026")
+        self.assertEqual(rosary["episode_id"], "daily-rosary-2026-04-06")
         self.assertEqual(
             [section["title"] for section in morning["sections"]],
             ["Daily Intro", "Opening Prayers", "Petitions", "Intercessory Litany"],
@@ -291,6 +319,32 @@ class TestPublishContracts(unittest.TestCase):
             [section["title"] for section in rosary["sections"]],
             ["Opening Prayers", "Joyful Mysteries", "Closing Prayers"],
         )
+
+    def test_rosary_audio_fragments_use_cached_standard_prayers(self):
+        contracts = self.mod.load_publish_contracts()
+        rosary_contract = next(contract for contract in contracts if contract.contract_id == "rosary")
+
+        jobs = self.mod.build_audio_jobs([rosary_contract], target_date=datetime.date(2026, 4, 6))
+
+        self.assertEqual(len(jobs), 1)
+        job = jobs[0]
+        self.assertEqual(job["title"], "Daily Rosary - April 6, 2026")
+        self.assertEqual(job["episode_id"], "daily-rosary-2026-04-06")
+        fragments = job["audio_fragments"]
+        self.assertTrue(any(fragment["kind"] == "rosary-reflection" for fragment in fragments))
+        hail_mary_fragments = [fragment for fragment in fragments if fragment["label"] == "Hail Mary"]
+        decade_hail_mary_fragments = [fragment for fragment in hail_mary_fragments if "/decade-" in fragment["fragment_key"]]
+        our_father_fragments = [fragment for fragment in fragments if fragment["label"] == "Our Father"]
+        glory_be_fragments = [fragment for fragment in fragments if fragment["label"] == "Glory Be"]
+        fatima_fragments = [fragment for fragment in fragments if fragment["label"] == "Fatima Prayer"]
+        self.assertEqual(len(hail_mary_fragments), 53)
+        self.assertEqual(len(decade_hail_mary_fragments), 50)
+        self.assertEqual(len(our_father_fragments), 6)
+        self.assertEqual(len(glory_be_fragments), 6)
+        self.assertEqual(len(fatima_fragments), 5)
+        self.assertEqual(len({fragment["text"] for fragment in decade_hail_mary_fragments}), 1)
+        self.assertEqual(len({fragment["effective_audio_config"]["providers"][0]["provider"] for fragment in decade_hail_mary_fragments}), 1)
+        self.assertEqual(len(job["resume_markers"]), len(fragments))
 
     def test_auxilium_weekday_map_selects_each_weekday_prayer(self):
         contracts = self.mod.load_publish_contracts()
@@ -322,6 +376,25 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(job["audio_fragments"][0]["kind"], "liturgical-announcement")
         self.assertEqual(job["audio_fragments"][0]["label"], "Liturgical Announcement")
         self.assertTrue(any("weekday-map-monday" in fragment["fragment_key"] for fragment in job["audio_fragments"]))
+        versicle_fragments = [fragment for fragment in job["audio_fragments"] if fragment.get("audio_role") == "versicle"]
+        response_fragments = [fragment for fragment in job["audio_fragments"] if fragment.get("audio_role") == "response"]
+        self.assertEqual(
+            [fragment["text"] for fragment in versicle_fragments],
+            [
+                "Our help is in the name of the Lord.",
+                "Thou hast redeemed us with Thy Blood, O Lord.",
+            ],
+        )
+        self.assertEqual(
+            [fragment["text"] for fragment in response_fragments],
+            [
+                "Who made heaven and earth.",
+                "And made of us a kingdom for our God.",
+                "Amen.",
+            ],
+        )
+        self.assertTrue(all(fragment["effective_audio_config"]["providers"][0]["voice"] == "alloy" for fragment in versicle_fragments))
+        self.assertTrue(all(fragment["effective_audio_config"]["providers"][0]["voice"] == "echo" for fragment in response_fragments))
         self.assertEqual(len(job["resume_markers"]), len(job["audio_fragments"]))
         self.assertEqual(job["resume_markers"][0]["source"], "audio_fragment")
         self.assertEqual(job["resume_markers"][0]["fragment_key"], job["audio_fragments"][0]["fragment_key"])

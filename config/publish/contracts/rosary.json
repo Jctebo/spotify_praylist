@@ -27,6 +27,17 @@
       "docs_root": "docs",
       "audio_dir": "docs/audio",
       "feed_path": "docs/podcast.xml"
+    },
+    "metadata": {
+      "title_template": "Daily Rosary - {date_display}",
+      "description_template": "Daily Rosary for {date_display}. The five mysteries include short Gospel-rooted reflections for today's prayer.",
+      "episode_id_template": "daily-rosary-{date_iso}",
+      "rosary_reflections": {
+        "calendar": "general_roman",
+        "locale": "en",
+        "prompt_model": "gpt-4.1-mini",
+        "allow_missing_gospel": true
+      }
     }
   },
   "entries": [
@@ -40,11 +51,36 @@
         "enabled": true
       },
       "audio_config": {
-        "enabled": false,
+        "enabled": true,
         "model": "gpt-4o-mini-tts",
         "voice": "alloy",
         "format": "mp3",
-        "speed": 1.0
+        "speed": 1.0,
+        "providers": [
+          {
+            "provider": "elevenlabs",
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "voice_id": "2NfTQuOn6dRQvgKuC2le",
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+              "stability": 0.5,
+              "similarity_boost": 0.75,
+              "use_speaker_boost": true,
+              "style": 0,
+              "speed": 1.0
+            },
+            "format": "mp3",
+            "speed": 1.0
+          },
+          {
+            "provider": "openai",
+            "api_key_env": "OPENAI_API_KEY",
+            "model": "gpt-4o-mini-tts",
+            "voice": "alloy",
+            "format": "mp3",
+            "speed": 1.0
+          }
+        ]
       },
       "blocks": [
         {
@@ -78,37 +114,24 @@
           ]
         },
         {
-          "kind": "weekday_map",
-          "selector": "weekday",
-          "map": {
-            "monday": {
-              "kind": "file",
-              "path": "config/publish/templates/rosary/mysteries/joyful.txt"
-            },
-            "tuesday": {
-              "kind": "file",
-              "path": "config/publish/templates/rosary/mysteries/sorrowful.txt"
-            },
-            "wednesday": {
-              "kind": "file",
-              "path": "config/publish/templates/rosary/mysteries/glorious.txt"
-            },
-            "thursday": {
-              "kind": "file",
-              "path": "config/publish/templates/rosary/mysteries/luminous.txt"
-            },
-            "friday": {
-              "kind": "file",
-              "path": "config/publish/templates/rosary/mysteries/sorrowful.txt"
-            },
-            "saturday": {
-              "kind": "file",
-              "path": "config/publish/templates/rosary/mysteries/joyful.txt"
-            },
-            "sunday": {
-              "kind": "file",
-              "path": "config/publish/templates/rosary/mysteries/glorious.txt"
+          "kind": "rosary_decades",
+          "mysteries": {
+            "selector": "weekday",
+            "map": {
+              "monday": "config/publish/templates/rosary/mysteries/joyful.txt",
+              "tuesday": "config/publish/templates/rosary/mysteries/sorrowful.txt",
+              "wednesday": "config/publish/templates/rosary/mysteries/glorious.txt",
+              "thursday": "config/publish/templates/rosary/mysteries/luminous.txt",
+              "friday": "config/publish/templates/rosary/mysteries/sorrowful.txt",
+              "saturday": "config/publish/templates/rosary/mysteries/joyful.txt",
+              "sunday": "config/publish/templates/rosary/mysteries/glorious.txt"
             }
+          },
+          "prayers": {
+            "our_father": "config/publish/templates/rosary/our-father.txt",
+            "hail_mary": "config/publish/templates/rosary/hail-mary.txt",
+            "glory_be": "config/publish/templates/rosary/glory-be.txt",
+            "fatima_prayer": "config/publish/templates/rosary/fatima-prayer.txt"
           }
         },
         {

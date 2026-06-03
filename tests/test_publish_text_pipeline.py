@@ -1,6 +1,7 @@
 import datetime
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 
 from tests.test_helpers import load_module
 
@@ -9,7 +10,7 @@ class FakeNotionClient:
     def __init__(self):
         self.pages = {
             "Morning Prayer - April 6, 2026": "page-1",
-            "Daily Rosary": "page-2",
+            "Daily Rosary - April 6, 2026": "page-2",
             "Auxilium Christianorum - April 6, 2026": "page-3",
         }
         self.page_children = {}
@@ -78,6 +79,21 @@ class TestPublishTextPipeline(unittest.TestCase):
             f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "
             "Today the Church celebrates Saint Example."
         )
+        self.contracts_mod.build_rosary_reflection_set = self._fake_rosary_reflection_set
+
+    def _fake_rosary_reflection_set(self, date_value, mystery_text, **kwargs):
+        lines = [line.strip() for line in mystery_text.splitlines() if line.strip()]
+        mysteries = []
+        for line in lines[1:]:
+            number, rest = line.split(".", 1)
+            title, fruit = rest.split(" - ", 1)
+            mysteries.append(SimpleNamespace(number=int(number), title=title.strip(), fruit=fruit.strip()))
+        return SimpleNamespace(
+            mystery_set_title=lines[0],
+            mysteries=tuple(mysteries),
+            reflections=tuple(f"Reflection for {mystery.title}." for mystery in mysteries),
+            source="generated",
+        )
 
     def test_upsert_text_jobs_updates_existing_pages_by_title(self):
         contracts = self.contracts_mod.load_publish_contracts()
@@ -91,7 +107,7 @@ class TestPublishTextPipeline(unittest.TestCase):
         self.assertEqual(first["updated"], 3)
         self.assertEqual(second["created"], 0)
         self.assertEqual(second["updated"], 3)
-        self.assertEqual(set(client.pages.keys()), {"Morning Prayer - April 6, 2026", "Daily Rosary", "Auxilium Christianorum - April 6, 2026"})
+        self.assertEqual(set(client.pages.keys()), {"Morning Prayer - April 6, 2026", "Daily Rosary - April 6, 2026", "Auxilium Christianorum - April 6, 2026"})
         self.assertEqual([_toggle_title(block) for block in client.page_children["page-1"]], [
             "Daily Intro",
             "Opening Prayers",
