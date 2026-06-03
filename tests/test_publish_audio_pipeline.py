@@ -32,8 +32,42 @@ class TestPublishAudioPipeline(unittest.TestCase):
         package_contracts.build_daily_intro_text = stub
         self.contracts_mod.build_liturgical_announcement_text = announcement_stub
         package_contracts.build_liturgical_announcement_text = announcement_stub
+        self.contracts_mod.build_rosary_day_context = self._fake_rosary_day_context
+        package_contracts.build_rosary_day_context = self._fake_rosary_day_context
+        self.contracts_mod.build_rosary_intro_text = self._fake_rosary_intro_text
+        package_contracts.build_rosary_intro_text = self._fake_rosary_intro_text
         self.contracts_mod.build_rosary_reflection_set = self._fake_rosary_reflection_set
         package_contracts.build_rosary_reflection_set = self._fake_rosary_reflection_set
+
+    def _fake_rosary_intro_text(self, date_value, mystery_set_title, mysteries, **kwargs):
+        return (
+            f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}, in the Easter season. "
+            "For today's rosary, we will focus on the feast of Saint Example. "
+            f"As we pray the {mystery_set_title}, we ask for grace."
+        )
+
+    def _fake_rosary_day_context(self, date_value, mystery_text, **kwargs):
+        lines = [line.strip() for line in mystery_text.splitlines() if line.strip()]
+        mysteries = []
+        for line in lines[1:]:
+            number, rest = line.split(".", 1)
+            title, fruit = rest.split(" - ", 1)
+            mysteries.append(SimpleNamespace(number=int(number), title=title.strip(), fruit=fruit.strip()))
+        return SimpleNamespace(
+            date=date_value,
+            mystery_set_title=lines[0],
+            mysteries=tuple(mysteries),
+            focus_source="feast",
+            focus_title="Saint Example",
+            focus_prompt_label="the feast of Saint Example",
+            celebration_clause="Saint Example",
+            season_label="Easter season",
+            feast_names=("Saint Example",),
+            gospel_citation="John 10:1-10",
+            gospel_text="Jesus calls his sheep by name.",
+            calendar="general_roman",
+            locale="en",
+        )
 
     def _fake_rosary_reflection_set(self, date_value, mystery_text, **kwargs):
         lines = [line.strip() for line in mystery_text.splitlines() if line.strip()]
@@ -47,6 +81,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
             mysteries=tuple(mysteries),
             reflections=tuple(f"Reflection for {mystery.title}." for mystery in mysteries),
             source="generated",
+            day_context=self._fake_rosary_day_context(date_value, mystery_text),
         )
 
     def _normalize(self, text):
@@ -80,6 +115,9 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertGreater(len(regina_job["audio_fragments"]), 0)
         self.assertGreater(len(auxilium_job["audio_fragments"]), 0)
         self.assertGreater(len(rosary_job["audio_fragments"]), 0)
+        self.assertEqual(rosary_job["title"], "Daily Rosary - Joyful Mysteries - Saint Example - April 6, 2026")
+        self.assertEqual(rosary_job["audio_fragments"][0]["kind"], "rosary-intro")
+        self.assertEqual(rosary_job["audio_fragments"][0]["label"], "Rosary Intro")
         self.assertEqual(auxilium_job["resume_markers"][0]["source"], "audio_fragment")
 
     def test_render_audio_job_skips_when_hash_matches(self):

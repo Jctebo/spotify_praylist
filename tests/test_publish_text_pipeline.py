@@ -10,7 +10,7 @@ class FakeNotionClient:
     def __init__(self):
         self.pages = {
             "Morning Prayer - April 6, 2026": "page-1",
-            "Daily Rosary - April 6, 2026": "page-2",
+            "Daily Rosary - Joyful Mysteries - Saint Example - April 6, 2026": "page-2",
             "Auxilium Christianorum - April 6, 2026": "page-3",
         }
         self.page_children = {}
@@ -79,7 +79,36 @@ class TestPublishTextPipeline(unittest.TestCase):
             f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "
             "Today the Church celebrates Saint Example."
         )
+        self.contracts_mod.build_rosary_day_context = self._fake_rosary_day_context
+        self.contracts_mod.build_rosary_intro_text = lambda date_value, mystery_set_title, mysteries, **kwargs: (
+            "Today is Monday, April 6, 2026, in the Easter season. "
+            "For today's rosary, we will focus on the feast of Saint Example. "
+            f"As we pray the {mystery_set_title}, we ask for grace."
+        )
         self.contracts_mod.build_rosary_reflection_set = self._fake_rosary_reflection_set
+
+    def _fake_rosary_day_context(self, date_value, mystery_text, **kwargs):
+        lines = [line.strip() for line in mystery_text.splitlines() if line.strip()]
+        mysteries = []
+        for line in lines[1:]:
+            number, rest = line.split(".", 1)
+            title, fruit = rest.split(" - ", 1)
+            mysteries.append(SimpleNamespace(number=int(number), title=title.strip(), fruit=fruit.strip()))
+        return SimpleNamespace(
+            date=date_value,
+            mystery_set_title=lines[0],
+            mysteries=tuple(mysteries),
+            focus_source="feast",
+            focus_title="Saint Example",
+            focus_prompt_label="the feast of Saint Example",
+            celebration_clause="Saint Example",
+            season_label="Easter season",
+            feast_names=("Saint Example",),
+            gospel_citation="John 10:1-10",
+            gospel_text="Jesus calls his sheep by name.",
+            calendar="general_roman",
+            locale="en",
+        )
 
     def _fake_rosary_reflection_set(self, date_value, mystery_text, **kwargs):
         lines = [line.strip() for line in mystery_text.splitlines() if line.strip()]
@@ -93,6 +122,7 @@ class TestPublishTextPipeline(unittest.TestCase):
             mysteries=tuple(mysteries),
             reflections=tuple(f"Reflection for {mystery.title}." for mystery in mysteries),
             source="generated",
+            day_context=self._fake_rosary_day_context(date_value, mystery_text),
         )
 
     def test_upsert_text_jobs_updates_existing_pages_by_title(self):
@@ -107,7 +137,14 @@ class TestPublishTextPipeline(unittest.TestCase):
         self.assertEqual(first["updated"], 3)
         self.assertEqual(second["created"], 0)
         self.assertEqual(second["updated"], 3)
-        self.assertEqual(set(client.pages.keys()), {"Morning Prayer - April 6, 2026", "Daily Rosary - April 6, 2026", "Auxilium Christianorum - April 6, 2026"})
+        self.assertEqual(
+            set(client.pages.keys()),
+            {
+                "Morning Prayer - April 6, 2026",
+                "Daily Rosary - Joyful Mysteries - Saint Example - April 6, 2026",
+                "Auxilium Christianorum - April 6, 2026",
+            },
+        )
         self.assertEqual([_toggle_title(block) for block in client.page_children["page-1"]], [
             "Daily Intro",
             "Opening Prayers",
@@ -115,6 +152,7 @@ class TestPublishTextPipeline(unittest.TestCase):
             "Intercessory Litany",
         ])
         self.assertEqual([_toggle_title(block) for block in client.page_children["page-2"]], [
+            "Rosary Intro",
             "Opening Prayers",
             "Joyful Mysteries",
             "Closing Prayers",

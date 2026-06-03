@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 from jobs.publish.daily_intro import build_daily_intro_text
 from jobs.publish.formatting import build_publish_context, derive_episode_id, render_publish_template
 from jobs.publish.liturgical_announcement import build_liturgical_announcement_text
-from jobs.publish.rosary_reflections import build_rosary_reflection_set
+from jobs.publish.rosary_reflections import build_rosary_day_context, build_rosary_intro_text, build_rosary_reflection_set
 from jobs.publish.fragments import audio_manifest_hash
 from jobs.publish.errors import PublishMissingDataError
 from jobs.novena.liturgical_helpers import is_easter_season_for_date
@@ -375,6 +375,16 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
             normalized["locale"] = str(normalized.get("locale", "")).strip()
         if "include_season" in normalized:
             normalized["include_season"] = _normalize_bool(normalized.get("include_season", False))
+    elif kind == "rosary-intro":
+        normalized["title"] = str(normalized.get("title", "")).strip()
+        if "calendar" in normalized:
+            normalized["calendar"] = str(normalized.get("calendar", "")).strip()
+        if "locale" in normalized:
+            normalized["locale"] = str(normalized.get("locale", "")).strip()
+        if "prompt_model" in normalized:
+            normalized["prompt_model"] = str(normalized.get("prompt_model", "")).strip()
+        if "allow_missing_gospel" in normalized:
+            normalized["allow_missing_gospel"] = _normalize_bool(normalized.get("allow_missing_gospel", True))
     elif kind == "rosary-decades":
         mysteries = normalized.get("mysteries")
         if not isinstance(mysteries, dict):
@@ -520,6 +530,8 @@ def _validate_entry_blocks(blocks: Sequence[Dict[str, Any]], path: Path, entry_i
         elif kind == "daily-intro":
             continue
         elif kind == "liturgical-announcement":
+            continue
+        elif kind == "rosary-intro":
             continue
         elif kind == "rosary-decades":
             mysteries = block.get("mysteries") or {}
@@ -705,12 +717,74 @@ def _rosary_reflection_config(block: Dict[str, Any], contract: PublishContract) 
     return config
 
 
+def _find_first_block_by_kind(blocks: Sequence[Any], kind_name: str) -> Optional[Dict[str, Any]]:
+    target = normalize_publish_key(kind_name)
+    for block in blocks:
+        if not isinstance(block, dict):
+            continue
+        kind = normalize_publish_key(block.get("kind"))
+        if kind == target:
+            return block
+        nested: Sequence[Any] = []
+        if kind == "sequence":
+            nested = block.get("blocks") or []
+        elif kind == "repeat":
+            nested = [block.get("block")]
+        elif kind == "weekday-map":
+            mapping = block.get("map") or {}
+            nested = list(mapping.values())
+        found = _find_first_block_by_kind(nested, target) if nested else None
+        if found is not None:
+            return found
+    return None
+
+
+def _build_rosary_day_runtime_context(
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    target_date: _dt.date,
+) -> Dict[str, Any]:
+    rosary_block = _find_first_block_by_kind(entry.get("blocks") or [], "rosary-decades")
+    if not rosary_block:
+        return {}
+    config = _rosary_reflection_config(rosary_block, contract)
+    mystery_text = _selected_rosary_mystery_text(rosary_block, contract=contract, entry=entry, target_date=target_date)
+    day_context = build_rosary_day_context(
+        target_date,
+        mystery_text,
+        calendar=str(config.get("calendar") or "").strip() or None,
+        locale=str(config.get("locale") or "").strip() or None,
+        allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
+        season=_season_for_date(contract, target_date),
+    )
+    return {
+        "rosary_day_context": day_context,
+        "rosary_mystery_set_title": day_context.mystery_set_title,
+        "rosary_focus_title": day_context.focus_title,
+        "rosary_focus_source": day_context.focus_source,
+        "rosary_focus_prompt_label": day_context.focus_prompt_label,
+        "rosary_season_label": day_context.season_label,
+        "rosary_gospel_citation": day_context.gospel_citation,
+    }
+
+
+def _entry_runtime_context(
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    target_date: _dt.date,
+) -> Dict[str, Any]:
+    runtime: Dict[str, Any] = {}
+    runtime.update(_build_rosary_day_runtime_context(contract, entry, target_date))
+    return runtime
+
+
 def _build_rosary_reflection_set(
     block: Dict[str, Any],
     *,
     contract: PublishContract,
     entry: Dict[str, Any],
     target_date: _dt.date,
+    runtime_context: Optional[Dict[str, Any]] = None,
 ):
     config = _rosary_reflection_config(block, contract)
     mystery_text = _selected_rosary_mystery_text(block, contract=contract, entry=entry, target_date=target_date)
@@ -722,6 +796,46 @@ def _build_rosary_reflection_set(
         prompt_model=str(config.get("prompt_model") or "").strip() or None,
         allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
         season=_season_for_date(contract, target_date),
+        day_context=(runtime_context or {}).get("rosary_day_context"),
+    )
+
+
+def _resolve_rosary_intro_content(
+    block: Dict[str, Any],
+    *,
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    target_date: _dt.date,
+    runtime_context: Optional[Dict[str, Any]] = None,
+) -> str:
+    rosary_block = _find_first_block_by_kind(entry.get("blocks") or [], "rosary-decades")
+    if not rosary_block:
+        raise PublishMissingDataError(f"Publish entry '{entry.get('entry_id', '')}' has a rosary_intro block without rosary_decades.")
+    config = _rosary_reflection_config(rosary_block, contract)
+    for key in ("calendar", "locale", "prompt_model", "allow_missing_gospel"):
+        if key in block:
+            config[key] = block.get(key)
+    day_context = (runtime_context or {}).get("rosary_day_context")
+    if day_context is None:
+        mystery_text = _selected_rosary_mystery_text(rosary_block, contract=contract, entry=entry, target_date=target_date)
+        day_context = build_rosary_day_context(
+            target_date,
+            mystery_text,
+            calendar=str(config.get("calendar") or "").strip() or None,
+            locale=str(config.get("locale") or "").strip() or None,
+            allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
+            season=_season_for_date(contract, target_date),
+        )
+    return build_rosary_intro_text(
+        target_date,
+        day_context.mystery_set_title,
+        day_context.mysteries,
+        calendar=str(config.get("calendar") or "").strip() or None,
+        locale=str(config.get("locale") or "").strip() or None,
+        prompt_model=str(config.get("prompt_model") or "").strip() or None,
+        allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
+        season=_season_for_date(contract, target_date),
+        day_context=day_context,
     )
 
 
@@ -744,8 +858,15 @@ def _resolve_rosary_decades_content(
     contract: PublishContract,
     entry: Dict[str, Any],
     target_date: _dt.date,
+    runtime_context: Optional[Dict[str, Any]] = None,
 ) -> str:
-    reflection_set = _build_rosary_reflection_set(block, contract=contract, entry=entry, target_date=target_date)
+    reflection_set = _build_rosary_reflection_set(
+        block,
+        contract=contract,
+        entry=entry,
+        target_date=target_date,
+        runtime_context=runtime_context,
+    )
     our_father = _read_rosary_prayer_text(block, "our_father")
     hail_mary = _read_rosary_prayer_text(block, "hail_mary")
     glory_be = _read_rosary_prayer_text(block, "glory_be")
@@ -774,6 +895,7 @@ def resolve_block_content(
     contract: PublishContract,
     entry: Dict[str, Any],
     target_date: Optional[_dt.date] = None,
+    runtime_context: Optional[Dict[str, Any]] = None,
 ) -> str:
     if isinstance(block, str):
         return block.strip()
@@ -803,19 +925,48 @@ def resolve_block_content(
             chosen = mapping.get(weekday.lower()) or mapping.get(weekday.title())
             if chosen is None:
                 raise PublishMissingDataError(f"Publish entry '{entry.get('entry_id', '')}' has no weekday_map entry for '{weekday}'.")
-            return resolve_block_content(chosen, contract=contract, entry=entry, target_date=effective_date)
+            return resolve_block_content(chosen, contract=contract, entry=entry, target_date=effective_date, runtime_context=runtime_context)
         if kind == "sequence":
-            children = [resolve_block_content(child, contract=contract, entry=entry, target_date=effective_date) for child in block.get("blocks", [])]
+            children = [
+                resolve_block_content(
+                    child,
+                    contract=contract,
+                    entry=entry,
+                    target_date=effective_date,
+                    runtime_context=runtime_context,
+                )
+                for child in block.get("blocks", [])
+            ]
             children = [child for child in children if child.strip()]
             separator = str(block.get("separator", "\n\n"))
             return separator.join(children).strip()
         if kind == "repeat":
-            repeated = resolve_block_content(block.get("block"), contract=contract, entry=entry, target_date=effective_date)
+            repeated = resolve_block_content(
+                block.get("block"),
+                contract=contract,
+                entry=entry,
+                target_date=effective_date,
+                runtime_context=runtime_context,
+            )
             separator = str(block.get("separator", "\n"))
             count = int(block.get("count", 0))
             return separator.join(repeated for _ in range(count)).strip()
         if kind == "rosary-decades":
-            return _resolve_rosary_decades_content(block, contract=contract, entry=entry, target_date=effective_date)
+            return _resolve_rosary_decades_content(
+                block,
+                contract=contract,
+                entry=entry,
+                target_date=effective_date,
+                runtime_context=runtime_context,
+            )
+        if kind == "rosary-intro":
+            return _resolve_rosary_intro_content(
+                block,
+                contract=contract,
+                entry=entry,
+                target_date=effective_date,
+                runtime_context=runtime_context,
+            )
         if kind == "daily-intro":
             metadata = dict(contract.metadata or {})
             intro_config = dict(metadata.get("daily_intro") or {}) if isinstance(metadata.get("daily_intro"), dict) else {}
@@ -879,10 +1030,27 @@ def resolve_block_content(
 
 
 
-def _entry_text_body(contract: PublishContract, entry: Dict[str, Any], *, target_date: Optional[_dt.date] = None) -> str:
+def _entry_text_body(
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    *,
+    target_date: Optional[_dt.date] = None,
+    runtime_context: Optional[Dict[str, Any]] = None,
+) -> str:
+    effective_date = target_date or _local_date_for_timezone(contract.timezone)
+    runtime_context = runtime_context if runtime_context is not None else _entry_runtime_context(contract, entry, effective_date)
     blocks = entry.get("blocks") or []
     if blocks:
-        parts = [resolve_block_content(block, contract=contract, entry=entry, target_date=target_date) for block in blocks]
+        parts = [
+            resolve_block_content(
+                block,
+                contract=contract,
+                entry=entry,
+                target_date=effective_date,
+                runtime_context=runtime_context,
+            )
+            for block in blocks
+        ]
         parts = [part.strip() for part in parts if part.strip()]
         return "\n\n".join(parts).strip()
     return str(entry.get("text", "")).strip()
@@ -908,6 +1076,9 @@ def _fragment_label_for_block(block: Dict[str, Any], text: str) -> str:
 
     if kind == "liturgical-announcement":
         return explicit or "Liturgical Announcement"
+
+    if kind == "rosary-intro":
+        return explicit or "Rosary Intro"
 
     if kind == "inline":
         first_line = _first_non_empty_line(text)
@@ -980,8 +1151,15 @@ def _expand_rosary_decade_audio_fragments(
     entry: Dict[str, Any],
     target_date: _dt.date,
     path_parts: Sequence[str],
+    runtime_context: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
-    reflection_set = _build_rosary_reflection_set(block, contract=contract, entry=entry, target_date=target_date)
+    reflection_set = _build_rosary_reflection_set(
+        block,
+        contract=contract,
+        entry=entry,
+        target_date=target_date,
+        runtime_context=runtime_context,
+    )
     fragments: List[Dict[str, Any]] = []
     hail_mary_count = int(block.get("hail_mary_count", 10))
     for mystery, reflection in zip(reflection_set.mysteries, reflection_set.reflections):
@@ -1069,6 +1247,7 @@ def _expand_audio_fragments_from_block(
     entry: Dict[str, Any],
     target_date: Optional[_dt.date],
     path_parts: Sequence[str],
+    runtime_context: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     if isinstance(block, str):
         text = block.strip()
@@ -1101,6 +1280,7 @@ def _expand_audio_fragments_from_block(
                     entry=entry,
                     target_date=effective_date,
                     path_parts=(*path_parts, child_segment),
+                    runtime_context=runtime_context,
                 )
             )
         return fragments
@@ -1118,6 +1298,7 @@ def _expand_audio_fragments_from_block(
                     entry=entry,
                     target_date=effective_date,
                     path_parts=(*path_parts, child_segment),
+                    runtime_context=runtime_context,
                 )
             )
         return fragments
@@ -1135,11 +1316,18 @@ def _expand_audio_fragments_from_block(
             entry=entry,
             target_date=effective_date,
             path_parts=(*path_parts, child_segment),
+            runtime_context=runtime_context,
         )
 
     if kind == "monthly-template":
         month_name = evaluate_selector(block.get("selector", "current_calendar_month"), target_date=effective_date, timezone=contract.timezone, contract=contract, entry=entry)
-        text = resolve_block_content(block, contract=contract, entry=entry, target_date=effective_date)
+        text = resolve_block_content(
+            block,
+            contract=contract,
+            entry=entry,
+            target_date=effective_date,
+            runtime_context=runtime_context,
+        )
         if not text.strip():
             return []
         fragment_key = "/".join((*path_parts, _fragment_path_segment("monthly-template", value=month_name)))
@@ -1160,10 +1348,17 @@ def _expand_audio_fragments_from_block(
             entry=entry,
             target_date=effective_date,
             path_parts=path_parts,
+            runtime_context=runtime_context,
         )
 
-    if kind in {"file", "inline", "daily-intro", "liturgical-announcement"}:
-        text = resolve_block_content(block, contract=contract, entry=entry, target_date=effective_date)
+    if kind in {"file", "inline", "daily-intro", "liturgical-announcement", "rosary-intro"}:
+        text = resolve_block_content(
+            block,
+            contract=contract,
+            entry=entry,
+            target_date=effective_date,
+            runtime_context=runtime_context,
+        )
         if not text.strip():
             return []
         fragment_key = "/".join((*path_parts, _fragment_path_segment(kind)))
@@ -1185,10 +1380,12 @@ def expand_audio_fragments(
     entry: Dict[str, Any],
     *,
     target_date: Optional[_dt.date] = None,
+    runtime_context: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
     fragments: List[Dict[str, Any]] = []
     blocks = list(entry.get("blocks") or [])
     effective_date = target_date or _local_date_for_timezone(contract.timezone)
+    runtime_context = runtime_context if runtime_context is not None else _entry_runtime_context(contract, entry, effective_date)
     if blocks:
         for index, block in enumerate(blocks, start=1):
             fragments.extend(
@@ -1198,6 +1395,7 @@ def expand_audio_fragments(
                     entry=entry,
                     target_date=effective_date,
                     path_parts=(f"block-{index}",),
+                    runtime_context=runtime_context,
                 )
             )
         return fragments
@@ -1243,11 +1441,9 @@ def _section_title_for_block(block: Dict[str, Any], text: str, *, index: int, to
 
     kind = normalize_publish_key(block.get("kind"))
     if kind == "sequence":
-        if index == 1:
-            return "Opening Prayers"
         if index == total:
             return "Closing Prayers"
-        return f"Section {index}"
+        return "Opening Prayers"
 
     if kind == "weekday-map":
         first_line = _first_non_empty_line(text)
@@ -1279,6 +1475,9 @@ def _section_title_for_block(block: Dict[str, Any], text: str, *, index: int, to
     if kind == "liturgical-announcement":
         return explicit or "Liturgical Announcement"
 
+    if kind == "rosary-intro":
+        return explicit or "Rosary Intro"
+
     if kind == "inline":
         first_line = _first_non_empty_line(text)
         if first_line and len(first_line) <= 80:
@@ -1288,12 +1487,25 @@ def _section_title_for_block(block: Dict[str, Any], text: str, *, index: int, to
     return f"Section {index}"
 
 
-def _build_text_sections(contract: PublishContract, entry: Dict[str, Any], *, target_date: Optional[_dt.date] = None) -> List[Dict[str, Any]]:
+def _build_text_sections(
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    *,
+    target_date: Optional[_dt.date] = None,
+    runtime_context: Optional[Dict[str, Any]] = None,
+) -> List[Dict[str, Any]]:
     sections: List[Dict[str, Any]] = []
     blocks = list(entry.get("blocks") or [])
     effective_date = target_date or _local_date_for_timezone(contract.timezone)
+    runtime_context = runtime_context if runtime_context is not None else _entry_runtime_context(contract, entry, effective_date)
     for index, block in enumerate(blocks, start=1):
-        text = resolve_block_content(block, contract=contract, entry=entry, target_date=effective_date)
+        text = resolve_block_content(
+            block,
+            contract=contract,
+            entry=entry,
+            target_date=effective_date,
+            runtime_context=runtime_context,
+        )
         if not text.strip():
             continue
         sections.append(
@@ -1351,6 +1563,7 @@ def _render_entry_metadata(
     entry: Dict[str, Any],
     *,
     target_date: Optional[_dt.date] = None,
+    runtime_context: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     effective_date = target_date or _local_date_for_timezone(contract.timezone)
     season = str(contract.season or "").strip().lower()
@@ -1366,6 +1579,11 @@ def _render_entry_metadata(
     )
     if season:
         context["season_label"] = _season_label_for_value(season)
+    if runtime_context:
+        for key, value in runtime_context.items():
+            if key == "rosary_day_context":
+                continue
+            context[key] = value
     metadata = dict(contract.metadata or {})
     title_template = str(metadata.get("title_template") or metadata.get("title") or "").strip()
     description_template = str(metadata.get("description_template") or metadata.get("description") or "").strip()
@@ -1397,11 +1615,27 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
             text_config = dict(entry.get("text_config") or {})
             if not bool(text_config.get("enabled", True)):
                 continue
-            rendered_metadata = _render_entry_metadata(contract, entry, target_date=effective_date)
-            text_body = _entry_text_body(contract, entry, target_date=effective_date)
+            runtime_context = _entry_runtime_context(contract, entry, effective_date)
+            rendered_metadata = _render_entry_metadata(
+                contract,
+                entry,
+                target_date=effective_date,
+                runtime_context=runtime_context,
+            )
+            text_body = _entry_text_body(
+                contract,
+                entry,
+                target_date=effective_date,
+                runtime_context=runtime_context,
+            )
             if not text_body.strip():
                 continue
-            sections = _build_text_sections(contract, entry, target_date=effective_date)
+            sections = _build_text_sections(
+                contract,
+                entry,
+                target_date=effective_date,
+                runtime_context=runtime_context,
+            )
             jobs.append(
                 {
                     "entry_id": entry["entry_id"],
@@ -1425,6 +1659,7 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
                     "notion_target": dict(contract.notion_target),
                     "audio_target": dict(contract.audio_target),
                     "metadata": dict(contract.metadata),
+                    "render_context": dict(rendered_metadata["context"]),
                     "source_path": str(contract.source_path),
                 }
             )
@@ -1461,12 +1696,28 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
                 audio_config["speed"] = float(DEFAULT_AUDIO_SETTINGS["speed"])
             if not audio_config["enabled"]:
                 continue
-            rendered_metadata = _render_entry_metadata(contract, entry, target_date=effective_date)
+            runtime_context = _entry_runtime_context(contract, entry, effective_date)
+            rendered_metadata = _render_entry_metadata(
+                contract,
+                entry,
+                target_date=effective_date,
+                runtime_context=runtime_context,
+            )
             audio_fragments = attach_effective_audio_configs(
-                expand_audio_fragments(contract, entry, target_date=effective_date),
+                expand_audio_fragments(
+                    contract,
+                    entry,
+                    target_date=effective_date,
+                    runtime_context=runtime_context,
+                ),
                 audio_config,
             )
-            text_body = _entry_text_body(contract, entry, target_date=effective_date)
+            text_body = _entry_text_body(
+                contract,
+                entry,
+                target_date=effective_date,
+                runtime_context=runtime_context,
+            )
             if not text_body.strip():
                 continue
             if not audio_fragments:
@@ -1493,6 +1744,7 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
                 "notion_target": dict(contract.notion_target),
                 "audio_target": dict(contract.audio_target),
                 "metadata": dict(contract.metadata),
+                "render_context": dict(rendered_metadata["context"]),
                 "source_path": str(contract.source_path),
             }
             job["content_hash"] = audio_manifest_hash(job, audio_fragments, audio_config)

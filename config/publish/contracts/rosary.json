@@ -29,8 +29,8 @@
       "feed_path": "docs/podcast.xml"
     },
     "metadata": {
-      "title_template": "Daily Rosary - {date_display}",
-      "description_template": "Daily Rosary for {date_display}. The five mysteries include short Gospel-rooted reflections for today's prayer.",
+      "title_template": "Daily Rosary - {rosary_mystery_set_title} - {rosary_focus_title} - {date_display}",
+      "description_template": "Daily Rosary for {date_display}. The {rosary_mystery_set_title} include short reflections focused on {rosary_focus_title}.",
       "episode_id_template": "daily-rosary-{date_iso}",
       "rosary_reflections": {
         "calendar": "general_roman",
@@ -83,6 +83,10 @@
         ]
       },
       "blocks": [
+        {
+          "kind": "rosary_intro",
+          "title": "Rosary Intro"
+        },
         {
           "kind": "sequence",
           "blocks": [
