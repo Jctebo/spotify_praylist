@@ -62,7 +62,7 @@ class TestPublishRosaryReflections(unittest.TestCase):
             self.mod.validate_rosary_reflections("Only one reflection.", mysteries)
 
         with self.assertRaisesRegex(RuntimeError, "too long"):
-            self.mod.validate_rosary_reflections(["x" * 281] * 5, mysteries)
+            self.mod.validate_rosary_reflections(["x" * 651] * 5, mysteries)
 
     def test_build_rosary_reflections_uses_generated_output_when_valid(self):
         _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
@@ -81,16 +81,43 @@ class TestPublishRosaryReflections(unittest.TestCase):
 
         self.assertEqual(reflections, tuple(f"Generated reflection {index}." for index in range(1, 6)))
 
+    def test_build_rosary_reflections_uses_season_generation_when_gospel_is_missing(self):
+        _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
+        missing_context = SimpleNamespace(celebration_clause="Monday", gospel_citation="", gospel_text="")
+        prompts = []
+
+        def fake_openai_reflections(model, prompt):
+            prompts.append(prompt)
+            return "\n".join(f"Seasonal reflection {index} for The Annunciation and humility." for index in range(1, 6))
+
+        with mock.patch.object(self.mod, "fetch_daily_gospel_context", return_value=missing_context), mock.patch.object(
+            self.mod,
+            "_call_openai_reflections",
+            side_effect=fake_openai_reflections,
+        ):
+            reflections = self.mod.build_rosary_reflections(datetime.date(2026, 4, 6), mysteries, season="easter")
+
+        self.assertEqual(len(reflections), 5)
+        self.assertIn("Seasonal reflection 1", reflections[0])
+        self.assertEqual(len(prompts), 1)
+        self.assertIn("Season: Easter season", prompts[0])
+
     def test_build_rosary_reflections_falls_back_without_gospel_or_valid_model_output(self):
         _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
         missing_context = SimpleNamespace(celebration_clause="Monday", gospel_citation="", gospel_text="")
 
-        with mock.patch.object(self.mod, "fetch_daily_gospel_context", return_value=missing_context):
+        with mock.patch.object(self.mod, "fetch_daily_gospel_context", return_value=missing_context), mock.patch.object(
+            self.mod,
+            "_call_openai_reflections",
+            side_effect=RuntimeError("season generation failed"),
+        ):
             reflections = self.mod.build_rosary_reflections(datetime.date(2026, 4, 6), mysteries, season="easter")
 
         self.assertEqual(len(reflections), 5)
-        self.assertIn("in this Easter season", reflections[0])
+        self.assertIn("In this Easter season", reflections[0])
         self.assertIn("The Annunciation", reflections[0])
+        self.assertIn("humility", reflections[0])
+        self.assertIn("risen Christ", reflections[0])
 
         context = SimpleNamespace(
             celebration_clause="Monday",
@@ -105,6 +132,8 @@ class TestPublishRosaryReflections(unittest.TestCase):
             fallback = self.mod.build_rosary_reflections(datetime.date(2026, 4, 6), mysteries)
 
         self.assertIn("The Annunciation", fallback[0])
+        self.assertIn("Ordinary Time", fallback[0])
+        self.assertIn("humility", fallback[0])
 
 
 if __name__ == "__main__":

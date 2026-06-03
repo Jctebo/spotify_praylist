@@ -1,5 +1,12 @@
 # Release Log
 
+## [0.3.4.0] - 2026-06-03
+
+### Changed
+- Refined Daily Rosary reflection audio pacing by adding a stronger spoken boundary between each mystery's fruit and reflection.
+- Expanded Daily Rosary reflection generation into three similarly sized tiers: OpenAI with the day's Gospel, OpenAI with the liturgical season, and a generic season-aware fallback.
+- Updated Rosary reflection prompts and deterministic fallbacks to describe each mystery, explain the fruit, and repeat both naturally in a four-sentence spoken format.
+
 ## [0.3.3.0] - 2026-06-02
 
 ### Added
