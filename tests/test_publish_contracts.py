@@ -73,6 +73,14 @@ class TestPublishContracts(unittest.TestCase):
             day_context=self._fake_rosary_day_context(date_value, mystery_text),
         )
 
+    def assert_standard_loudness_normalization(self, audio_config):
+        settings = audio_config.get("loudness_normalization")
+        self.assertIsInstance(settings, dict)
+        self.assertTrue(settings["enabled"])
+        self.assertEqual(settings["integrated_lufs"], -16)
+        self.assertEqual(settings["true_peak_db"], -1.5)
+        self.assertEqual(settings["lra"], 11)
+
     def test_render_publish_template_and_episode_id_are_date_scoped(self):
         contracts = self.mod.load_publish_contracts()
         target_date = datetime.date(2026, 4, 6)
@@ -126,7 +134,7 @@ class TestPublishContracts(unittest.TestCase):
             contracts_by_id["auxilium-christianorum"].entries[0]["audio_config"]["providers"][0]["voice_settings"]["speed"],
             0.98,
         )
-        self.assertTrue(contracts_by_id["auxilium-christianorum"].entries[0]["audio_config"]["loudness_normalization"]["enabled"])
+        self.assert_standard_loudness_normalization(contracts_by_id["auxilium-christianorum"].entries[0]["audio_config"])
         self.assertEqual(contracts_by_id["marian-antiphon-angelus"].season, "ordinary")
         self.assertEqual(contracts_by_id["marian-antiphon-regina-caeli"].season, "easter")
         self.assertEqual(
@@ -143,6 +151,8 @@ class TestPublishContracts(unittest.TestCase):
         self.assertFalse(contracts_by_id["marian-antiphon-regina-caeli"].entries[0]["text_config"]["enabled"])
         self.assertTrue(contracts_by_id["marian-antiphon-angelus"].entries[0]["audio_config"]["enabled"])
         self.assertTrue(contracts_by_id["marian-antiphon-regina-caeli"].entries[0]["audio_config"]["enabled"])
+        self.assert_standard_loudness_normalization(contracts_by_id["marian-antiphon-angelus"].entries[0]["audio_config"])
+        self.assert_standard_loudness_normalization(contracts_by_id["marian-antiphon-regina-caeli"].entries[0]["audio_config"])
         self.assertTrue(contracts_by_id["morning-prayer-elevenlabs"].entries[0]["text_config"]["enabled"])
         self.assertEqual(contracts_by_id["morning-prayer-elevenlabs"].metadata["title_template"], "Morning Prayer - {date:%B %-d, %Y}")
         self.assertEqual(
@@ -157,7 +167,7 @@ class TestPublishContracts(unittest.TestCase):
             contracts_by_id["morning-prayer-elevenlabs"].entries[0]["audio_config"]["providers"][0]["voice_id"],
             "2NfTQuOn6dRQvgKuC2le",
         )
-        self.assertTrue(contracts_by_id["morning-prayer-elevenlabs"].entries[0]["audio_config"]["loudness_normalization"]["enabled"])
+        self.assert_standard_loudness_normalization(contracts_by_id["morning-prayer-elevenlabs"].entries[0]["audio_config"])
         self.assertEqual(
             contracts_by_id["morning-prayer-elevenlabs"].entries[0]["audio_config"]["providers"][0]["model_id"],
             "eleven_multilingual_v2",
@@ -171,9 +181,105 @@ class TestPublishContracts(unittest.TestCase):
             "Daily Rosary - {rosary_mystery_set_title} - {rosary_focus_title} - {date_display}",
         )
         self.assertTrue(contracts_by_id["rosary"].entries[0]["audio_config"]["enabled"])
+        self.assert_standard_loudness_normalization(contracts_by_id["rosary"].entries[0]["audio_config"])
         self.assertFalse(contracts_by_id["morning-prayer-elevenlabs"].entries[0]["blocks"][0]["skip_if_missing"])
         self.assertTrue(contracts_by_id["morning-prayer-elevenlabs"].metadata["daily_intro"]["allow_missing_gospel"])
         self.assertNotIn("allow_missing_gospel", contracts_by_id["morning-prayer-elevenlabs"].entries[0]["blocks"][0])
+
+    def test_all_active_audio_jobs_use_standard_loudness_normalization(self):
+        contracts = self.mod.load_publish_contracts()
+        target_dates = [
+            datetime.date(2026, 4, 6),
+            datetime.date(2026, 6, 2),
+        ]
+        jobs_by_entry_id = {}
+
+        for target_date in target_dates:
+            for job in self.mod.build_audio_jobs(contracts, target_date=target_date):
+                jobs_by_entry_id[job["entry_id"]] = job
+
+        self.assertEqual(
+            set(jobs_by_entry_id),
+            {
+                "auxilium-christianorum",
+                "morning-prayer-elevenlabs",
+                "marian-antiphon-angelus",
+                "marian-antiphon-regina-caeli",
+                "rosary",
+            },
+        )
+        for entry_id, job in jobs_by_entry_id.items():
+            with self.subTest(entry_id=entry_id):
+                self.assert_standard_loudness_normalization(job["audio_config"])
+
+    def test_audio_loudness_normalization_can_be_overridden_by_contract(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contracts_dir = root / "config" / "publish" / "contracts"
+            templates_dir = root / "config" / "publish" / "templates"
+            contracts_dir.mkdir(parents=True, exist_ok=True)
+            templates_dir.mkdir(parents=True, exist_ok=True)
+            (templates_dir / "sample.txt").write_text("Sample prayer.", encoding="utf-8")
+            (contracts_dir / "sample.json").write_text(
+                json.dumps(
+                    {
+                        "contract": {
+                            "id": "sample",
+                            "type": "daily-prayer",
+                            "frequency": "daily",
+                            "timezone": "America/Chicago",
+                            "version": "1",
+                        },
+                        "entries": [
+                            {
+                                "entry_id": "custom-loudness",
+                                "date": "daily",
+                                "title": "Custom Loudness",
+                                "status": "approved",
+                                "text": "Custom Loudness",
+                                "audio_config": {
+                                    "enabled": True,
+                                    "loudness_normalization": {
+                                        "enabled": True,
+                                        "integrated_lufs": -18,
+                                        "true_peak_db": -2,
+                                        "lra": 9,
+                                    },
+                                },
+                                "blocks": [{"kind": "file", "path": "config/publish/templates/sample.txt"}],
+                            },
+                            {
+                                "entry_id": "disabled-loudness",
+                                "date": "daily",
+                                "title": "Disabled Loudness",
+                                "status": "approved",
+                                "text": "Disabled Loudness",
+                                "audio_config": {
+                                    "enabled": True,
+                                    "loudness_normalization": False,
+                                },
+                                "blocks": [{"kind": "file", "path": "config/publish/templates/sample.txt"}],
+                            },
+                        ],
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            with mock.patch.object(self.mod, "ROOT", root):
+                contracts = self.mod.load_publish_contracts(contracts_dir)
+                jobs = self.mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
+
+        jobs_by_id = {job["entry_id"]: job for job in jobs}
+        custom = jobs_by_id["custom-loudness"]["audio_config"]["loudness_normalization"]
+        disabled = jobs_by_id["disabled-loudness"]["audio_config"]["loudness_normalization"]
+        self.assertTrue(custom["enabled"])
+        self.assertEqual(custom["integrated_lufs"], -18.0)
+        self.assertEqual(custom["true_peak_db"], -2.0)
+        self.assertEqual(custom["lra"], 9.0)
+        self.assertFalse(disabled["enabled"])
+        self.assertEqual(disabled["integrated_lufs"], -16.0)
 
     def test_build_audio_jobs_routes_marian_antiphons_by_season(self):
         contracts = self.mod.load_publish_contracts()

@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
-from jobs.publish.audio import audio_public_url, openai_tts_renderer
+from jobs.publish.audio import audio_public_url, normalize_episode_loudness, openai_tts_renderer
 from jobs.publish.fragments import (
     audio_manifest_hash,
     assemble_audio_fragments,
@@ -13,7 +13,32 @@ from jobs.publish.fragments import (
     sanitize_tts_input,
 )
 
-from .contracts import NovenaRuntime
+from .contracts import DEFAULT_LOUDNESS_NORMALIZATION, NovenaRuntime
+
+
+def _normalize_loudness_config(config: Any) -> Dict[str, Any]:
+    if config is None:
+        settings = dict(DEFAULT_LOUDNESS_NORMALIZATION)
+    elif isinstance(config, dict):
+        settings = dict(DEFAULT_LOUDNESS_NORMALIZATION)
+        settings.update(config)
+    else:
+        settings = dict(DEFAULT_LOUDNESS_NORMALIZATION)
+        settings["enabled"] = bool(config)
+    settings["enabled"] = bool(settings.get("enabled", True))
+    try:
+        settings["integrated_lufs"] = float(settings.get("integrated_lufs", DEFAULT_LOUDNESS_NORMALIZATION["integrated_lufs"]))
+    except Exception:
+        settings["integrated_lufs"] = float(DEFAULT_LOUDNESS_NORMALIZATION["integrated_lufs"])
+    try:
+        settings["true_peak_db"] = float(settings.get("true_peak_db", DEFAULT_LOUDNESS_NORMALIZATION["true_peak_db"]))
+    except Exception:
+        settings["true_peak_db"] = float(DEFAULT_LOUDNESS_NORMALIZATION["true_peak_db"])
+    try:
+        settings["lra"] = float(settings.get("lra", DEFAULT_LOUDNESS_NORMALIZATION["lra"]))
+    except Exception:
+        settings["lra"] = float(DEFAULT_LOUDNESS_NORMALIZATION["lra"])
+    return settings
 
 
 def build_novena_audio_job(runtime: NovenaRuntime, rendered: Dict[str, Any]) -> Dict[str, Any]:
@@ -27,6 +52,9 @@ def build_novena_audio_job(runtime: NovenaRuntime, rendered: Dict[str, Any]) -> 
         audio_config["speed"] = float(audio_config.get("speed", 1.0))
     except Exception:
         audio_config["speed"] = 1.0
+    audio_config["loudness_normalization"] = _normalize_loudness_config(
+        audio_config.get("loudness_normalization")
+    )
     fragments = list(rendered.get("audio_fragments") or [])
     text = str(rendered.get("content", {}).get("text", "")).strip()
     job = {
@@ -133,6 +161,8 @@ def render_novena_audio_job(
         raw_audio = assemble_audio_fragments(fragment_paths, target_format, cache_root=fragment_root)
     if not raw_audio:
         raise RuntimeError(f"Audio assembly returned empty output for novena '{episode_id}'.")
+    loudness_settings = _normalize_loudness_config(audio_config.get("loudness_normalization"))
+    raw_audio = normalize_episode_loudness(raw_audio, target_format, audio_config, cache_root=fragment_root)
     audio_path.write_bytes(raw_audio)
     if write_sidecar:
         sidecar_path.write_text(
@@ -150,6 +180,8 @@ def render_novena_audio_job(
                     "content_hash": content_hash,
                     "audio_path": str(audio_path),
                     "audio_url": audio_public_url(episode_id),
+                    "audio_length": len(raw_audio),
+                    "loudness_normalization": loudness_settings,
                     "tts": audio_config,
                     "fragment_manifest_hash": content_hash,
                     "fragments": fragment_results,
@@ -166,6 +198,8 @@ def render_novena_audio_job(
             "audio_url": audio_public_url(episode_id),
             "rendered": True,
             "content_hash": content_hash,
+            "audio_length": len(raw_audio),
+            "loudness_normalization": loudness_settings,
             "fragment_results": fragment_results,
         }
     )

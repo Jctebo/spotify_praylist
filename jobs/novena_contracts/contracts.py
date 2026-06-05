@@ -14,7 +14,20 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONTRACT_DIR = ROOT / "contracts" / "novenas"
 DEFAULT_TEMPLATE_DIR = DEFAULT_CONTRACT_DIR / "templates"
 DEFAULT_FEAST_DIR = DEFAULT_CONTRACT_DIR / "feast-days"
-DEFAULT_AUDIO_CONFIG = {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+DEFAULT_LOUDNESS_NORMALIZATION = {
+    "enabled": True,
+    "integrated_lufs": -16,
+    "true_peak_db": -1.5,
+    "lra": 11,
+}
+DEFAULT_AUDIO_CONFIG = {
+    "enabled": True,
+    "model": "gpt-4o-mini-tts",
+    "voice": "alloy",
+    "format": "mp3",
+    "speed": 1.0,
+    "loudness_normalization": dict(DEFAULT_LOUDNESS_NORMALIZATION),
+}
 DEFAULT_RSS_CONFIG = {
     "enabled": True,
     "feed_id": "ora-pro-nobis",
@@ -341,6 +354,29 @@ def _normalize_audio_config(config: Any) -> Dict[str, Any]:
         audio["speed"] = float(audio.get("speed", DEFAULT_AUDIO_CONFIG["speed"]))
     except Exception:
         audio["speed"] = float(DEFAULT_AUDIO_CONFIG["speed"])
+    loudness_config = audio.get("loudness_normalization")
+    if loudness_config is None:
+        loudness = dict(DEFAULT_LOUDNESS_NORMALIZATION)
+    elif isinstance(loudness_config, dict):
+        loudness = dict(DEFAULT_LOUDNESS_NORMALIZATION)
+        loudness.update(loudness_config)
+    else:
+        loudness = dict(DEFAULT_LOUDNESS_NORMALIZATION)
+        loudness["enabled"] = bool(loudness_config)
+    loudness["enabled"] = bool(loudness.get("enabled", True))
+    try:
+        loudness["integrated_lufs"] = float(loudness.get("integrated_lufs", DEFAULT_LOUDNESS_NORMALIZATION["integrated_lufs"]))
+    except Exception:
+        loudness["integrated_lufs"] = float(DEFAULT_LOUDNESS_NORMALIZATION["integrated_lufs"])
+    try:
+        loudness["true_peak_db"] = float(loudness.get("true_peak_db", DEFAULT_LOUDNESS_NORMALIZATION["true_peak_db"]))
+    except Exception:
+        loudness["true_peak_db"] = float(DEFAULT_LOUDNESS_NORMALIZATION["true_peak_db"])
+    try:
+        loudness["lra"] = float(loudness.get("lra", DEFAULT_LOUDNESS_NORMALIZATION["lra"]))
+    except Exception:
+        loudness["lra"] = float(DEFAULT_LOUDNESS_NORMALIZATION["lra"])
+    audio["loudness_normalization"] = loudness
     return audio
 
 

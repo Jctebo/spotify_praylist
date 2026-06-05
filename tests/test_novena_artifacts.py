@@ -99,9 +99,12 @@ class TestNovenaArtifacts(unittest.TestCase):
 
             self.assertTrue(Path(first["audio_path"]).exists())
             self.assertTrue(Path(first["audio_path"]).with_suffix(".json").exists())
+            self.assertTrue(first["loudness_normalization"]["enabled"])
+            self.assertEqual(first["loudness_normalization"]["integrated_lufs"], -16.0)
         self.assertTrue(first["rendered"])
         self.assertFalse(second["rendered"])
         self.assertEqual(fake_renderer_calls["count"], 2)
+        self.assertTrue(job["audio_config"]["loudness_normalization"]["enabled"])
         self.assertEqual(payload["id"], "2026-06-03-most_sacred_heart_of_jesus-day-1")
         self.assertEqual(payload["family_id"], "standard_9_day")
         self.assertEqual(payload["audio"]["file"], "2026-06-03-most_sacred_heart_of_jesus-day-1.mp3")
@@ -109,6 +112,44 @@ class TestNovenaArtifacts(unittest.TestCase):
         self.assertEqual(payload["content"]["sections"][1]["kind"], "generated")
         self.assertEqual(payload["feast"]["color"], "green")
         self.assertIn("June 3, 2026", payload["title"])
+
+    def test_novena_audio_loudness_normalization_can_be_overridden(self):
+        runtime = self._runtime()
+        publishing = dict(runtime.publishing)
+        publishing["audio"] = {
+            "enabled": True,
+            "model": "gpt-4o-mini-tts",
+            "voice": "alloy",
+            "format": "mp3",
+            "speed": 1.0,
+            "loudness_normalization": {
+                "enabled": True,
+                "integrated_lufs": -18,
+                "true_peak_db": -2,
+                "lra": 9,
+            },
+        }
+        runtime = contracts_mod.NovenaRuntime(
+            family_id=runtime.family_id,
+            contract_id=runtime.contract_id,
+            saint=runtime.saint,
+            feast=runtime.feast,
+            novena=runtime.novena,
+            resolved_template=runtime.resolved_template,
+            date=runtime.date,
+            active_day=runtime.active_day,
+            publishing=publishing,
+            source_path=runtime.source_path,
+        )
+        rendered = engine_mod.render_novena(runtime, generate_text_fn=lambda prompt, context: f"{prompt} ({context['theme']})")
+
+        job = audio_mod.build_novena_audio_job(runtime, rendered)
+
+        settings = job["audio_config"]["loudness_normalization"]
+        self.assertTrue(settings["enabled"])
+        self.assertEqual(settings["integrated_lufs"], -18.0)
+        self.assertEqual(settings["true_peak_db"], -2.0)
+        self.assertEqual(settings["lra"], 9.0)
 
     def test_placeholder_sidecar_is_skipped_from_published_audio_jobs(self):
         runtime = self._runtime()
