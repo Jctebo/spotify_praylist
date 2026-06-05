@@ -248,7 +248,7 @@ def _renderer_for_provider(provider_audio_config: Dict[str, Any], renderer):
     raise RuntimeError(f"Unsupported audio provider '{provider}'.")
 
 
-def _render_fragment_with_provider_fallback(
+def render_fragment_audio_with_provider_fallback(
     fragment: Dict[str, Any],
     audio_config: Dict[str, Any],
     renderer,
@@ -974,7 +974,7 @@ def render_audio_job(
     try:
         for fragment in fragments:
             fragment_audio_config = effective_fragment_audio_config(fragment, audio_config)
-            rendered_fragment = _render_fragment_with_provider_fallback(
+            rendered_fragment = render_fragment_audio_with_provider_fallback(
                 fragment,
                 fragment_audio_config,
                 renderer,

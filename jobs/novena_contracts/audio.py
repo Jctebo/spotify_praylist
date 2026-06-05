@@ -4,12 +4,11 @@ import json
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
-from jobs.publish.audio import audio_public_url, normalize_episode_loudness, openai_tts_renderer
+from jobs.publish.audio import audio_public_url, normalize_episode_loudness, render_fragment_audio_with_provider_fallback
 from jobs.publish.fragments import (
     audio_manifest_hash,
     assemble_audio_fragments,
     publish_audio_cache_root,
-    render_fragment_audio,
     sanitize_tts_input,
 )
 
@@ -119,7 +118,6 @@ def render_novena_audio_job(
         )
         return rendered
 
-    renderer = renderer or openai_tts_renderer
     fragment_root = publish_audio_cache_root(cache_root)
     fragment_paths = []
     fragment_results = []
@@ -135,7 +133,14 @@ def render_novena_audio_job(
         )
         return rendered
     for fragment in fragments:
-        rendered_fragment = render_fragment_audio(fragment, audio_config, renderer, cache_root=fragment_root)
+        rendered_fragment = render_fragment_audio_with_provider_fallback(
+            fragment,
+            audio_config,
+            renderer,
+            cache_root=fragment_root,
+            force_rebuild=False,
+        )
+        rendered_effective_config = dict(rendered_fragment.get("audio_config") or audio_config)
         fragment_paths.append(Path(rendered_fragment["audio_path"]))
         fragment_results.append(
             {
@@ -150,6 +155,8 @@ def render_novena_audio_job(
                 "source_fragment_key": str(fragment.get("source_fragment_key", "")).strip(),
                 "fragment_hash": rendered_fragment["fragment_hash"],
                 "audio_path": str(rendered_fragment["audio_path"]),
+                "tts": rendered_effective_config,
+                "provider": str(rendered_fragment.get("provider", "")).strip() or "openai",
                 "rendered": bool(rendered_fragment.get("rendered", False)),
             }
         )

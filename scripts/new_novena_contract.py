@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 from pathlib import Path
 from typing import Any, Dict, List
 
-from jobs.novena_contracts.contracts import DEFAULT_CONTRACT_DIR
+from jobs.novena_contracts.contracts import DEFAULT_AUDIO_CONFIG, DEFAULT_CONTRACT_DIR
 from jobs.novena_contracts.validators import normalize_contract_filename, resolve_romcal_identifier, validate_novena_contract
 
 
@@ -44,6 +45,7 @@ def build_contract_payload(args: argparse.Namespace) -> Dict[str, Any]:
                     "voice": args.audio_voice,
                     "format": args.audio_format,
                     "speed": float(args.audio_speed),
+                    "providers": copy.deepcopy(DEFAULT_AUDIO_CONFIG["providers"]),
                 },
                 "rss": {
                     "enabled": True,

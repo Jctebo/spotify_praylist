@@ -43,6 +43,10 @@ class TestNovenaContracts(unittest.TestCase):
         )
         self.assertIn("saint-life outline", contract.novena.ai_config["theme_prompt"])
         self.assertIn("final perseverance", contract.novena.ai_config["theme_prompt"])
+        self.assertEqual(contract.publishing.audio["providers"][0]["provider"], "elevenlabs")
+        self.assertEqual(contract.publishing.audio["providers"][0]["voice_id"], "pGAwIQNN9UjOkKxjAyGQ")
+        self.assertEqual(contract.publishing.audio["providers"][1]["provider"], "openai")
+        self.assertEqual(contract.publishing.audio["providers"][1]["voice"], "alloy")
 
     def test_load_novena_contracts_reads_short_form_fatima_fixture(self):
         contracts = self.contracts_mod.load_novena_contracts()
@@ -449,6 +453,48 @@ class TestNovenaContracts(unittest.TestCase):
         self.assertEqual(payload["contract"]["saint"]["id"], "most_sacred_heart_of_jesus")
         self.assertEqual(payload["contract"]["novena"]["template_id"], "standard-9-day")
         self.assertEqual(payload["contract"]["novena"]["ai_config"]["themes"], ["trust in the Sacred Heart"])
+        self.assertEqual(payload["contract"]["publishing"]["audio"]["providers"][0]["voice_id"], "pGAwIQNN9UjOkKxjAyGQ")
+        self.assertEqual(payload["contract"]["publishing"]["audio"]["providers"][1]["provider"], "openai")
+
+    def test_validate_novena_contract_rejects_invalid_elevenlabs_provider(self):
+        payload = {
+            "contract": {
+                "id": "invalid_provider",
+                "type": "novena_feast_rule",
+                "saint": {"id": "invalid_provider", "name": "Invalid Provider"},
+                "feast": {"mode": "fixed", "month": 6, "day": 1, "name": "Invalid Provider"},
+                "novena": {
+                    "duration_days": 9,
+                    "start_offset_days": -9,
+                    "content_mode": "hybrid",
+                    "template_id": "standard-9-day",
+                    "ai_config": {"theme_prompt": "Create nine focus lines."},
+                },
+                "publishing": {
+                    "audio": {
+                        "enabled": True,
+                        "model": "gpt-4o-mini-tts",
+                        "voice": "alloy",
+                        "format": "mp3",
+                        "speed": 1.0,
+                        "providers": [{"provider": "elevenlabs", "model_id": "eleven_multilingual_v2"}],
+                    },
+                    "rss": {
+                        "enabled": True,
+                        "feed_id": "ora-pro-nobis",
+                        "episode_title_pattern": "Short-Form Novena to {saint_name} Day {day} - {date_display}",
+                        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+                    },
+                },
+            }
+        }
+
+        with self.assertRaisesRegex(RuntimeError, "voice_id is required"):
+            self.validators_mod.validate_novena_contract(
+                payload,
+                source="<test>",
+                template_dir=self.contracts_mod.DEFAULT_TEMPLATE_DIR,
+            )
 
     def test_build_contract_payload_supports_movable_feasts(self):
         args = argparse.Namespace(
