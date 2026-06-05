@@ -69,8 +69,9 @@ class TestPublishContracts(unittest.TestCase):
             mystery_set_title=lines[0],
             mysteries=tuple(mysteries),
             reflections=tuple(f"Reflection for {mystery.title}." for mystery in mysteries),
-            source="generated",
+            source="generated_feast",
             day_context=self._fake_rosary_day_context(date_value, mystery_text),
+            fallback_reason="",
         )
 
     def assert_standard_loudness_normalization(self, audio_config):

@@ -23,6 +23,11 @@ class TestPublishAudioFragments(unittest.TestCase):
             f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "
             "Today the Church celebrates Saint Example."
         )
+        self.contracts_mod.build_rosary_intro_text = lambda date_value, mystery_set_title, mysteries, **kwargs: (
+            "Today is Monday, April 6, 2026, in the Easter season. "
+            "For today's rosary, we will focus on the feast of Saint Example. "
+            f"As we pray the {mystery_set_title}, we ask for grace."
+        )
         self.contracts_mod.build_rosary_reflection_set = self._fake_rosary_reflection_set
 
     def _fake_rosary_reflection_set(self, date_value, mystery_text, **kwargs):
@@ -36,7 +41,8 @@ class TestPublishAudioFragments(unittest.TestCase):
             mystery_set_title=lines[0],
             mysteries=tuple(mysteries),
             reflections=tuple(f"Reflection for {mystery.title}." for mystery in mysteries),
-            source="generated",
+            source="generated_feast",
+            fallback_reason="",
         )
 
     def test_expand_audio_fragments_preserves_order_and_selector_resolution(self):

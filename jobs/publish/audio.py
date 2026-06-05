@@ -303,6 +303,16 @@ def _is_current_audio_file(audio_path: Path, sidecar_path: Path, content_hash: s
     return str(payload.get("content_hash", "")).strip() == content_hash
 
 
+def _json_safe_metadata(value: Any) -> Any:
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, dict):
+        return {str(key): _json_safe_metadata(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe_metadata(item) for item in value]
+    return str(value)
+
+
 def _payload_audio_length(
     payload: Dict[str, Any],
     *,
@@ -1027,6 +1037,8 @@ def render_audio_job(
                     "tts": rendered_audio_config,
                     "fragment_manifest_hash": fragment_manifest_hash,
                     "fragments": fragment_results,
+                    "render_context": _json_safe_metadata(dict(job.get("render_context") or {})),
+                    "rosary_reflections": _json_safe_metadata(dict(job.get("rosary_reflections") or {})),
                     "resume_markers": list(job.get("resume_markers") or []),
                 },
                 indent=2,

@@ -80,8 +80,9 @@ class TestPublishAudioPipeline(unittest.TestCase):
             mystery_set_title=lines[0],
             mysteries=tuple(mysteries),
             reflections=tuple(f"Reflection for {mystery.title}." for mystery in mysteries),
-            source="generated",
+            source="generated_feast",
             day_context=self._fake_rosary_day_context(date_value, mystery_text),
+            fallback_reason="",
         )
 
     def _normalize(self, text):
@@ -116,6 +117,10 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertGreater(len(auxilium_job["audio_fragments"]), 0)
         self.assertGreater(len(rosary_job["audio_fragments"]), 0)
         self.assertEqual(rosary_job["title"], "Daily Rosary - Joyful Mysteries - Saint Example - April 6, 2026")
+        self.assertEqual(rosary_job["render_context"]["rosary_reflection_source"], "generated_feast")
+        self.assertEqual(rosary_job["render_context"]["rosary_reflection_count"], 5)
+        self.assertEqual(rosary_job["rosary_reflections"]["source"], "generated_feast")
+        self.assertEqual(rosary_job["rosary_reflections"]["count"], 5)
         self.assertEqual(rosary_job["audio_fragments"][0]["kind"], "rosary-intro")
         self.assertEqual(rosary_job["audio_fragments"][0]["label"], "Rosary Intro")
         self.assertEqual(auxilium_job["resume_markers"][0]["source"], "audio_fragment")
@@ -217,6 +222,24 @@ class TestPublishAudioPipeline(unittest.TestCase):
         )
         self.assertTrue(all(fragment["tts"]["voice"] == "echo" for fragment in response_fragments))
         self.assertTrue(all(fragment["tts"]["provider"] == "openai" for fragment in response_fragments))
+
+    def test_render_rosary_sidecar_records_reflection_metadata(self):
+        contracts = self.contracts_mod.load_publish_contracts()
+        jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
+        job = next(job for job in jobs if job["entry_id"] == "rosary")
+        fake_renderer, _ = self._fake_renderer()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            cache_root = Path(tmpdir) / ".cache"
+            rendered = self.audio_mod.render_audio_job(job, renderer=fake_renderer, docs_root=docs_root, cache_root=cache_root)
+            sidecar_path = Path(rendered["audio_path"]).with_suffix(".json")
+            sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(sidecar["render_context"]["rosary_reflection_source"], "generated_feast")
+        self.assertEqual(sidecar["render_context"]["rosary_reflection_count"], 5)
+        self.assertEqual(sidecar["rosary_reflections"]["source"], "generated_feast")
+        self.assertEqual(sidecar["rosary_reflections"]["count"], 5)
 
     def test_render_audio_job_force_rebuild_ignores_existing_cache(self):
         contracts = self.contracts_mod.load_publish_contracts()
