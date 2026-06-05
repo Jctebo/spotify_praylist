@@ -100,6 +100,9 @@ def normalize_audio_settings(audio_config: Dict[str, Any]) -> Dict[str, Any]:
     providers = audio_config.get("providers")
     if isinstance(providers, list) and providers:
         settings["providers"] = [_normalize_tts_value(dict(provider)) if isinstance(provider, dict) else provider for provider in providers]
+    loudness_normalization = audio_config.get("loudness_normalization")
+    if isinstance(loudness_normalization, dict):
+        settings["loudness_normalization"] = _normalize_tts_value(dict(loudness_normalization))
     return settings
 
 

@@ -6,6 +6,7 @@ import os
 import sys
 import shutil
 import datetime as _dt
+import tempfile
 from html import escape as _html_escape
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
@@ -22,6 +23,8 @@ from jobs.publish.fragments import (
     assemble_audio_fragments,
     audio_manifest_hash,
     effective_fragment_audio_config,
+    _audio_output_args,
+    _run_ffmpeg,
     publish_audio_cache_root,
     normalize_audio_settings,
     render_fragment_audio,
@@ -349,6 +352,71 @@ def _job_audio_length(audio_path: Path, *, fallback: Any = None) -> int:
         return int(fallback)
     except Exception:
         return 0
+
+
+def _normalize_loudness_settings(audio_config: Dict[str, Any]) -> Dict[str, Any]:
+    settings = audio_config.get("loudness_normalization")
+    if isinstance(settings, dict):
+        enabled = bool(settings.get("enabled", False))
+    else:
+        enabled = bool(settings)
+        settings = {}
+    if not enabled:
+        return {"enabled": False}
+    try:
+        integrated_lufs = float(settings.get("integrated_lufs", -16))
+    except Exception:
+        integrated_lufs = -16.0
+    try:
+        true_peak_db = float(settings.get("true_peak_db", -1.5))
+    except Exception:
+        true_peak_db = -1.5
+    try:
+        lra = float(settings.get("lra", 11))
+    except Exception:
+        lra = 11.0
+    return {
+        "enabled": True,
+        "integrated_lufs": integrated_lufs,
+        "true_peak_db": true_peak_db,
+        "lra": lra,
+    }
+
+
+def normalize_episode_loudness(raw_audio: bytes, audio_format: str, audio_config: Dict[str, Any], *, cache_root: Optional[Path] = None) -> bytes:
+    settings = _normalize_loudness_settings(audio_config)
+    if not settings["enabled"]:
+        return raw_audio
+    target_format = str(audio_format or "").strip().lower() or "mp3"
+    root = publish_audio_cache_root(cache_root)
+    tmp_dir = root / "tmp"
+    tmp_dir.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=tmp_dir) as temp_dir:
+        input_path = Path(temp_dir) / f"input.{target_format}"
+        output_path = Path(temp_dir) / f"normalized.{target_format}"
+        input_path.write_bytes(raw_audio)
+        loudnorm = (
+            f"loudnorm=I={settings['integrated_lufs']:g}:"
+            f"TP={settings['true_peak_db']:g}:"
+            f"LRA={settings['lra']:g}:"
+            "print_format=summary"
+        )
+        _run_ffmpeg(
+            [
+                "-y",
+                "-i",
+                str(input_path),
+                "-af",
+                loudnorm,
+                "-vn",
+                *_audio_output_args(target_format),
+                str(output_path),
+            ]
+        )
+        normalized = output_path.read_bytes()
+    if not normalized:
+        raise RuntimeError("Loudness normalization returned empty audio.")
+    return normalized
 
 
 def load_published_audio_jobs(
@@ -929,6 +997,8 @@ def render_audio_job(
             raw_audio = assemble_audio_fragments(fragment_paths, target_format, cache_root=fragment_root)
         if not raw_audio:
             raise RuntimeError(f"Audio assembly returned empty output for entry '{job.get('entry_id', '')}'.")
+        loudness_settings = _normalize_loudness_settings(audio_config)
+        raw_audio = normalize_episode_loudness(raw_audio, target_format, audio_config, cache_root=fragment_root)
         audio_length = len(raw_audio)
         audio_path.write_bytes(raw_audio)
         rendered_audio_config = normalize_audio_settings(audio_config)
@@ -951,6 +1021,7 @@ def render_audio_job(
                     "audio_path": str(audio_path),
                     "audio_url": audio_public_url(episode_id),
                     "audio_length": audio_length,
+                    "loudness_normalization": loudness_settings,
                     "generated_at": generated_at,
                     "rss_guid": rss_guid,
                     "tts": rendered_audio_config,
@@ -969,6 +1040,7 @@ def render_audio_job(
         rendered["rendered"] = True
         rendered["content_hash"] = content_hash
         rendered["audio_length"] = audio_length
+        rendered["loudness_normalization"] = loudness_settings
         rendered["generated_at"] = generated_at
         rendered["rss_guid"] = rss_guid
         rendered["audio_fragments"] = fragments

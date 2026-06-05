@@ -146,6 +146,53 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.assertGreater(Path(first["audio_path"]).stat().st_size, 0)
             self.assertEqual(first["rss_guid"], second["rss_guid"])
 
+    def test_render_audio_job_normalizes_final_episode_when_configured(self):
+        job = {
+            "entry_id": "normalize-test",
+            "episode_id": "normalize-test-2026-04-06",
+            "contract_id": "test-contract",
+            "title": "Normalize Test",
+            "description": "Normalize Test",
+            "date": "daily",
+            "published_date": "2026-04-06",
+            "text": "Normalize Test",
+            "audio_config": {
+                "enabled": True,
+                "model": "gpt-4o-mini-tts",
+                "voice": "alloy",
+                "format": "mp3",
+                "speed": 1.0,
+                "loudness_normalization": {
+                    "enabled": True,
+                    "integrated_lufs": -16,
+                    "true_peak_db": -1.5,
+                    "lra": 11,
+                },
+            },
+            "audio_fragments": [
+                {
+                    "fragment_key": "block-1/inline",
+                    "block_path": "block-1/inline",
+                    "kind": "inline",
+                    "label": "Normalize Fragment",
+                    "text": "Normalize this fragment.",
+                }
+            ],
+        }
+        fake_renderer, _ = self._fake_renderer()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            cache_root = Path(tmpdir) / ".cache"
+            rendered = self.audio_mod.render_audio_job(job, renderer=fake_renderer, docs_root=docs_root, cache_root=cache_root)
+            sidecar = json.loads(Path(rendered["audio_path"]).with_suffix(".json").read_text(encoding="utf-8"))
+            self.assertGreater(Path(rendered["audio_path"]).stat().st_size, 0)
+
+        self.assertTrue(rendered["loudness_normalization"]["enabled"])
+        self.assertEqual(rendered["loudness_normalization"]["integrated_lufs"], -16.0)
+        self.assertTrue(sidecar["loudness_normalization"]["enabled"])
+        self.assertEqual(sidecar["loudness_normalization"]["true_peak_db"], -1.5)
+
     def test_render_auxilium_sidecar_records_response_roles(self):
         contracts = self.contracts_mod.load_publish_contracts()
         jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))

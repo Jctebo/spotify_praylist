@@ -33,21 +33,27 @@
         "voice": "alloy",
         "format": "mp3",
         "speed": 1.0,
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "true_peak_db": -1.5,
+          "lra": 11
+        },
         "providers": [
           {
             "provider": "elevenlabs",
             "api_key_env": "ELEVENLABS_API_KEY",
-            "voice_id": "2NfTQuOn6dRQvgKuC2le",
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
             "model_id": "eleven_multilingual_v2",
             "voice_settings": {
-              "stability": 0.5,
-              "similarity_boost": 0.75,
+              "stability": 0.65,
+              "similarity_boost": 0.8,
               "use_speaker_boost": true,
               "style": 0,
-              "speed": 1.0
+              "speed": 0.98
             },
             "format": "mp3",
-            "speed": 1.0
+            "speed": 0.98
           },
           {
             "provider": "openai",

@@ -1,5 +1,12 @@
 # Release Log
 
+## [0.3.4.3] - 2026-06-05
+
+### Changed
+- Switched Auxilium Christianorum's main ElevenLabs narrator to the Amelia voice with warmer, slower devotional settings.
+- Kept Morning Prayer on the existing cloned Tebo voice while enabling final whole-track loudness normalization.
+- Added configurable ffmpeg loudness normalization for assembled publish-audio MP3s and recorded the applied normalization settings in episode sidecars.
+
 ## [0.3.4.2] - 2026-06-05
 
 ### Fixed

@@ -118,6 +118,15 @@ class TestPublishContracts(unittest.TestCase):
         self.assertTrue(contracts_by_id["auxilium-christianorum"].entries[0]["text_config"]["enabled"])
         self.assertTrue(contracts_by_id["auxilium-christianorum"].entries[0]["audio_config"]["enabled"])
         self.assertEqual(contracts_by_id["auxilium-christianorum"].entries[0]["blocks"][0]["kind"], "liturgical-announcement")
+        self.assertEqual(
+            contracts_by_id["auxilium-christianorum"].entries[0]["audio_config"]["providers"][0]["voice_id"],
+            "pGAwIQNN9UjOkKxjAyGQ",
+        )
+        self.assertEqual(
+            contracts_by_id["auxilium-christianorum"].entries[0]["audio_config"]["providers"][0]["voice_settings"]["speed"],
+            0.98,
+        )
+        self.assertTrue(contracts_by_id["auxilium-christianorum"].entries[0]["audio_config"]["loudness_normalization"]["enabled"])
         self.assertEqual(contracts_by_id["marian-antiphon-angelus"].season, "ordinary")
         self.assertEqual(contracts_by_id["marian-antiphon-regina-caeli"].season, "easter")
         self.assertEqual(
@@ -148,6 +157,7 @@ class TestPublishContracts(unittest.TestCase):
             contracts_by_id["morning-prayer-elevenlabs"].entries[0]["audio_config"]["providers"][0]["voice_id"],
             "2NfTQuOn6dRQvgKuC2le",
         )
+        self.assertTrue(contracts_by_id["morning-prayer-elevenlabs"].entries[0]["audio_config"]["loudness_normalization"]["enabled"])
         self.assertEqual(
             contracts_by_id["morning-prayer-elevenlabs"].entries[0]["audio_config"]["providers"][0]["model_id"],
             "eleven_multilingual_v2",
