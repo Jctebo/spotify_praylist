@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any, List, Optional, Sequence
 
 from openai import OpenAI
+from pydantic import BaseModel
 
 from jobs.novena.liturgical_helpers import celebration_name, infer_celebration_rank, romcal_fetch_day
 from jobs.publish.daily_intro import OAI_MODEL, _normalize_whitespace, _resolve_openai_settings, fetch_daily_gospel_context
@@ -14,6 +15,11 @@ from jobs.publish.daily_intro import OAI_MODEL, _normalize_whitespace, _resolve_
 
 MAX_REFLECTION_CHARS = 650
 FEAST_RANKS = frozenset({"solemnity", "feast", "memorial", "optional_memorial"})
+SOURCE_GENERATED_FEAST = "generated_feast"
+SOURCE_GENERATED_GOSPEL = "generated_gospel"
+SOURCE_GENERATED_SEASON = "generated_season"
+SOURCE_FALLBACK_FEAST = "fallback_feast"
+SOURCE_FALLBACK_GENERIC = "fallback_generic"
 
 
 @dataclass(frozen=True)
@@ -30,6 +36,14 @@ class RosaryReflectionSet:
     reflections: tuple[str, ...]
     source: str
     day_context: "RosaryDayContext"
+    fallback_reason: str = ""
+
+
+@dataclass(frozen=True)
+class RosaryReflectionResult:
+    reflections: tuple[str, ...]
+    source: str
+    fallback_reason: str = ""
 
 
 @dataclass(frozen=True)
@@ -47,6 +61,15 @@ class RosaryDayContext:
     gospel_text: str
     calendar: str
     locale: str
+
+
+class _StructuredRosaryReflection(BaseModel):
+    number: int
+    reflection: str
+
+
+class _StructuredRosaryReflectionResponse(BaseModel):
+    reflections: list[_StructuredRosaryReflection]
 
 
 def parse_rosary_mysteries(text: str) -> tuple[str, tuple[RosaryMystery, ...]]:
@@ -98,11 +121,31 @@ def fallback_rosary_reflections(mysteries: Sequence[RosaryMystery], season: Opti
     return tuple(reflections)
 
 
+def fallback_feast_rosary_reflections(mysteries: Sequence[RosaryMystery], focus: RosaryDayContext) -> tuple[str, ...]:
+    feast_label = focus.focus_prompt_label or "today's feast"
+    season_label = focus.season_label or "the liturgical season"
+    reflections = []
+    for mystery in mysteries:
+        fruit = mystery.fruit.lower()
+        reflection = (
+            f"{mystery.title} draws this decade into {feast_label}. "
+            f"As the Church keeps this celebration in {season_label}, the mystery of {mystery.title} teaches us to receive the day through Christ. "
+            f"The fruit of this mystery is {fruit}, the grace that lets this feast shape how we listen, choose, and love. "
+            f"As we pray {mystery.title}, we ask for {fruit} to become visible in this decade and in our life today."
+        )
+        reflections.append(reflection)
+    return tuple(reflections)
+
+
 def validate_rosary_reflections(raw: Any, mysteries: Sequence[RosaryMystery]) -> tuple[str, ...]:
-    if isinstance(raw, str):
+    if isinstance(raw, _StructuredRosaryReflectionResponse):
+        lines = [_normalize_reflection_line(item.reflection) for item in raw.reflections]
+    elif isinstance(raw, dict) and isinstance(raw.get("reflections"), list):
+        lines = [_normalize_reflection_line(_reflection_text_from_item(item)) for item in raw.get("reflections") or []]
+    elif isinstance(raw, str):
         lines = [_normalize_reflection_line(line) for line in raw.splitlines()]
     else:
-        lines = [_normalize_reflection_line(line) for line in list(raw or [])]
+        lines = [_normalize_reflection_line(_reflection_text_from_item(line)) for line in list(raw or [])]
     cleaned = [line for line in lines if line]
     if len(cleaned) != len(mysteries):
         raise RuntimeError(f"Rosary reflection generation must return exactly {len(mysteries)} reflections, got {len(cleaned)}.")
@@ -112,7 +155,7 @@ def validate_rosary_reflections(raw: Any, mysteries: Sequence[RosaryMystery]) ->
     return tuple(cleaned)
 
 
-def build_rosary_reflections(
+def build_rosary_reflection_result(
     date_value,
     mysteries: Sequence[RosaryMystery],
     *,
@@ -122,7 +165,7 @@ def build_rosary_reflections(
     allow_missing_gospel: bool = True,
     season: Optional[str] = None,
     day_context: Optional[RosaryDayContext] = None,
-) -> tuple[str, ...]:
+) -> RosaryReflectionResult:
     model = str(prompt_model or os.getenv(OAI_MODEL, "") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
     context = day_context or build_rosary_day_context(
         date_value,
@@ -138,21 +181,61 @@ def build_rosary_reflections(
         prompt = _build_feast_prompt(date_value, context, mysteries)
         try:
             rendered = _call_openai_reflections(model, prompt)
-            return validate_rosary_reflections(rendered, mysteries)
+            return RosaryReflectionResult(
+                reflections=validate_rosary_reflections(rendered, mysteries),
+                source=SOURCE_GENERATED_FEAST,
+            )
         except Exception as exc:
-            print(f"WARN rosary_reflections feast_generation_invalid detail={exc}; trying gospel_or_season", file=sys.stderr)
+            print(f"WARN rosary_reflections feast_generation_invalid detail={exc}; using feast_fallback", file=sys.stderr)
+            return RosaryReflectionResult(
+                reflections=validate_rosary_reflections(fallback_feast_rosary_reflections(mysteries, context), mysteries),
+                source=SOURCE_FALLBACK_FEAST,
+                fallback_reason=str(exc),
+            )
 
     if not str(context.gospel_text or "").strip():
         print("INFO rosary_reflections missing_gospel_text; trying season_only_generation", file=sys.stderr)
-        return _build_seasonal_or_generic_reflections(date_value, mysteries, model=model, season=context.season_label or season)
+        return _build_seasonal_or_generic_reflection_result(date_value, mysteries, model=model, season=context.season_label or season)
 
     prompt = _build_prompt_from_day_context(date_value, context, mysteries)
     try:
         rendered = _call_openai_reflections(model, prompt)
-        return validate_rosary_reflections(rendered, mysteries)
+        return RosaryReflectionResult(
+            reflections=validate_rosary_reflections(rendered, mysteries),
+            source=SOURCE_GENERATED_GOSPEL,
+        )
     except Exception as exc:
         print(f"WARN rosary_reflections gospel_generation_invalid detail={exc}; trying season_only_generation", file=sys.stderr)
-        return _build_seasonal_or_generic_reflections(date_value, mysteries, model=model, season=context.season_label or season)
+        return _build_seasonal_or_generic_reflection_result(
+            date_value,
+            mysteries,
+            model=model,
+            season=context.season_label or season,
+            fallback_reason=str(exc),
+        )
+
+
+def build_rosary_reflections(
+    date_value,
+    mysteries: Sequence[RosaryMystery],
+    *,
+    calendar: Optional[str] = None,
+    locale: Optional[str] = None,
+    prompt_model: Optional[str] = None,
+    allow_missing_gospel: bool = True,
+    season: Optional[str] = None,
+    day_context: Optional[RosaryDayContext] = None,
+) -> tuple[str, ...]:
+    return build_rosary_reflection_result(
+        date_value,
+        mysteries=mysteries,
+        calendar=calendar,
+        locale=locale,
+        prompt_model=prompt_model,
+        allow_missing_gospel=allow_missing_gospel,
+        season=season,
+        day_context=day_context,
+    ).reflections
 
 
 def build_rosary_day_context(
@@ -254,7 +337,7 @@ def build_rosary_reflection_set(
         allow_missing_gospel=allow_missing_gospel,
         season=season,
     )
-    reflections = build_rosary_reflections(
+    result = build_rosary_reflection_result(
         date_value,
         mysteries,
         calendar=calendar,
@@ -264,13 +347,13 @@ def build_rosary_reflection_set(
         season=season,
         day_context=day_context,
     )
-    source = "fallback" if reflections == fallback_rosary_reflections(mysteries, season=season) else "generated"
     return RosaryReflectionSet(
         mystery_set_title=title,
         mysteries=mysteries,
-        reflections=reflections,
-        source=source,
+        reflections=result.reflections,
+        source=result.source,
         day_context=day_context,
+        fallback_reason=result.fallback_reason,
     )
 
 
@@ -333,6 +416,12 @@ def _normalize_reflection_line(value: Any) -> str:
     line = _normalize_whitespace(value)
     line = re.sub(r"^\s*(?:[-*]|\d+[\).])\s*", "", line).strip()
     return line
+
+
+def _reflection_text_from_item(value: Any) -> str:
+    if isinstance(value, dict):
+        return str(value.get("reflection") or value.get("text") or value.get("value") or "").strip()
+    return str(getattr(value, "reflection", value) or "").strip()
 
 
 def _join_with_and(items: Sequence[str]) -> str:
@@ -562,29 +651,73 @@ Mysteries:
 """.strip()
 
 
-def _build_seasonal_or_generic_reflections(
+def _build_seasonal_or_generic_reflection_result(
     date_value,
     mysteries: Sequence[RosaryMystery],
     *,
     model: str,
     season: Optional[str] = None,
-) -> tuple[str, ...]:
+    fallback_reason: str = "",
+) -> RosaryReflectionResult:
     prompt = _build_season_prompt(date_value, mysteries, season=season)
     try:
         rendered = _call_openai_reflections(model, prompt)
-        return validate_rosary_reflections(rendered, mysteries)
+        return RosaryReflectionResult(
+            reflections=validate_rosary_reflections(rendered, mysteries),
+            source=SOURCE_GENERATED_SEASON,
+            fallback_reason=fallback_reason,
+        )
     except Exception as exc:
         print(f"WARN rosary_reflections using generic_fallback reason=season_generation_invalid detail={exc}", file=sys.stderr)
-        return fallback_rosary_reflections(mysteries, season=season)
+        reason = "; ".join(part for part in (fallback_reason, str(exc)) if part)
+        return RosaryReflectionResult(
+            reflections=validate_rosary_reflections(fallback_rosary_reflections(mysteries, season=season), mysteries),
+            source=SOURCE_FALLBACK_GENERIC,
+            fallback_reason=reason,
+        )
 
 
-def _call_openai_reflections(model: str, prompt: str) -> str:
-    return _call_openai_text(
-        model,
-        prompt,
-        system="Return plain text only. Exactly five lines. No markdown, no bullets, no numbering, no commentary.",
-        temperature=0.4,
+def _call_openai_reflections(model: str, prompt: str) -> Any:
+    api_key, base_url, resolved_model = _resolve_openai_settings(model=model)
+    if not api_key:
+        raise RuntimeError("Missing OpenAI API key for Rosary text generation.")
+    client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
+    user = _normalize_whitespace(prompt)
+    system = (
+        "Return JSON only. Provide exactly five reflections in order, one for each mystery. "
+        "Each item must include number and reflection."
     )
+    try:
+        response = client.responses.parse(
+            model=resolved_model or model,
+            temperature=0.4,
+            input=[
+                {"role": "system", "content": [{"type": "input_text", "text": system}]},
+                {"role": "user", "content": [{"type": "input_text", "text": user}]},
+            ],
+            text_format=_StructuredRosaryReflectionResponse,
+        )
+        parsed = getattr(response, "output_parsed", None)
+        if parsed:
+            return parsed
+    except Exception as exc:
+        print(f"WARN rosary_reflections structured_generation_unavailable detail={exc}; trying plain_text", file=sys.stderr)
+
+    response = client.responses.create(
+        model=resolved_model or model,
+        temperature=0.4,
+        input=[
+            {
+                "role": "system",
+                "content": [{"type": "input_text", "text": "Return plain text only. Exactly five lines. No markdown, no bullets, no numbering, no commentary."}],
+            },
+            {"role": "user", "content": [{"type": "input_text", "text": user}]},
+        ],
+    )
+    text = str(getattr(response, "output_text", "") or "").strip()
+    if text:
+        return text
+    raise RuntimeError("Rosary reflection generation returned empty text.")
 
 
 def _call_openai_text(model: str, prompt: str, *, system: str, temperature: float) -> str:

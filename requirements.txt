@@ -3,6 +3,7 @@ requests
 beautifulsoup4
 romcal==4.0.0b6
 openai
+pydantic
 catholic-mass-readings
 pillow
 pypdf

@@ -820,9 +820,28 @@ def _build_rosary_reflection_set(
     target_date: _dt.date,
     runtime_context: Optional[Dict[str, Any]] = None,
 ):
+    return _get_or_build_rosary_reflection_set(
+        block,
+        contract=contract,
+        entry=entry,
+        target_date=target_date,
+        runtime_context=runtime_context,
+    )
+
+
+def _get_or_build_rosary_reflection_set(
+    block: Dict[str, Any],
+    *,
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    target_date: _dt.date,
+    runtime_context: Optional[Dict[str, Any]] = None,
+):
+    if runtime_context is not None and runtime_context.get("rosary_reflection_set") is not None:
+        return runtime_context["rosary_reflection_set"]
     config = _rosary_reflection_config(block, contract)
     mystery_text = _selected_rosary_mystery_text(block, contract=contract, entry=entry, target_date=target_date)
-    return build_rosary_reflection_set(
+    reflection_set = build_rosary_reflection_set(
         target_date,
         mystery_text,
         calendar=str(config.get("calendar") or "").strip() or None,
@@ -832,6 +851,36 @@ def _build_rosary_reflection_set(
         season=_season_for_date(contract, target_date),
         day_context=(runtime_context or {}).get("rosary_day_context"),
     )
+    if runtime_context is not None:
+        runtime_context["rosary_reflection_set"] = reflection_set
+    return reflection_set
+
+
+def _rosary_reflection_metadata(reflection_set: Any) -> Dict[str, Any]:
+    if reflection_set is None:
+        return {}
+    context = getattr(reflection_set, "day_context", None)
+    return {
+        "source": str(getattr(reflection_set, "source", "") or "").strip(),
+        "fallback_reason": str(getattr(reflection_set, "fallback_reason", "") or "").strip(),
+        "count": len(tuple(getattr(reflection_set, "reflections", ()) or ())),
+        "focus_source": str(getattr(context, "focus_source", "") or "").strip(),
+        "focus_title": str(getattr(context, "focus_title", "") or "").strip(),
+        "focus_prompt_label": str(getattr(context, "focus_prompt_label", "") or "").strip(),
+    }
+
+
+def _rosary_reflection_metadata_from_context(runtime_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    return _rosary_reflection_metadata((runtime_context or {}).get("rosary_reflection_set"))
+
+
+def _attach_rosary_reflection_context(render_context: Dict[str, Any], runtime_context: Optional[Dict[str, Any]]) -> None:
+    metadata = _rosary_reflection_metadata_from_context(runtime_context)
+    if not metadata:
+        return
+    render_context["rosary_reflection_source"] = metadata["source"]
+    render_context["rosary_reflection_fallback_reason"] = metadata["fallback_reason"]
+    render_context["rosary_reflection_count"] = metadata["count"]
 
 
 def _resolve_rosary_intro_content(
@@ -1670,6 +1719,9 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
                 target_date=effective_date,
                 runtime_context=runtime_context,
             )
+            render_context = dict(rendered_metadata["context"])
+            _attach_rosary_reflection_context(render_context, runtime_context)
+            rosary_reflections = _rosary_reflection_metadata_from_context(runtime_context)
             jobs.append(
                 {
                     "entry_id": entry["entry_id"],
@@ -1693,7 +1745,8 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
                     "notion_target": dict(contract.notion_target),
                     "audio_target": dict(contract.audio_target),
                     "metadata": dict(contract.metadata),
-                    "render_context": dict(rendered_metadata["context"]),
+                    "render_context": render_context,
+                    "rosary_reflections": rosary_reflections,
                     "source_path": str(contract.source_path),
                 }
             )
@@ -1760,6 +1813,9 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
                 continue
             if not audio_fragments:
                 continue
+            render_context = dict(rendered_metadata["context"])
+            _attach_rosary_reflection_context(render_context, runtime_context)
+            rosary_reflections = _rosary_reflection_metadata_from_context(runtime_context)
             job = {
                 "entry_id": entry["entry_id"],
                 "episode_id": rendered_metadata["episode_id"],
@@ -1782,7 +1838,8 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
                 "notion_target": dict(contract.notion_target),
                 "audio_target": dict(contract.audio_target),
                 "metadata": dict(contract.metadata),
-                "render_context": dict(rendered_metadata["context"]),
+                "render_context": render_context,
+                "rosary_reflections": rosary_reflections,
                 "source_path": str(contract.source_path),
             }
             job["content_hash"] = audio_manifest_hash(job, audio_fragments, audio_config)
