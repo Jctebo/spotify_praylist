@@ -5,7 +5,13 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
 from jobs.publish.audio import audio_public_url, openai_tts_renderer
-from jobs.publish.fragments import audio_manifest_hash, assemble_audio_fragments, publish_audio_cache_root, render_fragment_audio
+from jobs.publish.fragments import (
+    audio_manifest_hash,
+    assemble_audio_fragments,
+    publish_audio_cache_root,
+    render_fragment_audio,
+    sanitize_tts_input,
+)
 
 from .contracts import NovenaRuntime
 
@@ -109,7 +115,7 @@ def render_novena_audio_job(
                 "block_path": str(fragment.get("block_path", "")).strip(),
                 "kind": str(fragment.get("kind", "")).strip(),
                 "label": str(fragment.get("label", "")).strip(),
-                "text": str(fragment.get("text", "")).strip(),
+                "text": sanitize_tts_input(fragment.get("text", "")),
                 "days": list(fragment.get("days") or []),
                 "repeat_index": int(fragment.get("repeat_index", 1) or 1),
                 "repeat_count": int(fragment.get("repeat_count", 1) or 1),
