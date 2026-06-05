@@ -1,5 +1,16 @@
 # Release Log
 
+## [0.3.4.5] - 2026-06-05
+
+### Added
+- Added structured Daily Rosary reflection generation with validated five-reflection output and compatible plain-text fallback when structured parsing is unavailable.
+- Added Rosary reflection source/count metadata to publish jobs and final audio sidecars for post-run auditability.
+
+### Fixed
+- Kept feast-day Rosary reflection fallback centered on the feast when generated output is malformed, preventing feast-focused episodes from degrading into generic Ordinary Time reflections.
+- Added St. Boniface and malformed-output regression coverage for Daily Rosary reflection precedence and fallback behavior.
+- Made `pydantic` an explicit dependency because Rosary structured-output parsing imports it directly.
+
 ## [0.3.4.4] - 2026-06-05
 
 ### Changed
