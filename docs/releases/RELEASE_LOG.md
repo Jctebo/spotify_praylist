@@ -1,5 +1,16 @@
 # Release Log
 
+## [0.3.4.4] - 2026-06-05
+
+### Changed
+- Made final MP3 loudness normalization a default audio setting for publish-audio and novena contracts, using the shared `-16 LUFS`, `-1.5 dBTP`, `11 LRA` target.
+- Kept `loudness_normalization` contract-configurable so individual contracts can override or disable it for alternate mastering requirements.
+- Applied final FFmpeg loudness normalization to novena audio rendering and recorded normalization metadata in novena sidecars.
+
+### Fixed
+- Removed duplicated loudness normalization blocks from individual podcast contracts now covered by the shared default.
+- Added regression coverage for publish-audio defaults, contract overrides, fragment hashing, novena defaults, and novena rendering.
+
 ## [0.3.4.3] - 2026-06-05
 
 ### Changed

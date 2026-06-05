@@ -41,6 +41,12 @@ DEFAULT_AUDIO_SETTINGS = {
     "format": "mp3",
     "speed": 1.0,
 }
+DEFAULT_LOUDNESS_NORMALIZATION = {
+    "enabled": True,
+    "integrated_lufs": -16,
+    "true_peak_db": -1.5,
+    "lra": 11,
+}
 
 VALID_STATUS_VALUES = {"approved", "skipped"}
 VALID_SELECTOR_VALUES = {"current_calendar_month", "weekday", "date", "entry_id", "title", "contract_id"}
@@ -186,6 +192,31 @@ def _normalize_provider_config(provider: Any, path: Path, entry_id: str, index: 
     return normalized
 
 
+def _normalize_loudness_normalization(config: Any) -> Dict[str, Any]:
+    if config is None:
+        settings: Dict[str, Any] = dict(DEFAULT_LOUDNESS_NORMALIZATION)
+    elif isinstance(config, dict):
+        settings = dict(DEFAULT_LOUDNESS_NORMALIZATION)
+        settings.update(config)
+    else:
+        settings = dict(DEFAULT_LOUDNESS_NORMALIZATION)
+        settings["enabled"] = bool(config)
+    settings["enabled"] = _normalize_bool(settings.get("enabled", True))
+    try:
+        settings["integrated_lufs"] = float(settings.get("integrated_lufs", DEFAULT_LOUDNESS_NORMALIZATION["integrated_lufs"]))
+    except Exception:
+        settings["integrated_lufs"] = float(DEFAULT_LOUDNESS_NORMALIZATION["integrated_lufs"])
+    try:
+        settings["true_peak_db"] = float(settings.get("true_peak_db", DEFAULT_LOUDNESS_NORMALIZATION["true_peak_db"]))
+    except Exception:
+        settings["true_peak_db"] = float(DEFAULT_LOUDNESS_NORMALIZATION["true_peak_db"])
+    try:
+        settings["lra"] = float(settings.get("lra", DEFAULT_LOUDNESS_NORMALIZATION["lra"]))
+    except Exception:
+        settings["lra"] = float(DEFAULT_LOUDNESS_NORMALIZATION["lra"])
+    return settings
+
+
 
 def _normalize_frequency(value: Any, path: Path) -> str:
     frequency = str(value or "").strip().lower()
@@ -257,6 +288,9 @@ def _normalize_audio_config(payload: Dict[str, Any], path: Path, entry_id: str) 
         audio_config["speed"] = float(audio_config.get("speed", DEFAULT_AUDIO_SETTINGS["speed"]))
     except Exception:
         audio_config["speed"] = float(DEFAULT_AUDIO_SETTINGS["speed"])
+    audio_config["loudness_normalization"] = _normalize_loudness_normalization(
+        audio_config.get("loudness_normalization")
+    )
     providers = audio_config.get("providers")
     if providers is not None:
         if not isinstance(providers, list):
@@ -1688,12 +1722,16 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
             audio_config.setdefault("voice", DEFAULT_AUDIO_SETTINGS["voice"])
             audio_config.setdefault("format", DEFAULT_AUDIO_SETTINGS["format"])
             audio_config.setdefault("speed", DEFAULT_AUDIO_SETTINGS["speed"])
+            audio_config.setdefault("loudness_normalization", dict(DEFAULT_LOUDNESS_NORMALIZATION))
             audio_config["enabled"] = bool(audio_config.get("enabled", False))
             audio_config["format"] = str(audio_config.get("format", DEFAULT_AUDIO_SETTINGS["format"])).strip().lower() or DEFAULT_AUDIO_SETTINGS["format"]
             try:
                 audio_config["speed"] = float(audio_config.get("speed", DEFAULT_AUDIO_SETTINGS["speed"]))
             except Exception:
                 audio_config["speed"] = float(DEFAULT_AUDIO_SETTINGS["speed"])
+            audio_config["loudness_normalization"] = _normalize_loudness_normalization(
+                audio_config.get("loudness_normalization")
+            )
             if not audio_config["enabled"]:
                 continue
             runtime_context = _entry_runtime_context(contract, entry, effective_date)
