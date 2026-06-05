@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.3.4.2] - 2026-06-05
+
+### Fixed
+- Added shared TTS input sanitization so label-style prefixes such as `Prayer:` and standalone `colon` artifacts are removed before fragment hashing, sidecar writing, and renderer calls.
+- Added regression coverage proving Saint Anthony novena audio fragments and generic publish fragments no longer send spoken markup artifacts to TTS.
+
 ## [0.3.4.1] - 2026-06-03
 
 ### Added

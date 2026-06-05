@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import subprocess
 import tempfile
 from pathlib import Path
@@ -13,10 +14,53 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PUBLISH_AUDIO_CACHE_DIR = ROOT / ".cache" / "publish_audio"
 DEFAULT_FRAGMENT_SILENCE_MS = 350
 FFMPEG_BINARY = imageio_ffmpeg.get_ffmpeg_exe()
+TTS_LABEL_PREFIXES = {
+    "antiphon",
+    "conclusion",
+    "devotion",
+    "intercession",
+    "meditation",
+    "memorare",
+    "petition",
+    "prayer",
+    "reflection",
+    "response",
+    "verse",
+}
+TTS_LABEL_PREFIX_RE = re.compile(
+    rf"(?im)(^|[\r\n]+)\s*(?P<label>{'|'.join(sorted(TTS_LABEL_PREFIXES))})\s*:\s+"
+)
+TTS_LEADING_COLON_LABEL_RE = re.compile(
+    rf"(?im)(^|[\r\n]+)\s*colon\s+(?={'|'.join(sorted(TTS_LABEL_PREFIXES))}\s*:)"
+)
+TTS_LABEL_WORD_COLON_RE = re.compile(
+    rf"(?im)(^|[\r\n]+)\s*(?P<label>{'|'.join(sorted(TTS_LABEL_PREFIXES))})\s+colon\s+"
+)
+TTS_STANDALONE_COLON_LINE_RE = re.compile(r"(?im)(^|[\r\n]+)\s*colon\s*(?=$|[\r\n]+)")
 
 
 def publish_audio_cache_root(cache_root: Optional[Path] = None) -> Path:
     return Path(cache_root) if cache_root else DEFAULT_PUBLISH_AUDIO_CACHE_DIR
+
+
+def sanitize_tts_input(text: Any) -> str:
+    spoken = str(text or "").replace("\u00a0", " ").strip()
+    if not spoken:
+        return ""
+    spoken = TTS_LEADING_COLON_LABEL_RE.sub(lambda match: match.group(1), spoken)
+    spoken = TTS_LABEL_WORD_COLON_RE.sub(lambda match: match.group(1), spoken)
+    spoken = TTS_LABEL_PREFIX_RE.sub(lambda match: match.group(1), spoken)
+    spoken = TTS_STANDALONE_COLON_LINE_RE.sub(lambda match: match.group(1), spoken)
+    spoken = re.sub(r"[ \t]+", " ", spoken)
+    spoken = re.sub(r" *\r?\n *", "\n", spoken)
+    spoken = re.sub(r"\n{3,}", "\n\n", spoken)
+    return spoken.strip()
+
+
+def sanitize_fragment_for_tts(fragment: Dict[str, Any]) -> Dict[str, Any]:
+    sanitized = dict(fragment)
+    sanitized["text"] = sanitize_tts_input(fragment.get("text", ""))
+    return sanitized
 
 
 def _normalize_tts_value(value: Any) -> Any:
@@ -77,7 +121,7 @@ def _hash_payload(payload: Dict[str, Any]) -> str:
 def fragment_content_hash(fragment: Dict[str, Any], audio_config: Dict[str, Any]) -> str:
     effective_audio_config = effective_fragment_audio_config(fragment, audio_config)
     payload = {
-        "text": str(fragment.get("text", "")).strip(),
+        "text": sanitize_tts_input(fragment.get("text", "")),
         "audio_role": str(fragment.get("audio_role", "")).strip(),
         "tts": normalize_audio_settings(effective_audio_config),
     }
@@ -188,7 +232,7 @@ def _fragment_sidecar_payload(
         "block_path": str(fragment.get("block_path", "")).strip(),
         "kind": str(fragment.get("kind", "")).strip(),
         "label": str(fragment.get("label", "")).strip(),
-        "text": str(fragment.get("text", "")).strip(),
+        "text": sanitize_tts_input(fragment.get("text", "")),
         "audio_path": str(audio_path),
         "tts": normalize_audio_settings(audio_config),
     }
@@ -227,7 +271,7 @@ def render_fragment_audio(
                 )
         return {"audio_path": audio_path, "fragment_hash": fragment_hash, "rendered": False}
 
-    raw_audio = renderer(str(fragment.get("text", "")), dict(settings))
+    raw_audio = renderer(sanitize_tts_input(fragment.get("text", "")), dict(settings))
     if not raw_audio:
         raise RuntimeError(f"Audio renderer returned empty output for fragment '{fragment.get('fragment_key', '')}'.")
     audio_path.write_bytes(raw_audio)

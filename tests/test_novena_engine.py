@@ -1,4 +1,5 @@
 import datetime
+import re
 import unittest
 from unittest import mock
 
@@ -285,6 +286,29 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertEqual(text.count("Our Father, who art in heaven, hallowed be thy name."), 1)
         self.assertEqual(text.count("Hail Mary, full of grace, the Lord is with thee."), 1)
         self.assertEqual(text.count("Glory be to the Father, and to the Son, and to the Holy Spirit."), 7)
+
+    def test_render_novena_traditional_st_anthony_has_no_colon_artifacts(self):
+        contracts = contracts_mod.load_novena_contracts(contracts_mod.DEFAULT_FEAST_DIR / "st_anthony.json")
+        contract = next(item for item in contracts if item.contract_id == "st_anthony")
+        artifact_pattern = re.compile(r"\bcolon\b|(?:^|\n)\s*(?:Prayer|Reflection|Memorare):", re.IGNORECASE)
+
+        for day in range(1, 10):
+            runtime = contracts_mod.NovenaRuntime(
+                family_id=contract.family_id,
+                contract_id=contract.contract_id,
+                saint=dict(contract.saint),
+                feast=contract.feast.to_dict() if contract.feast is not None else {},
+                novena=contract.novena.to_dict(),
+                resolved_template=contract.novena.template,
+                date=datetime.date(2026, 6, 3) + datetime.timedelta(days=day - 1),
+                active_day=day,
+                publishing=contract.publishing.to_dict(),
+                source_path=contract.source_path,
+            )
+            rendered = engine_mod.render_novena(runtime, generate_text_fn=lambda prompt, context: f"{prompt} ({context['day']})")
+
+            for fragment in rendered["audio_fragments"]:
+                self.assertNotRegex(str(fragment.get("text", "")), artifact_pattern)
 
     def test_generate_text_calls_openai_with_context_and_returns_model_text(self):
         captured = {}

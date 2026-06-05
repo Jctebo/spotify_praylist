@@ -1,4 +1,5 @@
 import datetime
+import json
 import tempfile
 import shutil
 import unittest
@@ -107,6 +108,69 @@ class TestPublishAudioFragments(unittest.TestCase):
                 },
             ),
         )
+
+    def test_sanitize_tts_input_removes_label_and_literal_colon_artifacts(self):
+        self.assertEqual(
+            self.fragments_mod.sanitize_tts_input("Prayer: Father, hear us."),
+            "Father, hear us.",
+        )
+        self.assertEqual(
+            self.fragments_mod.sanitize_tts_input("colon Prayer: Father, hear us."),
+            "Father, hear us.",
+        )
+        self.assertEqual(
+            self.fragments_mod.sanitize_tts_input("Prayer colon Father, hear us."),
+            "Father, hear us.",
+        )
+        self.assertEqual(
+            self.fragments_mod.sanitize_tts_input("Consider this: God is merciful."),
+            "Consider this: God is merciful.",
+        )
+        self.assertEqual(
+            self.fragments_mod.sanitize_tts_input("We pray for people with colon cancer."),
+            "We pray for people with colon cancer.",
+        )
+
+    def test_tts_sanitization_controls_fragment_hash_and_renderer_input(self):
+        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        clean_fragment = {
+            "fragment_key": "block-1/inline",
+            "block_path": "block-1/inline",
+            "kind": "inline",
+            "label": "Prayer",
+            "text": "Father, hear us.",
+        }
+        artifact_fragment = {**clean_fragment, "text": "Prayer: Father, hear us."}
+        changed_fragment = {**clean_fragment, "text": "Prayer: Father, help us."}
+
+        self.assertEqual(
+            self.fragments_mod.fragment_content_hash(clean_fragment, settings),
+            self.fragments_mod.fragment_content_hash(artifact_fragment, settings),
+        )
+        self.assertNotEqual(
+            self.fragments_mod.fragment_content_hash(clean_fragment, settings),
+            self.fragments_mod.fragment_content_hash(changed_fragment, settings),
+        )
+
+        calls = []
+
+        def fake_renderer(text, audio_config):
+            calls.append(text)
+            return make_test_mp3_bytes()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cache_root = Path(tmpdir) / ".cache"
+            rendered = self.fragments_mod.render_fragment_audio(
+                artifact_fragment,
+                settings,
+                fake_renderer,
+                cache_root=cache_root,
+            )
+            sidecar = Path(rendered["audio_path"]).with_suffix(".json")
+            payload = json.loads(sidecar.read_text(encoding="utf-8"))
+
+        self.assertEqual(calls, ["Father, hear us."])
+        self.assertEqual(payload["text"], "Father, hear us.")
 
     def test_role_specific_audio_config_changes_fragment_and_manifest_hash(self):
         fragment = {
