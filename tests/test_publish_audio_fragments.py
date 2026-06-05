@@ -85,6 +85,21 @@ class TestPublishAudioFragments(unittest.TestCase):
                 fragment,
                 {
                     **base,
+                    "loudness_normalization": {
+                        "enabled": True,
+                        "integrated_lufs": -16,
+                        "true_peak_db": -1.5,
+                        "lra": 11,
+                    },
+                },
+            ),
+        )
+        self.assertNotEqual(
+            base_hash,
+            self.fragments_mod.fragment_content_hash(
+                fragment,
+                {
+                    **base,
                     "provider": "elevenlabs",
                     "voice_id": "voice-123",
                     "model_id": "eleven_multilingual_v2",
