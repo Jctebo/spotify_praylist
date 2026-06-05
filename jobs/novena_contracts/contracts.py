@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as _dt
+import copy
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -20,12 +21,39 @@ DEFAULT_LOUDNESS_NORMALIZATION = {
     "true_peak_db": -1.5,
     "lra": 11,
 }
+DEFAULT_ELEVENLABS_AMELIA_PROVIDER = {
+    "provider": "elevenlabs",
+    "api_key_env": "ELEVENLABS_API_KEY",
+    "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+    "model_id": "eleven_multilingual_v2",
+    "voice_settings": {
+        "stability": 0.65,
+        "similarity_boost": 0.8,
+        "use_speaker_boost": True,
+        "style": 0,
+        "speed": 1.0,
+    },
+    "format": "mp3",
+    "speed": 1.0,
+}
+DEFAULT_OPENAI_PROVIDER = {
+    "provider": "openai",
+    "api_key_env": "OPENAI_API_KEY",
+    "model": "gpt-4o-mini-tts",
+    "voice": "alloy",
+    "format": "mp3",
+    "speed": 1.0,
+}
 DEFAULT_AUDIO_CONFIG = {
     "enabled": True,
     "model": "gpt-4o-mini-tts",
     "voice": "alloy",
     "format": "mp3",
     "speed": 1.0,
+    "providers": [
+        copy.deepcopy(DEFAULT_ELEVENLABS_AMELIA_PROVIDER),
+        copy.deepcopy(DEFAULT_OPENAI_PROVIDER),
+    ],
     "loudness_normalization": dict(DEFAULT_LOUDNESS_NORMALIZATION),
 }
 DEFAULT_RSS_CONFIG = {
@@ -341,11 +369,11 @@ def _selector_payload_to_rule(selector_payload: Dict[str, Any], *, source: Path)
 
 
 def _normalize_audio_config(config: Any) -> Dict[str, Any]:
-    audio = dict(DEFAULT_AUDIO_CONFIG)
+    audio = copy.deepcopy(DEFAULT_AUDIO_CONFIG)
     if isinstance(config, dict):
         for key in audio:
             if key in config:
-                audio[key] = config[key]
+                audio[key] = copy.deepcopy(config[key])
     audio["enabled"] = bool(audio.get("enabled", True))
     audio["model"] = str(audio.get("model", DEFAULT_AUDIO_CONFIG["model"])).strip() or DEFAULT_AUDIO_CONFIG["model"]
     audio["voice"] = str(audio.get("voice", DEFAULT_AUDIO_CONFIG["voice"])).strip() or DEFAULT_AUDIO_CONFIG["voice"]
@@ -377,6 +405,36 @@ def _normalize_audio_config(config: Any) -> Dict[str, Any]:
     except Exception:
         loudness["lra"] = float(DEFAULT_LOUDNESS_NORMALIZATION["lra"])
     audio["loudness_normalization"] = loudness
+    providers = audio.get("providers")
+    if isinstance(providers, list) and providers:
+        normalized_providers: List[Dict[str, Any]] = []
+        for provider in providers:
+            if isinstance(provider, dict):
+                normalized = copy.deepcopy(provider)
+                normalized["provider"] = str(normalized.get("provider", "")).strip().lower()
+                normalized["api_key_env"] = str(normalized.get("api_key_env", "")).strip()
+                normalized["format"] = str(normalized.get("format", audio["format"])).strip().lower() or audio["format"]
+                try:
+                    normalized["speed"] = float(normalized.get("speed", audio["speed"]))
+                except Exception:
+                    normalized["speed"] = float(audio["speed"])
+                if normalized["provider"] == "openai":
+                    normalized["api_key_env"] = normalized["api_key_env"] or "OPENAI_API_KEY"
+                    normalized["model"] = str(normalized.get("model", audio["model"])).strip() or audio["model"]
+                    normalized["voice"] = str(normalized.get("voice", audio["voice"])).strip() or audio["voice"]
+                elif normalized["provider"] == "elevenlabs":
+                    normalized["api_key_env"] = normalized["api_key_env"] or "ELEVENLABS_API_KEY"
+                    normalized["voice_id"] = str(normalized.get("voice_id", "")).strip()
+                    normalized["model_id"] = str(normalized.get("model_id", "")).strip()
+                    voice_settings = normalized.get("voice_settings")
+                    normalized["voice_settings"] = copy.deepcopy(voice_settings) if isinstance(voice_settings, dict) else {}
+                normalized_providers.append(normalized)
+        if normalized_providers:
+            audio["providers"] = normalized_providers
+        else:
+            audio.pop("providers", None)
+    else:
+        audio.pop("providers", None)
     return audio
 
 

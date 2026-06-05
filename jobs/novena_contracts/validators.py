@@ -359,6 +359,31 @@ def validate_novena_contract(payload: Dict[str, Any], *, source: str, template_d
         raise RuntimeError(f"Invalid novena contract in {source}: publishing.rss must be an object.")
     if not bool(audio.get("enabled", True)):
         raise RuntimeError(f"Invalid novena contract in {source}: publishing.audio.enabled must be true.")
+    providers = audio.get("providers")
+    if providers is not None:
+        if not isinstance(providers, list) or not providers:
+            raise RuntimeError(f"Invalid novena contract in {source}: publishing.audio.providers must be a non-empty array.")
+        for index, provider in enumerate(providers, start=1):
+            if not isinstance(provider, dict):
+                raise RuntimeError(f"Invalid novena contract in {source}: publishing.audio.providers[{index}] must be an object.")
+            provider_name = str(provider.get("provider", "")).strip().lower()
+            if not provider_name:
+                raise RuntimeError(f"Invalid novena contract in {source}: publishing.audio.providers[{index}].provider is required.")
+            if provider_name == "elevenlabs":
+                if not str(provider.get("voice_id", "")).strip():
+                    raise RuntimeError(f"Invalid novena contract in {source}: publishing.audio.providers[{index}].voice_id is required for ElevenLabs.")
+                if not str(provider.get("model_id", "")).strip():
+                    raise RuntimeError(f"Invalid novena contract in {source}: publishing.audio.providers[{index}].model_id is required for ElevenLabs.")
+                voice_settings = provider.get("voice_settings")
+                if voice_settings is not None and not isinstance(voice_settings, dict):
+                    raise RuntimeError(f"Invalid novena contract in {source}: publishing.audio.providers[{index}].voice_settings must be an object.")
+            elif provider_name == "openai":
+                if not str(provider.get("model", audio.get("model", "gpt-4o-mini-tts"))).strip():
+                    raise RuntimeError(f"Invalid novena contract in {source}: publishing.audio.providers[{index}].model is required for OpenAI.")
+                if not str(provider.get("voice", audio.get("voice", "alloy"))).strip():
+                    raise RuntimeError(f"Invalid novena contract in {source}: publishing.audio.providers[{index}].voice is required for OpenAI.")
+            else:
+                raise RuntimeError(f"Invalid novena contract in {source}: unsupported audio provider '{provider_name}'.")
     if not bool(rss.get("enabled", True)):
         raise RuntimeError(f"Invalid novena contract in {source}: publishing.rss.enabled must be true.")
     for field_name in ("feed_id", "episode_title_pattern", "episode_description_pattern"):

@@ -48,7 +48,7 @@ Optional variables:
 - Marian Antiphon publish audio contracts are season-gated: the ordinary-season Angelus contract and the Easter-season Regina Caeli contract each render their own daily episode while reusing the shared daily intro and sign-of-cross templates; both episode titles include `Marian Antiphon` so Spotify lookup can target one durable title marker across seasons
 - Publish-audio and novena episodes normalize the final assembled MP3 to the shared podcast loudness target (`-16 LUFS`, `-1.5 dBTP`, `11 LRA`) after fragment assembly by default; individual contracts can override or disable `loudness_normalization` when a specific episode family needs different mastering.
 - `scripts/run_morning_prayer_elevenlabs_local.py`: step-by-step local smoke helper that loads `config/local/elevenlabs.env`, renders only the Morning Prayer ElevenLabs variant, and writes local feed/archive artifacts under `artifacts/local/elevenlabs/`
-- `ELEVENLABS_API_KEY` for the Morning Prayer ElevenLabs variant in local runs or GitHub Actions
+- `ELEVENLABS_API_KEY` for ElevenLabs-first publish audio, including Morning Prayer, Auxilium Christianorum, Marian Antiphons, Rosary, and novena audio in local runs or GitHub Actions; OpenAI remains the configured fallback where provider lists include it
 - `config/publish/images/logo_ora_pro_nobis.png`: podcast cover art copied into the published `docs/images/` tree
 - `PUBLISH_GITHUB_PAGES_BASE_URL` to override the RSS enclosure base URL when publishing audio
 - `PUBLISH_PODCAST_FEED_URL` to override the remote `podcast.xml` archive URL when publishing audio

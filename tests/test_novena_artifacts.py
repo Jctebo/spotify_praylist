@@ -151,6 +151,75 @@ class TestNovenaArtifacts(unittest.TestCase):
         self.assertEqual(settings["true_peak_db"], -2.0)
         self.assertEqual(settings["lra"], 9.0)
 
+    def test_novena_audio_falls_back_to_openai_after_elevenlabs_failure(self):
+        runtime = self._runtime()
+        publishing = dict(runtime.publishing)
+        publishing["audio"] = {
+            "enabled": True,
+            "model": "gpt-4o-mini-tts",
+            "voice": "alloy",
+            "format": "mp3",
+            "speed": 1.0,
+            "providers": [
+                {
+                    "provider": "elevenlabs",
+                    "api_key_env": "ELEVENLABS_API_KEY",
+                    "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+                    "model_id": "eleven_multilingual_v2",
+                    "format": "mp3",
+                    "speed": 1.0,
+                },
+                {
+                    "provider": "openai",
+                    "api_key_env": "OPENAI_API_KEY",
+                    "model": "gpt-4o-mini-tts",
+                    "voice": "alloy",
+                    "format": "mp3",
+                    "speed": 1.0,
+                },
+            ],
+        }
+        runtime = contracts_mod.NovenaRuntime(
+            family_id=runtime.family_id,
+            contract_id=runtime.contract_id,
+            saint=runtime.saint,
+            feast=runtime.feast,
+            novena=runtime.novena,
+            resolved_template=runtime.resolved_template,
+            date=runtime.date,
+            active_day=runtime.active_day,
+            publishing=publishing,
+            source_path=runtime.source_path,
+        )
+        rendered = engine_mod.render_novena(runtime, generate_text_fn=lambda prompt, context: f"{prompt} ({context['theme']})")
+        job = audio_mod.build_novena_audio_job(runtime, rendered)
+        calls = []
+
+        def fake_renderer(text, audio_config):
+            calls.append(dict(audio_config))
+            if audio_config.get("provider") == "elevenlabs":
+                raise RuntimeError("ElevenLabs unavailable")
+            return make_test_mp3_bytes()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            cache_root = Path(tmpdir) / ".cache"
+            result = audio_mod.render_novena_audio_job(
+                job,
+                renderer=fake_renderer,
+                docs_root=docs_root,
+                cache_root=cache_root,
+                write_sidecar=True,
+            )
+            payload = json.loads(Path(result["audio_path"]).with_suffix(".json").read_text(encoding="utf-8"))
+
+        self.assertTrue(result["rendered"])
+        self.assertGreaterEqual(len(calls), 2)
+        self.assertEqual(calls[0]["provider"], "elevenlabs")
+        self.assertEqual(calls[-1]["provider"], "openai")
+        self.assertEqual(payload["fragments"][0]["provider"], "openai")
+        self.assertEqual(payload["fragments"][0]["tts"]["provider"], "openai")
+
     def test_placeholder_sidecar_is_skipped_from_published_audio_jobs(self):
         runtime = self._runtime()
         rendered = engine_mod.render_novena(runtime, generate_text_fn=lambda prompt, context: f"{prompt} ({context['theme']})")

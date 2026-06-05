@@ -154,6 +154,14 @@ class TestPublishContracts(unittest.TestCase):
         self.assertTrue(contracts_by_id["marian-antiphon-regina-caeli"].entries[0]["audio_config"]["enabled"])
         self.assert_standard_loudness_normalization(contracts_by_id["marian-antiphon-angelus"].entries[0]["audio_config"])
         self.assert_standard_loudness_normalization(contracts_by_id["marian-antiphon-regina-caeli"].entries[0]["audio_config"])
+        self.assertEqual(
+            contracts_by_id["marian-antiphon-angelus"].entries[0]["audio_config"]["providers"][0]["voice_id"],
+            "2NfTQuOn6dRQvgKuC2le",
+        )
+        self.assertEqual(
+            contracts_by_id["marian-antiphon-regina-caeli"].entries[0]["audio_config"]["providers"][0]["voice_id"],
+            "2NfTQuOn6dRQvgKuC2le",
+        )
         self.assertTrue(contracts_by_id["morning-prayer-elevenlabs"].entries[0]["text_config"]["enabled"])
         self.assertEqual(contracts_by_id["morning-prayer-elevenlabs"].metadata["title_template"], "Morning Prayer - {date:%B %-d, %Y}")
         self.assertEqual(
@@ -183,6 +191,10 @@ class TestPublishContracts(unittest.TestCase):
         )
         self.assertTrue(contracts_by_id["rosary"].entries[0]["audio_config"]["enabled"])
         self.assert_standard_loudness_normalization(contracts_by_id["rosary"].entries[0]["audio_config"])
+        self.assertEqual(
+            contracts_by_id["rosary"].entries[0]["audio_config"]["providers"][0]["voice_id"],
+            "2NfTQuOn6dRQvgKuC2le",
+        )
         self.assertFalse(contracts_by_id["morning-prayer-elevenlabs"].entries[0]["blocks"][0]["skip_if_missing"])
         self.assertTrue(contracts_by_id["morning-prayer-elevenlabs"].metadata["daily_intro"]["allow_missing_gospel"])
         self.assertNotIn("allow_missing_gospel", contracts_by_id["morning-prayer-elevenlabs"].entries[0]["blocks"][0])
@@ -549,8 +561,18 @@ class TestPublishContracts(unittest.TestCase):
                 "Amen.",
             ],
         )
-        self.assertTrue(all(fragment["effective_audio_config"]["providers"][0]["voice"] == "alloy" for fragment in versicle_fragments))
-        self.assertTrue(all(fragment["effective_audio_config"]["providers"][0]["voice"] == "echo" for fragment in response_fragments))
+        self.assertTrue(
+            all(fragment["effective_audio_config"]["providers"][0]["voice_id"] == "nPczCjzI2devNBz1zQrb" for fragment in versicle_fragments)
+        )
+        self.assertTrue(
+            all(fragment["effective_audio_config"]["providers"][1]["voice"] == "alloy" for fragment in versicle_fragments)
+        )
+        self.assertTrue(
+            all(fragment["effective_audio_config"]["providers"][0]["voice_id"] == "nPczCjzI2devNBz1zQrb" for fragment in response_fragments)
+        )
+        self.assertTrue(
+            all(fragment["effective_audio_config"]["providers"][1]["voice"] == "echo" for fragment in response_fragments)
+        )
         self.assertEqual(len(job["resume_markers"]), len(job["audio_fragments"]))
         self.assertEqual(job["resume_markers"][0]["source"], "audio_fragment")
         self.assertEqual(job["resume_markers"][0]["fragment_key"], job["audio_fragments"][0]["fragment_key"])

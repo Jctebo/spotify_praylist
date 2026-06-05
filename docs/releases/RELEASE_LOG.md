@@ -1,5 +1,20 @@
 # Release Log
 
+## [0.3.4.6] - 2026-06-05
+
+### Added
+- Added Amelia-first/OpenAI-second provider lists to novena audio defaults and the standard nine-day novena family contract.
+- Added ElevenLabs Brian-first role overrides for Auxilium Christianorum's versicle and response fragments.
+
+### Changed
+- Preserved the existing Morning Prayer, Rosary, and Marian Antiphon ElevenLabs voice ids instead of replacing them with Amelia.
+- Reused the shared publish-audio provider fallback path for novena rendering so OpenAI remains an ordered fallback, not the primary path.
+- Updated the novena contract generator and README guidance to match the new provider-first behavior.
+
+### Fixed
+- Prevented novena audio from staying OpenAI-only by wiring it to Amelia-first provider fallback.
+- Added contract validation and regression coverage for novena provider lists and Auxilium role-specific voice overrides.
+
 ## [0.3.4.5] - 2026-06-05
 
 ### Added
