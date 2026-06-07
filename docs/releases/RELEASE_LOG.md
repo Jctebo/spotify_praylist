@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.3.4.7] - 2026-06-07
+
+### Fixed
+- Removed Sunday-only weekday gates from the Father Mike and Bishop Barron Spotify homily contracts so the Sunday playlist can pull the latest available homilies whenever refresh runs.
+- Added regression coverage proving both homily contracts stay ungated and resolve during a non-Sunday Sunday-playlist queue build.
+
 ## [0.3.4.6] - 2026-06-05
 
 ### Added
