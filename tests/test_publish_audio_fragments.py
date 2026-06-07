@@ -23,6 +23,7 @@ class TestPublishAudioFragments(unittest.TestCase):
             f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "
             "Today the Church celebrates Saint Example."
         )
+        self.contracts_mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
         self.contracts_mod.build_rosary_intro_text = lambda date_value, mystery_set_title, mysteries, **kwargs: (
             "Today is Monday, April 6, 2026, in the Easter season. "
             "For today's rosary, we will focus on the feast of Saint Example. "

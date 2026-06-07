@@ -79,6 +79,7 @@ class TestPublishTextPipeline(unittest.TestCase):
             f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "
             "Today the Church celebrates Saint Example."
         )
+        self.contracts_mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
         self.contracts_mod.build_rosary_day_context = self._fake_rosary_day_context
         self.contracts_mod.build_rosary_intro_text = lambda date_value, mystery_set_title, mysteries, **kwargs: (
             "Today is Monday, April 6, 2026, in the Easter season. "
@@ -160,6 +161,7 @@ class TestPublishTextPipeline(unittest.TestCase):
         ])
         self.assertEqual([_toggle_title(block) for block in client.page_children["page-3"]], [
             "Liturgical Announcement",
+            "Prayer Intro",
             "Opening Prayers",
             "Litany of the Most Precious Blood",
             "Weekday Prayer",

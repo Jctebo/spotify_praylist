@@ -27,6 +27,7 @@ class TestPublishContracts(unittest.TestCase):
             f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "
             "Today the Church celebrates Saint Example."
         )
+        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
         self.mod.build_rosary_day_context = self._fake_rosary_day_context
         self.mod.build_rosary_intro_text = lambda date_value, mystery_set_title, mysteries, **kwargs: (
             "Today is Monday, April 6, 2026, in the Easter season. "
@@ -307,6 +308,14 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(ordinary_marian["title"], "Marian Antiphon - Angelus - June 2, 2026")
         self.assertEqual(easter_marian["episode_id"], "marian-antiphon-regina-caeli-2026-04-06")
         self.assertEqual(ordinary_marian["episode_id"], "marian-antiphon-angelus-2026-06-02")
+        self.assertEqual(easter_marian["audio_fragments"][0]["kind"], "daily-intro")
+        self.assertEqual(easter_marian["audio_fragments"][1]["kind"], "prayer-intro")
+        self.assertIn("Regina Caeli", easter_marian["audio_fragments"][1]["text"])
+        self.assertIn("Saint Example", easter_marian["audio_fragments"][1]["text"])
+        self.assertEqual(ordinary_marian["audio_fragments"][0]["kind"], "daily-intro")
+        self.assertEqual(ordinary_marian["audio_fragments"][1]["kind"], "prayer-intro")
+        self.assertIn("Angelus", ordinary_marian["audio_fragments"][1]["text"])
+        self.assertIn("Saint Example", ordinary_marian["audio_fragments"][1]["text"])
 
     def test_build_text_jobs_uses_metadata_allow_missing_gospel_when_block_omits_it(self):
         contracts = self.mod.load_publish_contracts()
@@ -380,6 +389,46 @@ class TestPublishContracts(unittest.TestCase):
         self.assertTrue(all(not call[1]["allow_missing_gospel"] for call in self.calls))
         self.assertIn("allow_missing_gospel=false", stderr.getvalue())
         self.assertIn("Daily Intro", stderr.getvalue())
+
+    def test_prayer_intro_rejects_multi_sentence_template(self):
+        contracts = self.mod.load_publish_contracts()
+        auxilium_contract = next(contract for contract in contracts if contract.contract_id == "auxilium-christianorum")
+        entry = dict(auxilium_contract.entries[0])
+        block = {
+            "kind": "prayer-intro",
+            "title": "Prayer Intro",
+            "prayer_title": "Auxilium Christianorum prayers",
+            "devotion": "Auxilium Christianorum",
+            "template": "First sentence for {day_theme}. Second sentence for {prayer_title}.",
+        }
+
+        with self.assertRaisesRegex(RuntimeError, "exactly 1 sentence"):
+            self.mod.resolve_block_content(
+                block,
+                contract=auxilium_contract,
+                entry=entry,
+                target_date=datetime.date(2026, 4, 6),
+            )
+
+    def test_prayer_intro_rejects_unsupported_template_placeholder(self):
+        contracts = self.mod.load_publish_contracts()
+        auxilium_contract = next(contract for contract in contracts if contract.contract_id == "auxilium-christianorum")
+        entry = dict(auxilium_contract.entries[0])
+        block = {
+            "kind": "prayer-intro",
+            "title": "Prayer Intro",
+            "prayer_title": "Auxilium Christianorum prayers",
+            "devotion": "Auxilium Christianorum",
+            "template": "In today's {devotion}, we reflect on {missing_theme}.",
+        }
+
+        with self.assertRaisesRegex(RuntimeError, "unsupported placeholder 'missing_theme'"):
+            self.mod.resolve_block_content(
+                block,
+                contract=auxilium_contract,
+                entry=entry,
+                target_date=datetime.date(2026, 4, 6),
+            )
 
     def test_build_text_jobs_skips_missing_monthly_template_when_flagged(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -463,9 +512,14 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(auxilium["episode_id"], "auxilium-christianorum-2026-04-06")
         self.assertEqual(
             [section["title"] for section in auxilium["sections"]],
-            ["Liturgical Announcement", "Opening Prayers", "Litany of the Most Precious Blood", "Weekday Prayer", "Conclusion"],
+            ["Liturgical Announcement", "Prayer Intro", "Opening Prayers", "Litany of the Most Precious Blood", "Weekday Prayer", "Conclusion"],
+        )
+        self.assertIn(
+            "As we begin today's Auxilium Christianorum prayers, we place Saint Example under Mary's protection and ask for strength in the spiritual battle.",
+            auxilium["text"],
         )
         self.assertEqual(auxilium["resume_markers"][0]["label"], "Liturgical Announcement")
+        self.assertEqual(auxilium["resume_markers"][1]["label"], "Prayer Intro")
         self.assertEqual(auxilium["resume_markers"][0]["source"], "text_section")
         self.assertIn("April", morning["text"])
         self.assertIn("Joyful Mysteries", rosary["text"])
@@ -543,6 +597,10 @@ class TestPublishContracts(unittest.TestCase):
         job = jobs[0]
         self.assertEqual(job["audio_fragments"][0]["kind"], "liturgical-announcement")
         self.assertEqual(job["audio_fragments"][0]["label"], "Liturgical Announcement")
+        self.assertEqual(job["audio_fragments"][1]["kind"], "prayer-intro")
+        self.assertEqual(job["audio_fragments"][1]["label"], "Prayer Intro")
+        self.assertEqual(job["audio_fragments"][1]["fragment_key"], "block-2/prayer-intro")
+        self.assertIn("Auxilium Christianorum prayers", job["audio_fragments"][1]["text"])
         self.assertTrue(any("weekday-map-monday" in fragment["fragment_key"] for fragment in job["audio_fragments"]))
         versicle_fragments = [fragment for fragment in job["audio_fragments"] if fragment.get("audio_role") == "versicle"]
         response_fragments = [fragment for fragment in job["audio_fragments"] if fragment.get("audio_role") == "response"]
@@ -576,6 +634,7 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(len(job["resume_markers"]), len(job["audio_fragments"]))
         self.assertEqual(job["resume_markers"][0]["source"], "audio_fragment")
         self.assertEqual(job["resume_markers"][0]["fragment_key"], job["audio_fragments"][0]["fragment_key"])
+        self.assertEqual(job["resume_markers"][1]["fragment_key"], job["audio_fragments"][1]["fragment_key"])
 
     def test_expand_audio_fragments_flattens_leaf_blocks_in_order(self):
         contracts = self.mod.load_publish_contracts()

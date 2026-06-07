@@ -32,6 +32,8 @@ class TestPublishAudioPipeline(unittest.TestCase):
         package_contracts.build_daily_intro_text = stub
         self.contracts_mod.build_liturgical_announcement_text = announcement_stub
         package_contracts.build_liturgical_announcement_text = announcement_stub
+        self.contracts_mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
+        package_contracts.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
         self.contracts_mod.build_rosary_day_context = self._fake_rosary_day_context
         package_contracts.build_rosary_day_context = self._fake_rosary_day_context
         self.contracts_mod.build_rosary_intro_text = self._fake_rosary_intro_text

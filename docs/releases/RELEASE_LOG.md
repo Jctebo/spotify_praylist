@@ -1,5 +1,12 @@
 # Release Log
 
+## [0.3.4.8] - 2026-06-07
+
+### Added
+- Added deterministic `prayer_intro` publish blocks that render one-sentence day-theme transitions without introducing another OpenAI dependency.
+- Added natural transition intros for Auxilium Christianorum and both Marian Antiphon episodes so the day announcement flows into the prayer body.
+- Added regression coverage for prayer intro text, audio fragment order, resume markers, and invalid transition templates.
+
 ## [0.3.4.7] - 2026-06-07
 
 ### Fixed
