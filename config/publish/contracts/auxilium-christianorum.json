@@ -121,6 +121,13 @@
           "title": "Liturgical Announcement"
         },
         {
+          "kind": "prayer_intro",
+          "title": "Prayer Intro",
+          "prayer_title": "Auxilium Christianorum prayers",
+          "devotion": "Auxilium Christianorum",
+          "template": "As we begin today's {prayer_title}, we place {day_theme} under Mary's protection and ask for strength in the spiritual battle."
+        },
+        {
           "kind": "sequence",
           "title": "Opening Prayers",
           "blocks": [

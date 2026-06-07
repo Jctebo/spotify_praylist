@@ -14,7 +14,7 @@ from jobs.publish.liturgical_announcement import build_liturgical_announcement_t
 from jobs.publish.rosary_reflections import build_rosary_day_context, build_rosary_intro_text, build_rosary_reflection_set
 from jobs.publish.fragments import audio_manifest_hash
 from jobs.publish.errors import PublishMissingDataError
-from jobs.novena.liturgical_helpers import is_easter_season_for_date
+from jobs.novena.liturgical_helpers import celebration_name, is_easter_season_for_date, romcal_fetch_day
 
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONTRACT_DIR = ROOT / "config" / "publish" / "contracts"
@@ -409,6 +409,15 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
             normalized["locale"] = str(normalized.get("locale", "")).strip()
         if "include_season" in normalized:
             normalized["include_season"] = _normalize_bool(normalized.get("include_season", False))
+    elif kind == "prayer-intro":
+        normalized["title"] = str(normalized.get("title", "")).strip()
+        normalized["prayer_title"] = str(normalized.get("prayer_title", "")).strip()
+        normalized["devotion"] = str(normalized.get("devotion", "")).strip()
+        normalized["template"] = str(normalized.get("template", "")).strip()
+        if "calendar" in normalized:
+            normalized["calendar"] = str(normalized.get("calendar", "")).strip()
+        if "locale" in normalized:
+            normalized["locale"] = str(normalized.get("locale", "")).strip()
     elif kind == "rosary-intro":
         normalized["title"] = str(normalized.get("title", "")).strip()
         if "calendar" in normalized:
@@ -565,6 +574,8 @@ def _validate_entry_blocks(blocks: Sequence[Dict[str, Any]], path: Path, entry_i
             continue
         elif kind == "liturgical-announcement":
             continue
+        elif kind == "prayer-intro":
+            continue
         elif kind == "rosary-intro":
             continue
         elif kind == "rosary-decades":
@@ -707,6 +718,101 @@ def _read_text_file(path_text: str) -> str:
     if not path.exists():
         raise PublishMissingDataError(f"Publish template file not found: {path}")
     return path.read_text(encoding="utf-8").strip()
+
+
+def _compact_text(value: Any) -> str:
+    return " ".join(str(value or "").split()).strip()
+
+
+def _join_with_and(items: Sequence[str]) -> str:
+    cleaned = [str(item or "").strip() for item in items if str(item or "").strip()]
+    if not cleaned:
+        return ""
+    if len(cleaned) == 1:
+        return cleaned[0]
+    if len(cleaned) == 2:
+        return f"{cleaned[0]} and {cleaned[1]}"
+    return ", ".join(cleaned[:-1]) + f", and {cleaned[-1]}"
+
+
+def _prayer_intro_liturgical_context(block: Dict[str, Any], contract: PublishContract) -> Tuple[str, str]:
+    metadata = dict(contract.metadata or {})
+    for key in ("prayer_intro", "liturgical_announcement", "daily_intro"):
+        config = metadata.get(key)
+        if isinstance(config, dict):
+            calendar = str(block.get("calendar") or config.get("calendar") or "").strip()
+            locale = str(block.get("locale") or config.get("locale") or "").strip()
+            if calendar or locale:
+                return calendar or "general_roman", locale or "en"
+    return (
+        str(block.get("calendar") or metadata.get("calendar") or "general_roman").strip() or "general_roman",
+        str(block.get("locale") or metadata.get("locale") or "en").strip() or "en",
+    )
+
+
+def _prayer_intro_day_theme(date_value: _dt.date, *, calendar: str, locale: str) -> str:
+    rows = romcal_fetch_day(calendar, locale, date_value)
+    if not rows:
+        raise PublishMissingDataError(
+            f"Romcal returned no celebrations for {date_value.isoformat()} "
+            f"(calendar={calendar}, locale={locale})."
+        )
+    names: List[str] = []
+    seen: set[str] = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = _compact_text(celebration_name(row))
+        if not name:
+            continue
+        key = name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        names.append(name)
+    if not names:
+        raise PublishMissingDataError(
+            f"Romcal returned no usable celebration names for {date_value.isoformat()} "
+            f"(calendar={calendar}, locale={locale})."
+        )
+    return _join_with_and(names)
+
+
+def _validate_prayer_intro_sentence(text: str) -> str:
+    rendered = _compact_text(text)
+    if not rendered:
+        raise RuntimeError("Prayer intro rendered empty text.")
+    sentences = [part.strip() for part in re.split(r"(?<=[.!?])\s+", rendered) if part.strip()]
+    if len(sentences) != 1:
+        raise RuntimeError(f"Prayer intro must contain exactly 1 sentence, got {len(sentences)}.")
+    if not re.search(r"[.!?]$", sentences[0]):
+        raise RuntimeError("Prayer intro must end with sentence punctuation.")
+    return sentences[0]
+
+
+def _resolve_prayer_intro_content(
+    block: Dict[str, Any],
+    *,
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    target_date: _dt.date,
+) -> str:
+    prayer_title = _compact_text(block.get("prayer_title") or entry.get("title") or contract.contract_id)
+    devotion = _compact_text(block.get("devotion") or prayer_title)
+    template = _compact_text(block.get("template"))
+    if not template:
+        template = "In today's {devotion}, we turn toward {day_theme} as we enter the {prayer_title}."
+    calendar, locale = _prayer_intro_liturgical_context(block, contract)
+    day_theme = _prayer_intro_day_theme(target_date, calendar=calendar, locale=locale)
+    try:
+        rendered = template.format(
+            day_theme=day_theme,
+            prayer_title=prayer_title,
+            devotion=devotion,
+        )
+    except KeyError as exc:
+        raise RuntimeError(f"Prayer intro template contains unsupported placeholder '{exc.args[0]}'.") from exc
+    return _validate_prayer_intro_sentence(rendered)
 
 
 def _block_display_name(block: Dict[str, Any]) -> str:
@@ -1101,6 +1207,13 @@ def resolve_block_content(
                 locale=locale,
                 include_season=include_season,
             )
+        if kind == "prayer-intro":
+            return _resolve_prayer_intro_content(
+                block,
+                contract=contract,
+                entry=entry,
+                target_date=effective_date,
+            )
         raise RuntimeError(f"Publish entry '{entry.get('entry_id', '')}' uses unsupported block kind '{kind}'.")
     except PublishMissingDataError as exc:
         if skip_if_missing:
@@ -1159,6 +1272,9 @@ def _fragment_label_for_block(block: Dict[str, Any], text: str) -> str:
 
     if kind == "liturgical-announcement":
         return explicit or "Liturgical Announcement"
+
+    if kind == "prayer-intro":
+        return explicit or "Prayer Intro"
 
     if kind == "rosary-intro":
         return explicit or "Rosary Intro"
@@ -1434,7 +1550,7 @@ def _expand_audio_fragments_from_block(
             runtime_context=runtime_context,
         )
 
-    if kind in {"file", "inline", "daily-intro", "liturgical-announcement", "rosary-intro"}:
+    if kind in {"file", "inline", "daily-intro", "liturgical-announcement", "prayer-intro", "rosary-intro"}:
         text = resolve_block_content(
             block,
             contract=contract,
@@ -1557,6 +1673,9 @@ def _section_title_for_block(block: Dict[str, Any], text: str, *, index: int, to
 
     if kind == "liturgical-announcement":
         return explicit or "Liturgical Announcement"
+
+    if kind == "prayer-intro":
+        return explicit or "Prayer Intro"
 
     if kind == "rosary-intro":
         return explicit or "Rosary Intro"

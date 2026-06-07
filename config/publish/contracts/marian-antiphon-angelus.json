@@ -66,6 +66,13 @@
           "title": "Daily Intro"
         },
         {
+          "kind": "prayer_intro",
+          "title": "Prayer Intro",
+          "prayer_title": "Angelus",
+          "devotion": "Marian Antiphon",
+          "template": "In today's {devotion}, we turn to Our Lady through the {prayer_title}, reflecting on {day_theme} as we enter this prayer."
+        },
+        {
           "kind": "sequence",
           "title": "Angelus Prayer",
           "blocks": [
