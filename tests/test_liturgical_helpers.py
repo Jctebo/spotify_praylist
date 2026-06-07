@@ -90,6 +90,35 @@ class TestLiturgicalHelpers(unittest.TestCase):
                     datetime.date(2026, 6, 7),
                 )
 
+    def test_resolve_liturgical_music_season_maps_major_seasons(self):
+        cases = {
+            datetime.date(2026, 11, 29): "advent",
+            datetime.date(2026, 12, 25): "christmas",
+            datetime.date(2026, 6, 8): "ordinary_time",
+            datetime.date(2026, 3, 10): "lent",
+            datetime.date(2026, 3, 29): "holy_week",
+            datetime.date(2026, 3, 30): "holy_week",
+            datetime.date(2026, 4, 5): "easter",
+        }
+        for date_value, expected in cases.items():
+            with self.subTest(date_value=date_value):
+                self.assertEqual(
+                    self.mod.resolve_liturgical_music_season("general_roman", "en", date_value),
+                    expected,
+                )
+
+    def test_resolve_liturgical_music_season_maps_triduum_to_holy_week(self):
+        for date_value in (
+            datetime.date(2026, 4, 2),
+            datetime.date(2026, 4, 3),
+            datetime.date(2026, 4, 4),
+        ):
+            with self.subTest(date_value=date_value):
+                self.assertEqual(
+                    self.mod.resolve_liturgical_music_season("general_roman", "en", date_value),
+                    "holy_week",
+                )
+
     def test_env_helpers_cover_boolean_integer_and_required_values(self):
         with temp_env({"HELPER_BOOL": "yes", "HELPER_INT": "7"}):
             self.assertTrue(self.mod.bool_env("HELPER_BOOL", False))

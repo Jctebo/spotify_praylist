@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 import sys
 import shutil
 import datetime as _dt
@@ -19,6 +20,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from jobs.publish.contracts import DEFAULT_GITHUB_PAGES_BASE_URL, ROOT, build_audio_jobs as _build_audio_jobs
+from jobs.publish.audio_branding import apply_audio_branding, audio_branding_hash_metadata
 from jobs.publish.fragments import (
     assemble_audio_fragments,
     audio_manifest_hash,
@@ -948,7 +950,18 @@ def render_audio_job(
                     "text": text,
                 }
             ]
-    content_hash = str(job.get("content_hash", "")).strip() or content_hash_for_entry(job, audio_config)
+    try:
+        audio_config["audio_branding"] = audio_branding_hash_metadata(job, audio_config)
+    except Exception as exc:
+        logger.warning("Audio branding metadata unavailable episode=%s error=%s", episode_id, exc)
+        audio_config["audio_branding"] = {"status": "skipped", "skip_reason": f"metadata_failed: {exc}"}
+    provided_content_hash = str(job.get("content_hash", "")).strip()
+    computed_content_hash = content_hash_for_entry(job, audio_config)
+    content_hash = (
+        provided_content_hash
+        if provided_content_hash and not re.fullmatch(r"[0-9a-f]{64}", provided_content_hash)
+        else computed_content_hash
+    )
     generated_at = _iso_utc_now()
     rss_guid = compose_rss_guid(episode_id, content_hash)
     if not _env_flag(PUBLISH_AUDIO_FORCE_REBUILD) and _is_current_audio_file(audio_path, sidecar_path, content_hash):
@@ -1007,6 +1020,25 @@ def render_audio_job(
             raw_audio = assemble_audio_fragments(fragment_paths, target_format, cache_root=fragment_root)
         if not raw_audio:
             raise RuntimeError(f"Audio assembly returned empty output for entry '{job.get('entry_id', '')}'.")
+        def branding_tts_renderer(fragment: Dict[str, Any], fragment_audio_config: Dict[str, Any]) -> Dict[str, Any]:
+            return render_fragment_audio_with_provider_fallback(
+                fragment,
+                fragment_audio_config,
+                renderer,
+                cache_root=fragment_root,
+                force_rebuild=force_rebuild,
+            )
+
+        branding_result = apply_audio_branding(
+            raw_audio,
+            target_format,
+            job,
+            audio_config,
+            render_tts_fragment=branding_tts_renderer,
+            cache_root=fragment_root,
+        )
+        raw_audio = bytes(branding_result.get("audio") or raw_audio)
+        audio_branding_metadata = dict(branding_result.get("metadata") or {})
         loudness_settings = _normalize_loudness_settings(audio_config)
         raw_audio = normalize_episode_loudness(raw_audio, target_format, audio_config, cache_root=fragment_root)
         audio_length = len(raw_audio)
@@ -1032,6 +1064,7 @@ def render_audio_job(
                     "audio_url": audio_public_url(episode_id),
                     "audio_length": audio_length,
                     "loudness_normalization": loudness_settings,
+                    "audio_branding": _json_safe_metadata(audio_branding_metadata),
                     "generated_at": generated_at,
                     "rss_guid": rss_guid,
                     "tts": rendered_audio_config,
@@ -1053,6 +1086,7 @@ def render_audio_job(
         rendered["content_hash"] = content_hash
         rendered["audio_length"] = audio_length
         rendered["loudness_normalization"] = loudness_settings
+        rendered["audio_branding"] = audio_branding_metadata
         rendered["generated_at"] = generated_at
         rendered["rss_guid"] = rss_guid
         rendered["audio_fragments"] = fragments

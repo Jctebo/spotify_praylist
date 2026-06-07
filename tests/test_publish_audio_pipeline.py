@@ -150,6 +150,9 @@ class TestPublishAudioPipeline(unittest.TestCase):
             sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
             self.assertEqual(sidecar["resume_markers"][0]["source"], "audio_fragment")
             self.assertEqual(sidecar["resume_markers"][0]["fragment_key"], first["audio_fragments"][0]["fragment_key"])
+            self.assertEqual(sidecar["audio_branding"]["status"], "applied")
+            self.assertEqual(sidecar["audio_branding"]["season"], "easter")
+            self.assertIn("Easter Podcast.mp3", sidecar["audio_branding"]["season_asset"])
             self.assertGreater(Path(first["audio_path"]).stat().st_size, 0)
             self.assertEqual(first["rss_guid"], second["rss_guid"])
 
@@ -259,7 +262,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
 
             self.assertTrue(first["rendered"])
             self.assertTrue(second["rendered"])
-            self.assertEqual(calls["count"], len(job["audio_fragments"]) * 2)
+            self.assertEqual(calls["count"], (len(job["audio_fragments"]) + 1) * 2)
             self.assertTrue(Path(first["audio_path"]).exists())
             self.assertTrue(Path(second["audio_path"]).exists())
             self.assertEqual(first["rss_guid"], second["rss_guid"])
