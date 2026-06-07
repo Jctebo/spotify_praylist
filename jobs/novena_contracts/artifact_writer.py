@@ -41,10 +41,18 @@ def write_novena_artifact(runtime: NovenaRuntime, rendered: Dict[str, Any], audi
     root = Path(docs_root) if docs_root else Path(__file__).resolve().parents[2] / "docs"
     sidecar_path = audio_sidecar_path(episode_id, docs_root=root)
     if sidecar_path.exists():
-        return sidecar_path
+        try:
+            existing = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        except Exception:
+            existing = {}
+        existing_hash = str(existing.get("content_hash") or existing.get("audio", {}).get("content_hash", "")).strip()
+        next_hash = str(audio_result.get("content_hash", rendered.get("content_hash", ""))).strip()
+        if existing_hash == next_hash:
+            return sidecar_path
     sidecar_path.parent.mkdir(parents=True, exist_ok=True)
     title = str(rendered.get("title", "")).strip()
     description = str(rendered.get("description", "")).strip() or title
+    audio_branding = dict(audio_result.get("audio_branding") or {})
     payload = {
         "id": episode_id,
         "episode_id": episode_id,
@@ -70,7 +78,9 @@ def write_novena_artifact(runtime: NovenaRuntime, rendered: Dict[str, Any], audi
             "url": str(audio_result.get("audio_url", audio_public_url(episode_id))),
             "rendered": bool(audio_result.get("rendered", False)),
             "content_hash": str(audio_result.get("content_hash", rendered.get("content_hash", ""))).strip(),
+            "audio_branding": audio_branding,
         },
+        "audio_branding": audio_branding,
         "audio_path": str(audio_result.get("audio_path", audio_output_path(episode_id, docs_root=root))),
         "audio_url": str(audio_result.get("audio_url", audio_public_url(episode_id))),
         "content_hash": str(audio_result.get("content_hash", rendered.get("content_hash", ""))).strip(),

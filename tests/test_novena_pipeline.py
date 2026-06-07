@@ -153,7 +153,7 @@ class TestNovenaPipeline(unittest.TestCase):
             self.assertEqual(first["audio"], 1)
             self.assertEqual(second["audio"], 1)
             self.assertEqual(len(first["seeded_items"]), 9)
-            self.assertEqual(renderer_calls["count"], 3)
+            self.assertEqual(renderer_calls["count"], 4)
             self.assertEqual(generate_calls["count"], calls_after_first)
             self.assertEqual(len(jobs), 1)
             self.assertEqual(len(list((docs_root / "audio").glob("*.json"))), 9)
