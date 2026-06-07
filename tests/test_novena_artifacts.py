@@ -101,11 +101,15 @@ class TestNovenaArtifacts(unittest.TestCase):
             self.assertTrue(Path(first["audio_path"]).with_suffix(".json").exists())
             self.assertTrue(first["loudness_normalization"]["enabled"])
             self.assertEqual(first["loudness_normalization"]["integrated_lufs"], -16.0)
+            self.assertEqual(first["audio_branding"]["status"], "applied")
+            self.assertEqual(first["audio_branding"]["season"], "ordinary_time")
         self.assertTrue(first["rendered"])
         self.assertFalse(second["rendered"])
-        self.assertEqual(fake_renderer_calls["count"], 2)
+        self.assertEqual(fake_renderer_calls["count"], 3)
         self.assertTrue(job["audio_config"]["loudness_normalization"]["enabled"])
         self.assertEqual(payload["id"], "2026-06-03-most_sacred_heart_of_jesus-day-1")
+        self.assertEqual(payload["audio_branding"]["status"], "applied")
+        self.assertEqual(payload["audio"]["audio_branding"]["season"], "ordinary_time")
         self.assertEqual(payload["family_id"], "standard_9_day")
         self.assertEqual(payload["audio"]["file"], "2026-06-03-most_sacred_heart_of_jesus-day-1.mp3")
         self.assertEqual(payload["template"]["source"], "template_id:standard-9-day")
@@ -216,9 +220,54 @@ class TestNovenaArtifacts(unittest.TestCase):
         self.assertTrue(result["rendered"])
         self.assertGreaterEqual(len(calls), 2)
         self.assertEqual(calls[0]["provider"], "elevenlabs")
-        self.assertEqual(calls[-1]["provider"], "openai")
+        self.assertTrue(any(call.get("provider") == "openai" for call in calls))
         self.assertEqual(payload["fragments"][0]["provider"], "openai")
         self.assertEqual(payload["fragments"][0]["tts"]["provider"], "openai")
+        self.assertEqual(payload["audio_branding"]["status"], "skipped")
+        self.assertIn("branding_failed", payload["audio_branding"]["skip_reason"])
+
+    def test_existing_novena_sidecar_is_refreshed_when_branding_changes_hash(self):
+        runtime = self._runtime()
+        rendered = engine_mod.render_novena(runtime, generate_text_fn=lambda prompt, context: f"{prompt} ({context['theme']})")
+        rendered["title"] = "Short-Form Novena to The Most Sacred Heart of Jesus Day 1 - June 3, 2026"
+        rendered["description"] = rendered["title"]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            cache_root = Path(tmpdir) / ".cache"
+            job = audio_mod.build_novena_audio_job(runtime, rendered)
+            sidecar_path = docs_root / "audio" / "2026-06-03-most_sacred_heart_of_jesus-day-1.json"
+            audio_path = sidecar_path.with_suffix(".mp3")
+            sidecar_path.parent.mkdir(parents=True, exist_ok=True)
+            audio_path.write_bytes(make_test_mp3_bytes())
+            sidecar_path.write_text(
+                json.dumps(
+                    {
+                        "episode_id": job["episode_id"],
+                        "content_hash": "legacy-unbranded-hash",
+                        "audio": {"content_hash": "legacy-unbranded-hash"},
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            def fake_renderer(text, audio_config):
+                return make_test_mp3_bytes()
+
+            audio_result = audio_mod.render_novena_audio_job(
+                job,
+                renderer=fake_renderer,
+                docs_root=docs_root,
+                cache_root=cache_root,
+                write_sidecar=False,
+            )
+            artifact_writer_mod.write_novena_artifact(runtime, rendered, audio_result, docs_root=docs_root)
+            payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+
+        self.assertTrue(audio_result["rendered"])
+        self.assertNotEqual(audio_result["content_hash"], "legacy-unbranded-hash")
+        self.assertEqual(payload["content_hash"], audio_result["content_hash"])
+        self.assertEqual(payload["audio_branding"]["status"], "applied")
 
     def test_placeholder_sidecar_is_skipped_from_published_audio_jobs(self):
         runtime = self._runtime()

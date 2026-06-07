@@ -1,10 +1,17 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
-from jobs.publish.audio import audio_public_url, normalize_episode_loudness, render_fragment_audio_with_provider_fallback
+from jobs.publish.audio import (
+    PUBLISH_AUDIO_FORCE_REBUILD,
+    audio_public_url,
+    normalize_episode_loudness,
+    render_fragment_audio_with_provider_fallback,
+)
+from jobs.publish.audio_branding import apply_audio_branding, audio_branding_hash_metadata
 from jobs.publish.fragments import (
     audio_manifest_hash,
     assemble_audio_fragments,
@@ -13,6 +20,13 @@ from jobs.publish.fragments import (
 )
 
 from .contracts import DEFAULT_LOUDNESS_NORMALIZATION, NovenaRuntime
+
+
+def _env_flag(name: str, *, default: bool = False) -> bool:
+    raw = str(os.getenv(name, "")).strip().lower()
+    if not raw:
+        return default
+    return raw in {"1", "true", "yes", "on"}
 
 
 def _normalize_loudness_config(config: Any) -> Dict[str, Any]:
@@ -74,6 +88,10 @@ def build_novena_audio_job(runtime: NovenaRuntime, rendered: Dict[str, Any]) -> 
         "audio_fragments": fragments,
         "audio_config": audio_config,
     }
+    try:
+        audio_config["audio_branding"] = audio_branding_hash_metadata(job, audio_config)
+    except Exception as exc:
+        audio_config["audio_branding"] = {"status": "skipped", "skip_reason": f"metadata_failed: {exc}"}
     job["content_hash"] = audio_manifest_hash(job, fragments, audio_config)
     return job
 
@@ -105,8 +123,13 @@ def render_novena_audio_job(
     audio_path.parent.mkdir(parents=True, exist_ok=True)
     audio_config = dict(job.get("audio_config") or {})
     fragments = list(job.get("audio_fragments") or [])
-    content_hash = str(job.get("content_hash", "")).strip() or audio_manifest_hash(job, fragments, audio_config)
-    if _sidecar_matches(audio_path, sidecar_path, content_hash):
+    try:
+        audio_config["audio_branding"] = audio_branding_hash_metadata(job, audio_config)
+    except Exception as exc:
+        audio_config["audio_branding"] = {"status": "skipped", "skip_reason": f"metadata_failed: {exc}"}
+    content_hash = audio_manifest_hash(job, fragments, audio_config)
+    force_rebuild = _env_flag(PUBLISH_AUDIO_FORCE_REBUILD)
+    if not force_rebuild and _sidecar_matches(audio_path, sidecar_path, content_hash):
         rendered = dict(job)
         rendered.update(
             {
@@ -121,7 +144,7 @@ def render_novena_audio_job(
     fragment_root = publish_audio_cache_root(cache_root)
     fragment_paths = []
     fragment_results = []
-    if audio_path.exists():
+    if not force_rebuild and audio_path.exists() and not sidecar_path.exists():
         rendered = dict(job)
         rendered.update(
             {
@@ -169,6 +192,25 @@ def render_novena_audio_job(
     if not raw_audio:
         raise RuntimeError(f"Audio assembly returned empty output for novena '{episode_id}'.")
     loudness_settings = _normalize_loudness_config(audio_config.get("loudness_normalization"))
+    def render_branding_fragment(fragment: Dict[str, Any], settings: Dict[str, Any]) -> Dict[str, Any]:
+        return render_fragment_audio_with_provider_fallback(
+            fragment,
+            settings,
+            renderer,
+            cache_root=fragment_root,
+            force_rebuild=force_rebuild,
+        )
+
+    branding_result = apply_audio_branding(
+        raw_audio,
+        target_format,
+        {**job, "content_hash": content_hash},
+        audio_config,
+        render_tts_fragment=render_branding_fragment,
+        cache_root=fragment_root,
+    )
+    raw_audio = bytes(branding_result.get("audio") or raw_audio)
+    audio_branding_metadata = dict(branding_result.get("metadata") or {})
     raw_audio = normalize_episode_loudness(raw_audio, target_format, audio_config, cache_root=fragment_root)
     audio_path.write_bytes(raw_audio)
     if write_sidecar:
@@ -189,6 +231,7 @@ def render_novena_audio_job(
                     "audio_url": audio_public_url(episode_id),
                     "audio_length": len(raw_audio),
                     "loudness_normalization": loudness_settings,
+                    "audio_branding": audio_branding_metadata,
                     "tts": audio_config,
                     "fragment_manifest_hash": content_hash,
                     "fragments": fragment_results,
@@ -207,6 +250,7 @@ def render_novena_audio_job(
             "content_hash": content_hash,
             "audio_length": len(raw_audio),
             "loudness_normalization": loudness_settings,
+            "audio_branding": audio_branding_metadata,
             "fragment_results": fragment_results,
         }
     )
