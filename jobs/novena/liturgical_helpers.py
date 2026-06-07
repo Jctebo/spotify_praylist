@@ -32,6 +32,23 @@ SPECIAL_SUNDAY_SOLEMNITY_IDS = (
     "palm_sunday_of_the_passion_of_the_lord",
     "easter_sunday",
 )
+LITURGICAL_MUSIC_SEASONS = {
+    "advent",
+    "christmas",
+    "ordinary_time",
+    "lent",
+    "holy_week",
+    "easter",
+}
+HOLY_WEEK_IDS = {
+    "palm_sunday_of_the_passion_of_the_lord",
+    "holy_monday",
+    "holy_tuesday",
+    "holy_wednesday",
+    "thursday_of_the_lords_supper",
+    "friday_of_the_passion_of_the_lord",
+    "holy_saturday",
+}
 
 ROMCAL_CALENDAR = "ROMCAL_CALENDAR"
 ROMCAL_LOCALE = "ROMCAL_LOCALE"
@@ -396,6 +413,62 @@ def is_easter_season_for_date(calendar: str, locale: str, dt: datetime.date) -> 
             f"(calendar={normalize_romcal_calendar(calendar)}, locale={locale})"
         )
     return season_value == Season.easter_time.value
+
+
+def _romcal_row_text(row: Dict[str, Any], field_name: str) -> str:
+    return str(row.get(field_name, "") or "").strip().lower().replace(" ", "_").replace("-", "_")
+
+
+def _is_holy_week_row(row: Dict[str, Any], dt: datetime.date) -> bool:
+    celebration_id = _romcal_row_text(row, "id")
+    if celebration_id == "easter_sunday":
+        try:
+            season_start = datetime.date.fromisoformat(str(row.get("start_of_season", "")).strip())
+        except Exception:
+            season_start = dt
+        return dt < season_start
+    if celebration_id in HOLY_WEEK_IDS:
+        return True
+    fullname = str(row.get("fullname", "") or row.get("name", "") or "").strip().lower()
+    if "holy week" in fullname or "palm sunday" in fullname:
+        return True
+    precedence = _romcal_row_text(row, "precedence")
+    if precedence.startswith("precedence."):
+        precedence = precedence.split(".", 1)[1]
+    return precedence == Precedence.triduum_1.value
+
+
+def resolve_liturgical_music_season(calendar: str, locale: str, dt: datetime.date) -> str:
+    rows = romcal_fetch_day(calendar, locale, dt)
+    if not rows:
+        raise RuntimeError(
+            f"Unable to determine Romcal music season for {dt.isoformat()} "
+            f"(calendar={normalize_romcal_calendar(calendar)}, locale={locale})"
+        )
+
+    primary = rows[0] if isinstance(rows[0], dict) else {}
+    if _is_holy_week_row(primary, dt):
+        return "holy_week"
+
+    season_value = _normalize_romcal_season_value(primary.get("season"))
+    if not season_value:
+        season_value = _normalize_romcal_season_value(primary.get("season_name"))
+    if season_value == Season.advent.value:
+        return "advent"
+    if season_value == Season.christmas_time.value:
+        return "christmas"
+    if season_value == Season.lent.value:
+        return "lent"
+    if season_value == Season.paschal_triduum.value:
+        return "holy_week"
+    if season_value == Season.easter_time.value:
+        return "easter"
+    if season_value == Season.ordinary_time.value:
+        return "ordinary_time"
+    raise RuntimeError(
+        f"Unsupported Romcal music season '{season_value}' for {dt.isoformat()} "
+        f"(calendar={normalize_romcal_calendar(calendar)}, locale={locale})"
+    )
 
 
 def devotional_output_is_eligible(celebration_rank: str, precedence: str) -> bool:

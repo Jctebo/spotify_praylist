@@ -1,0 +1,50 @@
+{
+  "enabled": true,
+  "calendar": "general_roman",
+  "locale": "en",
+  "welcome": {
+    "text": "Welcome to Ora Pro Nobis, where we pray with the Saints.",
+    "providers": [
+      {
+        "provider": "elevenlabs",
+        "api_key_env": "ELEVENLABS_API_KEY",
+        "voice_id": "2NfTQuOn6dRQvgKuC2le",
+        "model_id": "eleven_multilingual_v2",
+        "voice_settings": {
+          "stability": 0.5,
+          "similarity_boost": 0.75,
+          "use_speaker_boost": true,
+          "style": 0,
+          "speed": 1.0
+        },
+        "format": "mp3",
+        "speed": 1.0
+      }
+    ]
+  },
+  "timing": {
+    "intro_lead_in_seconds": 3.5,
+    "intro_fade_in_seconds": 1.25,
+    "fade_under_welcome_seconds": 1.5,
+    "welcome_gap_seconds": 0.35,
+    "outro_seconds": 6.0,
+    "outro_fade_seconds": 6.0
+  },
+  "levels": {
+    "intro_db": -8.0,
+    "under_welcome_db": -18.0,
+    "background_bed_db": -32.0,
+    "outro_db": -12.0
+  },
+  "background_bed": {
+    "enabled": true
+  },
+  "seasons": {
+    "advent": "config/publish/audio/Advent Podcast.mp3",
+    "christmas": "config/publish/audio/Christmas Podcast.mp3",
+    "ordinary_time": "config/publish/audio/Ordinary Time Podcast.mp3",
+    "lent": "config/publish/audio/Lent Podcast.mp3",
+    "holy_week": "config/publish/audio/Holy Week Podcast.mp3",
+    "easter": "config/publish/audio/Easter Podcast.mp3"
+  }
+}

@@ -151,6 +151,9 @@ def audio_manifest_hash(
         "tts": normalize_audio_settings(audio_config),
         "fragments": fragment_rows,
     }
+    audio_branding = audio_config.get("audio_branding")
+    if isinstance(audio_branding, dict):
+        payload["audio_branding"] = _normalize_tts_value(audio_branding)
     return _hash_payload(payload)
 
 

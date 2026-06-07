@@ -1,5 +1,20 @@
 # Release Log
 
+## [0.3.4.9] - 2026-06-07
+
+### Added
+- Added centralized seasonal audio branding for Ora Pro Nobis publish-audio episodes, with configured music assets for Advent, Christmas, Ordinary Time, Lent, Holy Week, and Easter.
+- Added a spoken Ora Pro Nobis welcome rendered through the configured cloned ElevenLabs voice.
+- Added ffmpeg-based intro music, welcome ducking, optional quiet background bed, and outro fade mixing before final loudness normalization.
+- Added regression coverage for music-season resolution, including Triduum and Holy Saturday mapping to Holy Week, branding metadata, missing-asset handling, and the publish-audio render path.
+
+### Changed
+- Updated publish-audio episode hashing and sidecars so seasonal branding config and assets are auditable and invalidate stale rendered MP3s.
+- Documented the `config/publish/audio/` seasonal MP3 replacement workflow.
+
+### Fixed
+- Ensured Paschal Triduum and civil Holy Saturday select Holy Week music while Easter Sunday selects Easter music.
+
 ## [0.3.4.8] - 2026-06-07
 
 ### Added
