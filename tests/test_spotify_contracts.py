@@ -432,6 +432,14 @@ class TestSpotifyContracts(unittest.TestCase):
         self.assertEqual(contracts["daily-examen"].notion_name, "Daily Examen")
         self.assertEqual(contracts["daily-examen"].spotify_uri, "spotify:episode:1I8pCawzp1Wd5pE0NcHmUj")
 
+    def test_load_spotify_queue_contracts_keeps_sunday_homilies_ungated(self):
+        contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
+
+        self.assertEqual(contracts["fr-mike-sunday-homily"].resolver, "SUNDAY_FRMIKE")
+        self.assertEqual(contracts["fr-mike-sunday-homily"].weekdays, ())
+        self.assertEqual(contracts["barron-sunday-sermon"].resolver, "SUNDAY_BARRON")
+        self.assertEqual(contracts["barron-sunday-sermon"].weekdays, ())
+
     def test_load_spotify_playlist_definitions_matches_filter_with_identity_only_files(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

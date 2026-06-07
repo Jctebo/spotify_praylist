@@ -138,6 +138,32 @@ class TestRefreshJobContractPath(unittest.TestCase):
         self.assertTrue(status["Daily Novenas"])
         sp.show_episodes.assert_called_once_with(lookup.show_id, limit=50, market="US")
 
+    def test_sunday_homily_contracts_resolve_latest_episode_on_weekdays(self):
+        contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
+        fr_mike = contracts["fr-mike-sunday-homily"]
+        barron = contracts["barron-sunday-sermon"]
+        status = {}
+
+        def fake_latest(sp, show_id):
+            return (f"spotify:episode:{show_id}", f"Latest {show_id}")
+
+        with patch.object(self.mod, "latest_by_release_date", side_effect=fake_latest):
+            queue = self.mod.build_queue_for_playlist_definition(
+                object(),
+                _playlist_definition(self.mod, "sunday", name="Sunday"),
+                "Wednesday",
+                datetime.date(2026, 6, 10),
+                status,
+                {"FRMIKE_SUNDAY": "frshow", "BARRON_SUNDAY": "barronshow"},
+                {},
+                {},
+                ordered_contracts=(fr_mike, barron),
+            )
+
+        self.assertEqual(queue, ["spotify:episode:frshow", "spotify:episode:barronshow"])
+        self.assertTrue(status["Fr. Mike Sunday Homily"])
+        self.assertTrue(status["Bp. Barron Sunday Sermon"])
+
     def test_angelus_contract_files_resolve_daily_marian_antiphon_episode(self):
         contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
 
