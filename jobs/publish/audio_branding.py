@@ -103,6 +103,7 @@ def normalize_audio_branding_config(payload: Dict[str, Any]) -> Dict[str, Any]:
         "locale": str(payload.get("locale", "en")).strip() or "en",
         "welcome": {
             "text": str(welcome.get("text", DEFAULT_WELCOME_TEXT)).strip() or DEFAULT_WELCOME_TEXT,
+            "tts_text": str(welcome.get("tts_text", "")).strip(),
             "providers": [dict(item) for item in welcome.get("providers", []) if isinstance(item, dict)],
         },
         "timing": {
@@ -236,7 +237,7 @@ def _render_welcome_audio(
         "block_path": "audio-branding/welcome",
         "kind": "audio-branding-welcome",
         "label": "Ora Pro Nobis Welcome",
-        "text": str(welcome.get("text", DEFAULT_WELCOME_TEXT)).strip() or DEFAULT_WELCOME_TEXT,
+        "text": str(welcome.get("tts_text") or welcome.get("text", DEFAULT_WELCOME_TEXT)).strip() or DEFAULT_WELCOME_TEXT,
     }
     return render_tts_fragment(fragment, welcome_audio_config)
 
@@ -263,37 +264,34 @@ def _build_filter_graph(
     welcome_start = intro_lead
     spoken_start = intro_lead + welcome_duration + welcome_gap
     total_duration = spoken_start + spoken_duration + outro_seconds
-    intro_duration = max(spoken_start, intro_lead + fade_under)
-    fade_under_start = max(0.0, welcome_start)
     outro_start = spoken_start + spoken_duration
     parts = [
-        (
-            f"[1:a]atrim=0:{intro_duration:.3f},asetpts=PTS-STARTPTS,"
-            f"afade=t=in:st=0:d={intro_fade:.3f},"
-            f"afade=t=out:st={fade_under_start:.3f}:d={fade_under:.3f},"
-            f"volume={float(levels.get('intro_db', -8.0)):.3f}dB[intro]"
-        ),
-        (
-            f"[1:a]atrim=0:{(welcome_duration + fade_under):.3f},asetpts=PTS-STARTPTS,"
-            f"volume={float(levels.get('under_welcome_db', -18.0)):.3f}dB,"
-            f"adelay={_delay_ms(welcome_start)}:all=1,"
-            f"afade=t=out:st={welcome_duration:.3f}:d={fade_under:.3f}[underwelcome]"
-        ),
         f"[2:a]adelay={_delay_ms(welcome_start)}:all=1[welcome]",
         f"[0:a]adelay={_delay_ms(spoken_start)}:all=1[spoken]",
     ]
-    labels = ["[intro]", "[underwelcome]", "[welcome]", "[spoken]"]
+    labels = ["[welcome]", "[spoken]"]
     if bed_enabled:
         parts.append(
             (
-                f"[1:a]atrim=0:{(spoken_duration + outro_seconds):.3f},asetpts=PTS-STARTPTS,"
+                f"[1:a]atrim=0:{total_duration:.3f},asetpts=PTS-STARTPTS,"
+                f"afade=t=in:st=0:d={intro_fade:.3f},"
                 f"volume={float(levels.get('background_bed_db', -32.0)):.3f}dB,"
-                f"adelay={_delay_ms(spoken_start)}:all=1,"
                 f"afade=t=out:st={outro_start:.3f}:d={outro_fade:.3f}[bed]"
             )
         )
         labels.append("[bed]")
     else:
+        intro_duration = max(spoken_start, intro_lead + fade_under)
+        fade_under_start = max(0.0, welcome_start)
+        parts.insert(
+            0,
+            (
+                f"[1:a]atrim=0:{intro_duration:.3f},asetpts=PTS-STARTPTS,"
+                f"afade=t=in:st=0:d={intro_fade:.3f},"
+                f"afade=t=out:st={fade_under_start:.3f}:d={fade_under:.3f},"
+                f"volume={float(levels.get('intro_db', -8.0)):.3f}dB[intro]"
+            ),
+        )
         parts.append(
             (
                 f"[1:a]atrim=0:{outro_seconds:.3f},asetpts=PTS-STARTPTS,"
@@ -302,6 +300,7 @@ def _build_filter_graph(
                 f"afade=t=out:st=0:d={outro_fade:.3f}[outro]"
             )
         )
+        labels.insert(0, "[intro]")
         labels.append("[outro]")
     parts.append(
         "".join(labels)

@@ -4,15 +4,16 @@
   "locale": "en",
   "welcome": {
     "text": "Welcome to Ora Pro Nobis, where we pray with the Saints.",
+    "tts_text": "Welcome to Oh-rah Pro No-bees, where we pray with the Saints.",
     "providers": [
       {
         "provider": "elevenlabs",
         "api_key_env": "ELEVENLABS_API_KEY",
-        "voice_id": "2NfTQuOn6dRQvgKuC2le",
+        "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
         "model_id": "eleven_multilingual_v2",
         "voice_settings": {
-          "stability": 0.5,
-          "similarity_boost": 0.75,
+          "stability": 0.65,
+          "similarity_boost": 0.8,
           "use_speaker_boost": true,
           "style": 0,
           "speed": 1.0
@@ -26,15 +27,15 @@
     "intro_lead_in_seconds": 3.5,
     "intro_fade_in_seconds": 1.25,
     "fade_under_welcome_seconds": 1.5,
-    "welcome_gap_seconds": 0.35,
+    "welcome_gap_seconds": 0.0,
     "outro_seconds": 6.0,
     "outro_fade_seconds": 6.0
   },
   "levels": {
-    "intro_db": -8.0,
-    "under_welcome_db": -18.0,
-    "background_bed_db": -32.0,
-    "outro_db": -12.0
+    "intro_db": -30.0,
+    "under_welcome_db": -30.0,
+    "background_bed_db": -30.0,
+    "outro_db": -30.0
   },
   "background_bed": {
     "enabled": true
