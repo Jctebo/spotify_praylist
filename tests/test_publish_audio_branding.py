@@ -21,10 +21,11 @@ class TestPublishAudioBranding(unittest.TestCase):
                 "locale": "en",
                 "welcome": {
                     "text": "Welcome to Ora Pro Nobis, where we pray with the Saints.",
+                    "tts_text": "Welcome to Oh-rah Pro No-bees, where we pray with the Saints.",
                     "providers": [
                         {
                             "provider": "elevenlabs",
-                            "voice_id": "2NfTQuOn6dRQvgKuC2le",
+                            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
                             "model_id": "eleven_multilingual_v2",
                             "format": "mp3",
                             "speed": 1.0,
@@ -33,11 +34,15 @@ class TestPublishAudioBranding(unittest.TestCase):
                 },
                 "timing": {
                     "intro_lead_in_seconds": 3.5,
+                    "welcome_gap_seconds": 0.0,
                     "outro_seconds": 4.0,
                     "outro_fade_seconds": 4.0,
                 },
                 "levels": {
-                    "background_bed_db": -32,
+                    "intro_db": -30,
+                    "under_welcome_db": -30,
+                    "background_bed_db": -30,
+                    "outro_db": -30,
                 },
                 "seasons": {
                     "easter": str(music_path),
@@ -74,7 +79,8 @@ class TestPublishAudioBranding(unittest.TestCase):
         self.assertEqual(metadata["season"], "easter")
         self.assertTrue(metadata["asset"]["exists"])
         self.assertEqual(metadata["config"]["welcome"]["text"], "Welcome to Ora Pro Nobis, where we pray with the Saints.")
-        self.assertEqual(metadata["welcome_tts"]["providers"][0]["voice_id"], "2NfTQuOn6dRQvgKuC2le")
+        self.assertEqual(metadata["config"]["welcome"]["tts_text"], "Welcome to Oh-rah Pro No-bees, where we pray with the Saints.")
+        self.assertEqual(metadata["welcome_tts"]["providers"][0]["voice_id"], "pGAwIQNN9UjOkKxjAyGQ")
 
     def test_apply_audio_branding_skips_missing_music_asset(self):
         with tempfile.TemporaryDirectory() as tmpdir, mock.patch.object(
@@ -113,8 +119,10 @@ class TestPublishAudioBranding(unittest.TestCase):
             config = self._config(music_path)
             raw_audio = make_test_mp3_bytes(duration_seconds=0.4, frequency=440)
             welcome_audio = make_test_mp3_bytes(duration_seconds=0.2, frequency=660)
+            captured = {}
 
             def renderer(fragment, audio_config):
+                captured["fragment"] = dict(fragment)
                 welcome_path = Path(tmpdir) / "welcome.mp3"
                 welcome_path.write_bytes(welcome_audio)
                 return {
@@ -124,7 +132,7 @@ class TestPublishAudioBranding(unittest.TestCase):
                     "provider": "elevenlabs",
                     "audio_config": {
                         "provider": "elevenlabs",
-                        "voice_id": "2NfTQuOn6dRQvgKuC2le",
+                        "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
                         "model_id": "eleven_multilingual_v2",
                         "format": "mp3",
                         "speed": 1.0,
@@ -145,6 +153,7 @@ class TestPublishAudioBranding(unittest.TestCase):
         self.assertEqual(result["metadata"]["season"], "easter")
         self.assertGreater(len(result["audio"]), len(raw_audio))
         self.assertEqual(result["metadata"]["welcome"]["provider"], "elevenlabs")
+        self.assertEqual(captured["fragment"]["text"], "Welcome to Oh-rah Pro No-bees, where we pray with the Saints.")
 
     def test_filter_graph_contains_expected_levels_and_fades(self):
         config = self._config("music.mp3")
@@ -157,9 +166,12 @@ class TestPublishAudioBranding(unittest.TestCase):
         self.assertGreater(duration, 14.0)
         self.assertIn("afade=t=in", graph)
         self.assertIn("afade=t=out", graph)
-        self.assertIn("volume=-18.000dB", graph)
-        self.assertIn("volume=-32.000dB", graph)
-        self.assertIn("amix=inputs=5", graph)
+        self.assertIn("volume=-30.000dB", graph)
+        self.assertNotIn("[intro]", graph)
+        self.assertNotIn("[underwelcome]", graph)
+        self.assertNotIn("volume=-30.000dB,adelay", graph)
+        self.assertIn("[0:a]adelay=4500:all=1[spoken]", graph)
+        self.assertIn("amix=inputs=3", graph)
 
     def test_audio_manifest_hash_changes_with_branding_metadata(self):
         job = {
