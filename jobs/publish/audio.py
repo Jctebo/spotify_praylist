@@ -1072,6 +1072,7 @@ def render_audio_job(
                     "fragments": fragment_results,
                     "render_context": _json_safe_metadata(dict(job.get("render_context") or {})),
                     "rosary_reflections": _json_safe_metadata(dict(job.get("rosary_reflections") or {})),
+                    "daily_reflection": _json_safe_metadata(dict(job.get("daily_reflection") or {})),
                     "resume_markers": list(job.get("resume_markers") or []),
                 },
                 indent=2,
