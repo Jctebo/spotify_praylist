@@ -1,5 +1,16 @@
 # Release Log
 
+## [0.3.5.0] - 2026-06-09
+
+### Added
+- Added a shared daily liturgical context helper for publish jobs, with feast/Gospel/season precedence, normalized daily theme metadata, tone, imagery, saint intercession, and music mood fields.
+- Added a generated Daily Reflection episode contract with an Ignatian-style reflection and guided examen, including deterministic fallback text when OpenAI generation is unavailable.
+- Added `ignatian-reflection` publish block support, runtime context caching, render metadata, sidecar metadata, and regression coverage for text/audio job integration.
+
+### Changed
+- Updated the `Daily Examen` Spotify contract to resolve the generated Ora Pro Nobis Daily Reflection episode by show/title/date lookup instead of a fixed external episode URI.
+- Extended publish-audio regression expectations so Daily Reflection participates in the existing common audio branding and background music pipeline.
+
 ## [0.3.4.9] - 2026-06-07
 
 ### Added
