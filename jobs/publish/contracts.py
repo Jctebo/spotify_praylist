@@ -9,7 +9,9 @@ from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Tuple
 from zoneinfo import ZoneInfo
 
 from jobs.publish.daily_intro import build_daily_intro_text
+from jobs.publish.daily_liturgical_context import build_daily_liturgical_context
 from jobs.publish.formatting import build_publish_context, derive_episode_id, render_publish_template
+from jobs.publish.ignatian_reflection import build_ignatian_reflection_episode
 from jobs.publish.liturgical_announcement import build_liturgical_announcement_text
 from jobs.publish.rosary_reflections import build_rosary_day_context, build_rosary_intro_text, build_rosary_reflection_set
 from jobs.publish.fragments import audio_manifest_hash
@@ -401,6 +403,16 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
             normalized["prompt_model"] = str(normalized.get("prompt_model", "")).strip()
         if "allow_missing_gospel" in normalized:
             normalized["allow_missing_gospel"] = _normalize_bool(normalized.get("allow_missing_gospel", False))
+    elif kind == "ignatian-reflection":
+        normalized["title"] = str(normalized.get("title", "")).strip()
+        if "calendar" in normalized:
+            normalized["calendar"] = str(normalized.get("calendar", "")).strip()
+        if "locale" in normalized:
+            normalized["locale"] = str(normalized.get("locale", "")).strip()
+        if "prompt_model" in normalized:
+            normalized["prompt_model"] = str(normalized.get("prompt_model", "")).strip()
+        if "allow_missing_gospel" in normalized:
+            normalized["allow_missing_gospel"] = _normalize_bool(normalized.get("allow_missing_gospel", True))
     elif kind == "liturgical-announcement":
         normalized["title"] = str(normalized.get("title", "")).strip()
         if "calendar" in normalized:
@@ -577,6 +589,8 @@ def _validate_entry_blocks(blocks: Sequence[Dict[str, Any]], path: Path, entry_i
         elif kind == "prayer-intro":
             continue
         elif kind == "rosary-intro":
+            continue
+        elif kind == "ignatian-reflection":
             continue
         elif kind == "rosary-decades":
             mysteries = block.get("mysteries") or {}
@@ -857,6 +871,20 @@ def _rosary_reflection_config(block: Dict[str, Any], contract: PublishContract) 
     return config
 
 
+def _daily_reflection_config(block: Dict[str, Any], contract: PublishContract) -> Dict[str, Any]:
+    metadata = dict(contract.metadata or {})
+    config = (
+        dict(metadata.get("daily_reflection") or {})
+        if isinstance(metadata.get("daily_reflection"), dict)
+        else {}
+    )
+    for key in ("calendar", "locale", "prompt_model", "allow_missing_gospel"):
+        if key in block:
+            config[key] = block.get(key)
+    config["allow_missing_gospel"] = _normalize_bool(config.get("allow_missing_gospel", True))
+    return config
+
+
 def _find_first_block_by_kind(blocks: Sequence[Any], kind_name: str) -> Optional[Dict[str, Any]]:
     target = normalize_publish_key(kind_name)
     for block in blocks:
@@ -915,6 +943,20 @@ def _entry_runtime_context(
 ) -> Dict[str, Any]:
     runtime: Dict[str, Any] = {}
     runtime.update(_build_rosary_day_runtime_context(contract, entry, target_date))
+    reflection_block = _find_first_block_by_kind(entry.get("blocks") or [], "ignatian-reflection")
+    if reflection_block:
+        config = _daily_reflection_config(reflection_block, contract)
+        context = build_daily_liturgical_context(
+            target_date,
+            calendar=str(config.get("calendar") or "").strip() or None,
+            locale=str(config.get("locale") or "").strip() or None,
+            allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
+        )
+        runtime["daily_liturgical_context"] = context.to_dict()
+        runtime["daily_reflection_primary_theme"] = context.primaryTheme
+        runtime["daily_reflection_primary_theme_title"] = _humanize_slug(context.primaryTheme)
+        runtime["daily_reflection_tone"] = context.emotionalTone
+        runtime["daily_reflection_saint"] = context.saintOfDay
     return runtime
 
 
@@ -987,6 +1029,108 @@ def _attach_rosary_reflection_context(render_context: Dict[str, Any], runtime_co
     render_context["rosary_reflection_source"] = metadata["source"]
     render_context["rosary_reflection_fallback_reason"] = metadata["fallback_reason"]
     render_context["rosary_reflection_count"] = metadata["count"]
+
+
+def _daily_reflection_metadata_from_context(runtime_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    episode = (runtime_context or {}).get("ignatian_reflection_episode")
+    helper = (runtime_context or {}).get("daily_liturgical_context")
+    if not episode and not helper:
+        return {}
+    metadata: Dict[str, Any] = {}
+    if isinstance(helper, dict):
+        metadata["helper"] = helper
+    if episode is not None:
+        metadata["episode"] = {
+            "title": str(getattr(episode, "title", "") or "").strip(),
+            "source": str(getattr(episode, "source", "") or "").strip(),
+            "fallback_reason": str(getattr(episode, "fallback_reason", "") or "").strip(),
+            "saint_name": str(getattr(episode, "saint_name", "") or "").strip(),
+            "word_count": int(getattr(episode, "word_count", 0) or 0),
+        }
+    return metadata
+
+
+def _attach_daily_reflection_context(render_context: Dict[str, Any], runtime_context: Optional[Dict[str, Any]]) -> None:
+    metadata = _daily_reflection_metadata_from_context(runtime_context)
+    if not metadata:
+        return
+    helper = metadata.get("helper") if isinstance(metadata.get("helper"), dict) else {}
+    episode = metadata.get("episode") if isinstance(metadata.get("episode"), dict) else {}
+    render_context["daily_reflection_primary_theme"] = str(helper.get("primaryTheme", "")).strip()
+    render_context["daily_reflection_tone"] = str(helper.get("emotionalTone", "")).strip()
+    render_context["daily_reflection_source"] = str(episode.get("source", "")).strip()
+    render_context["daily_reflection_word_count"] = int(episode.get("word_count", 0) or 0)
+
+
+def _get_or_build_ignatian_reflection_episode(
+    block: Dict[str, Any],
+    *,
+    contract: PublishContract,
+    target_date: _dt.date,
+    runtime_context: Optional[Dict[str, Any]] = None,
+):
+    if runtime_context is not None and runtime_context.get("ignatian_reflection_episode") is not None:
+        return runtime_context["ignatian_reflection_episode"]
+    config = _daily_reflection_config(block, contract)
+    helper_payload = (runtime_context or {}).get("daily_liturgical_context")
+    if isinstance(helper_payload, dict):
+        from jobs.publish.daily_liturgical_context import DailyLiturgicalContext
+
+        helper = DailyLiturgicalContext(
+            date=str(helper_payload.get("date", "")),
+            liturgicalSeason=str(helper_payload.get("liturgicalSeason", "")),
+            liturgicalWeek=str(helper_payload.get("liturgicalWeek", "")),
+            feastDay=str(helper_payload.get("feastDay", "")),
+            liturgicalRank=str(helper_payload.get("liturgicalRank", "")),
+            saintOfDay=str(helper_payload.get("saintOfDay", "")),
+            gospelTheme=str(helper_payload.get("gospelTheme", "")),
+            primaryTheme=str(helper_payload.get("primaryTheme", "")),
+            secondaryThemes=tuple(helper_payload.get("secondaryThemes") or ()),
+            emotionalTone=str(helper_payload.get("emotionalTone", "")),
+            reflectionFocus=str(helper_payload.get("reflectionFocus", "")),
+            suggestedImagery=tuple(helper_payload.get("suggestedImagery") or ()),
+            suggestedMusicMood=str(helper_payload.get("suggestedMusicMood", "")),
+            openingTone=str(helper_payload.get("openingTone", "")),
+            closingTone=str(helper_payload.get("closingTone", "")),
+            saintIntercessions=tuple(helper_payload.get("saintIntercessions") or ()),
+            shortSummary=str(helper_payload.get("shortSummary", "")),
+            source=str(helper_payload.get("source", "")),
+            fallbackReason=str(helper_payload.get("fallbackReason", "")),
+            gospelCitation=str(helper_payload.get("gospelCitation", "")),
+            calendar=str(helper_payload.get("calendar", "general_roman")),
+            locale=str(helper_payload.get("locale", "en")),
+        )
+    else:
+        helper = build_daily_liturgical_context(
+            target_date,
+            calendar=str(config.get("calendar") or "").strip() or None,
+            locale=str(config.get("locale") or "").strip() or None,
+            allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
+        )
+    episode = build_ignatian_reflection_episode(
+        target_date,
+        helper,
+        prompt_model=str(config.get("prompt_model") or "").strip() or None,
+    )
+    if runtime_context is not None:
+        runtime_context["ignatian_reflection_episode"] = episode
+    return episode
+
+
+def _resolve_ignatian_reflection_content(
+    block: Dict[str, Any],
+    *,
+    contract: PublishContract,
+    target_date: _dt.date,
+    runtime_context: Optional[Dict[str, Any]] = None,
+) -> str:
+    episode = _get_or_build_ignatian_reflection_episode(
+        block,
+        contract=contract,
+        target_date=target_date,
+        runtime_context=runtime_context,
+    )
+    return str(getattr(episode, "text", "") or "").strip()
 
 
 def _resolve_rosary_intro_content(
@@ -1156,6 +1300,13 @@ def resolve_block_content(
                 target_date=effective_date,
                 runtime_context=runtime_context,
             )
+        if kind == "ignatian-reflection":
+            return _resolve_ignatian_reflection_content(
+                block,
+                contract=contract,
+                target_date=effective_date,
+                runtime_context=runtime_context,
+            )
         if kind == "daily-intro":
             metadata = dict(contract.metadata or {})
             intro_config = dict(metadata.get("daily_intro") or {}) if isinstance(metadata.get("daily_intro"), dict) else {}
@@ -1278,6 +1429,9 @@ def _fragment_label_for_block(block: Dict[str, Any], text: str) -> str:
 
     if kind == "rosary-intro":
         return explicit or "Rosary Intro"
+
+    if kind == "ignatian-reflection":
+        return explicit or "Daily Reflection"
 
     if kind == "inline":
         first_line = _first_non_empty_line(text)
@@ -1550,7 +1704,7 @@ def _expand_audio_fragments_from_block(
             runtime_context=runtime_context,
         )
 
-    if kind in {"file", "inline", "daily-intro", "liturgical-announcement", "prayer-intro", "rosary-intro"}:
+    if kind in {"file", "inline", "daily-intro", "liturgical-announcement", "prayer-intro", "rosary-intro", "ignatian-reflection"}:
         text = resolve_block_content(
             block,
             contract=contract,
@@ -1679,6 +1833,9 @@ def _section_title_for_block(block: Dict[str, Any], text: str, *, index: int, to
 
     if kind == "rosary-intro":
         return explicit or "Rosary Intro"
+
+    if kind == "ignatian-reflection":
+        return explicit or "Daily Reflection"
 
     if kind == "inline":
         first_line = _first_non_empty_line(text)
@@ -1840,7 +1997,9 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
             )
             render_context = dict(rendered_metadata["context"])
             _attach_rosary_reflection_context(render_context, runtime_context)
+            _attach_daily_reflection_context(render_context, runtime_context)
             rosary_reflections = _rosary_reflection_metadata_from_context(runtime_context)
+            daily_reflection = _daily_reflection_metadata_from_context(runtime_context)
             jobs.append(
                 {
                     "entry_id": entry["entry_id"],
@@ -1866,6 +2025,7 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
                     "metadata": dict(contract.metadata),
                     "render_context": render_context,
                     "rosary_reflections": rosary_reflections,
+                    "daily_reflection": daily_reflection,
                     "source_path": str(contract.source_path),
                 }
             )
@@ -1934,7 +2094,9 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
                 continue
             render_context = dict(rendered_metadata["context"])
             _attach_rosary_reflection_context(render_context, runtime_context)
+            _attach_daily_reflection_context(render_context, runtime_context)
             rosary_reflections = _rosary_reflection_metadata_from_context(runtime_context)
+            daily_reflection = _daily_reflection_metadata_from_context(runtime_context)
             job = {
                 "entry_id": entry["entry_id"],
                 "episode_id": rendered_metadata["episode_id"],
@@ -1959,6 +2121,7 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
                 "metadata": dict(contract.metadata),
                 "render_context": render_context,
                 "rosary_reflections": rosary_reflections,
+                "daily_reflection": daily_reflection,
                 "source_path": str(contract.source_path),
             }
             job["content_hash"] = audio_manifest_hash(job, audio_fragments, audio_config)

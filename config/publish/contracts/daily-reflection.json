@@ -1,0 +1,93 @@
+{
+  "contract": {
+    "id": "daily-reflection",
+    "type": "daily-prayer",
+    "frequency": "daily",
+    "timezone": "America/Chicago",
+    "version": "1",
+    "notion_target": {
+      "database_name": "Opus Dei",
+      "database_id_env": "NOTION_PUBLISH_DATABASE_ID",
+      "fields": {
+        "entry_id": "Entry ID",
+        "title": "Name",
+        "date": "Date",
+        "status": "Status",
+        "frequency": "Frequency",
+        "contract": "Contract",
+        "text": "Text",
+        "text_hash": "Text Hash",
+        "audio_enabled": "Audio Enabled",
+        "audio_url": "Audio URL",
+        "audio_path": "Audio Path",
+        "content_hash": "Content Hash"
+      }
+    },
+    "audio_target": {
+      "docs_root": "docs",
+      "audio_dir": "docs/audio",
+      "feed_path": "docs/podcast.xml"
+    },
+    "metadata": {
+      "title_template": "Daily Reflection - {daily_reflection_primary_theme_title} - {date_display}",
+      "description_template": "Daily Ignatian reflection for {date_display}, focused on {daily_reflection_primary_theme}.",
+      "episode_id_template": "daily-reflection-{date_iso}",
+      "daily_reflection": {
+        "calendar": "general_roman",
+        "locale": "en",
+        "prompt_model": "gpt-4.1-mini",
+        "allow_missing_gospel": true
+      }
+    }
+  },
+  "entries": [
+    {
+      "entry_id": "daily-reflection",
+      "date": "daily",
+      "title": "Daily Reflection",
+      "status": "approved",
+      "text": "Daily Reflection",
+      "text_config": {
+        "enabled": true
+      },
+      "audio_config": {
+        "enabled": true,
+        "model": "gpt-4o-mini-tts",
+        "voice": "alloy",
+        "format": "mp3",
+        "speed": 1.0,
+        "providers": [
+          {
+            "provider": "elevenlabs",
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "voice_id": "2NfTQuOn6dRQvgKuC2le",
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {
+              "stability": 0.5,
+              "similarity_boost": 0.75,
+              "use_speaker_boost": true,
+              "style": 0,
+              "speed": 1.0
+            },
+            "format": "mp3",
+            "speed": 1.0
+          },
+          {
+            "provider": "openai",
+            "api_key_env": "OPENAI_API_KEY",
+            "model": "gpt-4o-mini-tts",
+            "voice": "alloy",
+            "format": "mp3",
+            "speed": 1.0
+          }
+        ]
+      },
+      "blocks": [
+        {
+          "kind": "ignatian_reflection",
+          "title": "Daily Reflection"
+        }
+      ]
+    }
+  ]
+}

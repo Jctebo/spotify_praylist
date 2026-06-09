@@ -40,6 +40,10 @@ class TestPublishAudioPipeline(unittest.TestCase):
         package_contracts.build_rosary_intro_text = self._fake_rosary_intro_text
         self.contracts_mod.build_rosary_reflection_set = self._fake_rosary_reflection_set
         package_contracts.build_rosary_reflection_set = self._fake_rosary_reflection_set
+        self.contracts_mod.build_daily_liturgical_context = self._fake_daily_liturgical_context
+        package_contracts.build_daily_liturgical_context = self._fake_daily_liturgical_context
+        self.contracts_mod.build_ignatian_reflection_episode = self._fake_ignatian_reflection_episode
+        package_contracts.build_ignatian_reflection_episode = self._fake_ignatian_reflection_episode
 
     def _fake_rosary_intro_text(self, date_value, mystery_set_title, mysteries, **kwargs):
         return (
@@ -87,6 +91,54 @@ class TestPublishAudioPipeline(unittest.TestCase):
             fallback_reason="",
         )
 
+    def _fake_daily_liturgical_context(self, date_value, **kwargs):
+        payload = {
+            "date": date_value.isoformat(),
+            "liturgicalSeason": "Easter season",
+            "liturgicalWeek": "",
+            "feastDay": "Saint Example",
+            "liturgicalRank": "memorial",
+            "saintOfDay": "Saint Example",
+            "gospelTheme": "trust",
+            "primaryTheme": "trust",
+            "secondaryThemes": ["discernment", "resurrection hope"],
+            "emotionalTone": "contemplative",
+            "reflectionFocus": "Notice where God invites trust through Saint Example.",
+            "suggestedImagery": ["steady candlelight"],
+            "suggestedMusicMood": "soft and contemplative",
+            "openingTone": "peaceful and attentive",
+            "closingTone": "peaceful trust",
+            "saintIntercessions": ["Saint Example"],
+            "shortSummary": "Today's shared focus is trust.",
+            "source": "gospel",
+            "fallbackReason": "",
+            "gospelCitation": "John 10:1-10",
+            "calendar": "general_roman",
+            "locale": "en",
+        }
+        return SimpleNamespace(**payload, to_dict=lambda: dict(payload))
+
+    def _fake_ignatian_reflection_episode(self, date_value, context, **kwargs):
+        text = (
+            "Episode Title\nDaily Reflection - Trust - April 6, 2026\n\n"
+            "Opening Welcome\nWelcome to Ora Pro Nobis, where we pray with the Saints.\n\n"
+            "Liturgical Context Introduction\nToday's shared focus is trust.\n\n"
+            "Ignatian Reflection\nGod meets us in ordinary life and teaches us trust.\n\n"
+            "Guided Examen\nBegin with gratitude. Review the day with Jesus. Notice consolation and desolation. "
+            "Speak with Jesus and look toward tomorrow with hope.\n\n"
+            "Closing Prayer\nLord Jesus, teach us to trust you. Amen.\n\n"
+            "Final Closing\nSaint Example, pray for us.\n"
+            "And may the peace of Christ remain with you."
+        )
+        return SimpleNamespace(
+            title="Daily Reflection - Trust - April 6, 2026",
+            text=text,
+            source="fallback",
+            fallback_reason="test",
+            saint_name="Example",
+            word_count=80,
+        )
+
     def _normalize(self, text):
         return " ".join(str(text or "").split())
 
@@ -104,12 +156,13 @@ class TestPublishAudioPipeline(unittest.TestCase):
         contracts = self.contracts_mod.load_publish_contracts()
         jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
 
-        self.assertEqual(len(jobs), 4)
-        self.assertEqual({job["entry_id"] for job in jobs}, {"auxilium-christianorum", "morning-prayer-elevenlabs", "marian-antiphon-regina-caeli", "rosary"})
+        self.assertEqual(len(jobs), 5)
+        self.assertEqual({job["entry_id"] for job in jobs}, {"auxilium-christianorum", "daily-reflection", "morning-prayer-elevenlabs", "marian-antiphon-regina-caeli", "rosary"})
         morning_job = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
         regina_job = next(job for job in jobs if job["entry_id"] == "marian-antiphon-regina-caeli")
         auxilium_job = next(job for job in jobs if job["entry_id"] == "auxilium-christianorum")
         rosary_job = next(job for job in jobs if job["entry_id"] == "rosary")
+        reflection_job = next(job for job in jobs if job["entry_id"] == "daily-reflection")
         self.assertTrue(morning_job["audio_config"]["enabled"])
         self.assertTrue(regina_job["audio_config"]["enabled"])
         self.assertTrue(auxilium_job["audio_config"]["enabled"])
@@ -125,6 +178,8 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertEqual(rosary_job["rosary_reflections"]["count"], 5)
         self.assertEqual(rosary_job["audio_fragments"][0]["kind"], "rosary-intro")
         self.assertEqual(rosary_job["audio_fragments"][0]["label"], "Rosary Intro")
+        self.assertEqual(reflection_job["audio_fragments"][0]["kind"], "ignatian-reflection")
+        self.assertEqual(reflection_job["daily_reflection"]["helper"]["primaryTheme"], "trust")
         self.assertEqual(auxilium_job["resume_markers"][0]["source"], "audio_fragment")
 
     def test_render_audio_job_skips_when_hash_matches(self):
@@ -348,14 +403,16 @@ class TestPublishAudioPipeline(unittest.TestCase):
             feed_root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             titles = [item.findtext("title") or "" for item in feed_root.findall("./channel/item")]
 
-            self.assertEqual(result["jobs"], 4)
-            self.assertEqual(result["rendered"], 4)
+            self.assertEqual(result["jobs"], 5)
+            self.assertEqual(result["rendered"], 5)
             self.assertEqual(result["archived"], 0)
             self.assertTrue((docs_root / "podcast.xml").exists())
             self.assertTrue((docs_root / "audio" / f"auxilium-christianorum-{expected_date.isoformat()}.mp3").exists())
+            self.assertTrue((docs_root / "audio" / f"daily-reflection-{expected_date.isoformat()}.mp3").exists())
             self.assertTrue((docs_root / "audio" / f"morning-prayer-elevenlabs-{expected_date.isoformat()}.mp3").exists())
             self.assertTrue((docs_root / "audio" / f"daily-rosary-{expected_date.isoformat()}.mp3").exists())
             self.assertTrue(any(title.startswith("Auxilium Christianorum - ") for title in titles))
+            self.assertTrue(any(title.startswith("Daily Reflection - ") for title in titles))
             self.assertTrue(any(title.startswith("Morning Prayer - ") for title in titles))
             self.assertTrue(any(title.startswith("Daily Rosary - ") for title in titles))
             self.assertTrue(
@@ -384,7 +441,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.runner_mod.load_published_audio_jobs = fake_load_published_audio_jobs
             result = self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
 
-        self.assertEqual(result["jobs"], 4)
+        self.assertEqual(result["jobs"], 5)
         self.assertEqual(result["archived"], 0)
         self.assertEqual(Path(captured["kwargs"]["docs_root"]).name, "docs")
         self.assertIn("github.io", str(captured["kwargs"]["base_url"]))
@@ -434,16 +491,17 @@ class TestPublishAudioPipeline(unittest.TestCase):
             archive_manifest = json.loads((audio_dir / "index.json").read_text(encoding="utf-8"))
             archive_html = (audio_dir / "index.html").read_text(encoding="utf-8")
 
-        self.assertEqual(result["jobs"], 4)
-        self.assertEqual(result["rendered"], 4)
+        self.assertEqual(result["jobs"], 5)
+        self.assertEqual(result["rendered"], 5)
         self.assertEqual(result["archived"], 1)
         self.assertTrue(any(guid.startswith(f"auxilium-christianorum-{current_target_date.isoformat()}::") for guid in guids))
+        self.assertTrue(any(guid.startswith(f"daily-reflection-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"marian-antiphon-regina-caeli-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"daily-rosary-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"{archived_episode_id}::") for guid in guids))
-        self.assertEqual(len(guids), 5)
-        self.assertEqual(archive_manifest["count"], 5)
+        self.assertEqual(len(guids), 6)
+        self.assertEqual(archive_manifest["count"], 6)
         self.assertIn("Published audio archive", archive_html)
         self.assertIn(f"{archived_episode_id}.mp3", archive_html)
 
@@ -611,13 +669,15 @@ class TestPublishAudioPipeline(unittest.TestCase):
             root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") or "" for item in root.findall("./channel/item")]
 
-            self.assertEqual(result["jobs"], 8)
-            self.assertEqual(result["rendered"], 8)
+            self.assertEqual(result["jobs"], 10)
+            self.assertEqual(result["rendered"], 10)
             self.assertTrue(any(guid.startswith(f"auxilium-christianorum-{today.isoformat()}::") for guid in guids))
+            self.assertTrue(any(guid.startswith(f"daily-reflection-{today.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{today.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"marian-antiphon-angelus-{today.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"daily-rosary-{today.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"auxilium-christianorum-{tomorrow.isoformat()}::") for guid in guids))
+            self.assertTrue(any(guid.startswith(f"daily-reflection-{tomorrow.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{tomorrow.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"marian-antiphon-angelus-{tomorrow.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"daily-rosary-{tomorrow.isoformat()}::") for guid in guids))
@@ -663,10 +723,11 @@ class TestPublishAudioPipeline(unittest.TestCase):
             root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") or "" for item in root.findall("./channel/item")]
 
-        self.assertEqual(result["jobs"], 4)
+        self.assertEqual(result["jobs"], 5)
         self.assertEqual(result["archived"], 1)
-        self.assertEqual(len(guids), 5)
+        self.assertEqual(len(guids), 6)
         self.assertTrue(any(guid.startswith(f"auxilium-christianorum-{current_target_date.isoformat()}::") for guid in guids))
+        self.assertTrue(any(guid.startswith(f"daily-reflection-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"marian-antiphon-regina-caeli-{current_target_date.isoformat()}::") for guid in guids))
         self.assertTrue(any(guid.startswith(f"daily-rosary-{current_target_date.isoformat()}::") for guid in guids))

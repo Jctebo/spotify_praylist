@@ -1,5 +1,13 @@
 {
   "key": "daily-examen",
   "notion_name": "Daily Examen",
-  "spotify_uri": "spotify:episode:1I8pCawzp1Wd5pE0NcHmUj"
+  "spotify_episode_lookup": {
+    "show_id": "4PNxb0OazrkcEp3FAggRoD",
+    "required_name_terms": ["Daily Reflection"],
+    "date_formats": [
+      "{month_name} {day}, {year}",
+      "{month_short} {day}, {year}",
+      "{month_short}. {day}, {year}"
+    ]
+  }
 }
