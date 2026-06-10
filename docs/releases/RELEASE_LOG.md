@@ -1,5 +1,18 @@
 # Release Log
 
+## [0.3.6.0] - 2026-06-09
+
+### Added
+- Added a pause-rich Daily Reflection structure that splits the spoken prayer into four fragments with 15-second silent gaps between them.
+
+### Changed
+- Updated the Daily Reflection generator, fallback narration, and validation so the spoken script is shorter, more question-led, and more clearly shaped by the daily liturgical helper.
+- Extended the publish-audio pipeline so Daily Reflection silence duration is explicit in job config and fragment assembly while the shared seasonal music bed continues underneath the pauses.
+- Updated contract and audio regression coverage for the new Daily Reflection fragment labels, silence timing, and helper-driven variation.
+
+### Fixed
+- Removed the redundant spoken `Episode Title` heading from Daily Reflection narration while keeping the metadata title unchanged for Spotify lookup and episode discovery.
+
 ## [0.3.5.0] - 2026-06-09
 
 ### Added
