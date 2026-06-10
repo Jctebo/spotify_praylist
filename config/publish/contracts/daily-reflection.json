@@ -56,6 +56,7 @@
         "voice": "alloy",
         "format": "mp3",
         "speed": 1.0,
+        "silence_ms": 15000,
         "providers": [
           {
             "provider": "elevenlabs",

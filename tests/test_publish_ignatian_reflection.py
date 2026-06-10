@@ -43,11 +43,16 @@ class TestIgnatianReflection(unittest.TestCase):
         self.assertEqual(episode.source, "fallback")
         self.assertEqual(episode.saint_name, "Ignatius of Loyola")
         self.assertIn("Welcome to Ora Pro Nobis, where we pray with the Saints.", episode.text)
-        self.assertIn("Guided Examen", episode.text)
+        self.assertNotIn("Episode Title", episode.text)
+        self.assertEqual(len(episode.segments), 4)
+        self.assertEqual(episode.pause_ms, 15000)
         self.assertIn("consolation and desolation", episode.text)
+        self.assertIn("?", episode.segments[0])
+        self.assertTrue(episode.segments[0].startswith("Welcome to Ora Pro Nobis, where we pray with the Saints."))
         self.assertTrue(episode.text.endswith("And may the peace of Christ remain with you."))
         self.assertIn("Saint Ignatius of Loyola, pray for us.", episode.text)
-        self.assertGreaterEqual(episode.word_count, 500)
+        self.assertGreaterEqual(episode.word_count, 100)
+        self.assertLessEqual(episode.word_count, 350)
 
     def test_saint_name_is_not_double_prefixed(self):
         with mock.patch.object(self.mod, "_resolve_openai_settings", return_value=("", "https://api.openai.com/v1", "gpt-4.1-mini")):

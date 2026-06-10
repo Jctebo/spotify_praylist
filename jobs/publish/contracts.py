@@ -11,7 +11,7 @@ from zoneinfo import ZoneInfo
 from jobs.publish.daily_intro import build_daily_intro_text
 from jobs.publish.daily_liturgical_context import build_daily_liturgical_context
 from jobs.publish.formatting import build_publish_context, derive_episode_id, render_publish_template
-from jobs.publish.ignatian_reflection import build_ignatian_reflection_episode
+from jobs.publish.ignatian_reflection import DEFAULT_REFLECTION_PAUSE_MS, build_ignatian_reflection_episode
 from jobs.publish.liturgical_announcement import build_liturgical_announcement_text
 from jobs.publish.rosary_reflections import build_rosary_day_context, build_rosary_intro_text, build_rosary_reflection_set
 from jobs.publish.fragments import audio_manifest_hash
@@ -413,6 +413,11 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
             normalized["prompt_model"] = str(normalized.get("prompt_model", "")).strip()
         if "allow_missing_gospel" in normalized:
             normalized["allow_missing_gospel"] = _normalize_bool(normalized.get("allow_missing_gospel", True))
+        if "pause_ms" in normalized:
+            try:
+                normalized["pause_ms"] = int(float(normalized.get("pause_ms", DEFAULT_REFLECTION_PAUSE_MS)))
+            except Exception:
+                normalized["pause_ms"] = DEFAULT_REFLECTION_PAUSE_MS
     elif kind == "liturgical-announcement":
         normalized["title"] = str(normalized.get("title", "")).strip()
         if "calendar" in normalized:
@@ -881,6 +886,12 @@ def _daily_reflection_config(block: Dict[str, Any], contract: PublishContract) -
     for key in ("calendar", "locale", "prompt_model", "allow_missing_gospel"):
         if key in block:
             config[key] = block.get(key)
+    if "pause_ms" in block:
+        config["pause_ms"] = block.get("pause_ms")
+    try:
+        config["pause_ms"] = int(float(config.get("pause_ms", DEFAULT_REFLECTION_PAUSE_MS)))
+    except Exception:
+        config["pause_ms"] = DEFAULT_REFLECTION_PAUSE_MS
     config["allow_missing_gospel"] = _normalize_bool(config.get("allow_missing_gospel", True))
     return config
 
@@ -957,6 +968,7 @@ def _entry_runtime_context(
         runtime["daily_reflection_primary_theme_title"] = _humanize_slug(context.primaryTheme)
         runtime["daily_reflection_tone"] = context.emotionalTone
         runtime["daily_reflection_saint"] = context.saintOfDay
+        runtime["daily_reflection_pause_ms"] = int(config.get("pause_ms", DEFAULT_REFLECTION_PAUSE_MS))
     return runtime
 
 
@@ -1046,6 +1058,8 @@ def _daily_reflection_metadata_from_context(runtime_context: Optional[Dict[str, 
             "fallback_reason": str(getattr(episode, "fallback_reason", "") or "").strip(),
             "saint_name": str(getattr(episode, "saint_name", "") or "").strip(),
             "word_count": int(getattr(episode, "word_count", 0) or 0),
+            "pause_ms": int(getattr(episode, "pause_ms", DEFAULT_REFLECTION_PAUSE_MS) or DEFAULT_REFLECTION_PAUSE_MS),
+            "segment_count": len(tuple(getattr(episode, "segments", ()) or ())),
         }
     return metadata
 
@@ -1060,6 +1074,8 @@ def _attach_daily_reflection_context(render_context: Dict[str, Any], runtime_con
     render_context["daily_reflection_tone"] = str(helper.get("emotionalTone", "")).strip()
     render_context["daily_reflection_source"] = str(episode.get("source", "")).strip()
     render_context["daily_reflection_word_count"] = int(episode.get("word_count", 0) or 0)
+    render_context["daily_reflection_pause_ms"] = int(episode.get("pause_ms", DEFAULT_REFLECTION_PAUSE_MS) or DEFAULT_REFLECTION_PAUSE_MS)
+    render_context["daily_reflection_segment_count"] = int(episode.get("segment_count", 0) or 0)
 
 
 def _get_or_build_ignatian_reflection_episode(
@@ -1111,6 +1127,7 @@ def _get_or_build_ignatian_reflection_episode(
         target_date,
         helper,
         prompt_model=str(config.get("prompt_model") or "").strip() or None,
+        pause_ms=int(config.get("pause_ms", DEFAULT_REFLECTION_PAUSE_MS) or DEFAULT_REFLECTION_PAUSE_MS),
     )
     if runtime_context is not None:
         runtime_context["ignatian_reflection_episode"] = episode
@@ -1131,6 +1148,22 @@ def _resolve_ignatian_reflection_content(
         runtime_context=runtime_context,
     )
     return str(getattr(episode, "text", "") or "").strip()
+
+
+def _split_ignatian_reflection_paragraphs(text: str) -> List[str]:
+    return [part.strip() for part in re.split(r"\n{2,}", str(text or "").strip()) if part.strip()]
+
+
+def _ignatian_reflection_fragment_label(index: int, total: int) -> str:
+    if index == 1:
+        return "Opening Welcome"
+    if index == 2:
+        return "Reflection"
+    if index == 3:
+        return "Guided Examen"
+    if index == total:
+        return "Closing Prayer"
+    return f"Reflection {index}"
 
 
 def _resolve_rosary_intro_content(
@@ -1704,7 +1737,42 @@ def _expand_audio_fragments_from_block(
             runtime_context=runtime_context,
         )
 
-    if kind in {"file", "inline", "daily-intro", "liturgical-announcement", "prayer-intro", "rosary-intro", "ignatian-reflection"}:
+    if kind == "ignatian-reflection":
+        episode = _get_or_build_ignatian_reflection_episode(
+            block,
+            contract=contract,
+            target_date=effective_date,
+            runtime_context=runtime_context,
+        )
+        paragraphs = _split_ignatian_reflection_paragraphs(str(getattr(episode, "text", "") or ""))
+        if not paragraphs:
+            return []
+        if len(paragraphs) == 1:
+            fragment_key = "/".join((*path_parts, _fragment_path_segment(kind)))
+            return [
+                _fragment_payload(
+                    fragment_key=fragment_key,
+                    kind=kind,
+                    label="Daily Reflection",
+                    text=paragraphs[0],
+                    block=block,
+                )
+            ]
+        fragments = []
+        for index, paragraph in enumerate(paragraphs, start=1):
+            fragment_key = "/".join((*path_parts, _fragment_path_segment(kind, index=index)))
+            fragments.append(
+                _fragment_payload(
+                    fragment_key=fragment_key,
+                    kind=kind,
+                    label=_ignatian_reflection_fragment_label(index, len(paragraphs)),
+                    text=paragraph,
+                    block=block,
+                )
+            )
+        return fragments
+
+    if kind in {"file", "inline", "daily-intro", "liturgical-announcement", "prayer-intro", "rosary-intro"}:
         text = resolve_block_content(
             block,
             contract=contract,
@@ -2067,6 +2135,9 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
             if not audio_config["enabled"]:
                 continue
             runtime_context = _entry_runtime_context(contract, entry, effective_date)
+            reflection_pause_ms = int(runtime_context.get("daily_reflection_pause_ms", 0) or 0)
+            if reflection_pause_ms > 0:
+                audio_config["silence_ms"] = reflection_pause_ms
             rendered_metadata = _render_entry_metadata(
                 contract,
                 entry,

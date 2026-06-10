@@ -1,5 +1,18 @@
 # Release Log
 
+## [0.3.6.0] - 2026-06-09
+
+### Added
+- Added a Daily Reflection format with four short spoken sections and 15-second pauses between them.
+
+### Changed
+- Updated the Daily Reflection generator, fallback narration, and validation so each day feels shorter, more question-led, and shaped by the daily liturgical helper.
+- Extended the publish-audio pipeline so Daily Reflection pauses stay at 15 seconds in job config and fragment assembly while the shared seasonal music bed keeps playing underneath.
+- Updated contract and audio regression coverage for the new Daily Reflection fragment labels, pause timing, and helper-driven variation.
+
+### Fixed
+- Removed the spoken `Episode Title` heading from Daily Reflection narration while keeping the metadata title unchanged for Spotify lookup and episode discovery.
+
 ## [0.3.5.0] - 2026-06-09
 
 ### Added

@@ -97,6 +97,11 @@ def normalize_audio_settings(audio_config: Dict[str, Any]) -> Dict[str, Any]:
         settings["model_id"] = str(audio_config.get("model_id", "")).strip()
     if "voice_settings" in audio_config and isinstance(audio_config.get("voice_settings"), dict):
         settings["voice_settings"] = _normalize_tts_value(dict(audio_config.get("voice_settings") or {}))
+    if "silence_ms" in audio_config:
+        try:
+            settings["silence_ms"] = int(float(audio_config.get("silence_ms")))
+        except Exception:
+            pass
     providers = audio_config.get("providers")
     if isinstance(providers, list) and providers:
         settings["providers"] = [_normalize_tts_value(dict(provider)) if isinstance(provider, dict) else provider for provider in providers]
