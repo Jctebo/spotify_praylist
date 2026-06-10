@@ -106,14 +106,11 @@ class TestPublishContracts(unittest.TestCase):
 
     def _fake_ignatian_reflection_episode(self, date_value, context, **kwargs):
         text = (
-            "Episode Title\nDaily Reflection - Trust - April 6, 2026\n\n"
-            "Opening Welcome\nWelcome to Ora Pro Nobis, where we pray with the Saints.\n\n"
-            "Liturgical Context Introduction\nToday's shared focus is trust.\n\n"
-            "Ignatian Reflection\nGod meets us in ordinary life and teaches us trust.\n\n"
-            "Guided Examen\nBegin with gratitude. Review the day with Jesus. Notice consolation and desolation. "
-            "Speak with Jesus and look toward tomorrow with hope.\n\n"
-            "Closing Prayer\nLord Jesus, teach us to trust you. Amen.\n\n"
-            "Final Closing\nSaint Example, pray for us.\n"
+            "Welcome to Ora Pro Nobis, where we pray with the Saints. Today's shared focus is trust, and the day asks us to notice the quiet ways God meets us. What is the grace already present in this day?\n\n"
+            "This day speaks the language of trust. It arrives through a welcome, a delay, or a small mercy you almost missed. Where did trust quietly touch your ordinary life today?\n\n"
+            "In the examen, let gratitude come first, then the review, then the places of consolation and desolation. Bring the day honestly before Jesus, and ask what faithful step he is asking of you tonight. What does the Spirit want you to notice before tomorrow arrives?\n\n"
+            "Lord Jesus Christ, teach us to find you in the ordinary places of our lives. Give us the grace of trust, the honesty to notice your movements in our hearts, and the courage to follow where you gently lead. Amen.\n"
+            "Saint Example, pray for us.\n"
             "And may the peace of Christ remain with you."
         )
         return SimpleNamespace(
@@ -122,7 +119,9 @@ class TestPublishContracts(unittest.TestCase):
             source="fallback",
             fallback_reason="test",
             saint_name="Example",
-            word_count=80,
+            word_count=120,
+            pause_ms=15000,
+            segments=tuple(text.split("\n\n")),
         )
 
     def assert_standard_loudness_normalization(self, audio_config):
@@ -612,9 +611,10 @@ class TestPublishContracts(unittest.TestCase):
 
         self.assertEqual(len(jobs), 1)
         job = jobs[0]
-        self.assertEqual(job["audio_fragments"][0]["kind"], "ignatian-reflection")
-        self.assertEqual(job["audio_fragments"][0]["label"], "Daily Reflection")
-        self.assertIn("Guided Examen", job["audio_fragments"][0]["text"])
+        self.assertEqual([fragment["kind"] for fragment in job["audio_fragments"]], ["ignatian-reflection"] * 4)
+        self.assertEqual([fragment["label"] for fragment in job["audio_fragments"]], ["Opening Welcome", "Reflection", "Guided Examen", "Closing Prayer"])
+        self.assertGreaterEqual(len(job["audio_fragments"]), 4)
+        self.assertEqual(job["audio_config"]["silence_ms"], 15000)
         self.assertEqual(job["daily_reflection"]["helper"]["suggestedMusicMood"], "soft and contemplative")
         self.assertEqual(job["render_context"]["daily_reflection_source"], "fallback")
 

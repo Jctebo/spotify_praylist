@@ -1017,7 +1017,16 @@ def render_audio_job(
         if len(fragment_paths) == 1 and fragment_paths[0].suffix.lower().lstrip(".") == target_format:
             raw_audio = fragment_paths[0].read_bytes()
         else:
-            raw_audio = assemble_audio_fragments(fragment_paths, target_format, cache_root=fragment_root)
+            try:
+                silence_ms = int(audio_config.get("silence_ms", 350))
+            except Exception:
+                silence_ms = 350
+            raw_audio = assemble_audio_fragments(
+                fragment_paths,
+                target_format,
+                cache_root=fragment_root,
+                silence_ms=silence_ms,
+            )
         if not raw_audio:
             raise RuntimeError(f"Audio assembly returned empty output for entry '{job.get('entry_id', '')}'.")
         def branding_tts_renderer(fragment: Dict[str, Any], fragment_audio_config: Dict[str, Any]) -> Dict[str, Any]:
