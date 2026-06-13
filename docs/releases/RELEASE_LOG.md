@@ -1,5 +1,14 @@
 # Release Log
 
+## [0.3.6.1] - 2026-06-13
+
+### Changed
+- Updated Morning Prayer and Evening Prayer Spotify resolution so Divine Office is tried before Sing the Hours.
+- Kept the existing contract keys and fallback routing intact while preserving the Sing the Hours evening compatibility path.
+
+### Fixed
+- Added regression coverage for morning and evening preference order plus fallback behavior.
+
 ## [0.3.6.0] - 2026-06-09
 
 ### Added

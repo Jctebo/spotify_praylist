@@ -2255,32 +2255,36 @@ def rosary_mystery_for_weekday(weekday: str) -> str:
 def get_morning_prayer(
     sp: spotipy.Spotify, shows_cfg: Dict[str, Any], tokens_cfg: Dict[str, Any], status: Dict[str, bool]
 ) -> Tuple[Optional[str], Optional[str]]:
-    uri, name = sth_match_today(sp, cfg_value(shows_cfg, "STH", "shows"), list(cfg_token_terms(tokens_cfg, "STH_LAUDS")))
-    if uri:
-        status["Morning Prayer (STH)"] = True
-        status["Morning Prayer (DO fallback)"] = False
-        return uri, name
     uri, name = do_date_aware(
         sp, cfg_value(shows_cfg, "DIVINE_OFFICE", "shows"), cfg_token_terms(tokens_cfg, "DO_MORNING")
     )
-    status["Morning Prayer (STH)"] = False
-    status["Morning Prayer (DO fallback)"] = bool(uri)
+    if uri:
+        status["Morning Prayer (DO)"] = True
+        status["Morning Prayer (STH fallback)"] = False
+        return uri, name
+    uri, name = sth_match_today(
+        sp, cfg_value(shows_cfg, "STH", "shows"), list(cfg_token_terms(tokens_cfg, "STH_LAUDS"))
+    )
+    status["Morning Prayer (DO)"] = False
+    status["Morning Prayer (STH fallback)"] = bool(uri)
     return uri, name
 
 
 def get_evening_prayer(
     sp: spotipy.Spotify, shows_cfg: Dict[str, Any], tokens_cfg: Dict[str, Any], status: Dict[str, bool]
 ) -> Tuple[Optional[str], Optional[str]]:
-    uri, name = sth_match_today(sp, cfg_value(shows_cfg, "STH", "shows"), list(cfg_token_terms(tokens_cfg, "STH_VESPERS")))
-    if uri:
-        status["Evening Prayer (STH Vespers)"] = True
-        status["Evening Prayer (DO fallback)"] = False
-        return uri, name
     uri, name = do_date_aware(
         sp, cfg_value(shows_cfg, "DIVINE_OFFICE", "shows"), cfg_token_terms(tokens_cfg, "DO_EVENING")
     )
-    status["Evening Prayer (STH Vespers)"] = False
-    status["Evening Prayer (DO fallback)"] = bool(uri)
+    if uri:
+        status["Evening Prayer (DO)"] = True
+        status["Evening Prayer (STH fallback)"] = False
+        return uri, name
+    uri, name = sth_match_today(
+        sp, cfg_value(shows_cfg, "STH", "shows"), list(cfg_token_terms(tokens_cfg, "STH_VESPERS"))
+    )
+    status["Evening Prayer (DO)"] = False
+    status["Evening Prayer (STH fallback)"] = bool(uri)
     return uri, name
 
 
@@ -2354,6 +2358,13 @@ def resolve_item_uri(
     if key == "STH_MORNING":
         uri, _ = sth_match_today(sp, cfg_value(shows_cfg, "STH", "shows"), list(cfg_token_terms(tokens_cfg, "STH_LAUDS")))
         status["Morning Prayer (STH)"] = bool(uri)
+        return uri
+
+    if key == "STH_EVENING":
+        uri, _ = sth_match_today(
+            sp, cfg_value(shows_cfg, "STH", "shows"), list(cfg_token_terms(tokens_cfg, "STH_VESPERS"))
+        )
+        status["Evening Prayer (STH Vespers)"] = bool(uri)
         return uri
 
     if key == "DO_MORNING":
