@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.3.6.4] - 2026-06-13
+
+### Fixed
+- Removed the stale `petition-church` resolver from the built-in Morning Prayer page-audio fallback contract so remote generation no longer points at a missing template file.
+- Added regression coverage that verifies every built-in Morning Prayer file resolver references a checked-in template file.
+
 ## [0.3.6.3] - 2026-06-13
 
 ### Changed

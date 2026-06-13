@@ -208,7 +208,24 @@ class TestPageAudioJob(unittest.TestCase):
         ]
         self.assertGreater(len(resolver_keys), 0)
         self.assertNotIn("random-intention", resolver_keys)
+        self.assertNotIn("petition-church", resolver_keys)
         self.assertEqual(resolver_keys[0], "morning-offering")
+
+    def test_default_morning_prayer_file_resolvers_exist(self):
+        with temp_env({self.page_audio.MORNING_PRAYER_CONTRACT_FILE: ""}):
+            contract = self.page_audio.load_morning_prayer_contract_from_file()
+
+        missing = []
+        for resolver in contract.get("resolvers", []):
+            if not isinstance(resolver, dict) or resolver.get("kind") != "file":
+                continue
+            path = Path(str(resolver.get("path", "")))
+            if not path.is_absolute():
+                path = Path.cwd() / path
+            if not path.exists():
+                missing.append(f"{resolver.get('key')}: {path}")
+
+        self.assertEqual(missing, [])
 
     def test_load_morning_prayer_contract_from_file_rejects_legacy_override(self):
         legacy_path = Path.cwd() / "config" / "legacy" / "morning-prayer.json"
