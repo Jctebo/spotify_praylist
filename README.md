@@ -34,7 +34,7 @@ Optional variables:
 - `jobs/notion/generate_page_audio.py`: archived page-audio runtime retained only for older Morning Prayer workflows
 - `NOTION_PUBLISH_DATABASE_ID` or `NOTION_DATABASE_NAME` for the new publish-text Notion target, which upserts page titles on the `Opus Dei` database and writes the prayer text into the page body
 - For local OpenAI runs, copy `config/local/openai.env.example` to `config/local/openai.env` and fill in `OPENAI_API_KEY`; the publish-text helper will read that file automatically, and you can override the path with `OPENAI_API_KEY_FILE`
-- `Publish Prayer Text` now runs after `Daily Spotify Playlist Refresh` completes successfully on `main`, plus manual dispatches
+- `Publish Prayer Text` is disabled while the Notion publish target is corrected; the archived workflow definition lives at `.github/disabled_workflows/publish_text.yml`
 
 ### Audio
 - `jobs/publish/run_audio_pipeline.py`: contract-driven audio publication that writes date-scoped `docs/audio/<episode_id>.mp3` files and refreshes `docs/podcast.xml`

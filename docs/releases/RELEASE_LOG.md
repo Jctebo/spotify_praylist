@@ -1,5 +1,14 @@
 # Release Log
 
+## [0.3.6.5] - 2026-06-13
+
+### Changed
+- Disabled the failing `Publish Prayer Text` GitHub Actions workflow by moving its YAML definition to `.github/disabled_workflows/publish_text.yml`.
+- Updated README workflow documentation to point maintainers at the archived workflow while the Notion publish target is corrected.
+
+### Fixed
+- Added regression coverage that prevents `.github/workflows/publish_text.yml` from becoming active again unintentionally.
+
 ## [0.3.6.4] - 2026-06-13
 
 ### Fixed
