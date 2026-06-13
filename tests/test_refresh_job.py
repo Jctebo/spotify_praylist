@@ -956,6 +956,109 @@ class TestRefreshJob(unittest.TestCase):
         self.assertTrue(status["Fr. Mike Sunday Homily"])
         self.assertTrue(status["Bp. Barron Sunday Sermon"])
 
+    def test_evening_sing_the_hours_resolver_is_still_available(self):
+        status = {}
+        sp = object()
+
+        with patch.object(self.mod, "sth_match_today", return_value=("spotify:episode:sth-evening", "Sing the Hours Evening")) as sth_mock:
+            uri = self.mod.resolve_item_uri(
+                sp,
+                "STH_EVENING",
+                "Wednesday",
+                status,
+                {"STH": "sth_show"},
+                {},
+                {"STH_VESPERS": "Vespers"},
+            )
+
+        self.assertEqual(uri, "spotify:episode:sth-evening")
+        sth_mock.assert_called_once_with(sp, "sth_show", ["Vespers"])
+        self.assertTrue(status["Evening Prayer (STH Vespers)"])
+
+    def test_morning_prayer_prefers_divine_office_before_sing_the_hours(self):
+        status = {}
+        sp = object()
+
+        with patch.object(self.mod, "do_date_aware", return_value=("spotify:episode:do-morning", "Divine Office Morning")) as do_mock, patch.object(
+            self.mod, "sth_match_today", return_value=("spotify:episode:sth-morning", "Sing the Hours Morning")
+        ) as sth_mock:
+            uri, name = self.mod.get_morning_prayer(
+                sp,
+                {"DIVINE_OFFICE": "do_show", "STH": "sth_show"},
+                {"DO_MORNING": "Morning Prayer", "STH_LAUDS": "Lauds"},
+                status,
+            )
+
+        self.assertEqual(uri, "spotify:episode:do-morning")
+        self.assertEqual(name, "Divine Office Morning")
+        do_mock.assert_called_once_with(sp, "do_show", ("Morning Prayer",))
+        sth_mock.assert_not_called()
+        self.assertTrue(status["Morning Prayer (DO)"])
+        self.assertFalse(status["Morning Prayer (STH fallback)"])
+
+    def test_morning_prayer_falls_back_to_sing_the_hours_when_divine_office_missing(self):
+        status = {}
+        sp = object()
+
+        with patch.object(self.mod, "do_date_aware", return_value=(None, None)) as do_mock, patch.object(
+            self.mod, "sth_match_today", return_value=("spotify:episode:sth-morning", "Sing the Hours Morning")
+        ) as sth_mock:
+            uri, name = self.mod.get_morning_prayer(
+                sp,
+                {"DIVINE_OFFICE": "do_show", "STH": "sth_show"},
+                {"DO_MORNING": "Morning Prayer", "STH_LAUDS": "Lauds"},
+                status,
+            )
+
+        self.assertEqual(uri, "spotify:episode:sth-morning")
+        self.assertEqual(name, "Sing the Hours Morning")
+        do_mock.assert_called_once_with(sp, "do_show", ("Morning Prayer",))
+        sth_mock.assert_called_once_with(sp, "sth_show", ["Lauds"])
+        self.assertFalse(status["Morning Prayer (DO)"])
+        self.assertTrue(status["Morning Prayer (STH fallback)"])
+
+    def test_evening_prayer_prefers_divine_office_before_sing_the_hours(self):
+        status = {}
+        sp = object()
+
+        with patch.object(self.mod, "do_date_aware", return_value=("spotify:episode:do-evening", "Divine Office Evening")) as do_mock, patch.object(
+            self.mod, "sth_match_today", return_value=("spotify:episode:sth-evening", "Sing the Hours Evening")
+        ) as sth_mock:
+            uri, name = self.mod.get_evening_prayer(
+                sp,
+                {"DIVINE_OFFICE": "do_show", "STH": "sth_show"},
+                {"DO_EVENING": "Evening Prayer", "STH_VESPERS": "Vespers"},
+                status,
+            )
+
+        self.assertEqual(uri, "spotify:episode:do-evening")
+        self.assertEqual(name, "Divine Office Evening")
+        do_mock.assert_called_once_with(sp, "do_show", ("Evening Prayer",))
+        sth_mock.assert_not_called()
+        self.assertTrue(status["Evening Prayer (DO)"])
+        self.assertFalse(status["Evening Prayer (STH fallback)"])
+
+    def test_evening_prayer_falls_back_to_sing_the_hours_when_divine_office_missing(self):
+        status = {}
+        sp = object()
+
+        with patch.object(self.mod, "do_date_aware", return_value=(None, None)) as do_mock, patch.object(
+            self.mod, "sth_match_today", return_value=("spotify:episode:sth-evening", "Sing the Hours Evening")
+        ) as sth_mock:
+            uri, name = self.mod.get_evening_prayer(
+                sp,
+                {"DIVINE_OFFICE": "do_show", "STH": "sth_show"},
+                {"DO_EVENING": "Evening Prayer", "STH_VESPERS": "Vespers"},
+                status,
+            )
+
+        self.assertEqual(uri, "spotify:episode:sth-evening")
+        self.assertEqual(name, "Sing the Hours Evening")
+        do_mock.assert_called_once_with(sp, "do_show", ("Evening Prayer",))
+        sth_mock.assert_called_once_with(sp, "sth_show", ["Vespers"])
+        self.assertFalse(status["Evening Prayer (DO)"])
+        self.assertTrue(status["Evening Prayer (STH fallback)"])
+
     def test_resolve_spec_uri_does_not_alias_legacy_resolver_names(self):
         status = {}
         sp = object()
