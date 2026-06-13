@@ -48,6 +48,7 @@ class SpotifyQueueContract(NamedTuple):
     spotify_uri_easter: str
     weekdays: Tuple[str, ...]
     spotify_episode_lookup: Optional[SpotifyEpisodeLookupContract] = None
+    website: Optional[Dict[str, Any]] = None
     source_path: Path = Path()
 
 
@@ -186,6 +187,78 @@ def _load_contract_weekdays(payload: Dict[str, Any], contract_path: Path) -> Tup
     return tuple(normalized)
 
 
+def _normalize_bool(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        raw = value.strip().lower()
+        if raw in {"1", "true", "yes", "y", "on"}:
+            return True
+        if raw in {"0", "false", "no", "n", "off"}:
+            return False
+    return bool(value)
+
+
+def _optional_website_text(website: Dict[str, Any], field_name: str) -> str:
+    value = website.get(field_name)
+    return str(value).strip() if value is not None else ""
+
+
+def _load_website_metadata(payload: Dict[str, Any], contract_path: Path) -> Dict[str, Any]:
+    raw_website = payload.get("website")
+    if raw_website is None:
+        return {}
+    if not isinstance(raw_website, dict):
+        raise RuntimeError(f"Spotify queue contract '{contract_path}' has invalid 'website'; expected an object.")
+
+    website = dict(raw_website)
+    website["enabled"] = _normalize_bool(website.get("enabled", False))
+    if not website["enabled"]:
+        return website
+
+    for field_name in ("slug", "title", "summary", "group", "source_label", "availability"):
+        if not _optional_website_text(website, field_name):
+            raise RuntimeError(
+                f"Spotify queue contract '{contract_path}' has enabled website metadata missing '{field_name}'."
+            )
+
+    slug = normalize_spotify_contract_key(_optional_website_text(website, "slug"))
+    if not slug:
+        raise RuntimeError(f"Spotify queue contract '{contract_path}' has invalid website slug.")
+    website["slug"] = slug
+
+    group = _optional_website_text(website, "group")
+    if group not in {"ora-pro-nobis", "external-spotify"}:
+        raise RuntimeError(
+            f"Spotify queue contract '{contract_path}' has invalid website group '{group}'. "
+            "Use 'ora-pro-nobis' or 'external-spotify'."
+        )
+    availability = _optional_website_text(website, "availability")
+    if availability not in {"daily", "seasonal", "weekday", "sunday", "fixed"}:
+        raise RuntimeError(
+            f"Spotify queue contract '{contract_path}' has invalid website availability '{availability}'."
+        )
+    try:
+        website["order"] = float(website.get("order", 0))
+    except Exception as exc:
+        raise RuntimeError(f"Spotify queue contract '{contract_path}' has invalid website order.") from exc
+
+    aliases = website.get("aliases")
+    if aliases is not None:
+        if not isinstance(aliases, list):
+            raise RuntimeError(f"Spotify queue contract '{contract_path}' has invalid website aliases.")
+        website["aliases"] = [str(alias).strip() for alias in aliases if str(alias).strip()]
+
+    external_url = _optional_website_text(website, "external_url")
+    if external_url and not re.fullmatch(r"https?://[^\s]+", external_url):
+        raise RuntimeError(f"Spotify queue contract '{contract_path}' has invalid website external_url.")
+    if group == "external-spotify" and not external_url and not str(payload.get("spotify_uri", "")).strip():
+        raise RuntimeError(
+            f"Spotify queue contract '{contract_path}' has external website metadata without 'external_url'."
+        )
+    return website
+
+
 def _load_spotify_episode_lookup_search(
     payload: Dict[str, Any],
     contract_path: Path,
@@ -268,6 +341,7 @@ def load_spotify_queue_contracts(contract_dir: Optional[Path] = None) -> List[Sp
         spotify_url_normal = _optional_text(payload, "spotify_url_normal")
         spotify_uri_easter = _optional_text(payload, "spotify_uri_easter")
         weekdays = _load_contract_weekdays(payload, contract_path)
+        website = _load_website_metadata(payload, contract_path)
         spotify_episode_lookup: Optional[SpotifyEpisodeLookupContract] = None
         lookup_payload = payload.get("spotify_episode_lookup")
 
@@ -349,6 +423,7 @@ def load_spotify_queue_contracts(contract_dir: Optional[Path] = None) -> List[Sp
                 spotify_uri_easter=spotify_uri_easter,
                 weekdays=weekdays,
                 spotify_episode_lookup=spotify_episode_lookup,
+                website=website,
                 source_path=contract_path,
             )
         )

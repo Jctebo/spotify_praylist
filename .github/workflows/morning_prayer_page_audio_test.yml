@@ -1,4 +1,4 @@
-name: Morning Prayer Page Audio Test
+name: Website Publish Validation
 
 on:
   workflow_dispatch:
@@ -23,5 +23,5 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Run page-audio contract tests
-        run: python -m unittest tests.test_page_audio_job
+      - name: Run website publish validation tests
+        run: python -m unittest tests.test_page_audio_job tests.test_publish_site tests.test_spotify_contracts tests.test_publish_contracts

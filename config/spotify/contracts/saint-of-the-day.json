@@ -1,5 +1,18 @@
 {
   "key": "saint-of-the-day",
   "notion_name": "Saint of the Day",
-  "resolver": "SAINT_OF_DAY"
+  "resolver": "SAINT_OF_DAY",
+  "website": {
+    "enabled": true,
+    "slug": "saint-of-the-day",
+    "title": "Saint of the Day",
+    "subtitle": "Daily saint",
+    "summary": "A daily saint profile, linked to Spotify as an external source.",
+    "group": "external-spotify",
+    "order": 240,
+    "source_label": "Franciscan Media",
+    "availability": "daily",
+    "external_url": "https://open.spotify.com/show/1skJeU3tBmO7ftJ2ugNyYd",
+    "primary_action_label": "Open in Spotify"
+  }
 }

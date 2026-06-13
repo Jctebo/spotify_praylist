@@ -180,6 +180,7 @@ jobs:
           write_podcast_feed(feed_xml, pages_root / "podcast.xml")
           print(f"Rebuilt podcast.xml from {len(jobs)} archive item(s).")
           PY
+          python -m jobs.publish.site --docs-root "${GITHUB_WORKSPACE}/pages"
 
       - name: Configure GitHub Pages
         if: github.ref == 'refs/heads/main'

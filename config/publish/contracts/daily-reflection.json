@@ -32,6 +32,19 @@
       "title_template": "Daily Reflection - {daily_reflection_primary_theme_title} - {date_display}",
       "description_template": "Daily Ignatian reflection for {date_display}, focused on {daily_reflection_primary_theme}.",
       "episode_id_template": "daily-reflection-{date_iso}",
+      "website": {
+        "enabled": true,
+        "slug": "daily-reflection",
+        "title": "Daily Reflection",
+        "subtitle": "Ignatian examen",
+        "summary": "A daily Ignatian-style reflection and guided examen shaped by the day's liturgical context.",
+        "group": "ora-pro-nobis",
+        "order": 50,
+        "source_label": "Ora Pro Nobis",
+        "availability": "daily",
+        "primary_action_label": "Pray today's reflection",
+        "aliases": ["Daily Examen"]
+      },
       "daily_reflection": {
         "calendar": "general_roman",
         "locale": "en",

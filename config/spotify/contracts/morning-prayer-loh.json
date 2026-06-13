@@ -2,5 +2,19 @@
   "key": "morning-prayer-loh",
   "notion_name": "Morning Prayer (LOH)",
   "resolver": "MORNING",
-  "fallback_resolver": "DO_MORNING"
+  "fallback_resolver": "DO_MORNING",
+  "website": {
+    "enabled": true,
+    "slug": "morning-prayer-loh",
+    "title": "Morning Prayer (Liturgy of the Hours)",
+    "subtitle": "Lauds",
+    "summary": "Morning Prayer from the Liturgy of the Hours, linked to Spotify as an external source.",
+    "group": "external-spotify",
+    "order": 120,
+    "source_label": "Divine Office",
+    "availability": "daily",
+    "external_url": "https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM",
+    "primary_action_label": "Open in Spotify",
+    "aliases": ["Lauds"]
+  }
 }

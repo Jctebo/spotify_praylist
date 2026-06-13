@@ -32,6 +32,18 @@
       "title_template": "Morning Prayer - {date:%B %-d, %Y}",
       "description_template": "Morning Prayer for {date:%B %-d, %Y}. The daily opening block follows the liturgical day and the day's Gospel.",
       "episode_id_template": "{entry_id}-{date_iso}",
+      "website": {
+        "enabled": true,
+        "slug": "morning-prayer",
+        "title": "Morning Prayer",
+        "subtitle": "Daily offering",
+        "summary": "A structured Catholic morning prayer with a liturgical opening, offering, consecration, and intercessions.",
+        "group": "ora-pro-nobis",
+        "order": 10,
+        "source_label": "Ora Pro Nobis",
+        "availability": "daily",
+        "primary_action_label": "Pray morning prayer"
+      },
       "daily_intro": {
         "calendar": "general_roman",
         "locale": "en",

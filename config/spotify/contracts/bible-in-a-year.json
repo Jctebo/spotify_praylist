@@ -1,5 +1,19 @@
 {
   "key": "bible-in-a-year",
   "notion_name": "Bible in a Year",
-  "resolver": "BIBLE_IN_A_YEAR"
+  "resolver": "BIBLE_IN_A_YEAR",
+  "website": {
+    "enabled": true,
+    "slug": "bible-in-a-year",
+    "title": "Bible in a Year",
+    "subtitle": "Daily Scripture",
+    "summary": "The Bible in a Year podcast from Ascension, linked to Spotify as an external source.",
+    "group": "external-spotify",
+    "order": 210,
+    "source_label": "Ascension",
+    "availability": "daily",
+    "external_url": "https://open.spotify.com/show/4Pppt42NPK2XzKwNIoW7BR",
+    "primary_action_label": "Open in Spotify",
+    "aliases": ["BIAY"]
+  }
 }

@@ -1,5 +1,18 @@
 {
   "key": "barron-sunday-sermon",
   "notion_name": "Bp. Barron Sunday Sermon",
-  "resolver": "SUNDAY_BARRON"
+  "resolver": "SUNDAY_BARRON",
+  "website": {
+    "enabled": true,
+    "slug": "barron-sunday-sermon",
+    "title": "Bishop Barron Sunday Sermon",
+    "subtitle": "Sunday sermon",
+    "summary": "Sunday sermons from Bishop Robert Barron, linked to Spotify as an external source.",
+    "group": "external-spotify",
+    "order": 320,
+    "source_label": "Word on Fire",
+    "availability": "sunday",
+    "external_url": "https://open.spotify.com/show/5G6vtvZBIQMpQ8TLgXLBiK",
+    "primary_action_label": "Open in Spotify"
+  }
 }

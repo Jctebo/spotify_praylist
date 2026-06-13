@@ -10,6 +10,20 @@
       "title_template": "Marian Antiphon - Regina Caeli - {date_display}",
       "description_template": "Regina Caeli for {date_display} during {season_label}. The daily intro announces the day, then the prayer begins with the sign of the cross.",
       "episode_id_template": "marian-antiphon-regina-caeli-{date_iso}",
+      "website": {
+        "enabled": true,
+        "slug": "marian-antiphon",
+        "title": "Marian Antiphon",
+        "subtitle": "Angelus and Regina Caeli",
+        "summary": "The Church's daily Marian prayer, prayed as the Angelus outside Easter and Regina Caeli during Easter.",
+        "group": "ora-pro-nobis",
+        "order": 30,
+        "source_label": "Ora Pro Nobis",
+        "availability": "seasonal",
+        "prayer_family": "marian-antiphon",
+        "primary_action_label": "Pray today's antiphon",
+        "notes": "Angelus in ordinary seasons; Regina Caeli in Easter season."
+      },
       "daily_intro": {
         "calendar": "general_roman",
         "locale": "en",

@@ -195,6 +195,31 @@ class TestPublishContracts(unittest.TestCase):
         self.assert_standard_loudness_normalization(contracts_by_id["auxilium-christianorum"].entries[0]["audio_config"])
         self.assertEqual(contracts_by_id["marian-antiphon-angelus"].season, "ordinary")
         self.assertEqual(contracts_by_id["marian-antiphon-regina-caeli"].season, "easter")
+        for contract_id in (
+            "auxilium-christianorum",
+            "daily-reflection",
+            "marian-antiphon-angelus",
+            "marian-antiphon-regina-caeli",
+            "morning-prayer-elevenlabs",
+            "rosary",
+        ):
+            website = contracts_by_id[contract_id].metadata.get("website")
+            self.assertIsInstance(website, dict)
+            self.assertTrue(website["enabled"])
+            self.assertIn(website["group"], {"ora-pro-nobis"})
+            self.assertTrue(website["slug"])
+            self.assertTrue(website["title"])
+            self.assertTrue(website["summary"])
+            self.assertTrue(website["source_label"])
+            self.assertIn(website["availability"], {"daily", "seasonal"})
+        self.assertEqual(
+            contracts_by_id["marian-antiphon-angelus"].metadata["website"]["prayer_family"],
+            "marian-antiphon",
+        )
+        self.assertEqual(
+            contracts_by_id["marian-antiphon-regina-caeli"].metadata["website"]["prayer_family"],
+            "marian-antiphon",
+        )
         self.assertEqual(
             contracts_by_id["marian-antiphon-angelus"].metadata["title_template"],
             "Marian Antiphon - Angelus - {date_display}",

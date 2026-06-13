@@ -4,5 +4,19 @@
   "spotify_uri": "spotify:episode:4rZ8YJKq1iuqiypu3Q5TRm",
   "weekdays": [
     "Friday"
-  ]
+  ],
+  "website": {
+    "enabled": true,
+    "slug": "friday-stations-of-the-cross",
+    "title": "Stations of the Cross",
+    "subtitle": "Friday devotion",
+    "summary": "A fixed Stations of the Cross devotion on Spotify.",
+    "group": "external-spotify",
+    "order": 330,
+    "source_label": "Spotify",
+    "availability": "weekday",
+    "external_url": "https://open.spotify.com/episode/4rZ8YJKq1iuqiypu3Q5TRm",
+    "primary_action_label": "Open in Spotify",
+    "notes": "Scheduled for Fridays."
+  }
 }

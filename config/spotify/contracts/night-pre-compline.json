@@ -1,5 +1,18 @@
 {
   "key": "night-pre-compline",
   "notion_name": "Night Before Compline",
-  "spotify_uri": "spotify:episode:1I8pCawzp1Wd5pE0NcHmUj"
+  "spotify_uri": "spotify:episode:1I8pCawzp1Wd5pE0NcHmUj",
+  "website": {
+    "enabled": true,
+    "slug": "night-before-compline",
+    "title": "Night Before Compline",
+    "subtitle": "Night devotion",
+    "summary": "A fixed night prayer before Compline on Spotify.",
+    "group": "external-spotify",
+    "order": 350,
+    "source_label": "Spotify",
+    "availability": "fixed",
+    "external_url": "https://open.spotify.com/episode/1I8pCawzp1Wd5pE0NcHmUj",
+    "primary_action_label": "Open in Spotify"
+  }
 }

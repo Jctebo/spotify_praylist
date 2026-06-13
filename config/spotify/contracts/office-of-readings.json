@@ -1,5 +1,18 @@
 {
   "key": "office-of-readings",
   "notion_name": "Office of Readings",
-  "resolver": "OFFICE"
+  "resolver": "OFFICE",
+  "website": {
+    "enabled": true,
+    "slug": "office-of-readings",
+    "title": "Office of Readings",
+    "subtitle": "Liturgy of the Hours",
+    "summary": "The Office of Readings, linked to Spotify as an external source.",
+    "group": "external-spotify",
+    "order": 180,
+    "source_label": "Divine Office",
+    "availability": "daily",
+    "external_url": "https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM",
+    "primary_action_label": "Open in Spotify"
+  }
 }

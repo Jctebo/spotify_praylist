@@ -1,5 +1,18 @@
 {
   "key": "invitatory",
   "notion_name": "Invitatory",
-  "resolver": "INVITATORY"
+  "resolver": "INVITATORY",
+  "website": {
+    "enabled": true,
+    "slug": "invitatory",
+    "title": "Invitatory",
+    "subtitle": "Liturgy of the Hours",
+    "summary": "The opening hour of the Divine Office, offered through Spotify as an external prayer source.",
+    "group": "external-spotify",
+    "order": 110,
+    "source_label": "Divine Office",
+    "availability": "daily",
+    "external_url": "https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM",
+    "primary_action_label": "Open in Spotify"
+  }
 }

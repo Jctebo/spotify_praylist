@@ -264,6 +264,61 @@ class TestSpotifyContracts(unittest.TestCase):
         self.assertEqual(lookup.required_name_terms, ("Morning Prayer", "April"))
         self.assertEqual(lookup.date_formats, ("{month_name} {day}, {year}",))
 
+    def test_load_spotify_queue_contracts_preserves_website_metadata(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            contract_dir = Path(tmpdir)
+            _write_json(
+                contract_dir / "bible-in-a-year.json",
+                {
+                    "key": "bible-in-a-year",
+                    "notion_name": "Bible in a Year",
+                    "resolver": "BIBLE_IN_A_YEAR",
+                    "website": {
+                        "enabled": True,
+                        "slug": "Bible in a Year",
+                        "title": "Bible in a Year",
+                        "summary": "Daily Scripture listening on Spotify.",
+                        "group": "external-spotify",
+                        "source_label": "Ascension",
+                        "availability": "daily",
+                        "order": 20,
+                        "external_url": "https://open.spotify.com/show/4Pppt42NPK2XzKwNIoW7BR",
+                        "aliases": ["BIAY"],
+                    },
+                },
+            )
+
+            contracts = self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
+
+        contract = contracts[0]
+        self.assertEqual(contract.website["slug"], "bible-in-a-year")
+        self.assertEqual(contract.website["order"], 20.0)
+        self.assertEqual(contract.website["aliases"], ["BIAY"])
+
+    def test_load_spotify_queue_contracts_rejects_invalid_website_metadata(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            contract_dir = Path(tmpdir)
+            _write_json(
+                contract_dir / "broken.json",
+                {
+                    "key": "broken",
+                    "notion_name": "Broken",
+                    "resolver": "BROKEN",
+                    "website": {
+                        "enabled": True,
+                        "slug": "broken",
+                        "title": "Broken",
+                        "summary": "Broken entry.",
+                        "group": "external-spotify",
+                        "source_label": "Broken",
+                        "availability": "daily",
+                    },
+                },
+            )
+
+            with self.assertRaisesRegex(RuntimeError, "without 'external_url'"):
+                self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
+
     def test_load_spotify_queue_contracts_accepts_ordered_episode_lookup_searches(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             contract_dir = Path(tmpdir)

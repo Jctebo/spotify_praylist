@@ -1,0 +1,725 @@
+{
+  "base_url": "https://jctebo.github.io/spotify_praylist",
+  "count": 24,
+  "generated_at": "2026-06-13T22:45:58Z",
+  "groups": [
+    {
+      "key": "ora-pro-nobis",
+      "label": "Ora Pro Nobis"
+    },
+    {
+      "key": "external-spotify",
+      "label": "Spotify prayers"
+    }
+  ],
+  "items": [
+    {
+      "aliases": [],
+      "archive_url": "audio/",
+      "availability": "daily",
+      "contract_id": "morning-prayer-elevenlabs",
+      "external_url": "",
+      "feed_url": "https://jctebo.github.io/spotify_praylist/podcast.xml",
+      "group": "ora-pro-nobis",
+      "group_label": "Ora Pro Nobis",
+      "id": "publish:morning-prayer-elevenlabs",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/morning-prayer/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Pray morning prayer",
+      "related_contracts": [
+        "morning-prayer-elevenlabs"
+      ],
+      "related_entry_ids": [
+        "morning-prayer-elevenlabs"
+      ],
+      "slug": "morning-prayer",
+      "source": "publish",
+      "source_label": "Ora Pro Nobis",
+      "subtitle": "Daily offering",
+      "summary": "A structured Catholic morning prayer with a liturgical opening, offering, consecration, and intercessions.",
+      "title": "Morning Prayer",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/morning-prayer/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "audio/",
+      "availability": "daily",
+      "contract_id": "auxilium-christianorum",
+      "external_url": "",
+      "feed_url": "https://jctebo.github.io/spotify_praylist/podcast.xml",
+      "group": "ora-pro-nobis",
+      "group_label": "Ora Pro Nobis",
+      "id": "publish:auxilium-christianorum",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/auxilium-christianorum/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Pray today's episode",
+      "related_contracts": [
+        "auxilium-christianorum"
+      ],
+      "related_entry_ids": [
+        "auxilium-christianorum"
+      ],
+      "slug": "auxilium-christianorum",
+      "source": "publish",
+      "source_label": "Ora Pro Nobis",
+      "subtitle": "Daily deliverance prayers",
+      "summary": "Lay-member daily prayers from Auxilium Christianorum with the liturgical day and weekday prayer.",
+      "title": "Auxilium Christianorum",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/auxilium-christianorum/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "audio/",
+      "availability": "seasonal",
+      "contract_id": "marian-antiphon-angelus",
+      "external_url": "",
+      "feed_url": "https://jctebo.github.io/spotify_praylist/podcast.xml",
+      "group": "ora-pro-nobis",
+      "group_label": "Ora Pro Nobis",
+      "id": "publish:marian-antiphon-angelus",
+      "latest_audio": null,
+      "notes": "Angelus in ordinary seasons; Regina Caeli in Easter season.",
+      "path": "prayers/marian-antiphon/index.html",
+      "prayer_family": "marian-antiphon",
+      "primary_action_label": "Pray today's antiphon",
+      "related_contracts": [
+        "marian-antiphon-angelus",
+        "marian-antiphon-regina-caeli"
+      ],
+      "related_entry_ids": [
+        "marian-antiphon-angelus",
+        "marian-antiphon-regina-caeli"
+      ],
+      "slug": "marian-antiphon",
+      "source": "publish",
+      "source_label": "Ora Pro Nobis",
+      "subtitle": "Angelus and Regina Caeli",
+      "summary": "The Church's daily Marian prayer, prayed as the Angelus outside Easter and Regina Caeli during Easter.",
+      "title": "Marian Antiphon",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/marian-antiphon/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "audio/",
+      "availability": "daily",
+      "contract_id": "rosary",
+      "external_url": "",
+      "feed_url": "https://jctebo.github.io/spotify_praylist/podcast.xml",
+      "group": "ora-pro-nobis",
+      "group_label": "Ora Pro Nobis",
+      "id": "publish:rosary",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/daily-rosary/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Pray today's Rosary",
+      "related_contracts": [
+        "rosary"
+      ],
+      "related_entry_ids": [
+        "rosary"
+      ],
+      "slug": "daily-rosary",
+      "source": "publish",
+      "source_label": "Ora Pro Nobis",
+      "subtitle": "Mysteries and reflections",
+      "summary": "The daily Rosary with the traditional mysteries and short reflections grounded in the liturgical day.",
+      "title": "Daily Rosary",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/daily-rosary/"
+    },
+    {
+      "aliases": [
+        "Daily Examen"
+      ],
+      "archive_url": "audio/",
+      "availability": "daily",
+      "contract_id": "daily-reflection",
+      "external_url": "",
+      "feed_url": "https://jctebo.github.io/spotify_praylist/podcast.xml",
+      "group": "ora-pro-nobis",
+      "group_label": "Ora Pro Nobis",
+      "id": "publish:daily-reflection",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/daily-reflection/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Pray today's reflection",
+      "related_contracts": [
+        "daily-reflection"
+      ],
+      "related_entry_ids": [
+        "daily-reflection"
+      ],
+      "slug": "daily-reflection",
+      "source": "publish",
+      "source_label": "Ora Pro Nobis",
+      "subtitle": "Ignatian examen",
+      "summary": "A daily Ignatian-style reflection and guided examen shaped by the day's liturgical context.",
+      "title": "Daily Reflection",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/daily-reflection/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "audio/",
+      "availability": "daily",
+      "contract_id": "daily-novenas",
+      "external_url": "",
+      "feed_url": "https://jctebo.github.io/spotify_praylist/podcast.xml",
+      "group": "ora-pro-nobis",
+      "group_label": "Ora Pro Nobis",
+      "id": "spotify:daily-novenas",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/daily-novenas/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Pray today's novena",
+      "related_contracts": [
+        "daily-novenas"
+      ],
+      "related_entry_ids": [
+        "daily-novenas"
+      ],
+      "slug": "daily-novenas",
+      "source": "spotify",
+      "source_label": "Ora Pro Nobis",
+      "subtitle": "Liturgical calendar",
+      "summary": "Ora Pro Nobis novena prayers selected from the liturgical calendar and published as daily audio.",
+      "title": "Daily Novenas",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/daily-novenas/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "",
+      "availability": "daily",
+      "contract_id": "invitatory",
+      "external_url": "https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:invitatory",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/invitatory/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "invitatory"
+      ],
+      "related_entry_ids": [
+        "invitatory"
+      ],
+      "slug": "invitatory",
+      "source": "spotify",
+      "source_label": "Divine Office",
+      "subtitle": "Liturgy of the Hours",
+      "summary": "The opening hour of the Divine Office, offered through Spotify as an external prayer source.",
+      "title": "Invitatory",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/invitatory/"
+    },
+    {
+      "aliases": [
+        "Lauds"
+      ],
+      "archive_url": "",
+      "availability": "daily",
+      "contract_id": "morning-prayer-loh",
+      "external_url": "https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:morning-prayer-loh",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/morning-prayer-loh/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "morning-prayer-loh"
+      ],
+      "related_entry_ids": [
+        "morning-prayer-loh"
+      ],
+      "slug": "morning-prayer-loh",
+      "source": "spotify",
+      "source_label": "Divine Office",
+      "subtitle": "Lauds",
+      "summary": "Morning Prayer from the Liturgy of the Hours, linked to Spotify as an external source.",
+      "title": "Morning Prayer (Liturgy of the Hours)",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/morning-prayer-loh/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "",
+      "availability": "daily",
+      "contract_id": "midmorning-prayer",
+      "external_url": "https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:midmorning-prayer",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/midmorning-prayer/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "midmorning-prayer"
+      ],
+      "related_entry_ids": [
+        "midmorning-prayer"
+      ],
+      "slug": "midmorning-prayer",
+      "source": "spotify",
+      "source_label": "Divine Office",
+      "subtitle": "Liturgy of the Hours",
+      "summary": "The midmorning hour from the Liturgy of the Hours, linked to Spotify as an external source.",
+      "title": "Midmorning Prayer",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/midmorning-prayer/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "",
+      "availability": "daily",
+      "contract_id": "midday-prayer",
+      "external_url": "https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:midday-prayer",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/midday-prayer/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "midday-prayer"
+      ],
+      "related_entry_ids": [
+        "midday-prayer"
+      ],
+      "slug": "midday-prayer",
+      "source": "spotify",
+      "source_label": "Divine Office",
+      "subtitle": "Liturgy of the Hours",
+      "summary": "The midday hour from the Liturgy of the Hours, linked to Spotify as an external source.",
+      "title": "Midday Prayer",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/midday-prayer/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "",
+      "availability": "daily",
+      "contract_id": "midafternoon-prayer",
+      "external_url": "https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:midafternoon-prayer",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/midafternoon-prayer/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "midafternoon-prayer"
+      ],
+      "related_entry_ids": [
+        "midafternoon-prayer"
+      ],
+      "slug": "midafternoon-prayer",
+      "source": "spotify",
+      "source_label": "Divine Office",
+      "subtitle": "Liturgy of the Hours",
+      "summary": "The midafternoon hour from the Liturgy of the Hours, linked to Spotify as an external source.",
+      "title": "Midafternoon Prayer",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/midafternoon-prayer/"
+    },
+    {
+      "aliases": [
+        "Vespers"
+      ],
+      "archive_url": "",
+      "availability": "daily",
+      "contract_id": "evening-prayer-loh",
+      "external_url": "https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:evening-prayer-loh",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/evening-prayer-loh/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "evening-prayer-loh"
+      ],
+      "related_entry_ids": [
+        "evening-prayer-loh"
+      ],
+      "slug": "evening-prayer-loh",
+      "source": "spotify",
+      "source_label": "Divine Office",
+      "subtitle": "Vespers",
+      "summary": "Evening Prayer from the Liturgy of the Hours, linked to Spotify as an external source.",
+      "title": "Evening Prayer (Liturgy of the Hours)",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/evening-prayer-loh/"
+    },
+    {
+      "aliases": [
+        "Compline"
+      ],
+      "archive_url": "",
+      "availability": "daily",
+      "contract_id": "night-prayer-loh",
+      "external_url": "https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:night-prayer-loh",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/night-prayer-loh/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "night-prayer-loh"
+      ],
+      "related_entry_ids": [
+        "night-prayer-loh"
+      ],
+      "slug": "night-prayer-loh",
+      "source": "spotify",
+      "source_label": "Divine Office",
+      "subtitle": "Compline",
+      "summary": "Night Prayer from the Liturgy of the Hours, linked to Spotify as an external source.",
+      "title": "Night Prayer (Liturgy of the Hours)",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/night-prayer-loh/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "",
+      "availability": "daily",
+      "contract_id": "office-of-readings",
+      "external_url": "https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:office-of-readings",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/office-of-readings/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "office-of-readings"
+      ],
+      "related_entry_ids": [
+        "office-of-readings"
+      ],
+      "slug": "office-of-readings",
+      "source": "spotify",
+      "source_label": "Divine Office",
+      "subtitle": "Liturgy of the Hours",
+      "summary": "The Office of Readings, linked to Spotify as an external source.",
+      "title": "Office of Readings",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/office-of-readings/"
+    },
+    {
+      "aliases": [
+        "BIAY"
+      ],
+      "archive_url": "",
+      "availability": "daily",
+      "contract_id": "bible-in-a-year",
+      "external_url": "https://open.spotify.com/show/4Pppt42NPK2XzKwNIoW7BR",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:bible-in-a-year",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/bible-in-a-year/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "bible-in-a-year"
+      ],
+      "related_entry_ids": [
+        "bible-in-a-year"
+      ],
+      "slug": "bible-in-a-year",
+      "source": "spotify",
+      "source_label": "Ascension",
+      "subtitle": "Daily Scripture",
+      "summary": "The Bible in a Year podcast from Ascension, linked to Spotify as an external source.",
+      "title": "Bible in a Year",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/bible-in-a-year/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "",
+      "availability": "daily",
+      "contract_id": "daily-mass-readings",
+      "external_url": "https://open.spotify.com/show/3IANujvjklSBVf6ioZd03N",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:daily-mass-readings",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/daily-mass-readings/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "daily-mass-readings"
+      ],
+      "related_entry_ids": [
+        "daily-mass-readings"
+      ],
+      "slug": "daily-mass-readings",
+      "source": "spotify",
+      "source_label": "USCCB",
+      "subtitle": "USCCB readings",
+      "summary": "Daily Catholic Mass readings, linked to Spotify as an external source.",
+      "title": "Daily Mass Readings",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/daily-mass-readings/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "",
+      "availability": "daily",
+      "contract_id": "daily-gospel-exegesis",
+      "external_url": "https://open.spotify.com/show/753FVUsio4Y6GjFvbGpvF0",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:daily-gospel-exegesis",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/daily-gospel-exegesis/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "daily-gospel-exegesis"
+      ],
+      "related_entry_ids": [
+        "daily-gospel-exegesis"
+      ],
+      "slug": "daily-gospel-exegesis",
+      "source": "spotify",
+      "source_label": "St. Paul Center",
+      "subtitle": "Gospel reflection",
+      "summary": "Daily Gospel exegesis and reflection, linked to Spotify as an external source.",
+      "title": "Daily Gospel Exegesis",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/daily-gospel-exegesis/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "",
+      "availability": "daily",
+      "contract_id": "saint-of-the-day",
+      "external_url": "https://open.spotify.com/show/1skJeU3tBmO7ftJ2ugNyYd",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:saint-of-the-day",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/saint-of-the-day/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "saint-of-the-day"
+      ],
+      "related_entry_ids": [
+        "saint-of-the-day"
+      ],
+      "slug": "saint-of-the-day",
+      "source": "spotify",
+      "source_label": "Franciscan Media",
+      "subtitle": "Daily saint",
+      "summary": "A daily saint profile, linked to Spotify as an external source.",
+      "title": "Saint of the Day",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/saint-of-the-day/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "",
+      "availability": "daily",
+      "contract_id": "rosary",
+      "external_url": "https://open.spotify.com/show/0aWJbTYTENolXYpBDSgzcH",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:rosary",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/rosary-spotify/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "rosary"
+      ],
+      "related_entry_ids": [
+        "rosary"
+      ],
+      "slug": "rosary-spotify",
+      "source": "spotify",
+      "source_label": "Spotify",
+      "subtitle": "External Rosary",
+      "summary": "An external Rosary prayer source available on Spotify.",
+      "title": "Rosary on Spotify",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/rosary-spotify/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "",
+      "availability": "sunday",
+      "contract_id": "fr-mike-sunday-homily",
+      "external_url": "https://open.spotify.com/show/1CK5AHgLneCo2sE17UOfdV",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:fr-mike-sunday-homily",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/fr-mike-sunday-homily/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "fr-mike-sunday-homily"
+      ],
+      "related_entry_ids": [
+        "fr-mike-sunday-homily"
+      ],
+      "slug": "fr-mike-sunday-homily",
+      "source": "spotify",
+      "source_label": "Ascension",
+      "subtitle": "Sunday homily",
+      "summary": "Sunday homilies from Fr. Mike Schmitz, linked to Spotify as an external source.",
+      "title": "Fr. Mike Sunday Homily",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/fr-mike-sunday-homily/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "",
+      "availability": "sunday",
+      "contract_id": "barron-sunday-sermon",
+      "external_url": "https://open.spotify.com/show/5G6vtvZBIQMpQ8TLgXLBiK",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:barron-sunday-sermon",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/barron-sunday-sermon/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "barron-sunday-sermon"
+      ],
+      "related_entry_ids": [
+        "barron-sunday-sermon"
+      ],
+      "slug": "barron-sunday-sermon",
+      "source": "spotify",
+      "source_label": "Word on Fire",
+      "subtitle": "Sunday sermon",
+      "summary": "Sunday sermons from Bishop Robert Barron, linked to Spotify as an external source.",
+      "title": "Bishop Barron Sunday Sermon",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/barron-sunday-sermon/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "",
+      "availability": "weekday",
+      "contract_id": "friday-stations-of-the-cross",
+      "external_url": "https://open.spotify.com/episode/4rZ8YJKq1iuqiypu3Q5TRm",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:friday-stations-of-the-cross",
+      "latest_audio": null,
+      "notes": "Scheduled for Fridays.",
+      "path": "prayers/friday-stations-of-the-cross/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "friday-stations-of-the-cross"
+      ],
+      "related_entry_ids": [
+        "friday-stations-of-the-cross"
+      ],
+      "slug": "friday-stations-of-the-cross",
+      "source": "spotify",
+      "source_label": "Spotify",
+      "subtitle": "Friday devotion",
+      "summary": "A fixed Stations of the Cross devotion on Spotify.",
+      "title": "Stations of the Cross",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/friday-stations-of-the-cross/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "",
+      "availability": "seasonal",
+      "contract_id": "lenten-devotion",
+      "external_url": "https://open.spotify.com/episode/4rZ8YJKq1iuqiypu3Q5TRm",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:lenten-devotion",
+      "latest_audio": null,
+      "notes": "Scheduled for Fridays in Lent.",
+      "path": "prayers/lenten-devotion/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "lenten-devotion"
+      ],
+      "related_entry_ids": [
+        "lenten-devotion"
+      ],
+      "slug": "lenten-devotion",
+      "source": "spotify",
+      "source_label": "Spotify",
+      "subtitle": "Seasonal devotion",
+      "summary": "A fixed Lenten devotion on Spotify.",
+      "title": "Lenten Devotion",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/lenten-devotion/"
+    },
+    {
+      "aliases": [],
+      "archive_url": "",
+      "availability": "fixed",
+      "contract_id": "night-pre-compline",
+      "external_url": "https://open.spotify.com/episode/1I8pCawzp1Wd5pE0NcHmUj",
+      "feed_url": "",
+      "group": "external-spotify",
+      "group_label": "Spotify prayers",
+      "id": "spotify:night-pre-compline",
+      "latest_audio": null,
+      "notes": "",
+      "path": "prayers/night-before-compline/index.html",
+      "prayer_family": "",
+      "primary_action_label": "Open in Spotify",
+      "related_contracts": [
+        "night-pre-compline"
+      ],
+      "related_entry_ids": [
+        "night-pre-compline"
+      ],
+      "slug": "night-before-compline",
+      "source": "spotify",
+      "source_label": "Spotify",
+      "subtitle": "Night devotion",
+      "summary": "A fixed night prayer before Compline on Spotify.",
+      "title": "Night Before Compline",
+      "url": "https://jctebo.github.io/spotify_praylist/prayers/night-before-compline/"
+    }
+  ]
+}

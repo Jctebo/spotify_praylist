@@ -32,6 +32,18 @@
       "title_template": "Daily Rosary - {rosary_mystery_set_title} - {rosary_focus_title} - {date_display}",
       "description_template": "Daily Rosary for {date_display}. The {rosary_mystery_set_title} include short reflections focused on {rosary_focus_title}.",
       "episode_id_template": "daily-rosary-{date_iso}",
+      "website": {
+        "enabled": true,
+        "slug": "daily-rosary",
+        "title": "Daily Rosary",
+        "subtitle": "Mysteries and reflections",
+        "summary": "The daily Rosary with the traditional mysteries and short reflections grounded in the liturgical day.",
+        "group": "ora-pro-nobis",
+        "order": 40,
+        "source_label": "Ora Pro Nobis",
+        "availability": "daily",
+        "primary_action_label": "Pray today's Rosary"
+      },
       "rosary_reflections": {
         "calendar": "general_roman",
         "locale": "en",
