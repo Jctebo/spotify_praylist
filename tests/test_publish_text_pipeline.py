@@ -12,11 +12,13 @@ class FakeNotionClient:
             "Morning Prayer - April 6, 2026": "page-1",
             "Daily Rosary - Joyful Mysteries - Saint Example - April 6, 2026": "page-2",
             "Auxilium Christianorum - April 6, 2026": "page-3",
+            "Daily Reflection - Resurrection Hope - April 6, 2026": "page-4",
         }
         self.page_children = {}
         self.page_children["page-1"] = []
         self.page_children["page-2"] = []
         self.page_children["page-3"] = []
+        self.page_children["page-4"] = []
         self.updated = []
         self.queries = []
 
@@ -25,6 +27,8 @@ class FakeNotionClient:
         filter_body = body["filter"]
         title_filter = filter_body.get("title") or {}
         entry_id = title_filter.get("equals")
+        if str(entry_id).startswith("Daily Reflection - ") and str(entry_id).endswith(" - April 6, 2026"):
+            return {"results": [{"id": "page-4"}]}
         for page_title, page_id in self.pages.items():
             if page_title == entry_id:
                 return {"results": [{"id": page_id}]}
@@ -136,15 +140,16 @@ class TestPublishTextPipeline(unittest.TestCase):
         second = self.notion_mod.upsert_text_jobs_to_notion(jobs, client=client)
 
         self.assertEqual(first["created"], 0)
-        self.assertEqual(first["updated"], 3)
+        self.assertEqual(first["updated"], 4)
         self.assertEqual(second["created"], 0)
-        self.assertEqual(second["updated"], 3)
+        self.assertEqual(second["updated"], 4)
         self.assertEqual(
             set(client.pages.keys()),
             {
                 "Morning Prayer - April 6, 2026",
                 "Daily Rosary - Joyful Mysteries - Saint Example - April 6, 2026",
                 "Auxilium Christianorum - April 6, 2026",
+                "Daily Reflection - Resurrection Hope - April 6, 2026",
             },
         )
         self.assertEqual([_toggle_title(block) for block in client.page_children["page-1"]], [
@@ -185,6 +190,14 @@ class TestPublishTextPipeline(unittest.TestCase):
 
         result = self.runner_mod.run_text_pipeline()
 
-        self.assertEqual(result["jobs"], 3)
+        self.assertEqual(result["jobs"], 4)
         self.assertEqual(result["created"], 0)
-        self.assertEqual(result["updated"], 3)
+        self.assertEqual(result["updated"], 4)
+
+    def test_publish_text_workflow_is_not_active(self):
+        active_path = Path(".github/workflows/publish_text.yml")
+        archived_path = Path(".github/disabled_workflows/publish_text.yml")
+
+        self.assertFalse(active_path.exists())
+        self.assertTrue(archived_path.exists())
+        self.assertIn("name: Publish Prayer Text", archived_path.read_text(encoding="utf-8"))
