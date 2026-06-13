@@ -1,5 +1,21 @@
 # Release Log
 
+## [0.3.6.2] - 2026-06-13
+
+### Added
+- Added a contract-driven GitHub Pages prayer website with a responsive directory home, `docs/prayers/index.json`, and one static page per visible prayer.
+- Added validated website metadata to Spotify queue contracts and listener-facing metadata to Ora Pro Nobis publish contracts, Daily Novenas, and external Spotify prayer entries.
+- Added website generation tests for manifest/page output, Marian Antiphon family merging, latest-audio links, stale page cleanup, duplicate slug rejection, and workflow wiring.
+
+### Changed
+- Replaced the Pages root with the generated daily prayer directory while preserving the podcast feed and audio archive surfaces.
+- Updated both Pages deployment workflows to run the shared website generator before upload.
+- Renamed the legacy Morning Prayer page-audio manual workflow to `Website Publish Validation` and expanded it to cover website, Spotify contract, and publish contract tests.
+
+### Fixed
+- Ensured generated prayer pages are reset on each site build so renamed or disabled prayer slugs do not leave stale Pages output behind.
+- Raised generated button touch targets to 44px for better mobile usability.
+
 ## [0.3.6.1] - 2026-06-13
 
 ### Changed
