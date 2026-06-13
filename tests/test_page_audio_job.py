@@ -190,6 +190,13 @@ class TestPageAudioJob(unittest.TestCase):
         self.assertEqual(contract["tts"]["model"], "gpt-4o-mini-tts")
         self.assertTrue(contract["enabled"])
 
+    def test_remote_morning_prayer_workflow_uses_runtime_contract_loader(self):
+        workflow = Path(".github/workflows/morning_prayer_page_audio_remote.yml").read_text(encoding="utf-8")
+
+        self.assertIn("load_morning_prayer_contract_from_file", workflow)
+        self.assertNotIn('Path("config/custom_tts/morning-prayer.json").read_text', workflow)
+        self.assertNotIn("FileNotFoundError", workflow)
+
     def test_load_morning_prayer_contract_from_file_omits_random_intention_resolver(self):
         with temp_env({self.page_audio.MORNING_PRAYER_CONTRACT_FILE: ""}):
             contract = self.page_audio.load_morning_prayer_contract_from_file()
