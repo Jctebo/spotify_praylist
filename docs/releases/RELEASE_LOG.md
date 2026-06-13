@@ -1,5 +1,15 @@
 # Release Log
 
+## [0.3.6.3] - 2026-06-13
+
+### Changed
+- Updated the remote Morning Prayer page-audio workflow to resolve its OneDrive output folder through the page-audio runtime contract loader instead of reading the removed custom-TTS JSON file directly.
+- Clarified README page-audio docs so the Morning Prayer custom-TTS JSON is documented as an optional override with built-in defaults.
+
+### Fixed
+- Prevented the remote Morning Prayer page-audio workflow from failing during rclone validation with `FileNotFoundError` for `config/custom_tts/morning-prayer.json`.
+- Added regression coverage that keeps the workflow on the runtime contract-loader path.
+
 ## [0.3.6.2] - 2026-06-13
 
 ### Added

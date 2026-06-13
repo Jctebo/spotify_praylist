@@ -57,7 +57,22 @@ jobs:
         run: |
           set -euo pipefail
           REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
-          PUBLISH_INFO="$(python -c 'from pathlib import Path, PureWindowsPath; import json, sys; config = json.loads(Path("config/custom_tts/morning-prayer.json").read_text(encoding="utf-8")); path = PureWindowsPath(str(config["output_path"])); parts = list(path.parts); idx = next((i for i, part in enumerate(parts) if part.lower() == "onedrive"), -1); tail = parts[idx + 1:] if idx >= 0 else []; print("/".join(tail[:-1]) if len(tail) >= 2 else sys.exit("config/custom_tts/morning-prayer.json output_path must include OneDrive/<remote root>/<folder>"))')"
+          PUBLISH_INFO="$(python - <<'PY'
+          from pathlib import PureWindowsPath
+          import sys
+
+          from jobs.notion.generate_page_audio import load_morning_prayer_contract_from_file
+
+          contract = load_morning_prayer_contract_from_file()
+          path = PureWindowsPath(str(contract.get("output_path", "")))
+          parts = list(path.parts)
+          idx = next((i for i, part in enumerate(parts) if part.lower() == "onedrive"), -1)
+          tail = parts[idx + 1:] if idx >= 0 else []
+          if len(tail) < 2:
+              sys.exit("Morning Prayer output_path must include OneDrive/<remote root>/<folder>")
+          print("/".join(tail[:-1]))
+          PY
+          )"
           REMOTE_ROOT="${PUBLISH_INFO}"
           rclone lsd "${REMOTE_NAME}:" >/dev/null
           rclone lsd "${REMOTE_NAME}:${REMOTE_ROOT}" >/dev/null || true
@@ -80,7 +95,22 @@ jobs:
       - name: Sync page-audio library to OneDrive
         run: |
           set -euo pipefail
-          PUBLISH_INFO="$(python -c 'from pathlib import Path, PureWindowsPath; import json, sys; config = json.loads(Path("config/custom_tts/morning-prayer.json").read_text(encoding="utf-8")); path = PureWindowsPath(str(config["output_path"])); parts = list(path.parts); idx = next((i for i, part in enumerate(parts) if part.lower() == "onedrive"), -1); tail = parts[idx + 1:] if idx >= 0 else []; print("/".join(tail) if len(tail) >= 2 else sys.exit("config/custom_tts/morning-prayer.json output_path must include OneDrive/<remote root>/<folder>"))')"
+          PUBLISH_INFO="$(python - <<'PY'
+          from pathlib import PureWindowsPath
+          import sys
+
+          from jobs.notion.generate_page_audio import load_morning_prayer_contract_from_file
+
+          contract = load_morning_prayer_contract_from_file()
+          path = PureWindowsPath(str(contract.get("output_path", "")))
+          parts = list(path.parts)
+          idx = next((i for i, part in enumerate(parts) if part.lower() == "onedrive"), -1)
+          tail = parts[idx + 1:] if idx >= 0 else []
+          if len(tail) < 2:
+              sys.exit("Morning Prayer output_path must include OneDrive/<remote root>/<folder>")
+          print("/".join(tail))
+          PY
+          )"
           REMOTE_ROOT="${PUBLISH_INFO%/*}"
           PUBLISH_FOLDER="${PUBLISH_INFO##*/}"
           LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/$REMOTE_ROOT"

@@ -96,7 +96,7 @@ Optional variables:
 - `config/spotify/contracts/*.json`: one resolver-backed, fixed-URI, or `spotify_episode_lookup` queue contract per file; the three Marian Antiphon Spotify contracts resolve the daily Ora Pro Nobis episode through ordered lookup searches
 - `config/spotify/playlists/*.json`: thin playlist definitions with playlist identity only
 - `config/legacy/playlist_config.json`: legacy reference config kept off the active runtime path
-- `config/custom_tts/morning-prayer.json`: canonical Morning Prayer custom TTS contract for the active page-audio surface
+- `config/custom_tts/morning-prayer.json`: optional Morning Prayer custom TTS override; when absent, the page-audio runtime uses its built-in Morning Prayer contract defaults
 - `config/legacy/page_audio/*.json`, `config/legacy/rosary.json`, and `config/legacy/auxilium_daily_text.json`: discontinued top-level page-audio contracts retained only as archives; the active runtime no longer loads them
 - `jobs/publish/*.py`: new generic publish boundary for Notion text and GitHub Pages audio outputs
 - `jobs/publish/liturgical_announcement.py`: deterministic Romcal-backed liturgical/date announcement block used by Auxilium Christianorum without requiring OpenAI or Gospel text
@@ -483,7 +483,7 @@ Purpose:
 - can truncate managed playlist-audio outputs locally before regeneration so stale ordered filenames disappear on the next OneDrive sync
 
 Current config:
-- Morning Prayer now resolves from `config/custom_tts/morning-prayer.json`, with `MORNING_PRAYER_CONTRACT_FILE` kept as an override-only custom-TTS validation path.
+- Morning Prayer resolves from the built-in page-audio contract defaults unless `config/custom_tts/morning-prayer.json` or `MORNING_PRAYER_CONTRACT_FILE` points at a valid custom-TTS override.
 - `Morning Prayer` now runs from the two-list `Opus Dei` + owner-linked `Detailed Fragments` model
 - required Morning Prayer fragments are owner-linked `Audio Fragments` rows for the static prayers, `Monthly Intention`, and `Daily Novena Audio`
 - the live Morning Prayer contract currently uses these durable keys for the petition rows: `petition-church` for `Petition - Right Use of Technology`, `petition-sick-departed` for `Petition - Sanctification of the Church`, and `petition-7` for `Petition - Sick and Departed`
@@ -547,7 +547,7 @@ Environment variables:
 - `NOTION_AUDIO_FRAGMENTS_DATABASE_NAME` (fallback lookup; default `Audio Fragments`)
 - `NOTION_AUDIO_OUTPUTS_DATABASE_ID` (recommended for fragment-backed outputs)
 - `NOTION_AUDIO_OUTPUTS_DATABASE_NAME` (fallback lookup; default `Audio Outputs`)
-- `MORNING_PRAYER_CONTRACT_FILE` (default `config/custom_tts/morning-prayer.json`; custom-TTS-only override path for Morning Prayer)
+- `MORNING_PRAYER_CONTRACT_FILE` (optional custom-TTS-only override path for Morning Prayer; defaults to the built-in contract when no override file exists)
 - `PAGE_AUDIO_CONFIG_FILE` (custom-TTS-only contract config; when set to a specific `config/custom_tts/*.json`, the run executes only that selected contract)
 - `PAGE_AUDIO_CACHE_DIR` (default `.cache/page_audio`)
 - `PAGE_AUDIO_LIBRARY_DIR` (optional; default local root is `%USERPROFILE%\OneDrive\Praylist Audio\Playlist Audio`)
