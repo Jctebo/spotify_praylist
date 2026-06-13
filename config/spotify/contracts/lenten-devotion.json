@@ -4,5 +4,19 @@
   "spotify_uri": "spotify:episode:4rZ8YJKq1iuqiypu3Q5TRm",
   "weekdays": [
     "Friday"
-  ]
+  ],
+  "website": {
+    "enabled": true,
+    "slug": "lenten-devotion",
+    "title": "Lenten Devotion",
+    "subtitle": "Seasonal devotion",
+    "summary": "A fixed Lenten devotion on Spotify.",
+    "group": "external-spotify",
+    "order": 340,
+    "source_label": "Spotify",
+    "availability": "seasonal",
+    "external_url": "https://open.spotify.com/episode/4rZ8YJKq1iuqiypu3Q5TRm",
+    "primary_action_label": "Open in Spotify",
+    "notes": "Scheduled for Fridays in Lent."
+  }
 }

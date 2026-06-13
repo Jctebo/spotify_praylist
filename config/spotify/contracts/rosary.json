@@ -1,5 +1,18 @@
 {
   "key": "rosary",
   "notion_name": "Rosary",
-  "resolver": "ROSARY"
+  "resolver": "ROSARY",
+  "website": {
+    "enabled": true,
+    "slug": "rosary-spotify",
+    "title": "Rosary on Spotify",
+    "subtitle": "External Rosary",
+    "summary": "An external Rosary prayer source available on Spotify.",
+    "group": "external-spotify",
+    "order": 250,
+    "source_label": "Spotify",
+    "availability": "daily",
+    "external_url": "https://open.spotify.com/show/0aWJbTYTENolXYpBDSgzcH",
+    "primary_action_label": "Open in Spotify"
+  }
 }

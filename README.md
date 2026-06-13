@@ -78,10 +78,17 @@ Optional variables:
 
 ### RSS Pages
 - Site root landing page: `https://jctebo.github.io/spotify_praylist/`
+- Website generator: `python -m jobs.publish.site`
+- Directory home: `docs/index.html`
+- Prayer manifest: `docs/prayers/index.json`
+- Per-prayer pages: `docs/prayers/<slug>/index.html`
 - Feed file: `docs/podcast.xml`
 - Audio enclosures: `docs/audio/*.mp3`
 - Public feed URL on GitHub Pages: `https://jctebo.github.io/spotify_praylist/podcast.xml`
 - Public audio URL pattern on GitHub Pages: `https://jctebo.github.io/spotify_praylist/audio/<episode_id>.mp3`
+- The directory is contract-driven. Ora Pro Nobis generated prayers use `contract.metadata.website` in `config/publish/contracts/*.json`; Spotify-only prayers use top-level `website` metadata in `config/spotify/contracts/*.json`.
+- Enabled website metadata requires `slug`, `title`, `summary`, `group`, `source_label`, and `availability`; external Spotify entries also require `external_url` unless they use a direct `spotify_uri`.
+- `publish_audio.yml` and `daily_devotional_image_remote.yml` both run the site generator before Pages upload so the root directory, prayer pages, feed, and audio archive publish together.
 
 ## Files
 - `jobs/playlist/refresh_playlist.py`: active Spotify refresh runtime with Notion-owned membership/order
@@ -116,6 +123,7 @@ Queue contract files in `config/spotify/contracts/` own:
 - `notion_name`, the exact Notion row title used for membership matching
 - exactly one of `resolver` or `spotify_uri` for ordinary contracts
 - `spotify_episode_lookup` for date-scoped podcast episode matching by show id, required name terms, ordered date formats, and optional ordered search profiles
+- optional top-level `website` metadata for listener-facing prayer directory entries
 - resolver names are exact; the runtime does not rewrite legacy alias names before dispatch
 - the three Marian Antiphon contracts target the Ora Pro Nobis show and try `Marian Antiphon` first, then legacy `Angelus` and `Regina Caeli` title searches for transition coverage
 - optional `fallback_resolver`

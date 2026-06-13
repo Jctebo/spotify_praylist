@@ -1,5 +1,18 @@
 {
   "key": "midmorning-prayer",
   "notion_name": "Midmorning Prayer",
-  "resolver": "MIDMORNING"
+  "resolver": "MIDMORNING",
+  "website": {
+    "enabled": true,
+    "slug": "midmorning-prayer",
+    "title": "Midmorning Prayer",
+    "subtitle": "Liturgy of the Hours",
+    "summary": "The midmorning hour from the Liturgy of the Hours, linked to Spotify as an external source.",
+    "group": "external-spotify",
+    "order": 130,
+    "source_label": "Divine Office",
+    "availability": "daily",
+    "external_url": "https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM",
+    "primary_action_label": "Open in Spotify"
+  }
 }

@@ -12,5 +12,17 @@
       "{month_short} {day_ordinal}, {year}",
       "{month_short}. {day_ordinal}, {year}"
     ]
+  },
+  "website": {
+    "enabled": true,
+    "slug": "daily-novenas",
+    "title": "Daily Novenas",
+    "subtitle": "Liturgical calendar",
+    "summary": "Ora Pro Nobis novena prayers selected from the liturgical calendar and published as daily audio.",
+    "group": "ora-pro-nobis",
+    "order": 60,
+    "source_label": "Ora Pro Nobis",
+    "availability": "daily",
+    "primary_action_label": "Pray today's novena"
   }
 }

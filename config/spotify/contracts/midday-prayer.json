@@ -1,5 +1,18 @@
 {
   "key": "midday-prayer",
   "notion_name": "Midday Prayer",
-  "resolver": "MIDDAY"
+  "resolver": "MIDDAY",
+  "website": {
+    "enabled": true,
+    "slug": "midday-prayer",
+    "title": "Midday Prayer",
+    "subtitle": "Liturgy of the Hours",
+    "summary": "The midday hour from the Liturgy of the Hours, linked to Spotify as an external source.",
+    "group": "external-spotify",
+    "order": 140,
+    "source_label": "Divine Office",
+    "availability": "daily",
+    "external_url": "https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM",
+    "primary_action_label": "Open in Spotify"
+  }
 }

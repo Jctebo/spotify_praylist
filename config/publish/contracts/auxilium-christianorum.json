@@ -10,6 +10,18 @@
       "description_template": "Auxilium Christianorum lay-member daily prayers for {date_display}. The episode announces the liturgical day, then follows the daily prayer sequence from the official lay-member prayer PDF.",
       "episode_id_template": "auxilium-christianorum-{date_iso}",
       "source": "Auxilium Christianorum lay-member daily prayer PDF, copyright 2012 Auxilium Christianorum.",
+      "website": {
+        "enabled": true,
+        "slug": "auxilium-christianorum",
+        "title": "Auxilium Christianorum",
+        "subtitle": "Daily deliverance prayers",
+        "summary": "Lay-member daily prayers from Auxilium Christianorum with the liturgical day and weekday prayer.",
+        "group": "ora-pro-nobis",
+        "order": 20,
+        "source_label": "Ora Pro Nobis",
+        "availability": "daily",
+        "primary_action_label": "Pray today's episode"
+      },
       "liturgical_announcement": {
         "calendar": "general_roman",
         "locale": "en",

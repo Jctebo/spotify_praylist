@@ -1,5 +1,18 @@
 {
   "key": "daily-mass-readings",
   "notion_name": "USCCB Daily Readings",
-  "resolver": "USCCB"
+  "resolver": "USCCB",
+  "website": {
+    "enabled": true,
+    "slug": "daily-mass-readings",
+    "title": "Daily Mass Readings",
+    "subtitle": "USCCB readings",
+    "summary": "Daily Catholic Mass readings, linked to Spotify as an external source.",
+    "group": "external-spotify",
+    "order": 220,
+    "source_label": "USCCB",
+    "availability": "daily",
+    "external_url": "https://open.spotify.com/show/3IANujvjklSBVf6ioZd03N",
+    "primary_action_label": "Open in Spotify"
+  }
 }

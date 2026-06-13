@@ -75,6 +75,9 @@ jobs:
       - name: Publish novena audio and RSS feed
         run: python -m jobs.novena_contracts.pipeline
 
+      - name: Build prayer website
+        run: python -m jobs.publish.site
+
       - name: Save publish audio cache
         if: success()
         uses: actions/cache/save@v4

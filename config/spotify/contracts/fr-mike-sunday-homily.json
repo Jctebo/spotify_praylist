@@ -1,5 +1,18 @@
 {
   "key": "fr-mike-sunday-homily",
   "notion_name": "Fr. Mike Sunday Homily",
-  "resolver": "SUNDAY_FRMIKE"
+  "resolver": "SUNDAY_FRMIKE",
+  "website": {
+    "enabled": true,
+    "slug": "fr-mike-sunday-homily",
+    "title": "Fr. Mike Sunday Homily",
+    "subtitle": "Sunday homily",
+    "summary": "Sunday homilies from Fr. Mike Schmitz, linked to Spotify as an external source.",
+    "group": "external-spotify",
+    "order": 310,
+    "source_label": "Ascension",
+    "availability": "sunday",
+    "external_url": "https://open.spotify.com/show/1CK5AHgLneCo2sE17UOfdV",
+    "primary_action_label": "Open in Spotify"
+  }
 }

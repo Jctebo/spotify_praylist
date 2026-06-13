@@ -1,5 +1,18 @@
 {
   "key": "daily-gospel-exegesis",
   "notion_name": "Daily Gospel Exegesis",
-  "resolver": "DGE"
+  "resolver": "DGE",
+  "website": {
+    "enabled": true,
+    "slug": "daily-gospel-exegesis",
+    "title": "Daily Gospel Exegesis",
+    "subtitle": "Gospel reflection",
+    "summary": "Daily Gospel exegesis and reflection, linked to Spotify as an external source.",
+    "group": "external-spotify",
+    "order": 230,
+    "source_label": "St. Paul Center",
+    "availability": "daily",
+    "external_url": "https://open.spotify.com/show/753FVUsio4Y6GjFvbGpvF0",
+    "primary_action_label": "Open in Spotify"
+  }
 }
