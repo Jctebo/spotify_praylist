@@ -549,6 +549,35 @@ class TestSpotifyContracts(unittest.TestCase):
         self.assertEqual(definitions[0].playlist_id, "morning123")
         self.assertEqual(definitions[0].contracts, ())
 
+    def test_load_spotify_playlist_definitions_rejects_unknown_contract_keys(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            playlist_dir = root / "playlists"
+            contract_dir = root / "contracts"
+            playlist_dir.mkdir()
+            contract_dir.mkdir()
+            _write_json(
+                contract_dir / "known.json",
+                {
+                    "key": "known",
+                    "notion_name": "Known",
+                    "resolver": "KNOWN",
+                },
+            )
+            _write_json(
+                playlist_dir / "morning.json",
+                {
+                    "key": "morning",
+                    "name": "Morning",
+                    "playlist_id": "morning123",
+                    "contracts": ["known", "missing"],
+                },
+            )
+
+            contracts = self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
+            with self.assertRaisesRegex(RuntimeError, "unknown contract key"):
+                self.mod.load_spotify_playlist_definitions(playlist_dir=playlist_dir, contracts=contracts)
+
     def test_load_spotify_playlist_definitions_rejects_bad_playlist_ids(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

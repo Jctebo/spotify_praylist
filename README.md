@@ -86,7 +86,11 @@ Optional variables:
 - Audio enclosures: `docs/audio/*.mp3`
 - Public feed URL on GitHub Pages: `https://jctebo.github.io/spotify_praylist/podcast.xml`
 - Public audio URL pattern on GitHub Pages: `https://jctebo.github.io/spotify_praylist/audio/<episode_id>.mp3`
-- The directory is contract-driven. Ora Pro Nobis generated prayers use `contract.metadata.website` in `config/publish/contracts/*.json`; Spotify-only prayers use top-level `website` metadata in `config/spotify/contracts/*.json`.
+- The directory home is organized by active praylists: `Morning Praylist`, `Daily Praylist`, and `Night Praylist`.
+- Home-page prayer cards have one action, `Open prayer`; playback, Spotify links, feed links, and readable prayer text live on the generated prayer page.
+- The directory is contract-driven and active-playlist filtered. `config/spotify/playlists/*.json` `contracts` arrays decide which contract-backed pages are generated for the Praylist surface.
+- Ora Pro Nobis generated prayers use `contract.metadata.website` in `config/publish/contracts/*.json`; Spotify-only prayers use top-level `website` metadata in `config/spotify/contracts/*.json`.
+- Published audio JSON sidecars under `docs/audio/` provide latest episode metadata, readable prayer text from ordered fragments, and individual Daily Novena episode listings when present.
 - Enabled website metadata requires `slug`, `title`, `summary`, `group`, `source_label`, and `availability`; external Spotify entries also require `external_url` unless they use a direct `spotify_uri`.
 - `publish_audio.yml` and `daily_devotional_image_remote.yml` both run the site generator before Pages upload so the root directory, prayer pages, feed, and audio archive publish together.
 
@@ -94,7 +98,7 @@ Optional variables:
 - `jobs/playlist/refresh_playlist.py`: active Spotify refresh runtime with Notion-owned membership/order
 - `jobs/playlist/spotify_contracts.py`: loader and validation for `config/spotify/contracts/*.json` and `config/spotify/playlists/*.json`
 - `config/spotify/contracts/*.json`: one resolver-backed, fixed-URI, or `spotify_episode_lookup` queue contract per file; the three Marian Antiphon Spotify contracts resolve the daily Ora Pro Nobis episode through ordered lookup searches
-- `config/spotify/playlists/*.json`: thin playlist definitions with playlist identity only
+- `config/spotify/playlists/*.json`: playlist definitions with playlist identity plus checked-in active contract arrays used by the static Praylist website
 - `config/legacy/playlist_config.json`: legacy reference config kept off the active runtime path
 - `config/custom_tts/morning-prayer.json`: optional Morning Prayer custom TTS override; when absent, the page-audio runtime uses its built-in Morning Prayer contract defaults
 - `config/legacy/page_audio/*.json`, `config/legacy/rosary.json`, and `config/legacy/auxilium_daily_text.json`: discontinued top-level page-audio contracts retained only as archives; the active runtime no longer loads them
@@ -148,6 +152,7 @@ Playlist definition files in `config/spotify/playlists/` own:
 - `key`
 - `name`
 - `playlist_id`
+- optional `contracts`, the ordered active Spotify contract keys used by the static Praylist website
 
 Playlist membership and sequence come from checked Notion rows:
 - Notion `Enabled` must be checked.

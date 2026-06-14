@@ -1,5 +1,9 @@
 {
   "key": "sunday",
   "name": "Sunday",
-  "playlist_id": "6J7xLMNK5tPqXY9HbgvZoM"
+  "playlist_id": "6J7xLMNK5tPqXY9HbgvZoM",
+  "contracts": [
+    "fr-mike-sunday-homily",
+    "barron-sunday-sermon"
+  ]
 }

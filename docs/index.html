@@ -80,6 +80,15 @@
     .detail { max-width: 760px; padding: 24px 0 48px; }
     .detail-panel { margin-top: 20px; padding: 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
     .links { display: grid; gap: 10px; margin-top: 18px; }
+    .player { display: grid; gap: 10px; margin-top: 14px; }
+    audio { width: 100%; }
+    .prayer-text { margin-top: 24px; display: grid; gap: 14px; }
+    .prayer-section { padding-top: 14px; border-top: 1px solid var(--line); }
+    .prayer-section h2 { font-size: 1rem; margin: 0 0 6px; }
+    .prayer-section p { margin: 0 0 10px; }
+    .novena-list { margin-top: 24px; display: grid; gap: 14px; }
+    .episode { padding: 16px; border: 1px solid var(--line); border-radius: 8px; background: #fbf8f1; }
+    .episode h2 { font-size: 1rem; margin: 0 0 6px; }
     footer { padding: 20px 0 32px; color: var(--muted); border-top: 1px solid var(--line); }
     @media (max-width: 640px) {
       .wrap { width: min(100% - 22px, 1120px); }
@@ -88,15 +97,16 @@
       .card { min-height: 0; }
       .button { width: 100%; }
     }
-    </style>
+</style>
 </head>
 <body>
   <header>
     <div class="wrap topline">
       <div class="brand">Ora Pro Nobis</div>
       <nav aria-label="Prayer groups">
-        <a href="#ora-pro-nobis">Ora Pro Nobis</a>
-        <a href="#external-spotify">Spotify prayers</a>
+        <a href="#morning-praylist">Morning Praylist</a>
+        <a href="#daily-praylist">Daily Praylist</a>
+        <a href="#night-praylist">Night Praylist</a>
         <a href="audio/">Audio archive</a>
         <a href="podcast.xml">Podcast feed</a>
       </nav>
@@ -104,50 +114,18 @@
   </header>
   <div class="hero">
     <div class="wrap">
-      <h1>Daily prayer directory</h1>
-      <p class="lede">Find Ora Pro Nobis generated prayers, daily novenas, and curated external Spotify prayer links from one responsive directory.</p>
+      <h1>Daily Praylists</h1>
+      <p class="lede">Open active Morning, Daily, and Night Praylist prayers from one responsive directory.</p>
     </div>
   </div>
   <main class="wrap">
 
-            <section id="ora-pro-nobis">
+            <section id="morning-praylist">
               <div class="section-head">
-                <h2>Ora Pro Nobis</h2>
-                <span class="count">6 prayers</span>
+                <h2>Morning Praylist</h2>
+                <span class="count">7 prayers</span>
               </div>
               <div class="grid">
-      <article class="card">
-        <div class="meta">
-          <span class="pill">Ora Pro Nobis</span>
-          <span class="pill">Daily</span>
-
-        </div>
-        <h3>Morning Prayer</h3>
-        <p class="subtitle">Daily offering</p>
-        <p class="summary">A structured Catholic morning prayer with a liturgical opening, offering, consecration, and intercessions.</p>
-        <div class="actions">
-          <a class="button" href="prayers/morning-prayer/">Open prayer</a>
-          <a class="button secondary" href="https://jctebo.github.io/spotify_praylist/podcast.xml">Pray morning prayer</a>
-        </div>
-      </article>
-
-
-      <article class="card">
-        <div class="meta">
-          <span class="pill">Ora Pro Nobis</span>
-          <span class="pill">Daily</span>
-
-        </div>
-        <h3>Auxilium Christianorum</h3>
-        <p class="subtitle">Daily deliverance prayers</p>
-        <p class="summary">Lay-member daily prayers from Auxilium Christianorum with the liturgical day and weekday prayer.</p>
-        <div class="actions">
-          <a class="button" href="prayers/auxilium-christianorum/">Open prayer</a>
-          <a class="button secondary" href="https://jctebo.github.io/spotify_praylist/podcast.xml">Pray today&#x27;s episode</a>
-        </div>
-      </article>
-
-
       <article class="card">
         <div class="meta">
           <span class="pill">Ora Pro Nobis</span>
@@ -159,66 +137,10 @@
         <p class="summary">The Church&#x27;s daily Marian prayer, prayed as the Angelus outside Easter and Regina Caeli during Easter.</p>
         <div class="actions">
           <a class="button" href="prayers/marian-antiphon/">Open prayer</a>
-          <a class="button secondary" href="https://jctebo.github.io/spotify_praylist/podcast.xml">Pray today&#x27;s antiphon</a>
         </div>
       </article>
 
 
-      <article class="card">
-        <div class="meta">
-          <span class="pill">Ora Pro Nobis</span>
-          <span class="pill">Daily</span>
-
-        </div>
-        <h3>Daily Rosary</h3>
-        <p class="subtitle">Mysteries and reflections</p>
-        <p class="summary">The daily Rosary with the traditional mysteries and short reflections grounded in the liturgical day.</p>
-        <div class="actions">
-          <a class="button" href="prayers/daily-rosary/">Open prayer</a>
-          <a class="button secondary" href="https://jctebo.github.io/spotify_praylist/podcast.xml">Pray today&#x27;s Rosary</a>
-        </div>
-      </article>
-
-
-      <article class="card">
-        <div class="meta">
-          <span class="pill">Ora Pro Nobis</span>
-          <span class="pill">Daily</span>
-
-        </div>
-        <h3>Daily Reflection</h3>
-        <p class="subtitle">Ignatian examen</p>
-        <p class="summary">A daily Ignatian-style reflection and guided examen shaped by the day&#x27;s liturgical context.</p>
-        <div class="actions">
-          <a class="button" href="prayers/daily-reflection/">Open prayer</a>
-          <a class="button secondary" href="https://jctebo.github.io/spotify_praylist/podcast.xml">Pray today&#x27;s reflection</a>
-        </div>
-      </article>
-
-
-      <article class="card">
-        <div class="meta">
-          <span class="pill">Ora Pro Nobis</span>
-          <span class="pill">Daily</span>
-
-        </div>
-        <h3>Daily Novenas</h3>
-        <p class="subtitle">Liturgical calendar</p>
-        <p class="summary">Ora Pro Nobis novena prayers selected from the liturgical calendar and published as daily audio.</p>
-        <div class="actions">
-          <a class="button" href="prayers/daily-novenas/">Open prayer</a>
-          <a class="button secondary" href="https://jctebo.github.io/spotify_praylist/podcast.xml">Pray today&#x27;s novena</a>
-        </div>
-      </article>
-    </div>
-            </section>
-
-            <section id="external-spotify">
-              <div class="section-head">
-                <h2>Spotify prayers</h2>
-                <span class="count">18 prayers</span>
-              </div>
-              <div class="grid">
       <article class="card">
         <div class="meta">
           <span class="pill">Divine Office</span>
@@ -230,7 +152,21 @@
         <p class="summary">The opening hour of the Divine Office, offered through Spotify as an external prayer source.</p>
         <div class="actions">
           <a class="button" href="prayers/invitatory/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM">Open in Spotify</a>
+        </div>
+      </article>
+
+
+      <article class="card">
+        <div class="meta">
+          <span class="pill">Ora Pro Nobis</span>
+          <span class="pill">Daily</span>
+
+        </div>
+        <h3>Morning Prayer</h3>
+        <p class="subtitle">Daily offering</p>
+        <p class="summary">A structured Catholic morning prayer with a liturgical opening, offering, consecration, and intercessions.</p>
+        <div class="actions">
+          <a class="button" href="prayers/morning-prayer/">Open prayer</a>
         </div>
       </article>
 
@@ -246,103 +182,6 @@
         <p class="summary">Morning Prayer from the Liturgy of the Hours, linked to Spotify as an external source.</p>
         <div class="actions">
           <a class="button" href="prayers/morning-prayer-loh/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM">Open in Spotify</a>
-        </div>
-      </article>
-
-
-      <article class="card">
-        <div class="meta">
-          <span class="pill">Divine Office</span>
-          <span class="pill">Daily</span>
-
-        </div>
-        <h3>Midmorning Prayer</h3>
-        <p class="subtitle">Liturgy of the Hours</p>
-        <p class="summary">The midmorning hour from the Liturgy of the Hours, linked to Spotify as an external source.</p>
-        <div class="actions">
-          <a class="button" href="prayers/midmorning-prayer/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM">Open in Spotify</a>
-        </div>
-      </article>
-
-
-      <article class="card">
-        <div class="meta">
-          <span class="pill">Divine Office</span>
-          <span class="pill">Daily</span>
-
-        </div>
-        <h3>Midday Prayer</h3>
-        <p class="subtitle">Liturgy of the Hours</p>
-        <p class="summary">The midday hour from the Liturgy of the Hours, linked to Spotify as an external source.</p>
-        <div class="actions">
-          <a class="button" href="prayers/midday-prayer/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM">Open in Spotify</a>
-        </div>
-      </article>
-
-
-      <article class="card">
-        <div class="meta">
-          <span class="pill">Divine Office</span>
-          <span class="pill">Daily</span>
-
-        </div>
-        <h3>Midafternoon Prayer</h3>
-        <p class="subtitle">Liturgy of the Hours</p>
-        <p class="summary">The midafternoon hour from the Liturgy of the Hours, linked to Spotify as an external source.</p>
-        <div class="actions">
-          <a class="button" href="prayers/midafternoon-prayer/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM">Open in Spotify</a>
-        </div>
-      </article>
-
-
-      <article class="card">
-        <div class="meta">
-          <span class="pill">Divine Office</span>
-          <span class="pill">Daily</span>
-
-        </div>
-        <h3>Evening Prayer (Liturgy of the Hours)</h3>
-        <p class="subtitle">Vespers</p>
-        <p class="summary">Evening Prayer from the Liturgy of the Hours, linked to Spotify as an external source.</p>
-        <div class="actions">
-          <a class="button" href="prayers/evening-prayer-loh/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM">Open in Spotify</a>
-        </div>
-      </article>
-
-
-      <article class="card">
-        <div class="meta">
-          <span class="pill">Divine Office</span>
-          <span class="pill">Daily</span>
-
-        </div>
-        <h3>Night Prayer (Liturgy of the Hours)</h3>
-        <p class="subtitle">Compline</p>
-        <p class="summary">Night Prayer from the Liturgy of the Hours, linked to Spotify as an external source.</p>
-        <div class="actions">
-          <a class="button" href="prayers/night-prayer-loh/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM">Open in Spotify</a>
-        </div>
-      </article>
-
-
-      <article class="card">
-        <div class="meta">
-          <span class="pill">Divine Office</span>
-          <span class="pill">Daily</span>
-
-        </div>
-        <h3>Office of Readings</h3>
-        <p class="subtitle">Liturgy of the Hours</p>
-        <p class="summary">The Office of Readings, linked to Spotify as an external source.</p>
-        <div class="actions">
-          <a class="button" href="prayers/office-of-readings/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM">Open in Spotify</a>
         </div>
       </article>
 
@@ -358,7 +197,6 @@
         <p class="summary">The Bible in a Year podcast from Ascension, linked to Spotify as an external source.</p>
         <div class="actions">
           <a class="button" href="prayers/bible-in-a-year/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/4Pppt42NPK2XzKwNIoW7BR">Open in Spotify</a>
         </div>
       </article>
 
@@ -374,23 +212,6 @@
         <p class="summary">Daily Catholic Mass readings, linked to Spotify as an external source.</p>
         <div class="actions">
           <a class="button" href="prayers/daily-mass-readings/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/3IANujvjklSBVf6ioZd03N">Open in Spotify</a>
-        </div>
-      </article>
-
-
-      <article class="card">
-        <div class="meta">
-          <span class="pill">St. Paul Center</span>
-          <span class="pill">Daily</span>
-
-        </div>
-        <h3>Daily Gospel Exegesis</h3>
-        <p class="subtitle">Gospel reflection</p>
-        <p class="summary">Daily Gospel exegesis and reflection, linked to Spotify as an external source.</p>
-        <div class="actions">
-          <a class="button" href="prayers/daily-gospel-exegesis/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/753FVUsio4Y6GjFvbGpvF0">Open in Spotify</a>
         </div>
       </article>
 
@@ -406,7 +227,118 @@
         <p class="summary">A daily saint profile, linked to Spotify as an external source.</p>
         <div class="actions">
           <a class="button" href="prayers/saint-of-the-day/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/1skJeU3tBmO7ftJ2ugNyYd">Open in Spotify</a>
+        </div>
+      </article>
+    </div>
+            </section>
+
+            <section id="daily-praylist">
+              <div class="section-head">
+                <h2>Daily Praylist</h2>
+                <span class="count">14 prayers</span>
+              </div>
+              <div class="grid">
+      <article class="card">
+        <div class="meta">
+          <span class="pill">Divine Office</span>
+          <span class="pill">Daily</span>
+
+        </div>
+        <h3>Midmorning Prayer</h3>
+        <p class="subtitle">Liturgy of the Hours</p>
+        <p class="summary">The midmorning hour from the Liturgy of the Hours, linked to Spotify as an external source.</p>
+        <div class="actions">
+          <a class="button" href="prayers/midmorning-prayer/">Open prayer</a>
+        </div>
+      </article>
+
+
+      <article class="card">
+        <div class="meta">
+          <span class="pill">Divine Office</span>
+          <span class="pill">Daily</span>
+
+        </div>
+        <h3>Midday Prayer</h3>
+        <p class="subtitle">Liturgy of the Hours</p>
+        <p class="summary">The midday hour from the Liturgy of the Hours, linked to Spotify as an external source.</p>
+        <div class="actions">
+          <a class="button" href="prayers/midday-prayer/">Open prayer</a>
+        </div>
+      </article>
+
+
+      <article class="card">
+        <div class="meta">
+          <span class="pill">Divine Office</span>
+          <span class="pill">Daily</span>
+
+        </div>
+        <h3>Midafternoon Prayer</h3>
+        <p class="subtitle">Liturgy of the Hours</p>
+        <p class="summary">The midafternoon hour from the Liturgy of the Hours, linked to Spotify as an external source.</p>
+        <div class="actions">
+          <a class="button" href="prayers/midafternoon-prayer/">Open prayer</a>
+        </div>
+      </article>
+
+
+      <article class="card">
+        <div class="meta">
+          <span class="pill">Ora Pro Nobis</span>
+          <span class="pill">Seasonal</span>
+
+        </div>
+        <h3>Marian Antiphon</h3>
+        <p class="subtitle">Angelus and Regina Caeli</p>
+        <p class="summary">The Church&#x27;s daily Marian prayer, prayed as the Angelus outside Easter and Regina Caeli during Easter.</p>
+        <div class="actions">
+          <a class="button" href="prayers/marian-antiphon/">Open prayer</a>
+        </div>
+      </article>
+
+
+      <article class="card">
+        <div class="meta">
+          <span class="pill">Ora Pro Nobis</span>
+          <span class="pill">Daily</span>
+
+        </div>
+        <h3>Auxilium Christianorum</h3>
+        <p class="subtitle">Daily deliverance prayers</p>
+        <p class="summary">Lay-member daily prayers from Auxilium Christianorum with the liturgical day and weekday prayer.</p>
+        <div class="actions">
+          <a class="button" href="prayers/auxilium-christianorum/">Open prayer</a>
+        </div>
+      </article>
+
+
+      <article class="card">
+        <div class="meta">
+          <span class="pill">Ora Pro Nobis</span>
+          <span class="pill">Daily</span>
+
+        </div>
+        <h3>Daily Novenas</h3>
+        <p class="subtitle">Liturgical calendar</p>
+        <p class="summary">Ora Pro Nobis novena prayers selected from the liturgical calendar and published as daily audio.</p>
+        <div class="actions">
+          <a class="button" href="prayers/daily-novenas/">Open prayer</a>
+        </div>
+      </article>
+
+
+      <article class="card">
+        <div class="meta">
+          <span class="pill">Ora Pro Nobis</span>
+          <span class="pill">Daily</span>
+
+        </div>
+        <h3>Daily Rosary</h3>
+        <p class="subtitle">Mysteries and reflections</p>
+        <p class="summary">The daily Rosary with the traditional mysteries and short reflections grounded in the liturgical day.</p>
+        <div class="actions">
+          <a class="button" href="prayers/daily-rosary/">Open prayer</a>
         </div>
       </article>
 
@@ -422,39 +354,36 @@
         <p class="summary">An external Rosary prayer source available on Spotify.</p>
         <div class="actions">
           <a class="button" href="prayers/rosary-spotify/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/0aWJbTYTENolXYpBDSgzcH">Open in Spotify</a>
         </div>
       </article>
 
 
       <article class="card">
         <div class="meta">
-          <span class="pill">Ascension</span>
-          <span class="pill">Sunday</span>
+          <span class="pill">Ora Pro Nobis</span>
+          <span class="pill">Daily</span>
 
         </div>
-        <h3>Fr. Mike Sunday Homily</h3>
-        <p class="subtitle">Sunday homily</p>
-        <p class="summary">Sunday homilies from Fr. Mike Schmitz, linked to Spotify as an external source.</p>
+        <h3>Daily Reflection</h3>
+        <p class="subtitle">Ignatian examen</p>
+        <p class="summary">A daily Ignatian-style reflection and guided examen shaped by the day&#x27;s liturgical context.</p>
         <div class="actions">
-          <a class="button" href="prayers/fr-mike-sunday-homily/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/1CK5AHgLneCo2sE17UOfdV">Open in Spotify</a>
+          <a class="button" href="prayers/daily-reflection/">Open prayer</a>
         </div>
       </article>
 
 
       <article class="card">
         <div class="meta">
-          <span class="pill">Word on Fire</span>
-          <span class="pill">Sunday</span>
+          <span class="pill">St. Paul Center</span>
+          <span class="pill">Daily</span>
 
         </div>
-        <h3>Bishop Barron Sunday Sermon</h3>
-        <p class="subtitle">Sunday sermon</p>
-        <p class="summary">Sunday sermons from Bishop Robert Barron, linked to Spotify as an external source.</p>
+        <h3>Daily Gospel Exegesis</h3>
+        <p class="subtitle">Gospel reflection</p>
+        <p class="summary">Daily Gospel exegesis and reflection, linked to Spotify as an external source.</p>
         <div class="actions">
-          <a class="button" href="prayers/barron-sunday-sermon/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/show/5G6vtvZBIQMpQ8TLgXLBiK">Open in Spotify</a>
+          <a class="button" href="prayers/daily-gospel-exegesis/">Open prayer</a>
         </div>
       </article>
 
@@ -470,7 +399,6 @@
         <p class="summary">A fixed Stations of the Cross devotion on Spotify.</p>
         <div class="actions">
           <a class="button" href="prayers/friday-stations-of-the-cross/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/episode/4rZ8YJKq1iuqiypu3Q5TRm">Open in Spotify</a>
         </div>
       </article>
 
@@ -486,7 +414,73 @@
         <p class="summary">A fixed Lenten devotion on Spotify.</p>
         <div class="actions">
           <a class="button" href="prayers/lenten-devotion/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/episode/4rZ8YJKq1iuqiypu3Q5TRm">Open in Spotify</a>
+        </div>
+      </article>
+
+
+      <article class="card">
+        <div class="meta">
+          <span class="pill">Ascension</span>
+          <span class="pill">Sunday</span>
+
+        </div>
+        <h3>Fr. Mike Sunday Homily</h3>
+        <p class="subtitle">Sunday homily</p>
+        <p class="summary">Sunday homilies from Fr. Mike Schmitz, linked to Spotify as an external source.</p>
+        <div class="actions">
+          <a class="button" href="prayers/fr-mike-sunday-homily/">Open prayer</a>
+        </div>
+      </article>
+
+
+      <article class="card">
+        <div class="meta">
+          <span class="pill">Word on Fire</span>
+          <span class="pill">Sunday</span>
+
+        </div>
+        <h3>Bishop Barron Sunday Sermon</h3>
+        <p class="subtitle">Sunday sermon</p>
+        <p class="summary">Sunday sermons from Bishop Robert Barron, linked to Spotify as an external source.</p>
+        <div class="actions">
+          <a class="button" href="prayers/barron-sunday-sermon/">Open prayer</a>
+        </div>
+      </article>
+    </div>
+            </section>
+
+            <section id="night-praylist">
+              <div class="section-head">
+                <h2>Night Praylist</h2>
+                <span class="count">5 prayers</span>
+              </div>
+              <div class="grid">
+      <article class="card">
+        <div class="meta">
+          <span class="pill">Ora Pro Nobis</span>
+          <span class="pill">Seasonal</span>
+
+        </div>
+        <h3>Marian Antiphon</h3>
+        <p class="subtitle">Angelus and Regina Caeli</p>
+        <p class="summary">The Church&#x27;s daily Marian prayer, prayed as the Angelus outside Easter and Regina Caeli during Easter.</p>
+        <div class="actions">
+          <a class="button" href="prayers/marian-antiphon/">Open prayer</a>
+        </div>
+      </article>
+
+
+      <article class="card">
+        <div class="meta">
+          <span class="pill">Divine Office</span>
+          <span class="pill">Daily</span>
+
+        </div>
+        <h3>Evening Prayer (Liturgy of the Hours)</h3>
+        <p class="subtitle">Vespers</p>
+        <p class="summary">Evening Prayer from the Liturgy of the Hours, linked to Spotify as an external source.</p>
+        <div class="actions">
+          <a class="button" href="prayers/evening-prayer-loh/">Open prayer</a>
         </div>
       </article>
 
@@ -502,7 +496,36 @@
         <p class="summary">A fixed night prayer before Compline on Spotify.</p>
         <div class="actions">
           <a class="button" href="prayers/night-before-compline/">Open prayer</a>
-          <a class="button secondary" href="https://open.spotify.com/episode/1I8pCawzp1Wd5pE0NcHmUj">Open in Spotify</a>
+        </div>
+      </article>
+
+
+      <article class="card">
+        <div class="meta">
+          <span class="pill">Divine Office</span>
+          <span class="pill">Daily</span>
+
+        </div>
+        <h3>Night Prayer (Liturgy of the Hours)</h3>
+        <p class="subtitle">Compline</p>
+        <p class="summary">Night Prayer from the Liturgy of the Hours, linked to Spotify as an external source.</p>
+        <div class="actions">
+          <a class="button" href="prayers/night-prayer-loh/">Open prayer</a>
+        </div>
+      </article>
+
+
+      <article class="card">
+        <div class="meta">
+          <span class="pill">Divine Office</span>
+          <span class="pill">Daily</span>
+
+        </div>
+        <h3>Office of Readings</h3>
+        <p class="subtitle">Liturgy of the Hours</p>
+        <p class="summary">The Office of Readings, linked to Spotify as an external source.</p>
+        <div class="actions">
+          <a class="button" href="prayers/office-of-readings/">Open prayer</a>
         </div>
       </article>
     </div>
@@ -510,7 +533,7 @@
 
   </main>
   <footer>
-    <div class="wrap">Generated 2026-06-13T22:45:58Z. External Spotify prayers open on Spotify.</div>
+    <div class="wrap">Generated 2026-06-14T00:42:30Z.</div>
   </footer>
 </body>
 </html>
