@@ -247,18 +247,23 @@ class TestPublishSite(unittest.TestCase):
             self.site.write_prayer_site(
                 docs_root=docs_root,
                 base_url="https://example.test/site",
+                audio_base_url="https://audio.example.test",
                 publish_contract_dir=publish_dir,
                 spotify_contract_dir=spotify_dir,
                 spotify_playlist_dir=playlist_dir,
             )
 
             page = (docs_root / "prayers" / "morning-prayer" / "index.html").read_text(encoding="utf-8")
+            manifest = json.loads((docs_root / "prayers" / "index.json").read_text(encoding="utf-8"))
             self.assertIn("<audio controls", page)
             self.assertIn("Prayer text", page)
             self.assertIn("Lord, open my lips.", page)
             self.assertIn("x2", page)
             self.assertIn("Keep &lt;us&gt; close.", page)
-            self.assertIn("https://example.test/site/audio/morning-prayer-2026-06-13.mp3", page)
+            self.assertIn("https://audio.example.test/morning-prayer-2026-06-13.mp3", page)
+            self.assertIn("https://audio.example.test/", page)
+            self.assertEqual(manifest["base_url"], "https://example.test/site")
+            self.assertEqual(manifest["audio_archive_url"], "https://audio.example.test/")
 
     def test_write_prayer_site_rejects_duplicate_slug_without_family(self):
         with tempfile.TemporaryDirectory() as tmpdir:

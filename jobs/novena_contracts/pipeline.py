@@ -8,7 +8,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
-from jobs.publish.audio import audio_public_url, github_pages_base_url, podcast_feed_public_url
+from jobs.publish.audio import audio_public_url, github_pages_base_url, podcast_feed_public_url, resolve_audio_public_base_url
 from jobs.publish.formatting import render_publish_template
 
 from .artifact_writer import audio_output_path, write_novena_artifact
@@ -179,6 +179,7 @@ def _placeholder_audio_result(
     rendered: Dict[str, Any],
     *,
     base_url: Optional[str],
+    audio_base_url: Optional[str],
     docs_root: Optional[Path],
 ) -> Dict[str, Any]:
     episode_id = str(rendered.get("episode_id") or _episode_id(runtime)).strip()
@@ -186,11 +187,17 @@ def _placeholder_audio_result(
         "episode_id": episode_id,
         "entry_id": episode_id,
         "audio_path": str(audio_output_path(episode_id, docs_root=docs_root)),
-        "audio_url": audio_public_url(episode_id, base_url=base_url),
+        "audio_url": audio_public_url(episode_id, base_url=base_url, audio_base_url=audio_base_url),
         "audio_config": dict(runtime.publishing.get("audio") or {}),
         "content_hash": str(rendered.get("content_hash", "")).strip(),
         "rendered": False,
     }
+
+
+def _normalize_audio_result_url(audio_result: Dict[str, Any], *, audio_base_url: Optional[str]) -> None:
+    episode_id = str(audio_result.get("episode_id") or audio_result.get("entry_id") or "").strip()
+    if episode_id:
+        audio_result["audio_url"] = audio_public_url(episode_id, audio_base_url=audio_base_url)
 
 
 def _sidecar_path(runtime: Any, *, docs_root: Optional[Path]) -> Path:
@@ -283,13 +290,15 @@ def run_novena_pipeline(
     remote_feed_url: Optional[str] = None,
 ) -> Dict[str, Any]:
     root = Path(docs_root) if docs_root else Path(__file__).resolve().parents[2] / "docs"
+    audio_base_url = resolve_audio_public_base_url(base_url=base_url)
     contracts = load_novena_contracts(contract_dir or DEFAULT_CONTRACT_DIR)
     anchor_date = today or _dt.date.today()
     target_dates = list(publish_dates) if publish_dates is not None else [anchor_date]
     target_date_set = {target for target in target_dates}
     logger.info(
-        "novena_pipeline start base_url=%s publish_dates=%s contracts=%d",
+        "novena_pipeline start base_url=%s audio_base_url=%s publish_dates=%s contracts=%d",
         base_url or github_pages_base_url(),
+        audio_base_url,
         ",".join(target.isoformat() for target in target_dates),
         len(contracts),
     )
@@ -353,8 +362,15 @@ def run_novena_pipeline(
                     cache_root=cache_root,
                     write_sidecar=False,
                 )
+                _normalize_audio_result_url(audio_result, audio_base_url=audio_base_url)
             else:
-                audio_result = _placeholder_audio_result(runtime, rendered, base_url=base_url, docs_root=root)
+                audio_result = _placeholder_audio_result(
+                    runtime,
+                    rendered,
+                    base_url=base_url,
+                    audio_base_url=audio_base_url,
+                    docs_root=root,
+                )
             sidecar_path = write_novena_artifact(runtime, rendered, audio_result, docs_root=root)
         else:
             rendered = _rendered_from_sidecar(runtime, sidecar_payload)
@@ -367,6 +383,7 @@ def run_novena_pipeline(
                     cache_root=cache_root,
                     write_sidecar=False,
                 )
+                _normalize_audio_result_url(audio_result, audio_base_url=audio_base_url)
             else:
                 audio_result = dict(sidecar_payload.get("audio") or {})
                 audio_result.setdefault("episode_id", _episode_id(runtime))

@@ -41,7 +41,7 @@ Optional variables:
 - `jobs/publish/fragments.py`: fragment cache and ffmpeg assembly helpers used by the publish audio path
 - publish audio caches leaf fragments under `.cache/publish_audio/` so unchanged spoken blocks can be reused across reruns, and GitHub Actions persists that cache across workflow runs
 - publish audio writes one JSON sidecar per episode under `docs/audio/`, including ordered `resume_markers` for fragment-level resume/bookmark surfaces; reruns now rebuild the feed from the local `docs/audio/` archive snapshot rather than the remote published feed
-- the publish workflow also writes `docs/audio/index.html` and `docs/audio/index.json` so GitHub Pages exposes a browsable archive dashboard alongside the feed
+- the publish workflow also writes `docs/audio/index.html` and `docs/audio/index.json`; in CI, generated audio artifacts are synced to Cloudflare R2 and the GitHub Pages artifact is staged without the heavy `docs/audio/` folder
 - Auxilium Christianorum publishes as its own daily Ora Pro Nobis episode with a deterministic liturgical announcement, the lay-member every-day prayers, the correct weekday prayer, the Litany of the Most Precious Blood, and the daily conclusion
 - Auxilium Christianorum and Marian Antiphon episodes use deterministic `prayer_intro` bridge blocks so the liturgical day announcement flows into the prayer with one concise day-theme transition sentence.
 - Auxilium Christianorum response markers are normalized into clean spoken fragments: printed `V.` and `R.` labels are omitted, response boundaries become normal fragment pauses, and short versicle/response fragments can use role-specific TTS voices
@@ -54,8 +54,10 @@ Optional variables:
 - `ELEVENLABS_API_KEY` for ElevenLabs-first publish audio, including Morning Prayer, Auxilium Christianorum, Marian Antiphons, Rosary, Daily Reflection, and novena audio in local runs or GitHub Actions; OpenAI remains the configured fallback where provider lists include it
 - `config/publish/images/logo_ora_pro_nobis.png`: podcast cover art copied into the published `docs/images/` tree
 - To replace future seasonal music, overwrite the matching MP3 in `config/publish/audio/` or update the path in `config/publish/audio_branding.json`; missing assets log a warning and publish the spoken episode without music.
-- `PUBLISH_GITHUB_PAGES_BASE_URL` to override the RSS enclosure base URL when publishing audio
+- `PUBLISH_GITHUB_PAGES_BASE_URL` to override the static site and podcast feed base URL when publishing audio
+- `AUDIO_PUBLIC_BASE_URL` to override the public MP3/sidecar base URL; production uses `https://audio.orapronobis.media`
 - `PUBLISH_PODCAST_FEED_URL` to override the remote `podcast.xml` archive URL when publishing audio
+- Cloudflare R2 publishing uses GitHub Actions secrets `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY`, plus Actions variables `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ENDPOINT`, and `AUDIO_PUBLIC_BASE_URL`
 - `Publish Prayer Audio` now runs at `06:00 UTC`, and `Daily Spotify Playlist Refresh` runs at `05:00 UTC`, `13:00 UTC`, and `21:00 UTC`, on `main`, on pushes to `main`, plus manual dispatches
 
 ### Novena
@@ -83,9 +85,10 @@ Optional variables:
 - Prayer manifest: `docs/prayers/index.json`
 - Per-prayer pages: `docs/prayers/<slug>/index.html`
 - Feed file: `docs/podcast.xml`
-- Audio enclosures: `docs/audio/*.mp3`
+- Local audio archive: `docs/audio/*.mp3`
+- Public audio URL pattern on R2: `https://audio.orapronobis.media/<episode_id>.mp3`
 - Public feed URL on GitHub Pages: `https://jctebo.github.io/spotify_praylist/podcast.xml`
-- Public audio URL pattern on GitHub Pages: `https://jctebo.github.io/spotify_praylist/audio/<episode_id>.mp3`
+- Public audio URL pattern on GitHub Pages when `AUDIO_PUBLIC_BASE_URL` is unset: `https://jctebo.github.io/spotify_praylist/audio/<episode_id>.mp3`
 - The directory home is organized by active praylists: `Morning Praylist`, `Daily Praylist`, and `Night Praylist`.
 - Home-page prayer cards have one action, `Open prayer`; playback, Spotify links, feed links, and readable prayer text live on the generated prayer page.
 - The directory is contract-driven and active-playlist filtered. `config/spotify/playlists/*.json` `contracts` arrays decide which contract-backed pages are generated for the Praylist surface.

@@ -1,5 +1,19 @@
 # Release Log
 
+## [0.3.6.7] - 2026-06-14
+
+### Added
+- Added Cloudflare R2 audio publishing for the combined prayer audio workflow, including a tested S3-compatible sync helper for generated `docs/audio` artifacts.
+- Added `AUDIO_PUBLIC_BASE_URL` support so MP3, sidecar, archive, prayer page, and RSS enclosure links can resolve through `audio.orapronobis.media`.
+
+### Changed
+- Split static site/feed base URLs from public audio URLs while keeping podcast feed and Pages output on GitHub Pages.
+- Updated the publish workflow to sync audio to R2 before deploy and upload a staged GitHub Pages artifact with `audio/` removed.
+- Documented the R2 secrets/variables and the new audio-hosting split in the README.
+
+### Fixed
+- Normalized freshly rendered audio and novena enclosure URLs so custom local site bases and configured audio bases do not produce mixed hosts.
+
 ## [0.3.6.6] - 2026-06-14
 
 ### Added

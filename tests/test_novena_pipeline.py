@@ -497,6 +497,12 @@ class TestNovenaPipeline(unittest.TestCase):
 
             root_xml = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             guids = [item.findtext("guid") for item in root_xml.findall("./channel/item")]
+            enclosures = [
+                item.find("./enclosure").get("url")
+                for item in root_xml.findall("./channel/item")
+                if item.find("./enclosure") is not None
+            ]
             self.assertTrue(any((guid or "").startswith("morning-prayer-2026-04-06::") for guid in guids))
             self.assertTrue(any((guid or "").startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::") for guid in guids))
+            self.assertTrue(any(url == "https://example.com/audio/2026-06-03-most_sacred_heart_of_jesus-day-1.mp3" for url in enclosures))
             self.assertEqual(result["active"], 1)

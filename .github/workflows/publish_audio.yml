@@ -36,6 +36,12 @@ jobs:
       NOVENA_PUBLISH_MODE: ${{ github.event.inputs.novena_publish_mode }}
       PUBLISH_GITHUB_PAGES_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
       PUBLISH_PODCAST_FEED_URL: https://jctebo.github.io/spotify_praylist/podcast.xml
+      AUDIO_PUBLIC_BASE_URL: ${{ vars.AUDIO_PUBLIC_BASE_URL }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
+      R2_BUCKET: ${{ vars.R2_BUCKET }}
+      R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}
 
     steps:
       - name: Checkout
@@ -78,6 +84,9 @@ jobs:
       - name: Build prayer website
         run: python -m jobs.publish.site
 
+      - name: Sync audio archive to R2
+        run: python scripts/sync_r2_audio.py
+
       - name: Save publish audio cache
         if: success()
         uses: actions/cache/save@v4
@@ -98,11 +107,19 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: actions/configure-pages@v5
 
+      - name: Stage GitHub Pages artifact
+        if: github.ref == 'refs/heads/main'
+        run: |
+          rm -rf pages_artifact
+          mkdir -p pages_artifact
+          cp -a docs/. pages_artifact/
+          rm -rf pages_artifact/audio
+
       - name: Upload GitHub Pages artifact
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v4
         with:
-          path: ${{ github.workspace }}/docs
+          path: ${{ github.workspace }}/pages_artifact
 
       - name: Deploy GitHub Pages
         if: github.ref == 'refs/heads/main'
