@@ -151,6 +151,28 @@ class TestPublishAudioPipeline(unittest.TestCase):
 
         return renderer, calls
 
+    def test_audio_public_url_uses_configured_audio_base_without_audio_prefix(self):
+        with temp_env(
+            {
+                "AUDIO_PUBLIC_BASE_URL": "https://audio.orapronobis.media/",
+                "PUBLISH_GITHUB_PAGES_BASE_URL": "https://example.com/site",
+            }
+        ):
+            audio_url = self.audio_mod.audio_public_url("morning-prayer-2026-06-13")
+            archive_url = self.audio_mod.audio_archive_public_url()
+
+        self.assertEqual(audio_url, "https://audio.orapronobis.media/morning-prayer-2026-06-13.mp3")
+        self.assertEqual(archive_url, "https://audio.orapronobis.media/")
+
+    def test_audio_public_url_falls_back_to_custom_site_audio_path(self):
+        with temp_env({"AUDIO_PUBLIC_BASE_URL": ""}):
+            audio_url = self.audio_mod.audio_public_url(
+                "morning-prayer-2026-06-13",
+                base_url="https://example.com/site/",
+            )
+
+        self.assertEqual(audio_url, "https://example.com/site/audio/morning-prayer-2026-06-13.mp3")
+
     def test_build_audio_jobs_only_includes_enabled_entries(self):
         contracts = self.contracts_mod.load_publish_contracts()
         jobs = self.audio_mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 4, 6))
@@ -640,6 +662,19 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertIn("ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}", workflow_text)
         self.assertIn("PUBLISH_AUDIO_FORCE_REBUILD: ${{ github.event.inputs.novena_publish_mode == 'bootstrap-no-cache' }}", workflow_text)
 
+    def test_publish_audio_workflow_syncs_r2_and_stages_pages_without_audio(self):
+        workflow_text = Path(".github/workflows/publish_audio.yml").read_text(encoding="utf-8")
+
+        self.assertIn("AUDIO_PUBLIC_BASE_URL: ${{ vars.AUDIO_PUBLIC_BASE_URL }}", workflow_text)
+        self.assertIn("R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}", workflow_text)
+        self.assertIn("R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}", workflow_text)
+        self.assertIn("R2_BUCKET: ${{ vars.R2_BUCKET }}", workflow_text)
+        self.assertIn("R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}", workflow_text)
+        self.assertIn("python scripts/sync_r2_audio.py", workflow_text)
+        self.assertIn("Stage GitHub Pages artifact", workflow_text)
+        self.assertIn("rm -rf pages_artifact/audio", workflow_text)
+        self.assertIn("path: ${{ github.workspace }}/pages_artifact", workflow_text)
+
     def test_daily_devotional_image_workflow_rebuilds_podcast_feed_from_archive(self):
         workflow_text = Path(".github/workflows/daily_devotional_image_remote.yml").read_text(encoding="utf-8")
 
@@ -682,6 +717,31 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.assertTrue(any(guid.startswith(f"morning-prayer-elevenlabs-{tomorrow.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"marian-antiphon-angelus-{tomorrow.isoformat()}::") for guid in guids))
             self.assertTrue(any(guid.startswith(f"daily-rosary-{tomorrow.isoformat()}::") for guid in guids))
+
+    def test_run_audio_pipeline_rewrites_rendered_enclosures_to_audio_base(self):
+        contracts = self.contracts_mod.load_publish_contracts()
+        fake_renderer, _ = self._fake_renderer()
+        target_date = datetime.date(2026, 6, 2)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            cache_root = Path(tmpdir) / ".cache"
+            self.runner_mod.load_publish_contracts = lambda contract_dir=None: contracts
+            with temp_env({"AUDIO_PUBLIC_BASE_URL": "https://audio.orapronobis.media"}):
+                self.runner_mod.run_audio_pipeline(
+                    docs_root=docs_root,
+                    renderer=fake_renderer,
+                    cache_root=cache_root,
+                    target_date=target_date,
+                    base_url="https://example.test/site",
+                )
+
+            root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
+            enclosure_urls = [item.find("./enclosure").get("url") for item in root.findall("./channel/item")]
+
+        self.assertTrue(enclosure_urls)
+        self.assertTrue(all(url.startswith("https://audio.orapronobis.media/") for url in enclosure_urls))
+        self.assertTrue(all("/audio/" not in url.removeprefix("https://audio.orapronobis.media/") for url in enclosure_urls))
 
     def test_run_audio_pipeline_rebuilds_feed_from_local_archive_only(self):
         contracts = self.contracts_mod.load_publish_contracts()

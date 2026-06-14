@@ -24,9 +24,11 @@ from jobs.playlist.spotify_contracts import (  # noqa: E402
 )
 from jobs.publish.audio import (  # noqa: E402
     PUBLISH_DOCS_DIR,
+    audio_archive_public_url,
     github_pages_base_url,
     load_published_audio_jobs,
     podcast_feed_public_url,
+    resolve_audio_public_base_url,
 )
 from jobs.publish.contracts import (  # noqa: E402
     DEFAULT_CONTRACT_DIR as DEFAULT_PUBLISH_CONTRACT_DIR,
@@ -301,7 +303,7 @@ def _publish_entry_from_contract(contract: Any) -> Optional[Dict[str, Any]]:
         "notes": _clean(website.get("notes")),
         "aliases": list(website.get("aliases") or []),
         "feed_url": podcast_feed_public_url(),
-        "archive_url": "audio/",
+        "archive_url": audio_archive_public_url(),
         "latest_audio": None,
     }
 
@@ -336,7 +338,7 @@ def _spotify_entry_from_contract(contract: Any) -> Optional[Dict[str, Any]]:
         "notes": _clean(website.get("notes")),
         "aliases": list(website.get("aliases") or []),
         "feed_url": podcast_feed_public_url() if website["group"] == "ora-pro-nobis" else "",
-        "archive_url": "audio/" if website["group"] == "ora-pro-nobis" else "",
+        "archive_url": audio_archive_public_url() if website["group"] == "ora-pro-nobis" else "",
         "latest_audio": None,
     }
 
@@ -437,6 +439,7 @@ def load_prayer_site_entries(
     spotify_playlist_dir: Optional[Path] = None,
     docs_root: Optional[Path] = None,
     base_url: Optional[str] = None,
+    audio_base_url: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     entries_by_slug: Dict[str, Dict[str, Any]] = {}
     for contract in _load_publish_contracts_for_site(publish_contract_dir):
@@ -468,13 +471,19 @@ def load_prayer_site_entries(
             item["title"].lower(),
         ),
     )
-    jobs = load_published_audio_jobs(docs_root=docs_root, base_url=base_url)
+    jobs = load_published_audio_jobs(docs_root=docs_root, base_url=base_url, audio_base_url=audio_base_url)
     _attach_latest_audio(entries, jobs)
     return entries
 
 
-def build_site_manifest(entries: Sequence[Dict[str, Any]], *, base_url: Optional[str] = None) -> Dict[str, Any]:
+def build_site_manifest(
+    entries: Sequence[Dict[str, Any]],
+    *,
+    base_url: Optional[str] = None,
+    audio_base_url: Optional[str] = None,
+) -> Dict[str, Any]:
     site_base = _clean(base_url or github_pages_base_url()).rstrip("/")
+    audio_archive_url = audio_archive_public_url(base_url=site_base, audio_base_url=audio_base_url)
     items: List[Dict[str, Any]] = []
     for entry in entries:
         item = {key: value for key, value in entry.items() if key not in {"order"}}
@@ -484,6 +493,7 @@ def build_site_manifest(entries: Sequence[Dict[str, Any]], *, base_url: Optional
     return {
         "generated_at": _iso_utc_now(),
         "base_url": site_base,
+        "audio_archive_url": audio_archive_url,
         "count": len(items),
         "groups": list(PRAYLIST_GROUPS),
         "items": items,
@@ -499,6 +509,15 @@ def _primary_href(entry: Dict[str, Any]) -> str:
     if entry.get("feed_url"):
         return _clean(entry["feed_url"])
     return _clean(entry.get("archive_url")) or "#"
+
+
+def _href_from_prayer_page(value: Any) -> str:
+    href = _clean(value)
+    if not href:
+        return "#"
+    if re.fullmatch(r"https?://[^\s]+", href):
+        return href
+    return f"../../{href.lstrip('/')}"
 
 
 def _availability_label(value: str) -> str:
@@ -712,6 +731,7 @@ def _entry_card(entry: Dict[str, Any]) -> str:
 
 
 def _site_index_html(entries: Sequence[Dict[str, Any]], manifest: Dict[str, Any]) -> str:
+    audio_archive_url = _clean(manifest.get("audio_archive_url")) or "audio/"
     sections = []
     for group in PRAYLIST_GROUPS:
         group_key = group["key"]
@@ -745,7 +765,7 @@ def _site_index_html(entries: Sequence[Dict[str, Any]], manifest: Dict[str, Any]
         <a href="#morning-praylist">Morning Praylist</a>
         <a href="#daily-praylist">Daily Praylist</a>
         <a href="#night-praylist">Night Praylist</a>
-        <a href="audio/">Audio archive</a>
+        <a href="{_html(audio_archive_url)}">Audio archive</a>
         <a href="podcast.xml">Podcast feed</a>
       </nav>
     </div>
@@ -769,6 +789,7 @@ def _site_index_html(entries: Sequence[Dict[str, Any]], manifest: Dict[str, Any]
 
 def _prayer_page_html(entry: Dict[str, Any], manifest: Dict[str, Any]) -> str:
     latest = entry.get("latest_audio") or {}
+    audio_archive_url = _clean(manifest.get("audio_archive_url")) or "../../audio/"
     latest_block = ""
     if latest.get("audio_url"):
         latest_block = (
@@ -788,7 +809,7 @@ def _prayer_page_html(entry: Dict[str, Any], manifest: Dict[str, Any]) -> str:
         feed_block = f"""<a class="button secondary" href="{_html(entry['feed_url'])}">Podcast feed</a>"""
     archive_block = ""
     if entry.get("archive_url"):
-        archive_block = f"""<a class="button secondary" href="../../{_html(entry['archive_url'])}">Audio archive</a>"""
+        archive_block = f"""<a class="button secondary" href="{_html(_href_from_prayer_page(entry['archive_url']))}">Audio archive</a>"""
     notes = f"<p>{_html(entry.get('notes'))}</p>" if entry.get("notes") else ""
     prayer_text = _prayer_text_html(entry.get("latest_prayer_text"))
     novena_episodes = _novena_episodes_html(entry)
@@ -807,7 +828,7 @@ def _prayer_page_html(entry: Dict[str, Any], manifest: Dict[str, Any]) -> str:
       <div class="brand">Ora Pro Nobis</div>
       <nav aria-label="Prayer navigation">
         <a href="../../">Directory</a>
-        <a href="../../audio/">Audio archive</a>
+        <a href="{_html(audio_archive_url)}">Audio archive</a>
         <a href="../../podcast.xml">Podcast feed</a>
       </nav>
     </div>
@@ -847,19 +868,22 @@ def write_prayer_site(
     publish_contract_dir: Optional[Path] = None,
     spotify_contract_dir: Optional[Path] = None,
     spotify_playlist_dir: Optional[Path] = None,
+    audio_base_url: Optional[str] = None,
 ) -> Dict[str, Any]:
     root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
     site_base = _clean(base_url or github_pages_base_url()).rstrip("/")
+    resolved_audio_base = resolve_audio_public_base_url(base_url=site_base, audio_base_url=audio_base_url)
     entries = load_prayer_site_entries(
         publish_contract_dir=publish_contract_dir,
         spotify_contract_dir=spotify_contract_dir,
         spotify_playlist_dir=spotify_playlist_dir,
         docs_root=root,
         base_url=site_base,
+        audio_base_url=resolved_audio_base,
     )
     if not entries:
         raise RuntimeError("No enabled prayer website entries were found.")
-    manifest = build_site_manifest(entries, base_url=site_base)
+    manifest = build_site_manifest(entries, base_url=site_base, audio_base_url=resolved_audio_base)
 
     prayers_dir = _reset_generated_prayers_dir(root)
     index_path = root / "index.html"
@@ -887,8 +911,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Build the Ora Pro Nobis static prayer website.")
     parser.add_argument("--docs-root", type=Path, default=None, help="Docs or staged Pages root to write into.")
     parser.add_argument("--base-url", default=None, help="Public base URL for generated manifest/audio links.")
+    parser.add_argument("--audio-base-url", default=None, help="Public base URL for generated audio links.")
     args = parser.parse_args(argv)
-    result = write_prayer_site(docs_root=args.docs_root, base_url=args.base_url)
+    result = write_prayer_site(docs_root=args.docs_root, base_url=args.base_url, audio_base_url=args.audio_base_url)
     print(
         f"Wrote prayer website: {result['site_index_path']} "
         f"({result['count']} entries, {len(result['site_pages'])} pages)"

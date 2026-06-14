@@ -8,3 +8,4 @@ catholic-mass-readings
 pillow
 pypdf
 imageio-ffmpeg
+boto3

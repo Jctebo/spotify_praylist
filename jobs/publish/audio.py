@@ -41,6 +41,7 @@ DEFAULT_AUDIO_ARCHIVE_MANIFEST_PATH = DEFAULT_AUDIO_DIR / "index.json"
 DEFAULT_PODCAST_COVER_ART_SOURCE = ROOT / "config" / "publish" / "images" / "logo_ora_pro_nobis.png"
 DEFAULT_PODCAST_COVER_ART_RELATIVE_PATH = Path("images") / DEFAULT_PODCAST_COVER_ART_SOURCE.name
 PUBLISH_GITHUB_PAGES_BASE_URL = "PUBLISH_GITHUB_PAGES_BASE_URL"
+PUBLISH_AUDIO_PUBLIC_BASE_URL = "AUDIO_PUBLIC_BASE_URL"
 PUBLISH_PODCAST_FEED_URL = "PUBLISH_PODCAST_FEED_URL"
 PUBLISH_AUDIO_FORCE_REBUILD = "PUBLISH_AUDIO_FORCE_REBUILD"
 OPENAI_API_KEY = "OPENAI_API_KEY"
@@ -55,6 +56,30 @@ logger = logging.getLogger(__name__)
 def github_pages_base_url() -> str:
     configured = os.getenv(PUBLISH_GITHUB_PAGES_BASE_URL, "").strip()
     return configured or DEFAULT_GITHUB_PAGES_BASE_URL
+
+
+def audio_public_base_url() -> str:
+    configured = os.getenv(PUBLISH_AUDIO_PUBLIC_BASE_URL, "").strip()
+    if configured:
+        return configured.rstrip("/")
+    return f"{github_pages_base_url().rstrip('/')}/audio"
+
+
+def resolve_audio_public_base_url(
+    *,
+    base_url: Optional[str] = None,
+    audio_base_url: Optional[str] = None,
+) -> str:
+    configured_audio_base = str(audio_base_url or "").strip()
+    if configured_audio_base:
+        return configured_audio_base.rstrip("/")
+    configured = os.getenv(PUBLISH_AUDIO_PUBLIC_BASE_URL, "").strip()
+    if configured:
+        return configured.rstrip("/")
+    configured_site_base = str(base_url or "").strip()
+    if configured_site_base:
+        return f"{configured_site_base.rstrip('/')}/audio"
+    return audio_public_base_url()
 
 
 def podcast_feed_public_url() -> str:
@@ -73,9 +98,23 @@ def audio_sidecar_path(episode_id: str, *, docs_root: Optional[Path] = None) -> 
     return audio_output_path(episode_id, docs_root=docs_root).with_suffix(".json")
 
 
-def audio_public_url(episode_id: str, *, base_url: Optional[str] = None) -> str:
-    url_root = (base_url or github_pages_base_url()).rstrip("/")
-    return f"{url_root}/audio/{episode_id}.mp3"
+def audio_public_url(
+    episode_id: str,
+    *,
+    base_url: Optional[str] = None,
+    audio_base_url: Optional[str] = None,
+) -> str:
+    url_root = resolve_audio_public_base_url(base_url=base_url, audio_base_url=audio_base_url)
+    return f"{url_root}/{episode_id}.mp3"
+
+
+def audio_archive_public_url(
+    *,
+    base_url: Optional[str] = None,
+    audio_base_url: Optional[str] = None,
+) -> str:
+    url_root = resolve_audio_public_base_url(base_url=base_url, audio_base_url=audio_base_url)
+    return f"{url_root.rstrip('/')}/"
 
 
 def podcast_cover_art_public_url(*, base_url: Optional[str] = None) -> str:
@@ -435,6 +474,7 @@ def load_published_audio_jobs(
     *,
     docs_root: Optional[Path] = None,
     base_url: Optional[str] = None,
+    audio_base_url: Optional[str] = None,
     exclude_episode_ids: Optional[Sequence[str]] = None,
 ) -> List[Dict[str, Any]]:
     root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
@@ -491,7 +531,7 @@ def load_published_audio_jobs(
                 "published_date": published_date,
                 "content_hash": str(payload.get("content_hash", "")).strip(),
                 "audio_path": str(audio_output_path(episode_id, docs_root=root)),
-                "audio_url": audio_public_url(episode_id, base_url=base_url),
+                "audio_url": audio_public_url(episode_id, base_url=base_url, audio_base_url=audio_base_url),
                 "audio_length": audio_length,
                 "generated_at": generated_at,
                 "rss_guid": rss_guid,
@@ -523,9 +563,11 @@ def build_audio_archive_manifest(
     *,
     docs_root: Optional[Path] = None,
     base_url: Optional[str] = None,
+    audio_base_url: Optional[str] = None,
 ) -> Dict[str, Any]:
     root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
     site_base = str(base_url or github_pages_base_url()).strip().rstrip("/")
+    audio_base = resolve_audio_public_base_url(base_url=base_url, audio_base_url=audio_base_url)
     items: List[Dict[str, Any]] = []
     for job in jobs:
         episode_id = str(job.get("episode_id", "")).strip() or str(job.get("entry_id", "")).strip()
@@ -550,11 +592,11 @@ def build_audio_archive_manifest(
                 "rss_guid": str(job.get("rss_guid", "")).strip() or compose_rss_guid(episode_id, job.get("content_hash")),
                 "content_hash": str(job.get("content_hash", "")).strip(),
                 "audio_length": int(job.get("audio_length") or 0),
-                "audio_url": audio_public_url(episode_id, base_url=site_base),
+                "audio_url": audio_public_url(episode_id, audio_base_url=audio_base),
                 "audio_path": audio_path.relative_to(root).as_posix(),
                 "audio_filename": audio_path.name,
                 "sidecar_path": sidecar_path.relative_to(root).as_posix(),
-                "sidecar_url": f"{site_base}/audio/{sidecar_path.name}",
+                "sidecar_url": f"{audio_base}/{sidecar_path.name}",
             }
         )
     items.sort(
@@ -581,7 +623,7 @@ def _archive_index_html(manifest: Dict[str, Any], *, base_url: Optional[str] = N
         title = _html_escape(str(item.get("title", "")).strip() or str(item.get("episode_id", "")).strip())
         episode_id = _html_escape(str(item.get("episode_id", "")).strip())
         published_date = _html_escape(str(item.get("published_date", "")).strip())
-        audio_href = _html_escape(str(item.get("audio_filename", "")).strip() or f"{episode_id}.mp3")
+        audio_href = _html_escape(str(item.get("audio_url", "")).strip() or str(item.get("audio_filename", "")).strip() or f"{episode_id}.mp3")
         sidecar_href = _html_escape(str(item.get("sidecar_url", "")).strip() or f"{episode_id}.json")
         audio_length = _html_escape(str(item.get("audio_length", "")).strip() or "-")
         rows.append(
@@ -879,12 +921,18 @@ def _archive_index_html(manifest: Dict[str, Any], *, base_url: Optional[str] = N
 """
 
 
-def write_audio_archive_index(*, docs_root: Optional[Path] = None, base_url: Optional[str] = None) -> Dict[str, Any]:
+def write_audio_archive_index(
+    *,
+    docs_root: Optional[Path] = None,
+    base_url: Optional[str] = None,
+    audio_base_url: Optional[str] = None,
+) -> Dict[str, Any]:
     root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
     audio_dir = root / "audio"
     audio_dir.mkdir(parents=True, exist_ok=True)
-    jobs = load_published_audio_jobs(docs_root=root, base_url=base_url)
-    manifest = build_audio_archive_manifest(jobs, docs_root=root, base_url=base_url)
+    resolved_audio_base_url = resolve_audio_public_base_url(base_url=base_url, audio_base_url=audio_base_url)
+    jobs = load_published_audio_jobs(docs_root=root, base_url=base_url, audio_base_url=resolved_audio_base_url)
+    manifest = build_audio_archive_manifest(jobs, docs_root=root, base_url=base_url, audio_base_url=resolved_audio_base_url)
     manifest_path = audio_dir / "index.json"
     manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
     html_path = audio_dir / "index.html"

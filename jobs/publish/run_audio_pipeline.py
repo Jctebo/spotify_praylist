@@ -13,6 +13,7 @@ if str(ROOT) not in sys.path:
 
 from jobs.publish.audio import (
     DEFAULT_PODCAST_FEED_PATH,
+    audio_public_url,
     build_audio_jobs,
     ensure_podcast_cover_art,
     github_pages_base_url,
@@ -20,6 +21,7 @@ from jobs.publish.audio import (
     podcast_feed_public_url,
     podcast_cover_art_public_url,
     render_audio_job,
+    resolve_audio_public_base_url,
     write_audio_archive_index,
 )
 from jobs.publish.contracts import DEFAULT_CONTRACT_DIR, load_publish_contracts
@@ -73,28 +75,36 @@ def run_audio_pipeline(
     else:
         dates = [_default_target_date()]
     logger.info(
-        "audio_pipeline start base_url=%s target_dates=%s contracts=%d",
+        "audio_pipeline start base_url=%s audio_base_url=%s target_dates=%s contracts=%d",
         base_url or github_pages_base_url(),
+        resolve_audio_public_base_url(base_url=base_url),
         ",".join(target.isoformat() for target in dates),
         len(contracts),
     )
     jobs = []
     for date_value in dates:
         jobs.extend(build_audio_jobs(contracts, target_date=date_value))
-    rendered_jobs = [render_audio_job(job, renderer=renderer, docs_root=docs_root, cache_root=cache_root) for job in jobs]
     cover_art_path = ensure_podcast_cover_art(docs_root=docs_root)
     feed_base_url = base_url or github_pages_base_url()
+    audio_base_url = resolve_audio_public_base_url(base_url=feed_base_url)
+    rendered_jobs = [render_audio_job(job, renderer=renderer, docs_root=docs_root, cache_root=cache_root) for job in jobs]
+    for rendered_job in rendered_jobs:
+        episode_id = str(rendered_job.get("episode_id") or rendered_job.get("entry_id") or "").strip()
+        if episode_id:
+            rendered_job["audio_url"] = audio_public_url(episode_id, audio_base_url=audio_base_url)
     cover_art_url = podcast_cover_art_public_url(base_url=feed_base_url)
     feed_path = Path(docs_root) / "podcast.xml" if docs_root else DEFAULT_PODCAST_FEED_PATH
     logger.info(
-        "audio_pipeline rendered base_url=%s jobs=%d rendered_ids=%s",
+        "audio_pipeline rendered base_url=%s audio_base_url=%s jobs=%d rendered_ids=%s",
         feed_base_url,
+        audio_base_url,
         len(jobs),
         _episode_id_list(rendered_jobs),
     )
     archived_jobs = load_published_audio_jobs(
         docs_root=docs_root,
         base_url=feed_base_url,
+        audio_base_url=audio_base_url,
         exclude_episode_ids=[str(job.get("episode_id", "")).strip() for job in rendered_jobs],
     )
     archive_source = "local"
@@ -116,7 +126,7 @@ def run_audio_pipeline(
     )
     feed_xml = build_rss_feed([*rendered_jobs, *archived_jobs], base_url=feed_base_url, cover_art_url=cover_art_url)
     feed_path = write_podcast_feed(feed_xml, feed_path)
-    archive_index = write_audio_archive_index(docs_root=docs_root, base_url=feed_base_url)
+    archive_index = write_audio_archive_index(docs_root=docs_root, base_url=feed_base_url, audio_base_url=audio_base_url)
     logger.info(
         "audio_pipeline write feed_path=%s rendered=%d archived=%d archive_items=%d",
         feed_path,
