@@ -8,17 +8,24 @@
   <style>
     :root {
       color-scheme: light;
-      --bg: #f7f4ed;
+      --bg: #f8f3e9;
       --paper: #fffdf8;
-      --ink: #1f2720;
-      --muted: #5f665f;
-      --line: #d8d0c2;
-      --green: #315f4d;
-      --green-dark: #234538;
-      --gold: #a56f2c;
-      --wine: #7b2f42;
-      --shadow: 0 12px 28px rgba(54, 45, 31, 0.10);
+      --ink: #071f3d;
+      --muted: #5e6470;
+      --line: #d8c8a4;
+      --navy: #08284f;
+      --navy-soft: #12365f;
+      --gold: #a77b32;
+      --gold-soft: #efe2bf;
+      --ivory: #fff8ea;
+      --accent: #2f6b4f;
+      --accent-soft: #dfeee5;
+      --shadow: 0 12px 28px rgba(8, 40, 79, 0.10);
     }
+    body.theme-green { --accent: #2f6b4f; --accent-soft: #dfeee5; }
+    body.theme-purple { --accent: #6e447d; --accent-soft: #eadff0; }
+    body.theme-gold { --accent: #a77b32; --accent-soft: #f2e6c9; }
+    body.theme-red { --accent: #9d3038; --accent-soft: #f0dddd; }
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -29,17 +36,22 @@
       line-height: 1.55;
       letter-spacing: 0;
     }
-    a { color: var(--green-dark); }
+    a { color: var(--navy); }
     a:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
     .wrap { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
-    header { padding: 28px 0 18px; border-bottom: 1px solid var(--line); background: var(--paper); }
+    header { padding: 18px 0; border-bottom: 1px solid var(--line); background: var(--paper); }
     .topline { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-    .brand { font-size: 0.88rem; font-weight: 800; color: var(--green-dark); text-transform: uppercase; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--navy); text-decoration: none; font-weight: 800; text-transform: uppercase; }
+    .brand img { width: 44px; height: 44px; object-fit: contain; }
     nav { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.94rem; }
     nav a { text-decoration: none; font-weight: 700; }
-    .hero { padding: 28px 0 24px; background: var(--paper); }
-    h1 { margin: 0; max-width: 840px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 5vw, 4.1rem); line-height: 1.02; }
+    .hero { padding: 34px 0 26px; background: linear-gradient(180deg, var(--paper), var(--ivory)); border-bottom: 1px solid var(--line); }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr); gap: 28px; align-items: center; }
+    .hero-mark { width: 116px; height: 116px; object-fit: contain; margin-bottom: 18px; }
+    h1 { margin: 0; max-width: 840px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 5vw, 4.1rem); line-height: 1.02; color: var(--navy); }
     .lede { max-width: 780px; margin: 14px 0 0; color: var(--muted); font-size: 1.08rem; }
+    .hero-visual { aspect-ratio: 16 / 10; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--accent-soft); box-shadow: var(--shadow); }
+    .hero-visual img { width: 100%; height: 100%; display: block; object-fit: cover; }
     main { padding: 26px 0 44px; }
     section + section { margin-top: 34px; }
     .section-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); margin-bottom: 14px; padding-bottom: 10px; }
@@ -56,11 +68,13 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       box-shadow: var(--shadow);
+      border-top: 4px solid var(--accent);
     }
     .meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.82rem; color: var(--muted); }
     .pill { border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; background: #fbf8f1; }
+    .pill.accent { border-color: var(--accent); color: var(--navy); background: var(--accent-soft); }
     .card h3 { margin: 0; font-size: 1.15rem; line-height: 1.2; }
-    .subtitle { margin: -6px 0 0; color: var(--wine); font-weight: 700; font-size: 0.92rem; }
+    .subtitle { margin: -6px 0 0; color: var(--gold); font-weight: 700; font-size: 0.92rem; }
     .summary { margin: 0; color: var(--muted); }
     .actions { margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; }
     .button {
@@ -72,13 +86,15 @@
       border-radius: 7px;
       text-decoration: none;
       font-weight: 800;
-      border: 1px solid var(--green);
-      background: var(--green);
+      border: 1px solid var(--navy);
+      background: var(--navy);
       color: #fff;
     }
-    .button.secondary { background: transparent; color: var(--green-dark); }
+    .button.secondary { background: transparent; color: var(--navy); }
     .detail { max-width: 760px; padding: 24px 0 48px; }
     .detail-panel { margin-top: 20px; padding: 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+    .detail-visual { margin-top: 20px; aspect-ratio: 4 / 5; max-height: 520px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--accent-soft); }
+    .detail-visual img { width: 100%; height: 100%; display: block; object-fit: cover; }
     .links { display: grid; gap: 10px; margin-top: 18px; }
     .player { display: grid; gap: 10px; margin-top: 14px; }
     audio { width: 100%; }
@@ -93,19 +109,21 @@
     @media (max-width: 640px) {
       .wrap { width: min(100% - 22px, 1120px); }
       header { padding-top: 20px; }
+      .hero-grid { grid-template-columns: 1fr; }
+      .hero-mark { width: 88px; height: 88px; }
       .section-head { align-items: start; flex-direction: column; }
       .card { min-height: 0; }
       .button { width: 100%; }
     }
 </style>
 </head>
-<body>
+<body class="theme-green">
   <header>
     <div class="wrap topline">
-      <div class="brand">Ora Pro Nobis</div>
+      <a class="brand" href="../../"><img src="../../images/site/ora-pro-nobis-mark-160.png" alt="Ora Pro Nobis logo"><span>Ora Pro Nobis</span></a>
       <nav aria-label="Prayer navigation">
         <a href="../../">Directory</a>
-        <a href="../../audio/">Audio archive</a>
+        <a href="https://jctebo.github.io/spotify_praylist/audio/">Audio archive</a>
         <a href="../../podcast.xml">Podcast feed</a>
       </nav>
     </div>
@@ -115,23 +133,25 @@
       <span class="pill">Ora Pro Nobis</span>
       <span class="pill">Daily</span>
       <span class="pill">Ora Pro Nobis</span>
+      <span class="pill accent">Ordinary Time</span>
     </div>
     <h1>Daily Reflection</h1>
     <p class="lede">A daily Ignatian-style reflection and guided examen shaped by the day&#x27;s liturgical context.</p>
+
     <div class="detail-panel">
 
       <div class="links">
 
 
         <a class="button secondary" href="https://jctebo.github.io/spotify_praylist/podcast.xml">Podcast feed</a>
-        <a class="button secondary" href="../../audio/">Audio archive</a>
+        <a class="button secondary" href="https://jctebo.github.io/spotify_praylist/audio/">Audio archive</a>
       </div>
     </div>
 
 
   </main>
   <footer>
-    <div class="wrap">Generated 2026-06-14T00:42:30Z.</div>
+    <div class="wrap">Generated 2026-06-14T18:31:04Z.</div>
   </footer>
 </body>
 </html>

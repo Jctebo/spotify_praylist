@@ -91,11 +91,16 @@ Optional variables:
 - Public audio URL pattern on GitHub Pages when `AUDIO_PUBLIC_BASE_URL` is unset: `https://jctebo.github.io/spotify_praylist/audio/<episode_id>.mp3`
 - The directory home is organized by active praylists: `Morning Praylist`, `Daily Praylist`, and `Night Praylist`.
 - Home-page prayer cards have one action, `Open prayer`; playback, Spotify links, feed links, and readable prayer text live on the generated prayer page.
+- The generated site is branded from the Ora Pro Nobis logo: the full `docs/images/logo_ora_pro_nobis.png` remains the podcast/RSS cover art, while `python -m jobs.publish.site` creates smaller web derivatives under `docs/images/site/` for page headers and hero branding.
+- Prayer cards and prayer pages focus on the local site date from `JOB_UTC_OFFSET`: exact-date sidecars show as `Today`, older sidecars show as `Most recent`, and future sidecars show as `Upcoming` so tomorrow's normal publish output is not mislabeled as today's prayer.
+- The site adds a subtle liturgical accent token from the shared daily liturgical context helper: purple for Advent/Lent, gold for Easter/Christmas, green for Ordinary Time, and red for Pentecost or martyr/passions contexts.
+- When `devotional/DCIM/devotional_image_library.json` is present, the site generator reads the current portrait/wide devotional image manifests, optimizes selected web images into `docs/images/site/`, and renders the wide image on the home page and the portrait image on prayer detail pages. If the image tree is absent or incomplete, the site falls back to a logo-only layout without broken images.
 - The directory is contract-driven and active-playlist filtered. `config/spotify/playlists/*.json` `contracts` arrays decide which contract-backed pages are generated for the Praylist surface.
 - Ora Pro Nobis generated prayers use `contract.metadata.website` in `config/publish/contracts/*.json`; Spotify-only prayers use top-level `website` metadata in `config/spotify/contracts/*.json`.
 - Published audio JSON sidecars under `docs/audio/` provide latest episode metadata, readable prayer text from ordered fragments, and individual Daily Novena episode listings when present.
 - Enabled website metadata requires `slug`, `title`, `summary`, `group`, `source_label`, and `availability`; external Spotify entries also require `external_url` unless they use a direct `spotify_uri`.
 - `publish_audio.yml` and `daily_devotional_image_remote.yml` both run the site generator before Pages upload so the root directory, prayer pages, feed, and audio archive publish together.
+- `publish_audio.yml` restores the current devotional image folders from OneDrive via rclone on `main` before site generation, while `daily_devotional_image_remote.yml` generates/syncs the devotional images and builds the same public image tree under `pages/devotional/DCIM`.
 
 ## Files
 - `jobs/playlist/refresh_playlist.py`: active Spotify refresh runtime with Notion-owned membership/order

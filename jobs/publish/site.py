@@ -9,6 +9,7 @@ import sys
 from html import escape as _html_escape
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence
+from urllib.parse import quote
 
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
@@ -23,6 +24,7 @@ from jobs.playlist.spotify_contracts import (  # noqa: E402
     normalize_spotify_queue_uri,
 )
 from jobs.publish.audio import (  # noqa: E402
+    DEFAULT_PODCAST_COVER_ART_SOURCE,
     PUBLISH_DOCS_DIR,
     audio_archive_public_url,
     github_pages_base_url,
@@ -35,6 +37,13 @@ from jobs.publish.contracts import (  # noqa: E402
     load_publish_contracts,
     normalize_publish_key,
 )
+from jobs.publish.daily_liturgical_context import build_daily_liturgical_context  # noqa: E402
+from jobs.novena.liturgical_helpers import local_today  # noqa: E402
+
+try:  # noqa: E402
+    from PIL import Image
+except Exception:  # pragma: no cover - exercised by environments without Pillow
+    Image = None  # type: ignore[assignment]
 
 VALID_GROUPS = {"ora-pro-nobis", "external-spotify"}
 VALID_AVAILABILITY = {"daily", "seasonal", "weekday", "sunday", "fixed"}
@@ -64,6 +73,14 @@ GENERATED_SPOTIFY_ALIASES = {
     "angelus-midday": ("marian-antiphon-angelus", "marian-antiphon-regina-caeli"),
     "angelus-evening": ("marian-antiphon-angelus", "marian-antiphon-regina-caeli"),
 }
+SITE_IMAGE_DIR = Path("images") / "site"
+DEVOTIONAL_PUBLIC_ROOT = Path("devotional") / "DCIM"
+DEVOTIONAL_ROOT_MANIFEST = "devotional_image_library.json"
+DEVOTIONAL_FOLDER_MANIFEST = "images_manifest.json"
+LOGO_ASSET_SPECS = (
+    ("mark_160", "ora-pro-nobis-mark-160.png", 160),
+    ("mark_320", "ora-pro-nobis-mark-320.png", 320),
+)
 
 
 def _iso_utc_now() -> str:
@@ -102,6 +119,225 @@ def _json_default(value: Any) -> Any:
     if isinstance(value, Path):
         return value.as_posix()
     return str(value)
+
+
+def _site_today(value: Optional[Any] = None) -> _dt.date:
+    if isinstance(value, _dt.date):
+        return value
+    if value:
+        return _dt.date.fromisoformat(str(value))
+    return local_today()
+
+
+def _parse_iso_date(value: Any) -> Optional[_dt.date]:
+    text = _clean(value)
+    if not text:
+        return None
+    try:
+        return _dt.date.fromisoformat(text)
+    except Exception:
+        return None
+
+
+def _root_relative_url(path: Any) -> str:
+    text = _clean(path)
+    if not text:
+        return ""
+    return quote(text.replace("\\", "/"), safe="/")
+
+
+def _page_relative_url(path: Any) -> str:
+    text = _root_relative_url(path)
+    return f"../../{text}" if text else ""
+
+
+def _image_alt_from_record(record: Dict[str, Any], fallback: str = "Ora Pro Nobis devotional image") -> str:
+    subject = _clean(record.get("subject_slug") or record.get("id") or record.get("base_name")).replace("-", " ")
+    if subject:
+        return subject.title()
+    return fallback
+
+
+def _save_resized_image(source: Path, target: Path, *, max_size: int, quality: int = 82) -> Optional[Path]:
+    if Image is None or not source.exists():
+        return None
+    target.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with Image.open(source) as image:
+            image = image.convert("RGBA") if image.mode in {"P", "LA", "RGBA"} else image.convert("RGB")
+            image.thumbnail((max_size, max_size))
+            if target.suffix.lower() in {".jpg", ".jpeg"}:
+                background = Image.new("RGB", image.size, (255, 253, 248))
+                if image.mode == "RGBA":
+                    background.paste(image, mask=image.getchannel("A"))
+                    image = background
+                else:
+                    image = image.convert("RGB")
+                image.save(target, format="JPEG", quality=quality, optimize=True)
+            else:
+                image.save(target, optimize=True)
+    except Exception as exc:
+        print(f"WARN site image optimization failed source={source} target={target} detail={exc}", file=sys.stderr)
+        return None
+    return target
+
+
+def _prepare_logo_assets(root: Path) -> Dict[str, Dict[str, str]]:
+    assets: Dict[str, Dict[str, str]] = {}
+    source = DEFAULT_PODCAST_COVER_ART_SOURCE
+    if not source.exists():
+        return assets
+    for key, filename, size in LOGO_ASSET_SPECS:
+        relative = SITE_IMAGE_DIR / filename
+        target = root / relative
+        if _save_resized_image(source, target, max_size=size, quality=90):
+            assets[key] = {"path": relative.as_posix(), "url": _root_relative_url(relative), "alt": "Ora Pro Nobis logo"}
+    return assets
+
+
+def _liturgical_color_token(context: Dict[str, Any]) -> str:
+    season = _clean(context.get("season")).lower()
+    feast = _clean(context.get("feast")).lower()
+    rank = _clean(context.get("rank")).lower()
+    source = f"{season} {feast} {rank}"
+    if "pentecost" in source or "martyr" in source or "passion" in source:
+        return "red"
+    if "advent" in source or "lent" in source:
+        return "purple"
+    if "easter" in source or "christmas" in source:
+        return "gold"
+    return "green"
+
+
+def _build_site_liturgical_context(today: _dt.date) -> Dict[str, Any]:
+    try:
+        context = build_daily_liturgical_context(today)
+        payload = {
+            "date": today.isoformat(),
+            "season": _clean(context.liturgicalSeason) or "Ordinary Time",
+            "feast": _clean(context.feastDay),
+            "rank": _clean(context.liturgicalRank),
+            "summary": _clean(context.shortSummary),
+            "source": _clean(context.source),
+        }
+    except Exception as exc:
+        print(f"WARN site liturgical context unavailable date={today.isoformat()} detail={exc}", file=sys.stderr)
+        payload = {
+            "date": today.isoformat(),
+            "season": "Ordinary Time",
+            "feast": "",
+            "rank": "",
+            "summary": f"Today's prayer focus follows Ordinary Time on {today.isoformat()}.",
+            "source": "fallback",
+        }
+    payload["color"] = _liturgical_color_token(payload)
+    return payload
+
+
+def _mmdd_in_window(today: _dt.date, start_mmdd: str, end_mmdd: str) -> bool:
+    start = _clean(start_mmdd)
+    end = _clean(end_mmdd)
+    if not start or not end:
+        return False
+    current = f"{today.month:02d}-{today.day:02d}"
+    if start <= end:
+        return start <= current <= end
+    return current >= start or current <= end
+
+
+def _mmdd_sort_value(value: str) -> int:
+    text = _clean(value)
+    try:
+        month, day = text.split("-", 1)
+        return int(month) * 100 + int(day)
+    except Exception:
+        return 0
+
+
+def _load_json_file(path: Path) -> Optional[Dict[str, Any]]:
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        print(f"WARN site json load failed path={path} detail={exc}", file=sys.stderr)
+        return None
+    return payload if isinstance(payload, dict) else None
+
+
+def _load_devotional_public_library(root: Path) -> Dict[str, Any]:
+    manifest_path = root / DEVOTIONAL_PUBLIC_ROOT / DEVOTIONAL_ROOT_MANIFEST
+    if not manifest_path.exists():
+        return {"folders": [], "items": []}
+    root_manifest = _load_json_file(manifest_path) or {}
+    items: List[Dict[str, Any]] = []
+    folders = []
+    for folder in root_manifest.get("folders") or []:
+        if not isinstance(folder, dict):
+            continue
+        if _clean(folder.get("state")) != "current":
+            continue
+        manifest_rel = _clean(folder.get("manifest_path"))
+        if not manifest_rel:
+            continue
+        folder_manifest = _load_json_file(root / DEVOTIONAL_PUBLIC_ROOT / manifest_rel)
+        if not folder_manifest:
+            continue
+        folders.append(dict(folder))
+        for item in folder_manifest.get("items") or []:
+            if isinstance(item, dict):
+                merged = dict(item)
+                merged.setdefault("variant", _clean(folder.get("variant")))
+                merged.setdefault("state", _clean(folder.get("state")))
+                items.append(merged)
+    return {"folders": folders, "items": items}
+
+
+def _prepare_site_image_asset(root: Path, source_path: Path, slug: str, *, max_size: int, variant: str) -> Optional[Dict[str, str]]:
+    safe_slug = _slug(slug) or "devotional-image"
+    filename = f"devotional-{safe_slug}-{variant}.jpg"
+    relative = SITE_IMAGE_DIR / filename
+    target = root / relative
+    if not _save_resized_image(source_path, target, max_size=max_size, quality=82):
+        return None
+    return {"path": relative.as_posix(), "url": _root_relative_url(relative)}
+
+
+def _select_devotional_images(library: Dict[str, Any], root: Path, today: _dt.date) -> Dict[str, Dict[str, str]]:
+    selected: Dict[str, Dict[str, str]] = {}
+    items = [item for item in library.get("items") or [] if isinstance(item, dict)]
+    for variant, max_size in (("wide", 1280), ("portrait", 760)):
+        candidates = [item for item in items if _clean(item.get("variant")) == variant]
+        candidates.sort(
+            key=lambda item: (
+                0 if _mmdd_in_window(today, _clean(item.get("start_mmdd")), _clean(item.get("end_mmdd"))) else 1,
+                -_mmdd_sort_value(_clean(item.get("start_mmdd"))),
+                _clean(item.get("id")),
+            )
+        )
+        for item in candidates:
+            image_file = ((item.get("files") or {}).get("image") or {}) if isinstance(item.get("files"), dict) else {}
+            rel_path = _clean(image_file.get("relative_path")) if isinstance(image_file, dict) else ""
+            if not rel_path:
+                continue
+            source = root / DEVOTIONAL_PUBLIC_ROOT / rel_path
+            prepared = _prepare_site_image_asset(
+                root,
+                source,
+                _clean(item.get("id") or item.get("subject_slug") or variant),
+                max_size=max_size,
+                variant=variant,
+            )
+            if not prepared:
+                continue
+            selected[variant] = {
+                **prepared,
+                "source_path": (DEVOTIONAL_PUBLIC_ROOT / rel_path).as_posix(),
+                "alt": _image_alt_from_record(item),
+                "id": _clean(item.get("id")),
+                "subject_slug": _clean(item.get("subject_slug")),
+                "variant": variant,
+            }
+            break
+    return selected
 
 
 def spotify_open_url(value: str) -> str:
@@ -394,42 +630,143 @@ def _novena_episode_from_job(job: Dict[str, Any]) -> Dict[str, Any]:
         "published_date": _clean(job.get("published_date")),
         "audio_url": _clean(job.get("audio_url")),
         "prayer_text": prayer_text if prayer_text["sections"] else None,
+        "audio_status": _clean(job.get("audio_status")),
     }
 
 
-def _attach_latest_audio(entries: Sequence[Dict[str, Any]], jobs: Sequence[Dict[str, Any]]) -> None:
+def _audio_payload_from_job(job: Dict[str, Any], *, status: str) -> Dict[str, Any]:
+    prayer_text = _prayer_text_from_sidecar_job(job)
+    return {
+        "title": _clean(job.get("title")),
+        "episode_id": _clean(job.get("episode_id")),
+        "published_date": _clean(job.get("published_date")),
+        "audio_url": _clean(job.get("audio_url")),
+        "audio_status": status,
+        "has_prayer_text": bool(prayer_text["sections"]),
+    }
+
+
+def _audio_date_status(job: Dict[str, Any], today: _dt.date) -> str:
+    published = _parse_iso_date(job.get("published_date"))
+    if not published:
+        return "none"
+    if published == today:
+        return "today"
+    if published > today:
+        return "upcoming"
+    return "fallback"
+
+
+def _job_matches_entry(job: Dict[str, Any], entry: Dict[str, Any]) -> bool:
+    contract_ids = set(entry.get("related_contracts") or [])
+    entry_ids = set(entry.get("related_entry_ids") or [])
+    return _clean(job.get("contract_id")) in contract_ids or _clean(job.get("entry_id")) in entry_ids
+
+
+def _select_audio_for_entry(entry: Dict[str, Any], jobs: Sequence[Dict[str, Any]], today: _dt.date) -> Dict[str, Any]:
+    today_jobs: List[Dict[str, Any]] = []
+    fallback_jobs: List[Dict[str, Any]] = []
+    upcoming_jobs: List[Dict[str, Any]] = []
+    for job in jobs:
+        if not _job_matches_entry(job, entry):
+            continue
+        status = _audio_date_status(job, today)
+        if status == "today":
+            today_jobs.append(job)
+        elif status == "fallback":
+            fallback_jobs.append(job)
+        elif status == "upcoming":
+            upcoming_jobs.append(job)
+    selected_status = "none"
+    selected_job: Optional[Dict[str, Any]] = None
+    if today_jobs:
+        selected_status = "today"
+        selected_job = today_jobs[0]
+    elif fallback_jobs:
+        selected_status = "fallback"
+        selected_job = fallback_jobs[0]
+    elif upcoming_jobs:
+        selected_status = "upcoming"
+        selected_job = upcoming_jobs[-1]
+    return {"status": selected_status, "job": selected_job}
+
+
+def _audio_label(entry: Dict[str, Any]) -> str:
+    audio = entry.get("selected_audio") or {}
+    date_text = _clean(audio.get("published_date"))
+    status = _clean(entry.get("audio_status"))
+    if status == "today" and date_text:
+        return f"Today: {date_text}"
+    if status == "fallback" and date_text:
+        return f"Most recent: {date_text}"
+    if status == "upcoming" and date_text:
+        return f"Upcoming: {date_text}"
+    return ""
+
+
+def _audio_heading(entry: Dict[str, Any]) -> str:
+    status = _clean(entry.get("audio_status"))
+    if status == "today":
+        return "Today's episode"
+    if status == "fallback":
+        return "Most recent available episode"
+    if status == "upcoming":
+        return "Upcoming episode"
+    return ""
+
+
+def _attach_today_audio(entries: Sequence[Dict[str, Any]], jobs: Sequence[Dict[str, Any]], today: _dt.date) -> None:
     novena_episodes = [
-        _novena_episode_from_job(job)
+        _novena_episode_from_job(dict(job, audio_status=_audio_date_status(job, today)))
         for job in jobs
         if _clean(job.get("contract_type")) == "novena_feast_rule"
     ]
+    novena_episodes.sort(
+        key=lambda item: (
+            0 if item.get("audio_status") == "today" else 1 if item.get("audio_status") == "fallback" else 2,
+            -(_parse_iso_date(item.get("published_date")) or _dt.date.min).toordinal(),
+            item.get("episode_id", ""),
+        )
+    )
     for entry in entries:
+        entry["audio_status"] = "none"
+        entry["today_audio"] = None
+        entry["fallback_audio"] = None
+        entry["upcoming_audio"] = None
+        entry["selected_audio"] = None
         if entry.get("slug") == "daily-novenas":
             entry["novena_episodes"] = novena_episodes
-            if novena_episodes and not entry.get("latest_audio"):
-                latest = novena_episodes[0]
-                entry["latest_audio"] = {
-                    "title": latest["title"],
-                    "episode_id": latest["episode_id"],
-                    "published_date": latest["published_date"],
-                    "audio_url": latest["audio_url"],
-                    "has_prayer_text": bool((latest.get("prayer_text") or {}).get("sections")),
-                }
-        contract_ids = set(entry.get("related_contracts") or [])
-        entry_ids = set(entry.get("related_entry_ids") or [])
-        for job in jobs:
-            if _clean(job.get("contract_id")) in contract_ids or _clean(job.get("entry_id")) in entry_ids:
-                prayer_text = _prayer_text_from_sidecar_job(job)
-                entry["latest_audio"] = {
-                    "title": _clean(job.get("title")),
-                    "episode_id": _clean(job.get("episode_id")),
-                    "published_date": _clean(job.get("published_date")),
-                    "audio_url": _clean(job.get("audio_url")),
-                    "has_prayer_text": bool(prayer_text["sections"]),
-                }
-                if prayer_text["sections"]:
-                    entry["latest_prayer_text"] = prayer_text
-                break
+            for status in ("today", "fallback", "upcoming"):
+                matching = [episode for episode in novena_episodes if episode.get("audio_status") == status]
+                if matching:
+                    latest = matching[0]
+                    entry[f"{status}_audio"] = {
+                        "title": latest["title"],
+                        "episode_id": latest["episode_id"],
+                        "published_date": latest["published_date"],
+                        "audio_url": latest["audio_url"],
+                        "audio_status": status,
+                        "has_prayer_text": bool((latest.get("prayer_text") or {}).get("sections")),
+                    }
+                    if not entry.get("selected_audio"):
+                        entry["selected_audio"] = entry[f"{status}_audio"]
+                        entry["audio_status"] = status
+            if entry.get("selected_audio"):
+                entry["latest_audio"] = entry["selected_audio"]
+            continue
+        selection = _select_audio_for_entry(entry, jobs, today)
+        selected_job = selection.get("job")
+        selected_status = _clean(selection.get("status")) or "none"
+        if not selected_job:
+            continue
+        audio_payload = _audio_payload_from_job(selected_job, status=selected_status)
+        entry[f"{selected_status}_audio"] = audio_payload
+        entry["selected_audio"] = audio_payload
+        entry["latest_audio"] = audio_payload
+        entry["audio_status"] = selected_status
+        prayer_text = _prayer_text_from_sidecar_job(selected_job)
+        if prayer_text["sections"] and selected_status in {"today", "fallback"}:
+            entry["latest_prayer_text"] = prayer_text
 
 
 def load_prayer_site_entries(
@@ -440,7 +777,9 @@ def load_prayer_site_entries(
     docs_root: Optional[Path] = None,
     base_url: Optional[str] = None,
     audio_base_url: Optional[str] = None,
+    today: Optional[Any] = None,
 ) -> List[Dict[str, Any]]:
+    site_today = _site_today(today)
     entries_by_slug: Dict[str, Dict[str, Any]] = {}
     for contract in _load_publish_contracts_for_site(publish_contract_dir):
         entry = _publish_entry_from_contract(contract)
@@ -472,7 +811,7 @@ def load_prayer_site_entries(
         ),
     )
     jobs = load_published_audio_jobs(docs_root=docs_root, base_url=base_url, audio_base_url=audio_base_url)
-    _attach_latest_audio(entries, jobs)
+    _attach_today_audio(entries, jobs, site_today)
     return entries
 
 
@@ -481,9 +820,15 @@ def build_site_manifest(
     *,
     base_url: Optional[str] = None,
     audio_base_url: Optional[str] = None,
+    today: Optional[Any] = None,
+    liturgical_context: Optional[Dict[str, Any]] = None,
+    brand_assets: Optional[Dict[str, Any]] = None,
+    devotional_images: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     site_base = _clean(base_url or github_pages_base_url()).rstrip("/")
     audio_archive_url = audio_archive_public_url(base_url=site_base, audio_base_url=audio_base_url)
+    site_today = _site_today(today)
+    context = liturgical_context or _build_site_liturgical_context(site_today)
     items: List[Dict[str, Any]] = []
     for entry in entries:
         item = {key: value for key, value in entry.items() if key not in {"order"}}
@@ -492,8 +837,12 @@ def build_site_manifest(
         items.append(item)
     return {
         "generated_at": _iso_utc_now(),
+        "today": site_today.isoformat(),
         "base_url": site_base,
         "audio_archive_url": audio_archive_url,
+        "liturgical_context": context,
+        "brand_assets": brand_assets or {},
+        "devotional_images": devotional_images or {},
         "count": len(items),
         "groups": list(PRAYLIST_GROUPS),
         "items": items,
@@ -501,9 +850,9 @@ def build_site_manifest(
 
 
 def _primary_href(entry: Dict[str, Any]) -> str:
-    latest = entry.get("latest_audio") or {}
-    if latest.get("audio_url"):
-        return _clean(latest["audio_url"])
+    selected = entry.get("selected_audio") or entry.get("latest_audio") or {}
+    if selected.get("audio_url"):
+        return _clean(selected["audio_url"])
     if entry.get("external_url"):
         return _clean(entry["external_url"])
     if entry.get("feed_url"):
@@ -535,17 +884,24 @@ def _site_css() -> str:
     return """
     :root {
       color-scheme: light;
-      --bg: #f7f4ed;
+      --bg: #f8f3e9;
       --paper: #fffdf8;
-      --ink: #1f2720;
-      --muted: #5f665f;
-      --line: #d8d0c2;
-      --green: #315f4d;
-      --green-dark: #234538;
-      --gold: #a56f2c;
-      --wine: #7b2f42;
-      --shadow: 0 12px 28px rgba(54, 45, 31, 0.10);
+      --ink: #071f3d;
+      --muted: #5e6470;
+      --line: #d8c8a4;
+      --navy: #08284f;
+      --navy-soft: #12365f;
+      --gold: #a77b32;
+      --gold-soft: #efe2bf;
+      --ivory: #fff8ea;
+      --accent: #2f6b4f;
+      --accent-soft: #dfeee5;
+      --shadow: 0 12px 28px rgba(8, 40, 79, 0.10);
     }
+    body.theme-green { --accent: #2f6b4f; --accent-soft: #dfeee5; }
+    body.theme-purple { --accent: #6e447d; --accent-soft: #eadff0; }
+    body.theme-gold { --accent: #a77b32; --accent-soft: #f2e6c9; }
+    body.theme-red { --accent: #9d3038; --accent-soft: #f0dddd; }
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -556,17 +912,22 @@ def _site_css() -> str:
       line-height: 1.55;
       letter-spacing: 0;
     }
-    a { color: var(--green-dark); }
+    a { color: var(--navy); }
     a:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
     .wrap { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
-    header { padding: 28px 0 18px; border-bottom: 1px solid var(--line); background: var(--paper); }
+    header { padding: 18px 0; border-bottom: 1px solid var(--line); background: var(--paper); }
     .topline { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-    .brand { font-size: 0.88rem; font-weight: 800; color: var(--green-dark); text-transform: uppercase; }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--navy); text-decoration: none; font-weight: 800; text-transform: uppercase; }
+    .brand img { width: 44px; height: 44px; object-fit: contain; }
     nav { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.94rem; }
     nav a { text-decoration: none; font-weight: 700; }
-    .hero { padding: 28px 0 24px; background: var(--paper); }
-    h1 { margin: 0; max-width: 840px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 5vw, 4.1rem); line-height: 1.02; }
+    .hero { padding: 34px 0 26px; background: linear-gradient(180deg, var(--paper), var(--ivory)); border-bottom: 1px solid var(--line); }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr); gap: 28px; align-items: center; }
+    .hero-mark { width: 116px; height: 116px; object-fit: contain; margin-bottom: 18px; }
+    h1 { margin: 0; max-width: 840px; font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 5vw, 4.1rem); line-height: 1.02; color: var(--navy); }
     .lede { max-width: 780px; margin: 14px 0 0; color: var(--muted); font-size: 1.08rem; }
+    .hero-visual { aspect-ratio: 16 / 10; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--accent-soft); box-shadow: var(--shadow); }
+    .hero-visual img { width: 100%; height: 100%; display: block; object-fit: cover; }
     main { padding: 26px 0 44px; }
     section + section { margin-top: 34px; }
     .section-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); margin-bottom: 14px; padding-bottom: 10px; }
@@ -583,11 +944,13 @@ def _site_css() -> str:
       border: 1px solid var(--line);
       border-radius: 8px;
       box-shadow: var(--shadow);
+      border-top: 4px solid var(--accent);
     }
     .meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 0.82rem; color: var(--muted); }
     .pill { border: 1px solid var(--line); border-radius: 999px; padding: 3px 8px; background: #fbf8f1; }
+    .pill.accent { border-color: var(--accent); color: var(--navy); background: var(--accent-soft); }
     .card h3 { margin: 0; font-size: 1.15rem; line-height: 1.2; }
-    .subtitle { margin: -6px 0 0; color: var(--wine); font-weight: 700; font-size: 0.92rem; }
+    .subtitle { margin: -6px 0 0; color: var(--gold); font-weight: 700; font-size: 0.92rem; }
     .summary { margin: 0; color: var(--muted); }
     .actions { margin-top: auto; display: flex; gap: 10px; flex-wrap: wrap; }
     .button {
@@ -599,13 +962,15 @@ def _site_css() -> str:
       border-radius: 7px;
       text-decoration: none;
       font-weight: 800;
-      border: 1px solid var(--green);
-      background: var(--green);
+      border: 1px solid var(--navy);
+      background: var(--navy);
       color: #fff;
     }
-    .button.secondary { background: transparent; color: var(--green-dark); }
+    .button.secondary { background: transparent; color: var(--navy); }
     .detail { max-width: 760px; padding: 24px 0 48px; }
     .detail-panel { margin-top: 20px; padding: 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
+    .detail-visual { margin-top: 20px; aspect-ratio: 4 / 5; max-height: 520px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--accent-soft); }
+    .detail-visual img { width: 100%; height: 100%; display: block; object-fit: cover; }
     .links { display: grid; gap: 10px; margin-top: 18px; }
     .player { display: grid; gap: 10px; margin-top: 14px; }
     audio { width: 100%; }
@@ -620,6 +985,8 @@ def _site_css() -> str:
     @media (max-width: 640px) {
       .wrap { width: min(100% - 22px, 1120px); }
       header { padding-top: 20px; }
+      .hero-grid { grid-template-columns: 1fr; }
+      .hero-mark { width: 88px; height: 88px; }
       .section-head { align-items: start; flex-direction: column; }
       .card { min-height: 0; }
       .button { width: 100%; }
@@ -676,6 +1043,11 @@ def _novena_episodes_html(entry: Dict[str, Any]) -> str:
         """
     cards = []
     for episode in episodes[:12]:
+        label = {
+            "today": "Today",
+            "fallback": "Most recent",
+            "upcoming": "Upcoming",
+        }.get(_clean(episode.get("audio_status")), "Episode")
         action = (
             f"""<a class="button secondary" href="{_html(episode.get('audio_url'))}">Listen to episode</a>"""
             if episode.get("audio_url")
@@ -690,7 +1062,7 @@ def _novena_episodes_html(entry: Dict[str, Any]) -> str:
             f"""
             <article class="episode">
               <h2>{_html(episode.get('title'))}</h2>
-              <p class="summary">{_html(episode.get('published_date'))}</p>
+              <p class="summary">{_html(label)}: {_html(episode.get('published_date'))}</p>
               <div class="links">{action}</div>
               {text_preview}
             </article>
@@ -706,19 +1078,15 @@ def _novena_episodes_html(entry: Dict[str, Any]) -> str:
 
 def _entry_card(entry: Dict[str, Any]) -> str:
     detail_href = f"prayers/{_html(entry['slug'])}/"
-    latest = entry.get("latest_audio") or {}
-    latest_text = (
-        f"<span class=\"pill\">Latest: {_html(latest.get('published_date'))}</span>"
-        if latest.get("published_date")
-        else ""
-    )
+    audio_label = _audio_label(entry)
+    audio_text = f"<span class=\"pill accent\">{_html(audio_label)}</span>" if audio_label else ""
     subtitle = f"<p class=\"subtitle\">{_html(entry.get('subtitle'))}</p>" if entry.get("subtitle") else ""
     return f"""
       <article class="card">
         <div class="meta">
           <span class="pill">{_html(entry.get('source_label'))}</span>
           <span class="pill">{_html(_availability_label(entry.get('availability', '')))}</span>
-          {latest_text}
+          {audio_text}
         </div>
         <h3>{_html(entry.get('title'))}</h3>
         {subtitle}
@@ -730,8 +1098,41 @@ def _entry_card(entry: Dict[str, Any]) -> str:
     """
 
 
+def _brand_html(manifest: Dict[str, Any], *, root_prefix: str = "") -> str:
+    mark = ((manifest.get("brand_assets") or {}).get("mark_160") or {}).get("url", "")
+    image = f"""<img src="{_html(root_prefix + _clean(mark))}" alt="Ora Pro Nobis logo">""" if mark else ""
+    return f"""<a class="brand" href="{_html(root_prefix or './')}">{image}<span>Ora Pro Nobis</span></a>"""
+
+
+def _hero_visual_html(manifest: Dict[str, Any]) -> str:
+    image = (manifest.get("devotional_images") or {}).get("wide") or {}
+    if not image.get("url"):
+        return ""
+    return f"""
+      <figure class="hero-visual">
+        <img src="{_html(image.get('url'))}" alt="{_html(image.get('alt'))}" loading="lazy">
+      </figure>
+    """
+
+
+def _detail_visual_html(manifest: Dict[str, Any]) -> str:
+    image = (manifest.get("devotional_images") or {}).get("portrait") or {}
+    if not image.get("url"):
+        return ""
+    return f"""
+      <figure class="detail-visual">
+        <img src="{_html(_page_relative_url(image.get('path')))}" alt="{_html(image.get('alt'))}" loading="lazy">
+      </figure>
+    """
+
+
 def _site_index_html(entries: Sequence[Dict[str, Any]], manifest: Dict[str, Any]) -> str:
     audio_archive_url = _clean(manifest.get("audio_archive_url")) or "audio/"
+    context = manifest.get("liturgical_context") or {}
+    color = _clean(context.get("color")) or "green"
+    mark = ((manifest.get("brand_assets") or {}).get("mark_320") or {}).get("url", "")
+    mark_html = f"""<img class="hero-mark" src="{_html(mark)}" alt="Ora Pro Nobis logo">""" if mark else ""
+    hero_visual = _hero_visual_html(manifest)
     sections = []
     for group in PRAYLIST_GROUPS:
         group_key = group["key"]
@@ -757,10 +1158,10 @@ def _site_index_html(entries: Sequence[Dict[str, Any]], manifest: Dict[str, Any]
   <meta name="description" content="A mobile and desktop friendly directory for Ora Pro Nobis daily prayers and external Spotify prayer links.">
   <style>{_site_css()}</style>
 </head>
-<body>
+<body class="theme-{_html(color)}">
   <header>
     <div class="wrap topline">
-      <div class="brand">Ora Pro Nobis</div>
+      {_brand_html(manifest)}
       <nav aria-label="Prayer groups">
         <a href="#morning-praylist">Morning Praylist</a>
         <a href="#daily-praylist">Daily Praylist</a>
@@ -771,9 +1172,17 @@ def _site_index_html(entries: Sequence[Dict[str, Any]], manifest: Dict[str, Any]
     </div>
   </header>
   <div class="hero">
-    <div class="wrap">
-      <h1>Daily Praylists</h1>
-      <p class="lede">Open active Morning, Daily, and Night Praylist prayers from one responsive directory.</p>
+    <div class="wrap hero-grid">
+      <div>
+        {mark_html}
+        <div class="meta">
+          <span class="pill accent">{_html(context.get('season') or 'Ordinary Time')}</span>
+          <span class="pill">{_html(manifest.get('today'))}</span>
+        </div>
+        <h1>Ora Pro Nobis</h1>
+        <p class="lede">{_html(context.get('summary') or 'Open active Morning, Daily, and Night Praylist prayers from one responsive directory.')}</p>
+      </div>
+      {hero_visual}
     </div>
   </div>
   <main class="wrap">
@@ -788,16 +1197,22 @@ def _site_index_html(entries: Sequence[Dict[str, Any]], manifest: Dict[str, Any]
 
 
 def _prayer_page_html(entry: Dict[str, Any], manifest: Dict[str, Any]) -> str:
-    latest = entry.get("latest_audio") or {}
+    selected_audio = entry.get("selected_audio") or entry.get("latest_audio") or {}
     audio_archive_url = _clean(manifest.get("audio_archive_url")) or "../../audio/"
-    latest_block = ""
-    if latest.get("audio_url"):
-        latest_block = (
+    context = manifest.get("liturgical_context") or {}
+    color = _clean(context.get("color")) or "green"
+    audio_block = ""
+    if selected_audio.get("audio_url"):
+        heading = _audio_heading(entry)
+        open_label = "Open audio"
+        if entry.get("audio_status") == "today":
+            open_label = "Open today's audio"
+        audio_block = (
             f"""
             <div class="player">
-              <p class="summary">Latest episode: {_html(latest.get('title'))} ({_html(latest.get('published_date'))})</p>
-              <audio controls src="{_html(latest['audio_url'])}">Your browser does not support audio playback.</audio>
-              <a class="button" href="{_html(latest['audio_url'])}">Open latest audio</a>
+              <p class="summary">{_html(heading)}: {_html(selected_audio.get('title'))} ({_html(selected_audio.get('published_date'))})</p>
+              <audio controls src="{_html(selected_audio['audio_url'])}">Your browser does not support audio playback.</audio>
+              <a class="button" href="{_html(selected_audio['audio_url'])}">{_html(open_label)}</a>
             </div>
             """
         )
@@ -813,6 +1228,7 @@ def _prayer_page_html(entry: Dict[str, Any], manifest: Dict[str, Any]) -> str:
     notes = f"<p>{_html(entry.get('notes'))}</p>" if entry.get("notes") else ""
     prayer_text = _prayer_text_html(entry.get("latest_prayer_text"))
     novena_episodes = _novena_episodes_html(entry)
+    visual = _detail_visual_html(manifest)
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -822,10 +1238,10 @@ def _prayer_page_html(entry: Dict[str, Any], manifest: Dict[str, Any]) -> str:
   <meta name="description" content="{_html(entry.get('summary'))}">
   <style>{_site_css()}</style>
 </head>
-<body>
+<body class="theme-{_html(color)}">
   <header>
     <div class="wrap topline">
-      <div class="brand">Ora Pro Nobis</div>
+      {_brand_html(manifest, root_prefix="../../")}
       <nav aria-label="Prayer navigation">
         <a href="../../">Directory</a>
         <a href="{_html(audio_archive_url)}">Audio archive</a>
@@ -838,13 +1254,15 @@ def _prayer_page_html(entry: Dict[str, Any], manifest: Dict[str, Any]) -> str:
       <span class="pill">{_html(entry.get('source_label'))}</span>
       <span class="pill">{_html(_availability_label(entry.get('availability', '')))}</span>
       <span class="pill">{_html(entry.get('group_label'))}</span>
+      <span class="pill accent">{_html(context.get('season') or 'Ordinary Time')}</span>
     </div>
     <h1>{_html(entry.get('title'))}</h1>
     <p class="lede">{_html(entry.get('summary'))}</p>
+    {visual}
     <div class="detail-panel">
       {notes}
       <div class="links">
-        {latest_block}
+        {audio_block}
         {spotify_block}
         {feed_block}
         {archive_block}
@@ -869,10 +1287,15 @@ def write_prayer_site(
     spotify_contract_dir: Optional[Path] = None,
     spotify_playlist_dir: Optional[Path] = None,
     audio_base_url: Optional[str] = None,
+    today: Optional[Any] = None,
 ) -> Dict[str, Any]:
     root = Path(docs_root) if docs_root else PUBLISH_DOCS_DIR
     site_base = _clean(base_url or github_pages_base_url()).rstrip("/")
     resolved_audio_base = resolve_audio_public_base_url(base_url=site_base, audio_base_url=audio_base_url)
+    site_today = _site_today(today)
+    liturgical_context = _build_site_liturgical_context(site_today)
+    brand_assets = _prepare_logo_assets(root)
+    devotional_images = _select_devotional_images(_load_devotional_public_library(root), root, site_today)
     entries = load_prayer_site_entries(
         publish_contract_dir=publish_contract_dir,
         spotify_contract_dir=spotify_contract_dir,
@@ -880,10 +1303,19 @@ def write_prayer_site(
         docs_root=root,
         base_url=site_base,
         audio_base_url=resolved_audio_base,
+        today=site_today,
     )
     if not entries:
         raise RuntimeError("No enabled prayer website entries were found.")
-    manifest = build_site_manifest(entries, base_url=site_base, audio_base_url=resolved_audio_base)
+    manifest = build_site_manifest(
+        entries,
+        base_url=site_base,
+        audio_base_url=resolved_audio_base,
+        today=site_today,
+        liturgical_context=liturgical_context,
+        brand_assets=brand_assets,
+        devotional_images=devotional_images,
+    )
 
     prayers_dir = _reset_generated_prayers_dir(root)
     index_path = root / "index.html"
@@ -912,8 +1344,14 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     parser.add_argument("--docs-root", type=Path, default=None, help="Docs or staged Pages root to write into.")
     parser.add_argument("--base-url", default=None, help="Public base URL for generated manifest/audio links.")
     parser.add_argument("--audio-base-url", default=None, help="Public base URL for generated audio links.")
+    parser.add_argument("--today", default=None, help="Override the local site date for testing, in YYYY-MM-DD format.")
     args = parser.parse_args(argv)
-    result = write_prayer_site(docs_root=args.docs_root, base_url=args.base_url, audio_base_url=args.audio_base_url)
+    result = write_prayer_site(
+        docs_root=args.docs_root,
+        base_url=args.base_url,
+        audio_base_url=args.audio_base_url,
+        today=args.today,
+    )
     print(
         f"Wrote prayer website: {result['site_index_path']} "
         f"({result['count']} entries, {len(result['site_pages'])} pages)"

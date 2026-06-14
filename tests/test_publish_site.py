@@ -1,9 +1,21 @@
 import json
 import tempfile
 import unittest
+from dataclasses import dataclass
 from pathlib import Path
 
+from PIL import Image
+
 from tests.test_helpers import make_test_mp3_bytes
+
+
+@dataclass
+class FakeLiturgicalContext:
+    liturgicalSeason: str = "Ordinary Time"
+    feastDay: str = ""
+    liturgicalRank: str = ""
+    shortSummary: str = "Today's shared focus is trust, received through Ordinary Time."
+    source: str = "season"
 
 
 class TestPublishSite(unittest.TestCase):
@@ -11,6 +23,7 @@ class TestPublishSite(unittest.TestCase):
         import jobs.publish.site as site
 
         self.site = site
+        self.site.build_daily_liturgical_context = lambda date_value: FakeLiturgicalContext()
 
     def _write_publish_contract(self, contract_dir, contract_id, *, slug=None, family="", title=None):
         payload = {
@@ -131,6 +144,41 @@ class TestPublishSite(unittest.TestCase):
         path = Path(playlist_dir) / f"{key}.json"
         path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
         return path
+
+    def _write_audio_sidecar(
+        self,
+        audio_dir,
+        episode_id,
+        *,
+        entry_id="morning-prayer",
+        contract_id="morning-prayer",
+        title="Morning Prayer",
+        published_date="2026-06-14",
+        contract_type="",
+        family_id="",
+        text="Lord, open my lips.",
+    ):
+        audio_dir = Path(audio_dir)
+        audio_dir.mkdir(parents=True, exist_ok=True)
+        (audio_dir / f"{episode_id}.mp3").write_bytes(make_test_mp3_bytes())
+        (audio_dir / f"{episode_id}.json").write_text(
+            json.dumps(
+                {
+                    "entry_id": entry_id,
+                    "episode_id": episode_id,
+                    "contract_id": contract_id,
+                    "contract_type": contract_type,
+                    "family_id": family_id,
+                    "title": f"{title} - {published_date}",
+                    "description": f"{title}.",
+                    "published_date": published_date,
+                    "content_hash": "abc",
+                    "audio_length": 123,
+                    "fragments": [{"label": "Opening", "text": text}],
+                }
+            ),
+            encoding="utf-8",
+        )
 
     def test_write_prayer_site_generates_index_manifest_and_pages(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -448,13 +496,253 @@ class TestPublishSite(unittest.TestCase):
             self.assertIn("Jesus, meek and humble of heart.", page)
             self.assertIn("https://example.test/site/audio/2026-06-13-sacred-heart-day-1.mp3", page)
 
+    def test_write_prayer_site_prefers_today_audio_over_upcoming(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            publish_dir = root / "publish"
+            spotify_dir = root / "spotify"
+            playlist_dir = root / "playlists"
+            docs_root = root / "docs"
+            audio_dir = docs_root / "audio"
+            publish_dir.mkdir()
+            spotify_dir.mkdir()
+            playlist_dir.mkdir()
+            self._write_publish_contract(publish_dir, "morning-prayer", title="Morning Prayer")
+            self._write_spotify_contract(spotify_dir, "morning-prayer", website_enabled=False, title="Morning Prayer")
+            self._write_playlist(playlist_dir, ["morning-prayer"])
+            self._write_audio_sidecar(audio_dir, "morning-prayer-2026-06-15", published_date="2026-06-15")
+            self._write_audio_sidecar(audio_dir, "morning-prayer-2026-06-14", published_date="2026-06-14")
+
+            self.site.write_prayer_site(
+                docs_root=docs_root,
+                publish_contract_dir=publish_dir,
+                spotify_contract_dir=spotify_dir,
+                spotify_playlist_dir=playlist_dir,
+                today="2026-06-14",
+            )
+
+            home = (docs_root / "index.html").read_text(encoding="utf-8")
+            page = (docs_root / "prayers" / "morning-prayer" / "index.html").read_text(encoding="utf-8")
+            manifest = json.loads((docs_root / "prayers" / "index.json").read_text(encoding="utf-8"))
+            morning = next(item for item in manifest["items"] if item["slug"] == "morning-prayer")
+            self.assertEqual(morning["audio_status"], "today")
+            self.assertIn("Today: 2026-06-14", home)
+            self.assertIn("Today&#x27;s episode", page)
+            self.assertNotIn("Latest episode", page)
+
+    def test_write_prayer_site_labels_older_audio_as_most_recent(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            publish_dir = root / "publish"
+            spotify_dir = root / "spotify"
+            playlist_dir = root / "playlists"
+            docs_root = root / "docs"
+            audio_dir = docs_root / "audio"
+            publish_dir.mkdir()
+            spotify_dir.mkdir()
+            playlist_dir.mkdir()
+            self._write_publish_contract(publish_dir, "morning-prayer", title="Morning Prayer")
+            self._write_spotify_contract(spotify_dir, "morning-prayer", website_enabled=False, title="Morning Prayer")
+            self._write_playlist(playlist_dir, ["morning-prayer"])
+            self._write_audio_sidecar(audio_dir, "morning-prayer-2026-06-13", published_date="2026-06-13")
+
+            self.site.write_prayer_site(
+                docs_root=docs_root,
+                publish_contract_dir=publish_dir,
+                spotify_contract_dir=spotify_dir,
+                spotify_playlist_dir=playlist_dir,
+                today="2026-06-14",
+            )
+
+            home = (docs_root / "index.html").read_text(encoding="utf-8")
+            page = (docs_root / "prayers" / "morning-prayer" / "index.html").read_text(encoding="utf-8")
+            self.assertIn("Most recent: 2026-06-13", home)
+            self.assertIn("Most recent available episode", page)
+
+    def test_write_prayer_site_labels_future_audio_as_upcoming(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            publish_dir = root / "publish"
+            spotify_dir = root / "spotify"
+            playlist_dir = root / "playlists"
+            docs_root = root / "docs"
+            audio_dir = docs_root / "audio"
+            publish_dir.mkdir()
+            spotify_dir.mkdir()
+            playlist_dir.mkdir()
+            self._write_publish_contract(publish_dir, "morning-prayer", title="Morning Prayer")
+            self._write_spotify_contract(spotify_dir, "morning-prayer", website_enabled=False, title="Morning Prayer")
+            self._write_playlist(playlist_dir, ["morning-prayer"])
+            self._write_audio_sidecar(audio_dir, "morning-prayer-2026-06-15", published_date="2026-06-15")
+
+            self.site.write_prayer_site(
+                docs_root=docs_root,
+                publish_contract_dir=publish_dir,
+                spotify_contract_dir=spotify_dir,
+                spotify_playlist_dir=playlist_dir,
+                today="2026-06-14",
+            )
+
+            home = (docs_root / "index.html").read_text(encoding="utf-8")
+            page = (docs_root / "prayers" / "morning-prayer" / "index.html").read_text(encoding="utf-8")
+            self.assertIn("Upcoming: 2026-06-15", home)
+            self.assertIn("Upcoming episode", page)
+            self.assertNotIn("Today's episode", page)
+
+    def test_site_manifest_records_liturgical_color_token(self):
+        self.site.build_daily_liturgical_context = lambda date_value: FakeLiturgicalContext(
+            liturgicalSeason="Lent",
+            shortSummary="Today's shared focus is repentance, received through Lent.",
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            publish_dir = root / "publish"
+            spotify_dir = root / "spotify"
+            playlist_dir = root / "playlists"
+            docs_root = root / "docs"
+            publish_dir.mkdir()
+            spotify_dir.mkdir()
+            playlist_dir.mkdir()
+            self._write_publish_contract(publish_dir, "morning-prayer", title="Morning Prayer")
+            self._write_spotify_contract(spotify_dir, "morning-prayer", website_enabled=False, title="Morning Prayer")
+            self._write_playlist(playlist_dir, ["morning-prayer"])
+
+            self.site.write_prayer_site(
+                docs_root=docs_root,
+                publish_contract_dir=publish_dir,
+                spotify_contract_dir=spotify_dir,
+                spotify_playlist_dir=playlist_dir,
+                today="2026-03-01",
+            )
+
+            manifest = json.loads((docs_root / "prayers" / "index.json").read_text(encoding="utf-8"))
+            home = (docs_root / "index.html").read_text(encoding="utf-8")
+            self.assertEqual(manifest["liturgical_context"]["color"], "purple")
+            self.assertIn('class="theme-purple"', home)
+
+    def test_liturgical_color_token_maps_requested_colors(self):
+        self.assertEqual(self.site._liturgical_color_token({"season": "Advent"}), "purple")
+        self.assertEqual(self.site._liturgical_color_token({"season": "Easter season"}), "gold")
+        self.assertEqual(self.site._liturgical_color_token({"season": "Ordinary Time"}), "green")
+        self.assertEqual(self.site._liturgical_color_token({"feast": "Saint Example, Martyr"}), "red")
+        self.assertEqual(self.site._liturgical_color_token({"feast": "Pentecost Sunday"}), "red")
+
+    def test_write_prayer_site_uses_devotional_image_manifest_when_present(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            publish_dir = root / "publish"
+            spotify_dir = root / "spotify"
+            playlist_dir = root / "playlists"
+            docs_root = root / "docs"
+            dcim = docs_root / "devotional" / "DCIM"
+            wide_dir = dcim / "Current Devotion Wide"
+            portrait_dir = dcim / "Current Devotion"
+            publish_dir.mkdir()
+            spotify_dir.mkdir()
+            playlist_dir.mkdir()
+            wide_dir.mkdir(parents=True)
+            portrait_dir.mkdir(parents=True)
+            self._write_publish_contract(publish_dir, "morning-prayer", title="Morning Prayer")
+            self._write_spotify_contract(spotify_dir, "morning-prayer", website_enabled=False, title="Morning Prayer")
+            self._write_playlist(playlist_dir, ["morning-prayer"])
+            Image.new("RGB", (1536, 1024), color=(20, 40, 70)).save(wide_dir / "06-10_06-19_cal_saint-example_mod_realism.png")
+            Image.new("RGB", (1024, 1536), color=(70, 40, 20)).save(portrait_dir / "06-10_06-19_cal_saint-example_mod_realism.png")
+            (dcim / "devotional_image_library.json").write_text(
+                json.dumps(
+                    {
+                        "folders": [
+                            {
+                                "folder_name": "Current Devotion Wide",
+                                "state": "current",
+                                "variant": "wide",
+                                "manifest_path": "Current Devotion Wide/images_manifest.json",
+                            },
+                            {
+                                "folder_name": "Current Devotion",
+                                "state": "current",
+                                "variant": "portrait",
+                                "manifest_path": "Current Devotion/images_manifest.json",
+                            },
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            for folder, variant in ((wide_dir, "wide"), (portrait_dir, "portrait")):
+                Image.new("RGB", (1536, 1024), color=(10, 80, 60)).save(
+                    folder / "06-13_06-19_cal_newer-saint_mod_realism.png"
+                )
+                (folder / "images_manifest.json").write_text(
+                    json.dumps(
+                        {
+                            "items": [
+                                {
+                                    "id": "06-10_06-19_cal_saint-example_mod_realism",
+                                    "state": "current",
+                                    "variant": variant,
+                                    "start_mmdd": "06-10",
+                                    "end_mmdd": "06-19",
+                                    "subject_slug": "saint-example",
+                                    "files": {
+                                        "image": {
+                                            "relative_path": f"{folder.name}/06-10_06-19_cal_saint-example_mod_realism.png"
+                                        }
+                                    },
+                                },
+                                {
+                                    "id": "06-13_06-19_cal_newer-saint_mod_realism",
+                                    "state": "current",
+                                    "variant": variant,
+                                    "start_mmdd": "06-13",
+                                    "end_mmdd": "06-19",
+                                    "subject_slug": "newer-saint",
+                                    "files": {
+                                        "image": {
+                                            "relative_path": f"{folder.name}/06-13_06-19_cal_newer-saint_mod_realism.png"
+                                        }
+                                    },
+                                },
+                            ]
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+
+            self.site.write_prayer_site(
+                docs_root=docs_root,
+                publish_contract_dir=publish_dir,
+                spotify_contract_dir=spotify_dir,
+                spotify_playlist_dir=playlist_dir,
+                today="2026-06-14",
+            )
+
+            manifest = json.loads((docs_root / "prayers" / "index.json").read_text(encoding="utf-8"))
+            home = (docs_root / "index.html").read_text(encoding="utf-8")
+            page = (docs_root / "prayers" / "morning-prayer" / "index.html").read_text(encoding="utf-8")
+            self.assertIn("wide", manifest["devotional_images"])
+            self.assertIn("portrait", manifest["devotional_images"])
+            self.assertTrue((docs_root / manifest["devotional_images"]["wide"]["path"]).exists())
+            self.assertEqual(manifest["devotional_images"]["wide"]["subject_slug"], "newer-saint")
+            self.assertIn("devotional-06-13-06-19-cal-newer-saint-mod-realism-wide.jpg", home)
+            self.assertIn("devotional-06-13-06-19-cal-newer-saint-mod-realism-portrait.jpg", page)
+
     def test_workflows_call_prayer_site_generator(self):
         publish_audio = Path(".github/workflows/publish_audio.yml").read_text(encoding="utf-8")
         devotional = Path(".github/workflows/daily_devotional_image_remote.yml").read_text(encoding="utf-8")
         validation = Path(".github/workflows/morning_prayer_page_audio_test.yml").read_text(encoding="utf-8")
 
         self.assertIn("python -m jobs.publish.site", publish_audio)
+        self.assertIn("Restore devotional image public tree", publish_audio)
+        self.assertIn("--target-root \"${GITHUB_WORKSPACE}/docs/devotional/DCIM\"", publish_audio)
+        self.assertLess(
+            publish_audio.index("Restore devotional image public tree"),
+            publish_audio.index("python -m jobs.publish.site"),
+        )
         self.assertIn('python -m jobs.publish.site --docs-root "${GITHUB_WORKSPACE}/pages"', devotional)
+        self.assertLess(
+            devotional.index("python sync/build_devotional_public_tree.py"),
+            devotional.index('python -m jobs.publish.site --docs-root "${GITHUB_WORKSPACE}/pages"'),
+        )
         self.assertIn("Website Publish Validation", validation)
         self.assertIn("tests.test_publish_site", validation)
         self.assertIn("tests.test_page_audio_job", validation)
