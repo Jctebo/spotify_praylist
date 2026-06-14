@@ -1,5 +1,23 @@
 # Release Log
 
+## [0.3.6.8] - 2026-06-14
+
+### Added
+- Added Ora Pro Nobis site branding with optimized header and hero logo derivatives under `docs/images/site/`.
+- Added today-aware prayer audio selection so generated pages distinguish today's episode, most recent fallback audio, and upcoming audio.
+- Added liturgical accent tokens for green, purple, gold, and red based on the shared daily liturgical context helper.
+- Added optional devotional image ingestion from the public `devotional/DCIM` manifest tree, with optimized wide and portrait web derivatives when images are available.
+
+### Changed
+- Restyled the generated prayer directory and prayer detail pages around the logo's navy, gold, and ivory palette.
+- Updated the production audio publish workflow to restore current devotional image folders from OneDrive before building the generated site.
+- Documented site branding, devotional image behavior, today/fallback labels, and the rclone dependency in the README.
+
+### Fixed
+- Prevented tomorrow's normal publish output from being labeled as today's prayer on the generated site.
+- Preferred the most recently-started active devotional image window when multiple current images match the site date.
+- Added regression coverage for today/fallback/upcoming audio labels, liturgical color mapping, devotional image selection, and workflow ordering.
+
 ## [0.3.6.7] - 2026-06-14
 
 ### Added
