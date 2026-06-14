@@ -469,6 +469,11 @@ def load_spotify_playlist_definitions(
     if not playlist_files:
         raise RuntimeError(f"No Spotify playlist definition files found in {base_dir}.")
 
+    valid_contract_keys = (
+        {normalize_spotify_contract_key(contract.key) for contract in contracts}
+        if contracts is not None
+        else None
+    )
     definitions: List[SpotifyPlaylistDefinition] = []
     seen_keys: Dict[str, Path] = {}
     seen_names: Dict[str, Path] = {}
@@ -483,6 +488,13 @@ def load_spotify_playlist_definitions(
             _require_text(payload, "playlist_id", playlist_path, "Spotify playlist definition")
         )
         contract_keys = _load_playlist_contract_keys(payload, playlist_path)
+        if valid_contract_keys is not None:
+            unknown_contracts = [key for key in contract_keys if key not in valid_contract_keys]
+            if unknown_contracts:
+                raise RuntimeError(
+                    f"Spotify playlist definition '{playlist_path}' references unknown contract key(s): "
+                    f"{', '.join(unknown_contracts)}."
+                )
 
         if not key:
             raise RuntimeError(f"Spotify playlist definition '{playlist_path}' has an invalid 'key'.")

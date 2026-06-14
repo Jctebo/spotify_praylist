@@ -1,5 +1,23 @@
 # Release Log
 
+## [0.3.6.6] - 2026-06-14
+
+### Added
+- Added sidecar-backed readable prayer text to generated prayer pages, including native audio playback when a latest MP3 sidecar is available.
+- Added individual Daily Novena episode listings on the Daily Novenas page from novena audio sidecars.
+- Added checked-in active contract arrays to Morning, Midday, Night, and Sunday Spotify playlist definitions for deterministic static site generation.
+
+### Changed
+- Reorganized the Pages home directory into Morning Praylist, Daily Praylist, and Night Praylist sections.
+- Moved playback and Spotify outbound actions onto detail pages so home cards use a single `Open prayer` action.
+- Limited generated prayer pages and manifest entries to contracts active in the checked-in Spotify playlist definitions, with Sunday homilies grouped under Daily Praylist.
+- Updated RSS Pages documentation and regenerated the checked-in Pages output for the new Praylist layout.
+
+### Fixed
+- Validated playlist `contracts` arrays against known Spotify contracts so misspelled active contract keys fail early.
+- Matched active Praylist membership through website aliases as well as contract IDs, slugs, and entry IDs.
+- Added regression coverage for active filtering, one-button home cards, detail-page Spotify actions, sidecar prayer text rendering, alias matching, and Daily Novena individual episode rendering.
+
 ## [0.3.6.5] - 2026-06-13
 
 ### Changed
