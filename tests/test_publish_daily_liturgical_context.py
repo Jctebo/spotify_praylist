@@ -32,6 +32,12 @@ class TestDailyLiturgicalContext(unittest.TestCase):
         self.assertEqual(payload["primaryTheme"], "mercy")
         self.assertEqual(payload["source"], "feast")
         self.assertIn("discernment", payload["secondaryThemes"])
+        self.assertEqual(payload["sharedThemeVersion"], "daily-theme-v1")
+        self.assertIn("Mercy", payload["sharedThemeTitle"])
+        self.assertIn("The Most Sacred Heart of Jesus", payload["sharedThemeExplanation"])
+        self.assertIn("today's Gospel, Matthew 10:1-7", payload["sharedThemeExplanation"])
+        self.assertTrue(any(source["kind"] == "gospel" for source in payload["sharedThemeSources"]))
+        self.assertTrue(any(source["kind"] == "season" for source in payload["sharedThemeSources"]))
 
     def test_memorial_subtly_yields_to_gospel_theme(self):
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [
@@ -52,6 +58,10 @@ class TestDailyLiturgicalContext(unittest.TestCase):
         self.assertEqual(context.source, "gospel")
         self.assertEqual(context.saintOfDay, "Saint Example")
         self.assertEqual(context.saintIntercessions, ("Saint Example",))
+        self.assertIn("Trust", context.sharedThemeTitle)
+        self.assertIn("Saint Example", context.sharedThemeExplanation)
+        self.assertIn("Mark 5:36", context.sharedThemeExplanation)
+        self.assertIn("today's focus", context.sharedThemeTransition)
 
     def test_missing_gospel_falls_back_to_season(self):
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [
@@ -73,6 +83,9 @@ class TestDailyLiturgicalContext(unittest.TestCase):
         self.assertEqual(context.primaryTheme, "repentance")
         self.assertEqual(context.source, "season")
         self.assertIn("network unavailable", context.fallbackReason)
+        self.assertIn("Repentance", context.sharedThemeTitle)
+        self.assertIn("Lent", context.sharedThemeExplanation)
+        self.assertTrue(any(source["kind"] == "season" for source in context.to_dict()["sharedThemeSources"]))
 
 
 if __name__ == "__main__":

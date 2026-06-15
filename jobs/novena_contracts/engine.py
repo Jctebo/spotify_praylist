@@ -15,6 +15,7 @@ from .contracts import NovenaRuntime, TemplateFragment, TemplateSection
 OPENAI_API_KEY = "OPENAI_API_KEY"
 OAI_API_BASE_URL = "OAI_API_BASE_URL"
 OAI_MODEL = "OAI_MODEL"
+NOVENA_DAILY_THEME_VERSION = "daily-theme-v1"
 
 
 def _normalize_whitespace(text: str) -> str:
@@ -164,12 +165,15 @@ def _intro_fragment(runtime: NovenaRuntime, context: Mapping[str, Any]) -> Dict[
     episode_id = f"{runtime.date.isoformat()}-{runtime.contract_id}-day-{runtime.active_day}"
     saint_name = str(context.get("saint_name", runtime.saint.get("name", runtime.contract_id))).strip()
     title = f"Welcome to Day {runtime.active_day}"
+    daily_theme_title = _normalize_whitespace(context.get("daily_theme_title", ""))
+    daily_theme_transition = _normalize_whitespace(context.get("daily_theme_transition", ""))
+    theme_sentence = f" {daily_theme_transition}" if daily_theme_title and daily_theme_transition else ""
     return {
         "fragment_key": f"{episode_id}/intro",
         "block_path": "intro",
         "kind": "fixed",
         "label": title,
-        "text": f"Welcome to Day {runtime.active_day} of the Novena to {saint_name}.",
+        "text": f"Welcome to Day {runtime.active_day} of the Novena to {saint_name}.{theme_sentence}",
     }
 
 
@@ -342,6 +346,7 @@ def runtime_context(runtime: NovenaRuntime) -> Dict[str, Any]:
     theme = themes[(runtime.active_day - 1) % len(themes)] if themes else str(runtime.feast.get("name", runtime.saint.get("name", runtime.contract_id))).strip()
     saint_name = str(runtime.saint.get("name", runtime.contract_id)).strip()
     feast_name = str(runtime.feast.get("name", runtime.contract_id)).strip()
+    daily_theme = _novena_daily_theme_context(runtime, theme=theme, saint_name=saint_name, feast_name=feast_name)
     context = {
         "family_id": runtime.family_id,
         "day": runtime.active_day,
@@ -368,4 +373,43 @@ def runtime_context(runtime: NovenaRuntime) -> Dict[str, Any]:
         "month_name": runtime.date.strftime("%B"),
         "contract_id": runtime.contract_id,
     }
+    context.update(daily_theme)
     return context
+
+
+def _title_case(value: str) -> str:
+    return " ".join(part.capitalize() for part in _normalize_whitespace(value or "trust").split())
+
+
+def _slug(value: str) -> str:
+    return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", str(value or "").lower())).strip("-") or "trust"
+
+
+def _novena_daily_theme_context(
+    runtime: NovenaRuntime,
+    *,
+    theme: str,
+    saint_name: str,
+    feast_name: str,
+) -> Dict[str, Any]:
+    theme_title = _title_case(theme or feast_name or saint_name or "trust")
+    theme_lc = theme_title[:1].lower() + theme_title[1:] if theme_title else "trust"
+    explanation = (
+        f"Today's focus is {theme_lc}: this novena day is prayed with {saint_name}, "
+        f"so the day's petition can be joined to the Church's prayer on {runtime.date.strftime('%B')} {runtime.date.day}, {runtime.date.year}."
+    )
+    transition = (
+        f"Carrying today's focus of {theme_lc}, we join this novena intention to the needs of the whole day."
+    )
+    return {
+        "daily_theme_title": theme_title,
+        "daily_theme_slug": _slug(theme_title),
+        "daily_theme_explanation": explanation,
+        "daily_theme_transition": transition,
+        "daily_theme_reflection_focus": explanation,
+        "daily_theme_sources": [
+            {"kind": "novena", "label": saint_name, "theme": theme},
+            {"kind": "feast", "label": feast_name, "theme": theme},
+        ],
+        "daily_theme_version": NOVENA_DAILY_THEME_VERSION,
+    }

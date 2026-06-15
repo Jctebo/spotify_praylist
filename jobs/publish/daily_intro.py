@@ -392,6 +392,40 @@ def _validate_daily_intro(text: str, *, allow_missing_gospel: bool = False) -> s
     return " ".join(sentences).strip()
 
 
+def _shared_theme_value(shared_theme: Optional[Dict[str, Any]], key: str) -> str:
+    if not isinstance(shared_theme, dict):
+        return ""
+    return _normalize_whitespace(shared_theme.get(key, ""))
+
+
+def _validate_theme_intro(text: str, *, allow_missing_gospel: bool = False) -> str:
+    rendered = _validate_daily_intro(text, allow_missing_gospel=allow_missing_gospel)
+    if not rendered:
+        return rendered
+    lowered = rendered.lower()
+    if "today's focus" not in lowered and "the grace" not in lowered:
+        raise RuntimeError("Daily intro must explain today's focus.")
+    if "gospel" not in lowered and not allow_missing_gospel:
+        raise RuntimeError("Daily intro must mention the Gospel when Gospel text is available.")
+    return rendered
+
+
+def _deterministic_theme_intro(date_value, context: DailyIntroContext, shared_theme: Dict[str, Any]) -> str:
+    title = _shared_theme_value(shared_theme, "sharedThemeTitle") or _shared_theme_value(shared_theme, "daily_theme_title") or "Trust"
+    explanation = (
+        _shared_theme_value(shared_theme, "sharedThemeExplanation")
+        or _shared_theme_value(shared_theme, "daily_theme_explanation")
+        or f"Today's focus is {title}."
+    )
+    if context.gospel_text:
+        gospel = f"In today's Gospel, {context.gospel_citation or 'the Lord'} helps us receive this focus with faith."
+    else:
+        gospel = "We receive this focus through the Church's prayer for this liturgical day."
+    return _normalize_whitespace(
+        f"Today the Church celebrates {context.celebration_clause}. {explanation} {gospel}"
+    )
+
+
 def build_daily_intro_text(
     date_value,
     *,
@@ -399,6 +433,7 @@ def build_daily_intro_text(
     locale: Optional[str] = None,
     prompt_model: Optional[str] = None,
     allow_missing_gospel: bool = False,
+    shared_theme: Optional[Dict[str, Any]] = None,
 ) -> str:
     context = fetch_daily_gospel_context(
         date_value,
@@ -407,6 +442,38 @@ def build_daily_intro_text(
         allow_missing_gospel=allow_missing_gospel,
     )
     model = str(prompt_model or os.getenv(OAI_MODEL, "") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
+    theme_title = _shared_theme_value(shared_theme, "sharedThemeTitle") or _shared_theme_value(shared_theme, "daily_theme_title")
+    theme_explanation = _shared_theme_value(shared_theme, "sharedThemeExplanation") or _shared_theme_value(shared_theme, "daily_theme_explanation")
+    if theme_title or theme_explanation:
+        gospel_rule = (
+            "Sentence 3 must begin with \"In today's Gospel\" and explain how the Gospel supports today's focus."
+            if context.gospel_text
+            else "Sentence 3 must explain that this focus is received through the liturgical day without mentioning the Gospel."
+        )
+        prompt = f"""
+Write exactly three sentences for the opening block of a Catholic morning prayer podcast.
+
+Sentence 1 must begin with "Today the Church celebrates" and must include this liturgical context exactly: {context.celebration_clause}.
+Sentence 2 must begin with "Today's focus is" and explain this focus in plain spoken language: {theme_explanation or theme_title}.
+{gospel_rule}
+
+Date: {date_value.isoformat()}
+Liturgical context: {context.celebration_clause}
+Shared focus title: {theme_title}
+Shared focus explanation: {theme_explanation}
+Gospel citation: {context.gospel_citation}
+Gospel text:
+{context.gospel_text}
+""".strip()
+        try:
+            rendered = _call_openai_prompt(model, prompt)
+            return _validate_theme_intro(rendered, allow_missing_gospel=allow_missing_gospel)
+        except Exception:
+            return _validate_theme_intro(
+                _deterministic_theme_intro(date_value, context, dict(shared_theme or {})),
+                allow_missing_gospel=True,
+            )
+
     if context.gospel_text:
         prompt = f"""
 Write exactly three sentences for the opening block of a Catholic prayer podcast.

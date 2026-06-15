@@ -217,6 +217,14 @@ def _load_sidecar_payload(runtime: Any, *, docs_root: Optional[Path]) -> Optiona
 
 def _rendered_from_sidecar(runtime: Any, payload: Dict[str, Any]) -> Dict[str, Any]:
     episode_id = str(payload.get("episode_id") or _episode_id(runtime)).strip()
+    context = dict(payload.get("context") or {})
+    if not context:
+        context = {
+            "saint_name": str((payload.get("saint") or runtime.saint).get("name", runtime.contract_id)).strip(),
+            "feast_name": str((payload.get("feast") or runtime.feast).get("name", runtime.contract_id)).strip(),
+            "day": int(payload.get("active_day", runtime.active_day) or runtime.active_day),
+            "daily_focus": _extract_daily_focus_from_payload(payload, runtime=runtime),
+        }
     return {
         "family_id": str(payload.get("family_id", runtime.family_id)).strip(),
         "contract_id": str(payload.get("contract_id", runtime.contract_id)).strip(),
@@ -226,12 +234,7 @@ def _rendered_from_sidecar(runtime: Any, payload: Dict[str, Any]) -> Dict[str, A
         "feast": dict(payload.get("feast") or runtime.feast),
         "novena": dict(payload.get("novena") or runtime.novena),
         "template": dict(payload.get("template") or runtime.resolved_template.to_dict()),
-        "context": {
-            "saint_name": str((payload.get("saint") or runtime.saint).get("name", runtime.contract_id)).strip(),
-            "feast_name": str((payload.get("feast") or runtime.feast).get("name", runtime.contract_id)).strip(),
-            "day": int(payload.get("active_day", runtime.active_day) or runtime.active_day),
-            "daily_focus": _extract_daily_focus_from_payload(payload, runtime=runtime),
-        },
+        "context": context,
         "content": dict(payload.get("content") or {}),
         "audio_fragments": list(payload.get("fragments") or []),
         "episode_id": episode_id,
@@ -274,6 +277,15 @@ def _audio_job_from_sidecar(runtime: Any, payload: Dict[str, Any]) -> Dict[str, 
         "audio_config": audio_config,
         "content_hash": content_hash,
     }
+
+
+def _sidecar_has_current_daily_theme(payload: Optional[Dict[str, Any]]) -> bool:
+    if not isinstance(payload, dict):
+        return False
+    context = payload.get("context")
+    if not isinstance(context, dict):
+        return False
+    return str(context.get("daily_theme_version", "")).strip() == "daily-theme-v1"
 
 
 def run_novena_pipeline(
@@ -347,6 +359,10 @@ def run_novena_pipeline(
     audio_items: List[Dict[str, Any]] = []
     for runtime in seeded_runtimes:
         sidecar_payload = _load_sidecar_payload(runtime, docs_root=root)
+        if sidecar_payload is not None and not _sidecar_has_current_daily_theme(sidecar_payload):
+            audio_payload = sidecar_payload.get("audio") if isinstance(sidecar_payload.get("audio"), dict) else {}
+            if runtime.date in target_date_set or not bool(audio_payload.get("rendered", False)):
+                sidecar_payload = None
         if sidecar_payload is None:
             rendered = render_novena(runtime, generate_text_fn=generate_text_fn)
             rendered["episode_id"] = _episode_id(runtime)
