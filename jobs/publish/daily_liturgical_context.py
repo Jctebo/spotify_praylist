@@ -369,6 +369,17 @@ def _slug(value: str) -> str:
     return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", str(value or "").lower())).strip("-") or "trust"
 
 
+def _join_with_and(items: Sequence[str]) -> str:
+    values = [_normalize_whitespace(item) for item in items if _normalize_whitespace(item)]
+    if not values:
+        return ""
+    if len(values) == 1:
+        return values[0]
+    if len(values) == 2:
+        return f"{values[0]} and {values[1]}"
+    return f"{', '.join(values[:-1])}, and {values[-1]}"
+
+
 def _truncate_sentence(value: str, *, limit: int = 220) -> str:
     text = _normalize_whitespace(value)
     if len(text) <= limit:

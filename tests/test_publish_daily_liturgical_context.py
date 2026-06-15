@@ -87,6 +87,34 @@ class TestDailyLiturgicalContext(unittest.TestCase):
         self.assertIn("Lent", context.sharedThemeExplanation)
         self.assertTrue(any(source["kind"] == "season" for source in context.to_dict()["sharedThemeSources"]))
 
+    def test_multiple_calendar_names_are_joined_in_shared_theme_source(self):
+        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [
+            {
+                "name": "Tuesday of the Eleventh Week in Ordinary Time",
+                "rank_name": "weekday",
+                "season": "Season.ORDINARY_TIME",
+            },
+            {
+                "name": "Saint Example",
+                "rank_name": "optional_memorial",
+                "season": "Season.ORDINARY_TIME",
+            },
+        ]
+        self.mod.fetch_daily_gospel_context = lambda *args, **kwargs: SimpleNamespace(
+            gospel_text="The Lord teaches us to forgive and love.",
+            gospel_citation="Matthew 5:43-48",
+        )
+
+        context = self.mod.build_daily_liturgical_context(datetime.date(2026, 6, 16))
+        payload = context.to_dict()
+
+        calendar_source = next(source for source in payload["sharedThemeSources"] if source["kind"] == "calendar")
+        self.assertEqual(
+            calendar_source["label"],
+            "Tuesday of the Eleventh Week in Ordinary Time and Saint Example",
+        )
+        self.assertIn("Tuesday of the Eleventh Week in Ordinary Time and Saint Example", payload["sharedThemeExplanation"])
+
 
 if __name__ == "__main__":
     unittest.main()
