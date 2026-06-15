@@ -1,5 +1,10 @@
 # Release Log
 
+## [0.3.6.10] - 2026-06-15
+
+### Fixed
+- Fixed the publish-audio shared daily theme builder when a liturgical day has multiple non-feast calendar names, preventing `NameError: _join_with_and is not defined` during the remote `Publish Prayer Audio` workflow.
+
 ## [0.3.6.9] - 2026-06-15
 
 ### Added
