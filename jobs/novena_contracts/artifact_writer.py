@@ -70,6 +70,7 @@ def write_novena_artifact(runtime: NovenaRuntime, rendered: Dict[str, Any], audi
         "feast": dict(runtime.feast),
         "novena": dict(runtime.novena),
         "template": rendered.get("template") or runtime.resolved_template.to_dict(),
+        "context": dict(rendered.get("context") or {}),
         "content": dict(rendered.get("content") or {}),
         "fragments": list(rendered.get("audio_fragments") or []),
         "audio": {

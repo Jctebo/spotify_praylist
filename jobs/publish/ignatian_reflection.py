@@ -64,7 +64,7 @@ def build_episode_title(date_value, context: DailyLiturgicalContext) -> str:
         if hasattr(date_value, "strftime")
         else str(date_value)
     )
-    theme = _title_case_theme(context.primaryTheme)
+    theme = str(context.sharedThemeTitle or "").strip() or _title_case_theme(context.primaryTheme)
     return f"Daily Reflection - {theme} - {date_display}"
 
 
@@ -91,7 +91,7 @@ Rules:
 - Paragraphs 1, 2, and 3 must each end with a question so the audio can pause after them.
 - The reflection should be shorter and more spacious than before, with several contemplative pauses.
 - Paragraph 1 should introduce the day's liturgical context naturally.
-- Paragraph 2 should draw the day into ordinary life through the primary theme, saint, imagery, and emotional tone.
+- Paragraph 2 should draw the day into ordinary life through the shared daily focus, saint, imagery, and emotional tone.
 - Paragraph 3 should guide a brief examen with gratitude, reviewing the day, consolation/desolation, speaking with Jesus, and hope for tomorrow.
 - Paragraph 4 should include the closing prayer and end exactly with these two final lines:
 Saint {_saint_for_context(context)}, pray for us.
@@ -135,10 +135,10 @@ def _call_openai_reflection(model: str, prompt: str) -> str:
 
 def deterministic_ignatian_reflection(date_value, context: DailyLiturgicalContext, title: str) -> str:
     saint = _saint_for_context(context)
-    focus = context.reflectionFocus
-    theme = context.primaryTheme
+    focus = context.sharedThemeReflectionFocus or context.reflectionFocus
+    theme = context.sharedThemeTitle or context.primaryTheme
     tone = context.emotionalTone
-    summary = context.shortSummary
+    summary = context.sharedThemeExplanation or context.shortSummary
     feast_sentence = f"The Church's calendar gives us {context.feastDay} as a companion today." if context.feastDay else ""
     gospel_sentence = (
         f"The Gospel theme before us is {context.gospelTheme}." if context.gospelTheme else

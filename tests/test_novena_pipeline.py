@@ -199,6 +199,49 @@ class TestNovenaPipeline(unittest.TestCase):
             self.assertTrue(any(guid.startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::") for guid in guids))
             self.assertTrue(any(guid.startswith("2026-06-04-most_sacred_heart_of_jesus-day-2::") for guid in guids))
 
+    def test_pipeline_preserves_stale_rendered_sidecar_outside_target_dates(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contracts_root = self._write_contracts(root)
+            docs_root = root / "docs"
+            cache_root = root / ".cache"
+
+            def fake_renderer(text, audio_config):
+                return make_test_mp3_bytes()
+
+            def fake_generate_text(prompt, context):
+                return self._fake_generate_text(prompt, context)
+
+            pipeline_mod.run_novena_pipeline(
+                contract_dir=contracts_root,
+                docs_root=docs_root,
+                cache_root=cache_root,
+                publish_dates=[datetime.date(2026, 6, 3), datetime.date(2026, 6, 4)],
+                renderer=fake_renderer,
+                generate_text_fn=fake_generate_text,
+            )
+            stale_sidecar = docs_root / "audio" / "2026-06-03-most_sacred_heart_of_jesus-day-1.json"
+            payload = json.loads(stale_sidecar.read_text(encoding="utf-8"))
+            payload.pop("context", None)
+            payload["content_hash"] = "legacy-rendered-hash"
+            payload["audio"]["content_hash"] = "legacy-rendered-hash"
+            payload["audio"]["rendered"] = True
+            stale_sidecar.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+
+            pipeline_mod.run_novena_pipeline(
+                contract_dir=contracts_root,
+                docs_root=docs_root,
+                cache_root=cache_root,
+                today=datetime.date(2026, 6, 4),
+                renderer=fake_renderer,
+                generate_text_fn=fake_generate_text,
+            )
+
+            preserved = json.loads(stale_sidecar.read_text(encoding="utf-8"))
+            self.assertNotIn("context", preserved)
+            self.assertEqual(preserved["content_hash"], "legacy-rendered-hash")
+            self.assertTrue(preserved["audio"]["rendered"])
+
     def test_pipeline_renders_traditional_novena_title_with_publish_date_suffix(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

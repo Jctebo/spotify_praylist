@@ -11,6 +11,7 @@ from jobs.publish.daily_intro import _normalize_whitespace, fetch_daily_gospel_c
 FEAST_RANKS = frozenset({"solemnity", "feast", "memorial", "optional_memorial"})
 MAJOR_RANKS = frozenset({"solemnity", "feast"})
 SAINT_FALLBACK = "Saint Ignatius of Loyola"
+SHARED_THEME_VERSION = "daily-theme-v1"
 
 
 @dataclass(frozen=True)
@@ -37,12 +38,20 @@ class DailyLiturgicalContext:
     gospelCitation: str = ""
     calendar: str = "general_roman"
     locale: str = "en"
+    sharedThemeTitle: str = ""
+    sharedThemeSlug: str = ""
+    sharedThemeExplanation: str = ""
+    sharedThemeTransition: str = ""
+    sharedThemeReflectionFocus: str = ""
+    sharedThemeSources: tuple[Dict[str, str], ...] = ()
+    sharedThemeVersion: str = SHARED_THEME_VERSION
 
     def to_dict(self) -> Dict[str, Any]:
         payload = asdict(self)
         payload["secondaryThemes"] = list(self.secondaryThemes)
         payload["suggestedImagery"] = list(self.suggestedImagery)
         payload["saintIntercessions"] = list(self.saintIntercessions)
+        payload["sharedThemeSources"] = [dict(item) for item in self.sharedThemeSources]
         return payload
 
 
@@ -109,6 +118,15 @@ def build_daily_liturgical_context(
     focus_label = _focus_label(source, feast["name"] if feast else "", gospel_citation, season)
     fallback_reason = "; ".join(part for part in (romcal_error, gospel_error) if part)
     summary = _summary(primary_theme, focus_label, season)
+    shared_theme = _shared_theme_payload(
+        primary_theme=primary_theme,
+        gospel_theme=gospel_theme,
+        season=season,
+        feast=feast,
+        celebrations=celebrations,
+        gospel_citation=gospel_citation,
+        source=source,
+    )
 
     return DailyLiturgicalContext(
         date=date_value.isoformat(),
@@ -133,6 +151,13 @@ def build_daily_liturgical_context(
         gospelCitation=gospel_citation,
         calendar=effective_calendar,
         locale=effective_locale,
+        sharedThemeTitle=shared_theme["title"],
+        sharedThemeSlug=shared_theme["slug"],
+        sharedThemeExplanation=shared_theme["explanation"],
+        sharedThemeTransition=shared_theme["transition"],
+        sharedThemeReflectionFocus=shared_theme["reflection_focus"],
+        sharedThemeSources=tuple(shared_theme["sources"]),
+        sharedThemeVersion=SHARED_THEME_VERSION,
     )
 
 
@@ -334,3 +359,114 @@ def _focus_label(source: str, feast: str, gospel_citation: str, season: str) -> 
 def _summary(theme: str, focus_label: str, season: str) -> str:
     season_clause = f" in {season}" if season else ""
     return f"Today's shared focus is {theme}, received through {focus_label}{season_clause}."
+
+
+def _humanize_theme(value: str) -> str:
+    return " ".join(part.capitalize() for part in _normalize_whitespace(value or "trust").split())
+
+
+def _slug(value: str) -> str:
+    return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", str(value or "").lower())).strip("-") or "trust"
+
+
+def _truncate_sentence(value: str, *, limit: int = 220) -> str:
+    text = _normalize_whitespace(value)
+    if len(text) <= limit:
+        return text
+    trimmed = text[:limit].rsplit(" ", 1)[0].rstrip(" ,;:")
+    return f"{trimmed}."
+
+
+def _source_row(kind: str, label: str, theme: str = "") -> Dict[str, str]:
+    row = {"kind": kind, "label": _normalize_whitespace(label)}
+    if theme:
+        row["theme"] = _normalize_whitespace(theme)
+    return row
+
+
+def _shared_theme_sources(
+    *,
+    primary_theme: str,
+    gospel_theme: str,
+    season: str,
+    feast: Optional[Dict[str, str]],
+    celebrations: Sequence[Dict[str, str]],
+    gospel_citation: str,
+) -> List[Dict[str, str]]:
+    sources: List[Dict[str, str]] = []
+    if feast:
+        sources.append(_source_row(feast.get("rank", "feast"), feast.get("name", ""), _theme_from_feast(feast.get("name", ""), feast.get("rank", ""))))
+    elif celebrations:
+        names = [item.get("name", "") for item in celebrations if item.get("name")]
+        if names:
+            sources.append(_source_row("calendar", _join_with_and(names), primary_theme))
+    if gospel_theme:
+        label = f"today's Gospel, {gospel_citation}" if gospel_citation else "today's Gospel"
+        sources.append(_source_row("gospel", label, gospel_theme))
+    if season:
+        sources.append(_source_row("season", season, _theme_from_season(season)))
+    if not sources:
+        sources.append(_source_row("fallback", "ordinary life today", primary_theme or "trust"))
+    return sources
+
+
+def _theme_title(primary_theme: str, gospel_theme: str, season: str, feast: Optional[Dict[str, str]]) -> str:
+    values = [_normalize_whitespace(primary_theme)]
+    for value in (gospel_theme, _theme_from_season(season)):
+        cleaned = _normalize_whitespace(value)
+        if cleaned and cleaned not in values:
+            values.append(cleaned)
+    if feast and feast.get("rank") in {"memorial", "optional_memorial"} and "discernment" not in values:
+        values.append("discernment")
+    if len(values) == 1:
+        return _humanize_theme(values[0])
+    return _humanize_theme(" and ".join(values[:2]))
+
+
+def _shared_theme_payload(
+    *,
+    primary_theme: str,
+    gospel_theme: str,
+    season: str,
+    feast: Optional[Dict[str, str]],
+    celebrations: Sequence[Dict[str, str]],
+    gospel_citation: str,
+    source: str,
+) -> Dict[str, Any]:
+    title = _theme_title(primary_theme, gospel_theme, season, feast)
+    title_lc = title[:1].lower() + title[1:] if title else "trust"
+    sources = _shared_theme_sources(
+        primary_theme=primary_theme,
+        gospel_theme=gospel_theme,
+        season=season,
+        feast=feast,
+        celebrations=celebrations,
+        gospel_citation=gospel_citation,
+    )
+    day_label = sources[0]["label"] if sources else "ordinary life today"
+    gospel_clause = ""
+    if gospel_theme:
+        gospel_label = next((item["label"] for item in sources if item.get("kind") == "gospel"), "today's Gospel")
+        gospel_clause = f", while {gospel_label} draws out {gospel_theme}"
+    season_clause = f" in {season}" if season else ""
+    explanation = _truncate_sentence(
+        f"Today's focus is {title_lc}: the Church gives us {day_label}{season_clause}{gospel_clause}, so the whole day can be prayed as one invitation to {primary_theme}."
+    )
+    transition = _truncate_sentence(
+        f"Carrying today's focus of {title_lc}, we place ourselves and the needs of this day before the Lord."
+    )
+    reflection_focus = _truncate_sentence(
+        f"Pray with {title_lc} by holding together {day_label}, the light of the Gospel, and the grace of {season or 'this liturgical day'}."
+    )
+    if source == "fallback":
+        explanation = "Today's focus is Trust: even with limited liturgical data, the Church invites us to receive ordinary life as a place of grace."
+        transition = "Carrying today's focus of trust, we place ourselves and the needs of this day before the Lord."
+        reflection_focus = "Pray with trust by noticing where God is present in ordinary life today."
+    return {
+        "title": title,
+        "slug": _slug(title),
+        "explanation": explanation,
+        "transition": transition,
+        "reflection_focus": reflection_focus,
+        "sources": sources,
+    }

@@ -3,6 +3,7 @@ from __future__ import annotations
 import datetime as _dt
 import copy
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
@@ -479,6 +480,7 @@ def _build_context_for_patterns(runtime: NovenaRuntime) -> Dict[str, Any]:
         target_date=runtime.date,
     )
     theme, themes = _select_daily_focus(runtime)
+    theme_title = " ".join(part.capitalize() for part in str(theme or "trust").split())
     context.update(
         {
             "day": runtime.active_day,
@@ -493,6 +495,16 @@ def _build_context_for_patterns(runtime: NovenaRuntime) -> Dict[str, Any]:
             "daily_focus": theme,
             "themes": themes,
             "themes_text": ", ".join(str(item).strip() for item in themes if str(item).strip()),
+            "daily_theme_title": theme_title,
+            "daily_theme_slug": re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", theme_title.lower())).strip("-") or "trust",
+            "daily_theme_explanation": f"Today's focus is {theme_title[:1].lower() + theme_title[1:] if theme_title else 'trust'}: this novena day is joined to the Church's prayer.",
+            "daily_theme_transition": (
+                f"Carrying today's focus of {theme_title[:1].lower() + theme_title[1:] if theme_title else 'trust'}, "
+                "we join this novena intention to the needs of the whole day."
+            ),
+            "daily_theme_reflection_focus": f"Pray this novena day through {theme_title[:1].lower() + theme_title[1:] if theme_title else 'trust'}.",
+            "daily_theme_sources": [{"kind": "novena", "label": runtime.saint.get("name", runtime.contract_id), "theme": theme}],
+            "daily_theme_version": "daily-theme-v1",
         }
     )
     return context

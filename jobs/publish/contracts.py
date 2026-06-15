@@ -815,17 +815,27 @@ def _resolve_prayer_intro_content(
     contract: PublishContract,
     entry: Dict[str, Any],
     target_date: _dt.date,
+    runtime_context: Optional[Dict[str, Any]] = None,
 ) -> str:
     prayer_title = _compact_text(block.get("prayer_title") or entry.get("title") or contract.contract_id)
     devotion = _compact_text(block.get("devotion") or prayer_title)
     template = _compact_text(block.get("template"))
     if not template:
-        template = "In today's {devotion}, we turn toward {day_theme} as we enter the {prayer_title}."
-    calendar, locale = _prayer_intro_liturgical_context(block, contract)
-    day_theme = _prayer_intro_day_theme(target_date, calendar=calendar, locale=locale)
+        template = "As we enter the {prayer_title}, we carry the grace of {daily_theme_title} into today's {devotion}."
+    daily_theme_title = _compact_text((runtime_context or {}).get("daily_theme_title"))
+    daily_theme_transition = _compact_text((runtime_context or {}).get("daily_theme_transition"))
+    daily_theme_explanation = _compact_text((runtime_context or {}).get("daily_theme_explanation"))
+    if not daily_theme_title:
+        calendar, locale = _prayer_intro_liturgical_context(block, contract)
+        daily_theme_title = _prayer_intro_day_theme(target_date, calendar=calendar, locale=locale)
+    if not daily_theme_transition:
+        daily_theme_transition = f"Carrying today's focus of {daily_theme_title}, we place ourselves and the needs of this day before the Lord."
     try:
         rendered = template.format(
-            day_theme=day_theme,
+            day_theme=daily_theme_title,
+            daily_theme_title=daily_theme_title,
+            daily_theme_transition=daily_theme_transition,
+            daily_theme_explanation=daily_theme_explanation,
             prayer_title=prayer_title,
             devotion=devotion,
         )
@@ -896,6 +906,109 @@ def _daily_reflection_config(block: Dict[str, Any], contract: PublishContract) -
     return config
 
 
+def _daily_theme_config(contract: PublishContract, entry: Dict[str, Any]) -> Dict[str, Any]:
+    metadata = dict(contract.metadata or {})
+    config: Dict[str, Any] = {}
+    for key in ("daily_theme", "daily_reflection", "rosary_reflections", "daily_intro", "liturgical_announcement", "prayer_intro"):
+        value = metadata.get(key)
+        if isinstance(value, dict):
+            for option in ("calendar", "locale", "allow_missing_gospel"):
+                if option in value and option not in config:
+                    config[option] = value.get(option)
+    for block in entry.get("blocks") or []:
+        if not isinstance(block, dict):
+            continue
+        for option in ("calendar", "locale", "allow_missing_gospel"):
+            if option in block and option not in config:
+                config[option] = block.get(option)
+    config.setdefault("calendar", metadata.get("calendar") or "general_roman")
+    config.setdefault("locale", metadata.get("locale") or "en")
+    config["allow_missing_gospel"] = _normalize_bool(config.get("allow_missing_gospel", True))
+    return config
+
+
+def _daily_liturgical_context_to_payload(context: Any) -> Dict[str, Any]:
+    if context is None:
+        return {}
+    if isinstance(context, dict):
+        return dict(context)
+    to_dict = getattr(context, "to_dict", None)
+    if callable(to_dict):
+        try:
+            return dict(to_dict())
+        except Exception:
+            pass
+    keys = (
+        "date",
+        "liturgicalSeason",
+        "liturgicalWeek",
+        "feastDay",
+        "liturgicalRank",
+        "saintOfDay",
+        "gospelTheme",
+        "primaryTheme",
+        "secondaryThemes",
+        "emotionalTone",
+        "reflectionFocus",
+        "suggestedImagery",
+        "suggestedMusicMood",
+        "openingTone",
+        "closingTone",
+        "saintIntercessions",
+        "shortSummary",
+        "source",
+        "fallbackReason",
+        "gospelCitation",
+        "calendar",
+        "locale",
+        "sharedThemeTitle",
+        "sharedThemeSlug",
+        "sharedThemeExplanation",
+        "sharedThemeTransition",
+        "sharedThemeReflectionFocus",
+        "sharedThemeSources",
+        "sharedThemeVersion",
+    )
+    return {key: getattr(context, key) for key in keys if hasattr(context, key)}
+
+
+def _daily_theme_runtime_fields(payload: Dict[str, Any]) -> Dict[str, Any]:
+    title = str(payload.get("sharedThemeTitle") or _humanize_slug(payload.get("primaryTheme", "")) or "Trust").strip()
+    slug = str(payload.get("sharedThemeSlug") or normalize_publish_key(title)).strip() or "trust"
+    explanation = str(payload.get("sharedThemeExplanation") or payload.get("shortSummary") or f"Today's focus is {title}.").strip()
+    transition = str(
+        payload.get("sharedThemeTransition")
+        or f"Carrying today's focus of {title.lower()}, we place ourselves and the needs of this day before the Lord."
+    ).strip()
+    reflection_focus = str(payload.get("sharedThemeReflectionFocus") or payload.get("reflectionFocus") or explanation).strip()
+    sources = payload.get("sharedThemeSources") or []
+    return {
+        "daily_liturgical_context": payload,
+        "daily_theme_title": title,
+        "daily_theme_slug": slug,
+        "daily_theme_explanation": explanation,
+        "daily_theme_transition": transition,
+        "daily_theme_reflection_focus": reflection_focus,
+        "daily_theme_sources": sources,
+        "daily_theme_version": str(payload.get("sharedThemeVersion") or "daily-theme-v1"),
+    }
+
+
+def _build_daily_theme_runtime_context(
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    target_date: _dt.date,
+) -> Dict[str, Any]:
+    config = _daily_theme_config(contract, entry)
+    context = build_daily_liturgical_context(
+        target_date,
+        calendar=str(config.get("calendar") or "").strip() or None,
+        locale=str(config.get("locale") or "").strip() or None,
+        allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
+    )
+    return _daily_theme_runtime_fields(_daily_liturgical_context_to_payload(context))
+
+
 def _find_first_block_by_kind(blocks: Sequence[Any], kind_name: str) -> Optional[Dict[str, Any]]:
     target = normalize_publish_key(kind_name)
     for block in blocks:
@@ -922,6 +1035,7 @@ def _build_rosary_day_runtime_context(
     contract: PublishContract,
     entry: Dict[str, Any],
     target_date: _dt.date,
+    shared_theme: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     rosary_block = _find_first_block_by_kind(entry.get("blocks") or [], "rosary-decades")
     if not rosary_block:
@@ -935,6 +1049,7 @@ def _build_rosary_day_runtime_context(
         locale=str(config.get("locale") or "").strip() or None,
         allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
         season=_season_for_date(contract, target_date),
+        shared_theme=shared_theme,
     )
     return {
         "rosary_day_context": day_context,
@@ -952,22 +1067,18 @@ def _entry_runtime_context(
     entry: Dict[str, Any],
     target_date: _dt.date,
 ) -> Dict[str, Any]:
-    runtime: Dict[str, Any] = {}
-    runtime.update(_build_rosary_day_runtime_context(contract, entry, target_date))
+    runtime: Dict[str, Any] = _build_daily_theme_runtime_context(contract, entry, target_date)
+    runtime.update(_build_rosary_day_runtime_context(contract, entry, target_date, runtime.get("daily_liturgical_context")))
     reflection_block = _find_first_block_by_kind(entry.get("blocks") or [], "ignatian-reflection")
     if reflection_block:
         config = _daily_reflection_config(reflection_block, contract)
-        context = build_daily_liturgical_context(
-            target_date,
-            calendar=str(config.get("calendar") or "").strip() or None,
-            locale=str(config.get("locale") or "").strip() or None,
-            allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
+        context_payload = dict(runtime.get("daily_liturgical_context") or {})
+        runtime["daily_reflection_primary_theme"] = str(context_payload.get("primaryTheme", "")).strip()
+        runtime["daily_reflection_primary_theme_title"] = _humanize_slug(
+            context_payload.get("sharedThemeTitle") or context_payload.get("primaryTheme", "")
         )
-        runtime["daily_liturgical_context"] = context.to_dict()
-        runtime["daily_reflection_primary_theme"] = context.primaryTheme
-        runtime["daily_reflection_primary_theme_title"] = _humanize_slug(context.primaryTheme)
-        runtime["daily_reflection_tone"] = context.emotionalTone
-        runtime["daily_reflection_saint"] = context.saintOfDay
+        runtime["daily_reflection_tone"] = str(context_payload.get("emotionalTone", "")).strip()
+        runtime["daily_reflection_saint"] = str(context_payload.get("saintOfDay", "")).strip()
         runtime["daily_reflection_pause_ms"] = int(config.get("pause_ms", DEFAULT_REFLECTION_PAUSE_MS))
     return runtime
 
@@ -1010,6 +1121,7 @@ def _get_or_build_rosary_reflection_set(
         allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
         season=_season_for_date(contract, target_date),
         day_context=(runtime_context or {}).get("rosary_day_context"),
+        shared_theme=(runtime_context or {}).get("daily_liturgical_context"),
     )
     if runtime_context is not None:
         runtime_context["rosary_reflection_set"] = reflection_set
@@ -1115,6 +1227,13 @@ def _get_or_build_ignatian_reflection_episode(
             gospelCitation=str(helper_payload.get("gospelCitation", "")),
             calendar=str(helper_payload.get("calendar", "general_roman")),
             locale=str(helper_payload.get("locale", "en")),
+            sharedThemeTitle=str(helper_payload.get("sharedThemeTitle", "")),
+            sharedThemeSlug=str(helper_payload.get("sharedThemeSlug", "")),
+            sharedThemeExplanation=str(helper_payload.get("sharedThemeExplanation", "")),
+            sharedThemeTransition=str(helper_payload.get("sharedThemeTransition", "")),
+            sharedThemeReflectionFocus=str(helper_payload.get("sharedThemeReflectionFocus", "")),
+            sharedThemeSources=tuple(helper_payload.get("sharedThemeSources") or ()),
+            sharedThemeVersion=str(helper_payload.get("sharedThemeVersion", "daily-theme-v1")),
         )
     else:
         helper = build_daily_liturgical_context(
@@ -1191,6 +1310,7 @@ def _resolve_rosary_intro_content(
             locale=str(config.get("locale") or "").strip() or None,
             allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
             season=_season_for_date(contract, target_date),
+            shared_theme=(runtime_context or {}).get("daily_liturgical_context"),
         )
     return build_rosary_intro_text(
         target_date,
@@ -1202,6 +1322,7 @@ def _resolve_rosary_intro_content(
         allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
         season=_season_for_date(contract, target_date),
         day_context=day_context,
+        shared_theme=(runtime_context or {}).get("daily_liturgical_context"),
     )
 
 
@@ -1364,6 +1485,7 @@ def resolve_block_content(
                 locale=locale,
                 prompt_model=prompt_model,
                 allow_missing_gospel=allow_missing_gospel,
+                shared_theme=(runtime_context or {}).get("daily_liturgical_context"),
             )
         if kind == "liturgical-announcement":
             metadata = dict(contract.metadata or {})
@@ -1397,6 +1519,7 @@ def resolve_block_content(
                 contract=contract,
                 entry=entry,
                 target_date=effective_date,
+                runtime_context=runtime_context,
             )
         raise RuntimeError(f"Publish entry '{entry.get('entry_id', '')}' uses unsupported block kind '{kind}'.")
     except PublishMissingDataError as exc:
