@@ -1,5 +1,21 @@
 # Release Log
 
+## [0.3.6.9] - 2026-06-15
+
+### Added
+- Added an inclusive shared daily theme payload with title, slug, explanation, transition, reflection focus, sources, and version metadata.
+- Added shared daily theme context to Morning Prayer, Rosary, Daily Reflection, Auxilium Christianorum, Marian Antiphons, and novena rendering paths.
+- Added regression coverage for shared theme metadata and novena sidecar preservation.
+
+### Changed
+- Updated Morning Prayer intros to explain today's shared focus and why it fits the liturgical day, Gospel, and season when available.
+- Updated Rosary intro/reflection prompts and Daily Reflection title/fallback text to incorporate the same shared daily theme more deeply.
+- Reworded Auxilium Christianorum and Marian Antiphon prayer intros so they transition through the day's grace rather than awkwardly placing a calendar label under protection.
+- Updated novena intro fragments and sidecar context persistence so novenas lightly connect their saint/day focus to the day's prayer.
+
+### Fixed
+- Preserved already-rendered stale novena sidecars outside the current publish dates so pre-theme sidecars are not rewritten with placeholder audio metadata.
+
 ## [0.3.6.8] - 2026-06-14
 
 ### Added
