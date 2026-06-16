@@ -444,7 +444,7 @@ def _shared_theme_payload(
     source: str,
 ) -> Dict[str, Any]:
     title = _theme_title(primary_theme, gospel_theme, season, feast)
-    title_lc = title[:1].lower() + title[1:] if title else "trust"
+    title_lc = title.lower() if title else "trust"
     sources = _shared_theme_sources(
         primary_theme=primary_theme,
         gospel_theme=gospel_theme,

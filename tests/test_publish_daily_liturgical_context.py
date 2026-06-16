@@ -62,6 +62,7 @@ class TestDailyLiturgicalContext(unittest.TestCase):
         self.assertIn("Saint Example", context.sharedThemeExplanation)
         self.assertIn("Mark 5:36", context.sharedThemeExplanation)
         self.assertIn("today's focus", context.sharedThemeTransition)
+        self.assertNotIn("And", context.sharedThemeTransition)
 
     def test_missing_gospel_falls_back_to_season(self):
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [
@@ -114,6 +115,8 @@ class TestDailyLiturgicalContext(unittest.TestCase):
             "Tuesday of the Eleventh Week in Ordinary Time and Saint Example",
         )
         self.assertIn("Tuesday of the Eleventh Week in Ordinary Time and Saint Example", payload["sharedThemeExplanation"])
+        self.assertIn("mercy and trust", payload["sharedThemeTransition"])
+        self.assertNotIn("And", payload["sharedThemeTransition"])
 
 
 if __name__ == "__main__":

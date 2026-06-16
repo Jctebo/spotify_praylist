@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.3.6.13] - 2026-06-16
+
+### Fixed
+- Fixed shared daily theme transition casing so multi-word titles remain display-cased in metadata but are spoken in sentence case inside prayer and novena intros.
+- Added regression coverage for canonical daily theme transition casing.
+
 ## [0.3.6.12] - 2026-06-16
 
 ### Added
