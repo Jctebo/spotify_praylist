@@ -405,12 +405,11 @@ def _shared_theme_sources(
     gospel_citation: str,
 ) -> List[Dict[str, str]]:
     sources: List[Dict[str, str]] = []
-    if feast:
+    names = [item.get("name", "") for item in celebrations if item.get("name")]
+    if names:
+        sources.append(_source_row("calendar", _join_with_and(names), primary_theme))
+    elif feast:
         sources.append(_source_row(feast.get("rank", "feast"), feast.get("name", ""), _theme_from_feast(feast.get("name", ""), feast.get("rank", ""))))
-    elif celebrations:
-        names = [item.get("name", "") for item in celebrations if item.get("name")]
-        if names:
-            sources.append(_source_row("calendar", _join_with_and(names), primary_theme))
     if gospel_theme:
         label = f"today's Gospel, {gospel_citation}" if gospel_citation else "today's Gospel"
         sources.append(_source_row("gospel", label, gospel_theme))
