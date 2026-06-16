@@ -23,6 +23,17 @@ logger = logging.getLogger(__name__)
 
 SHORT_FORM_TEMPLATE_ID = "standard-9-day"
 SHORT_FORM_THEME_COUNT = 9
+DAILY_LITURGICAL_CONTEXT_FRESHNESS_KEYS = (
+    "date",
+    "sharedThemeTitle",
+    "sharedThemeVersion",
+    "sharedThemeExplanation",
+    "sharedThemeTransition",
+    "sharedThemeReflectionFocus",
+    "gospelCitation",
+    "fallbackReason",
+    "sharedThemeSources",
+)
 
 
 def _episode_id_list(jobs: Sequence[Dict[str, Any]], *, limit: int = 8) -> str:
@@ -283,7 +294,23 @@ def _audio_job_from_sidecar(runtime: Any, payload: Dict[str, Any]) -> Dict[str, 
     }
 
 
-def _sidecar_has_current_daily_theme(payload: Optional[Dict[str, Any]]) -> bool:
+def _daily_liturgical_context_matches(existing: Dict[str, Any], expected: Dict[str, Any]) -> bool:
+    for key in DAILY_LITURGICAL_CONTEXT_FRESHNESS_KEYS:
+        if key not in existing or key not in expected:
+            return False
+        if key == "sharedThemeSources":
+            if existing.get(key) != expected.get(key):
+                return False
+            continue
+        if str(existing.get(key, "")).strip() != str(expected.get(key, "")).strip():
+            return False
+    return True
+
+
+def _sidecar_has_current_daily_theme(
+    payload: Optional[Dict[str, Any]],
+    expected_daily_theme_context: Optional[Dict[str, Any]] = None,
+) -> bool:
     if not isinstance(payload, dict):
         return False
     daily_liturgical_context = payload.get("daily_liturgical_context")
@@ -293,8 +320,11 @@ def _sidecar_has_current_daily_theme(payload: Optional[Dict[str, Any]]) -> bool:
         return False
     if not str(daily_liturgical_context.get("sharedThemeTitle", "")).strip():
         return False
-    for required_key in ("gospelCitation", "fallbackReason", "sharedThemeSources"):
+    for required_key in DAILY_LITURGICAL_CONTEXT_FRESHNESS_KEYS:
         if required_key not in daily_liturgical_context:
+            return False
+    for required_key in ("sharedThemeExplanation", "sharedThemeTransition", "sharedThemeReflectionFocus"):
+        if not str(daily_liturgical_context.get(required_key, "")).strip():
             return False
     if not isinstance(daily_liturgical_context.get("sharedThemeSources"), list) or not daily_liturgical_context.get("sharedThemeSources"):
         return False
@@ -305,7 +335,28 @@ def _sidecar_has_current_daily_theme(payload: Optional[Dict[str, Any]]) -> bool:
     context = payload.get("context")
     if not isinstance(context, dict):
         return False
-    return str(context.get("daily_theme_version", "")).strip() == "daily-theme-v1"
+    if str(context.get("daily_theme_version", "")).strip() != "daily-theme-v1":
+        return False
+    if not all(
+        str(context.get(context_key, "")).strip() == str(daily_liturgical_context.get(payload_key, "")).strip()
+        for context_key, payload_key in (
+            ("daily_theme_explanation", "sharedThemeExplanation"),
+            ("daily_theme_transition", "sharedThemeTransition"),
+            ("daily_theme_reflection_focus", "sharedThemeReflectionFocus"),
+        )
+    ):
+        return False
+    if expected_daily_theme_context is None:
+        return True
+    expected_payload = expected_daily_theme_context.get("daily_liturgical_context")
+    if not isinstance(expected_payload, dict):
+        return False
+    if not _daily_liturgical_context_matches(daily_liturgical_context, expected_payload):
+        return False
+    return all(
+        str(context.get(context_key, "")).strip() == str(expected_daily_theme_context.get(context_key, "")).strip()
+        for context_key in ("daily_theme_explanation", "daily_theme_transition", "daily_theme_reflection_focus")
+    )
 
 
 def _daily_theme_config_for_runtime(runtime: Any) -> Dict[str, Any]:
@@ -395,12 +446,16 @@ def run_novena_pipeline(
     audio_items: List[Dict[str, Any]] = []
     for runtime in seeded_runtimes:
         sidecar_payload = _load_sidecar_payload(runtime, docs_root=root)
-        if sidecar_payload is not None and not _sidecar_has_current_daily_theme(sidecar_payload):
+        daily_theme_context = None
+        if runtime.date in target_date_set:
+            daily_theme_context = daily_theme_cache.get(runtime.date, _daily_theme_config_for_runtime(runtime))
+        if sidecar_payload is not None and not _sidecar_has_current_daily_theme(sidecar_payload, daily_theme_context):
             audio_payload = sidecar_payload.get("audio") if isinstance(sidecar_payload.get("audio"), dict) else {}
             if runtime.date in target_date_set or not bool(audio_payload.get("rendered", False)):
                 sidecar_payload = None
         if sidecar_payload is None:
-            daily_theme_context = daily_theme_cache.get(runtime.date, _daily_theme_config_for_runtime(runtime))
+            if daily_theme_context is None:
+                daily_theme_context = daily_theme_cache.get(runtime.date, _daily_theme_config_for_runtime(runtime))
             rendered = render_novena(runtime, daily_theme_context=daily_theme_context, generate_text_fn=generate_text_fn)
             rendered["episode_id"] = _episode_id(runtime)
             context = dict(rendered.get("context") or {})
