@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
 from jobs.publish.audio import audio_public_url, github_pages_base_url, podcast_feed_public_url, resolve_audio_public_base_url
+from jobs.publish.daily_theme_runtime import DailyThemeRuntimeCache
 from jobs.publish.formatting import render_publish_template
 
 from .artifact_writer import audio_output_path, write_novena_artifact
@@ -218,6 +219,9 @@ def _load_sidecar_payload(runtime: Any, *, docs_root: Optional[Path]) -> Optiona
 def _rendered_from_sidecar(runtime: Any, payload: Dict[str, Any]) -> Dict[str, Any]:
     episode_id = str(payload.get("episode_id") or _episode_id(runtime)).strip()
     context = dict(payload.get("context") or {})
+    daily_liturgical_context = payload.get("daily_liturgical_context")
+    if isinstance(daily_liturgical_context, dict) and "daily_liturgical_context" not in context:
+        context["daily_liturgical_context"] = dict(daily_liturgical_context)
     if not context:
         context = {
             "saint_name": str((payload.get("saint") or runtime.saint).get("name", runtime.contract_id)).strip(),
@@ -282,10 +286,41 @@ def _audio_job_from_sidecar(runtime: Any, payload: Dict[str, Any]) -> Dict[str, 
 def _sidecar_has_current_daily_theme(payload: Optional[Dict[str, Any]]) -> bool:
     if not isinstance(payload, dict):
         return False
+    daily_liturgical_context = payload.get("daily_liturgical_context")
+    if not isinstance(daily_liturgical_context, dict):
+        return False
+    if str(daily_liturgical_context.get("sharedThemeVersion", "")).strip() != "daily-theme-v1":
+        return False
+    if not str(daily_liturgical_context.get("sharedThemeTitle", "")).strip():
+        return False
+    for required_key in ("gospelCitation", "fallbackReason", "sharedThemeSources"):
+        if required_key not in daily_liturgical_context:
+            return False
+    if not isinstance(daily_liturgical_context.get("sharedThemeSources"), list) or not daily_liturgical_context.get("sharedThemeSources"):
+        return False
+    payload_date = str(payload.get("date") or payload.get("published_date") or "").strip()
+    context_date = str(daily_liturgical_context.get("date") or "").strip()
+    if payload_date and context_date and payload_date != context_date:
+        return False
     context = payload.get("context")
     if not isinstance(context, dict):
         return False
     return str(context.get("daily_theme_version", "")).strip() == "daily-theme-v1"
+
+
+def _daily_theme_config_for_runtime(runtime: Any) -> Dict[str, Any]:
+    config: Dict[str, Any] = {}
+    for source in (getattr(runtime, "publishing", {}) or {}, getattr(runtime, "novena", {}) or {}):
+        if not isinstance(source, dict):
+            continue
+        daily_theme = source.get("daily_theme")
+        if isinstance(daily_theme, dict):
+            for option in ("calendar", "locale"):
+                if option in daily_theme and option not in config:
+                    config[option] = daily_theme.get(option)
+    config.setdefault("calendar", "general_roman")
+    config.setdefault("locale", "en")
+    return config
 
 
 def run_novena_pipeline(
@@ -355,6 +390,7 @@ def run_novena_pipeline(
             prepared_active.extend(ordered)
 
     seeded_runtimes = _seed_short_form_runtimes(prepared_active)
+    daily_theme_cache = DailyThemeRuntimeCache()
     seeded_items: List[Dict[str, Any]] = []
     audio_items: List[Dict[str, Any]] = []
     for runtime in seeded_runtimes:
@@ -364,7 +400,8 @@ def run_novena_pipeline(
             if runtime.date in target_date_set or not bool(audio_payload.get("rendered", False)):
                 sidecar_payload = None
         if sidecar_payload is None:
-            rendered = render_novena(runtime, generate_text_fn=generate_text_fn)
+            daily_theme_context = daily_theme_cache.get(runtime.date, _daily_theme_config_for_runtime(runtime))
+            rendered = render_novena(runtime, daily_theme_context=daily_theme_context, generate_text_fn=generate_text_fn)
             rendered["episode_id"] = _episode_id(runtime)
             context = dict(rendered.get("context") or {})
             rendered["title"] = _render_title(runtime, context)

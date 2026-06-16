@@ -12,6 +12,16 @@ from jobs.publish.formatting import compose_rss_guid
 from .contracts import NovenaRuntime
 
 
+DAILY_LITURGICAL_CONTEXT_FRESHNESS_KEYS = (
+    "date",
+    "sharedThemeTitle",
+    "sharedThemeVersion",
+    "gospelCitation",
+    "fallbackReason",
+    "sharedThemeSources",
+)
+
+
 def _json_default(value: Any) -> Any:
     if isinstance(value, Enum):
         return value.value
@@ -36,10 +46,33 @@ def audio_sidecar_path(episode_id: str, *, docs_root: Optional[Path] = None) -> 
     return audio_output_path(episode_id, docs_root=docs_root).with_suffix(".json")
 
 
+def _daily_liturgical_context_metadata_current(existing: Any, expected: Dict[str, Any]) -> bool:
+    if not expected:
+        return True
+    if not isinstance(existing, dict):
+        return False
+    for key in DAILY_LITURGICAL_CONTEXT_FRESHNESS_KEYS:
+        if key not in existing or key not in expected:
+            return False
+        if key == "sharedThemeSources":
+            existing_sources = existing.get(key)
+            expected_sources = expected.get(key)
+            if not isinstance(existing_sources, list) or not isinstance(expected_sources, list):
+                return False
+            if existing_sources != expected_sources:
+                return False
+            continue
+        if str(existing.get(key, "")).strip() != str(expected.get(key, "")).strip():
+            return False
+    return True
+
+
 def write_novena_artifact(runtime: NovenaRuntime, rendered: Dict[str, Any], audio_result: Dict[str, Any], *, docs_root: Optional[Path] = None) -> Path:
     episode_id = str(rendered.get("episode_id") or f"{runtime.date.isoformat()}-{runtime.contract_id}-day-{runtime.active_day}").strip()
     root = Path(docs_root) if docs_root else Path(__file__).resolve().parents[2] / "docs"
     sidecar_path = audio_sidecar_path(episode_id, docs_root=root)
+    rendered_context = dict(rendered.get("context") or {})
+    daily_liturgical_context = dict(rendered_context.get("daily_liturgical_context") or {})
     if sidecar_path.exists():
         try:
             existing = json.loads(sidecar_path.read_text(encoding="utf-8"))
@@ -47,7 +80,9 @@ def write_novena_artifact(runtime: NovenaRuntime, rendered: Dict[str, Any], audi
             existing = {}
         existing_hash = str(existing.get("content_hash") or existing.get("audio", {}).get("content_hash", "")).strip()
         next_hash = str(audio_result.get("content_hash", rendered.get("content_hash", ""))).strip()
-        if existing_hash == next_hash:
+        existing_daily_context = existing.get("daily_liturgical_context")
+        metadata_current = _daily_liturgical_context_metadata_current(existing_daily_context, daily_liturgical_context)
+        if existing_hash == next_hash and metadata_current:
             return sidecar_path
     sidecar_path.parent.mkdir(parents=True, exist_ok=True)
     title = str(rendered.get("title", "")).strip()
@@ -70,7 +105,8 @@ def write_novena_artifact(runtime: NovenaRuntime, rendered: Dict[str, Any], audi
         "feast": dict(runtime.feast),
         "novena": dict(runtime.novena),
         "template": rendered.get("template") or runtime.resolved_template.to_dict(),
-        "context": dict(rendered.get("context") or {}),
+        "daily_liturgical_context": daily_liturgical_context,
+        "context": rendered_context,
         "content": dict(rendered.get("content") or {}),
         "fragments": list(rendered.get("audio_fragments") or []),
         "audio": {

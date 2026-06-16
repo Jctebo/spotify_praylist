@@ -10,6 +10,12 @@ from zoneinfo import ZoneInfo
 
 from jobs.publish.daily_intro import build_daily_intro_text
 from jobs.publish.daily_liturgical_context import build_daily_liturgical_context
+from jobs.publish.daily_theme_runtime import (
+    DailyThemeRuntimeCache as _PublishDailyThemeRuntimeCache,
+    copy_daily_theme_runtime_fields as _copy_daily_theme_runtime_fields,
+    daily_liturgical_context_to_payload as _daily_liturgical_context_to_payload,
+    daily_theme_runtime_fields as _daily_theme_runtime_fields,
+)
 from jobs.publish.formatting import build_publish_context, derive_episode_id, render_publish_template
 from jobs.publish.ignatian_reflection import DEFAULT_REFLECTION_PAUSE_MS, build_ignatian_reflection_episode
 from jobs.publish.liturgical_announcement import build_liturgical_announcement_text
@@ -927,73 +933,6 @@ def _daily_theme_config(contract: PublishContract, entry: Dict[str, Any]) -> Dic
     return config
 
 
-def _daily_liturgical_context_to_payload(context: Any) -> Dict[str, Any]:
-    if context is None:
-        return {}
-    if isinstance(context, dict):
-        return dict(context)
-    to_dict = getattr(context, "to_dict", None)
-    if callable(to_dict):
-        try:
-            return dict(to_dict())
-        except Exception:
-            pass
-    keys = (
-        "date",
-        "liturgicalSeason",
-        "liturgicalWeek",
-        "feastDay",
-        "liturgicalRank",
-        "saintOfDay",
-        "gospelTheme",
-        "primaryTheme",
-        "secondaryThemes",
-        "emotionalTone",
-        "reflectionFocus",
-        "suggestedImagery",
-        "suggestedMusicMood",
-        "openingTone",
-        "closingTone",
-        "saintIntercessions",
-        "shortSummary",
-        "source",
-        "fallbackReason",
-        "gospelCitation",
-        "calendar",
-        "locale",
-        "sharedThemeTitle",
-        "sharedThemeSlug",
-        "sharedThemeExplanation",
-        "sharedThemeTransition",
-        "sharedThemeReflectionFocus",
-        "sharedThemeSources",
-        "sharedThemeVersion",
-    )
-    return {key: getattr(context, key) for key in keys if hasattr(context, key)}
-
-
-def _daily_theme_runtime_fields(payload: Dict[str, Any]) -> Dict[str, Any]:
-    title = str(payload.get("sharedThemeTitle") or _humanize_slug(payload.get("primaryTheme", "")) or "Trust").strip()
-    slug = str(payload.get("sharedThemeSlug") or normalize_publish_key(title)).strip() or "trust"
-    explanation = str(payload.get("sharedThemeExplanation") or payload.get("shortSummary") or f"Today's focus is {title}.").strip()
-    transition = str(
-        payload.get("sharedThemeTransition")
-        or f"Carrying today's focus of {title.lower()}, we place ourselves and the needs of this day before the Lord."
-    ).strip()
-    reflection_focus = str(payload.get("sharedThemeReflectionFocus") or payload.get("reflectionFocus") or explanation).strip()
-    sources = payload.get("sharedThemeSources") or []
-    return {
-        "daily_liturgical_context": payload,
-        "daily_theme_title": title,
-        "daily_theme_slug": slug,
-        "daily_theme_explanation": explanation,
-        "daily_theme_transition": transition,
-        "daily_theme_reflection_focus": reflection_focus,
-        "daily_theme_sources": sources,
-        "daily_theme_version": str(payload.get("sharedThemeVersion") or "daily-theme-v1"),
-    }
-
-
 def _build_daily_theme_runtime_context(
     contract: PublishContract,
     entry: Dict[str, Any],
@@ -1007,68 +946,6 @@ def _build_daily_theme_runtime_context(
         allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
     )
     return _daily_theme_runtime_fields(_daily_liturgical_context_to_payload(context))
-
-
-def _daily_theme_cache_key(target_date: _dt.date, config: Dict[str, Any]) -> Tuple[str, str, str]:
-    calendar = str(config.get("calendar") or "general_roman").strip() or "general_roman"
-    locale = str(config.get("locale") or "en").strip() or "en"
-    return (target_date.isoformat(), calendar, locale)
-
-
-def _copy_daily_theme_runtime_fields(fields: Dict[str, Any]) -> Dict[str, Any]:
-    copied = dict(fields)
-    context = copied.get("daily_liturgical_context")
-    if isinstance(context, dict):
-        context_copy = dict(context)
-        context_sources = context_copy.get("sharedThemeSources")
-        if isinstance(context_sources, list):
-            context_copy["sharedThemeSources"] = [
-                dict(item) if isinstance(item, dict) else item for item in context_sources
-            ]
-        copied["daily_liturgical_context"] = context_copy
-    sources = copied.get("daily_theme_sources")
-    if isinstance(sources, list):
-        copied["daily_theme_sources"] = [dict(item) if isinstance(item, dict) else item for item in sources]
-    return copied
-
-
-def _build_canonical_daily_theme_runtime_context(
-    target_date: _dt.date,
-    *,
-    calendar: str,
-    locale: str,
-) -> Dict[str, Any]:
-    try:
-        context = build_daily_liturgical_context(
-            target_date,
-            calendar=calendar or None,
-            locale=locale or None,
-            allow_missing_gospel=False,
-        )
-    except Exception:
-        context = build_daily_liturgical_context(
-            target_date,
-            calendar=calendar or None,
-            locale=locale or None,
-            allow_missing_gospel=True,
-        )
-    return _daily_theme_runtime_fields(_daily_liturgical_context_to_payload(context))
-
-
-class _PublishDailyThemeRuntimeCache:
-    def __init__(self) -> None:
-        self._values: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
-
-    def get(self, target_date: _dt.date, config: Dict[str, Any]) -> Dict[str, Any]:
-        key = _daily_theme_cache_key(target_date, config)
-        if key not in self._values:
-            _date_iso, calendar, locale = key
-            self._values[key] = _build_canonical_daily_theme_runtime_context(
-                target_date,
-                calendar=calendar,
-                locale=locale,
-            )
-        return _copy_daily_theme_runtime_fields(self._values[key])
 
 
 def _find_first_block_by_kind(blocks: Sequence[Any], kind_name: str) -> Optional[Dict[str, Any]]:
@@ -2222,7 +2099,7 @@ def _render_entry_metadata(
 
 def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Optional[_dt.date] = None) -> List[Dict[str, Any]]:
     jobs: List[Dict[str, Any]] = []
-    daily_theme_cache = _PublishDailyThemeRuntimeCache()
+    daily_theme_cache = _PublishDailyThemeRuntimeCache(context_builder=build_daily_liturgical_context)
     for contract in contracts:
         effective_date = target_date or _local_date_for_timezone(contract.timezone)
         if not _contract_matches_target_date(contract, effective_date):
@@ -2304,7 +2181,7 @@ def resolve_text_jobs(contracts: Sequence[PublishContract], *, target_date: Opti
 
 def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optional[_dt.date] = None) -> List[Dict[str, Any]]:
     jobs: List[Dict[str, Any]] = []
-    daily_theme_cache = _PublishDailyThemeRuntimeCache()
+    daily_theme_cache = _PublishDailyThemeRuntimeCache(context_builder=build_daily_liturgical_context)
     for contract in contracts:
         effective_date = target_date or _local_date_for_timezone(contract.timezone)
         if not _contract_matches_target_date(contract, effective_date):

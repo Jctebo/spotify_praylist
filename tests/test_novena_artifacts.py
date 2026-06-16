@@ -105,7 +105,7 @@ class TestNovenaArtifacts(unittest.TestCase):
             self.assertEqual(first["audio_branding"]["season"], "ordinary_time")
         self.assertTrue(first["rendered"])
         self.assertFalse(second["rendered"])
-        self.assertEqual(fake_renderer_calls["count"], 3)
+        self.assertEqual(fake_renderer_calls["count"], 4)
         self.assertTrue(job["audio_config"]["loudness_normalization"]["enabled"])
         self.assertEqual(payload["id"], "2026-06-03-most_sacred_heart_of_jesus-day-1")
         self.assertEqual(payload["audio_branding"]["status"], "applied")
@@ -116,6 +116,52 @@ class TestNovenaArtifacts(unittest.TestCase):
         self.assertEqual(payload["content"]["sections"][1]["kind"], "generated")
         self.assertEqual(payload["feast"]["color"], "green")
         self.assertIn("June 3, 2026", payload["title"])
+
+    def test_artifact_writer_persists_top_level_daily_liturgical_context(self):
+        runtime = self._runtime()
+        rendered = engine_mod.render_novena(
+            runtime,
+            daily_theme_context={
+                "daily_liturgical_context": {
+                    "date": "2026-06-03",
+                    "sharedThemeTitle": "Humility And Trust",
+                    "sharedThemeVersion": "daily-theme-v1",
+                    "gospelCitation": "Matthew 5:43-48",
+                    "fallbackReason": "",
+                    "sharedThemeSources": [{"kind": "gospel", "label": "Matthew 5:43-48", "theme": "humility"}],
+                },
+                "daily_theme_title": "Humility And Trust",
+                "daily_theme_slug": "humility-and-trust",
+                "daily_theme_explanation": "Today's focus is humility and trust.",
+                "daily_theme_transition": "Carrying today's focus of humility and trust, we enter this novena.",
+                "daily_theme_reflection_focus": "Today's focus is humility and trust.",
+                "daily_theme_sources": [{"kind": "gospel", "label": "Matthew 5:43-48", "theme": "humility"}],
+                "daily_theme_version": "daily-theme-v1",
+            },
+            generate_text_fn=lambda prompt, context: f"{prompt} ({context['theme']})",
+        )
+        rendered["title"] = "Short-Form Novena to The Most Sacred Heart of Jesus Day 1 - June 3, 2026"
+        rendered["description"] = rendered["title"]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            sidecar = artifact_writer_mod.write_novena_artifact(
+                runtime,
+                rendered,
+                {
+                    "audio_path": str(docs_root / "audio" / "2026-06-03-most_sacred_heart_of_jesus-day-1.mp3"),
+                    "audio_url": "https://example.test/audio/2026-06-03-most_sacred_heart_of_jesus-day-1.mp3",
+                    "rendered": True,
+                    "content_hash": "hash-a",
+                },
+                docs_root=docs_root,
+            )
+            payload = json.loads(sidecar.read_text(encoding="utf-8"))
+
+        self.assertEqual(payload["daily_liturgical_context"]["sharedThemeTitle"], "Humility And Trust")
+        self.assertEqual(payload["daily_liturgical_context"]["gospelCitation"], "Matthew 5:43-48")
+        self.assertEqual(payload["context"]["daily_theme_title"], "Humility And Trust")
+        self.assertEqual(payload["context"]["novena_theme_title"], "Trust")
 
     def test_novena_audio_loudness_normalization_can_be_overridden(self):
         runtime = self._runtime()
