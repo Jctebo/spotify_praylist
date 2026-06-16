@@ -73,6 +73,8 @@ Optional variables:
 - The URL importer can optionally normalize instruction-heavy sections with OpenAI for TTS-friendly output; those rewrites are recorded on each section as `notes`
 - Before the model runs, the importer expands canonical prayer names like `Our Father`, `Hail Mary`, and `Glory Be` from the repo's Rosary text templates, then compacts identical day blocks into shared blocks tagged with the day numbers they cover so the TTS renderer can reuse one prayer block behind a small day-specific intro
 - Imported traditional novenas publish with a `Traditional Novena to {saint_name} Day {day} - {date_display}` episode title so they stay distinct from the existing auto-generated novena titles while showing the publish date in the RSS title
+- Published novena sidecars carry the same canonical `daily_liturgical_context` contract as daily prayer sidecars, while keeping novena-local focus in explicit `novena_*` fields.
+- Generated, short-form, and traditional novenas all receive only a brief shared-theme intro bridge before the existing novena prayer text; the novena body remains saint/day-specific.
 - For local OpenAI runs, copy `config/local/openai.env.example` to `config/local/openai.env` and fill in `OPENAI_API_KEY`; the importer will read that file automatically, and you can override the path with `OPENAI_API_KEY_FILE`
 - Novena contracts now support a top-level `enabled` flag; `enabled: false` contracts stay loadable for review but are skipped by the novena runtime
 - Run the July/August traditional novena import locally with `python scripts/run_traditional_novena_import_local.py`; pass repeated `--month` values if you need a different batch window.
