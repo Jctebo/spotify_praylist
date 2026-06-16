@@ -12,6 +12,48 @@ from tests.test_helpers import make_test_mp3_bytes, temp_env
 
 
 class TestNovenaPipeline(unittest.TestCase):
+    class FakeDailyThemeRuntimeCache:
+        def __init__(self):
+            self.calls = []
+
+        def get(self, target_date, config):
+            self.calls.append((target_date, dict(config)))
+            return {
+                "daily_liturgical_context": {
+                    "date": target_date.isoformat(),
+                    "liturgicalSeason": "Ordinary Time",
+                    "gospelCitation": "Matthew 5:43-48",
+                    "fallbackReason": "",
+                    "sharedThemeTitle": "Humility And Trust",
+                    "sharedThemeSlug": "humility-and-trust",
+                    "sharedThemeSources": [
+                        {"kind": "calendar", "label": "Tuesday of the Eleventh Week in Ordinary Time", "theme": "humility"},
+                        {"kind": "gospel", "label": "Matthew 5:43-48", "theme": "humility"},
+                        {"kind": "season", "label": "Ordinary Time", "theme": "trust"},
+                    ],
+                    "sharedThemeVersion": "daily-theme-v1",
+                },
+                "daily_theme_title": "Humility And Trust",
+                "daily_theme_slug": "humility-and-trust",
+                "daily_theme_explanation": "Today's focus is humility and trust.",
+                "daily_theme_transition": "Carrying today's focus of humility and trust, we enter this novena.",
+                "daily_theme_reflection_focus": "Today's focus is humility and trust.",
+                "daily_theme_sources": [
+                    {"kind": "calendar", "label": "Tuesday of the Eleventh Week in Ordinary Time", "theme": "humility"},
+                    {"kind": "gospel", "label": "Matthew 5:43-48", "theme": "humility"},
+                    {"kind": "season", "label": "Ordinary Time", "theme": "trust"},
+                ],
+                "daily_theme_version": "daily-theme-v1",
+            }
+
+    def setUp(self):
+        self._daily_theme_cache = pipeline_mod.DailyThemeRuntimeCache
+        pipeline_mod.DailyThemeRuntimeCache = self.FakeDailyThemeRuntimeCache
+        self.addCleanup(self._restore_daily_theme_cache)
+
+    def _restore_daily_theme_cache(self):
+        pipeline_mod.DailyThemeRuntimeCache = self._daily_theme_cache
+
     def _short_form_theme_prompt(self):
         return "Create a 9-day saint-life outline for {saint_name}. Return nine distinct daily focus lines, each rooted in a different stage or witness of the saint's life."
 
@@ -153,13 +195,20 @@ class TestNovenaPipeline(unittest.TestCase):
             self.assertEqual(first["audio"], 1)
             self.assertEqual(second["audio"], 1)
             self.assertEqual(len(first["seeded_items"]), 9)
-            self.assertEqual(renderer_calls["count"], 4)
+            self.assertEqual(renderer_calls["count"], 5)
             self.assertEqual(generate_calls["count"], calls_after_first)
             self.assertEqual(len(jobs), 1)
             self.assertEqual(len(list((docs_root / "audio").glob("*.json"))), 9)
             self.assertEqual(len(list((docs_root / "audio").glob("*.mp3"))), 1)
             self.assertTrue((docs_root / "audio" / "2026-06-03-most_sacred_heart_of_jesus-day-1.mp3").exists())
-            self.assertTrue((docs_root / "audio" / "2026-06-03-most_sacred_heart_of_jesus-day-1.json").exists())
+            sidecar_path = docs_root / "audio" / "2026-06-03-most_sacred_heart_of_jesus-day-1.json"
+            self.assertTrue(sidecar_path.exists())
+            sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            self.assertEqual(sidecar["daily_liturgical_context"]["sharedThemeTitle"], "Humility And Trust")
+            self.assertEqual(sidecar["daily_liturgical_context"]["gospelCitation"], "Matthew 5:43-48")
+            self.assertEqual(sidecar["daily_liturgical_context"]["fallbackReason"], "")
+            self.assertEqual(sidecar["context"]["daily_theme_title"], "Humility And Trust")
+            self.assertEqual(sidecar["context"]["novena_daily_focus"], "The Most Sacred Heart of Jesus focus 1")
             guid = feed_root.findtext("./channel/item/guid") or ""
             self.assertTrue(guid.startswith("2026-06-03-most_sacred_heart_of_jesus-day-1::"))
             self.assertEqual(
@@ -241,6 +290,54 @@ class TestNovenaPipeline(unittest.TestCase):
             self.assertNotIn("context", preserved)
             self.assertEqual(preserved["content_hash"], "legacy-rendered-hash")
             self.assertTrue(preserved["audio"]["rendered"])
+
+    def test_pipeline_refreshes_target_sidecar_missing_canonical_daily_context(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contracts_root = self._write_contracts(root)
+            docs_root = root / "docs"
+            cache_root = root / ".cache"
+
+            def fake_renderer(text, audio_config):
+                return make_test_mp3_bytes()
+
+            def fake_generate_text(prompt, context):
+                return self._fake_generate_text(prompt, context)
+
+            pipeline_mod.run_novena_pipeline(
+                contract_dir=contracts_root,
+                docs_root=docs_root,
+                cache_root=cache_root,
+                today=datetime.date(2026, 6, 3),
+                renderer=fake_renderer,
+                generate_text_fn=fake_generate_text,
+            )
+            sidecar_path = docs_root / "audio" / "2026-06-03-most_sacred_heart_of_jesus-day-1.json"
+            payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            payload["daily_liturgical_context"] = {
+                "date": "2026-06-03",
+                "sharedThemeTitle": "Humility And Trust",
+                "sharedThemeVersion": "daily-theme-v1",
+            }
+            payload["context"] = {
+                "daily_theme_title": "The Most Sacred Heart of Jesus",
+                "daily_theme_version": "daily-theme-v1",
+            }
+            sidecar_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+
+            pipeline_mod.run_novena_pipeline(
+                contract_dir=contracts_root,
+                docs_root=docs_root,
+                cache_root=cache_root,
+                today=datetime.date(2026, 6, 3),
+                renderer=fake_renderer,
+                generate_text_fn=fake_generate_text,
+            )
+
+            refreshed = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            self.assertEqual(refreshed["daily_liturgical_context"]["sharedThemeTitle"], "Humility And Trust")
+            self.assertEqual(refreshed["context"]["daily_theme_title"], "Humility And Trust")
+            self.assertEqual(refreshed["context"]["novena_daily_focus"], "The Most Sacred Heart of Jesus focus 1")
 
     def test_pipeline_renders_traditional_novena_title_with_publish_date_suffix(self):
         with tempfile.TemporaryDirectory() as tmpdir:

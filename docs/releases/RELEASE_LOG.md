@@ -1,5 +1,21 @@
 # Release Log
 
+## [0.3.6.12] - 2026-06-16
+
+### Added
+- Added a reusable daily theme runtime helper so publish-contract jobs and novena-contract jobs share the same canonical daily liturgical context conversion and cache.
+- Added top-level `daily_liturgical_context` payloads to novena sidecars, including shared theme title, Gospel citation, fallback status, source list, and version metadata.
+- Added regression coverage for canonical novena sidecar context, stale target-date sidecar refresh, traditional novena intro bridge parity, and Daily Novenas site sidecar consumption.
+
+### Changed
+- Updated novena rendering so canonical `daily_theme_*` fields come from the shared daily liturgical context while novena-local focus remains under `novena_*`, `theme`, and `daily_focus`.
+- Updated generated, short-form, fixed, and traditional novenas to prepend only a short shared-theme intro bridge before the existing novena prayer text.
+- Documented canonical novena sidecars and the brief intro bridge behavior in the README.
+
+### Fixed
+- Tightened novena sidecar freshness checks so legacy or partial sidecars without Gospel citation, fallback status, or shared theme sources are regenerated for target publish dates.
+- Prevented metadata-only sidecar repair from being skipped when audio content hashes already match.
+
 ## [0.3.6.11] - 2026-06-16
 
 ### Fixed

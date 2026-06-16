@@ -58,9 +58,68 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertEqual(rendered["content"]["sections"][0]["text"], "Pray for The Most Sacred Heart of Jesus on June 4, 2026.")
         self.assertEqual(rendered["content"]["sections"][1]["text"], "generated::Compose day 2 for mercy.")
         self.assertEqual(rendered["content"]["sections"][2]["text"], "Amen for The Most Sacred Heart of Jesus.")
-        self.assertEqual(len(rendered["audio_fragments"]), 3)
+        self.assertEqual(len(rendered["audio_fragments"]), 4)
+        self.assertEqual(rendered["audio_fragments"][0]["label"], "Welcome to Day 2")
+        self.assertEqual(rendered["audio_fragments"][1]["label"], "Opening Prayer")
         self.assertEqual(calls[0][1]["saint_name"], "The Most Sacred Heart of Jesus")
         self.assertEqual(calls[0][1]["day"], 2)
+        self.assertEqual(calls[0][1]["theme"], "mercy")
+        self.assertEqual(calls[0][1]["daily_focus"], "mercy")
+        self.assertEqual(calls[0][1]["novena_daily_focus"], "mercy")
+
+    def test_render_novena_uses_canonical_daily_theme_for_intro_without_replacing_novena_focus(self):
+        runtime = contracts_mod.NovenaRuntime(
+            family_id="traditional",
+            contract_id="st_example",
+            saint={"id": "st_example", "name": "St Example"},
+            feast={"month": 6, "day": 12, "name": "St Example"},
+            novena={"duration_days": 9, "start_offset_days": -9, "content_mode": "fixed", "ai_config": {"themes": ["courage"]}},
+            resolved_template=contracts_mod.TemplateSpec(
+                template_id="traditional-example",
+                source="embedded",
+                sections=(
+                    contracts_mod.TemplateSection(
+                        key="prayer",
+                        title="Traditional Prayer",
+                        kind="fixed",
+                        text="Original traditional prayer text.",
+                    ),
+                ),
+            ),
+            date=datetime.date(2026, 6, 16),
+            active_day=1,
+            publishing={"audio": {"enabled": True}, "rss": {"enabled": True}},
+            source_path=contracts_mod.DEFAULT_FEAST_DIR / "st_example.json",
+        )
+        daily_theme_context = {
+            "daily_liturgical_context": {
+                "date": "2026-06-16",
+                "sharedThemeTitle": "Humility And Trust",
+                "sharedThemeVersion": "daily-theme-v1",
+                "gospelCitation": "Matthew 5:43-48",
+                "fallbackReason": "",
+                "sharedThemeSources": [{"kind": "gospel", "label": "Matthew 5:43-48", "theme": "humility"}],
+            },
+            "daily_theme_title": "Humility And Trust",
+            "daily_theme_slug": "humility-and-trust",
+            "daily_theme_explanation": "Today's focus is humility and trust.",
+            "daily_theme_transition": "Carrying today's focus of humility and trust, we enter this novena.",
+            "daily_theme_reflection_focus": "Today's focus is humility and trust.",
+            "daily_theme_sources": [{"kind": "gospel", "label": "Matthew 5:43-48", "theme": "humility"}],
+            "daily_theme_version": "daily-theme-v1",
+        }
+
+        rendered = engine_mod.render_novena(runtime, daily_theme_context=daily_theme_context)
+
+        self.assertEqual(rendered["context"]["daily_theme_title"], "Humility And Trust")
+        self.assertEqual(rendered["context"]["novena_theme_title"], "Courage")
+        self.assertEqual(rendered["context"]["theme"], "courage")
+        self.assertEqual(rendered["context"]["daily_focus"], "courage")
+        self.assertEqual(rendered["context"]["novena_daily_focus"], "courage")
+        self.assertEqual(rendered["audio_fragments"][0]["label"], "Welcome to Day 1")
+        self.assertIn("Carrying today's focus of humility and trust", rendered["audio_fragments"][0]["text"])
+        self.assertEqual(rendered["audio_fragments"][1]["text"], "Original traditional prayer text.")
+        self.assertIn("Original traditional prayer text.", rendered["content"]["text"])
 
     def test_render_novena_uses_compact_blocks_for_reusable_tts_fragments(self):
         runtime = contracts_mod.NovenaRuntime(

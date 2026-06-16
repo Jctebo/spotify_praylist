@@ -290,9 +290,10 @@ def _block_parts_to_fragments(
 def render_novena(
     runtime: NovenaRuntime,
     *,
+    daily_theme_context: Optional[Mapping[str, Any]] = None,
     generate_text_fn: Callable[[str, Mapping[str, Any]], str] = generate_text,
 ) -> Dict[str, Any]:
-    context = runtime_context(runtime)
+    context = runtime_context(runtime, daily_theme_context=daily_theme_context)
     rendered_sections: List[Dict[str, Any]] = []
     for index, section in enumerate(runtime.resolved_template.sections, start=1):
         text = _render_template_section(section, context, generate_text_fn=generate_text_fn)
@@ -320,7 +321,8 @@ def render_novena(
                 if fragment is not None:
                     audio_fragments.append(fragment)
     else:
-        audio_fragments = [_section_to_fragment(runtime, section, index=index) for index, section in enumerate(rendered_sections, start=1)]
+        audio_fragments = [_intro_fragment(runtime, context)]
+        audio_fragments.extend(_section_to_fragment(runtime, section, index=index) for index, section in enumerate(rendered_sections, start=1))
     text_body = "\n\n".join(fragment["text"] for fragment in audio_fragments if str(fragment.get("text", "")).strip()).strip()
     return {
         "family_id": runtime.family_id,
@@ -340,13 +342,13 @@ def render_novena(
     }
 
 
-def runtime_context(runtime: NovenaRuntime) -> Dict[str, Any]:
+def runtime_context(runtime: NovenaRuntime, *, daily_theme_context: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
     ai_config = runtime.novena.get("ai_config") or {}
     themes = [str(item).strip() for item in ai_config.get("themes") or [] if str(item).strip()]
     theme = themes[(runtime.active_day - 1) % len(themes)] if themes else str(runtime.feast.get("name", runtime.saint.get("name", runtime.contract_id))).strip()
     saint_name = str(runtime.saint.get("name", runtime.contract_id)).strip()
     feast_name = str(runtime.feast.get("name", runtime.contract_id)).strip()
-    daily_theme = _novena_daily_theme_context(runtime, theme=theme, saint_name=saint_name, feast_name=feast_name)
+    novena_theme = _novena_daily_theme_context(runtime, theme=theme, saint_name=saint_name, feast_name=feast_name)
     context = {
         "family_id": runtime.family_id,
         "day": runtime.active_day,
@@ -359,6 +361,7 @@ def runtime_context(runtime: NovenaRuntime) -> Dict[str, Any]:
         "feast": dict(runtime.feast),
         "theme": theme,
         "daily_focus": theme,
+        "novena_daily_focus": theme,
         "themes": themes,
         "themes_text": ", ".join(str(item).strip() for item in themes if str(item).strip()),
         "date": runtime.date,
@@ -373,7 +376,9 @@ def runtime_context(runtime: NovenaRuntime) -> Dict[str, Any]:
         "month_name": runtime.date.strftime("%B"),
         "contract_id": runtime.contract_id,
     }
-    context.update(daily_theme)
+    context.update(novena_theme)
+    if daily_theme_context:
+        context.update(dict(daily_theme_context))
     return context
 
 
@@ -402,14 +407,14 @@ def _novena_daily_theme_context(
         f"Carrying today's focus of {theme_lc}, we join this novena intention to the needs of the whole day."
     )
     return {
-        "daily_theme_title": theme_title,
-        "daily_theme_slug": _slug(theme_title),
-        "daily_theme_explanation": explanation,
-        "daily_theme_transition": transition,
-        "daily_theme_reflection_focus": explanation,
-        "daily_theme_sources": [
+        "novena_theme_title": theme_title,
+        "novena_theme_slug": _slug(theme_title),
+        "novena_theme_explanation": explanation,
+        "novena_theme_transition": transition,
+        "novena_theme_reflection_focus": explanation,
+        "novena_theme_sources": [
             {"kind": "novena", "label": saint_name, "theme": theme},
             {"kind": "feast", "label": feast_name, "theme": theme},
         ],
-        "daily_theme_version": NOVENA_DAILY_THEME_VERSION,
+        "novena_theme_version": NOVENA_DAILY_THEME_VERSION,
     }
