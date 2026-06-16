@@ -1,5 +1,12 @@
 # Release Log
 
+## [0.3.6.11] - 2026-06-16
+
+### Fixed
+- Fixed per-prayer daily theme drift in publish-contract jobs by resolving one canonical daily theme per `(date, calendar, locale)` and reusing it across text and audio entries for that target date.
+- Ensured Gospel-inclusive daily theme context wins across Morning Prayer, Rosary, Daily Reflection, Auxilium Christianorum, and Marian Antiphons when Gospel data is available.
+- Preserved the calendar/day source in shared daily theme sources even when an optional memorial or feast is present, keeping the theme inclusive of day, Gospel, and season.
+
 ## [0.3.6.10] - 2026-06-15
 
 ### Fixed

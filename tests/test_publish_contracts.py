@@ -393,11 +393,11 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(easter_marian["audio_fragments"][0]["kind"], "daily-intro")
         self.assertEqual(easter_marian["audio_fragments"][1]["kind"], "prayer-intro")
         self.assertIn("Regina Caeli", easter_marian["audio_fragments"][1]["text"])
-        self.assertIn("Saint Example", easter_marian["audio_fragments"][1]["text"])
+        self.assertIn("carry the grace of Trust", easter_marian["audio_fragments"][1]["text"])
         self.assertEqual(ordinary_marian["audio_fragments"][0]["kind"], "daily-intro")
         self.assertEqual(ordinary_marian["audio_fragments"][1]["kind"], "prayer-intro")
         self.assertIn("Angelus", ordinary_marian["audio_fragments"][1]["text"])
-        self.assertIn("Saint Example", ordinary_marian["audio_fragments"][1]["text"])
+        self.assertIn("carry the grace of Trust", ordinary_marian["audio_fragments"][1]["text"])
 
     def test_build_text_jobs_uses_metadata_allow_missing_gospel_when_block_omits_it(self):
         contracts = self.mod.load_publish_contracts()
@@ -598,7 +598,7 @@ class TestPublishContracts(unittest.TestCase):
             ["Liturgical Announcement", "Prayer Intro", "Opening Prayers", "Litany of the Most Precious Blood", "Weekday Prayer", "Conclusion"],
         )
         self.assertIn(
-            "As we begin today's Auxilium Christianorum prayers, we place Saint Example under Mary's protection and ask for strength in the spiritual battle.",
+            "As we begin today's Auxilium Christianorum prayers, we carry the grace of Trust and place ourselves, our families, and the needs of this day under Mary's protection.",
             auxilium["text"],
         )
         self.assertEqual(auxilium["resume_markers"][0]["label"], "Liturgical Announcement")
@@ -642,6 +642,98 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(job["audio_config"]["silence_ms"], 15000)
         self.assertEqual(job["daily_reflection"]["helper"]["suggestedMusicMood"], "soft and contemplative")
         self.assertEqual(job["render_context"]["daily_reflection_source"], "fallback")
+
+    def test_build_audio_jobs_reuses_one_canonical_daily_theme_per_date(self):
+        calls = []
+
+        def context_payload(date_value, *, allow_missing_gospel):
+            if allow_missing_gospel:
+                title = "Trust"
+                source = "season"
+                gospel_citation = ""
+                gospel_theme = ""
+                primary_theme = "trust"
+                explanation = "Today's focus is trust from the calendar day and Ordinary Time."
+                sources = [
+                    {"kind": "calendar", "label": "Tuesday of the Eleventh Week in Ordinary Time", "theme": "trust"},
+                    {"kind": "season", "label": "Ordinary Time", "theme": "trust"},
+                ]
+            else:
+                title = "Humility And Trust"
+                source = "gospel"
+                gospel_citation = "Matthew 5:43-48"
+                gospel_theme = "humility"
+                primary_theme = "humility"
+                explanation = (
+                    "Today's focus is humility and trust: the calendar day, Ordinary Time, "
+                    "and today's Gospel, Matthew 5:43-48, are held together."
+                )
+                sources = [
+                    {"kind": "calendar", "label": "Tuesday of the Eleventh Week in Ordinary Time", "theme": "humility"},
+                    {"kind": "gospel", "label": "today's Gospel, Matthew 5:43-48", "theme": "humility"},
+                    {"kind": "season", "label": "Ordinary Time", "theme": "trust"},
+                ]
+            return {
+                "date": date_value.isoformat(),
+                "liturgicalSeason": "Ordinary Time",
+                "liturgicalWeek": "Eleventh Week in Ordinary Time",
+                "feastDay": "",
+                "liturgicalRank": "weekday",
+                "saintOfDay": "",
+                "gospelTheme": gospel_theme,
+                "primaryTheme": primary_theme,
+                "secondaryThemes": ["trust"],
+                "emotionalTone": "contemplative",
+                "reflectionFocus": explanation,
+                "suggestedImagery": ["open hands"],
+                "suggestedMusicMood": "soft and contemplative",
+                "openingTone": "peaceful and attentive",
+                "closingTone": "peaceful trust",
+                "saintIntercessions": [],
+                "shortSummary": explanation,
+                "source": source,
+                "fallbackReason": "",
+                "gospelCitation": gospel_citation,
+                "calendar": "general_roman",
+                "locale": "en",
+                "sharedThemeTitle": title,
+                "sharedThemeSlug": "humility-and-trust" if not allow_missing_gospel else "trust",
+                "sharedThemeExplanation": explanation,
+                "sharedThemeTransition": f"Carrying today's focus of {title.lower()}, we place this day before the Lord.",
+                "sharedThemeReflectionFocus": explanation,
+                "sharedThemeSources": sources,
+                "sharedThemeVersion": "daily-theme-v1",
+            }
+
+        def fake_build_daily_liturgical_context(date_value, **kwargs):
+            calls.append(dict(kwargs))
+            payload = context_payload(
+                date_value,
+                allow_missing_gospel=bool(kwargs.get("allow_missing_gospel", True)),
+            )
+            return SimpleNamespace(**payload, to_dict=lambda: dict(payload))
+
+        self.mod.build_daily_liturgical_context = fake_build_daily_liturgical_context
+        contracts = self.mod.load_publish_contracts()
+
+        jobs = self.mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 6, 16))
+
+        self.assertGreaterEqual(len(jobs), 4)
+        self.assertEqual(len(calls), 1)
+        self.assertFalse(calls[0]["allow_missing_gospel"])
+        titles = {job["render_context"]["daily_theme_title"] for job in jobs}
+        explanations = {job["render_context"]["daily_theme_explanation"] for job in jobs}
+        citations = {job["render_context"]["daily_liturgical_context"]["gospelCitation"] for job in jobs}
+        fallbacks = {job["render_context"]["daily_liturgical_context"]["fallbackReason"] for job in jobs}
+        source_lists = {
+            json.dumps(job["render_context"]["daily_theme_sources"], sort_keys=True)
+            for job in jobs
+        }
+        self.assertEqual(titles, {"Humility And Trust"})
+        self.assertEqual(len(explanations), 1)
+        self.assertEqual(citations, {"Matthew 5:43-48"})
+        self.assertEqual(fallbacks, {""})
+        self.assertEqual(len(source_lists), 1)
 
     def test_rosary_audio_fragments_use_cached_standard_prayers(self):
         contracts = self.mod.load_publish_contracts()

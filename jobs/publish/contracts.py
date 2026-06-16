@@ -1009,6 +1009,68 @@ def _build_daily_theme_runtime_context(
     return _daily_theme_runtime_fields(_daily_liturgical_context_to_payload(context))
 
 
+def _daily_theme_cache_key(target_date: _dt.date, config: Dict[str, Any]) -> Tuple[str, str, str]:
+    calendar = str(config.get("calendar") or "general_roman").strip() or "general_roman"
+    locale = str(config.get("locale") or "en").strip() or "en"
+    return (target_date.isoformat(), calendar, locale)
+
+
+def _copy_daily_theme_runtime_fields(fields: Dict[str, Any]) -> Dict[str, Any]:
+    copied = dict(fields)
+    context = copied.get("daily_liturgical_context")
+    if isinstance(context, dict):
+        context_copy = dict(context)
+        context_sources = context_copy.get("sharedThemeSources")
+        if isinstance(context_sources, list):
+            context_copy["sharedThemeSources"] = [
+                dict(item) if isinstance(item, dict) else item for item in context_sources
+            ]
+        copied["daily_liturgical_context"] = context_copy
+    sources = copied.get("daily_theme_sources")
+    if isinstance(sources, list):
+        copied["daily_theme_sources"] = [dict(item) if isinstance(item, dict) else item for item in sources]
+    return copied
+
+
+def _build_canonical_daily_theme_runtime_context(
+    target_date: _dt.date,
+    *,
+    calendar: str,
+    locale: str,
+) -> Dict[str, Any]:
+    try:
+        context = build_daily_liturgical_context(
+            target_date,
+            calendar=calendar or None,
+            locale=locale or None,
+            allow_missing_gospel=False,
+        )
+    except Exception:
+        context = build_daily_liturgical_context(
+            target_date,
+            calendar=calendar or None,
+            locale=locale or None,
+            allow_missing_gospel=True,
+        )
+    return _daily_theme_runtime_fields(_daily_liturgical_context_to_payload(context))
+
+
+class _PublishDailyThemeRuntimeCache:
+    def __init__(self) -> None:
+        self._values: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
+
+    def get(self, target_date: _dt.date, config: Dict[str, Any]) -> Dict[str, Any]:
+        key = _daily_theme_cache_key(target_date, config)
+        if key not in self._values:
+            _date_iso, calendar, locale = key
+            self._values[key] = _build_canonical_daily_theme_runtime_context(
+                target_date,
+                calendar=calendar,
+                locale=locale,
+            )
+        return _copy_daily_theme_runtime_fields(self._values[key])
+
+
 def _find_first_block_by_kind(blocks: Sequence[Any], kind_name: str) -> Optional[Dict[str, Any]]:
     target = normalize_publish_key(kind_name)
     for block in blocks:
@@ -1066,8 +1128,13 @@ def _entry_runtime_context(
     contract: PublishContract,
     entry: Dict[str, Any],
     target_date: _dt.date,
+    shared_theme_runtime: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
-    runtime: Dict[str, Any] = _build_daily_theme_runtime_context(contract, entry, target_date)
+    runtime: Dict[str, Any] = (
+        _copy_daily_theme_runtime_fields(shared_theme_runtime)
+        if shared_theme_runtime is not None
+        else _build_daily_theme_runtime_context(contract, entry, target_date)
+    )
     runtime.update(_build_rosary_day_runtime_context(contract, entry, target_date, runtime.get("daily_liturgical_context")))
     reflection_block = _find_first_block_by_kind(entry.get("blocks") or [], "ignatian-reflection")
     if reflection_block:
@@ -2155,6 +2222,7 @@ def _render_entry_metadata(
 
 def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Optional[_dt.date] = None) -> List[Dict[str, Any]]:
     jobs: List[Dict[str, Any]] = []
+    daily_theme_cache = _PublishDailyThemeRuntimeCache()
     for contract in contracts:
         effective_date = target_date or _local_date_for_timezone(contract.timezone)
         if not _contract_matches_target_date(contract, effective_date):
@@ -2165,7 +2233,12 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
             text_config = dict(entry.get("text_config") or {})
             if not bool(text_config.get("enabled", True)):
                 continue
-            runtime_context = _entry_runtime_context(contract, entry, effective_date)
+            runtime_context = _entry_runtime_context(
+                contract,
+                entry,
+                effective_date,
+                daily_theme_cache.get(effective_date, _daily_theme_config(contract, entry)),
+            )
             rendered_metadata = _render_entry_metadata(
                 contract,
                 entry,
@@ -2231,6 +2304,7 @@ def resolve_text_jobs(contracts: Sequence[PublishContract], *, target_date: Opti
 
 def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optional[_dt.date] = None) -> List[Dict[str, Any]]:
     jobs: List[Dict[str, Any]] = []
+    daily_theme_cache = _PublishDailyThemeRuntimeCache()
     for contract in contracts:
         effective_date = target_date or _local_date_for_timezone(contract.timezone)
         if not _contract_matches_target_date(contract, effective_date):
@@ -2257,7 +2331,12 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
             )
             if not audio_config["enabled"]:
                 continue
-            runtime_context = _entry_runtime_context(contract, entry, effective_date)
+            runtime_context = _entry_runtime_context(
+                contract,
+                entry,
+                effective_date,
+                daily_theme_cache.get(effective_date, _daily_theme_config(contract, entry)),
+            )
             reflection_pause_ms = int(runtime_context.get("daily_reflection_pause_ms", 0) or 0)
             if reflection_pause_ms > 0:
                 audio_config["silence_ms"] = reflection_pause_ms
