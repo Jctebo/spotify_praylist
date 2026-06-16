@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.3.6.14] - 2026-06-16
+
+### Fixed
+- Fixed novena sidecar reuse so target-date sidecars are compared against the current canonical daily theme prose, not only internally consistent metadata.
+- Added regression coverage for refreshing stale canonical transition text in existing novena sidecars.
+
 ## [0.3.6.13] - 2026-06-16
 
 ### Fixed
