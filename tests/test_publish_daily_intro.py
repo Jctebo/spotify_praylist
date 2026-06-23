@@ -169,6 +169,36 @@ class TestPublishDailyIntro(unittest.TestCase):
         self.assertNotIn("Gospel", captured["prompt"])
         self.assertNotIn("Gospel", text)
 
+    def test_build_daily_intro_text_with_shared_gospel_bridge_uses_bridge_when_context_missing(self):
+        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
+        self.mod._fetch_mass_with_retry = lambda date_value: None
+        self.mod._fetch_usccb_html = lambda date_value: (_ for _ in ()).throw(self.mod.DailyIntroMissingDataError("missing"))
+        captured = {}
+
+        def fake_prompt(model, prompt):
+            captured["prompt"] = prompt
+            return (
+                "In today's Gospel, Matthew 7:6, 12-14 draws us into trust. "
+                "Today's focus is Trust, a grace for listening to the Lord today. "
+                "Today the Church celebrates Saint Example, and this liturgical day gathers our prayer around that grace."
+            )
+
+        self.mod._call_openai_prompt = fake_prompt
+
+        text = self.mod.build_daily_intro_text(
+            datetime.date(2026, 4, 27),
+            allow_missing_gospel=True,
+            shared_theme={
+                "sharedThemeTitle": "Trust",
+                "sharedThemeExplanation": "Today's focus is Trust, a grace for listening to the Lord today.",
+                "sharedGospelBridge": "today's Gospel, Matthew 7:6, 12-14, draws us into trust",
+            },
+        )
+
+        self.assertTrue(text.startswith("In today's Gospel"))
+        self.assertIn("Gospel bridge:", captured["prompt"])
+        self.assertIn("today's Gospel, Matthew 7:6, 12-14", captured["prompt"])
+
     def test_build_daily_intro_text_allows_empty_output_when_gospel_missing(self):
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
         self.mod._fetch_mass_with_retry = lambda date_value: None

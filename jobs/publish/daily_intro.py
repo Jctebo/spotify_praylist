@@ -440,7 +440,7 @@ def _deterministic_theme_intro(date_value, context: DailyIntroContext, shared_th
         or f"Today's focus is {title}."
     )
     gospel_bridge = _shared_theme_value(shared_theme, "sharedGospelBridge") or _shared_theme_value(shared_theme, "daily_gospel_bridge")
-    if context.gospel_text:
+    if context.gospel_text or gospel_bridge or context.gospel_citation:
         if gospel_bridge:
             gospel = f"In {gospel_bridge}, helping us receive this focus with faith"
         else:
@@ -473,8 +473,9 @@ def build_daily_intro_text(
     theme_title = _shared_theme_value(shared_theme, "sharedThemeTitle") or _shared_theme_value(shared_theme, "daily_theme_title")
     theme_explanation = _shared_theme_value(shared_theme, "sharedThemeExplanation") or _shared_theme_value(shared_theme, "daily_theme_explanation")
     gospel_bridge = _shared_theme_value(shared_theme, "sharedGospelBridge") or _shared_theme_value(shared_theme, "daily_gospel_bridge")
+    has_gospel_context = bool(context.gospel_text or context.gospel_citation or gospel_bridge)
     if theme_title or theme_explanation:
-        if context.gospel_text:
+        if has_gospel_context:
             sentence_rules = f"""
 Sentence 1 must begin with "In today's Gospel" and explain how the Gospel supports today's focus.
 Sentence 2 must begin with "Today's focus is" and explain this focus in plain spoken language: {theme_explanation or theme_title}.
@@ -496,7 +497,7 @@ Liturgical context: {context.celebration_clause}
 Shared focus title: {theme_title}
 Shared focus explanation: {theme_explanation}
 """.strip()
-        if context.gospel_text:
+        if has_gospel_context:
             prompt = f"""
 {prompt}
 Gospel bridge: {gospel_bridge}
@@ -508,13 +509,13 @@ Gospel text:
             rendered = _call_openai_prompt(model, prompt)
             return _validate_theme_intro(
                 rendered,
-                has_gospel=bool(context.gospel_text),
+                has_gospel=has_gospel_context,
                 allow_missing_gospel=allow_missing_gospel,
             )
         except Exception:
             return _validate_theme_intro(
                 _deterministic_theme_intro(date_value, context, dict(shared_theme or {})),
-                has_gospel=bool(context.gospel_text),
+                has_gospel=has_gospel_context,
                 allow_missing_gospel=True,
             )
 
