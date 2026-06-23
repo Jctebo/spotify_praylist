@@ -84,7 +84,7 @@
           "title": "Prayer Intro",
           "prayer_title": "Regina Caeli",
           "devotion": "Marian Antiphon",
-          "template": "In today's {devotion}, we carry the grace of {daily_theme_title} to Our Lady through the {prayer_title} as we enter this prayer."
+          "template": "In today's {devotion}, {daily_gospel_bridge} and today's focus of {daily_theme_title} lead us to Our Lady through the {prayer_title} as we enter this prayer."
         },
         {
           "kind": "sequence",

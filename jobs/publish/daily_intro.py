@@ -398,10 +398,32 @@ def _shared_theme_value(shared_theme: Optional[Dict[str, Any]], key: str) -> str
     return _normalize_whitespace(shared_theme.get(key, ""))
 
 
-def _validate_theme_intro(text: str, *, allow_missing_gospel: bool = False) -> str:
-    rendered = _validate_daily_intro(text, allow_missing_gospel=allow_missing_gospel)
-    if not rendered:
+def _validate_theme_intro(text: str, *, has_gospel: bool, allow_missing_gospel: bool = False) -> str:
+    if not has_gospel:
+        rendered = _validate_daily_intro(text, allow_missing_gospel=allow_missing_gospel)
+        if not rendered:
+            return rendered
+        lowered = rendered.lower()
+        if "gospel" in lowered:
+            raise RuntimeError("Daily intro must not mention the Gospel when Gospel text is unavailable.")
+        if "today's focus" not in lowered and "the grace" not in lowered:
+            raise RuntimeError("Daily intro must explain today's focus.")
         return rendered
+
+    rendered = _normalize_whitespace(text)
+    if not rendered:
+        raise RuntimeError("Daily intro must contain at least one sentence.")
+    sentences = _split_sentences(rendered)
+    if len(sentences) != 3:
+        raise RuntimeError(f"Daily intro must contain exactly 3 sentences, got {len(sentences)}.")
+    if not sentences[0].lower().startswith("in today's gospel"):
+        raise RuntimeError("Daily intro must begin with a Gospel sentence.")
+    if not sentences[1].lower().startswith("today's focus is"):
+        raise RuntimeError("Daily intro second sentence must explain today's focus.")
+    third = sentences[2].lower()
+    if "church celebrates" not in third and "liturgical" not in third and "season" not in third:
+        raise RuntimeError("Daily intro third sentence must name the liturgical day or season.")
+    rendered = " ".join(sentences).strip()
     lowered = rendered.lower()
     if "today's focus" not in lowered and "the grace" not in lowered:
         raise RuntimeError("Daily intro must explain today's focus.")
@@ -417,13 +439,19 @@ def _deterministic_theme_intro(date_value, context: DailyIntroContext, shared_th
         or _shared_theme_value(shared_theme, "daily_theme_explanation")
         or f"Today's focus is {title}."
     )
+    gospel_bridge = _shared_theme_value(shared_theme, "sharedGospelBridge") or _shared_theme_value(shared_theme, "daily_gospel_bridge")
     if context.gospel_text:
-        gospel = f"In today's Gospel, {context.gospel_citation or 'the Lord'} helps us receive this focus with faith."
+        if gospel_bridge:
+            gospel = f"In {gospel_bridge}, helping us receive this focus with faith"
+        else:
+            gospel = f"In today's Gospel, {context.gospel_citation or 'the Lord'} helps us receive this focus with faith"
+        liturgical = f"Today the Church celebrates {context.celebration_clause}, and this liturgical day gathers our prayer around that grace."
+        return _normalize_whitespace(f"{gospel}. {explanation} {liturgical}")
     else:
         gospel = "We receive this focus through the Church's prayer for this liturgical day."
-    return _normalize_whitespace(
-        f"Today the Church celebrates {context.celebration_clause}. {explanation} {gospel}"
-    )
+        return _normalize_whitespace(
+            f"Today the Church celebrates {context.celebration_clause}. {explanation} {gospel}"
+        )
 
 
 def build_daily_intro_text(
@@ -444,33 +472,45 @@ def build_daily_intro_text(
     model = str(prompt_model or os.getenv(OAI_MODEL, "") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
     theme_title = _shared_theme_value(shared_theme, "sharedThemeTitle") or _shared_theme_value(shared_theme, "daily_theme_title")
     theme_explanation = _shared_theme_value(shared_theme, "sharedThemeExplanation") or _shared_theme_value(shared_theme, "daily_theme_explanation")
+    gospel_bridge = _shared_theme_value(shared_theme, "sharedGospelBridge") or _shared_theme_value(shared_theme, "daily_gospel_bridge")
     if theme_title or theme_explanation:
-        gospel_rule = (
-            "Sentence 3 must begin with \"In today's Gospel\" and explain how the Gospel supports today's focus."
-            if context.gospel_text
-            else "Sentence 3 must explain that this focus is received through the liturgical day without mentioning the Gospel."
-        )
+        if context.gospel_text:
+            sentence_rules = f"""
+Sentence 1 must begin with "In today's Gospel" and explain how the Gospel supports today's focus.
+Sentence 2 must begin with "Today's focus is" and explain this focus in plain spoken language: {theme_explanation or theme_title}.
+Sentence 3 must name this liturgical context exactly and explain how the Church receives the day in prayer: {context.celebration_clause}.
+""".strip()
+        else:
+            sentence_rules = f"""
+Sentence 1 must begin with "Today the Church celebrates" and must include this liturgical context exactly: {context.celebration_clause}.
+Sentence 2 must begin with "Today's focus is" and explain this focus in plain spoken language: {theme_explanation or theme_title}.
+Sentence 3 must explain that this focus is received through the liturgical day without mentioning the Gospel.
+""".strip()
         prompt = f"""
 Write exactly three sentences for the opening block of a Catholic morning prayer podcast.
 
-Sentence 1 must begin with "Today the Church celebrates" and must include this liturgical context exactly: {context.celebration_clause}.
-Sentence 2 must begin with "Today's focus is" and explain this focus in plain spoken language: {theme_explanation or theme_title}.
-{gospel_rule}
+{sentence_rules}
 
 Date: {date_value.isoformat()}
 Liturgical context: {context.celebration_clause}
 Shared focus title: {theme_title}
 Shared focus explanation: {theme_explanation}
+Gospel bridge: {gospel_bridge}
 Gospel citation: {context.gospel_citation}
 Gospel text:
 {context.gospel_text}
 """.strip()
         try:
             rendered = _call_openai_prompt(model, prompt)
-            return _validate_theme_intro(rendered, allow_missing_gospel=allow_missing_gospel)
+            return _validate_theme_intro(
+                rendered,
+                has_gospel=bool(context.gospel_text),
+                allow_missing_gospel=allow_missing_gospel,
+            )
         except Exception:
             return _validate_theme_intro(
                 _deterministic_theme_intro(date_value, context, dict(shared_theme or {})),
+                has_gospel=bool(context.gospel_text),
                 allow_missing_gospel=True,
             )
 

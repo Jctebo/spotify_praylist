@@ -96,6 +96,7 @@ class TestNovenaEngine(unittest.TestCase):
                 "date": "2026-06-16",
                 "sharedThemeTitle": "Humility And Trust",
                 "sharedThemeVersion": "daily-theme-v1",
+                "sharedGospelBridge": "today's Gospel, Matthew 5:43-48, draws us into humility",
                 "gospelCitation": "Matthew 5:43-48",
                 "fallbackReason": "",
                 "sharedThemeSources": [{"kind": "gospel", "label": "Matthew 5:43-48", "theme": "humility"}],
@@ -105,6 +106,7 @@ class TestNovenaEngine(unittest.TestCase):
             "daily_theme_explanation": "Today's focus is humility and trust.",
             "daily_theme_transition": "Carrying today's focus of humility and trust, we enter this novena.",
             "daily_theme_reflection_focus": "Today's focus is humility and trust.",
+            "daily_gospel_bridge": "today's Gospel, Matthew 5:43-48, draws us into humility",
             "daily_theme_sources": [{"kind": "gospel", "label": "Matthew 5:43-48", "theme": "humility"}],
             "daily_theme_version": "daily-theme-v1",
         }
@@ -117,7 +119,7 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertEqual(rendered["context"]["daily_focus"], "courage")
         self.assertEqual(rendered["context"]["novena_daily_focus"], "courage")
         self.assertEqual(rendered["audio_fragments"][0]["label"], "Welcome to Day 1")
-        self.assertIn("Carrying today's focus of humility and trust", rendered["audio_fragments"][0]["text"])
+        self.assertIn("Today's Gospel, Matthew 5:43-48, draws us into humility", rendered["audio_fragments"][0]["text"])
         self.assertEqual(rendered["audio_fragments"][1]["text"], "Original traditional prayer text.")
         self.assertIn("Original traditional prayer text.", rendered["content"]["text"])
 

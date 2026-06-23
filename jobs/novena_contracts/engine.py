@@ -167,7 +167,15 @@ def _intro_fragment(runtime: NovenaRuntime, context: Mapping[str, Any]) -> Dict[
     title = f"Welcome to Day {runtime.active_day}"
     daily_theme_title = _normalize_whitespace(context.get("daily_theme_title", ""))
     daily_theme_transition = _normalize_whitespace(context.get("daily_theme_transition", ""))
+    daily_liturgical_context = context.get("daily_liturgical_context") if isinstance(context.get("daily_liturgical_context"), Mapping) else {}
+    daily_gospel_bridge = _normalize_whitespace(context.get("daily_gospel_bridge", "") or daily_liturgical_context.get("sharedGospelBridge", ""))
     theme_sentence = f" {daily_theme_transition}" if daily_theme_title and daily_theme_transition else ""
+    if daily_gospel_bridge and daily_theme_title:
+        lowered_title = daily_theme_title.lower()
+        theme_sentence = (
+            f" {daily_gospel_bridge[:1].upper() + daily_gospel_bridge[1:]} and today's focus of {lowered_title} "
+            "join this novena intention to the needs of the whole day."
+        )
     return {
         "fragment_key": f"{episode_id}/intro",
         "block_path": "intro",

@@ -56,6 +56,7 @@ def daily_liturgical_context_to_payload(context: Any) -> Dict[str, Any]:
         "sharedThemeExplanation",
         "sharedThemeTransition",
         "sharedThemeReflectionFocus",
+        "sharedGospelBridge",
         "sharedThemeSources",
         "sharedThemeVersion",
     )
@@ -71,6 +72,7 @@ def daily_theme_runtime_fields(payload: Dict[str, Any]) -> Dict[str, Any]:
         or f"Carrying today's focus of {title.lower()}, we place ourselves and the needs of this day before the Lord."
     ).strip()
     reflection_focus = str(payload.get("sharedThemeReflectionFocus") or payload.get("reflectionFocus") or explanation).strip()
+    gospel_bridge = str(payload.get("sharedGospelBridge") or "").strip()
     sources = payload.get("sharedThemeSources") or []
     return {
         "daily_liturgical_context": payload,
@@ -79,6 +81,9 @@ def daily_theme_runtime_fields(payload: Dict[str, Any]) -> Dict[str, Any]:
         "daily_theme_explanation": explanation,
         "daily_theme_transition": transition,
         "daily_theme_reflection_focus": reflection_focus,
+        "daily_gospel_bridge": gospel_bridge,
+        "daily_gospel_citation": str(payload.get("gospelCitation") or "").strip(),
+        "daily_gospel_theme": str(payload.get("gospelTheme") or "").strip(),
         "daily_theme_sources": sources,
         "daily_theme_version": str(payload.get("sharedThemeVersion") or "daily-theme-v1"),
     }

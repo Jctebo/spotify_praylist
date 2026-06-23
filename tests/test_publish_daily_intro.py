@@ -156,6 +156,51 @@ class TestPublishDailyIntro(unittest.TestCase):
 
         self.assertIn("exactly 3 sentences", str(ctx.exception))
 
+    def test_build_daily_intro_text_with_shared_theme_starts_with_gospel(self):
+        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
+        self.mod.asyncio.run = lambda coro: self._fake_asyncio_run(coro)
+        captured = {}
+
+        def fake_prompt(model, prompt):
+            captured["prompt"] = prompt
+            return (
+                "In today's Gospel, Jesus calls his sheep by name and draws us into trust. "
+                "Today's focus is Trust, a grace for listening to the Lord today. "
+                "Today the Church celebrates Saint Example, and this liturgical day gathers our prayer around that grace."
+            )
+
+        self.mod._call_openai_prompt = fake_prompt
+
+        text = self.mod.build_daily_intro_text(
+            datetime.date(2026, 4, 27),
+            shared_theme={
+                "sharedThemeTitle": "Trust",
+                "sharedThemeExplanation": "Today's focus is Trust, a grace for listening to the Lord today.",
+                "sharedGospelBridge": "today's Gospel, John 10:11-18, draws us into trust",
+            },
+        )
+
+        self.assertTrue(text.startswith("In today's Gospel"))
+        self.assertIn("Today's focus is Trust", text)
+        self.assertIn("Gospel bridge: today's Gospel, John 10:11-18, draws us into trust", captured["prompt"])
+
+    def test_build_daily_intro_text_with_shared_theme_fallback_is_gospel_first(self):
+        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
+        self.mod.asyncio.run = lambda coro: self._fake_asyncio_run(coro)
+        self.mod._call_openai_prompt = lambda model, prompt: "Today the Church celebrates Saint Example. Invalid shape."
+
+        text = self.mod.build_daily_intro_text(
+            datetime.date(2026, 4, 27),
+            shared_theme={
+                "sharedThemeTitle": "Trust",
+                "sharedThemeExplanation": "Today's focus is Trust, a grace for listening to the Lord today.",
+                "sharedGospelBridge": "today's Gospel, John 10:11-18, draws us into trust",
+            },
+        )
+
+        self.assertTrue(text.startswith("In today's Gospel"))
+        self.assertIn("Today's focus is Trust", text)
+
     def test_resolve_openai_settings_reads_local_env_file(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             local_env = Path(tmpdir) / "openai.env"

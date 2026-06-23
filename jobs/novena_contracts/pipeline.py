@@ -30,6 +30,7 @@ DAILY_LITURGICAL_CONTEXT_FRESHNESS_KEYS = (
     "sharedThemeExplanation",
     "sharedThemeTransition",
     "sharedThemeReflectionFocus",
+    "sharedGospelBridge",
     "gospelCitation",
     "fallbackReason",
     "sharedThemeSources",

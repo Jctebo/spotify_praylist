@@ -36,6 +36,8 @@ class TestDailyLiturgicalContext(unittest.TestCase):
         self.assertIn("Mercy", payload["sharedThemeTitle"])
         self.assertIn("The Most Sacred Heart of Jesus", payload["sharedThemeExplanation"])
         self.assertIn("today's Gospel, Matthew 10:1-7", payload["sharedThemeExplanation"])
+        self.assertIn("today's Gospel, Matthew 10:1-7", payload["sharedGospelBridge"])
+        self.assertIn("mission", payload["sharedGospelBridge"])
         self.assertTrue(any(source["kind"] == "gospel" for source in payload["sharedThemeSources"]))
         self.assertTrue(any(source["kind"] == "season" for source in payload["sharedThemeSources"]))
 
@@ -86,6 +88,7 @@ class TestDailyLiturgicalContext(unittest.TestCase):
         self.assertIn("network unavailable", context.fallbackReason)
         self.assertIn("Repentance", context.sharedThemeTitle)
         self.assertIn("Lent", context.sharedThemeExplanation)
+        self.assertEqual(context.sharedGospelBridge, "")
         self.assertTrue(any(source["kind"] == "season" for source in context.to_dict()["sharedThemeSources"]))
 
     def test_multiple_calendar_names_are_joined_in_shared_theme_source(self):

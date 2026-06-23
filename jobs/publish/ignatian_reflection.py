@@ -91,6 +91,7 @@ Rules:
 - Paragraphs 1, 2, and 3 must each end with a question so the audio can pause after them.
 - The reflection should be shorter and more spacious than before, with several contemplative pauses.
 - Paragraph 1 should introduce the day's liturgical context naturally.
+- When sharedGospelBridge or gospelCitation is present, explicitly ground Paragraph 1 in that Gospel context.
 - Paragraph 2 should draw the day into ordinary life through the shared daily focus, saint, imagery, and emotional tone.
 - Paragraph 3 should guide a brief examen with gratitude, reviewing the day, consolation/desolation, speaking with Jesus, and hope for tomorrow.
 - Paragraph 4 should include the closing prayer and end exactly with these two final lines:
@@ -101,6 +102,7 @@ Saint {_saint_for_context(context)}, pray for us.
 
 Date: {date_value.isoformat()}
 Episode title: {title}
+Gospel bridge: {context.sharedGospelBridge or context.gospelCitation}
 Shared helper context:
 {payload}
 """.strip()
@@ -140,10 +142,14 @@ def deterministic_ignatian_reflection(date_value, context: DailyLiturgicalContex
     tone = context.emotionalTone
     summary = context.sharedThemeExplanation or context.shortSummary
     feast_sentence = f"The Church's calendar gives us {context.feastDay} as a companion today." if context.feastDay else ""
-    gospel_sentence = (
-        f"The Gospel theme before us is {context.gospelTheme}." if context.gospelTheme else
-        "The Church invites us to receive this day through the steady light of the liturgical season."
-    )
+    if context.sharedGospelBridge:
+        gospel_sentence = f"In {context.sharedGospelBridge}, the Lord gives this day its Gospel shape."
+    elif context.gospelCitation and context.gospelTheme:
+        gospel_sentence = f"Today's Gospel, {context.gospelCitation}, draws us into {context.gospelTheme}."
+    elif context.gospelTheme:
+        gospel_sentence = f"The Gospel theme before us is {context.gospelTheme}."
+    else:
+        gospel_sentence = "The Church invites us to receive this day through the steady light of the liturgical season."
     reflection = f"""
 {WELCOME} Today {summary.lower()} {feast_sentence} {gospel_sentence} We enter this prayer in a {tone} spirit and ask for the grace to notice God in ordinary life. What is the Lord already revealing in this day?
 

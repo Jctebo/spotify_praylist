@@ -831,6 +831,11 @@ def _resolve_prayer_intro_content(
     daily_theme_title = _compact_text((runtime_context or {}).get("daily_theme_title"))
     daily_theme_transition = _compact_text((runtime_context or {}).get("daily_theme_transition"))
     daily_theme_explanation = _compact_text((runtime_context or {}).get("daily_theme_explanation"))
+    daily_gospel_bridge = _compact_text((runtime_context or {}).get("daily_gospel_bridge"))
+    daily_gospel_citation = _compact_text((runtime_context or {}).get("daily_gospel_citation"))
+    daily_gospel_theme = _compact_text((runtime_context or {}).get("daily_gospel_theme"))
+    if not daily_gospel_bridge:
+        daily_gospel_bridge = "the Church's prayer for this liturgical day"
     if not daily_theme_title:
         calendar, locale = _prayer_intro_liturgical_context(block, contract)
         daily_theme_title = _prayer_intro_day_theme(target_date, calendar=calendar, locale=locale)
@@ -842,6 +847,9 @@ def _resolve_prayer_intro_content(
             daily_theme_title=daily_theme_title,
             daily_theme_transition=daily_theme_transition,
             daily_theme_explanation=daily_theme_explanation,
+            daily_gospel_bridge=daily_gospel_bridge,
+            daily_gospel_citation=daily_gospel_citation,
+            daily_gospel_theme=daily_gospel_theme,
             prayer_title=prayer_title,
             devotion=devotion,
         )

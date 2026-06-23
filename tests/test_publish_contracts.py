@@ -18,8 +18,9 @@ class TestPublishContracts(unittest.TestCase):
         def fake_build_daily_intro_text(date_value, **kwargs):
             self.calls.append((date_value, dict(kwargs)))
             return (
-                "Today the Church celebrates Saint Example. Praise be to God for his mercy. "
-                "In today's Gospel, Jesus calls his sheep by name."
+                "In today's Gospel, Jesus calls his sheep by name. "
+                "Today's focus is Trust, the grace of hearing the Lord's voice. "
+                "Today the Church celebrates Saint Example, and this liturgical day gathers our prayer around that grace."
             )
 
         self.mod.build_daily_intro_text = fake_build_daily_intro_text
@@ -59,6 +60,7 @@ class TestPublishContracts(unittest.TestCase):
             gospel_text="Jesus calls his sheep by name.",
             calendar="general_roman",
             locale="en",
+            shared_gospel_bridge="today's Gospel, John 10:1-10, draws us into trust",
         )
 
     def _fake_rosary_reflection_set(self, date_value, mystery_text, **kwargs):
@@ -101,6 +103,14 @@ class TestPublishContracts(unittest.TestCase):
             "gospelCitation": "John 10:1-10",
             "calendar": "general_roman",
             "locale": "en",
+            "sharedThemeTitle": "Trust",
+            "sharedThemeSlug": "trust",
+            "sharedThemeExplanation": "Today's focus is trust.",
+            "sharedThemeTransition": "Carrying today's focus of trust, we place this day before the Lord.",
+            "sharedThemeReflectionFocus": "Today's focus is trust.",
+            "sharedGospelBridge": "today's Gospel, John 10:1-10, draws us into trust",
+            "sharedThemeSources": [{"kind": "gospel", "label": "today's Gospel, John 10:1-10", "theme": "trust"}],
+            "sharedThemeVersion": "daily-theme-v1",
         }
         return SimpleNamespace(**payload, to_dict=lambda: dict(payload))
 
@@ -393,11 +403,13 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(easter_marian["audio_fragments"][0]["kind"], "daily-intro")
         self.assertEqual(easter_marian["audio_fragments"][1]["kind"], "prayer-intro")
         self.assertIn("Regina Caeli", easter_marian["audio_fragments"][1]["text"])
-        self.assertIn("carry the grace of Trust", easter_marian["audio_fragments"][1]["text"])
+        self.assertIn("today's Gospel, John 10:1-10, draws us into trust", easter_marian["audio_fragments"][1]["text"])
+        self.assertIn("today's focus of Trust", easter_marian["audio_fragments"][1]["text"])
         self.assertEqual(ordinary_marian["audio_fragments"][0]["kind"], "daily-intro")
         self.assertEqual(ordinary_marian["audio_fragments"][1]["kind"], "prayer-intro")
         self.assertIn("Angelus", ordinary_marian["audio_fragments"][1]["text"])
-        self.assertIn("carry the grace of Trust", ordinary_marian["audio_fragments"][1]["text"])
+        self.assertIn("today's Gospel, John 10:1-10, draws us into trust", ordinary_marian["audio_fragments"][1]["text"])
+        self.assertIn("today's focus of Trust", ordinary_marian["audio_fragments"][1]["text"])
 
     def test_build_text_jobs_uses_metadata_allow_missing_gospel_when_block_omits_it(self):
         contracts = self.mod.load_publish_contracts()
@@ -597,10 +609,8 @@ class TestPublishContracts(unittest.TestCase):
             [section["title"] for section in auxilium["sections"]],
             ["Liturgical Announcement", "Prayer Intro", "Opening Prayers", "Litany of the Most Precious Blood", "Weekday Prayer", "Conclusion"],
         )
-        self.assertIn(
-            "As we begin today's Auxilium Christianorum prayers, we carry the grace of Trust and place ourselves, our families, and the needs of this day under Mary's protection.",
-            auxilium["text"],
-        )
+        self.assertIn("As we begin today's Auxilium Christianorum prayers, today's Gospel, John 10:1-10, draws us into trust", auxilium["text"])
+        self.assertIn("today's focus of Trust", auxilium["text"])
         self.assertEqual(auxilium["resume_markers"][0]["label"], "Liturgical Announcement")
         self.assertEqual(auxilium["resume_markers"][1]["label"], "Prayer Intro")
         self.assertEqual(auxilium["resume_markers"][0]["source"], "text_section")
@@ -701,6 +711,9 @@ class TestPublishContracts(unittest.TestCase):
                 "sharedThemeExplanation": explanation,
                 "sharedThemeTransition": f"Carrying today's focus of {title.lower()}, we place this day before the Lord.",
                 "sharedThemeReflectionFocus": explanation,
+                "sharedGospelBridge": (
+                    "" if allow_missing_gospel else "today's Gospel, Matthew 5:43-48, draws us into humility"
+                ),
                 "sharedThemeSources": sources,
                 "sharedThemeVersion": "daily-theme-v1",
             }
@@ -724,6 +737,7 @@ class TestPublishContracts(unittest.TestCase):
         titles = {job["render_context"]["daily_theme_title"] for job in jobs}
         explanations = {job["render_context"]["daily_theme_explanation"] for job in jobs}
         citations = {job["render_context"]["daily_liturgical_context"]["gospelCitation"] for job in jobs}
+        bridges = {job["render_context"]["daily_gospel_bridge"] for job in jobs}
         fallbacks = {job["render_context"]["daily_liturgical_context"]["fallbackReason"] for job in jobs}
         source_lists = {
             json.dumps(job["render_context"]["daily_theme_sources"], sort_keys=True)
@@ -732,6 +746,7 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(titles, {"Humility And Trust"})
         self.assertEqual(len(explanations), 1)
         self.assertEqual(citations, {"Matthew 5:43-48"})
+        self.assertEqual(bridges, {"today's Gospel, Matthew 5:43-48, draws us into humility"})
         self.assertEqual(fallbacks, {""})
         self.assertEqual(len(source_lists), 1)
 
@@ -798,6 +813,8 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(job["audio_fragments"][1]["label"], "Prayer Intro")
         self.assertEqual(job["audio_fragments"][1]["fragment_key"], "block-2/prayer-intro")
         self.assertIn("Auxilium Christianorum prayers", job["audio_fragments"][1]["text"])
+        self.assertIn("today's Gospel, John 10:1-10, draws us into trust", job["audio_fragments"][1]["text"])
+        self.assertIn("Trust", job["audio_fragments"][1]["text"])
         self.assertTrue(any("weekday-map-monday" in fragment["fragment_key"] for fragment in job["audio_fragments"]))
         versicle_fragments = [fragment for fragment in job["audio_fragments"] if fragment.get("audio_role") == "versicle"]
         response_fragments = [fragment for fragment in job["audio_fragments"] if fragment.get("audio_role") == "response"]

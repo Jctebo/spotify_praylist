@@ -29,6 +29,7 @@ class TestNovenaPipeline(unittest.TestCase):
                     "sharedThemeExplanation": "Today's focus is humility and trust.",
                     "sharedThemeTransition": "Carrying today's focus of humility and trust, we enter this novena.",
                     "sharedThemeReflectionFocus": "Today's focus is humility and trust.",
+                    "sharedGospelBridge": "today's Gospel, Matthew 5:43-48, draws us into humility",
                     "sharedThemeSources": [
                         {"kind": "calendar", "label": "Tuesday of the Eleventh Week in Ordinary Time", "theme": "humility"},
                         {"kind": "gospel", "label": "Matthew 5:43-48", "theme": "humility"},
@@ -41,6 +42,7 @@ class TestNovenaPipeline(unittest.TestCase):
                 "daily_theme_explanation": "Today's focus is humility and trust.",
                 "daily_theme_transition": "Carrying today's focus of humility and trust, we enter this novena.",
                 "daily_theme_reflection_focus": "Today's focus is humility and trust.",
+                "daily_gospel_bridge": "today's Gospel, Matthew 5:43-48, draws us into humility",
                 "daily_theme_sources": [
                     {"kind": "calendar", "label": "Tuesday of the Eleventh Week in Ordinary Time", "theme": "humility"},
                     {"kind": "gospel", "label": "Matthew 5:43-48", "theme": "humility"},
