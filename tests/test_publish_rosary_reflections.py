@@ -206,6 +206,9 @@ class TestPublishRosaryReflections(unittest.TestCase):
             gospel_text="Jesus calls his sheep by name.",
             calendar="general_roman",
             locale="en",
+            shared_theme_title="Trust",
+            shared_theme_explanation="Today's focus is trust.",
+            shared_gospel_bridge="today's Gospel, John 10:1-10, draws us into trust",
         )
 
         generated = (
@@ -232,6 +235,7 @@ class TestPublishRosaryReflections(unittest.TestCase):
             )
 
         self.assertIn("For today's rosary, we will focus on the feast of Saint Example.", fallback)
+        self.assertIn("today's Gospel, John 10:1-10, draws us into trust", fallback)
         self.assertIn("Joyful Mysteries", fallback)
 
     def test_build_rosary_reflections_uses_season_generation_when_gospel_is_missing(self):
@@ -304,6 +308,9 @@ class TestPublishRosaryReflections(unittest.TestCase):
             gospel_text="Jesus taught in the temple.",
             calendar="general_roman",
             locale="en",
+            shared_theme_title="Wisdom",
+            shared_theme_explanation="Today's focus is wisdom.",
+            shared_gospel_bridge="today's Gospel, Mark 12:35-37, draws us into wisdom",
         )
 
         with mock.patch.object(self.mod, "_call_openai_reflections", return_value="Only one reflection."):
@@ -316,6 +323,7 @@ class TestPublishRosaryReflections(unittest.TestCase):
         self.assertEqual(result.source, self.mod.SOURCE_FALLBACK_FEAST)
         self.assertEqual(len(result.reflections), 5)
         self.assertTrue(all("the feast of Saint Boniface, Bishop and Martyr" in reflection for reflection in result.reflections))
+        self.assertTrue(all("today's Gospel, Mark 12:35-37, draws us into wisdom" in reflection for reflection in result.reflections))
         self.assertTrue(all("places before us a concrete moment" not in reflection for reflection in result.reflections))
 
     def test_build_rosary_reflections_uses_resolved_day_context_season_when_gospel_is_missing(self):
@@ -382,7 +390,7 @@ class TestPublishRosaryReflections(unittest.TestCase):
             fallback = self.mod.build_rosary_reflections(datetime.date(2026, 4, 6), mysteries)
 
         self.assertIn("The Annunciation", fallback[0])
-        self.assertIn("Easter season", fallback[0])
+        self.assertIn("today's Gospel, John 10:1-10", fallback[0])
         self.assertIn("humility", fallback[0])
 
 

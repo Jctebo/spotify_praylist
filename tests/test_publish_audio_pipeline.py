@@ -115,6 +115,14 @@ class TestPublishAudioPipeline(unittest.TestCase):
             "gospelCitation": "John 10:1-10",
             "calendar": "general_roman",
             "locale": "en",
+            "sharedThemeTitle": "Trust",
+            "sharedThemeSlug": "trust",
+            "sharedThemeExplanation": "Today's focus is trust.",
+            "sharedThemeTransition": "Carrying today's focus of trust, we place this day before the Lord.",
+            "sharedThemeReflectionFocus": "Today's focus is trust.",
+            "sharedGospelBridge": "today's Gospel, John 10:1-10, draws us into trust",
+            "sharedThemeSources": [{"kind": "gospel", "label": "today's Gospel, John 10:1-10", "theme": "trust"}],
+            "sharedThemeVersion": "daily-theme-v1",
         }
         return SimpleNamespace(**payload, to_dict=lambda: dict(payload))
 

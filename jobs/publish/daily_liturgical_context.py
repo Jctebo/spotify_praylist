@@ -43,6 +43,7 @@ class DailyLiturgicalContext:
     sharedThemeExplanation: str = ""
     sharedThemeTransition: str = ""
     sharedThemeReflectionFocus: str = ""
+    sharedGospelBridge: str = ""
     sharedThemeSources: tuple[Dict[str, str], ...] = ()
     sharedThemeVersion: str = SHARED_THEME_VERSION
 
@@ -156,6 +157,7 @@ def build_daily_liturgical_context(
         sharedThemeExplanation=shared_theme["explanation"],
         sharedThemeTransition=shared_theme["transition"],
         sharedThemeReflectionFocus=shared_theme["reflection_focus"],
+        sharedGospelBridge=shared_theme["gospel_bridge"],
         sharedThemeSources=tuple(shared_theme["sources"]),
         sharedThemeVersion=SHARED_THEME_VERSION,
     )
@@ -465,12 +467,14 @@ def _shared_theme_payload(
     transition = _truncate_sentence(
         f"Carrying today's focus of {title_lc}, we place ourselves and the needs of this day before the Lord."
     )
+    gospel_bridge = _shared_gospel_bridge(gospel_citation, gospel_theme)
     reflection_focus = _truncate_sentence(
-        f"Pray with {title_lc} by holding together {day_label}, the light of the Gospel, and the grace of {season or 'this liturgical day'}."
+        f"Pray with {title_lc} by holding together {day_label}, {gospel_bridge or 'the light of the Gospel'}, and the grace of {season or 'this liturgical day'}."
     )
     if source == "fallback":
         explanation = "Today's focus is Trust: even with limited liturgical data, the Church invites us to receive ordinary life as a place of grace."
         transition = "Carrying today's focus of trust, we place ourselves and the needs of this day before the Lord."
+        gospel_bridge = ""
         reflection_focus = "Pray with trust by noticing where God is present in ordinary life today."
     return {
         "title": title,
@@ -478,5 +482,16 @@ def _shared_theme_payload(
         "explanation": explanation,
         "transition": transition,
         "reflection_focus": reflection_focus,
+        "gospel_bridge": gospel_bridge,
         "sources": sources,
     }
+
+
+def _shared_gospel_bridge(gospel_citation: str, gospel_theme: str) -> str:
+    theme = _normalize_whitespace(gospel_theme)
+    if not theme:
+        return ""
+    citation = _normalize_whitespace(gospel_citation)
+    if citation:
+        return f"today's Gospel, {citation}, draws us into {theme}"
+    return f"today's Gospel draws us into {theme}"

@@ -65,6 +65,7 @@ class RosaryDayContext:
     shared_theme_explanation: str = ""
     shared_theme_reflection_focus: str = ""
     shared_theme_transition: str = ""
+    shared_gospel_bridge: str = ""
     shared_theme_sources: tuple[dict[str, str], ...] = ()
     shared_theme_version: str = ""
 
@@ -130,14 +131,33 @@ def fallback_rosary_reflections(mysteries: Sequence[RosaryMystery], season: Opti
 def fallback_feast_rosary_reflections(mysteries: Sequence[RosaryMystery], focus: RosaryDayContext) -> tuple[str, ...]:
     feast_label = focus.focus_prompt_label or "today's feast"
     season_label = focus.season_label or "the liturgical season"
+    gospel_bridge = focus.shared_gospel_bridge or (f"today's Gospel, {focus.gospel_citation}" if focus.gospel_citation else "today's Gospel")
+    shared_focus = focus.shared_theme_title or focus.focus_title or "today's grace"
     reflections = []
     for mystery in mysteries:
         fruit = mystery.fruit.lower()
         reflection = (
             f"{mystery.title} draws this decade into {feast_label}. "
-            f"As the Church keeps this celebration in {season_label}, the mystery of {mystery.title} teaches us to receive the day through Christ. "
+            f"As the Church keeps this celebration in {season_label}, {gospel_bridge} and today's focus of {shared_focus} teach us to receive the day through Christ. "
             f"The fruit of this mystery is {fruit}, the grace that lets this feast shape how we listen, choose, and love. "
             f"As we pray {mystery.title}, we ask for {fruit} to become visible in this decade and in our life today."
+        )
+        reflections.append(reflection)
+    return tuple(reflections)
+
+
+def fallback_gospel_theme_rosary_reflections(mysteries: Sequence[RosaryMystery], focus: RosaryDayContext) -> tuple[str, ...]:
+    gospel_bridge = focus.shared_gospel_bridge or (f"today's Gospel, {focus.gospel_citation}" if focus.gospel_citation else "today's Gospel")
+    shared_focus = focus.shared_theme_title or focus.focus_title or "today's grace"
+    shared_explanation = focus.shared_theme_explanation or focus.shared_theme_reflection_focus
+    reflections = []
+    for mystery in mysteries:
+        fruit = mystery.fruit.lower()
+        explanation = f" {shared_explanation}" if shared_explanation else ""
+        reflection = (
+            f"{mystery.title} is prayed in the light of {gospel_bridge}. "
+            f"Today's focus of {shared_focus} helps this mystery become a school of {fruit}.{explanation} "
+            f"As we pray this decade, we ask the Lord to let {fruit} shape how we listen, choose, and love today."
         )
         reflections.append(reflection)
     return tuple(reflections)
@@ -211,12 +231,10 @@ def build_rosary_reflection_result(
             source=SOURCE_GENERATED_GOSPEL,
         )
     except Exception as exc:
-        print(f"WARN rosary_reflections gospel_generation_invalid detail={exc}; trying season_only_generation", file=sys.stderr)
-        return _build_seasonal_or_generic_reflection_result(
-            date_value,
-            mysteries,
-            model=model,
-            season=context.season_label or season,
+        print(f"WARN rosary_reflections gospel_generation_invalid detail={exc}; using gospel_theme_fallback", file=sys.stderr)
+        return RosaryReflectionResult(
+            reflections=validate_rosary_reflections(fallback_gospel_theme_rosary_reflections(mysteries, context), mysteries),
+            source=SOURCE_FALLBACK_GENERIC,
             fallback_reason=str(exc),
         )
 
@@ -312,6 +330,7 @@ def build_rosary_day_context(
     shared_explanation = _normalize_whitespace(shared.get("sharedThemeExplanation") or shared.get("daily_theme_explanation"))
     shared_reflection_focus = _normalize_whitespace(shared.get("sharedThemeReflectionFocus") or shared.get("daily_theme_reflection_focus"))
     shared_transition = _normalize_whitespace(shared.get("sharedThemeTransition") or shared.get("daily_theme_transition"))
+    shared_gospel_bridge = _normalize_whitespace(shared.get("sharedGospelBridge") or shared.get("daily_gospel_bridge"))
     shared_sources = tuple(dict(item) for item in (shared.get("sharedThemeSources") or shared.get("daily_theme_sources") or ()) if isinstance(item, dict))
     shared_version = _normalize_whitespace(shared.get("sharedThemeVersion") or shared.get("daily_theme_version"))
     if shared_title:
@@ -337,6 +356,7 @@ def build_rosary_day_context(
         shared_theme_explanation=shared_explanation,
         shared_theme_reflection_focus=shared_reflection_focus,
         shared_theme_transition=shared_transition,
+        shared_gospel_bridge=shared_gospel_bridge,
         shared_theme_sources=shared_sources,
         shared_theme_version=shared_version,
     )
@@ -430,6 +450,7 @@ def build_rosary_intro_text(
             shared_theme_explanation=_normalize_whitespace((shared_theme or {}).get("sharedThemeExplanation", "")),
             shared_theme_reflection_focus=_normalize_whitespace((shared_theme or {}).get("sharedThemeReflectionFocus", "")),
             shared_theme_transition=_normalize_whitespace((shared_theme or {}).get("sharedThemeTransition", "")),
+            shared_gospel_bridge=_normalize_whitespace((shared_theme or {}).get("sharedGospelBridge", "") or (shared_theme or {}).get("daily_gospel_bridge", "")),
             shared_theme_sources=tuple(dict(item) for item in ((shared_theme or {}).get("sharedThemeSources") or ()) if isinstance(item, dict)),
             shared_theme_version=_normalize_whitespace((shared_theme or {}).get("sharedThemeVersion", "")),
         )
@@ -578,19 +599,21 @@ Gospel text:
 def _build_prompt_from_day_context(date_value, context: RosaryDayContext, mysteries: Sequence[RosaryMystery]) -> str:
     mystery_lines = "\n".join(f"{mystery.number}. {mystery.title} - {mystery.fruit}" for mystery in mysteries)
     shared_explanation = f"\nShared daily focus: {context.shared_theme_explanation}" if context.shared_theme_explanation else ""
+    gospel_bridge = f"\nGospel bridge: {context.shared_gospel_bridge}" if context.shared_gospel_bridge else ""
     return f"""
 Write exactly five Catholic Rosary decade reflections, one line per mystery.
 
 {_reflection_style_rules()}
 
 Additional Gospel rule:
-- Connect the listed mystery and fruit to {context.focus_prompt_label}.
+- Connect the listed mystery and fruit to {context.focus_prompt_label}, the Gospel bridge, and the shared daily focus.
 - Avoid adding details not present in the Gospel text.
 
 Date: {date_value.isoformat()}
 Liturgical context: {context.celebration_clause}
 Gospel citation: {context.gospel_citation}
 {shared_explanation}
+{gospel_bridge}
 Mysteries:
 {mystery_lines}
 
@@ -602,6 +625,7 @@ Gospel text:
 def _build_feast_prompt(date_value, focus: RosaryDayContext, mysteries: Sequence[RosaryMystery]) -> str:
     mystery_lines = "\n".join(f"{mystery.number}. {mystery.title} - {mystery.fruit}" for mystery in mysteries)
     shared_explanation = f"\nShared daily focus: {focus.shared_theme_explanation}" if focus.shared_theme_explanation else ""
+    gospel_bridge = f"\nGospel bridge: {focus.shared_gospel_bridge}" if focus.shared_gospel_bridge else ""
     return f"""
 Write exactly five Catholic Rosary decade reflections, one line per mystery.
 
@@ -609,6 +633,7 @@ Write exactly five Catholic Rosary decade reflections, one line per mystery.
 
 Additional feast day rule:
 - Today's highest priority focus is {focus.focus_prompt_label}; orient every reflection toward that celebration before using Gospel or seasonal themes.
+- Within that feast focus, connect each mystery and fruit to the Gospel bridge and shared daily focus when provided.
 - Do not invent biographical details about saints or feasts.
 
 Date: {date_value.isoformat()}
@@ -616,6 +641,7 @@ Liturgical context: {focus.celebration_clause}
 Liturgical season: {focus.season_label}
 Gospel citation: {focus.gospel_citation}
 {shared_explanation}
+{gospel_bridge}
 Mysteries:
 {mystery_lines}
 
@@ -632,12 +658,14 @@ def _build_intro_prompt(
 ) -> str:
     mystery_lines = "\n".join(f"{mystery.number}. {mystery.title} - {mystery.fruit}" for mystery in mysteries)
     shared_explanation = f"\nShared daily focus: {focus.shared_theme_explanation}" if focus.shared_theme_explanation else ""
+    gospel_bridge = f"\nGospel bridge: {focus.shared_gospel_bridge}" if focus.shared_gospel_bridge else ""
     return f"""
 Write a three to four sentence introduction for a Catholic Rosary podcast.
 
 Rules:
 - Sentence 1 must announce the calendar day and liturgical season.
 - Sentence 2 must begin with "For today's rosary, we will focus on" and name this focus exactly: {focus.focus_prompt_label}.
+- When a Gospel bridge is provided, mention it as the reason this Rosary focus belongs to today's prayer.
 - Mention {mystery_set_title} naturally once.
 - Keep the tone reverent and suitable for spoken prayer.
 - Do not use markdown, bullets, or numbering.
@@ -647,6 +675,7 @@ Liturgical day: {focus.celebration_clause or "the liturgical day"}
 Liturgical season: {focus.season_label or "the liturgical season"}
 Focus source: {focus.focus_source}
 {shared_explanation}
+{gospel_bridge}
 Mysteries:
 {mystery_lines}
 """.strip()
@@ -671,6 +700,7 @@ def _deterministic_rosary_intro(date_value, mystery_set_title: str, focus: Rosar
     return (
         f"Today is {date_display}, as the Church marks {liturgical_day} in {season_label}. "
         f"For today's rosary, we will focus on {focus.focus_prompt_label}. "
+        f"{focus.shared_gospel_bridge + ' ' if focus.shared_gospel_bridge else ''}"
         f"{focus.shared_theme_explanation + ' ' if focus.shared_theme_explanation else ''}"
         f"As we pray the {mystery_set_title}, we ask the Lord to draw each mystery into the needs of this day."
     )

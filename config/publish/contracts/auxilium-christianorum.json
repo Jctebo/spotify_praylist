@@ -137,7 +137,7 @@
           "title": "Prayer Intro",
           "prayer_title": "Auxilium Christianorum prayers",
           "devotion": "Auxilium Christianorum",
-          "template": "As we begin today's {prayer_title}, we carry the grace of {daily_theme_title} and place ourselves, our families, and the needs of this day under Mary's protection."
+          "template": "As we begin today's {prayer_title}, {daily_gospel_bridge} and today's focus of {daily_theme_title} lead us to place ourselves, our families, and the needs of this day under Mary's protection."
         },
         {
           "kind": "sequence",

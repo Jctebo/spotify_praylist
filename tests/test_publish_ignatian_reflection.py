@@ -31,6 +31,10 @@ class TestIgnatianReflection(unittest.TestCase):
             shortSummary="Today's shared focus is trust.",
             source="gospel",
             gospelCitation="Mark 5:36",
+            sharedThemeTitle="Trust",
+            sharedThemeExplanation="Today's focus is trust.",
+            sharedThemeReflectionFocus="Notice where God invites trust in ordinary life.",
+            sharedGospelBridge="today's Gospel, Mark 5:36, draws us into trust",
         )
 
     def test_missing_openai_uses_structured_fallback_with_ignatius(self):
@@ -43,6 +47,7 @@ class TestIgnatianReflection(unittest.TestCase):
         self.assertEqual(episode.source, "fallback")
         self.assertEqual(episode.saint_name, "Ignatius of Loyola")
         self.assertIn("Welcome to Ora Pro Nobis, where we pray with the Saints.", episode.text)
+        self.assertIn("today's Gospel, Mark 5:36, draws us into trust", episode.text)
         self.assertNotIn("Episode Title", episode.text)
         self.assertEqual(len(episode.segments), 4)
         self.assertEqual(episode.pause_ms, 15000)
