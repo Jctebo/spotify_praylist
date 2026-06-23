@@ -1,5 +1,20 @@
 # Release Log
 
+## [0.3.6.15] - 2026-06-22
+
+### Added
+- Added a canonical `sharedGospelBridge` field to the shared daily liturgical context and flattened publish runtime fields.
+- Added Gospel bridge support to prayer-intro templates, Rosary prompts and fallbacks, Daily Reflection prompts and fallbacks, and novena intro sidecar freshness metadata.
+
+### Changed
+- Made shared-theme Morning Prayer intros Gospel-first when Gospel text is available.
+- Updated Auxilium Christianorum, Angelus, and Regina Caeli prayer intros to reference both today's Gospel bridge and the shared day theme.
+- Updated Daily Rosary decade reflections so generated and deterministic fallback text stays shaped by the mystery, fruit, Gospel bridge, and day theme.
+- Updated README publish-audio and novena documentation to describe Gospel bridge behavior.
+
+### Fixed
+- Ensured novena sidecar freshness detects stale `sharedGospelBridge` metadata for target publish dates.
+
 ## [0.3.6.14] - 2026-06-16
 
 ### Fixed
