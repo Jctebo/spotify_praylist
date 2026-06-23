@@ -484,7 +484,7 @@ Sentence 3 must name this liturgical context exactly and explain how the Church 
             sentence_rules = f"""
 Sentence 1 must begin with "Today the Church celebrates" and must include this liturgical context exactly: {context.celebration_clause}.
 Sentence 2 must begin with "Today's focus is" and explain this focus in plain spoken language: {theme_explanation or theme_title}.
-Sentence 3 must explain that this focus is received through the liturgical day without mentioning the Gospel.
+Sentence 3 must explain that this focus is received through the liturgical day without referring to scripture readings.
 """.strip()
         prompt = f"""
 Write exactly three sentences for the opening block of a Catholic morning prayer podcast.
@@ -495,6 +495,10 @@ Date: {date_value.isoformat()}
 Liturgical context: {context.celebration_clause}
 Shared focus title: {theme_title}
 Shared focus explanation: {theme_explanation}
+""".strip()
+        if context.gospel_text:
+            prompt = f"""
+{prompt}
 Gospel bridge: {gospel_bridge}
 Gospel citation: {context.gospel_citation}
 Gospel text:
@@ -534,7 +538,7 @@ Write exactly two sentences for the opening block of a Catholic prayer podcast.
 
 Sentence 1 must begin with "Today the Church celebrates" and must include this liturgical context exactly: {context.celebration_clause}.
 Sentence 2 must be a short sentence of praise to God.
-Do not mention the Gospel because no Gospel text is available.
+Do not refer to scripture readings because no scripture text is available.
 
 Date: {date_value.isoformat()}
 Liturgical context: {context.celebration_clause}

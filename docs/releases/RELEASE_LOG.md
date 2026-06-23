@@ -14,6 +14,7 @@
 
 ### Fixed
 - Ensured novena sidecar freshness detects stale `sharedGospelBridge` metadata for target publish dates.
+- Prevented missing-Gospel daily intro prompts from exposing Gospel-labeled fields, avoiding bootstrap rejection when no Gospel text is available.
 
 ## [0.3.6.14] - 2026-06-16
 

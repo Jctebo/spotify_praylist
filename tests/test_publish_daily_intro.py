@@ -133,8 +133,41 @@ class TestPublishDailyIntro(unittest.TestCase):
             "Today the Church celebrates Saint Example. Praise be to God for his mercy. We thank God for this day. May his peace be with us all.",
         )
         self.assertIn("Write exactly two sentences", captured["prompt"])
+        self.assertNotIn("Gospel", captured["prompt"])
         self.assertNotIn("Gospel citation:", captured["prompt"])
         self.assertNotIn("Gospel text:", captured["prompt"])
+
+    def test_build_daily_intro_text_with_shared_theme_omits_gospel_prompt_when_missing(self):
+        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
+        self.mod._fetch_mass_with_retry = lambda date_value: None
+        self.mod._fetch_usccb_html = lambda date_value: (_ for _ in ()).throw(self.mod.DailyIntroMissingDataError("missing"))
+        captured = {}
+
+        def fake_prompt(model, prompt):
+            captured["prompt"] = prompt
+            return (
+                "Today the Church celebrates Saint Example. "
+                "Today's focus is Trust, a grace for listening to the Lord today. "
+                "The Gospel still teaches us to trust."
+            )
+
+        self.mod._call_openai_prompt = fake_prompt
+
+        text = self.mod.build_daily_intro_text(
+            datetime.date(2026, 4, 27),
+            allow_missing_gospel=True,
+            shared_theme={
+                "sharedThemeTitle": "Trust",
+                "sharedThemeExplanation": "Today's focus is Trust, a grace for listening to the Lord today.",
+            },
+        )
+
+        self.assertEqual(
+            text,
+            "Today the Church celebrates Saint Example. Today's focus is Trust, a grace for listening to the Lord today. We receive this focus through the Church's prayer for this liturgical day.",
+        )
+        self.assertNotIn("Gospel", captured["prompt"])
+        self.assertNotIn("Gospel", text)
 
     def test_build_daily_intro_text_allows_empty_output_when_gospel_missing(self):
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
