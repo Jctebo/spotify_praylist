@@ -686,11 +686,19 @@ class TestPublishAudioPipeline(unittest.TestCase):
     def test_daily_devotional_image_workflow_rebuilds_podcast_feed_from_archive(self):
         workflow_text = Path(".github/workflows/daily_devotional_image_remote.yml").read_text(encoding="utf-8")
 
+        self.assertIn("AUDIO_PUBLIC_BASE_URL: ${{ vars.AUDIO_PUBLIC_BASE_URL }}", workflow_text)
+        self.assertIn("Restore published audio archive", workflow_text)
+        self.assertIn("path: docs/audio", workflow_text)
         self.assertIn("Rebuilt podcast.xml from", workflow_text)
         self.assertIn("from jobs.publish.audio import (", workflow_text)
         self.assertIn("load_published_audio_jobs,", workflow_text)
         self.assertIn("refusing to publish a blank podcast feed", workflow_text)
         self.assertIn("podcast_cover_art_public_url", workflow_text)
+        self.assertIn('feed_path = Path(os.environ["GITHUB_WORKSPACE"]) / "pages" / "podcast.xml"', workflow_text)
+        self.assertIn("Refusing to publish missing or empty podcast feed", workflow_text)
+        self.assertIn("Refusing to publish podcast feed with no items", workflow_text)
+        self.assertIn('rm -rf "${GITHUB_WORKSPACE}/pages/audio"', workflow_text)
+        self.assertIn("path: ${{ github.workspace }}/pages", workflow_text)
 
     def test_run_audio_pipeline_can_render_today_and_tomorrow_together(self):
         contracts = self.contracts_mod.load_publish_contracts()

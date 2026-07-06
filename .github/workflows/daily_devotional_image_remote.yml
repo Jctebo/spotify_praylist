@@ -30,6 +30,7 @@ jobs:
       DEVOTIONAL_IMAGE_SIZE_WIDE: 1536x1024
       DEVOTIONAL_IMAGE_QUALITY: high
       DEVOTIONAL_IMAGE_FORMAT: png
+      AUDIO_PUBLIC_BASE_URL: ${{ vars.AUDIO_PUBLIC_BASE_URL }}
       RCLONE_REMOTE_NAME: ${{ vars.RCLONE_REMOTE_NAME }}
       RCLONE_REMOTE_ROOT: ${{ vars.RCLONE_REMOTE_ROOT }}
 
@@ -181,6 +182,21 @@ jobs:
           print(f"Rebuilt podcast.xml from {len(jobs)} archive item(s).")
           PY
           python -m jobs.publish.site --docs-root "${GITHUB_WORKSPACE}/pages"
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          feed_path = Path(os.environ["GITHUB_WORKSPACE"]) / "pages" / "podcast.xml"
+          if not feed_path.exists() or feed_path.stat().st_size == 0:
+              raise RuntimeError(f"Refusing to publish missing or empty podcast feed: {feed_path}")
+          root = ET.parse(feed_path).getroot()
+          item_count = len(root.findall("./channel/item"))
+          if item_count < 1:
+              raise RuntimeError(f"Refusing to publish podcast feed with no items: {feed_path}")
+          print(f"Verified podcast.xml contains {item_count} item(s).")
+          PY
+          rm -rf "${GITHUB_WORKSPACE}/pages/audio"
 
       - name: Configure GitHub Pages
         if: github.ref == 'refs/heads/main'
