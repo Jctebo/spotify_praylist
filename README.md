@@ -102,7 +102,7 @@ Optional variables:
 - Ora Pro Nobis generated prayers use `contract.metadata.website` in `config/publish/contracts/*.json`; Spotify-only prayers use top-level `website` metadata in `config/spotify/contracts/*.json`.
 - Published audio JSON sidecars under `docs/audio/` provide latest episode metadata, readable prayer text from ordered fragments, and individual Daily Novena episode listings when present.
 - Enabled website metadata requires `slug`, `title`, `summary`, `group`, `source_label`, and `availability`; external Spotify entries also require `external_url` unless they use a direct `spotify_uri`.
-- `publish_audio.yml` and `daily_devotional_image_remote.yml` both run the site generator before Pages upload so the root directory, prayer pages, feed, and audio archive publish together.
+- `publish_audio.yml` and `daily_devotional_image_remote.yml` both run the site generator before Pages upload so the root directory, prayer pages, and feed stay current while the heavy audio archive remains a local/R2-backed input rather than part of the Pages artifact.
 - `publish_audio.yml` restores the current devotional image folders from OneDrive via rclone on `main` before site generation, while `daily_devotional_image_remote.yml` generates/syncs the devotional images and builds the same public image tree under `pages/devotional/DCIM`.
 
 ## Files

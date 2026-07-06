@@ -1,5 +1,13 @@
 # Release Log
 
+## [0.3.6.16] - 2026-07-06
+
+### Fixed
+- Prevented the devotional-image workflow from publishing the restored audio archive inside the GitHub Pages artifact.
+- Preserved the podcast feed during devotional-image publishes by validating `pages/podcast.xml` before upload and removing only the deploy-copy `pages/audio` folder.
+- Wired the devotional-image feed rebuild to `AUDIO_PUBLIC_BASE_URL` so regenerated podcast entries continue to use the R2 audio host in production.
+- Added regression coverage for the devotional-image workflow's audio archive restore, feed guard, R2 URL wiring, Pages upload root, and deploy-copy audio removal.
+
 ## [0.3.6.15] - 2026-06-22
 
 ### Added
