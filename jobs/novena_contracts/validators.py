@@ -117,9 +117,7 @@ def validate_template_payload(payload: Dict[str, Any], *, source: str) -> None:
             if part_kind == "text":
                 if not str(part.get("text", "")).strip():
                     raise RuntimeError(f"Invalid template in {source}: {label} part {index} is missing text.")
-            elif part_kind == "fragment":
-                if not str(part.get("fragment_key", "")).strip():
-                    raise RuntimeError(f"Invalid template in {source}: {label} part {index} is missing fragment_key.")
+            if part_kind in {"text", "fragment"}:
                 repeat = part.get("repeat", 1)
                 try:
                     repeat_count = int(repeat)
@@ -127,6 +125,9 @@ def validate_template_payload(payload: Dict[str, Any], *, source: str) -> None:
                     raise RuntimeError(f"Invalid template in {source}: {label} part {index} repeat must be an integer.") from exc
                 if repeat_count <= 0:
                     raise RuntimeError(f"Invalid template in {source}: {label} part {index} repeat must be greater than zero.")
+            if part_kind == "fragment":
+                if not str(part.get("fragment_key", "")).strip():
+                    raise RuntimeError(f"Invalid template in {source}: {label} part {index} is missing fragment_key.")
             elif part_kind == "audio_cue":
                 cue = _normalize_token(part.get("cue"))
                 if cue != "sacred_bell":
@@ -134,7 +135,7 @@ def validate_template_payload(payload: Dict[str, Any], *, source: str) -> None:
                         f"Invalid template in {source}: {label} part {index} has unsupported audio cue "
                         f"'{part.get('cue', '')}'; expected 'sacred_bell'."
                     )
-            else:
+            elif part_kind == "pause":
                 raw_duration_ms = part.get("duration_ms")
                 if isinstance(raw_duration_ms, bool) or not isinstance(raw_duration_ms, int):
                     raise RuntimeError(

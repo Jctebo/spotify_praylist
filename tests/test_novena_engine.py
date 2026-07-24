@@ -392,9 +392,7 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertEqual(text.count("Our Father, who art in heaven, hallowed be thy name."), 3)
         self.assertEqual(text.count("Hail Mary, full of grace, the Lord is with thee."), 3)
         self.assertEqual(text.count("Glory be to the Father, and to the Son, and to the Holy Spirit."), 3)
-        self.assertEqual(text.count("You are going to say the following 3 times: Our Father"), 1)
-        self.assertEqual(text.count("You are going to say the following 3 times: Hail Mary"), 1)
-        self.assertEqual(text.count("You are going to say the following 3 times: Glory Be"), 1)
+        self.assertNotIn("You are going to say the following 3 times:", text)
         self.assertEqual(len(rendered["audio_fragments"]), 16)
 
     def test_render_novena_holy_spirit_uses_once_once_and_seven_glory_be_sequence(self):
