@@ -1,5 +1,13 @@
 # Release Log
 
+## [0.3.10.1] - 2026-07-24
+
+### Changed
+- URL novena imports now reject sources with 364 or more numbered prayer days before producing a contract or writing a file.
+
+### Removed
+- Removed the One Year St. Bridget of Sweden novena contract.
+
 ## [0.3.10.0] - 2026-07-24
 
 ### Added
