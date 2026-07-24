@@ -9,7 +9,13 @@ from types import SimpleNamespace
 from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Tuple
 from zoneinfo import ZoneInfo
 
-from jobs.publish.daily_intro import build_daily_intro_text
+from jobs.publish.daily_intro import build_daily_intro_result
+from jobs.publish.devotional_intro import (
+    DevotionalIntroResult,
+    build_devotional_intro,
+    get_devotional_intro_profile,
+    normalize_intro_profile,
+)
 from jobs.publish.daily_liturgical_context import build_daily_liturgical_context
 from jobs.publish.daily_theme_runtime import (
     DailyThemeRuntimeCache as _PublishDailyThemeRuntimeCache,
@@ -462,11 +468,19 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
         normalized["title"] = str(normalized.get("title", "")).strip()
         normalized["prayer_title"] = str(normalized.get("prayer_title", "")).strip()
         normalized["devotion"] = str(normalized.get("devotion", "")).strip()
-        normalized["template"] = str(normalized.get("template", "")).strip()
+        normalized["profile"] = normalize_intro_profile(normalized.get("profile"))
+        if normalized["profile"]:
+            get_devotional_intro_profile(normalized["profile"])
         if "calendar" in normalized:
             normalized["calendar"] = str(normalized.get("calendar", "")).strip()
         if "locale" in normalized:
             normalized["locale"] = str(normalized.get("locale", "")).strip()
+        if "prompt_model" in normalized:
+            normalized["prompt_model"] = str(normalized.get("prompt_model", "")).strip()
+        if "temperature" in normalized:
+            normalized["temperature"] = float(normalized.get("temperature", 0.4))
+        if "allow_missing_gospel" in normalized:
+            normalized["allow_missing_gospel"] = _normalize_bool(normalized.get("allow_missing_gospel", True))
     elif kind in {"rosary-intro", "rosary-overall-intention"}:
         normalized["title"] = str(normalized.get("title", "")).strip()
         if "calendar" in normalized:
@@ -792,59 +806,84 @@ def _join_with_and(items: Sequence[str]) -> str:
     return ", ".join(cleaned[:-1]) + f", and {cleaned[-1]}"
 
 
-def _prayer_intro_liturgical_context(block: Dict[str, Any], contract: PublishContract) -> Tuple[str, str]:
-    metadata = dict(contract.metadata or {})
-    for key in ("prayer_intro", "liturgical_announcement", "daily_intro"):
-        config = metadata.get(key)
-        if isinstance(config, dict):
-            calendar = str(block.get("calendar") or config.get("calendar") or "").strip()
-            locale = str(block.get("locale") or config.get("locale") or "").strip()
-            if calendar or locale:
-                return calendar or "general_roman", locale or "en"
-    return (
-        str(block.get("calendar") or metadata.get("calendar") or "general_roman").strip() or "general_roman",
-        str(block.get("locale") or metadata.get("locale") or "en").strip() or "en",
+def _devotional_intro_cache_key(entry: Dict[str, Any], block: Dict[str, Any], profile: str) -> str:
+    return "|".join(
+        (
+            str(entry.get("entry_id", "")).strip(),
+            normalize_publish_key(block.get("kind")),
+            normalize_intro_profile(profile),
+            _compact_text(block.get("prayer_title") or entry.get("title")),
+        )
     )
 
 
-def _prayer_intro_day_theme(date_value: _dt.date, *, calendar: str, locale: str) -> str:
-    rows = romcal_fetch_day(calendar, locale, date_value)
-    if not rows:
-        raise PublishMissingDataError(
-            f"Romcal returned no celebrations for {date_value.isoformat()} "
-            f"(calendar={calendar}, locale={locale})."
-        )
-    names: List[str] = []
-    seen: set[str] = set()
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        name = _compact_text(celebration_name(row))
-        if not name:
-            continue
-        key = name.lower()
-        if key in seen:
-            continue
-        seen.add(key)
-        names.append(name)
-    if not names:
-        raise PublishMissingDataError(
-            f"Romcal returned no usable celebration names for {date_value.isoformat()} "
-            f"(calendar={calendar}, locale={locale})."
-        )
-    return _join_with_and(names)
+def _cache_devotional_intro_result(
+    runtime_context: Optional[Dict[str, Any]],
+    cache_key: str,
+    builder,
+) -> DevotionalIntroResult:
+    if runtime_context is None:
+        return builder()
+    cache = runtime_context.setdefault("devotional_intro_results", {})
+    existing = cache.get(cache_key)
+    if isinstance(existing, DevotionalIntroResult):
+        return existing
+    result = builder()
+    cache[cache_key] = result
+    runtime_context["devotional_intro_result"] = result
+    return result
 
 
-def _validate_prayer_intro_sentence(text: str) -> str:
-    rendered = _compact_text(text)
-    if not rendered:
-        raise RuntimeError("Prayer intro rendered empty text.")
-    sentences = [part.strip() for part in re.split(r"(?<=[.!?])\s+", rendered) if part.strip()]
-    if len(sentences) != 1:
-        raise RuntimeError(f"Prayer intro must contain exactly 1 sentence, got {len(sentences)}.")
-    if not re.search(r"[.!?]$", sentences[0]):
-        raise RuntimeError("Prayer intro must end with sentence punctuation.")
-    return sentences[0]
+def _prayer_intro_config(block: Dict[str, Any], contract: PublishContract) -> Dict[str, Any]:
+    metadata = dict(contract.metadata or {})
+    config = dict(metadata.get("prayer_intro") or {}) if isinstance(metadata.get("prayer_intro"), dict) else {}
+    config.update({key: value for key, value in block.items() if key not in {"kind", "title"}})
+    config["profile"] = normalize_intro_profile(config.get("profile"))
+    if not config["profile"]:
+        raise RuntimeError("Generated prayer intro requires a supported 'profile'.")
+    get_devotional_intro_profile(config["profile"])
+    config["prompt_model"] = str(config.get("prompt_model") or "").strip()
+    try:
+        config["temperature"] = float(config.get("temperature", 0.4))
+    except Exception:
+        config["temperature"] = 0.4
+    config["allow_missing_gospel"] = _normalize_bool(config.get("allow_missing_gospel", True))
+    return config
+
+
+def _shared_intro_context(
+    *,
+    profile: str,
+    prayer_title: str,
+    devotion: str,
+    target_date: _dt.date,
+    runtime_context: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    runtime = runtime_context or {}
+    daily = runtime.get("daily_liturgical_context")
+    daily_payload = dict(daily) if isinstance(daily, dict) else {}
+    celebration_names = [
+        _compact_text(value)
+        for value in (
+            daily_payload.get("feastDay"),
+            daily_payload.get("saintOfDay"),
+        )
+        if _compact_text(value)
+    ]
+    return {
+        "date": target_date.isoformat(),
+        "profile": profile,
+        "prayer_title": prayer_title,
+        "devotion": devotion,
+        "celebration_clause": _join_with_and(celebration_names),
+        "season_label": _compact_text(daily_payload.get("liturgicalSeason")),
+        "daily_theme_title": _compact_text(runtime.get("daily_theme_title")),
+        "daily_theme_explanation": _compact_text(runtime.get("daily_theme_explanation")),
+        "daily_theme_transition": _compact_text(runtime.get("daily_theme_transition")),
+        "daily_gospel_bridge": _compact_text(runtime.get("daily_gospel_bridge")),
+        "daily_gospel_citation": _compact_text(runtime.get("daily_gospel_citation")),
+        "daily_gospel_theme": _compact_text(runtime.get("daily_gospel_theme")),
+    }
 
 
 def _resolve_prayer_intro_content(
@@ -857,37 +896,72 @@ def _resolve_prayer_intro_content(
 ) -> str:
     prayer_title = _compact_text(block.get("prayer_title") or entry.get("title") or contract.contract_id)
     devotion = _compact_text(block.get("devotion") or prayer_title)
-    template = _compact_text(block.get("template"))
-    if not template:
-        template = "As we enter the {prayer_title}, we carry the grace of {daily_theme_title} into today's {devotion}."
-    daily_theme_title = _compact_text((runtime_context or {}).get("daily_theme_title"))
-    daily_theme_transition = _compact_text((runtime_context or {}).get("daily_theme_transition"))
-    daily_theme_explanation = _compact_text((runtime_context or {}).get("daily_theme_explanation"))
-    daily_gospel_bridge = _compact_text((runtime_context or {}).get("daily_gospel_bridge"))
-    daily_gospel_citation = _compact_text((runtime_context or {}).get("daily_gospel_citation"))
-    daily_gospel_theme = _compact_text((runtime_context or {}).get("daily_gospel_theme"))
-    if not daily_gospel_bridge:
-        daily_gospel_bridge = "the Church's prayer for this liturgical day"
-    if not daily_theme_title:
-        calendar, locale = _prayer_intro_liturgical_context(block, contract)
-        daily_theme_title = _prayer_intro_day_theme(target_date, calendar=calendar, locale=locale)
-    if not daily_theme_transition:
-        daily_theme_transition = f"Carrying today's focus of {daily_theme_title}, we place ourselves and the needs of this day before the Lord."
+    config = _prayer_intro_config(block, contract)
+    intro_context = _shared_intro_context(
+        profile=config["profile"],
+        prayer_title=prayer_title,
+        devotion=devotion,
+        target_date=target_date,
+        runtime_context=runtime_context,
+    )
+    cache_key = _devotional_intro_cache_key(entry, block, config["profile"])
+    result = _cache_devotional_intro_result(
+        runtime_context,
+        cache_key,
+        lambda: build_devotional_intro(
+            config["profile"],
+            intro_context,
+            prompt_model=config["prompt_model"],
+            temperature=config["temperature"],
+        ),
+    )
+    return result.text
+
+
+def _resolve_daily_intro_content(
+    block: Dict[str, Any],
+    *,
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    target_date: _dt.date,
+    runtime_context: Optional[Dict[str, Any]] = None,
+) -> str:
+    metadata = dict(contract.metadata or {})
+    config = dict(metadata.get("daily_intro") or {}) if isinstance(metadata.get("daily_intro"), dict) else {}
+    config.update({key: value for key, value in block.items() if key not in {"kind", "title"}})
+    calendar = str(config.get("calendar") or "").strip() or None
+    locale = str(config.get("locale") or "").strip() or None
+    prompt_model = str(config.get("prompt_model") or "").strip() or None
+    allow_missing_gospel = _normalize_bool(config.get("allow_missing_gospel", False))
     try:
-        rendered = template.format(
-            day_theme=daily_theme_title,
-            daily_theme_title=daily_theme_title,
-            daily_theme_transition=daily_theme_transition,
-            daily_theme_explanation=daily_theme_explanation,
-            daily_gospel_bridge=daily_gospel_bridge,
-            daily_gospel_citation=daily_gospel_citation,
-            daily_gospel_theme=daily_gospel_theme,
-            prayer_title=prayer_title,
-            devotion=devotion,
-        )
-    except KeyError as exc:
-        raise RuntimeError(f"Prayer intro template contains unsupported placeholder '{exc.args[0]}'.") from exc
-    return _validate_prayer_intro_sentence(rendered)
+        temperature = float(config.get("temperature", 0.4))
+    except Exception:
+        temperature = 0.4
+    print(
+        "INFO daily_intro resolved "
+        f"entry={entry.get('entry_id', '')} "
+        f"block={_block_display_name(block)} "
+        f"calendar={calendar or '-'} "
+        f"locale={locale or '-'} "
+        f"prompt_model={prompt_model or '-'} "
+        f"allow_missing_gospel={str(allow_missing_gospel).lower()}",
+        file=sys.stderr,
+    )
+    cache_key = _devotional_intro_cache_key(entry, block, "morning-prayer")
+    result = _cache_devotional_intro_result(
+        runtime_context,
+        cache_key,
+        lambda: build_daily_intro_result(
+            target_date,
+            calendar=calendar,
+            locale=locale,
+            prompt_model=prompt_model,
+            temperature=temperature,
+            allow_missing_gospel=allow_missing_gospel,
+            shared_theme=(runtime_context or {}).get("daily_liturgical_context"),
+        ),
+    )
+    return result.text
 
 
 def _block_display_name(block: Dict[str, Any]) -> str:
@@ -1231,6 +1305,22 @@ def _attach_rosary_reflection_context(render_context: Dict[str, Any], runtime_co
     render_context["rosary_reflection_count"] = metadata["count"]
 
 
+def _devotional_intro_metadata_from_context(runtime_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    result = (runtime_context or {}).get("devotional_intro_result")
+    if isinstance(result, DevotionalIntroResult):
+        return result.metadata()
+    return {}
+
+
+def _attach_devotional_intro_context(
+    render_context: Dict[str, Any],
+    runtime_context: Optional[Dict[str, Any]],
+) -> None:
+    metadata = _devotional_intro_metadata_from_context(runtime_context)
+    if metadata:
+        render_context["devotional_intro"] = metadata
+
+
 def _daily_reflection_metadata_from_context(runtime_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     episode = (runtime_context or {}).get("ignatian_reflection_episode")
     helper = (runtime_context or {}).get("daily_liturgical_context")
@@ -1543,30 +1633,12 @@ def resolve_block_content(
                 runtime_context=runtime_context,
             )
         if kind == "daily-intro":
-            metadata = dict(contract.metadata or {})
-            intro_config = dict(metadata.get("daily_intro") or {}) if isinstance(metadata.get("daily_intro"), dict) else {}
-            intro_config.update({k: v for k, v in block.items() if k not in {"kind", "title"}})
-            calendar = str(intro_config.get("calendar") or "").strip() or None
-            locale = str(intro_config.get("locale") or "").strip() or None
-            prompt_model = str(intro_config.get("prompt_model") or "").strip() or None
-            allow_missing_gospel = _normalize_bool(intro_config.get("allow_missing_gospel", False))
-            print(
-                "INFO daily_intro resolved "
-                f"entry={entry.get('entry_id', '')} "
-                f"block={_block_display_name(block)} "
-                f"calendar={calendar or '-'} "
-                f"locale={locale or '-'} "
-                f"prompt_model={prompt_model or '-'} "
-                f"allow_missing_gospel={str(allow_missing_gospel).lower()}",
-                file=sys.stderr,
-            )
-            return build_daily_intro_text(
-                effective_date,
-                calendar=calendar,
-                locale=locale,
-                prompt_model=prompt_model,
-                allow_missing_gospel=allow_missing_gospel,
-                shared_theme=(runtime_context or {}).get("daily_liturgical_context"),
+            return _resolve_daily_intro_content(
+                block,
+                contract=contract,
+                entry=entry,
+                target_date=effective_date,
+                runtime_context=runtime_context,
             )
         if kind == "liturgical-announcement":
             metadata = dict(contract.metadata or {})
@@ -2284,7 +2356,7 @@ def _render_entry_metadata(
         context["season_label"] = _season_label_for_value(season)
     if runtime_context:
         for key, value in runtime_context.items():
-            if key == "rosary_day_context":
+            if key in {"rosary_day_context", "devotional_intro_results", "devotional_intro_result"}:
                 continue
             context[key] = value
     metadata = dict(contract.metadata or {})
@@ -2348,8 +2420,10 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
             render_context = dict(rendered_metadata["context"])
             _attach_rosary_reflection_context(render_context, runtime_context)
             _attach_daily_reflection_context(render_context, runtime_context)
+            _attach_devotional_intro_context(render_context, runtime_context)
             rosary_reflections = _rosary_reflection_metadata_from_context(runtime_context)
             daily_reflection = _daily_reflection_metadata_from_context(runtime_context)
+            devotional_intro = _devotional_intro_metadata_from_context(runtime_context)
             jobs.append(
                 {
                     "entry_id": entry["entry_id"],
@@ -2376,6 +2450,7 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
                     "render_context": render_context,
                     "rosary_reflections": rosary_reflections,
                     "daily_reflection": daily_reflection,
+                    "devotional_intro": devotional_intro,
                     "source_path": str(contract.source_path),
                 }
             )
@@ -2454,8 +2529,10 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
             render_context = dict(rendered_metadata["context"])
             _attach_rosary_reflection_context(render_context, runtime_context)
             _attach_daily_reflection_context(render_context, runtime_context)
+            _attach_devotional_intro_context(render_context, runtime_context)
             rosary_reflections = _rosary_reflection_metadata_from_context(runtime_context)
             daily_reflection = _daily_reflection_metadata_from_context(runtime_context)
+            devotional_intro = _devotional_intro_metadata_from_context(runtime_context)
             job = {
                 "entry_id": entry["entry_id"],
                 "episode_id": rendered_metadata["episode_id"],
@@ -2481,6 +2558,7 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
                 "render_context": render_context,
                 "rosary_reflections": rosary_reflections,
                 "daily_reflection": daily_reflection,
+                "devotional_intro": devotional_intro,
                 "source_path": str(contract.source_path),
             }
             job["content_hash"] = audio_manifest_hash(job, audio_fragments, audio_config)

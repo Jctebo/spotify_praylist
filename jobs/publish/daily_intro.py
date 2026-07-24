@@ -5,22 +5,21 @@ import html
 import os
 import re
 import time
-from functools import lru_cache
-from pathlib import Path
 from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Tuple
 
 from catholic_mass_readings import USCCB, models
 from curl_cffi import requests
-from openai import OpenAI
 
 from jobs.novena.liturgical_helpers import celebration_name, romcal_fetch_day
+from jobs.publish.devotional_intro import (
+    DevotionalIntroResult,
+    IntroTextGenerator,
+    MORNING_PRAYER_PROFILE,
+    build_devotional_intro,
+    resolve_openai_settings,
+)
 from jobs.publish.errors import DailyIntroMissingDataError
 
-ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_OPENAI_ENV_FILE = ROOT / "config" / "local" / "openai.env"
-OPENAI_API_KEY = "OPENAI_API_KEY"
-OPENAI_API_KEY_FILE = "OPENAI_API_KEY_FILE"
-OAI_API_BASE_URL = "OAI_API_BASE_URL"
 OAI_MODEL = "OAI_MODEL"
 ROMCAL_CALENDAR = "ROMCAL_CALENDAR"
 ROMCAL_LOCALE = "ROMCAL_LOCALE"
@@ -70,54 +69,8 @@ def _join_with_and(items: Sequence[str]) -> str:
     return ", ".join(cleaned[:-1]) + f", and {cleaned[-1]}"
 
 
-@lru_cache(maxsize=8)
-def _load_env_file(path_text: str) -> Dict[str, str]:
-    path = Path(path_text)
-    if not path.exists():
-        return {}
-    try:
-        lines = path.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return {}
-    values: Dict[str, str] = {}
-    for raw_line in lines:
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        if line.startswith("export "):
-            line = line[7:].lstrip()
-        if "=" not in line:
-            continue
-        key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip().strip("\"").strip("'")
-        if key:
-            values[key] = value
-    return values
-
-
 def _resolve_openai_settings(*, api_key: str = "", base_url: str = "", model: str = "") -> Tuple[str, str, str]:
-    configured_path = os.getenv(OPENAI_API_KEY_FILE, "").strip()
-    env_path = configured_path or str(DEFAULT_OPENAI_ENV_FILE)
-    file_values = _load_env_file(env_path)
-    resolved_api_key = (
-        str(api_key or "").strip()
-        or os.getenv(OPENAI_API_KEY, "").strip()
-        or file_values.get(OPENAI_API_KEY, "").strip()
-    )
-    resolved_base_url = (
-        str(base_url or "").strip()
-        or os.getenv(OAI_API_BASE_URL, "").strip()
-        or file_values.get(OAI_API_BASE_URL, "").strip()
-        or "https://api.openai.com/v1"
-    )
-    resolved_model = (
-        str(model or "").strip()
-        or os.getenv(OAI_MODEL, "").strip()
-        or file_values.get(OAI_MODEL, "").strip()
-        or "gpt-4.1-mini"
-    )
-    return resolved_api_key, resolved_base_url, resolved_model
+    return resolve_openai_settings(api_key=api_key, base_url=base_url, model=model)
 
 
 def _resolve_calendar(calendar: Optional[str]) -> str:
@@ -329,129 +282,71 @@ def fetch_daily_gospel_context(
     raise DailyIntroMissingDataError(message)
 
 
-def _openai_client() -> OpenAI:
-    api_key, base_url, _ = _resolve_openai_settings()
-    if not api_key:
-        raise RuntimeError(f"Missing required environment variable: {OPENAI_API_KEY}")
-    return OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
-
-
-def _call_openai_prompt(model: str, prompt: str) -> str:
-    client = _openai_client()
-    system = "Return plain text only. Exactly three sentences. No markdown, no bullets, no commentary."
-    user = _normalize_whitespace(prompt)
-    if not user:
-        raise RuntimeError("Daily intro prompt rendered empty text.")
-    try:
-        response = client.responses.create(
-            model=model,
-            temperature=0,
-            input=[
-                {"role": "system", "content": [{"type": "input_text", "text": system}]},
-                {"role": "user", "content": [{"type": "input_text", "text": user}]},
-            ],
-        )
-        text = _normalize_whitespace(str(getattr(response, "output_text", "") or "").strip())
-        if text:
-            return text
-    except Exception:
-        pass
-    chat = client.chat.completions.create(
-        model=model,
-        temperature=0,
-        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
-    )
-    choices = getattr(chat, "choices", None) or []
-    if not choices:
-        raise RuntimeError("Daily intro generation returned no choices.")
-    text = _normalize_whitespace(str(getattr(getattr(choices[0], "message", None), "content", "") or "").strip())
-    if not text:
-        raise RuntimeError("Daily intro generation returned empty text.")
-    return text
-
-
-def _split_sentences(text: str) -> List[str]:
-    body = _normalize_whitespace(text).replace("’", "'")
-    if not body:
-        return []
-    return [part.strip() for part in re.split(r"(?<=[.!?])\s+", body) if part.strip()]
-
-
-def _validate_daily_intro(text: str, *, allow_missing_gospel: bool = False) -> str:
-    sentences = _split_sentences(text)
-    if not sentences:
-        if allow_missing_gospel:
-            return ""
-        raise RuntimeError("Daily intro must contain at least one sentence.")
-    if not allow_missing_gospel and len(sentences) != 3:
-        raise RuntimeError(f"Daily intro must contain exactly 3 sentences, got {len(sentences)}.")
-    if not sentences[0].lower().startswith("today the church celebrates"):
-        raise RuntimeError("Daily intro must begin with a liturgical celebration sentence.")
-    if not allow_missing_gospel and not sentences[2].lower().startswith("in today's gospel"):
-        raise RuntimeError("Daily intro must end with a Gospel summary sentence.")
-    return " ".join(sentences).strip()
-
-
 def _shared_theme_value(shared_theme: Optional[Dict[str, Any]], key: str) -> str:
     if not isinstance(shared_theme, dict):
         return ""
     return _normalize_whitespace(shared_theme.get(key, ""))
 
 
-def _validate_theme_intro(text: str, *, has_gospel: bool, allow_missing_gospel: bool = False) -> str:
-    if not has_gospel:
-        rendered = _validate_daily_intro(text, allow_missing_gospel=allow_missing_gospel)
-        if not rendered:
-            return rendered
-        lowered = rendered.lower()
-        if "gospel" in lowered:
-            raise RuntimeError("Daily intro must not mention the Gospel when Gospel text is unavailable.")
-        if "today's focus" not in lowered and "the grace" not in lowered:
-            raise RuntimeError("Daily intro must explain today's focus.")
-        return rendered
-
-    rendered = _normalize_whitespace(text)
-    if not rendered:
-        raise RuntimeError("Daily intro must contain at least one sentence.")
-    sentences = _split_sentences(rendered)
-    if len(sentences) != 3:
-        raise RuntimeError(f"Daily intro must contain exactly 3 sentences, got {len(sentences)}.")
-    if not sentences[0].lower().startswith("in today's gospel"):
-        raise RuntimeError("Daily intro must begin with a Gospel sentence.")
-    if not sentences[1].lower().startswith("today's focus is"):
-        raise RuntimeError("Daily intro second sentence must explain today's focus.")
-    third = sentences[2].lower()
-    if "church celebrates" not in third and "liturgical" not in third and "season" not in third:
-        raise RuntimeError("Daily intro third sentence must name the liturgical day or season.")
-    rendered = " ".join(sentences).strip()
-    lowered = rendered.lower()
-    if "today's focus" not in lowered and "the grace" not in lowered:
-        raise RuntimeError("Daily intro must explain today's focus.")
-    if "gospel" not in lowered and not allow_missing_gospel:
-        raise RuntimeError("Daily intro must mention the Gospel when Gospel text is available.")
-    return rendered
-
-
-def _deterministic_theme_intro(date_value, context: DailyIntroContext, shared_theme: Dict[str, Any]) -> str:
-    title = _shared_theme_value(shared_theme, "sharedThemeTitle") or _shared_theme_value(shared_theme, "daily_theme_title") or "Trust"
-    explanation = (
+def build_daily_intro_result(
+    date_value,
+    *,
+    calendar: Optional[str] = None,
+    locale: Optional[str] = None,
+    prompt_model: Optional[str] = None,
+    temperature: float = 0.4,
+    allow_missing_gospel: bool = False,
+    shared_theme: Optional[Dict[str, Any]] = None,
+    generate_text_fn: Optional[IntroTextGenerator] = None,
+) -> DevotionalIntroResult:
+    context = fetch_daily_gospel_context(
+        date_value,
+        calendar=calendar,
+        locale=locale,
+        allow_missing_gospel=allow_missing_gospel,
+    )
+    model = str(prompt_model or os.getenv(OAI_MODEL, "") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
+    theme_title = (
+        _shared_theme_value(shared_theme, "sharedThemeTitle")
+        or _shared_theme_value(shared_theme, "daily_theme_title")
+        or context.celebration_clause
+    )
+    theme_explanation = (
         _shared_theme_value(shared_theme, "sharedThemeExplanation")
         or _shared_theme_value(shared_theme, "daily_theme_explanation")
-        or f"Today's focus is {title}."
     )
-    gospel_bridge = _shared_theme_value(shared_theme, "sharedGospelBridge") or _shared_theme_value(shared_theme, "daily_gospel_bridge")
-    if context.gospel_text or gospel_bridge or context.gospel_citation:
-        if gospel_bridge:
-            gospel = f"In {gospel_bridge}, helping us receive this focus with faith"
-        else:
-            gospel = f"In today's Gospel, {context.gospel_citation or 'the Lord'} helps us receive this focus with faith"
-        liturgical = f"Today the Church celebrates {context.celebration_clause}, and this liturgical day gathers our prayer around that grace."
-        return _normalize_whitespace(f"{gospel}. {explanation} {liturgical}")
-    else:
-        gospel = "We receive this focus through the Church's prayer for this liturgical day."
-        return _normalize_whitespace(
-            f"Today the Church celebrates {context.celebration_clause}. {explanation} {gospel}"
-        )
+    gospel_bridge = (
+        _shared_theme_value(shared_theme, "sharedGospelBridge")
+        or _shared_theme_value(shared_theme, "daily_gospel_bridge")
+    )
+    if not gospel_bridge and (context.gospel_text or context.gospel_citation):
+        gospel_bridge = f"Today's Gospel is proclaimed in {context.gospel_citation or context.mass_title}"
+    intro_context = {
+        "date": date_value.isoformat(),
+        "prayer_title": "Morning Prayer",
+        "devotion": "Morning Prayer",
+        "celebration_clause": context.celebration_clause,
+        "daily_theme_title": theme_title,
+        "daily_theme_explanation": theme_explanation,
+        "daily_theme_transition": (
+            _shared_theme_value(shared_theme, "sharedThemeTransition")
+            or _shared_theme_value(shared_theme, "daily_theme_transition")
+        ),
+        "season_label": (
+            _shared_theme_value(shared_theme, "seasonLabel")
+            or _shared_theme_value(shared_theme, "season_label")
+        ),
+        "daily_gospel_bridge": gospel_bridge,
+        "daily_gospel_citation": context.gospel_citation,
+        "daily_gospel_text": context.gospel_text,
+    }
+    return build_devotional_intro(
+        MORNING_PRAYER_PROFILE,
+        intro_context,
+        prompt_model=model,
+        temperature=temperature,
+        generate_text_fn=generate_text_fn,
+    )
 
 
 def build_daily_intro_text(
@@ -460,89 +355,18 @@ def build_daily_intro_text(
     calendar: Optional[str] = None,
     locale: Optional[str] = None,
     prompt_model: Optional[str] = None,
+    temperature: float = 0.4,
     allow_missing_gospel: bool = False,
     shared_theme: Optional[Dict[str, Any]] = None,
+    generate_text_fn: Optional[IntroTextGenerator] = None,
 ) -> str:
-    context = fetch_daily_gospel_context(
+    return build_daily_intro_result(
         date_value,
         calendar=calendar,
         locale=locale,
+        prompt_model=prompt_model,
+        temperature=temperature,
         allow_missing_gospel=allow_missing_gospel,
-    )
-    model = str(prompt_model or os.getenv(OAI_MODEL, "") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
-    theme_title = _shared_theme_value(shared_theme, "sharedThemeTitle") or _shared_theme_value(shared_theme, "daily_theme_title")
-    theme_explanation = _shared_theme_value(shared_theme, "sharedThemeExplanation") or _shared_theme_value(shared_theme, "daily_theme_explanation")
-    gospel_bridge = _shared_theme_value(shared_theme, "sharedGospelBridge") or _shared_theme_value(shared_theme, "daily_gospel_bridge")
-    has_gospel_context = bool(context.gospel_text or context.gospel_citation or gospel_bridge)
-    if theme_title or theme_explanation:
-        if has_gospel_context:
-            sentence_rules = f"""
-Sentence 1 must begin with "In today's Gospel" and explain how the Gospel supports today's focus.
-Sentence 2 must begin with "Today's focus is" and explain this focus in plain spoken language: {theme_explanation or theme_title}.
-Sentence 3 must name this liturgical context exactly and explain how the Church receives the day in prayer: {context.celebration_clause}.
-""".strip()
-        else:
-            sentence_rules = f"""
-Sentence 1 must begin with "Today the Church celebrates" and must include this liturgical context exactly: {context.celebration_clause}.
-Sentence 2 must begin with "Today's focus is" and explain this focus in plain spoken language: {theme_explanation or theme_title}.
-Sentence 3 must explain that this focus is received through the liturgical day without referring to scripture readings.
-""".strip()
-        prompt = f"""
-Write exactly three sentences for the opening block of a Catholic morning prayer podcast.
-
-{sentence_rules}
-
-Date: {date_value.isoformat()}
-Liturgical context: {context.celebration_clause}
-Shared focus title: {theme_title}
-Shared focus explanation: {theme_explanation}
-""".strip()
-        if has_gospel_context:
-            prompt = f"""
-{prompt}
-Gospel bridge: {gospel_bridge}
-Gospel citation: {context.gospel_citation}
-Gospel text:
-{context.gospel_text}
-""".strip()
-        try:
-            rendered = _call_openai_prompt(model, prompt)
-            return _validate_theme_intro(
-                rendered,
-                has_gospel=has_gospel_context,
-                allow_missing_gospel=allow_missing_gospel,
-            )
-        except Exception:
-            return _validate_theme_intro(
-                _deterministic_theme_intro(date_value, context, dict(shared_theme or {})),
-                has_gospel=has_gospel_context,
-                allow_missing_gospel=True,
-            )
-
-    if context.gospel_text:
-        prompt = f"""
-Write exactly three sentences for the opening block of a Catholic prayer podcast.
-
-Sentence 1 must begin with "Today the Church celebrates" and must include this liturgical context exactly: {context.celebration_clause}.
-Sentence 2 must be a short sentence of praise to God.
-Sentence 3 must begin with "In today's Gospel" and summarize the Gospel reading below in one reverent sentence without adding facts not present in the text.
-
-Date: {date_value.isoformat()}
-Liturgical context: {context.celebration_clause}
-Gospel citation: {context.gospel_citation}
-Gospel text:
-{context.gospel_text}
-""".strip()
-    else:
-        prompt = f"""
-Write exactly two sentences for the opening block of a Catholic prayer podcast.
-
-Sentence 1 must begin with "Today the Church celebrates" and must include this liturgical context exactly: {context.celebration_clause}.
-Sentence 2 must be a short sentence of praise to God.
-Do not refer to scripture readings because no scripture text is available.
-
-Date: {date_value.isoformat()}
-Liturgical context: {context.celebration_clause}
-    """.strip()
-    rendered = _call_openai_prompt(model, prompt)
-    return _validate_daily_intro(rendered, allow_missing_gospel=allow_missing_gospel)
+        shared_theme=shared_theme,
+        generate_text_fn=generate_text_fn,
+    ).text

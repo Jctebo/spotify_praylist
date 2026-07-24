@@ -26,6 +26,13 @@
         "calendar": "general_roman",
         "locale": "en",
         "include_season": true
+      },
+      "prayer_intro": {
+        "calendar": "general_roman",
+        "locale": "en",
+        "prompt_model": "gpt-4.1-mini",
+        "temperature": 0.4,
+        "allow_missing_gospel": true
       }
     }
   },
@@ -137,7 +144,7 @@
           "title": "Prayer Intro",
           "prayer_title": "Auxilium Christianorum prayers",
           "devotion": "Auxilium Christianorum",
-          "template": "As we begin today's {prayer_title}, {daily_gospel_bridge} and today's focus of {daily_theme_title} lead us to place ourselves, our families, and the needs of this day under Mary's protection."
+          "profile": "auxilium-christianorum"
         },
         {
           "kind": "sequence",

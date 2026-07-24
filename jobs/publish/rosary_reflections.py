@@ -715,6 +715,7 @@ The dominant priority is {context.dominant_priority.key}: {context.dominant_prio
 It must shape the introduction, overall intention, and all five decade intention/reflection pairs.
 Lower priorities may support it naturally but must never displace it.
 Use varied, prayerful language. Do not force a sentence count or a stock opening phrase.
+Write the introduction in 2-4 sentences.
 Use only the supplied liturgical facts. Do not invent biographies, events, quotations, citations, or Gospel details.
 Return plain prose inside the JSON fields, with no markdown, headings, or production commentary.
 

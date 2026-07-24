@@ -146,6 +146,16 @@ class TestPublishRosaryReflections(unittest.TestCase):
         self.assertEqual(context.focus_title, "Today's Gospel, Mark 12:35-37")
         self.assertEqual(context.shared_theme_title, "A Different Display Theme")
 
+    def test_prompt_guides_two_to_four_intro_sentences_without_validator_enforcement(self):
+        context = self._context(
+            [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}]
+        )
+
+        prompt = self.mod._build_devotional_prompt(self.date, context)
+
+        self.assertIn("Write the introduction in 2-4 sentences.", prompt)
+        self.assertIn("Do not force a sentence count", prompt)
+
     def test_semantic_validation_allows_flexible_sentence_shapes(self):
         context = self._context(
             [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}]

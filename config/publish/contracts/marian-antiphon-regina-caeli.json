@@ -24,10 +24,11 @@
         "primary_action_label": "Pray today's antiphon",
         "notes": "Angelus in ordinary seasons; Regina Caeli in Easter season."
       },
-      "daily_intro": {
+      "prayer_intro": {
         "calendar": "general_roman",
         "locale": "en",
         "prompt_model": "gpt-4.1-mini",
+        "temperature": 0.4,
         "allow_missing_gospel": true
       }
     }
@@ -76,15 +77,11 @@
       },
       "blocks": [
         {
-          "kind": "daily_intro",
-          "title": "Daily Intro"
-        },
-        {
           "kind": "prayer_intro",
           "title": "Prayer Intro",
           "prayer_title": "Regina Caeli",
           "devotion": "Marian Antiphon",
-          "template": "In today's {devotion}, {daily_gospel_bridge} and today's focus of {daily_theme_title} lead us to Our Lady through the {prayer_title} as we enter this prayer."
+          "profile": "regina-caeli"
         },
         {
           "kind": "sequence",

@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 import jobs.novena_contracts.contracts as contracts_mod
+import jobs.novena_contracts.engine as engine_mod
 import jobs.novena_contracts.pipeline as pipeline_mod
 from jobs.publish.audio import load_published_audio_jobs
 from tests.test_helpers import make_test_mp3_bytes, temp_env
@@ -53,11 +54,25 @@ class TestNovenaPipeline(unittest.TestCase):
 
     def setUp(self):
         self._daily_theme_cache = pipeline_mod.DailyThemeRuntimeCache
+        self._intro_builder = engine_mod.build_devotional_intro
         pipeline_mod.DailyThemeRuntimeCache = self.FakeDailyThemeRuntimeCache
+        engine_mod.build_devotional_intro = self._fake_intro
         self.addCleanup(self._restore_daily_theme_cache)
 
     def _restore_daily_theme_cache(self):
         pipeline_mod.DailyThemeRuntimeCache = self._daily_theme_cache
+        engine_mod.build_devotional_intro = self._intro_builder
+
+    def _fake_intro(self, profile, context, **kwargs):
+        saint_name = str(context.get("saint_name", "the saint")).strip()
+        day = str(context.get("day", "1")).strip()
+        theme = str(context.get("daily_theme_title", "Humility And Trust")).strip()
+        return engine_mod.DevotionalIntroResult(
+            text=f"Welcome to Day {day} of the Novena to {saint_name}, joining today's focus of {theme} to our prayer.",
+            profile="novena",
+            policy_version="devotional-intro-v1",
+            source="openai",
+        )
 
     def _short_form_theme_prompt(self):
         return "Create a 9-day saint-life outline for {saint_name}. Return nine distinct daily focus lines, each rooted in a different stage or witness of the saint's life."
@@ -68,6 +83,38 @@ class TestNovenaPipeline(unittest.TestCase):
             outline = [f"{saint_name} focus {index}" for index in range(1, 10)]
             return json.dumps(outline)
         return f"generated::{prompt}"
+
+    def test_sidecar_freshness_requires_current_devotional_intro_policy(self):
+        target_date = datetime.date(2026, 6, 3)
+        expected = self.FakeDailyThemeRuntimeCache().get(target_date, {})
+        payload = {
+            "date": target_date.isoformat(),
+            "daily_liturgical_context": dict(expected["daily_liturgical_context"]),
+            "devotional_intro": {
+                "profile": "novena",
+                "policy_version": "devotional-intro-v1",
+                "source": "openai",
+                "text": "Welcome.",
+                "fallback_reason": "",
+            },
+            "context": {
+                "daily_theme_version": "daily-theme-v1",
+                "daily_theme_explanation": expected["daily_theme_explanation"],
+                "daily_theme_transition": expected["daily_theme_transition"],
+                "daily_theme_reflection_focus": expected["daily_theme_reflection_focus"],
+                "devotional_intro": {
+                    "profile": "novena",
+                    "policy_version": "devotional-intro-v1",
+                    "source": "openai",
+                    "text": "Welcome.",
+                    "fallback_reason": "",
+                },
+            },
+        }
+
+        self.assertTrue(pipeline_mod._sidecar_has_current_daily_theme(payload, expected))
+        payload["devotional_intro"]["policy_version"] = "devotional-intro-v0"
+        self.assertFalse(pipeline_mod._sidecar_has_current_daily_theme(payload, expected))
 
     def _write_contracts(self, root: Path, *, include_selector_family: bool = False) -> Path:
         contracts_root = root / "contracts" / "novenas"
@@ -391,7 +438,7 @@ class TestNovenaPipeline(unittest.TestCase):
                 refreshed["daily_liturgical_context"]["sharedThemeTransition"],
                 "Carrying today's focus of humility and trust, we enter this novena.",
             )
-            self.assertIn("humility and trust", refreshed["fragments"][0]["text"])
+            self.assertIn("humility and trust", refreshed["fragments"][0]["text"].lower())
             self.assertNotIn("humility And Trust", refreshed["fragments"][0]["text"])
 
     def test_pipeline_renders_traditional_novena_title_with_publish_date_suffix(self):

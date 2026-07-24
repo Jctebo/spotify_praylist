@@ -7,6 +7,11 @@ from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from openai import OpenAI
 
+from jobs.publish.devotional_intro import (
+    DevotionalIntroResult,
+    NOVENA_PROFILE,
+    build_devotional_intro,
+)
 from jobs.publish.formatting import render_publish_template
 
 from .contracts import NovenaRuntime, TemplateFragment, TemplateSection
@@ -98,7 +103,6 @@ def generate_text(prompt: str, context: Mapping[str, Any]) -> str:
     system_prompt = (
         "You are a Catholic devotional writer for a novena podcast. "
         "Return only the finished devotional prose. "
-        "Always begin with a 1-2 sentence introduction to the saint before moving into the prayer. "
         "Make the day's focus distinct, rooted in one unique part of the saint's life, and avoid repeating other days. "
         "Do not repeat the prompt, do not quote instructions, and do not add commentary."
     )
@@ -161,28 +165,37 @@ def _section_to_fragment(runtime: NovenaRuntime, section: Dict[str, Any], *, ind
     }
 
 
-def _intro_fragment(runtime: NovenaRuntime, context: Mapping[str, Any]) -> Dict[str, Any]:
+def _intro_fragment(runtime: NovenaRuntime, intro: DevotionalIntroResult) -> Dict[str, Any]:
     episode_id = f"{runtime.date.isoformat()}-{runtime.contract_id}-day-{runtime.active_day}"
-    saint_name = str(context.get("saint_name", runtime.saint.get("name", runtime.contract_id))).strip()
     title = f"Welcome to Day {runtime.active_day}"
-    daily_theme_title = _normalize_whitespace(context.get("daily_theme_title", ""))
-    daily_theme_transition = _normalize_whitespace(context.get("daily_theme_transition", ""))
-    daily_liturgical_context = context.get("daily_liturgical_context") if isinstance(context.get("daily_liturgical_context"), Mapping) else {}
-    daily_gospel_bridge = _normalize_whitespace(context.get("daily_gospel_bridge", "") or daily_liturgical_context.get("sharedGospelBridge", ""))
-    theme_sentence = f" {daily_theme_transition}" if daily_theme_title and daily_theme_transition else ""
-    if daily_gospel_bridge and daily_theme_title:
-        lowered_title = daily_theme_title.lower()
-        theme_sentence = (
-            f" {daily_gospel_bridge[:1].upper() + daily_gospel_bridge[1:]} and today's focus of {lowered_title} "
-            "join this novena intention to the needs of the whole day."
-        )
     return {
         "fragment_key": f"{episode_id}/intro",
         "block_path": "intro",
         "kind": "fixed",
         "label": title,
-        "text": f"Welcome to Day {runtime.active_day} of the Novena to {saint_name}.{theme_sentence}",
+        "text": intro.text,
     }
+
+
+def _build_novena_intro_result(
+    runtime: NovenaRuntime,
+    context: Mapping[str, Any],
+    *,
+    generate_intro_fn: Callable[..., DevotionalIntroResult],
+) -> DevotionalIntroResult:
+    saint_name = _normalize_whitespace(context.get("saint_name", runtime.saint.get("name", runtime.contract_id)))
+    intro_context = dict(context)
+    intro_context.update(
+        {
+            "date": runtime.date.isoformat(),
+            "prayer_title": f"Novena to {saint_name}",
+            "devotion": f"Novena to {saint_name}",
+            "saint_name": saint_name,
+            "day": str(runtime.active_day),
+            "active_day": str(runtime.active_day),
+        }
+    )
+    return generate_intro_fn(NOVENA_PROFILE, intro_context)
 
 
 def _render_template_section(
@@ -310,8 +323,15 @@ def render_novena(
     *,
     daily_theme_context: Optional[Mapping[str, Any]] = None,
     generate_text_fn: Callable[[str, Mapping[str, Any]], str] = generate_text,
+    generate_intro_fn: Optional[Callable[..., DevotionalIntroResult]] = None,
 ) -> Dict[str, Any]:
     context = runtime_context(runtime, daily_theme_context=daily_theme_context)
+    intro_result = _build_novena_intro_result(
+        runtime,
+        context,
+        generate_intro_fn=generate_intro_fn or build_devotional_intro,
+    )
+    context["devotional_intro"] = intro_result.metadata()
     rendered_sections: List[Dict[str, Any]] = []
     for index, section in enumerate(runtime.resolved_template.sections, start=1):
         text = _render_template_section(section, context, generate_text_fn=generate_text_fn)
@@ -327,7 +347,7 @@ def render_novena(
     fragment_lookup = _fragment_lookup(runtime)
     audio_fragments: List[Dict[str, Any]] = []
     if compact_blocks and any(_normalize_day_list(block.days or ()) for block in compact_blocks):
-        audio_fragments.append(_intro_fragment(runtime, context))
+        audio_fragments.append(_intro_fragment(runtime, intro_result))
         for block in compact_blocks:
             block_days = _normalize_day_list(block.days or ())
             if block_days and runtime.active_day not in block_days:
@@ -339,7 +359,7 @@ def render_novena(
                 if fragment is not None:
                     audio_fragments.append(fragment)
     else:
-        audio_fragments = [_intro_fragment(runtime, context)]
+        audio_fragments = [_intro_fragment(runtime, intro_result)]
         audio_fragments.extend(_section_to_fragment(runtime, section, index=index) for index, section in enumerate(rendered_sections, start=1))
     text_body = "\n\n".join(fragment["text"] for fragment in audio_fragments if str(fragment.get("text", "")).strip()).strip()
     return {
@@ -356,6 +376,7 @@ def render_novena(
             "sections": rendered_sections,
             "text": text_body,
         },
+        "devotional_intro": intro_result.metadata(),
         "audio_fragments": audio_fragments,
     }
 

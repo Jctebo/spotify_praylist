@@ -20,16 +20,31 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.rss_mod = load_module("jobs/publish/rss.py")
         self.runner_mod = load_module("jobs/publish/run_audio_pipeline.py")
         self.runner_mod.load_podcast_feed_jobs = lambda *args, **kwargs: []
-        stub = lambda date_value, **kwargs: (
-            "Today the Church celebrates Saint Example. Praise be to God for his mercy. "
-            "In today's Gospel, Jesus calls his sheep by name."
-        )
+        def daily_intro_stub(date_value, **kwargs):
+            return self.contracts_mod.DevotionalIntroResult(
+                text="Morning Prayer receives today's Gospel with Trust as Saint Example accompanies our offering.",
+                profile="morning-prayer",
+                policy_version="devotional-intro-v1",
+                source="openai",
+            )
+
+        def prayer_intro_stub(profile, context, **kwargs):
+            profile_key = profile if isinstance(profile, str) else profile.key
+            prayer_title = str(context.get("prayer_title", "")).strip()
+            return self.contracts_mod.DevotionalIntroResult(
+                text=f"As we begin the {prayer_title}, today's focus of Trust leads us into faithful prayer.",
+                profile=profile_key,
+                policy_version="devotional-intro-v1",
+                source="openai",
+            )
         announcement_stub = lambda date_value, **kwargs: (
             f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "
             "Today the Church celebrates Saint Example."
         )
-        self.contracts_mod.build_daily_intro_text = stub
-        package_contracts.build_daily_intro_text = stub
+        self.contracts_mod.build_daily_intro_result = daily_intro_stub
+        package_contracts.build_daily_intro_result = daily_intro_stub
+        self.contracts_mod.build_devotional_intro = prayer_intro_stub
+        package_contracts.build_devotional_intro = prayer_intro_stub
         self.contracts_mod.build_liturgical_announcement_text = announcement_stub
         package_contracts.build_liturgical_announcement_text = announcement_stub
         self.contracts_mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
