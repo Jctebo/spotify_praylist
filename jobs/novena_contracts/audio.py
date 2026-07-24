@@ -60,7 +60,7 @@ def build_novena_audio_job(runtime: NovenaRuntime, rendered: Dict[str, Any]) -> 
     audio_config = dict(runtime.publishing.get("audio") or {})
     audio_config["enabled"] = bool(audio_config.get("enabled", True))
     audio_config["model"] = str(audio_config.get("model", "gpt-4o-mini-tts")).strip() or "gpt-4o-mini-tts"
-    audio_config["voice"] = str(audio_config.get("voice", "alloy")).strip() or "alloy"
+    audio_config["voice"] = str(audio_config.get("voice", "ash")).strip() or "ash"
     audio_config["format"] = str(audio_config.get("format", "mp3")).strip().lower() or "mp3"
     try:
         audio_config["speed"] = float(audio_config.get("speed", 1.0))

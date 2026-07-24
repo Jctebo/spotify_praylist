@@ -194,7 +194,7 @@
         "format": "mp3",
         "model": "gpt-4o-mini-tts",
         "speed": 1.0,
-        "voice": "alloy"
+        "voice": "ash"
       },
       "rss": {
         "enabled": true,

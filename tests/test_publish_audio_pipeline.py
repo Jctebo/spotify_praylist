@@ -270,7 +270,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
             "audio_config": {
                 "enabled": True,
                 "model": "gpt-4o-mini-tts",
-                "voice": "alloy",
+                "voice": "ash",
                 "format": "mp3",
                 "speed": 1.0,
                 "loudness_normalization": {

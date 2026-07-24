@@ -402,7 +402,7 @@ def validate_novena_contract(payload: Dict[str, Any], *, source: str, template_d
             elif provider_name == "openai":
                 if not str(provider.get("model", audio.get("model", "gpt-4o-mini-tts"))).strip():
                     raise RuntimeError(f"Invalid novena contract in {source}: publishing.audio.providers[{index}].model is required for OpenAI.")
-                if not str(provider.get("voice", audio.get("voice", "alloy"))).strip():
+                if not str(provider.get("voice", audio.get("voice", "ash"))).strip():
                     raise RuntimeError(f"Invalid novena contract in {source}: publishing.audio.providers[{index}].voice is required for OpenAI.")
             else:
                 raise RuntimeError(f"Invalid novena contract in {source}: unsupported audio provider '{provider_name}'.")

@@ -561,11 +561,11 @@ class TestNovenaJob(unittest.TestCase):
         env = {
             "NOVENA_AUDIO_ENABLED": "true",
             "NOVENA_AUDIO_MODEL": "gpt-4o-mini-tts",
-            "NOVENA_AUDIO_VOICE": "alloy",
+            "NOVENA_AUDIO_VOICE": "ash",
             "NOVENA_AUDIO_FORMAT": "mp3",
             "NOVENA_AUDIO_SPEED": "1.0",
         }
-        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        settings = {"model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0}
         saints = [{"date": "2026-03-03", "name": "Saint Agnes"}]
         render_hash = self.mod.compute_daily_novena_audio_render_hash(
             "https://api.openai.com/v1",
@@ -616,7 +616,7 @@ class TestNovenaJob(unittest.TestCase):
                     datetime.date(2026, 3, 12),
                 )
 
-        self.assertEqual(mode, f"cached:mp3:gpt-4o-mini-tts:alloy:hash={render_hash}")
+        self.assertEqual(mode, f"cached:mp3:gpt-4o-mini-tts:ash:hash={render_hash}")
         generate_mock.assert_not_called()
         remove_mock.assert_not_called()
         create_mock.assert_not_called()
@@ -628,12 +628,12 @@ class TestNovenaJob(unittest.TestCase):
         env = {
             "NOVENA_AUDIO_ENABLED": "true",
             "NOVENA_AUDIO_MODEL": "gpt-4o-mini-tts",
-            "NOVENA_AUDIO_VOICE": "alloy",
+            "NOVENA_AUDIO_VOICE": "ash",
             "NOVENA_AUDIO_FORMAT": "mp3",
             "NOVENA_AUDIO_SPEED": "1.0",
             "NOVENA_AUDIO_CAPTION": "Daily Novena Prayer (Audio)",
         }
-        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        settings = {"model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0}
         saints = [{"date": "2026-03-03", "name": "Saint Agnes"}]
         expected_hash = self.mod.compute_daily_novena_audio_render_hash(
             "https://api.openai.com/v1",
@@ -670,7 +670,7 @@ class TestNovenaJob(unittest.TestCase):
                     datetime.date(2026, 3, 12),
                 )
 
-        self.assertEqual(mode, f"attached:mp3:gpt-4o-mini-tts:alloy:hash={expected_hash}")
+        self.assertEqual(mode, f"attached:mp3:gpt-4o-mini-tts:ash:hash={expected_hash}")
         remove_mock.assert_called_once_with("page_1", "notion_token")
         append_mock.assert_called_once()
         self.assertIn(self.mod.render_hash_marker(expected_hash), append_mock.call_args.args[2])
@@ -722,7 +722,7 @@ class TestNovenaJob(unittest.TestCase):
             ],
             "closing_prayer": "Closing prayer.",
         }
-        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        settings = {"model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0}
         with tempfile.TemporaryDirectory() as tmpdir, temp_env({"NOVENA_AUDIO_LIBRARY_DIR": tmpdir}):
             with patch.object(self.mod, "generate_openai_audio_bytes", return_value=b"audio") as generate_mock:
                 first = self.mod.ensure_saint_novena_audio_library(
@@ -765,7 +765,7 @@ class TestNovenaJob(unittest.TestCase):
             ],
             "closing_prayer": "Closing prayer.",
         }
-        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        settings = {"model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0}
         with tempfile.TemporaryDirectory() as tmpdir, temp_env({"NOVENA_AUDIO_LIBRARY_DIR": tmpdir}):
             root = self.mod.novena_audio_library_dir()
             stale_folder = root / "2026-03-12_saint-agnes"

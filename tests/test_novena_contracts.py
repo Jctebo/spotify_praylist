@@ -46,7 +46,7 @@ class TestNovenaContracts(unittest.TestCase):
         self.assertEqual(contract.publishing.audio["providers"][0]["provider"], "elevenlabs")
         self.assertEqual(contract.publishing.audio["providers"][0]["voice_id"], "pGAwIQNN9UjOkKxjAyGQ")
         self.assertEqual(contract.publishing.audio["providers"][1]["provider"], "openai")
-        self.assertEqual(contract.publishing.audio["providers"][1]["voice"], "alloy")
+        self.assertEqual(contract.publishing.audio["providers"][1]["voice"], "ash")
 
     def test_load_novena_contracts_reads_short_form_fatima_fixture(self):
         contracts = self.contracts_mod.load_novena_contracts()
@@ -146,7 +146,7 @@ class TestNovenaContracts(unittest.TestCase):
                                 },
                             },
                             "publishing": {
-                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0},
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
@@ -193,7 +193,7 @@ class TestNovenaContracts(unittest.TestCase):
                                 },
                             },
                             "publishing": {
-                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0},
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
@@ -256,7 +256,7 @@ class TestNovenaContracts(unittest.TestCase):
                                 },
                             },
                             "publishing": {
-                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0},
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
@@ -334,7 +334,7 @@ class TestNovenaContracts(unittest.TestCase):
                                 },
                             },
                             "publishing": {
-                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0},
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
@@ -448,7 +448,7 @@ class TestNovenaContracts(unittest.TestCase):
                                 "ai_config": {},
                             },
                             "publishing": {
-                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0},
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
@@ -505,7 +505,7 @@ class TestNovenaContracts(unittest.TestCase):
             title_pattern="Short-Form Novena to {saint_name} Day {day} - {date_display}",
             description_pattern="Day {day} of the Novena to {saint_name} for {feast_name}.",
             audio_model="gpt-4o-mini-tts",
-            audio_voice="alloy",
+            audio_voice="ash",
             audio_format="mp3",
             audio_speed=1.0,
             output="",
@@ -540,7 +540,7 @@ class TestNovenaContracts(unittest.TestCase):
                     "audio": {
                         "enabled": True,
                         "model": "gpt-4o-mini-tts",
-                        "voice": "alloy",
+                        "voice": "ash",
                         "format": "mp3",
                         "speed": 1.0,
                         "providers": [{"provider": "elevenlabs", "model_id": "eleven_multilingual_v2"}],
@@ -580,7 +580,7 @@ class TestNovenaContracts(unittest.TestCase):
             title_pattern="Short-Form Novena to {saint_name} Day {day} - {date_display}",
             description_pattern="Day {day} of the Novena to {saint_name} for {feast_name}.",
             audio_model="gpt-4o-mini-tts",
-            audio_voice="alloy",
+            audio_voice="ash",
             audio_format="mp3",
             audio_speed=1.0,
             output="",
@@ -613,7 +613,7 @@ class TestNovenaContracts(unittest.TestCase):
             title_pattern="Short-Form Novena to {saint_name} Day {day} - {date_display}",
             description_pattern="Day {day} of the Novena to {saint_name} for {feast_name}.",
             audio_model="gpt-4o-mini-tts",
-            audio_voice="alloy",
+            audio_voice="ash",
             audio_format="mp3",
             audio_speed=1.0,
             output="",
@@ -648,7 +648,7 @@ class TestNovenaContracts(unittest.TestCase):
             title_pattern="Short-Form Novena to {saint_name} Day {day} - {date_display}",
             description_pattern="Day {day} of the Novena to {saint_name} for {feast_name}.",
             audio_model="gpt-4o-mini-tts",
-            audio_voice="alloy",
+            audio_voice="ash",
             audio_format="mp3",
             audio_speed=1.0,
             output="",
@@ -706,7 +706,7 @@ class TestNovenaContracts(unittest.TestCase):
                                 "template_id": "fixed-only",
                             },
                             "publishing": {
-                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0},
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",

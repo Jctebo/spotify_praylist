@@ -51,7 +51,7 @@ def prayer_runtime_config(contract: Dict[str, Any]) -> Dict[str, Any]:
         "builder": "morning_prayer_v1",
         "audio_caption": f"{title} (Audio)",
         "output_folder": Path(output_path).name,
-        "tts": {"model": model, "voice": "alloy", "format": "mp3", "speed": 1.0},
+        "tts": {"model": model, "voice": "ash", "format": "mp3", "speed": 1.0},
     }
 
 

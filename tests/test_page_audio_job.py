@@ -102,7 +102,7 @@ class TestPageAudioJob(unittest.TestCase):
         )
         self.assertEqual(contracts["morning-prayer"]["output_folder"], "Morning")
         self.assertEqual(contracts["morning-prayer"]["tts"]["model"], "gpt-4o-mini-tts")
-        self.assertEqual(contracts["morning-prayer"]["tts"]["voice"], "alloy")
+        self.assertEqual(contracts["morning-prayer"]["tts"]["voice"], "ash")
         self.assertEqual(contracts["morning-prayer"]["tts"]["format"], "mp3")
         self.assertEqual(contracts["morning-prayer"]["tts"]["speed"], 1.0)
 
@@ -299,7 +299,7 @@ class TestPageAudioJob(unittest.TestCase):
         }
         contract = _base_custom_tts_contract(path="config/custom_tts/morning-prayer.json", enabled=True)
         contract["output_folder"] = "Morning"
-        contract["tts"] = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        contract["tts"] = {"model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0}
         payload = {"configs": {"morning-prayer": contract}}
 
         with tempfile.TemporaryDirectory() as tmpdir, temp_env(
@@ -335,7 +335,7 @@ class TestPageAudioJob(unittest.TestCase):
             ), mock.patch.object(self.page_audio, "build_page_audio_plan", return_value=plan), mock.patch.object(
                 self.page_audio,
                 "render_page_audio_for_config",
-                return_value="attached:mp3:gpt-4o-mini-tts:alloy:hash=hash-1",
+                return_value="attached:mp3:gpt-4o-mini-tts:ash:hash=hash-1",
             ), mock.patch.object(
                 self.page_audio,
                 "truncate_managed_page_audio_outputs",

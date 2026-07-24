@@ -126,7 +126,7 @@ def main() -> int:
     parser.add_argument("--title-pattern", default="Short-Form Novena to {saint_name} Day {day} - {date_display}")
     parser.add_argument("--description-pattern", default="Day {day} of the Novena to {saint_name} for {feast_name}.")
     parser.add_argument("--audio-model", default="gpt-4o-mini-tts")
-    parser.add_argument("--audio-voice", default="alloy")
+    parser.add_argument("--audio-voice", default="ash")
     parser.add_argument("--audio-format", default="mp3")
     parser.add_argument("--audio-speed", default=1.0, type=float)
     parser.add_argument("--output", default="", help="Where to write the contract JSON.")

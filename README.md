@@ -455,7 +455,7 @@ Optional variables:
 - `NOTION_SAINT_REFRESH_ALL` (default `false`; set `true` to regenerate all existing saint row page bodies/backgrounds)
 - `NOVENA_AUDIO_ENABLED` (default `false`; set `true` to generate and embed audio on the same Notion page)
 - `NOVENA_AUDIO_MODEL` (default `gpt-4o-mini-tts`)
-- `NOVENA_AUDIO_VOICE` (default `alloy`)
+- `NOVENA_AUDIO_VOICE` (default `ash`)
 - `NOVENA_AUDIO_FORMAT` (default `mp3`)
 - `NOVENA_AUDIO_SPEED` (default `1.0`, range `0.25-4.0`)
 - `NOVENA_AUDIO_CAPTION` (default `Daily Novena Prayer (Audio)`)

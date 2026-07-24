@@ -72,7 +72,7 @@ class TestNovenaArtifacts(unittest.TestCase):
             date=datetime.date(2026, 6, 3),
             active_day=1,
             publishing={
-                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0},
                 "rss": {
                     "enabled": True,
                     "feed_id": "ora-pro-nobis",
@@ -241,7 +241,7 @@ class TestNovenaArtifacts(unittest.TestCase):
         publishing["audio"] = {
             "enabled": True,
             "model": "gpt-4o-mini-tts",
-            "voice": "alloy",
+            "voice": "ash",
             "format": "mp3",
             "speed": 1.0,
             "loudness_normalization": {
@@ -279,7 +279,7 @@ class TestNovenaArtifacts(unittest.TestCase):
         publishing["audio"] = {
             "enabled": True,
             "model": "gpt-4o-mini-tts",
-            "voice": "alloy",
+            "voice": "ash",
             "format": "mp3",
             "speed": 1.0,
             "providers": [
@@ -295,7 +295,7 @@ class TestNovenaArtifacts(unittest.TestCase):
                     "provider": "openai",
                     "api_key_env": "OPENAI_API_KEY",
                     "model": "gpt-4o-mini-tts",
-                    "voice": "alloy",
+                    "voice": "ash",
                     "format": "mp3",
                     "speed": 1.0,
                 },

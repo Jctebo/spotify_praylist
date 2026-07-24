@@ -81,7 +81,7 @@ def _normalize_tts_value(value: Any) -> Any:
 def normalize_audio_settings(audio_config: Dict[str, Any]) -> Dict[str, Any]:
     settings = {
         "model": str(audio_config.get("model", "gpt-4o-mini-tts")).strip() or "gpt-4o-mini-tts",
-        "voice": str(audio_config.get("voice", "alloy")).strip() or "alloy",
+        "voice": str(audio_config.get("voice", "ash")).strip() or "ash",
         "format": str(audio_config.get("format", "mp3")).strip().lower() or "mp3",
     }
     try:
