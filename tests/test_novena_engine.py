@@ -250,6 +250,55 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertIn("You are going to say the following 3 times:", rendered["content"]["text"])
         self.assertIn("Our Father text.", rendered["content"]["text"])
 
+    def test_render_novena_emits_control_fragments_without_spoken_labels(self):
+        runtime = contracts_mod.NovenaRuntime(
+            family_id="saints_joachim_and_anne",
+            contract_id="saints_joachim_and_anne",
+            saint={"id": "saints_joachim_and_anne", "name": "Saints Joachim and Anne"},
+            feast={"month": 7, "day": 26, "name": "Saints Joachim and Anne"},
+            novena={"duration_days": 9, "start_offset_days": -9, "content_mode": "fixed"},
+            resolved_template=contracts_mod.TemplateSpec(
+                template_id="embedded-fixed",
+                source="embedded",
+                sections=(
+                    contracts_mod.TemplateSection(
+                        key="prayer",
+                        title="Prayer",
+                        kind="fixed",
+                        text="Name your intention. Let us continue.",
+                    ),
+                ),
+                blocks=(
+                    contracts_mod.TemplateSection(
+                        key="prayer",
+                        title="Prayer",
+                        kind="fixed",
+                        days=(1,),
+                        parts=(
+                            {"kind": "text", "text": "Name your intention."},
+                            {"kind": "audio_cue", "cue": "sacred_bell"},
+                            {"kind": "pause", "duration_ms": 5000, "purpose": "personal_intention"},
+                            {"kind": "text", "text": "Let us continue."},
+                        ),
+                    ),
+                ),
+            ),
+            date=datetime.date(2026, 7, 17),
+            active_day=1,
+            publishing={"audio": {"enabled": True}, "rss": {"enabled": True}},
+            source_path=contracts_mod.DEFAULT_FEAST_DIR / "sts_joachim_and_anne.json",
+        )
+
+        rendered = engine_mod.render_novena(runtime)
+        kinds = [fragment["kind"] for fragment in rendered["audio_fragments"]]
+
+        self.assertEqual(kinds, ["fixed", "text", "audio_cue", "pause", "text"])
+        self.assertEqual(rendered["audio_fragments"][2]["cue"], "sacred_bell")
+        self.assertEqual(rendered["audio_fragments"][3]["duration_ms"], 5000)
+        self.assertEqual(rendered["audio_fragments"][3]["purpose"], "personal_intention")
+        self.assertNotIn("Sacred Bell", rendered["content"]["text"])
+        self.assertNotIn("Pause", rendered["content"]["text"])
+
     def test_render_novena_skips_part_blocks_for_other_days(self):
         runtime = contracts_mod.NovenaRuntime(
             family_id="holy_spirit",

@@ -41,4 +41,11 @@ Thumbs.db
 .idea/
 .astack/
 .agents/
+!.agents/
+.agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/normalize-prayer-tts/
+!.agents/skills/normalize-prayer-tts/**
+.agents/skills/normalize-prayer-tts/**/__pycache__/
 .copilot/

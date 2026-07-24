@@ -96,6 +96,19 @@ class TestNovenaContracts(unittest.TestCase):
         self.assertEqual([part.get("repeat", 1) for part in fragment_parts], [1, 1, 7])
         self.assertIn("Glory be to the Father SEVEN TIMES.", [part["text"] for part in block.parts if part.get("kind") == "text"])
 
+    def test_load_joachim_and_anne_fixture_uses_structured_intention_controls(self):
+        contracts = self.contracts_mod.load_novena_contracts()
+        contract = next(item for item in contracts if item.contract_id == "sts_joachim_and_anne")
+        parts = list(contract.novena.template.blocks[1].parts)
+
+        self.assertEqual(contract.saint["name"], "Saints Joachim and Anne")
+        self.assertEqual(contract.feast.name, "Saints Joachim and Anne")
+        self.assertEqual([part.get("kind") for part in parts[1:5]], ["text", "audio_cue", "pause", "text"])
+        self.assertEqual(parts[2]["cue"], "sacred_bell")
+        self.assertEqual(parts[3]["duration_ms"], 5000)
+        self.assertEqual(parts[3]["purpose"], "personal_intention")
+        self.assertNotIn("Pause here", " ".join(str(part.get("text", "")) for part in parts))
+
     def test_load_novena_contracts_has_unique_feast_day_contract_ids(self):
         contracts = self.contracts_mod.load_novena_contracts()
         contract_ids = [contract.contract_id for contract in contracts if contract.enabled]
@@ -345,6 +358,59 @@ class TestNovenaContracts(unittest.TestCase):
             contract.to_dict()["contract"]["novena"]["template"]["fragments"][0]["title"],
             "Our Father",
         )
+
+    def test_validate_template_payload_accepts_sacred_bell_and_pause_parts(self):
+        payload = {
+            "template_id": "embedded-fixed",
+            "sections": [
+                {"key": "prayer", "title": "Prayer", "kind": "fixed", "text": "Pray."},
+            ],
+            "blocks": [
+                {
+                    "key": "prayer",
+                    "title": "Prayer",
+                    "kind": "fixed",
+                    "parts": [
+                        {"kind": "text", "text": "Name your intention."},
+                        {"kind": "audio_cue", "cue": "sacred_bell"},
+                        {"kind": "pause", "duration_ms": 5000, "purpose": "personal_intention"},
+                        {"kind": "text", "text": "Let us continue."},
+                    ],
+                },
+            ],
+        }
+
+        self.validators_mod.validate_template_payload(payload, source="test")
+
+    def test_validate_template_payload_rejects_invalid_control_parts(self):
+        base = {
+            "template_id": "embedded-fixed",
+            "sections": [
+                {"key": "prayer", "title": "Prayer", "kind": "fixed", "text": "Pray."},
+            ],
+        }
+        invalid_parts = (
+            {"kind": "audio_cue", "cue": "gong"},
+            {"kind": "pause", "duration_ms": True},
+            {"kind": "pause", "duration_ms": 120001},
+            {"kind": "pause", "duration_ms": 5000, "repeat": 2},
+        )
+
+        for part in invalid_parts:
+            with self.subTest(part=part):
+                payload = {
+                    **base,
+                    "blocks": [
+                        {
+                            "key": "prayer",
+                            "title": "Prayer",
+                            "kind": "fixed",
+                            "parts": [{"kind": "text", "text": "Pray."}, part],
+                        },
+                    ],
+                }
+                with self.assertRaises(RuntimeError):
+                    self.validators_mod.validate_template_payload(payload, source="test")
 
     def test_load_novena_contracts_rejects_short_form_without_focus_prompt_or_theme_list(self):
         with tempfile.TemporaryDirectory() as tmpdir:

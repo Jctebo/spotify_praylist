@@ -388,6 +388,30 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
         normalized["folder"] = folder
         selector = str(normalized.get("selector", "current_calendar_month")).strip().lower() or "current_calendar_month"
         normalized["selector"] = selector
+    elif kind == "audio-cue":
+        cue = normalize_publish_key(normalized.get("cue"))
+        if cue != "sacred-bell":
+            raise RuntimeError(
+                f"Publish entry '{entry_id}' in '{path}' has unsupported audio cue "
+                f"'{normalized.get('cue', '')}'; expected 'sacred_bell'."
+            )
+        normalized["cue"] = cue
+        normalized["title"] = str(normalized.get("title", "")).strip() or "Sacred Bell"
+    elif kind == "pause":
+        raw_duration_ms = normalized.get("duration_ms")
+        if isinstance(raw_duration_ms, bool) or not isinstance(raw_duration_ms, int):
+            raise RuntimeError(
+                f"Publish entry '{entry_id}' in '{path}' has a pause block without a valid integer 'duration_ms'."
+            )
+        duration_ms = raw_duration_ms
+        if duration_ms < 1 or duration_ms > 120000:
+            raise RuntimeError(
+                f"Publish entry '{entry_id}' in '{path}' has pause duration_ms {duration_ms}; "
+                "expected a value from 1 through 120000."
+            )
+        normalized["duration_ms"] = duration_ms
+        normalized["purpose"] = normalize_publish_key(normalized.get("purpose"))
+        normalized["title"] = str(normalized.get("title", "")).strip() or "Pause"
     elif kind == "file":
         file_path = str(normalized.get("path", "")).strip()
         if not file_path:
@@ -592,6 +616,8 @@ def _validate_entry_blocks(blocks: Sequence[Dict[str, Any]], path: Path, entry_i
                     f"Publish entry '{entry_id}' in '{path}' references missing monthly template folder '{resolved_folder}'."
                 )
         elif kind == "inline":
+            continue
+        elif kind in {"audio-cue", "pause"}:
             continue
         elif kind == "daily-intro":
             continue
@@ -1346,6 +1372,8 @@ def resolve_block_content(
     skip_if_missing = _normalize_bool(block.get("skip_if_missing", False))
 
     try:
+        if kind in {"audio-cue", "pause"}:
+            return ""
         if kind == "inline":
             return str(block.get("text", "")).strip()
         if kind == "file":
@@ -1521,6 +1549,12 @@ def _fragment_label_for_block(block: Dict[str, Any], text: str) -> str:
         folder = str(block.get("folder", "")).strip()
         folder_name = Path(folder).name if folder else ""
         return _humanize_slug(folder_name) or "Monthly Intention"
+
+    if kind == "audio-cue":
+        return explicit or "Sacred Bell"
+
+    if kind == "pause":
+        return explicit or "Pause"
 
     if kind == "file":
         path_text = str(block.get("path", "")).strip()
@@ -1802,6 +1836,33 @@ def _expand_audio_fragments_from_block(
             )
         ]
 
+    if kind == "audio-cue":
+        fragment_key = "/".join((*path_parts, _fragment_path_segment(kind, value=block.get("cue"))))
+        fragment = _fragment_payload(
+            fragment_key=fragment_key,
+            kind=kind,
+            label=_fragment_label_for_block(block, ""),
+            text="",
+            block=block,
+        )
+        fragment["cue"] = str(block.get("cue", "")).strip()
+        return [fragment]
+
+    if kind == "pause":
+        fragment_key = "/".join((*path_parts, _fragment_path_segment(kind, value=block.get("purpose"))))
+        fragment = _fragment_payload(
+            fragment_key=fragment_key,
+            kind=kind,
+            label=_fragment_label_for_block(block, ""),
+            text="",
+            block=block,
+        )
+        fragment["duration_ms"] = int(block.get("duration_ms", 0))
+        purpose = str(block.get("purpose", "")).strip()
+        if purpose:
+            fragment["purpose"] = purpose
+        return [fragment]
+
     if kind == "rosary-decades":
         return _expand_rosary_decade_audio_fragments(
             block,
@@ -2027,7 +2088,10 @@ def build_resume_markers(
 ) -> List[Dict[str, Any]]:
     markers: List[Dict[str, Any]] = []
     if fragments is not None:
-        for order, fragment in enumerate(fragments, start=1):
+        for fragment in fragments:
+            if normalize_publish_key(fragment.get("kind")) in {"audio-cue", "pause"}:
+                continue
+            order = len(markers) + 1
             fragment_key = str(fragment.get("fragment_key", "")).strip()
             label = str(fragment.get("label", "")).strip() or fragment_key or f"Fragment {order}"
             marker_id = normalize_publish_key(fragment_key or label or f"fragment-{order}") or f"fragment-{order}"

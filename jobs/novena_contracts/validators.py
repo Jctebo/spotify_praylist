@@ -111,13 +111,13 @@ def validate_template_payload(payload: Dict[str, Any], *, source: str) -> None:
         for index, part in enumerate(parts, start=1):
             if not isinstance(part, dict):
                 raise RuntimeError(f"Invalid template in {source}: {label} part {index} must be an object.")
-            part_kind = str(part.get("kind", "")).strip().lower()
-            if part_kind not in {"text", "fragment"}:
+            part_kind = _normalize_token(part.get("kind"))
+            if part_kind not in {"text", "fragment", "audio_cue", "pause"}:
                 raise RuntimeError(f"Invalid template in {source}: {label} part {index} uses unsupported kind '{part_kind}'.")
             if part_kind == "text":
                 if not str(part.get("text", "")).strip():
                     raise RuntimeError(f"Invalid template in {source}: {label} part {index} is missing text.")
-            else:
+            elif part_kind == "fragment":
                 if not str(part.get("fragment_key", "")).strip():
                     raise RuntimeError(f"Invalid template in {source}: {label} part {index} is missing fragment_key.")
                 repeat = part.get("repeat", 1)
@@ -127,6 +127,28 @@ def validate_template_payload(payload: Dict[str, Any], *, source: str) -> None:
                     raise RuntimeError(f"Invalid template in {source}: {label} part {index} repeat must be an integer.") from exc
                 if repeat_count <= 0:
                     raise RuntimeError(f"Invalid template in {source}: {label} part {index} repeat must be greater than zero.")
+            elif part_kind == "audio_cue":
+                cue = _normalize_token(part.get("cue"))
+                if cue != "sacred_bell":
+                    raise RuntimeError(
+                        f"Invalid template in {source}: {label} part {index} has unsupported audio cue "
+                        f"'{part.get('cue', '')}'; expected 'sacred_bell'."
+                    )
+            else:
+                raw_duration_ms = part.get("duration_ms")
+                if isinstance(raw_duration_ms, bool) or not isinstance(raw_duration_ms, int):
+                    raise RuntimeError(
+                        f"Invalid template in {source}: {label} part {index} pause duration_ms must be an integer."
+                    )
+                if raw_duration_ms < 1 or raw_duration_ms > 120000:
+                    raise RuntimeError(
+                        f"Invalid template in {source}: {label} part {index} pause duration_ms "
+                        "must be from 1 through 120000."
+                    )
+            if part_kind in {"audio_cue", "pause"} and part.get("repeat") not in {None, 1}:
+                raise RuntimeError(
+                    f"Invalid template in {source}: {label} part {index} control parts do not support repeat."
+                )
 
     def _validate_section_list(items: Sequence[Dict[str, Any]], *, label: str, allow_parts: bool = False) -> None:
         seen_keys: set[str] = set()

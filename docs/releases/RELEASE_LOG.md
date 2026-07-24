@@ -1,5 +1,15 @@
 # Release Log
 
+## [0.3.7.0] - 2026-07-23
+
+### Added
+- Added a repository-local prayer TTS normalization skill with preview-only JSON diagnostics for roles, abbreviations, intention cues, pauses, and review-only print artifacts.
+- Added first-class sacred-bell and timed-pause controls to publish and structured novena contracts, including deterministic cached rendering and sidecar metadata.
+
+### Changed
+- Preserved exact explicit-pause timing by suppressing ordinary inter-fragment silence beside pause controls.
+- Migrated the Saints Joachim and Anne novena to pronounce “Saints” and use a sacred bell followed by a five-second personal-intention pause.
+
 ## [0.3.6.16] - 2026-07-06
 
 ### Fixed

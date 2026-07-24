@@ -16,6 +16,7 @@ from jobs.publish.fragments import (
     audio_manifest_hash,
     assemble_audio_fragments,
     publish_audio_cache_root,
+    render_control_fragment_audio,
     sanitize_tts_input,
 )
 
@@ -144,6 +145,7 @@ def render_novena_audio_job(
     fragment_root = publish_audio_cache_root(cache_root)
     fragment_paths = []
     fragment_results = []
+    target_format = str(audio_config.get("format", "mp3")).strip().lower() or "mp3"
     if not force_rebuild and audio_path.exists() and not sidecar_path.exists():
         rendered = dict(job)
         rendered.update(
@@ -156,39 +158,72 @@ def render_novena_audio_job(
         )
         return rendered
     for fragment in fragments:
-        rendered_fragment = render_fragment_audio_with_provider_fallback(
-            fragment,
-            audio_config,
-            renderer,
-            cache_root=fragment_root,
-            force_rebuild=False,
-        )
-        rendered_effective_config = dict(rendered_fragment.get("audio_config") or audio_config)
+        fragment_kind = str(fragment.get("kind", "")).strip().lower().replace("_", "-")
+        if fragment_kind in {"audio-cue", "pause"}:
+            rendered_fragment = render_control_fragment_audio(
+                fragment,
+                audio_config,
+                cache_root=fragment_root,
+            )
+            rendered_effective_config: Dict[str, Any] = {}
+        else:
+            rendered_fragment = render_fragment_audio_with_provider_fallback(
+                fragment,
+                audio_config,
+                renderer,
+                cache_root=fragment_root,
+                force_rebuild=False,
+            )
+            rendered_effective_config = dict(rendered_fragment.get("audio_config") or audio_config)
         fragment_paths.append(Path(rendered_fragment["audio_path"]))
-        fragment_results.append(
-            {
-                "fragment_key": str(fragment.get("fragment_key", "")).strip(),
-                "block_path": str(fragment.get("block_path", "")).strip(),
-                "kind": str(fragment.get("kind", "")).strip(),
-                "label": str(fragment.get("label", "")).strip(),
-                "text": sanitize_tts_input(fragment.get("text", "")),
-                "days": list(fragment.get("days") or []),
-                "repeat_index": int(fragment.get("repeat_index", 1) or 1),
-                "repeat_count": int(fragment.get("repeat_count", 1) or 1),
-                "source_fragment_key": str(fragment.get("source_fragment_key", "")).strip(),
-                "fragment_hash": rendered_fragment["fragment_hash"],
-                "audio_path": str(rendered_fragment["audio_path"]),
-                "tts": rendered_effective_config,
-                "provider": str(rendered_fragment.get("provider", "")).strip() or "openai",
-                "rendered": bool(rendered_fragment.get("rendered", False)),
-            }
-        )
+        fragment_result: Dict[str, Any] = {
+            "fragment_key": str(fragment.get("fragment_key", "")).strip(),
+            "block_path": str(fragment.get("block_path", "")).strip(),
+            "kind": str(fragment.get("kind", "")).strip(),
+            "label": str(fragment.get("label", "")).strip(),
+            "text": sanitize_tts_input(fragment.get("text", "")),
+            "days": list(fragment.get("days") or []),
+            "repeat_index": int(fragment.get("repeat_index", 1) or 1),
+            "repeat_count": int(fragment.get("repeat_count", 1) or 1),
+            "source_fragment_key": str(fragment.get("source_fragment_key", "")).strip(),
+            "fragment_hash": rendered_fragment["fragment_hash"],
+            "audio_path": str(rendered_fragment["audio_path"]),
+            "rendered": bool(rendered_fragment.get("rendered", False)),
+        }
+        if fragment_kind in {"audio-cue", "pause"}:
+            fragment_result["source"] = "generated"
+            if fragment_kind == "audio-cue":
+                fragment_result["cue"] = str(fragment.get("cue", "")).strip()
+            else:
+                fragment_result["duration_ms"] = int(fragment.get("duration_ms", 0) or 0)
+                fragment_result["purpose"] = str(fragment.get("purpose", "")).strip()
+        else:
+            fragment_result["tts"] = rendered_effective_config
+            fragment_result["provider"] = str(rendered_fragment.get("provider", "")).strip() or "openai"
+        fragment_results.append(fragment_result)
 
-    target_format = str(audio_config.get("format", "mp3")).strip().lower() or "mp3"
     if len(fragment_paths) == 1 and fragment_paths[0].suffix.lower().lstrip(".") == target_format:
         raw_audio = fragment_paths[0].read_bytes()
     else:
-        raw_audio = assemble_audio_fragments(fragment_paths, target_format, cache_root=fragment_root)
+        try:
+            silence_ms = int(audio_config.get("silence_ms", 350))
+        except Exception:
+            silence_ms = 350
+        fragment_kinds = [
+            str(fragment.get("kind", "")).strip().lower().replace("_", "-")
+            for fragment in fragments
+        ]
+        boundary_silence_ms = [
+            0 if "pause" in {fragment_kinds[index], fragment_kinds[index + 1]} else silence_ms
+            for index in range(max(0, len(fragment_kinds) - 1))
+        ]
+        raw_audio = assemble_audio_fragments(
+            fragment_paths,
+            target_format,
+            cache_root=fragment_root,
+            silence_ms=silence_ms,
+            boundary_silence_ms=boundary_silence_ms,
+        )
     if not raw_audio:
         raise RuntimeError(f"Audio assembly returned empty output for novena '{episode_id}'.")
     loudness_settings = _normalize_loudness_config(audio_config.get("loudness_normalization"))
