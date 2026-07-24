@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.3.9.1] - 2026-07-24
+
+### Changed
+- Replaced the OpenAI text-to-speech `alloy` voice with the approved `ash` voice across publish contracts, novena contracts, runtime fallbacks, authoring/setup helpers, documentation, and regression coverage.
+- Preserved provider routing, `gpt-4o-mini-tts`, audio format and speed, role-specific voices, ElevenLabs settings, devotional wording, and voice-aware cache invalidation.
+
 ## [0.3.9.0] - 2026-07-24
 
 ### Added
