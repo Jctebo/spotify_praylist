@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
@@ -13,13 +14,33 @@ from jobs.novena.liturgical_helpers import celebration_name, infer_celebration_r
 from jobs.publish.daily_intro import OAI_MODEL, _normalize_whitespace, _resolve_openai_settings, fetch_daily_gospel_context
 
 
-MAX_REFLECTION_CHARS = 650
-FEAST_RANKS = frozenset({"solemnity", "feast", "memorial", "optional_memorial"})
-SOURCE_GENERATED_FEAST = "generated_feast"
-SOURCE_GENERATED_GOSPEL = "generated_gospel"
-SOURCE_GENERATED_SEASON = "generated_season"
-SOURCE_FALLBACK_FEAST = "fallback_feast"
-SOURCE_FALLBACK_GENERIC = "fallback_generic"
+MAJOR_RANKS = frozenset({"solemnity", "feast"})
+MEMORIAL_RANKS = frozenset({"memorial", "optional_memorial"})
+EASTER_OCTAVE_RANK = "solemnity_easter_octave"
+APPROVED_HUMAN_NEED_CATEGORIES = (
+    "families",
+    "church",
+    "conversion",
+    "peace",
+    "suffering",
+    "poor_and_vulnerable",
+    "dead",
+    "vocations",
+    "leaders",
+    "personal_needs",
+)
+INTRO_MIN_CHARS = 120
+INTRO_MAX_CHARS = 700
+OVERALL_INTENTION_MIN_CHARS = 60
+OVERALL_INTENTION_MAX_CHARS = 400
+DECADE_INTENTION_MIN_CHARS = 40
+DECADE_INTENTION_MAX_CHARS = 280
+REFLECTION_MIN_CHARS = 120
+REFLECTION_MAX_CHARS = 650
+SOURCE_GENERATED_STRUCTURED = "generated_structured"
+SOURCE_GENERATED_JSON = "generated_json"
+SOURCE_FALLBACK_DETERMINISTIC = "fallback_deterministic"
+DEFAULT_TEMPERATURE = 0.65
 
 
 @dataclass(frozen=True)
@@ -30,20 +51,12 @@ class RosaryMystery:
 
 
 @dataclass(frozen=True)
-class RosaryReflectionSet:
-    mystery_set_title: str
-    mysteries: tuple[RosaryMystery, ...]
-    reflections: tuple[str, ...]
+class RosaryPriority:
+    key: str
     source: str
-    day_context: "RosaryDayContext"
-    fallback_reason: str = ""
-
-
-@dataclass(frozen=True)
-class RosaryReflectionResult:
-    reflections: tuple[str, ...]
-    source: str
-    fallback_reason: str = ""
+    title: str
+    prompt_context: str
+    anchors: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -51,12 +64,16 @@ class RosaryDayContext:
     date: Any
     mystery_set_title: str
     mysteries: tuple[RosaryMystery, ...]
+    season_mode: str
+    priorities: tuple[RosaryPriority, ...]
+    dominant_priority: RosaryPriority
     focus_source: str
     focus_title: str
     focus_prompt_label: str
     celebration_clause: str
     season_label: str
     feast_names: tuple[str, ...]
+    memorial_names: tuple[str, ...]
     gospel_citation: str
     gospel_text: str
     calendar: str
@@ -70,13 +87,54 @@ class RosaryDayContext:
     shared_theme_version: str = ""
 
 
-class _StructuredRosaryReflection(BaseModel):
+@dataclass(frozen=True)
+class RosaryDecadeDevotional:
     number: int
+    mystery: RosaryMystery
+    human_need_category: str
+    intention: str
     reflection: str
 
 
-class _StructuredRosaryReflectionResponse(BaseModel):
-    reflections: list[_StructuredRosaryReflection]
+@dataclass(frozen=True)
+class RosaryDevotionalSet:
+    mystery_set_title: str
+    mysteries: tuple[RosaryMystery, ...]
+    introduction: str
+    overall_intention: str
+    decades: tuple[RosaryDecadeDevotional, ...]
+    source: str
+    day_context: RosaryDayContext
+    fallback_reason: str = ""
+
+    @property
+    def reflections(self) -> tuple[str, ...]:
+        return tuple(decade.reflection for decade in self.decades)
+
+
+# Compatibility aliases for callers that still describe the package as a reflection set.
+RosaryReflectionSet = RosaryDevotionalSet
+
+
+@dataclass(frozen=True)
+class RosaryReflectionResult:
+    reflections: tuple[str, ...]
+    source: str
+    fallback_reason: str = ""
+
+
+class _StructuredRosaryDecade(BaseModel):
+    number: int
+    human_need_category: str
+    intention: str
+    reflection: str
+
+
+class _StructuredRosaryDevotionalResponse(BaseModel):
+    dominant_priority_key: str
+    introduction: str
+    overall_intention: str
+    decades: list[_StructuredRosaryDecade]
 
 
 def parse_rosary_mysteries(text: str) -> tuple[str, tuple[RosaryMystery, ...]]:
@@ -90,176 +148,15 @@ def parse_rosary_mysteries(text: str) -> tuple[str, tuple[RosaryMystery, ...]]:
         match = pattern.match(line)
         if not match:
             continue
-        number = int(match.group(1))
         mystery_title = _normalize_whitespace(match.group(2))
         fruit = _normalize_whitespace(match.group(3))
         if mystery_title and fruit:
-            mysteries.append(RosaryMystery(number=number, title=mystery_title, fruit=fruit))
+            mysteries.append(RosaryMystery(number=int(match.group(1)), title=mystery_title, fruit=fruit))
     if len(mysteries) != 5:
         raise RuntimeError(f"Rosary mystery template '{title}' must contain exactly 5 mystery rows, got {len(mysteries)}.")
-    expected = list(range(1, 6))
-    actual = [mystery.number for mystery in mysteries]
-    if actual != expected:
+    if [mystery.number for mystery in mysteries] != list(range(1, 6)):
         raise RuntimeError(f"Rosary mystery template '{title}' must number mysteries 1 through 5 in order.")
     return title, tuple(mysteries)
-
-
-def fallback_rosary_reflections(mysteries: Sequence[RosaryMystery], season: Optional[str] = None) -> tuple[str, ...]:
-    season_label = _season_label(season)
-    normalized_season = season_label.strip().lower()
-    reflections = []
-    for mystery in mysteries:
-        fruit = mystery.fruit.lower()
-        if normalized_season == "easter season":
-            reflection = (
-                f"{mystery.title} shows the light of the risen Christ breaking into ordinary fear and waiting. "
-                f"In this Easter season, the mystery of {mystery.title} teaches us to recognize hope where God is already at work. "
-                f"The fruit of this mystery is {fruit}, the grace that lets the heart answer God with trust. "
-                f"As we pray {mystery.title}, we ask for {fruit} to take root in this decade and in our day."
-            )
-        else:
-            reflection = (
-                f"{mystery.title} places before us a concrete moment in the life of Jesus and Mary. "
-                f"In {season_label}, the mystery of {mystery.title} teaches us to meet grace in the steady duties of the day. "
-                f"The fruit of this mystery is {fruit}, the grace that shapes how we listen, choose, and love. "
-                f"As we pray {mystery.title}, we ask for {fruit} to become visible in this decade and in our daily life."
-            )
-        reflections.append(reflection)
-    return tuple(reflections)
-
-
-def fallback_feast_rosary_reflections(mysteries: Sequence[RosaryMystery], focus: RosaryDayContext) -> tuple[str, ...]:
-    feast_label = focus.focus_prompt_label or "today's feast"
-    season_label = focus.season_label or "the liturgical season"
-    gospel_bridge = focus.shared_gospel_bridge or (f"today's Gospel, {focus.gospel_citation}" if focus.gospel_citation else "today's Gospel")
-    shared_focus = focus.shared_theme_title or focus.focus_title or "today's grace"
-    reflections = []
-    for mystery in mysteries:
-        fruit = mystery.fruit.lower()
-        reflection = (
-            f"{mystery.title} draws this decade into {feast_label}. "
-            f"As the Church keeps this celebration in {season_label}, {gospel_bridge} and today's focus of {shared_focus} teach us to receive the day through Christ. "
-            f"The fruit of this mystery is {fruit}, the grace that lets this feast shape how we listen, choose, and love. "
-            f"As we pray {mystery.title}, we ask for {fruit} to become visible in this decade and in our life today."
-        )
-        reflections.append(reflection)
-    return tuple(reflections)
-
-
-def fallback_gospel_theme_rosary_reflections(mysteries: Sequence[RosaryMystery], focus: RosaryDayContext) -> tuple[str, ...]:
-    gospel_bridge = focus.shared_gospel_bridge or (f"today's Gospel, {focus.gospel_citation}" if focus.gospel_citation else "today's Gospel")
-    shared_focus = focus.shared_theme_title or focus.focus_title or "today's grace"
-    shared_explanation = focus.shared_theme_explanation or focus.shared_theme_reflection_focus
-    reflections = []
-    for mystery in mysteries:
-        fruit = mystery.fruit.lower()
-        explanation = f" {shared_explanation}" if shared_explanation else ""
-        reflection = (
-            f"{mystery.title} is prayed in the light of {gospel_bridge}. "
-            f"Today's focus of {shared_focus} helps this mystery become a school of {fruit}.{explanation} "
-            f"As we pray this decade, we ask the Lord to let {fruit} shape how we listen, choose, and love today."
-        )
-        reflections.append(reflection)
-    return tuple(reflections)
-
-
-def validate_rosary_reflections(raw: Any, mysteries: Sequence[RosaryMystery]) -> tuple[str, ...]:
-    if isinstance(raw, _StructuredRosaryReflectionResponse):
-        lines = [_normalize_reflection_line(item.reflection) for item in raw.reflections]
-    elif isinstance(raw, dict) and isinstance(raw.get("reflections"), list):
-        lines = [_normalize_reflection_line(_reflection_text_from_item(item)) for item in raw.get("reflections") or []]
-    elif isinstance(raw, str):
-        lines = [_normalize_reflection_line(line) for line in raw.splitlines()]
-    else:
-        lines = [_normalize_reflection_line(_reflection_text_from_item(line)) for line in list(raw or [])]
-    cleaned = [line for line in lines if line]
-    if len(cleaned) != len(mysteries):
-        raise RuntimeError(f"Rosary reflection generation must return exactly {len(mysteries)} reflections, got {len(cleaned)}.")
-    for index, reflection in enumerate(cleaned, start=1):
-        if len(reflection) > MAX_REFLECTION_CHARS:
-            raise RuntimeError(f"Rosary reflection {index} is too long.")
-    return tuple(cleaned)
-
-
-def build_rosary_reflection_result(
-    date_value,
-    mysteries: Sequence[RosaryMystery],
-    *,
-    calendar: Optional[str] = None,
-    locale: Optional[str] = None,
-    prompt_model: Optional[str] = None,
-    allow_missing_gospel: bool = True,
-    season: Optional[str] = None,
-    day_context: Optional[RosaryDayContext] = None,
-) -> RosaryReflectionResult:
-    model = str(prompt_model or os.getenv(OAI_MODEL, "") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
-    context = day_context or build_rosary_day_context(
-        date_value,
-        "",
-        mysteries=mysteries,
-        calendar=calendar,
-        locale=locale,
-        allow_missing_gospel=allow_missing_gospel,
-        season=season,
-    )
-
-    if context.focus_source == "feast":
-        prompt = _build_feast_prompt(date_value, context, mysteries)
-        try:
-            rendered = _call_openai_reflections(model, prompt)
-            return RosaryReflectionResult(
-                reflections=validate_rosary_reflections(rendered, mysteries),
-                source=SOURCE_GENERATED_FEAST,
-            )
-        except Exception as exc:
-            print(f"WARN rosary_reflections feast_generation_invalid detail={exc}; using feast_fallback", file=sys.stderr)
-            return RosaryReflectionResult(
-                reflections=validate_rosary_reflections(fallback_feast_rosary_reflections(mysteries, context), mysteries),
-                source=SOURCE_FALLBACK_FEAST,
-                fallback_reason=str(exc),
-            )
-
-    if not str(context.gospel_text or "").strip():
-        print("INFO rosary_reflections missing_gospel_text; trying season_only_generation", file=sys.stderr)
-        return _build_seasonal_or_generic_reflection_result(date_value, mysteries, model=model, season=context.season_label or season)
-
-    prompt = _build_prompt_from_day_context(date_value, context, mysteries)
-    try:
-        rendered = _call_openai_reflections(model, prompt)
-        return RosaryReflectionResult(
-            reflections=validate_rosary_reflections(rendered, mysteries),
-            source=SOURCE_GENERATED_GOSPEL,
-        )
-    except Exception as exc:
-        print(f"WARN rosary_reflections gospel_generation_invalid detail={exc}; using gospel_theme_fallback", file=sys.stderr)
-        return RosaryReflectionResult(
-            reflections=validate_rosary_reflections(fallback_gospel_theme_rosary_reflections(mysteries, context), mysteries),
-            source=SOURCE_FALLBACK_GENERIC,
-            fallback_reason=str(exc),
-        )
-
-
-def build_rosary_reflections(
-    date_value,
-    mysteries: Sequence[RosaryMystery],
-    *,
-    calendar: Optional[str] = None,
-    locale: Optional[str] = None,
-    prompt_model: Optional[str] = None,
-    allow_missing_gospel: bool = True,
-    season: Optional[str] = None,
-    day_context: Optional[RosaryDayContext] = None,
-) -> tuple[str, ...]:
-    return build_rosary_reflection_result(
-        date_value,
-        mysteries=mysteries,
-        calendar=calendar,
-        locale=locale,
-        prompt_model=prompt_model,
-        allow_missing_gospel=allow_missing_gospel,
-        season=season,
-        day_context=day_context,
-    ).reflections
 
 
 def build_rosary_day_context(
@@ -291,63 +188,69 @@ def build_rosary_day_context(
             allow_missing_gospel=allow_missing_gospel,
         )
     except Exception as exc:
-        print(f"WARN rosary_reflections gospel_context_unavailable detail={exc}", file=sys.stderr)
+        print(f"WARN rosary_devotional gospel_context_unavailable detail={exc}", file=sys.stderr)
+
     rows: Sequence[Any] = []
     try:
         rows = romcal_fetch_day(effective_calendar, effective_locale, date_value)
     except Exception as exc:
-        print(f"WARN rosary_focus romcal_unavailable detail={exc}", file=sys.stderr)
+        print(f"WARN rosary_devotional romcal_unavailable detail={exc}", file=sys.stderr)
 
-    feast_names = _feast_names(rows)
-    season_label = _season_label_from_rows(rows) or (_season_label(season) if str(season or "").strip() else "")
+    shared = dict(shared_theme or {})
+    shared_season = shared.get("liturgicalSeason") or shared.get("liturgical_season")
+    season_label = _season_label_from_rows(rows) or _season_label(shared_season) or _season_label(season)
+    season_mode = _season_mode(season_label)
+    major_names, memorial_names = _ranked_celebration_names(rows)
     celebration_clause = _normalize_whitespace(getattr(daily_context, "celebration_clause", ""))
     if not celebration_clause:
         celebration_clause = _join_with_and(_celebration_names(rows))
     gospel_text = str(getattr(daily_context, "gospel_text", "") or "").strip()
     gospel_citation = _normalize_whitespace(getattr(daily_context, "gospel_citation", ""))
 
-    if feast_names:
-        focus_source = "feast"
-        focus_title = ", ".join(feast_names)
-        focus_prompt_label = f"the feast of {_join_with_and(feast_names)}"
-    elif gospel_text:
-        focus_source = "gospel"
-        focus_title = "Today's Gospel"
-        focus_prompt_label = "today's Gospel"
-        if gospel_citation:
-            focus_prompt_label = f"today's Gospel, {gospel_citation}"
-    elif season_label:
-        focus_source = "season"
-        focus_title = season_label
-        focus_prompt_label = f"the {season_label}"
-    else:
-        focus_source = "fruit"
-        focus_title = "Mystery Fruits"
-        focus_prompt_label = "the fruit of each mystery"
+    available = _available_priorities(
+        season_mode=season_mode,
+        season_label=season_label,
+        major_names=major_names,
+        memorial_names=memorial_names,
+        gospel_citation=gospel_citation,
+        gospel_text=gospel_text,
+    )
+    ordered_keys = {
+        "ordinary": ("major-celebration", "gospel", "memorial", "ordinary-time", "mystery-fruits"),
+        "nonordinary": ("major-celebration", "season", "gospel", "memorial", "mystery-fruits"),
+        "unknown": ("major-celebration", "gospel", "memorial", "mystery-fruits"),
+    }[season_mode]
+    priorities = tuple(available[key] for key in ordered_keys if key in available)
+    dominant = priorities[0]
 
-    shared = dict(shared_theme or {})
     shared_title = _normalize_whitespace(shared.get("sharedThemeTitle") or shared.get("daily_theme_title"))
     shared_explanation = _normalize_whitespace(shared.get("sharedThemeExplanation") or shared.get("daily_theme_explanation"))
-    shared_reflection_focus = _normalize_whitespace(shared.get("sharedThemeReflectionFocus") or shared.get("daily_theme_reflection_focus"))
+    shared_reflection_focus = _normalize_whitespace(
+        shared.get("sharedThemeReflectionFocus") or shared.get("daily_theme_reflection_focus")
+    )
     shared_transition = _normalize_whitespace(shared.get("sharedThemeTransition") or shared.get("daily_theme_transition"))
     shared_gospel_bridge = _normalize_whitespace(shared.get("sharedGospelBridge") or shared.get("daily_gospel_bridge"))
-    shared_sources = tuple(dict(item) for item in (shared.get("sharedThemeSources") or shared.get("daily_theme_sources") or ()) if isinstance(item, dict))
+    shared_sources = tuple(
+        dict(item)
+        for item in (shared.get("sharedThemeSources") or shared.get("daily_theme_sources") or ())
+        if isinstance(item, dict)
+    )
     shared_version = _normalize_whitespace(shared.get("sharedThemeVersion") or shared.get("daily_theme_version"))
-    if shared_title:
-        focus_title = shared_title
-    if shared_reflection_focus:
-        focus_prompt_label = shared_reflection_focus
 
     return RosaryDayContext(
         date=date_value,
         mystery_set_title=parsed_title,
         mysteries=tuple(parsed_mysteries),
-        focus_source=focus_source,
-        focus_title=focus_title,
-        focus_prompt_label=focus_prompt_label,
+        season_mode=season_mode,
+        priorities=priorities,
+        dominant_priority=dominant,
+        focus_source=dominant.source,
+        focus_title=dominant.title,
+        focus_prompt_label=dominant.prompt_context,
         celebration_clause=celebration_clause,
         season_label=season_label,
-        feast_names=tuple(feast_names),
+        feast_names=major_names,
+        memorial_names=memorial_names,
         gospel_citation=gospel_citation,
         gospel_text=gospel_text,
         calendar=effective_calendar,
@@ -362,20 +265,21 @@ def build_rosary_day_context(
     )
 
 
-def build_rosary_reflection_set(
+def build_rosary_devotional_set(
     date_value,
     mystery_text: str,
     *,
     calendar: Optional[str] = None,
     locale: Optional[str] = None,
     prompt_model: Optional[str] = None,
+    temperature: float = DEFAULT_TEMPERATURE,
     allow_missing_gospel: bool = True,
     season: Optional[str] = None,
     day_context: Optional[RosaryDayContext] = None,
     shared_theme: Optional[Mapping[str, Any]] = None,
-) -> RosaryReflectionSet:
+) -> RosaryDevotionalSet:
     title, mysteries = parse_rosary_mysteries(mystery_text)
-    day_context = day_context or build_rosary_day_context(
+    context = day_context or build_rosary_day_context(
         date_value,
         mystery_text,
         calendar=calendar,
@@ -384,24 +288,82 @@ def build_rosary_reflection_set(
         season=season,
         shared_theme=shared_theme,
     )
-    result = build_rosary_reflection_result(
+    context = _ensure_priority_context(context)
+    model = str(prompt_model or os.getenv(OAI_MODEL, "") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
+    prompt = _build_devotional_prompt(date_value, context)
+    failures: list[str] = []
+
+    try:
+        raw = _call_openai_structured(model, prompt, temperature=temperature)
+        return _devotional_from_validated(
+            validate_rosary_devotional_response(raw, context),
+            title=title,
+            mysteries=mysteries,
+            context=context,
+            source=SOURCE_GENERATED_STRUCTURED,
+        )
+    except Exception as exc:
+        failures.append(f"structured: {exc}")
+        print(f"WARN rosary_devotional structured_generation_invalid detail={exc}; trying_json", file=sys.stderr)
+
+    try:
+        raw = _call_openai_json(model, prompt, temperature=temperature)
+        return _devotional_from_validated(
+            validate_rosary_devotional_response(raw, context),
+            title=title,
+            mysteries=mysteries,
+            context=context,
+            source=SOURCE_GENERATED_JSON,
+        )
+    except Exception as exc:
+        failures.append(f"json: {exc}")
+        print(f"WARN rosary_devotional json_generation_invalid detail={exc}; using_atomic_fallback", file=sys.stderr)
+
+    return _deterministic_devotional_set(
+        date_value,
+        title,
+        mysteries,
+        context,
+        fallback_reason="; ".join(failures),
+    )
+
+
+def build_rosary_reflection_set(date_value, mystery_text: str, **kwargs: Any) -> RosaryDevotionalSet:
+    return build_rosary_devotional_set(date_value, mystery_text, **kwargs)
+
+
+def build_rosary_reflection_result(
+    date_value,
+    mysteries: Sequence[RosaryMystery],
+    *,
+    mystery_set_title: str = "Rosary Mysteries",
+    day_context: Optional[RosaryDayContext] = None,
+    **kwargs: Any,
+) -> RosaryReflectionResult:
+    mystery_text = _mystery_text(mystery_set_title, mysteries)
+    devotional = build_rosary_devotional_set(date_value, mystery_text, day_context=day_context, **kwargs)
+    return RosaryReflectionResult(
+        reflections=devotional.reflections,
+        source=devotional.source,
+        fallback_reason=devotional.fallback_reason,
+    )
+
+
+def build_rosary_reflections(
+    date_value,
+    mysteries: Sequence[RosaryMystery],
+    *,
+    mystery_set_title: str = "Rosary Mysteries",
+    day_context: Optional[RosaryDayContext] = None,
+    **kwargs: Any,
+) -> tuple[str, ...]:
+    return build_rosary_reflection_result(
         date_value,
         mysteries,
-        calendar=calendar,
-        locale=locale,
-        prompt_model=prompt_model,
-        allow_missing_gospel=allow_missing_gospel,
-        season=season,
+        mystery_set_title=mystery_set_title,
         day_context=day_context,
-    )
-    return RosaryReflectionSet(
-        mystery_set_title=title,
-        mysteries=mysteries,
-        reflections=result.reflections,
-        source=result.source,
-        day_context=day_context,
-        fallback_reason=result.fallback_reason,
-    )
+        **kwargs,
+    ).reflections
 
 
 def build_rosary_intro_text(
@@ -409,75 +371,578 @@ def build_rosary_intro_text(
     mystery_set_title: str,
     mysteries: Sequence[RosaryMystery],
     *,
-    calendar: Optional[str] = None,
-    locale: Optional[str] = None,
-    prompt_model: Optional[str] = None,
-    allow_missing_gospel: bool = True,
-    season: Optional[str] = None,
     day_context: Optional[RosaryDayContext] = None,
-    shared_theme: Optional[Mapping[str, Any]] = None,
+    **kwargs: Any,
 ) -> str:
-    model = str(prompt_model or os.getenv(OAI_MODEL, "") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
-    try:
-        context = day_context or build_rosary_day_context(
-            date_value,
-            "",
-            mystery_set_title=mystery_set_title,
-            mysteries=mysteries,
-            calendar=calendar,
-            locale=locale,
-            allow_missing_gospel=allow_missing_gospel,
-            season=season,
-            shared_theme=shared_theme,
+    mystery_text = _mystery_text(mystery_set_title, mysteries)
+    return build_rosary_devotional_set(date_value, mystery_text, day_context=day_context, **kwargs).introduction
+
+
+def validate_rosary_devotional_response(
+    raw: Any,
+    context: RosaryDayContext,
+) -> _StructuredRosaryDevotionalResponse:
+    if isinstance(raw, _StructuredRosaryDevotionalResponse):
+        parsed = raw
+    else:
+        payload = json.loads(raw) if isinstance(raw, str) else raw
+        parsed = _StructuredRosaryDevotionalResponse.model_validate(payload)
+
+    if parsed.dominant_priority_key != context.dominant_priority.key:
+        raise RuntimeError("Rosary devotional response returned the wrong dominant priority key.")
+    if len(parsed.decades) != 5:
+        raise RuntimeError(f"Rosary devotional response must contain exactly 5 decades, got {len(parsed.decades)}.")
+    if [item.number for item in parsed.decades] != [1, 2, 3, 4, 5]:
+        raise RuntimeError("Rosary devotional response must number decades 1 through 5 in order.")
+
+    introduction = _validated_prose("introduction", parsed.introduction, INTRO_MIN_CHARS, INTRO_MAX_CHARS)
+    overall = _validated_prose(
+        "overall intention",
+        parsed.overall_intention,
+        OVERALL_INTENTION_MIN_CHARS,
+        OVERALL_INTENTION_MAX_CHARS,
+    )
+    _reject_foreign_scripture_citations(f"{introduction} {overall}", context)
+    _require_dominant_anchor(f"{introduction} {overall}", context)
+
+    categories = [item.human_need_category for item in parsed.decades]
+    unknown = sorted(set(categories) - set(APPROVED_HUMAN_NEED_CATEGORIES))
+    if unknown:
+        raise RuntimeError(f"Rosary devotional response used unsupported human-need categories: {', '.join(unknown)}.")
+    if len(set(categories)) != 5:
+        raise RuntimeError("Rosary devotional response must use five distinct human-need categories.")
+
+    normalized_decades: list[_StructuredRosaryDecade] = []
+    for mystery, item in zip(context.mysteries, parsed.decades):
+        intention = _validated_prose(
+            f"decade {item.number} intention",
+            item.intention,
+            DECADE_INTENTION_MIN_CHARS,
+            DECADE_INTENTION_MAX_CHARS,
         )
-    except Exception as exc:
-        print(f"WARN rosary_intro context_unavailable detail={exc}; using fruit_focus", file=sys.stderr)
-        context = RosaryDayContext(
-            date=date_value,
-            mystery_set_title=mystery_set_title,
-            mysteries=tuple(mysteries),
-            calendar=str(calendar or "general_roman").strip() or "general_roman",
-            locale=str(locale or "en").strip() or "en",
-            celebration_clause="the liturgical day",
-            season_label=_season_label(season),
-            focus_source="fruit",
-            focus_title="Mystery Fruits",
-            focus_prompt_label="the fruit of each mystery",
-            feast_names=(),
-            gospel_citation="",
-            gospel_text="",
-            shared_theme_title=_normalize_whitespace((shared_theme or {}).get("sharedThemeTitle", "")),
-            shared_theme_explanation=_normalize_whitespace((shared_theme or {}).get("sharedThemeExplanation", "")),
-            shared_theme_reflection_focus=_normalize_whitespace((shared_theme or {}).get("sharedThemeReflectionFocus", "")),
-            shared_theme_transition=_normalize_whitespace((shared_theme or {}).get("sharedThemeTransition", "")),
-            shared_gospel_bridge=_normalize_whitespace((shared_theme or {}).get("sharedGospelBridge", "") or (shared_theme or {}).get("daily_gospel_bridge", "")),
-            shared_theme_sources=tuple(dict(item) for item in ((shared_theme or {}).get("sharedThemeSources") or ()) if isinstance(item, dict)),
-            shared_theme_version=_normalize_whitespace((shared_theme or {}).get("sharedThemeVersion", "")),
+        reflection = _validated_prose(
+            f"decade {item.number} reflection",
+            item.reflection,
+            REFLECTION_MIN_CHARS,
+            REFLECTION_MAX_CHARS,
         )
-    prompt = _build_intro_prompt(date_value, mystery_set_title, mysteries, context)
-    try:
-        rendered = _call_openai_text(
-            model,
-            prompt,
-            system="Return plain text only. Exactly three or four sentences. No markdown, no bullets, no commentary.",
-            temperature=0.3,
+        pair = f"{intention} {reflection}"
+        _reject_foreign_scripture_citations(pair, context)
+        _require_dominant_anchor(pair, context)
+        if not _contains_any(pair, (mystery.title, mystery.fruit)):
+            raise RuntimeError(f"Rosary decade {item.number} must mention its mystery title or fruit.")
+        normalized_decades.append(
+            _StructuredRosaryDecade(
+                number=item.number,
+                human_need_category=item.human_need_category,
+                intention=intention,
+                reflection=reflection,
+            )
         )
-        return _validate_rosary_intro(rendered)
-    except Exception as exc:
-        print(f"WARN rosary_intro using_deterministic_fallback detail={exc}", file=sys.stderr)
-        return _deterministic_rosary_intro(date_value, mystery_set_title, context)
+
+    return _StructuredRosaryDevotionalResponse(
+        dominant_priority_key=parsed.dominant_priority_key,
+        introduction=introduction,
+        overall_intention=overall,
+        decades=normalized_decades,
+    )
 
 
-def _normalize_reflection_line(value: Any) -> str:
-    line = _normalize_whitespace(value)
-    line = re.sub(r"^\s*(?:[-*]|\d+[\).])\s*", "", line).strip()
-    return line
+def validate_rosary_reflections(raw: Any, mysteries: Sequence[RosaryMystery]) -> tuple[str, ...]:
+    if isinstance(raw, str):
+        values = raw.splitlines()
+    elif isinstance(raw, dict):
+        values = raw.get("reflections") or ()
+    else:
+        values = raw or ()
+    cleaned: list[str] = []
+    for value in values:
+        text = value.get("reflection", "") if isinstance(value, dict) else getattr(value, "reflection", value)
+        normalized = re.sub(r"^\s*(?:[-*]|\d+[\).])\s*", "", _normalize_whitespace(text)).strip()
+        if normalized:
+            cleaned.append(normalized)
+    if len(cleaned) != len(mysteries):
+        raise RuntimeError(f"Rosary reflection generation must return exactly {len(mysteries)} reflections, got {len(cleaned)}.")
+    for index, reflection in enumerate(cleaned, start=1):
+        if len(reflection) > REFLECTION_MAX_CHARS:
+            raise RuntimeError(f"Rosary reflection {index} is too long.")
+    return tuple(cleaned)
 
 
-def _reflection_text_from_item(value: Any) -> str:
-    if isinstance(value, dict):
-        return str(value.get("reflection") or value.get("text") or value.get("value") or "").strip()
-    return str(getattr(value, "reflection", value) or "").strip()
+def fallback_rosary_reflections(
+    mysteries: Sequence[RosaryMystery],
+    season: Optional[str] = None,
+) -> tuple[str, ...]:
+    season_label = _season_label(season) or "the liturgical day"
+    return tuple(
+        (
+            f"{mystery.title} places a saving moment from the life of Jesus and Mary before us. "
+            f"Within {season_label}, its fruit of {mystery.fruit.lower()} teaches us to receive grace in ordinary duties. "
+            f"May this mystery shape how we listen, choose, and love as we carry its fruit into the needs of this day."
+        )
+        for mystery in mysteries
+    )
+
+
+def _available_priorities(
+    *,
+    season_mode: str,
+    season_label: str,
+    major_names: Sequence[str],
+    memorial_names: Sequence[str],
+    gospel_citation: str,
+    gospel_text: str,
+) -> dict[str, RosaryPriority]:
+    priorities: dict[str, RosaryPriority] = {}
+    if major_names:
+        title = _join_with_and(major_names)
+        priorities["major-celebration"] = RosaryPriority(
+            key="major-celebration",
+            source="major",
+            title=title,
+            prompt_context=f"the solemnity or feast of {title}",
+            anchors=tuple(major_names),
+        )
+    if season_mode == "nonordinary" and season_label:
+        priorities["season"] = RosaryPriority(
+            key="season",
+            source="season",
+            title=season_label,
+            prompt_context=f"the Church's prayer in {season_label}",
+            anchors=(season_label,),
+        )
+    if gospel_text:
+        gospel_title = f"Today's Gospel, {gospel_citation}" if gospel_citation else "Today's Gospel"
+        priorities["gospel"] = RosaryPriority(
+            key="gospel",
+            source="gospel",
+            title=gospel_title,
+            prompt_context=gospel_title,
+            anchors=tuple(value for value in ("today's Gospel", gospel_citation) if value),
+        )
+    if memorial_names:
+        title = _join_with_and(memorial_names)
+        priorities["memorial"] = RosaryPriority(
+            key="memorial",
+            source="memorial",
+            title=title,
+            prompt_context=f"the memorial of {title}",
+            anchors=tuple(memorial_names),
+        )
+    if season_mode == "ordinary":
+        priorities["ordinary-time"] = RosaryPriority(
+            key="ordinary-time",
+            source="ordinary",
+            title="Ordinary Time",
+            prompt_context="the steady discipleship of Ordinary Time",
+            anchors=("Ordinary Time",),
+        )
+    priorities["mystery-fruits"] = RosaryPriority(
+        key="mystery-fruits",
+        source="fruit",
+        title="Mystery Fruits",
+        prompt_context="the fruit of each mystery",
+        anchors=("mystery", "fruit"),
+    )
+    return priorities
+
+
+def _ensure_priority_context(context: Any) -> RosaryDayContext:
+    """Upgrade older test/provider context objects to the typed priority contract."""
+    if getattr(context, "dominant_priority", None) is not None and getattr(context, "priorities", None):
+        return context
+    source = str(getattr(context, "focus_source", "") or "").strip().lower()
+    title = str(getattr(context, "focus_title", "") or "").strip() or "Mystery Fruits"
+    prompt_context = str(getattr(context, "focus_prompt_label", "") or "").strip() or title
+    key_by_source = {
+        "feast": "major-celebration",
+        "major": "major-celebration",
+        "gospel": "gospel",
+        "memorial": "memorial",
+        "season": "season",
+        "ordinary": "ordinary-time",
+        "fruit": "mystery-fruits",
+    }
+    key = key_by_source.get(source, "mystery-fruits")
+    anchors = tuple(
+        value
+        for value in (
+            title,
+            getattr(context, "gospel_citation", "") if key == "gospel" else "",
+            "mystery" if key == "mystery-fruits" else "",
+        )
+        if str(value or "").strip()
+    )
+    dominant = RosaryPriority(
+        key=key,
+        source="major" if source == "feast" else source or "fruit",
+        title=title,
+        prompt_context=prompt_context,
+        anchors=anchors,
+    )
+    season_label = str(getattr(context, "season_label", "") or "").strip()
+    return RosaryDayContext(
+        date=getattr(context, "date", None),
+        mystery_set_title=str(getattr(context, "mystery_set_title", "") or "").strip(),
+        mysteries=tuple(getattr(context, "mysteries", ()) or ()),
+        season_mode=_season_mode(season_label),
+        priorities=(dominant,),
+        dominant_priority=dominant,
+        focus_source=dominant.source,
+        focus_title=dominant.title,
+        focus_prompt_label=dominant.prompt_context,
+        celebration_clause=str(getattr(context, "celebration_clause", "") or "").strip(),
+        season_label=season_label,
+        feast_names=tuple(getattr(context, "feast_names", ()) or ()),
+        memorial_names=tuple(getattr(context, "memorial_names", ()) or ()),
+        gospel_citation=str(getattr(context, "gospel_citation", "") or "").strip(),
+        gospel_text=str(getattr(context, "gospel_text", "") or "").strip(),
+        calendar=str(getattr(context, "calendar", "general_roman") or "general_roman"),
+        locale=str(getattr(context, "locale", "en") or "en"),
+        shared_theme_title=str(getattr(context, "shared_theme_title", "") or "").strip(),
+        shared_theme_explanation=str(getattr(context, "shared_theme_explanation", "") or "").strip(),
+        shared_theme_reflection_focus=str(
+            getattr(context, "shared_theme_reflection_focus", "") or ""
+        ).strip(),
+        shared_theme_transition=str(getattr(context, "shared_theme_transition", "") or "").strip(),
+        shared_gospel_bridge=str(getattr(context, "shared_gospel_bridge", "") or "").strip(),
+        shared_theme_sources=tuple(getattr(context, "shared_theme_sources", ()) or ()),
+        shared_theme_version=str(getattr(context, "shared_theme_version", "") or "").strip(),
+    )
+
+
+def _ranked_celebration_names(rows: Sequence[Any]) -> tuple[tuple[str, ...], tuple[str, ...]]:
+    major: list[str] = []
+    memorial: list[str] = []
+    seen: set[str] = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        rank = _normalized_rank(infer_celebration_rank(row))
+        name = _normalize_whitespace(celebration_name(row))
+        if not name or name.lower() in seen:
+            continue
+        target = major if rank in MAJOR_RANKS else memorial if rank in MEMORIAL_RANKS else None
+        if target is None or rank == EASTER_OCTAVE_RANK:
+            continue
+        seen.add(name.lower())
+        target.append(name)
+    return tuple(major), tuple(memorial)
+
+
+def _normalized_rank(value: Any) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", str(value or "").strip().lower()).strip("_")
+
+
+def _celebration_names(rows: Sequence[Any]) -> tuple[str, ...]:
+    names: list[str] = []
+    seen: set[str] = set()
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        name = _normalize_whitespace(celebration_name(row))
+        if name and name.lower() not in seen:
+            seen.add(name.lower())
+            names.append(name)
+    return tuple(names)
+
+
+def _season_label_from_rows(rows: Sequence[Any]) -> str:
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        label = _season_label(row.get("season") or row.get("season_name"))
+        if label:
+            return label
+    return ""
+
+
+def _season_label(value: Any) -> str:
+    raw_value = getattr(value, "value", value)
+    raw = str(raw_value or "").strip()
+    if raw.startswith("Season."):
+        raw = raw.split(".", 1)[1]
+    normalized = re.sub(r"[_-]+", " ", raw).strip().lower()
+    aliases = {
+        "ordinary": "Ordinary Time",
+        "ordinary time": "Ordinary Time",
+        "advent": "Advent",
+        "advent season": "Advent",
+        "christmas": "Christmas season",
+        "christmas time": "Christmas season",
+        "christmas season": "Christmas season",
+        "christmastide": "Christmas season",
+        "lent": "Lent",
+        "lenten season": "Lent",
+        "holy week": "Holy Week",
+        "easter": "Easter season",
+        "easter time": "Easter season",
+        "easter season": "Easter season",
+    }
+    if normalized in aliases:
+        return aliases[normalized]
+    return normalized.title() if normalized else ""
+
+
+def _season_mode(season_label: str) -> str:
+    if season_label == "Ordinary Time":
+        return "ordinary"
+    return "nonordinary" if season_label else "unknown"
+
+
+def _build_devotional_prompt(date_value, context: RosaryDayContext) -> str:
+    priority_lines = "\n".join(
+        f"{index}. key={priority.key}; source={priority.source}; title={priority.title}; context={priority.prompt_context}"
+        for index, priority in enumerate(context.priorities, start=1)
+    )
+    mystery_lines = "\n".join(
+        f"{mystery.number}. {mystery.title} - fruit: {mystery.fruit}" for mystery in context.mysteries
+    )
+    categories = ", ".join(APPROVED_HUMAN_NEED_CATEGORIES)
+    supporting = "\n".join(
+        line
+        for line in (
+            f"Shared daily theme: {context.shared_theme_title}" if context.shared_theme_title else "",
+            f"Shared explanation: {context.shared_theme_explanation}" if context.shared_theme_explanation else "",
+            f"Gospel bridge: {context.shared_gospel_bridge}" if context.shared_gospel_bridge else "",
+        )
+        if line
+    )
+    return f"""
+Create one coherent Catholic Rosary devotional package for {date_value.isoformat()}.
+
+The dominant priority is {context.dominant_priority.key}: {context.dominant_priority.prompt_context}.
+It must shape the introduction, overall intention, and all five decade intention/reflection pairs.
+Lower priorities may support it naturally but must never displace it.
+Use varied, prayerful language. Do not force a sentence count or a stock opening phrase.
+Use only the supplied liturgical facts. Do not invent biographies, events, quotations, citations, or Gospel details.
+Return plain prose inside the JSON fields, with no markdown, headings, or production commentary.
+
+Ordered priorities:
+{priority_lines}
+
+Liturgical day: {context.celebration_clause or "not supplied"}
+Season: {context.season_label or "not supplied"}
+Gospel citation: {context.gospel_citation or "not supplied"}
+Gospel text:
+{context.gospel_text or "not supplied"}
+{supporting}
+
+Mysteries:
+{mystery_lines}
+
+Requirements:
+- dominant_priority_key must be exactly "{context.dominant_priority.key}".
+- introduction: {INTRO_MIN_CHARS}-{INTRO_MAX_CHARS} characters and natural spoken welcome.
+- overall_intention: {OVERALL_INTENTION_MIN_CHARS}-{OVERALL_INTENTION_MAX_CHARS} characters.
+- exactly five numbered decades in order.
+- each decade uses one distinct human_need_category from: {categories}.
+- each intention is {DECADE_INTENTION_MIN_CHARS}-{DECADE_INTENTION_MAX_CHARS} characters.
+- each reflection is {REFLECTION_MIN_CHARS}-{REFLECTION_MAX_CHARS} characters.
+- every decade pair applies the same dominant priority through that decade's mystery or fruit.
+""".strip()
+
+
+def _call_openai_structured(model: str, prompt: str, *, temperature: float) -> Any:
+    api_key, base_url, resolved_model = _resolve_openai_settings(model=model)
+    if not api_key:
+        raise RuntimeError("Missing OpenAI API key for Rosary devotional generation.")
+    client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
+    response = client.responses.parse(
+        model=resolved_model or model,
+        temperature=temperature,
+        input=[
+            {
+                "role": "system",
+                "content": [{"type": "input_text", "text": "Return the requested Rosary package using the supplied schema."}],
+            },
+            {"role": "user", "content": [{"type": "input_text", "text": prompt}]},
+        ],
+        text_format=_StructuredRosaryDevotionalResponse,
+    )
+    parsed = getattr(response, "output_parsed", None)
+    if parsed is not None:
+        return parsed
+    refusal = _response_refusal(response)
+    if refusal:
+        raise RuntimeError(f"Rosary devotional generation was refused: {refusal}")
+    raise RuntimeError("Rosary devotional structured generation returned no parsed output.")
+
+
+def _call_openai_json(model: str, prompt: str, *, temperature: float) -> str:
+    api_key, base_url, resolved_model = _resolve_openai_settings(model=model)
+    if not api_key:
+        raise RuntimeError("Missing OpenAI API key for Rosary devotional generation.")
+    client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
+    response = client.responses.create(
+        model=resolved_model or model,
+        temperature=temperature,
+        input=[
+            {
+                "role": "system",
+                "content": [{
+                    "type": "input_text",
+                    "text": (
+                        "Return one JSON object only with keys dominant_priority_key, introduction, "
+                        "overall_intention, and decades. Each decade has number, human_need_category, "
+                        "intention, and reflection. No markdown."
+                    ),
+                }],
+            },
+            {"role": "user", "content": [{"type": "input_text", "text": prompt}]},
+        ],
+    )
+    text = str(getattr(response, "output_text", "") or "").strip()
+    if not text:
+        refusal = _response_refusal(response)
+        if refusal:
+            raise RuntimeError(f"Rosary devotional generation was refused: {refusal}")
+        raise RuntimeError("Rosary devotional JSON generation returned empty text.")
+    return text
+
+
+def _response_refusal(response: Any) -> str:
+    for item in getattr(response, "output", ()) or ():
+        for content in getattr(item, "content", ()) or ():
+            if getattr(content, "type", "") == "refusal":
+                return _normalize_whitespace(getattr(content, "refusal", "") or getattr(content, "text", ""))
+    return ""
+
+
+def _devotional_from_validated(
+    parsed: _StructuredRosaryDevotionalResponse,
+    *,
+    title: str,
+    mysteries: Sequence[RosaryMystery],
+    context: RosaryDayContext,
+    source: str,
+    fallback_reason: str = "",
+) -> RosaryDevotionalSet:
+    decades = tuple(
+        RosaryDecadeDevotional(
+            number=item.number,
+            mystery=mystery,
+            human_need_category=item.human_need_category,
+            intention=item.intention,
+            reflection=item.reflection,
+        )
+        for mystery, item in zip(mysteries, parsed.decades)
+    )
+    return RosaryDevotionalSet(
+        mystery_set_title=title,
+        mysteries=tuple(mysteries),
+        introduction=parsed.introduction,
+        overall_intention=parsed.overall_intention,
+        decades=decades,
+        source=source,
+        day_context=context,
+        fallback_reason=fallback_reason,
+    )
+
+
+def _deterministic_devotional_set(
+    date_value,
+    title: str,
+    mysteries: Sequence[RosaryMystery],
+    context: RosaryDayContext,
+    *,
+    fallback_reason: str,
+) -> RosaryDevotionalSet:
+    anchor = context.dominant_priority.anchors[0]
+    date_display = date_value.strftime("%A, %B %d, %Y").replace(" 0", " ")
+    introduction = (
+        f"On {date_display}, we bring the {title} into {anchor}. "
+        f"Each mystery gives us a different way to receive this grace, while the whole Rosary remains centered on one prayerful focus. "
+        "With Mary, let us listen for Christ and carry the needs of the Church and the world before him."
+    )
+    overall = (
+        f"We offer this Rosary for the grace revealed through {anchor}, asking that it renew our faith "
+        "and guide the intentions we place before the Lord in every decade."
+    )
+    categories = APPROVED_HUMAN_NEED_CATEGORIES[:5]
+    applications = (
+        "families seeking patience and faithful love",
+        "the Church in her mission of prayer and service",
+        "hearts in need of conversion and reconciliation",
+        "all who long for peace amid fear or division",
+        "those carrying illness, grief, or hidden suffering",
+    )
+    decades: list[_StructuredRosaryDecade] = []
+    for mystery, category, application in zip(mysteries, categories, applications):
+        intention = (
+            f"Through {anchor}, we pray this decade for {application}, that the fruit of "
+            f"{mystery.fruit.lower()} may strengthen them."
+        )
+        reflection = (
+            f"In {mystery.title}, we contemplate Christ's grace through {anchor}. "
+            f"The fruit of {mystery.fruit.lower()} shows how this same focus can enter concrete choices, relationships, and burdens. "
+            "As the decade unfolds, may this mystery teach us to receive that grace and offer it for the needs entrusted to our prayer."
+        )
+        decades.append(
+            _StructuredRosaryDecade(
+                number=mystery.number,
+                human_need_category=category,
+                intention=intention,
+                reflection=reflection,
+            )
+        )
+    parsed = validate_rosary_devotional_response(
+        _StructuredRosaryDevotionalResponse(
+            dominant_priority_key=context.dominant_priority.key,
+            introduction=introduction,
+            overall_intention=overall,
+            decades=decades,
+        ),
+        context,
+    )
+    return _devotional_from_validated(
+        parsed,
+        title=title,
+        mysteries=mysteries,
+        context=context,
+        source=SOURCE_FALLBACK_DETERMINISTIC,
+        fallback_reason=fallback_reason,
+    )
+
+
+def _validated_prose(label: str, value: Any, minimum: int, maximum: int) -> str:
+    text = _normalize_whitespace(value)
+    if len(text) < minimum:
+        raise RuntimeError(f"Rosary {label} is too short.")
+    if len(text) > maximum:
+        raise RuntimeError(f"Rosary {label} is too long.")
+    if re.search(r"(^|\s)(?:```|#{1,6}\s|\*\*|[*-]\s)", text):
+        raise RuntimeError(f"Rosary {label} must not contain markdown.")
+    prompt_echoes = ("dominant_priority_key", "human_need_category", "requirements:", "return json")
+    if any(echo in text.lower() for echo in prompt_echoes):
+        raise RuntimeError(f"Rosary {label} contains prompt or schema commentary.")
+    return text
+
+
+def _require_dominant_anchor(text: str, context: RosaryDayContext) -> None:
+    if not _contains_any(text, context.dominant_priority.anchors):
+        raise RuntimeError(
+            f"Rosary devotional prose must anchor the dominant priority '{context.dominant_priority.key}'."
+        )
+
+
+def _reject_foreign_scripture_citations(text: str, context: RosaryDayContext) -> None:
+    citations = re.findall(r"\b(?:[1-3]\s*)?[A-Z][a-z]+\s+\d{1,3}:\d{1,3}(?:-\d{1,3})?\b", text)
+    if not citations:
+        return
+    allowed = _normalize_for_match(context.gospel_citation)
+    for citation in citations:
+        if not allowed or _normalize_for_match(citation) not in allowed:
+            raise RuntimeError(f"Rosary devotional prose introduced an unsupported Scripture citation: {citation}.")
+
+
+def _contains_any(text: str, values: Sequence[str]) -> bool:
+    normalized = _normalize_for_match(text)
+    return any(_normalize_for_match(value) in normalized for value in values if _normalize_for_match(value))
+
+
+def _normalize_for_match(value: Any) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", str(value or "").lower()).strip()
 
 
 def _join_with_and(items: Sequence[str]) -> str:
@@ -491,321 +956,6 @@ def _join_with_and(items: Sequence[str]) -> str:
     return ", ".join(cleaned[:-1]) + f", and {cleaned[-1]}"
 
 
-def _feast_names(rows: Sequence[Any]) -> tuple[str, ...]:
-    names: List[str] = []
-    seen: set[str] = set()
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        rank = infer_celebration_rank(row).strip().lower().replace("-", "_").replace(" ", "_")
-        if rank not in FEAST_RANKS:
-            continue
-        name = _normalize_whitespace(celebration_name(row))
-        if not name:
-            continue
-        key = name.lower()
-        if key in seen:
-            continue
-        seen.add(key)
-        names.append(name)
-    return tuple(names)
-
-
-def _celebration_names(rows: Sequence[Any]) -> tuple[str, ...]:
-    names: List[str] = []
-    seen: set[str] = set()
-    for row in rows:
-        if not isinstance(row, dict):
-            continue
-        name = _normalize_whitespace(celebration_name(row))
-        if not name:
-            continue
-        key = name.lower()
-        if key in seen:
-            continue
-        seen.add(key)
-        names.append(name)
-    return tuple(names)
-
-
-def _season_label_from_rows(rows: Sequence[Any]) -> str:
-    primary = rows[0] if rows and isinstance(rows[0], dict) else {}
-    value = primary.get("season") or primary.get("season_name")
-    raw = getattr(value, "value", value)
-    text = str(raw or "").strip()
-    if text.startswith("Season."):
-        text = text.split(".", 1)[1]
-    text = re.sub(r"[_-]+", " ", text).strip()
-    if not text:
-        return ""
-    if text.lower() == "easter time":
-        return "Easter season"
-    return text.title()
-
-
-def _season_label(season: Optional[str]) -> str:
-    raw = str(season or "").strip()
-    normalized = raw.lower().replace("_", " ").replace("-", " ")
-    if normalized in {"easter", "easter season", "easter time"}:
-        return "Easter season"
-    if normalized in {"ordinary", "ordinary time"}:
-        return "Ordinary Time"
-    if normalized in {"advent", "advent season"}:
-        return "Advent"
-    if normalized in {"christmas", "christmas season", "christmastide"}:
-        return "Christmas season"
-    if normalized in {"lent", "lenten season"}:
-        return "Lent"
-    if raw:
-        return raw[0].upper() + raw[1:]
-    return "Ordinary Time"
-
-
-def _reflection_style_rules() -> str:
-    return f"""
-Each line must:
-- Stay under {MAX_REFLECTION_CHARS} characters.
-- Be one paragraph of 4 sentences.
-- Describe what the mystery is in 1-2 sentences.
-- Describe the fruit of the mystery in 1 sentence.
-- Repeat the mystery title and the fruit naturally at least once in the reflection.
-- Be reverent, warm, and suitable for spoken prayer.
-- Return plain text only, with one reflection per line and no numbering.
-""".strip()
-
-
-def _build_prompt(date_value, context: Any, mysteries: Sequence[RosaryMystery]) -> str:
-    mystery_lines = "\n".join(f"{mystery.number}. {mystery.title} - {mystery.fruit}" for mystery in mysteries)
-    return f"""
-Write exactly five Catholic Rosary decade reflections, one line per mystery.
-
-{_reflection_style_rules()}
-
-Additional Gospel rule:
-- Connect the listed mystery and fruit to today's Gospel.
-- Avoid adding details not present in the Gospel text.
-
-Date: {date_value.isoformat()}
-Liturgical context: {getattr(context, "celebration_clause", "")}
-Gospel citation: {getattr(context, "gospel_citation", "")}
-Mysteries:
-{mystery_lines}
-
-Gospel text:
-{getattr(context, "gospel_text", "")}
-""".strip()
-
-
-def _build_prompt_from_day_context(date_value, context: RosaryDayContext, mysteries: Sequence[RosaryMystery]) -> str:
-    mystery_lines = "\n".join(f"{mystery.number}. {mystery.title} - {mystery.fruit}" for mystery in mysteries)
-    shared_explanation = f"\nShared daily focus: {context.shared_theme_explanation}" if context.shared_theme_explanation else ""
-    gospel_bridge = f"\nGospel bridge: {context.shared_gospel_bridge}" if context.shared_gospel_bridge else ""
-    return f"""
-Write exactly five Catholic Rosary decade reflections, one line per mystery.
-
-{_reflection_style_rules()}
-
-Additional Gospel rule:
-- Connect the listed mystery and fruit to {context.focus_prompt_label}, the Gospel bridge, and the shared daily focus.
-- Avoid adding details not present in the Gospel text.
-
-Date: {date_value.isoformat()}
-Liturgical context: {context.celebration_clause}
-Gospel citation: {context.gospel_citation}
-{shared_explanation}
-{gospel_bridge}
-Mysteries:
-{mystery_lines}
-
-Gospel text:
-{context.gospel_text}
-""".strip()
-
-
-def _build_feast_prompt(date_value, focus: RosaryDayContext, mysteries: Sequence[RosaryMystery]) -> str:
-    mystery_lines = "\n".join(f"{mystery.number}. {mystery.title} - {mystery.fruit}" for mystery in mysteries)
-    shared_explanation = f"\nShared daily focus: {focus.shared_theme_explanation}" if focus.shared_theme_explanation else ""
-    gospel_bridge = f"\nGospel bridge: {focus.shared_gospel_bridge}" if focus.shared_gospel_bridge else ""
-    return f"""
-Write exactly five Catholic Rosary decade reflections, one line per mystery.
-
-{_reflection_style_rules()}
-
-Additional feast day rule:
-- Today's highest priority focus is {focus.focus_prompt_label}; orient every reflection toward that celebration before using Gospel or seasonal themes.
-- Within that feast focus, connect each mystery and fruit to the Gospel bridge and shared daily focus when provided.
-- Do not invent biographical details about saints or feasts.
-
-Date: {date_value.isoformat()}
-Liturgical context: {focus.celebration_clause}
-Liturgical season: {focus.season_label}
-Gospel citation: {focus.gospel_citation}
-{shared_explanation}
-{gospel_bridge}
-Mysteries:
-{mystery_lines}
-
-Gospel text, if useful:
-{focus.gospel_text}
-""".strip()
-
-
-def _build_intro_prompt(
-    date_value,
-    mystery_set_title: str,
-    mysteries: Sequence[RosaryMystery],
-    focus: RosaryDayContext,
-) -> str:
-    mystery_lines = "\n".join(f"{mystery.number}. {mystery.title} - {mystery.fruit}" for mystery in mysteries)
-    shared_explanation = f"\nShared daily focus: {focus.shared_theme_explanation}" if focus.shared_theme_explanation else ""
-    gospel_bridge = f"\nGospel bridge: {focus.shared_gospel_bridge}" if focus.shared_gospel_bridge else ""
-    return f"""
-Write a three to four sentence introduction for a Catholic Rosary podcast.
-
-Rules:
-- Sentence 1 must announce the calendar day and liturgical season.
-- Sentence 2 must begin with "For today's rosary, we will focus on" and name this focus exactly: {focus.focus_prompt_label}.
-- When a Gospel bridge is provided, mention it as the reason this Rosary focus belongs to today's prayer.
-- Mention {mystery_set_title} naturally once.
-- Keep the tone reverent and suitable for spoken prayer.
-- Do not use markdown, bullets, or numbering.
-
-Date: {date_value.isoformat()}
-Liturgical day: {focus.celebration_clause or "the liturgical day"}
-Liturgical season: {focus.season_label or "the liturgical season"}
-Focus source: {focus.focus_source}
-{shared_explanation}
-{gospel_bridge}
-Mysteries:
-{mystery_lines}
-""".strip()
-
-
-def _validate_rosary_intro(text: str) -> str:
-    cleaned = _normalize_whitespace(text)
-    sentences = [part.strip() for part in re.split(r"(?<=[.!?])\s+", cleaned) if part.strip()]
-    if len(sentences) not in {3, 4}:
-        raise RuntimeError(f"Rosary intro must contain 3 or 4 sentences, got {len(sentences)}.")
-    if "liturgical season" not in sentences[0].lower() and "season" not in sentences[0].lower():
-        raise RuntimeError("Rosary intro first sentence must announce the liturgical season.")
-    if not sentences[1].lower().startswith("for today's rosary, we will focus on"):
-        raise RuntimeError("Rosary intro second sentence must announce today's rosary focus.")
-    return " ".join(sentences).strip()
-
-
-def _deterministic_rosary_intro(date_value, mystery_set_title: str, focus: RosaryDayContext) -> str:
-    date_display = date_value.strftime("%A, %B %d, %Y").replace(" 0", " ")
-    liturgical_day = focus.celebration_clause or "the liturgical day"
-    season_label = focus.season_label or "the liturgical season"
-    return (
-        f"Today is {date_display}, as the Church marks {liturgical_day} in {season_label}. "
-        f"For today's rosary, we will focus on {focus.focus_prompt_label}. "
-        f"{focus.shared_gospel_bridge + ' ' if focus.shared_gospel_bridge else ''}"
-        f"{focus.shared_theme_explanation + ' ' if focus.shared_theme_explanation else ''}"
-        f"As we pray the {mystery_set_title}, we ask the Lord to draw each mystery into the needs of this day."
-    )
-
-
-def _build_season_prompt(date_value, mysteries: Sequence[RosaryMystery], *, season: Optional[str] = None) -> str:
-    mystery_lines = "\n".join(f"{mystery.number}. {mystery.title} - {mystery.fruit}" for mystery in mysteries)
-    return f"""
-Write exactly five Catholic Rosary decade reflections, one line per mystery.
-
-{_reflection_style_rules()}
-
-Additional season rule:
-- Since Gospel text is unavailable, connect each mystery and fruit to the liturgical season instead.
-- Season: {_season_label(season)}.
-
-Date: {date_value.isoformat()}
-Mysteries:
-{mystery_lines}
-""".strip()
-
-
-def _build_seasonal_or_generic_reflection_result(
-    date_value,
-    mysteries: Sequence[RosaryMystery],
-    *,
-    model: str,
-    season: Optional[str] = None,
-    fallback_reason: str = "",
-) -> RosaryReflectionResult:
-    prompt = _build_season_prompt(date_value, mysteries, season=season)
-    try:
-        rendered = _call_openai_reflections(model, prompt)
-        return RosaryReflectionResult(
-            reflections=validate_rosary_reflections(rendered, mysteries),
-            source=SOURCE_GENERATED_SEASON,
-            fallback_reason=fallback_reason,
-        )
-    except Exception as exc:
-        print(f"WARN rosary_reflections using generic_fallback reason=season_generation_invalid detail={exc}", file=sys.stderr)
-        reason = "; ".join(part for part in (fallback_reason, str(exc)) if part)
-        return RosaryReflectionResult(
-            reflections=validate_rosary_reflections(fallback_rosary_reflections(mysteries, season=season), mysteries),
-            source=SOURCE_FALLBACK_GENERIC,
-            fallback_reason=reason,
-        )
-
-
-def _call_openai_reflections(model: str, prompt: str) -> Any:
-    api_key, base_url, resolved_model = _resolve_openai_settings(model=model)
-    if not api_key:
-        raise RuntimeError("Missing OpenAI API key for Rosary text generation.")
-    client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
-    user = _normalize_whitespace(prompt)
-    system = (
-        "Return JSON only. Provide exactly five reflections in order, one for each mystery. "
-        "Each item must include number and reflection."
-    )
-    try:
-        response = client.responses.parse(
-            model=resolved_model or model,
-            temperature=0.4,
-            input=[
-                {"role": "system", "content": [{"type": "input_text", "text": system}]},
-                {"role": "user", "content": [{"type": "input_text", "text": user}]},
-            ],
-            text_format=_StructuredRosaryReflectionResponse,
-        )
-        parsed = getattr(response, "output_parsed", None)
-        if parsed:
-            return parsed
-    except Exception as exc:
-        print(f"WARN rosary_reflections structured_generation_unavailable detail={exc}; trying plain_text", file=sys.stderr)
-
-    response = client.responses.create(
-        model=resolved_model or model,
-        temperature=0.4,
-        input=[
-            {
-                "role": "system",
-                "content": [{"type": "input_text", "text": "Return plain text only. Exactly five lines. No markdown, no bullets, no numbering, no commentary."}],
-            },
-            {"role": "user", "content": [{"type": "input_text", "text": user}]},
-        ],
-    )
-    text = str(getattr(response, "output_text", "") or "").strip()
-    if text:
-        return text
-    raise RuntimeError("Rosary reflection generation returned empty text.")
-
-
-def _call_openai_text(model: str, prompt: str, *, system: str, temperature: float) -> str:
-    api_key, base_url, resolved_model = _resolve_openai_settings(model=model)
-    if not api_key:
-        raise RuntimeError("Missing OpenAI API key for Rosary text generation.")
-    client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
-    response = client.responses.create(
-        model=resolved_model or model,
-        temperature=temperature,
-        input=[
-            {"role": "system", "content": [{"type": "input_text", "text": system}]},
-            {"role": "user", "content": [{"type": "input_text", "text": _normalize_whitespace(prompt)}]},
-        ],
-    )
-    text = str(getattr(response, "output_text", "") or "").strip()
-    if text:
-        return text
-    raise RuntimeError("Rosary reflection generation returned empty text.")
+def _mystery_text(title: str, mysteries: Sequence[RosaryMystery]) -> str:
+    rows = "\n".join(f"{item.number}. {item.title} - {item.fruit}" for item in mysteries)
+    return f"{title}\n{rows}\n"

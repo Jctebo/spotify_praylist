@@ -1,4 +1,5 @@
 import datetime
+import json
 import unittest
 from types import SimpleNamespace
 from unittest import mock
@@ -18,380 +19,219 @@ JOYFUL_TEXT = """Joyful Mysteries
 class TestPublishRosaryReflections(unittest.TestCase):
     def setUp(self):
         self.mod = load_module("jobs/publish/rosary_reflections.py")
+        self.date = datetime.date(2026, 6, 5)
+        self.gospel = SimpleNamespace(
+            celebration_clause="Friday of the Ninth Week in Ordinary Time",
+            gospel_citation="Mark 12:35-37",
+            gospel_text="Jesus taught in the temple.",
+        )
 
-    def test_parse_rosary_mysteries_reads_title_mysteries_and_fruits(self):
-        title, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
+    def _context(self, rows, *, season="", gospel=None, shared=None):
+        with mock.patch.object(
+            self.mod,
+            "fetch_daily_gospel_context",
+            return_value=self.gospel if gospel is None else gospel,
+        ), mock.patch.object(self.mod, "romcal_fetch_day", return_value=rows):
+            return self.mod.build_rosary_day_context(
+                self.date,
+                JOYFUL_TEXT,
+                season=season,
+                shared_theme=shared,
+            )
 
-        self.assertEqual(title, "Joyful Mysteries")
-        self.assertEqual(len(mysteries), 5)
-        self.assertEqual(mysteries[0].number, 1)
-        self.assertEqual(mysteries[0].title, "The Annunciation")
-        self.assertEqual(mysteries[0].fruit, "Humility")
-        self.assertEqual(mysteries[-1].title, "The Finding of Jesus in the Temple")
+    def _valid_payload(self, context):
+        anchor = context.dominant_priority.anchors[0]
+        categories = self.mod.APPROVED_HUMAN_NEED_CATEGORIES[:5]
+        return {
+            "dominant_priority_key": context.dominant_priority.key,
+            "introduction": (
+                f"As we begin the Joyful Mysteries, {anchor} draws our prayer toward Christ and the needs of this day. "
+                "With Mary, we receive each mystery as a distinct invitation to faith, hope, and charity. "
+                "May this Rosary unite our intentions in one coherent offering."
+            ),
+            "overall_intention": (
+                f"We offer this Rosary in the light of {anchor}, asking the Lord to renew our faith "
+                "and guide every need we place before him."
+            ),
+            "decades": [
+                {
+                    "number": mystery.number,
+                    "human_need_category": category,
+                    "intention": (
+                        f"In the light of {anchor}, we pray for those entrusted to this decade, "
+                        f"asking for the grace of {mystery.fruit.lower()}."
+                    ),
+                    "reflection": (
+                        f"In {mystery.title}, we contemplate the saving work of Christ through {anchor}. "
+                        f"The fruit of {mystery.fruit.lower()} gives this shared focus a particular shape for our choices and relationships. "
+                        "May the mystery teach us to receive grace faithfully and carry it toward the people named in our prayer."
+                    ),
+                }
+                for mystery, category in zip(context.mysteries, categories)
+            ],
+        }
 
     def test_parse_rosary_mysteries_requires_five_ordered_rows(self):
+        title, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
+        self.assertEqual(title, "Joyful Mysteries")
+        self.assertEqual([item.number for item in mysteries], [1, 2, 3, 4, 5])
+
         with self.assertRaisesRegex(RuntimeError, "exactly 5 mystery rows"):
             self.mod.parse_rosary_mysteries("Joyful Mysteries\n1. The Annunciation - Humility\n")
 
-        with self.assertRaisesRegex(RuntimeError, "number mysteries 1 through 5"):
-            self.mod.parse_rosary_mysteries(
-                """Joyful Mysteries
-1. A - One
-2. B - Two
-3. C - Three
-4. D - Four
-6. E - Five
-"""
-            )
-
-    def test_validate_rosary_reflections_accepts_exactly_five_lines(self):
-        _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
-
-        reflections = self.mod.validate_rosary_reflections(
-            "\n".join(f"{index}. Reflection {index}." for index in range(1, 6)),
-            mysteries,
+    def test_ordinary_time_orders_major_gospel_memorial_then_ordinary(self):
+        rows = [
+            {"name": "A Solemnity", "rank_name": "solemnity", "season": "ordinary_time"},
+            {"name": "A Memorial", "rank_name": "memorial", "season": "ordinary_time"},
+        ]
+        context = self._context(rows)
+        self.assertEqual(
+            [priority.key for priority in context.priorities],
+            ["major-celebration", "gospel", "memorial", "ordinary-time", "mystery-fruits"],
         )
+        self.assertEqual(context.dominant_priority.key, "major-celebration")
 
-        self.assertEqual(reflections[0], "Reflection 1.")
-        self.assertEqual(len(reflections), 5)
-
-    def test_validate_rosary_reflections_accepts_structured_items(self):
-        _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
-
-        reflections = self.mod.validate_rosary_reflections(
-            {"reflections": [{"number": index, "reflection": f"Structured reflection {index}."} for index in range(1, 6)]},
-            mysteries,
+    def test_ordinary_time_gospel_outranks_memorial(self):
+        context = self._context(
+            [{"name": "Saint Boniface", "rank_name": "memorial", "season": "ordinary_time"}]
         )
+        self.assertEqual(context.dominant_priority.key, "gospel")
+        self.assertEqual(context.memorial_names, ("Saint Boniface",))
 
-        self.assertEqual(reflections[0], "Structured reflection 1.")
-        self.assertEqual(len(reflections), 5)
-
-    def test_validate_rosary_reflections_rejects_wrong_count_and_long_items(self):
-        _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
-
-        with self.assertRaisesRegex(RuntimeError, "exactly 5 reflections"):
-            self.mod.validate_rosary_reflections("Only one reflection.", mysteries)
-
-        with self.assertRaisesRegex(RuntimeError, "too long"):
-            self.mod.validate_rosary_reflections(["x" * 651] * 5, mysteries)
-
-    def test_build_rosary_reflections_uses_generated_output_when_valid(self):
-        _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
-        context = SimpleNamespace(
-            celebration_clause="Monday of Easter Week",
-            gospel_citation="John 10:1-10",
-            gospel_text="Jesus calls his sheep by name.",
+    def test_ordinary_time_memorial_outranks_ordinary_reflection_without_gospel(self):
+        missing = SimpleNamespace(celebration_clause="Friday", gospel_citation="", gospel_text="")
+        context = self._context(
+            [{"name": "Saint Boniface", "rank_name": "optional_memorial", "season": "ordinary_time"}],
+            gospel=missing,
         )
+        self.assertEqual(context.dominant_priority.key, "memorial")
 
-        with mock.patch.object(self.mod, "fetch_daily_gospel_context", return_value=context), mock.patch.object(
+    def test_nonordinary_season_outranks_gospel_and_memorial(self):
+        context = self._context(
+            [{"name": "An Advent Memorial", "rank_name": "memorial", "season": "advent"}]
+        )
+        self.assertEqual(
+            [priority.key for priority in context.priorities],
+            ["season", "gospel", "memorial", "mystery-fruits"],
+        )
+        self.assertEqual(context.dominant_priority.title, "Advent")
+
+    def test_nonordinary_major_celebration_still_dominates(self):
+        context = self._context(
+            [{"name": "The Annunciation of the Lord", "rank_name": "solemnity", "season": "lent"}]
+        )
+        self.assertEqual(context.dominant_priority.key, "major-celebration")
+        self.assertEqual(context.priorities[1].key, "season")
+
+    def test_easter_octave_pseudo_rank_remains_seasonal(self):
+        context = self._context(
+            [{
+                "name": "Friday within the Octave of Easter",
+                "rank_name": "solemnity-easter octave",
+                "season": "easter_time",
+            }]
+        )
+        self.assertEqual(context.dominant_priority.key, "season")
+        self.assertEqual(context.dominant_priority.title, "Easter season")
+        self.assertEqual(context.feast_names, ())
+
+    def test_shared_theme_supports_but_does_not_overwrite_rosary_authority(self):
+        context = self._context(
+            [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}],
+            shared={
+                "sharedThemeTitle": "A Different Display Theme",
+                "sharedThemeReflectionFocus": "A different shared focus",
+            },
+        )
+        self.assertEqual(context.focus_title, "Today's Gospel, Mark 12:35-37")
+        self.assertEqual(context.shared_theme_title, "A Different Display Theme")
+
+    def test_semantic_validation_allows_flexible_sentence_shapes(self):
+        context = self._context(
+            [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}]
+        )
+        parsed = self.mod.validate_rosary_devotional_response(self._valid_payload(context), context)
+        self.assertEqual(len(parsed.decades), 5)
+        self.assertFalse(parsed.introduction.startswith("For today's rosary"))
+
+    def test_semantic_validation_rejects_priority_category_and_mystery_failures(self):
+        context = self._context(
+            [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}]
+        )
+        wrong_key = self._valid_payload(context)
+        wrong_key["dominant_priority_key"] = "season"
+        with self.assertRaisesRegex(RuntimeError, "wrong dominant priority"):
+            self.mod.validate_rosary_devotional_response(wrong_key, context)
+
+        repeated_category = self._valid_payload(context)
+        repeated_category["decades"][1]["human_need_category"] = repeated_category["decades"][0]["human_need_category"]
+        with self.assertRaisesRegex(RuntimeError, "five distinct"):
+            self.mod.validate_rosary_devotional_response(repeated_category, context)
+
+        missing_mystery = self._valid_payload(context)
+        missing_mystery["decades"][0]["intention"] = (
+            "In today's Gospel, we pray for families who need patience and renewed trust in God's providence."
+        )
+        missing_mystery["decades"][0]["reflection"] = (
+            "Today's Gospel directs our attention toward Christ and calls us to listen with faith. "
+            "This shared focus can guide concrete choices, relationships, and burdens without becoming abstract. "
+            "May the Lord teach us to receive grace faithfully and carry it toward the people named in our prayer."
+        )
+        with self.assertRaisesRegex(RuntimeError, "mystery title or fruit"):
+            self.mod.validate_rosary_devotional_response(missing_mystery, context)
+
+        foreign_citation = self._valid_payload(context)
+        foreign_citation["decades"][0]["reflection"] += " John 3:16 confirms this prayer."
+        with self.assertRaisesRegex(RuntimeError, "unsupported Scripture citation"):
+            self.mod.validate_rosary_devotional_response(foreign_citation, context)
+
+    def test_generation_prefers_structured_package(self):
+        context = self._context(
+            [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}]
+        )
+        with mock.patch.object(
             self.mod,
-            "_call_openai_reflections",
-            return_value="\n".join(f"Generated reflection {index}." for index in range(1, 6)),
-        ):
-            reflections = self.mod.build_rosary_reflections(datetime.date(2026, 4, 6), mysteries)
+            "_call_openai_structured",
+            return_value=self._valid_payload(context),
+        ), mock.patch.object(self.mod, "_call_openai_json") as json_call:
+            result = self.mod.build_rosary_devotional_set(self.date, JOYFUL_TEXT, day_context=context)
 
-        self.assertEqual(reflections, tuple(f"Generated reflection {index}." for index in range(1, 6)))
+        self.assertEqual(result.source, self.mod.SOURCE_GENERATED_STRUCTURED)
+        self.assertEqual(len(result.decades), 5)
+        json_call.assert_not_called()
 
-    def test_rosary_day_context_prioritizes_optional_memorial_then_gospel_then_season(self):
-        _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
-        gospel_context = SimpleNamespace(
-            celebration_clause="Saint Example",
-            gospel_citation="John 10:1-10",
-            gospel_text="Jesus calls his sheep by name.",
+    def test_generation_retries_plain_json_then_uses_atomic_fallback(self):
+        context = self._context(
+            [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}]
         )
-
-        with mock.patch.object(self.mod, "fetch_daily_gospel_context", return_value=gospel_context), mock.patch.object(
+        with mock.patch.object(
             self.mod,
-            "romcal_fetch_day",
-            return_value=[
-                {
-                    "name": "Ferial Weekday",
-                    "rank_name": "weekday",
-                    "season": "easter_time",
-                },
-                {
-                    "name": "Saint Optional",
-                    "rank_name": "optional_memorial",
-                    "suppressed": True,
-                },
-            ],
-        ):
-            feast = self.mod.build_rosary_day_context(datetime.date(2026, 4, 6), JOYFUL_TEXT)
-
-        self.assertEqual(feast.focus_source, "feast")
-        self.assertEqual(feast.focus_title, "Saint Optional")
-        self.assertEqual(feast.focus_prompt_label, "the feast of Saint Optional")
-
-        with mock.patch.object(self.mod, "fetch_daily_gospel_context", return_value=gospel_context), mock.patch.object(
+            "_call_openai_structured",
+            side_effect=RuntimeError("unsupported"),
+        ), mock.patch.object(
             self.mod,
-            "romcal_fetch_day",
-            return_value=[{"name": "Ferial Weekday", "rank_name": "weekday", "season": "ordinary_time"}],
+            "_call_openai_json",
+            return_value=json.dumps(self._valid_payload(context)),
         ):
-            gospel = self.mod.build_rosary_day_context(datetime.date(2026, 6, 3), JOYFUL_TEXT)
-
-        self.assertEqual(gospel.focus_source, "gospel")
-        self.assertEqual(gospel.focus_title, "Today's Gospel")
-        self.assertEqual(gospel.focus_prompt_label, "today's Gospel, John 10:1-10")
-
-        missing_gospel = SimpleNamespace(celebration_clause="Ferial Weekday", gospel_citation="", gospel_text="")
-        with mock.patch.object(self.mod, "fetch_daily_gospel_context", return_value=missing_gospel), mock.patch.object(
-            self.mod,
-            "romcal_fetch_day",
-            return_value=[{"name": "Ferial Weekday", "rank_name": "weekday", "season": "ordinary_time"}],
-        ):
-            season = self.mod.build_rosary_day_context(datetime.date(2026, 6, 3), JOYFUL_TEXT)
-
-        self.assertEqual(season.focus_source, "season")
-        self.assertEqual(season.focus_title, "Ordinary Time")
-
-        with mock.patch.object(self.mod, "fetch_daily_gospel_context", side_effect=RuntimeError("no gospel")), mock.patch.object(
-            self.mod,
-            "romcal_fetch_day",
-            side_effect=RuntimeError("no romcal"),
-        ):
-            fruit = self.mod.build_rosary_day_context(
-                datetime.date(2026, 6, 3),
-                "",
-                mysteries=mysteries,
-                mystery_set_title="Joyful Mysteries",
-                season="",
-            )
-
-        self.assertEqual(fruit.focus_source, "fruit")
-        self.assertEqual(fruit.focus_title, "Mystery Fruits")
-
-    def test_rosary_day_context_resolves_st_boniface_as_feast(self):
-        _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
-        gospel_context = SimpleNamespace(
-            celebration_clause="Saint Boniface, Bishop and Martyr",
-            gospel_citation="Mark 12:35-37",
-            gospel_text="Jesus taught in the temple.",
-        )
-
-        with mock.patch.object(self.mod, "fetch_daily_gospel_context", return_value=gospel_context), mock.patch.object(
-            self.mod,
-            "romcal_fetch_day",
-            return_value=[
-                {
-                    "name": "Saint Boniface, Bishop and Martyr",
-                    "rank_name": "memorial",
-                    "season": "ordinary_time",
-                }
-            ],
-        ):
-            context = self.mod.build_rosary_day_context(
-                datetime.date(2026, 6, 5),
-                "",
-                mysteries=mysteries,
-                mystery_set_title="Sorrowful Mysteries",
-            )
-
-        self.assertEqual(context.focus_source, "feast")
-        self.assertEqual(context.focus_title, "Saint Boniface, Bishop and Martyr")
-        self.assertEqual(context.focus_prompt_label, "the feast of Saint Boniface, Bishop and Martyr")
-
-    def test_build_rosary_intro_uses_generated_text_or_deterministic_fallback(self):
-        _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
-        day_context = self.mod.RosaryDayContext(
-            date=datetime.date(2026, 4, 6),
-            mystery_set_title="Joyful Mysteries",
-            mysteries=mysteries,
-            focus_source="feast",
-            focus_title="Saint Example",
-            focus_prompt_label="the feast of Saint Example",
-            celebration_clause="Saint Example",
-            season_label="Easter season",
-            feast_names=("Saint Example",),
-            gospel_citation="John 10:1-10",
-            gospel_text="Jesus calls his sheep by name.",
-            calendar="general_roman",
-            locale="en",
-            shared_theme_title="Trust",
-            shared_theme_explanation="Today's focus is trust.",
-            shared_gospel_bridge="today's Gospel, John 10:1-10, draws us into trust",
-        )
-
-        generated = (
-            "Today is Monday in the Easter season. "
-            "For today's rosary, we will focus on the feast of Saint Example. "
-            "The Joyful Mysteries help us pray with Mary."
-        )
-        with mock.patch.object(self.mod, "_call_openai_text", return_value=generated):
-            intro = self.mod.build_rosary_intro_text(
-                datetime.date(2026, 4, 6),
-                "Joyful Mysteries",
-                mysteries,
-                day_context=day_context,
-            )
-
-        self.assertEqual(intro, generated)
-
-        with mock.patch.object(self.mod, "_call_openai_text", side_effect=RuntimeError("model down")):
-            fallback = self.mod.build_rosary_intro_text(
-                datetime.date(2026, 4, 6),
-                "Joyful Mysteries",
-                mysteries,
-                day_context=day_context,
-            )
-
-        self.assertIn("For today's rosary, we will focus on the feast of Saint Example.", fallback)
-        self.assertIn("today's Gospel, John 10:1-10, draws us into trust", fallback)
-        self.assertIn("Joyful Mysteries", fallback)
-
-    def test_build_rosary_reflections_uses_season_generation_when_gospel_is_missing(self):
-        _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
-        missing_context = SimpleNamespace(celebration_clause="Monday", gospel_citation="", gospel_text="")
-        prompts = []
-
-        def fake_openai_reflections(model, prompt):
-            prompts.append(prompt)
-            return "\n".join(f"Seasonal reflection {index} for The Annunciation and humility." for index in range(1, 6))
-
-        with mock.patch.object(self.mod, "fetch_daily_gospel_context", return_value=missing_context), mock.patch.object(
-            self.mod,
-            "_call_openai_reflections",
-            side_effect=fake_openai_reflections,
-        ):
-            reflections = self.mod.build_rosary_reflections(datetime.date(2026, 4, 6), mysteries, season="easter")
-
-        self.assertEqual(len(reflections), 5)
-        self.assertIn("Seasonal reflection 1", reflections[0])
-        self.assertEqual(len(prompts), 1)
-        self.assertIn("Season: Easter season", prompts[0])
-
-    def test_build_rosary_reflection_set_records_generated_feast_source(self):
-        _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
-        day_context = self.mod.RosaryDayContext(
-            date=datetime.date(2026, 4, 6),
-            mystery_set_title="Joyful Mysteries",
-            mysteries=mysteries,
-            focus_source="feast",
-            focus_title="Saint Example",
-            focus_prompt_label="the feast of Saint Example",
-            celebration_clause="Saint Example",
-            season_label="Easter season",
-            feast_names=("Saint Example",),
-            gospel_citation="John 10:1-10",
-            gospel_text="Jesus calls his sheep by name.",
-            calendar="general_roman",
-            locale="en",
-        )
+            result = self.mod.build_rosary_devotional_set(self.date, JOYFUL_TEXT, day_context=context)
+        self.assertEqual(result.source, self.mod.SOURCE_GENERATED_JSON)
 
         with mock.patch.object(
             self.mod,
-            "_call_openai_reflections",
-            return_value="\n".join(f"Feast reflection {index}." for index in range(1, 6)),
-        ):
-            reflection_set = self.mod.build_rosary_reflection_set(
-                datetime.date(2026, 4, 6),
-                JOYFUL_TEXT,
-                day_context=day_context,
-            )
-
-        self.assertEqual(reflection_set.source, self.mod.SOURCE_GENERATED_FEAST)
-        self.assertEqual(reflection_set.fallback_reason, "")
-        self.assertEqual(len(reflection_set.reflections), 5)
-
-    def test_feast_generation_invalid_uses_feast_fallback_without_season_drop(self):
-        _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
-        day_context = self.mod.RosaryDayContext(
-            date=datetime.date(2026, 6, 5),
-            mystery_set_title="Sorrowful Mysteries",
-            mysteries=mysteries,
-            focus_source="feast",
-            focus_title="Saint Boniface, Bishop and Martyr",
-            focus_prompt_label="the feast of Saint Boniface, Bishop and Martyr",
-            celebration_clause="Saint Boniface, Bishop and Martyr",
-            season_label="Ordinary Time",
-            feast_names=("Saint Boniface, Bishop and Martyr",),
-            gospel_citation="Mark 12:35-37",
-            gospel_text="Jesus taught in the temple.",
-            calendar="general_roman",
-            locale="en",
-            shared_theme_title="Wisdom",
-            shared_theme_explanation="Today's focus is wisdom.",
-            shared_gospel_bridge="today's Gospel, Mark 12:35-37, draws us into wisdom",
-        )
-
-        with mock.patch.object(self.mod, "_call_openai_reflections", return_value="Only one reflection."):
-            result = self.mod.build_rosary_reflection_result(
-                datetime.date(2026, 6, 5),
-                mysteries,
-                day_context=day_context,
-            )
-
-        self.assertEqual(result.source, self.mod.SOURCE_FALLBACK_FEAST)
-        self.assertEqual(len(result.reflections), 5)
-        self.assertTrue(all("the feast of Saint Boniface, Bishop and Martyr" in reflection for reflection in result.reflections))
-        self.assertTrue(all("today's Gospel, Mark 12:35-37, draws us into wisdom" in reflection for reflection in result.reflections))
-        self.assertTrue(all("places before us a concrete moment" not in reflection for reflection in result.reflections))
-
-    def test_build_rosary_reflections_uses_resolved_day_context_season_when_gospel_is_missing(self):
-        _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
-        day_context = self.mod.RosaryDayContext(
-            date=datetime.date(2026, 12, 7),
-            mystery_set_title="Joyful Mysteries",
-            mysteries=mysteries,
-            focus_source="season",
-            focus_title="Advent",
-            focus_prompt_label="the Advent",
-            celebration_clause="Monday of Advent",
-            season_label="Advent",
-            feast_names=(),
-            gospel_citation="",
-            gospel_text="",
-            calendar="general_roman",
-            locale="en",
-        )
-        prompts = []
-
-        def fake_openai_reflections(model, prompt):
-            prompts.append(prompt)
-            return "\n".join(f"Advent reflection {index} for The Annunciation and humility." for index in range(1, 6))
-
-        with mock.patch.object(self.mod, "_call_openai_reflections", side_effect=fake_openai_reflections):
-            reflections = self.mod.build_rosary_reflections(
-                datetime.date(2026, 12, 7),
-                mysteries,
-                day_context=day_context,
-            )
-
-        self.assertEqual(len(reflections), 5)
-        self.assertEqual(len(prompts), 1)
-        self.assertIn("Season: Advent", prompts[0])
-
-    def test_build_rosary_reflections_falls_back_without_gospel_or_valid_model_output(self):
-        _, mysteries = self.mod.parse_rosary_mysteries(JOYFUL_TEXT)
-        missing_context = SimpleNamespace(celebration_clause="Monday", gospel_citation="", gospel_text="")
-
-        with mock.patch.object(self.mod, "fetch_daily_gospel_context", return_value=missing_context), mock.patch.object(
+            "_call_openai_structured",
+            side_effect=RuntimeError("model down"),
+        ), mock.patch.object(
             self.mod,
-            "_call_openai_reflections",
-            side_effect=RuntimeError("season generation failed"),
+            "_call_openai_json",
+            side_effect=RuntimeError("provider down"),
         ):
-            reflections = self.mod.build_rosary_reflections(datetime.date(2026, 4, 6), mysteries, season="easter")
+            fallback = self.mod.build_rosary_devotional_set(self.date, JOYFUL_TEXT, day_context=context)
 
-        self.assertEqual(len(reflections), 5)
-        self.assertIn("In this Easter season", reflections[0])
-        self.assertIn("The Annunciation", reflections[0])
-        self.assertIn("humility", reflections[0])
-        self.assertIn("risen Christ", reflections[0])
-
-        context = SimpleNamespace(
-            celebration_clause="Monday",
-            gospel_citation="John 10:1-10",
-            gospel_text="Jesus calls his sheep by name.",
-        )
-        with mock.patch.object(self.mod, "fetch_daily_gospel_context", return_value=context), mock.patch.object(
-            self.mod,
-            "_call_openai_reflections",
-            return_value="Only one reflection.",
-        ):
-            fallback = self.mod.build_rosary_reflections(datetime.date(2026, 4, 6), mysteries)
-
-        self.assertIn("The Annunciation", fallback[0])
-        self.assertIn("today's Gospel, John 10:1-10", fallback[0])
-        self.assertIn("humility", fallback[0])
+        self.assertEqual(fallback.source, self.mod.SOURCE_FALLBACK_DETERMINISTIC)
+        self.assertEqual(len(fallback.decades), 5)
+        self.assertTrue(fallback.introduction)
+        self.assertTrue(fallback.overall_intention)
+        self.assertTrue(all(decade.intention and decade.reflection for decade in fallback.decades))
 
 
 if __name__ == "__main__":

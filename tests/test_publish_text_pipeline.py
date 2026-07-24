@@ -160,6 +160,7 @@ class TestPublishTextPipeline(unittest.TestCase):
         ])
         self.assertEqual([_toggle_title(block) for block in client.page_children["page-2"]], [
             "Rosary Intro",
+            "Rosary Intention",
             "Opening Prayers",
             "Joyful Mysteries",
             "Closing Prayers",
