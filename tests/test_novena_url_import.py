@@ -595,3 +595,25 @@ class TestNovenaUrlImport(unittest.TestCase):
         self.assertEqual(draft.status, "failed")
         self.assertFalse(draft.enabled)
         self.assertEqual(report.hard_failures, 1)
+
+    def test_single_import_rejects_year_long_novena_without_writing_contract(self):
+        url = "https://catholicnovenaapp.com/novenas/year-long/"
+        day_sections = "".join(
+            f'<h2 id="day-{day}">Day {day}</h2><p>Day {day} prayer text.</p>'
+            for day in range(1, 365)
+        )
+        html = f"""
+        <html><head><title>Year Long Novena | Intercede - Catholic Novenas</title></head><body><section class="page__content">
+          <h1>Year Long Novena</h1>
+          <div class="notice--info"><table><tr><td>Feastday:</td><td>July 23</td></tr></table></div>
+          {day_sections}
+        </section></body></html>
+        """
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_dir = Path(directory)
+            report = importer_mod.import_single_url(url, fetcher=lambda _: html, output_dir=output_dir)
+
+            self.assertEqual(report.hard_failures, 1)
+            self.assertIn("364 or more days", report.entries[0].issues[0])
+            self.assertEqual(list(output_dir.iterdir()), [])
