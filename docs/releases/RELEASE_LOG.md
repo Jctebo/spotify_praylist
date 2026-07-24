@@ -1,5 +1,20 @@
 # Release Log
 
+## [0.3.10.0] - 2026-07-24
+
+### Added
+- Structured sacred-bell cues and personal-intention pauses across all applicable novena contracts.
+- Role-specific novena responses using OpenAI Alloy while Ash remains the primary and versicle voice.
+
+### Changed
+- Normalized all repo-owned novena spoken text, expanded safe titles, and synchronized legacy sections with structured blocks.
+- Expanded printed repetitions into real repeated cached fragments.
+- Reworked the sacred bell with lower 392/784/1176 Hz harmonics, a longer 4.8-second decay, and a cache-version bump.
+
+### Fixed
+- Novena audio rendering now preserves role metadata and applies role overrides through provider fallback.
+- Contract validation now accepts repetitions on text parts.
+
 ## [0.3.9.1] - 2026-07-24
 
 ### Changed
