@@ -26,6 +26,7 @@ DEFAULT_REPORT_DIR = Path(__file__).resolve().parents[2] / "artifacts" / "novena
 DEFAULT_OPENAI_ENV_FILE = Path(__file__).resolve().parents[2] / "config" / "local" / "openai.env"
 DEFAULT_NOVENA_DURATION_DAYS = 9
 DEFAULT_NOVENA_START_OFFSET_DAYS = -9
+MAX_IMPORTED_NOVENA_DAYS = 363
 TRADITIONAL_NOVENA_TITLE_PATTERN = "Traditional Novena to {saint_name} Day {day} - {date_display}"
 USER_AGENT = "Mozilla/5.0 (compatible; novena-url-import/1.0)"
 OPENAI_API_KEY = "OPENAI_API_KEY"
@@ -1075,6 +1076,16 @@ def _extract_prayer_sections(html_text: str) -> List[Dict[str, Any]]:
 
     if not sections:
         raise RuntimeError("Unable to extract prayer sections from novena page.")
+    imported_day_numbers = [
+        int(section["key"].removeprefix("day-"))
+        for section in sections
+        if re.fullmatch(r"day-\d+", str(section.get("key", "")), re.IGNORECASE)
+    ]
+    if imported_day_numbers and max(imported_day_numbers) > MAX_IMPORTED_NOVENA_DAYS:
+        raise RuntimeError(
+            "Refusing to import a novena with 364 or more days; "
+            f"the source includes Day {max(imported_day_numbers)}."
+        )
     return sections
 
 
