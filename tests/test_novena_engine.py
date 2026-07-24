@@ -8,6 +8,27 @@ import jobs.novena_contracts.engine as engine_mod
 
 
 class TestNovenaEngine(unittest.TestCase):
+    def setUp(self):
+        self._original_intro_builder = engine_mod.build_devotional_intro
+        self.intro_calls = []
+
+        def fake_intro_builder(profile, context, **kwargs):
+            self.intro_calls.append((profile, dict(context), dict(kwargs)))
+            saint_name = str(context.get("saint_name", "the saint")).strip()
+            day = str(context.get("day", "1")).strip()
+            theme = str(context.get("daily_theme_title", "") or context.get("theme", "faithful prayer")).strip()
+            return engine_mod.DevotionalIntroResult(
+                text=f"Welcome to Day {day} of the Novena to {saint_name}, joining today's focus of {theme} to our prayer.",
+                profile="novena",
+                policy_version="devotional-intro-v1",
+                source="openai",
+            )
+
+        engine_mod.build_devotional_intro = fake_intro_builder
+
+    def tearDown(self):
+        engine_mod.build_devotional_intro = self._original_intro_builder
+
     def test_render_novena_renders_fixed_and_generated_sections_with_context(self):
         runtime = contracts_mod.NovenaRuntime(
             family_id="standard_9_day",
@@ -60,6 +81,7 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertEqual(rendered["content"]["sections"][2]["text"], "Amen for The Most Sacred Heart of Jesus.")
         self.assertEqual(len(rendered["audio_fragments"]), 4)
         self.assertEqual(rendered["audio_fragments"][0]["label"], "Welcome to Day 2")
+        self.assertEqual(len(self.intro_calls), 1)
         self.assertEqual(rendered["audio_fragments"][1]["label"], "Opening Prayer")
         self.assertEqual(calls[0][1]["saint_name"], "The Most Sacred Heart of Jesus")
         self.assertEqual(calls[0][1]["day"], 2)
@@ -119,7 +141,8 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertEqual(rendered["context"]["daily_focus"], "courage")
         self.assertEqual(rendered["context"]["novena_daily_focus"], "courage")
         self.assertEqual(rendered["audio_fragments"][0]["label"], "Welcome to Day 1")
-        self.assertIn("Today's Gospel, Matthew 5:43-48, draws us into humility", rendered["audio_fragments"][0]["text"])
+        self.assertIn("today's focus of Humility", rendered["audio_fragments"][0]["text"])
+        self.assertEqual(rendered["devotional_intro"]["policy_version"], "devotional-intro-v1")
         self.assertEqual(rendered["audio_fragments"][1]["text"], "Original traditional prayer text.")
         self.assertIn("Original traditional prayer text.", rendered["content"]["text"])
 
@@ -175,7 +198,7 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertEqual(rendered["audio_fragments"][0]["label"], "Welcome to Day 4")
         self.assertEqual(rendered["audio_fragments"][1]["label"], "Days 1-9")
         self.assertEqual(rendered["audio_fragments"][1]["days"], [1, 2, 3, 4, 5, 6, 7, 8, 9])
-        self.assertIn("Welcome to Day 4 of the Novena to Our Lady of Fatima.", rendered["content"]["text"])
+        self.assertIn("Welcome to Day 4 of the Novena to Our Lady of Fatima", rendered["content"]["text"])
         self.assertIn("Common prayer text.", rendered["content"]["text"])
 
     def test_render_novena_expands_fragment_parts_from_library(self):
@@ -472,7 +495,7 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertEqual(captured["responses_create"]["temperature"], 0)
         system_message = captured["responses_create"]["input"][0]["content"][0]["text"]
         user_message = captured["responses_create"]["input"][1]["content"][0]["text"]
-        self.assertIn("1-2 sentence introduction to the saint", system_message)
+        self.assertNotIn("introduction to the saint", system_message)
         self.assertIn("Saint: Saint Example", user_message)
         self.assertIn("Feast: Example Feast", user_message)
         self.assertIn("Daily focus: hope", user_message)

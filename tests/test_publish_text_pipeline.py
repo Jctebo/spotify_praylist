@@ -75,9 +75,17 @@ class TestPublishTextPipeline(unittest.TestCase):
         self.contracts_mod = load_module("jobs/publish/contracts.py")
         self.notion_mod = load_module("jobs/publish/notion.py")
         self.runner_mod = load_module("jobs/publish/run_text_pipeline.py")
-        self.contracts_mod.build_daily_intro_text = lambda date_value, **kwargs: (
-            "Today the Church celebrates Saint Example. Praise be to God for his mercy. "
-            "In today's Gospel, Jesus calls his sheep by name."
+        self.contracts_mod.build_daily_intro_result = lambda date_value, **kwargs: self.contracts_mod.DevotionalIntroResult(
+            text="Morning Prayer receives today's Gospel with Trust as Saint Example accompanies our offering.",
+            profile="morning-prayer",
+            policy_version="devotional-intro-v1",
+            source="openai",
+        )
+        self.contracts_mod.build_devotional_intro = lambda profile, context, **kwargs: self.contracts_mod.DevotionalIntroResult(
+            text=f"As we begin the {context.get('prayer_title')}, today's focus of Trust leads us into faithful prayer.",
+            profile=profile if isinstance(profile, str) else profile.key,
+            policy_version="devotional-intro-v1",
+            source="openai",
         )
         self.contracts_mod.build_liturgical_announcement_text = lambda date_value, **kwargs: (
             f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "

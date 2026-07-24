@@ -14,16 +14,34 @@ class TestPublishContracts(unittest.TestCase):
     def setUp(self):
         self.mod = load_module("jobs/publish/contracts.py")
         self.calls = []
+        self.prayer_intro_calls = 0
 
-        def fake_build_daily_intro_text(date_value, **kwargs):
+        def fake_build_daily_intro_result(date_value, **kwargs):
             self.calls.append((date_value, dict(kwargs)))
-            return (
-                "In today's Gospel, Jesus calls his sheep by name. "
-                "Today's focus is Trust, the grace of hearing the Lord's voice. "
-                "Today the Church celebrates Saint Example, and this liturgical day gathers our prayer around that grace."
+            return self.mod.DevotionalIntroResult(
+                text=(
+                    "Morning Prayer receives today's Gospel with Trust. "
+                    "Saint Example accompanies us as we offer the day to God."
+                ),
+                profile="morning-prayer",
+                policy_version="devotional-intro-v1",
+                source="openai",
             )
 
-        self.mod.build_daily_intro_text = fake_build_daily_intro_text
+        def fake_build_devotional_intro(profile, context, **kwargs):
+            self.prayer_intro_calls += 1
+            profile_key = profile if isinstance(profile, str) else profile.key
+            prayer_title = str(context.get("prayer_title", "")).strip()
+            theme = str(context.get("daily_theme_title", "Trust")).strip() or "Trust"
+            return self.mod.DevotionalIntroResult(
+                text=f"As we begin the {prayer_title}, today's focus of {theme} leads us into faithful prayer.",
+                profile=profile_key,
+                policy_version="devotional-intro-v1",
+                source="openai",
+            )
+
+        self.mod.build_daily_intro_result = fake_build_daily_intro_result
+        self.mod.build_devotional_intro = fake_build_devotional_intro
         self.mod.build_liturgical_announcement_text = lambda date_value, **kwargs: (
             f"Today is {date_value.strftime('%A, %B')} {date_value.day}, {date_value.year}. "
             "Today the Church celebrates Saint Example."
@@ -427,16 +445,14 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(ordinary_marian["title"], "Marian Antiphon - Angelus - June 2, 2026")
         self.assertEqual(easter_marian["episode_id"], "marian-antiphon-regina-caeli-2026-04-06")
         self.assertEqual(ordinary_marian["episode_id"], "marian-antiphon-angelus-2026-06-02")
-        self.assertEqual(easter_marian["audio_fragments"][0]["kind"], "daily-intro")
-        self.assertEqual(easter_marian["audio_fragments"][1]["kind"], "prayer-intro")
-        self.assertIn("Regina Caeli", easter_marian["audio_fragments"][1]["text"])
-        self.assertIn("today's Gospel, John 10:1-10, draws us into trust", easter_marian["audio_fragments"][1]["text"])
-        self.assertIn("today's focus of Trust", easter_marian["audio_fragments"][1]["text"])
-        self.assertEqual(ordinary_marian["audio_fragments"][0]["kind"], "daily-intro")
-        self.assertEqual(ordinary_marian["audio_fragments"][1]["kind"], "prayer-intro")
-        self.assertIn("Angelus", ordinary_marian["audio_fragments"][1]["text"])
-        self.assertIn("today's Gospel, John 10:1-10, draws us into trust", ordinary_marian["audio_fragments"][1]["text"])
-        self.assertIn("today's focus of Trust", ordinary_marian["audio_fragments"][1]["text"])
+        self.assertEqual(easter_marian["audio_fragments"][0]["kind"], "prayer-intro")
+        self.assertIn("Regina Caeli", easter_marian["audio_fragments"][0]["text"])
+        self.assertIn("Trust", easter_marian["audio_fragments"][0]["text"])
+        self.assertEqual(ordinary_marian["audio_fragments"][0]["kind"], "prayer-intro")
+        self.assertIn("Angelus", ordinary_marian["audio_fragments"][0]["text"])
+        self.assertIn("Trust", ordinary_marian["audio_fragments"][0]["text"])
+        self.assertNotIn("daily-intro", [fragment["kind"] for fragment in easter_marian["audio_fragments"]])
+        self.assertNotIn("daily-intro", [fragment["kind"] for fragment in ordinary_marian["audio_fragments"]])
 
     def test_build_text_jobs_uses_metadata_allow_missing_gospel_when_block_omits_it(self):
         contracts = self.mod.load_publish_contracts()
@@ -447,7 +463,7 @@ class TestPublishContracts(unittest.TestCase):
             jobs = self.mod.build_text_jobs(contracts, target_date=target_date)
 
         morning = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
-        self.assertIn("Today the Church celebrates", morning["text"])
+        self.assertIn("Morning Prayer receives today's Gospel with Trust", morning["text"])
         self.assertGreaterEqual(len(self.calls), 1)
         self.assertTrue(any(call[1]["allow_missing_gospel"] for call in self.calls))
         self.assertTrue(all(call[1]["allow_missing_gospel"] for call in self.calls))
@@ -511,7 +527,7 @@ class TestPublishContracts(unittest.TestCase):
         self.assertIn("allow_missing_gospel=false", stderr.getvalue())
         self.assertIn("Daily Intro", stderr.getvalue())
 
-    def test_prayer_intro_rejects_multi_sentence_template(self):
+    def test_prayer_intro_requires_supported_profile(self):
         contracts = self.mod.load_publish_contracts()
         auxilium_contract = next(contract for contract in contracts if contract.contract_id == "auxilium-christianorum")
         entry = dict(auxilium_contract.entries[0])
@@ -520,10 +536,9 @@ class TestPublishContracts(unittest.TestCase):
             "title": "Prayer Intro",
             "prayer_title": "Auxilium Christianorum prayers",
             "devotion": "Auxilium Christianorum",
-            "template": "First sentence for {day_theme}. Second sentence for {prayer_title}.",
         }
 
-        with self.assertRaisesRegex(RuntimeError, "exactly 1 sentence"):
+        with self.assertRaisesRegex(RuntimeError, "requires a supported 'profile'"):
             self.mod.resolve_block_content(
                 block,
                 contract=auxilium_contract,
@@ -531,7 +546,7 @@ class TestPublishContracts(unittest.TestCase):
                 target_date=datetime.date(2026, 4, 6),
             )
 
-    def test_prayer_intro_rejects_unsupported_template_placeholder(self):
+    def test_prayer_intro_reuses_cached_result(self):
         contracts = self.mod.load_publish_contracts()
         auxilium_contract = next(contract for contract in contracts if contract.contract_id == "auxilium-christianorum")
         entry = dict(auxilium_contract.entries[0])
@@ -540,16 +555,37 @@ class TestPublishContracts(unittest.TestCase):
             "title": "Prayer Intro",
             "prayer_title": "Auxilium Christianorum prayers",
             "devotion": "Auxilium Christianorum",
-            "template": "In today's {devotion}, we reflect on {missing_theme}.",
+            "profile": "auxilium-christianorum",
         }
+        calls = []
+        original = self.mod.build_devotional_intro
 
-        with self.assertRaisesRegex(RuntimeError, "unsupported placeholder 'missing_theme'"):
-            self.mod.resolve_block_content(
-                block,
-                contract=auxilium_contract,
-                entry=entry,
-                target_date=datetime.date(2026, 4, 6),
-            )
+        def counting_builder(*args, **kwargs):
+            calls.append((args, kwargs))
+            return original(*args, **kwargs)
+
+        self.mod.build_devotional_intro = counting_builder
+        runtime_context = {
+            "daily_theme_title": "Trust",
+            "daily_theme_explanation": "Trust in the Lord.",
+        }
+        first = self.mod.resolve_block_content(
+            block,
+            contract=auxilium_contract,
+            entry=entry,
+            target_date=datetime.date(2026, 4, 6),
+            runtime_context=runtime_context,
+        )
+        second = self.mod.resolve_block_content(
+            block,
+            contract=auxilium_contract,
+            entry=entry,
+            target_date=datetime.date(2026, 4, 6),
+            runtime_context=runtime_context,
+        )
+
+        self.assertEqual(first, second)
+        self.assertEqual(len(calls), 1)
 
     def test_build_text_jobs_skips_missing_monthly_template_when_flagged(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -619,7 +655,7 @@ class TestPublishContracts(unittest.TestCase):
         daily_reflection = next(job for job in jobs if job["entry_id"] == "daily-reflection")
         self.assertEqual(morning["title"], "Morning Prayer - April 6, 2026")
         self.assertEqual(morning["episode_id"], "morning-prayer-elevenlabs-2026-04-06")
-        self.assertIn("Today the Church celebrates", morning["text"])
+        self.assertIn("Morning Prayer receives today's Gospel with Trust", morning["text"])
         self.assertIn("Today is Monday, April 6, 2026", auxilium["text"])
         self.assertIn("Our help is in the name of the Lord.", auxilium["text"])
         self.assertIn("Who made heaven and earth.", auxilium["text"])
@@ -636,7 +672,7 @@ class TestPublishContracts(unittest.TestCase):
             [section["title"] for section in auxilium["sections"]],
             ["Liturgical Announcement", "Prayer Intro", "Opening Prayers", "Litany of the Most Precious Blood", "Weekday Prayer", "Conclusion"],
         )
-        self.assertIn("As we begin today's Auxilium Christianorum prayers, today's Gospel, John 10:1-10, draws us into trust", auxilium["text"])
+        self.assertIn("As we begin the Auxilium Christianorum prayers, today's focus of Trust", auxilium["text"])
         self.assertIn("today's focus of Trust", auxilium["text"])
         self.assertEqual(auxilium["resume_markers"][0]["label"], "Liturgical Announcement")
         self.assertEqual(auxilium["resume_markers"][1]["label"], "Prayer Intro")
@@ -854,8 +890,10 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(job["audio_fragments"][1]["label"], "Prayer Intro")
         self.assertEqual(job["audio_fragments"][1]["fragment_key"], "block-2/prayer-intro")
         self.assertIn("Auxilium Christianorum prayers", job["audio_fragments"][1]["text"])
-        self.assertIn("today's Gospel, John 10:1-10, draws us into trust", job["audio_fragments"][1]["text"])
         self.assertIn("Trust", job["audio_fragments"][1]["text"])
+        self.assertEqual(job["devotional_intro"]["profile"], "auxilium-christianorum")
+        self.assertEqual(job["render_context"]["devotional_intro"], job["devotional_intro"])
+        self.assertEqual(self.prayer_intro_calls, 1)
         self.assertTrue(any("weekday-map-monday" in fragment["fragment_key"] for fragment in job["audio_fragments"]))
         versicle_fragments = [fragment for fragment in job["audio_fragments"] if fragment.get("audio_role") == "versicle"]
         response_fragments = [fragment for fragment in job["audio_fragments"] if fragment.get("audio_role") == "response"]

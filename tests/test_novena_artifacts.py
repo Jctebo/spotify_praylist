@@ -17,6 +17,25 @@ class TestNovenaArtifacts(unittest.TestCase):
     class DummyColor(Enum):
         GREEN = "green"
 
+    def setUp(self):
+        self._intro_builder = engine_mod.build_devotional_intro
+
+        def fake_intro(profile, context, **kwargs):
+            saint_name = str(context.get("saint_name", "the saint")).strip()
+            day = str(context.get("day", "1")).strip()
+            theme = str(context.get("daily_theme_title", "") or context.get("theme", "Trust")).strip()
+            return engine_mod.DevotionalIntroResult(
+                text=f"Welcome to Day {day} of the Novena to {saint_name}, joining today's focus of {theme} to our prayer.",
+                profile="novena",
+                policy_version="devotional-intro-v1",
+                source="openai",
+            )
+
+        engine_mod.build_devotional_intro = fake_intro
+
+    def tearDown(self):
+        engine_mod.build_devotional_intro = self._intro_builder
+
     def _runtime(self):
         return contracts_mod.NovenaRuntime(
             family_id="standard_9_day",
@@ -115,6 +134,8 @@ class TestNovenaArtifacts(unittest.TestCase):
         self.assertEqual(payload["template"]["source"], "template_id:standard-9-day")
         self.assertEqual(payload["content"]["sections"][1]["kind"], "generated")
         self.assertEqual(payload["feast"]["color"], "green")
+        self.assertEqual(payload["devotional_intro"]["policy_version"], "devotional-intro-v1")
+        self.assertEqual(payload["context"]["devotional_intro"], payload["devotional_intro"])
         self.assertIn("June 3, 2026", payload["title"])
 
     def test_audio_rendering_generates_control_fragments_without_tts(self):
@@ -212,6 +233,7 @@ class TestNovenaArtifacts(unittest.TestCase):
         self.assertEqual(payload["daily_liturgical_context"]["gospelCitation"], "Matthew 5:43-48")
         self.assertEqual(payload["context"]["daily_theme_title"], "Humility And Trust")
         self.assertEqual(payload["context"]["novena_theme_title"], "Trust")
+        self.assertEqual(payload["devotional_intro"]["profile"], "novena")
 
     def test_novena_audio_loudness_normalization_can_be_overridden(self):
         runtime = self._runtime()

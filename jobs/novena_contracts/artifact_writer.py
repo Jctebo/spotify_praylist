@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 from jobs.publish.audio import audio_public_url
+from jobs.publish.devotional_intro import DEVOTIONAL_INTRO_POLICY_VERSION
 from jobs.publish.formatting import compose_rss_guid
 
 from .contracts import NovenaRuntime
@@ -71,12 +72,22 @@ def _daily_liturgical_context_metadata_current(existing: Any, expected: Dict[str
     return True
 
 
+def _devotional_intro_metadata_current(existing: Any, expected: Dict[str, Any]) -> bool:
+    if not isinstance(existing, dict) or not isinstance(expected, dict):
+        return False
+    return (
+        str(existing.get("policy_version", "")).strip() == DEVOTIONAL_INTRO_POLICY_VERSION
+        and existing == expected
+    )
+
+
 def write_novena_artifact(runtime: NovenaRuntime, rendered: Dict[str, Any], audio_result: Dict[str, Any], *, docs_root: Optional[Path] = None) -> Path:
     episode_id = str(rendered.get("episode_id") or f"{runtime.date.isoformat()}-{runtime.contract_id}-day-{runtime.active_day}").strip()
     root = Path(docs_root) if docs_root else Path(__file__).resolve().parents[2] / "docs"
     sidecar_path = audio_sidecar_path(episode_id, docs_root=root)
     rendered_context = dict(rendered.get("context") or {})
     daily_liturgical_context = dict(rendered_context.get("daily_liturgical_context") or {})
+    devotional_intro = dict(rendered.get("devotional_intro") or rendered_context.get("devotional_intro") or {})
     if sidecar_path.exists():
         try:
             existing = json.loads(sidecar_path.read_text(encoding="utf-8"))
@@ -86,7 +97,8 @@ def write_novena_artifact(runtime: NovenaRuntime, rendered: Dict[str, Any], audi
         next_hash = str(audio_result.get("content_hash", rendered.get("content_hash", ""))).strip()
         existing_daily_context = existing.get("daily_liturgical_context")
         metadata_current = _daily_liturgical_context_metadata_current(existing_daily_context, daily_liturgical_context)
-        if existing_hash == next_hash and metadata_current:
+        intro_metadata_current = _devotional_intro_metadata_current(existing.get("devotional_intro"), devotional_intro)
+        if existing_hash == next_hash and metadata_current and intro_metadata_current:
             return sidecar_path
     sidecar_path.parent.mkdir(parents=True, exist_ok=True)
     title = str(rendered.get("title", "")).strip()
@@ -110,6 +122,7 @@ def write_novena_artifact(runtime: NovenaRuntime, rendered: Dict[str, Any], audi
         "novena": dict(runtime.novena),
         "template": rendered.get("template") or runtime.resolved_template.to_dict(),
         "daily_liturgical_context": daily_liturgical_context,
+        "devotional_intro": devotional_intro,
         "context": rendered_context,
         "content": dict(rendered.get("content") or {}),
         "fragments": list(rendered.get("audio_fragments") or []),

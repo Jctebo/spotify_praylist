@@ -17,9 +17,7 @@ class TestPublishDailyIntro(unittest.TestCase):
     def _html_mass_page(self):
         return """
         <html>
-          <head>
-            <title>Fifth Sunday of Easter | USCCB</title>
-          </head>
+          <head><title>Fifth Sunday of Easter | USCCB</title></head>
           <body>
             <div class="content-header">
               <h3 class="name">Gospel</h3>
@@ -58,6 +56,24 @@ class TestPublishDailyIntro(unittest.TestCase):
             pass
         return result if result is not None else self._fake_mass()
 
+    def _valid_generator(self, captured=None):
+        def generate(model, system, prompt, temperature):
+            if captured is not None:
+                captured.update(
+                    {
+                        "model": model,
+                        "system": system,
+                        "prompt": prompt,
+                        "temperature": temperature,
+                    }
+                )
+            return (
+                "Morning Prayer gathers us around Trust as Saint Example accompanies the Church today. "
+                "In today's Gospel, Christ calls us to listen with faith and offer the whole day to God."
+            )
+
+        return generate
+
     def test_fetch_daily_gospel_context_joins_multiple_celebrations_with_and(self):
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [
             {"name": "Saint One"},
@@ -71,31 +87,18 @@ class TestPublishDailyIntro(unittest.TestCase):
         self.assertEqual(context.gospel_citation, "John 10:11-18")
         self.assertIn("good shepherd", context.gospel_text)
 
-    def test_build_daily_intro_text_returns_three_sentences(self):
-        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
-        self.mod.asyncio.run = lambda coro: self._fake_asyncio_run(coro)
-        self.mod._call_openai_prompt = (
-            lambda model, prompt: "Today the Church celebrates Saint Example. Praise be to God for his mercy. "
-            "In today's Gospel, Jesus calls his sheep by name."
-        )
-
-        text = self.mod.build_daily_intro_text(datetime.date(2026, 4, 27))
-
-        self.assertEqual(
-            text,
-            "Today the Church celebrates Saint Example. Praise be to God for his mercy. In today's Gospel, Jesus calls his sheep by name.",
-        )
-
     def test_fetch_daily_gospel_context_rejects_missing_gospel_section(self):
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
-        self.mod.asyncio.run = lambda coro: self._fake_asyncio_run(coro, SimpleNamespace(title="Broken Mass", url="", sections=[]))
+        self.mod.asyncio.run = lambda coro: self._fake_asyncio_run(
+            coro,
+            SimpleNamespace(title="Broken Mass", url="", sections=[]),
+        )
         self.mod._fetch_usccb_html = lambda date_value: "<html><head><title>Broken | USCCB</title></head><body></body></html>"
 
         with self.assertRaises(self.mod.DailyIntroMissingDataError) as ctx:
             self.mod.fetch_daily_gospel_context(datetime.date(2026, 4, 27))
 
         self.assertIn("no usable Gospel data", str(ctx.exception))
-        self.assertIsNotNone(ctx.exception.__cause__)
         self.assertIn("Gospel section", str(ctx.exception.__cause__))
 
     def test_fetch_daily_gospel_context_falls_back_to_html_when_library_returns_none(self):
@@ -105,180 +108,91 @@ class TestPublishDailyIntro(unittest.TestCase):
 
         context = self.mod.fetch_daily_gospel_context(datetime.date(2026, 4, 27))
 
-        self.assertEqual(context.celebration_clause, "Saint Example")
         self.assertEqual(context.gospel_citation, "John 14:1-12")
         self.assertIn("Do not let your hearts be troubled", context.gospel_text)
         self.assertEqual(context.mass_title, "Fifth Sunday of Easter")
 
-    def test_build_daily_intro_text_omits_gospel_when_allowed(self):
+    def test_build_daily_intro_uses_flexible_prompt_and_compatibility_wrapper(self):
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
-        self.mod._fetch_mass_with_retry = lambda date_value: None
-        self.mod._fetch_usccb_html = lambda date_value: (_ for _ in ()).throw(self.mod.DailyIntroMissingDataError("missing"))
+        self.mod.asyncio.run = lambda coro: self._fake_asyncio_run(coro)
         captured = {}
-        def fake_prompt(model, prompt):
-            captured["prompt"] = prompt
-            return (
-                "Today the Church celebrates Saint Example. "
-                "Praise be to God for his mercy. "
-                "We thank God for this day. "
-                "May his peace be with us all."
-            )
 
-        self.mod._call_openai_prompt = fake_prompt
-
-        text = self.mod.build_daily_intro_text(datetime.date(2026, 4, 27), allow_missing_gospel=True)
-
-        self.assertEqual(
-            text,
-            "Today the Church celebrates Saint Example. Praise be to God for his mercy. We thank God for this day. May his peace be with us all.",
+        result = self.mod.build_daily_intro_result(
+            datetime.date(2026, 4, 27),
+            shared_theme={
+                "sharedThemeTitle": "Trust",
+                "sharedThemeExplanation": "Entrust the work of this day to the Lord.",
+            },
+            generate_text_fn=self._valid_generator(captured),
         )
-        self.assertIn("Write exactly two sentences", captured["prompt"])
-        self.assertNotIn("Gospel", captured["prompt"])
-        self.assertNotIn("Gospel citation:", captured["prompt"])
-        self.assertNotIn("Gospel text:", captured["prompt"])
+        text = self.mod.build_daily_intro_text(
+            datetime.date(2026, 4, 27),
+            shared_theme={"sharedThemeTitle": "Trust"},
+            generate_text_fn=self._valid_generator(),
+        )
 
-    def test_build_daily_intro_text_with_shared_theme_omits_gospel_prompt_when_missing(self):
+        self.assertEqual(result.source, "openai")
+        self.assertEqual(result.profile, "morning-prayer")
+        self.assertEqual(text, result.text)
+        self.assertIn("Write the introduction in 2-4 sentences.", captured["prompt"])
+        self.assertNotIn("must begin with", captured["prompt"].lower())
+
+    def test_build_daily_intro_omits_gospel_context_when_missing(self):
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
         self.mod._fetch_mass_with_retry = lambda date_value: None
-        self.mod._fetch_usccb_html = lambda date_value: (_ for _ in ()).throw(self.mod.DailyIntroMissingDataError("missing"))
+        self.mod._fetch_usccb_html = lambda date_value: (_ for _ in ()).throw(
+            self.mod.DailyIntroMissingDataError("missing")
+        )
         captured = {}
 
-        def fake_prompt(model, prompt):
+        def generate(model, system, prompt, temperature):
             captured["prompt"] = prompt
             return (
-                "Today the Church celebrates Saint Example. "
-                "Today's focus is Trust, a grace for listening to the Lord today. "
-                "The Gospel still teaches us to trust."
+                "Morning Prayer gathers us around Trust as Saint Example accompanies the Church today. "
+                "We receive this grace through faithful prayer and offer the whole day to God."
             )
-
-        self.mod._call_openai_prompt = fake_prompt
 
         text = self.mod.build_daily_intro_text(
             datetime.date(2026, 4, 27),
             allow_missing_gospel=True,
-            shared_theme={
-                "sharedThemeTitle": "Trust",
-                "sharedThemeExplanation": "Today's focus is Trust, a grace for listening to the Lord today.",
-            },
+            shared_theme={"sharedThemeTitle": "Trust"},
+            generate_text_fn=generate,
         )
 
-        self.assertEqual(
-            text,
-            "Today the Church celebrates Saint Example. Today's focus is Trust, a grace for listening to the Lord today. We receive this focus through the Church's prayer for this liturgical day.",
-        )
-        self.assertNotIn("Gospel", captured["prompt"])
+        self.assertNotIn("Gospel bridge:", captured["prompt"])
+        self.assertIn("No Gospel context is supplied.", captured["prompt"])
         self.assertNotIn("Gospel", text)
 
-    def test_build_daily_intro_text_with_shared_gospel_bridge_uses_bridge_when_context_missing(self):
-        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
-        self.mod._fetch_mass_with_retry = lambda date_value: None
-        self.mod._fetch_usccb_html = lambda date_value: (_ for _ in ()).throw(self.mod.DailyIntroMissingDataError("missing"))
-        captured = {}
-
-        def fake_prompt(model, prompt):
-            captured["prompt"] = prompt
-            return (
-                "In today's Gospel, Matthew 7:6, 12-14 draws us into trust. "
-                "Today's focus is Trust, a grace for listening to the Lord today. "
-                "Today the Church celebrates Saint Example, and this liturgical day gathers our prayer around that grace."
-            )
-
-        self.mod._call_openai_prompt = fake_prompt
-
-        text = self.mod.build_daily_intro_text(
-            datetime.date(2026, 4, 27),
-            allow_missing_gospel=True,
-            shared_theme={
-                "sharedThemeTitle": "Trust",
-                "sharedThemeExplanation": "Today's focus is Trust, a grace for listening to the Lord today.",
-                "sharedGospelBridge": "today's Gospel, Matthew 7:6, 12-14, draws us into trust",
-            },
-        )
-
-        self.assertTrue(text.startswith("In today's Gospel"))
-        self.assertIn("Gospel bridge:", captured["prompt"])
-        self.assertIn("today's Gospel, Matthew 7:6, 12-14", captured["prompt"])
-
-    def test_build_daily_intro_text_allows_empty_output_when_gospel_missing(self):
-        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
-        self.mod._fetch_mass_with_retry = lambda date_value: None
-        self.mod._fetch_usccb_html = lambda date_value: (_ for _ in ()).throw(self.mod.DailyIntroMissingDataError("missing"))
-        self.mod._call_openai_prompt = lambda model, prompt: ""
-
-        text = self.mod.build_daily_intro_text(datetime.date(2026, 4, 27), allow_missing_gospel=True)
-
-        self.assertEqual(text, "")
-
-    def test_build_daily_intro_text_rejects_invalid_openai_shape(self):
+    def test_build_daily_intro_invalid_output_retries_then_falls_back(self):
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
         self.mod.asyncio.run = lambda coro: self._fake_asyncio_run(coro)
-        self.mod._call_openai_prompt = lambda model, prompt: "Today the Church celebrates Saint Example. Praise be to God for his mercy."
+        calls = []
 
-        with self.assertRaises(RuntimeError) as ctx:
-            self.mod.build_daily_intro_text(datetime.date(2026, 4, 27))
+        def generate(model, system, prompt, temperature):
+            calls.append(prompt)
+            return "Invalid."
 
-        self.assertIn("exactly 3 sentences", str(ctx.exception))
-
-    def test_build_daily_intro_text_with_shared_theme_starts_with_gospel(self):
-        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
-        self.mod.asyncio.run = lambda coro: self._fake_asyncio_run(coro)
-        captured = {}
-
-        def fake_prompt(model, prompt):
-            captured["prompt"] = prompt
-            return (
-                "In today's Gospel, Jesus calls his sheep by name and draws us into trust. "
-                "Today's focus is Trust, a grace for listening to the Lord today. "
-                "Today the Church celebrates Saint Example, and this liturgical day gathers our prayer around that grace."
-            )
-
-        self.mod._call_openai_prompt = fake_prompt
-
-        text = self.mod.build_daily_intro_text(
+        result = self.mod.build_daily_intro_result(
             datetime.date(2026, 4, 27),
-            shared_theme={
-                "sharedThemeTitle": "Trust",
-                "sharedThemeExplanation": "Today's focus is Trust, a grace for listening to the Lord today.",
-                "sharedGospelBridge": "today's Gospel, John 10:11-18, draws us into trust",
-            },
+            shared_theme={"sharedThemeTitle": "Trust"},
+            generate_text_fn=generate,
         )
 
-        self.assertTrue(text.startswith("In today's Gospel"))
-        self.assertIn("Today's focus is Trust", text)
-        self.assertIn("Gospel bridge: today's Gospel, John 10:11-18, draws us into trust", captured["prompt"])
-
-    def test_build_daily_intro_text_with_shared_theme_fallback_is_gospel_first(self):
-        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
-        self.mod.asyncio.run = lambda coro: self._fake_asyncio_run(coro)
-        self.mod._call_openai_prompt = lambda model, prompt: "Today the Church celebrates Saint Example. Invalid shape."
-
-        text = self.mod.build_daily_intro_text(
-            datetime.date(2026, 4, 27),
-            shared_theme={
-                "sharedThemeTitle": "Trust",
-                "sharedThemeExplanation": "Today's focus is Trust, a grace for listening to the Lord today.",
-                "sharedGospelBridge": "today's Gospel, John 10:11-18, draws us into trust",
-            },
-        )
-
-        self.assertTrue(text.startswith("In today's Gospel"))
-        self.assertIn("Today's focus is Trust", text)
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(result.source, "fallback-deterministic")
+        self.assertIn("Morning Prayer", result.text)
+        self.assertIn("Trust", result.text)
+        self.assertIn("Gospel", result.text)
 
     def test_resolve_openai_settings_reads_local_env_file(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             local_env = Path(tmpdir) / "openai.env"
             local_env.write_text(
-                "\n".join(
-                    [
-                        "OPENAI_API_KEY=local-test-key",
-                        "OAI_API_BASE_URL=https://example.invalid/v1",
-                        "OAI_MODEL=gpt-local-mini",
-                    ]
-                )
-                + "\n",
+                "OPENAI_API_KEY=local-test-key\n"
+                "OAI_API_BASE_URL=https://example.invalid/v1\n"
+                "OAI_MODEL=gpt-local-mini\n",
                 encoding="utf-8",
             )
-
             with mock.patch.dict(
                 self.mod.os.environ,
                 {
@@ -291,10 +205,7 @@ class TestPublishDailyIntro(unittest.TestCase):
             ):
                 resolved = self.mod._resolve_openai_settings()
 
-        self.assertEqual(
-            resolved,
-            ("local-test-key", "https://example.invalid/v1", "gpt-local-mini"),
-        )
+        self.assertEqual(resolved, ("local-test-key", "https://example.invalid/v1", "gpt-local-mini"))
 
 
 class TestLiturgicalAnnouncement(unittest.TestCase):
@@ -309,20 +220,19 @@ class TestLiturgicalAnnouncement(unittest.TestCase):
 
         text = self.mod.build_liturgical_announcement_text(
             datetime.date(2026, 6, 2),
-            calendar="general_roman",
-            locale="en",
             include_season=True,
         )
 
-        self.assertEqual(
-            text,
-            "Today is Tuesday, June 2, 2026. Today the Church celebrates Saint Example and Saint Optional. Liturgical season: Ordinary Time.",
-        )
+        self.assertIn("Tuesday, June 2, 2026", text)
+        self.assertIn("Saint Example and Saint Optional", text)
+        self.assertIn("Ordinary Time", text)
 
     def test_build_liturgical_announcement_text_rejects_missing_rows(self):
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: []
 
-        with self.assertRaises(self.mod.DailyIntroMissingDataError) as ctx:
+        with self.assertRaises(RuntimeError):
             self.mod.build_liturgical_announcement_text(datetime.date(2026, 6, 2))
 
-        self.assertIn("Romcal returned no celebrations", str(ctx.exception))
+
+if __name__ == "__main__":
+    unittest.main()

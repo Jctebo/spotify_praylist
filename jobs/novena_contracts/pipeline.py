@@ -10,6 +10,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 
 from jobs.publish.audio import audio_public_url, github_pages_base_url, podcast_feed_public_url, resolve_audio_public_base_url
 from jobs.publish.daily_theme_runtime import DailyThemeRuntimeCache
+from jobs.publish.devotional_intro import DEVOTIONAL_INTRO_POLICY_VERSION
 from jobs.publish.formatting import render_publish_template
 
 from .artifact_writer import audio_output_path, write_novena_artifact
@@ -234,6 +235,9 @@ def _rendered_from_sidecar(runtime: Any, payload: Dict[str, Any]) -> Dict[str, A
     daily_liturgical_context = payload.get("daily_liturgical_context")
     if isinstance(daily_liturgical_context, dict) and "daily_liturgical_context" not in context:
         context["daily_liturgical_context"] = dict(daily_liturgical_context)
+    devotional_intro = payload.get("devotional_intro")
+    if isinstance(devotional_intro, dict) and "devotional_intro" not in context:
+        context["devotional_intro"] = dict(devotional_intro)
     if not context:
         context = {
             "saint_name": str((payload.get("saint") or runtime.saint).get("name", runtime.contract_id)).strip(),
@@ -252,6 +256,7 @@ def _rendered_from_sidecar(runtime: Any, payload: Dict[str, Any]) -> Dict[str, A
         "template": dict(payload.get("template") or runtime.resolved_template.to_dict()),
         "context": context,
         "content": dict(payload.get("content") or {}),
+        "devotional_intro": dict(payload.get("devotional_intro") or {}),
         "audio_fragments": list(payload.get("fragments") or []),
         "episode_id": episode_id,
         "title": str(payload.get("title", "")).strip(),
@@ -335,6 +340,16 @@ def _sidecar_has_current_daily_theme(
         return False
     context = payload.get("context")
     if not isinstance(context, dict):
+        return False
+    devotional_intro = payload.get("devotional_intro")
+    if not isinstance(devotional_intro, dict):
+        return False
+    if str(devotional_intro.get("policy_version", "")).strip() != DEVOTIONAL_INTRO_POLICY_VERSION:
+        return False
+    context_intro = context.get("devotional_intro")
+    if not isinstance(context_intro, dict):
+        return False
+    if str(context_intro.get("policy_version", "")).strip() != DEVOTIONAL_INTRO_POLICY_VERSION:
         return False
     if str(context.get("daily_theme_version", "")).strip() != "daily-theme-v1":
         return False

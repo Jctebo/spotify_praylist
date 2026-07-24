@@ -11,7 +11,7 @@
       "key": "petition",
       "title": "Daily Petition",
       "kind": "generated",
-      "prompt": "Write a reverent novena petition for day {day} of the novena to {saint_name}. Begin with a 1-2 sentence introduction to the saint, then move into the daily focus: {theme}. Make the focus distinct from the other days and rooted in one unique part of the saint's life."
+      "prompt": "Write a reverent novena petition for day {day} of the novena to {saint_name}, centered on the daily focus: {theme}. Make the focus distinct from the other days and rooted in one unique part of the saint's life."
     },
     {
       "key": "closing",
