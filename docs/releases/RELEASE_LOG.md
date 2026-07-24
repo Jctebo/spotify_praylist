@@ -1,5 +1,21 @@
 # Release Log
 
+## [0.3.9.0] - 2026-07-24
+
+### Added
+- Added a shared, auditable devotional-introduction policy with prayer-specific profiles, semantic validation, one corrective retry, deterministic fallbacks, per-job caching, and `devotional-intro-v1` metadata.
+- Added policy-aware novena sidecar freshness so current artifacts regenerate when the introduction policy changes.
+
+### Changed
+- Gave Morning Prayer and Rosary introductions flexible 2–4 sentence prompt guidance without enforcing exact sentence counts.
+- Replaced fixed Auxilium Christianorum, Angelus, Regina Caeli, and novena transitions with flexible 1–2 sentence prayer-specific generated openings.
+- Consolidated Marian Antiphon episodes to one generated opening and removed duplicate saint introductions from generated novena petitions.
+- Preserved the Rosary's dominant seasonal priority, overall intention, and coherent five-decade reflection package.
+
+### Fixed
+- Prevented repeated intro generation within one publish job so readable text, audio fragments, and metadata share the same opening.
+- Sanitized fallback audit reasons so provider errors cannot persist credentials or URLs.
+
 ## [0.3.8.0] - 2026-07-23
 
 ### Added
