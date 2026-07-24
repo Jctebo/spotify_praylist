@@ -375,6 +375,8 @@ def _normalize_audio_config(config: Any) -> Dict[str, Any]:
         for key in audio:
             if key in config:
                 audio[key] = copy.deepcopy(config[key])
+        if isinstance(config.get("role_overrides"), dict):
+            audio["role_overrides"] = copy.deepcopy(config["role_overrides"])
     audio["enabled"] = bool(audio.get("enabled", True))
     audio["model"] = str(audio.get("model", DEFAULT_AUDIO_CONFIG["model"])).strip() or DEFAULT_AUDIO_CONFIG["model"]
     audio["voice"] = str(audio.get("voice", DEFAULT_AUDIO_CONFIG["voice"])).strip() or DEFAULT_AUDIO_CONFIG["voice"]

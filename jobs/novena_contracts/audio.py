@@ -11,6 +11,7 @@ from jobs.publish.audio import (
     normalize_episode_loudness,
     render_fragment_audio_with_provider_fallback,
 )
+from jobs.publish.contracts import effective_audio_config_for_fragment
 from jobs.publish.audio_branding import apply_audio_branding, audio_branding_hash_metadata
 from jobs.publish.fragments import (
     audio_manifest_hash,
@@ -167,14 +168,15 @@ def render_novena_audio_job(
             )
             rendered_effective_config: Dict[str, Any] = {}
         else:
+            fragment_audio_config = effective_audio_config_for_fragment(audio_config, fragment)
             rendered_fragment = render_fragment_audio_with_provider_fallback(
                 fragment,
-                audio_config,
+                fragment_audio_config,
                 renderer,
                 cache_root=fragment_root,
                 force_rebuild=False,
             )
-            rendered_effective_config = dict(rendered_fragment.get("audio_config") or audio_config)
+            rendered_effective_config = dict(rendered_fragment.get("audio_config") or fragment_audio_config)
         fragment_paths.append(Path(rendered_fragment["audio_path"]))
         fragment_result: Dict[str, Any] = {
             "fragment_key": str(fragment.get("fragment_key", "")).strip(),

@@ -77,14 +77,38 @@ class TestNovenaContracts(unittest.TestCase):
             ["our_father", "hail_mary", "glory_be"],
         )
         self.assertEqual([part.get("repeat", 1) for part in fragment_parts], [3, 3, 3])
-        self.assertEqual(
-            [part["text"] for part in block.parts if part.get("kind") == "text" and "You are going to say the following 3 times:" in part.get("text", "")],
-            [
-                "You are going to say the following 3 times: Our Father",
-                "You are going to say the following 3 times: Hail Mary",
-                "You are going to say the following 3 times: Glory Be",
-            ],
+        self.assertFalse(
+            any(
+                "You are going to say the following 3 times:" in part.get("text", "")
+                for part in block.parts
+                if part.get("kind") == "text"
+            )
         )
+
+    def test_normalized_novenas_keep_mcgivney_note_and_use_alloy_for_responses(self):
+        contracts = self.contracts_mod.load_novena_contracts()
+        mcgivney = next(item for item in contracts if item.contract_id == "bl_fr_michael_mcgivney")
+        mcgivney_text = "\n".join(
+            str(part.get("text", ""))
+            for block in mcgivney.novena.template.blocks
+            for part in block.parts
+            if part.get("kind") == "text"
+        )
+        self.assertIn("The Father McGivney Guild", mcgivney_text)
+        self.assertIn("1 Columbus Plaza", mcgivney_text)
+
+        nativity = next(item for item in contracts if item.contract_id == "nativity_of_mary")
+        response_parts = [
+            part
+            for block in nativity.novena.template.blocks
+            for part in block.parts
+            if part.get("audio_role") == "response"
+        ]
+        self.assertGreater(len(response_parts), 0)
+        self.assertEqual(nativity.publishing.audio["voice"], "ash")
+        response_providers = nativity.publishing.audio["role_overrides"]["response"]["providers"]
+        self.assertEqual([provider["provider"] for provider in response_providers], ["openai"])
+        self.assertEqual(response_providers[0]["voice"], "alloy")
 
     def test_load_novena_contracts_reads_pentecost_fixture_with_one_one_seven_pattern(self):
         contracts = self.contracts_mod.load_novena_contracts()

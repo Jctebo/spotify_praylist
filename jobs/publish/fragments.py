@@ -241,7 +241,7 @@ def ensure_silence_fragment(cache_root: Path, audio_format: str, silence_ms: int
     return silence_path
 
 
-SACRED_BELL_SYNTH_VERSION = 1
+SACRED_BELL_SYNTH_VERSION = 2
 
 
 def _sacred_bell_cache_path(cache_root: Path, audio_format: str) -> Path:
@@ -269,21 +269,21 @@ def ensure_sacred_bell_fragment(cache_root: Path, audio_format: str) -> Path:
             "-f",
             "lavfi",
             "-i",
-            "sine=frequency=784:sample_rate=44100:duration=2.2",
+            "sine=frequency=392:sample_rate=44100:duration=4.8",
             "-f",
             "lavfi",
             "-i",
-            "sine=frequency=1176:sample_rate=44100:duration=2.2",
+            "sine=frequency=784:sample_rate=44100:duration=4.8",
             "-f",
             "lavfi",
             "-i",
-            "sine=frequency=1568:sample_rate=44100:duration=2.2",
+            "sine=frequency=1176:sample_rate=44100:duration=4.8",
             "-filter_complex",
             (
-                "[0:a]volume=0.52,afade=t=out:st=0.15:d=2.05[a0];"
-                "[1:a]volume=0.22,afade=t=out:st=0.10:d=2.10[a1];"
-                "[2:a]volume=0.10,afade=t=out:st=0.05:d=2.15[a2];"
-                "[a0][a1][a2]amix=inputs=3:normalize=0,alimiter=limit=0.90[bell]"
+                "[0:a]volume=0.46,afade=t=out:st=0.20:d=4.55[a0];"
+                "[1:a]volume=0.18,afade=t=out:st=0.14:d=4.62[a1];"
+                "[2:a]volume=0.08,afade=t=out:st=0.08:d=4.70[a2];"
+                "[a0][a1][a2]amix=inputs=3:normalize=0,alimiter=limit=0.88[bell]"
             ),
             "-map",
             "[bell]",

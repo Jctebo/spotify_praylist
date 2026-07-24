@@ -19,7 +19,8 @@
             "key": "introduction",
             "kind": "fixed",
             "text": "You can pray the full Nativity of Mary Novena below.",
-            "title": "Introduction"
+            "title": "Introduction",
+            "parts": []
           },
           {
             "days": [
@@ -35,7 +36,13 @@
               },
               {
                 "kind": "text",
-                "text": "V. O God, come to my assistance. R. O Lord, make haste to help me. V."
+                "text": "O God, come to my assistance.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "O Lord, make haste to help me.",
+                "audio_role": "response"
               },
               {
                 "fragment_key": "glory_be",
@@ -43,7 +50,12 @@
               },
               {
                 "kind": "text",
-                "text": "to the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen"
+                "text": "to the Father, and to the Son, and to the Holy Spirit."
+              },
+              {
+                "kind": "text",
+                "text": "As it was in the beginning, is now and ever shall be, world without end. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -51,7 +63,16 @@
               },
               {
                 "kind": "text",
-                "text": "Dearest Mother, please pray for me and for these my intentions. Pause here to mention your request."
+                "text": "Dearest Mother, please pray for me and for these my intentions."
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "fragment_key": "hail_mary",
@@ -59,7 +80,17 @@
               },
               {
                 "kind": "text",
-                "text": "x1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen"
+                "text": "Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting."
+              },
+              {
+                "kind": "text",
+                "text": "Let us celebrate with joy the birth of the Blessed Virgin Mary.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -82,7 +113,13 @@
               },
               {
                 "kind": "text",
-                "text": "V. O God, come to my assistance. R. O Lord, make haste to help me. V."
+                "text": "O God, come to my assistance.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "O Lord, make haste to help me.",
+                "audio_role": "response"
               },
               {
                 "fragment_key": "glory_be",
@@ -90,7 +127,12 @@
               },
               {
                 "kind": "text",
-                "text": "to the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen"
+                "text": "to the Father, and to the Son, and to the Holy Spirit."
+              },
+              {
+                "kind": "text",
+                "text": "As it was in the beginning, is now and ever shall be, world without end. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -98,7 +140,16 @@
               },
               {
                 "kind": "text",
-                "text": "Dearest Mother, please pray for me and for these my intentions. Pause here to mention your request."
+                "text": "Dearest Mother, please pray for me and for these my intentions."
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "fragment_key": "hail_mary",
@@ -106,7 +157,17 @@
               },
               {
                 "kind": "text",
-                "text": "x1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen"
+                "text": "Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting."
+              },
+              {
+                "kind": "text",
+                "text": "Let us celebrate with joy the birth of the Blessed Virgin Mary.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -129,7 +190,13 @@
               },
               {
                 "kind": "text",
-                "text": "V. O God, come to my assistance. R. O Lord, make haste to help me. V."
+                "text": "O God, come to my assistance.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "O Lord, make haste to help me.",
+                "audio_role": "response"
               },
               {
                 "fragment_key": "glory_be",
@@ -137,7 +204,12 @@
               },
               {
                 "kind": "text",
-                "text": "to the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen"
+                "text": "to the Father, and to the Son, and to the Holy Spirit."
+              },
+              {
+                "kind": "text",
+                "text": "As it was in the beginning, is now and ever shall be, world without end. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -145,7 +217,16 @@
               },
               {
                 "kind": "text",
-                "text": "Dearest Mother, please pray for me and for these my intentions. Pause here to mention your request."
+                "text": "Dearest Mother, please pray for me and for these my intentions."
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "fragment_key": "hail_mary",
@@ -153,7 +234,17 @@
               },
               {
                 "kind": "text",
-                "text": "x1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen"
+                "text": "Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting."
+              },
+              {
+                "kind": "text",
+                "text": "Let us celebrate with joy the birth of the Blessed Virgin Mary.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -176,7 +267,13 @@
               },
               {
                 "kind": "text",
-                "text": "V. O God, come to my assistance. R. O Lord, make haste to help me. V."
+                "text": "O God, come to my assistance.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "O Lord, make haste to help me.",
+                "audio_role": "response"
               },
               {
                 "fragment_key": "glory_be",
@@ -184,7 +281,12 @@
               },
               {
                 "kind": "text",
-                "text": "to the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen"
+                "text": "to the Father, and to the Son, and to the Holy Spirit."
+              },
+              {
+                "kind": "text",
+                "text": "As it was in the beginning, is now and ever shall be, world without end. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -192,7 +294,16 @@
               },
               {
                 "kind": "text",
-                "text": "Dearest Mother, please pray for me and for these my intentions. Pause here to mention your request."
+                "text": "Dearest Mother, please pray for me and for these my intentions."
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "fragment_key": "hail_mary",
@@ -200,7 +311,17 @@
               },
               {
                 "kind": "text",
-                "text": "x1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen"
+                "text": "Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting."
+              },
+              {
+                "kind": "text",
+                "text": "Let us celebrate with joy the birth of the Blessed Virgin Mary.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -223,7 +344,13 @@
               },
               {
                 "kind": "text",
-                "text": "V. O God, come to my assistance. R. O Lord, make haste to help me. V."
+                "text": "O God, come to my assistance.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "O Lord, make haste to help me.",
+                "audio_role": "response"
               },
               {
                 "fragment_key": "glory_be",
@@ -231,7 +358,12 @@
               },
               {
                 "kind": "text",
-                "text": "to the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen"
+                "text": "to the Father, and to the Son, and to the Holy Spirit."
+              },
+              {
+                "kind": "text",
+                "text": "As it was in the beginning, is now and ever shall be, world without end. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -239,7 +371,16 @@
               },
               {
                 "kind": "text",
-                "text": "Dearest Mother, please pray for me and for these my intentions. Pause here to mention your request."
+                "text": "Dearest Mother, please pray for me and for these my intentions."
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "fragment_key": "hail_mary",
@@ -247,7 +388,17 @@
               },
               {
                 "kind": "text",
-                "text": "x1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen"
+                "text": "Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting."
+              },
+              {
+                "kind": "text",
+                "text": "Let us celebrate with joy the birth of the Blessed Virgin Mary.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -270,7 +421,13 @@
               },
               {
                 "kind": "text",
-                "text": "V. O God, come to my assistance. R. O Lord, make haste to help me. V."
+                "text": "O God, come to my assistance.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "O Lord, make haste to help me.",
+                "audio_role": "response"
               },
               {
                 "fragment_key": "glory_be",
@@ -278,15 +435,29 @@
               },
               {
                 "kind": "text",
-                "text": "to the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen"
+                "text": "to the Father, and to the Son, and to the Holy Spirit."
               },
               {
                 "kind": "text",
-                "text": "Most Beautiful Branch of the tree of David, most admirable Mary, whose birth was such a consolation to St. Joachim and St. Anne who were delighted to be the parents of so holy a child, may your birth be the consolation of my soul, by obtaining for me from God, victory over the world and detachment from all the things of this earth."
+                "text": "As it was in the beginning, is now and ever shall be, world without end. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
-                "text": "Dearest Mother, please pray for me and for these my intentions. Pause here to mention your request."
+                "text": "Most Beautiful Branch of the tree of David, most admirable Mary, whose birth was such a consolation to Saint Joachim and Saint Anne who were delighted to be the parents of so holy a child, may your birth be the consolation of my soul, by obtaining for me from God, victory over the world and detachment from all the things of this earth."
+              },
+              {
+                "kind": "text",
+                "text": "Dearest Mother, please pray for me and for these my intentions."
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "fragment_key": "hail_mary",
@@ -294,7 +465,17 @@
               },
               {
                 "kind": "text",
-                "text": "x1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen"
+                "text": "Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting."
+              },
+              {
+                "kind": "text",
+                "text": "Let us celebrate with joy the birth of the Blessed Virgin Mary.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -317,7 +498,13 @@
               },
               {
                 "kind": "text",
-                "text": "V. O God, come to my assistance. R. O Lord, make haste to help me. V."
+                "text": "O God, come to my assistance.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "O Lord, make haste to help me.",
+                "audio_role": "response"
               },
               {
                 "fragment_key": "glory_be",
@@ -325,7 +512,12 @@
               },
               {
                 "kind": "text",
-                "text": "to the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen"
+                "text": "to the Father, and to the Son, and to the Holy Spirit."
+              },
+              {
+                "kind": "text",
+                "text": "As it was in the beginning, is now and ever shall be, world without end. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -333,7 +525,16 @@
               },
               {
                 "kind": "text",
-                "text": "Dearest Mother, please pray for me and for these my intentions. Pause here to mention your request."
+                "text": "Dearest Mother, please pray for me and for these my intentions."
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "fragment_key": "hail_mary",
@@ -341,7 +542,17 @@
               },
               {
                 "kind": "text",
-                "text": "x1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen"
+                "text": "Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting."
+              },
+              {
+                "kind": "text",
+                "text": "Let us celebrate with joy the birth of the Blessed Virgin Mary.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -364,7 +575,13 @@
               },
               {
                 "kind": "text",
-                "text": "V. O God, come to my assistance. R. O Lord, make haste to help me. V."
+                "text": "O God, come to my assistance.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "O Lord, make haste to help me.",
+                "audio_role": "response"
               },
               {
                 "fragment_key": "glory_be",
@@ -372,7 +589,12 @@
               },
               {
                 "kind": "text",
-                "text": "to the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen"
+                "text": "to the Father, and to the Son, and to the Holy Spirit."
+              },
+              {
+                "kind": "text",
+                "text": "As it was in the beginning, is now and ever shall be, world without end. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -380,7 +602,16 @@
               },
               {
                 "kind": "text",
-                "text": "Dearest Mother, please pray for me and for these my intentions. Pause here to mention your request."
+                "text": "Dearest Mother, please pray for me and for these my intentions."
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "fragment_key": "hail_mary",
@@ -388,7 +619,17 @@
               },
               {
                 "kind": "text",
-                "text": "x1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen"
+                "text": "Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting."
+              },
+              {
+                "kind": "text",
+                "text": "Let us celebrate with joy the birth of the Blessed Virgin Mary.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -411,7 +652,13 @@
               },
               {
                 "kind": "text",
-                "text": "V. O God, come to my assistance. R. O Lord, make haste to help me. V."
+                "text": "O God, come to my assistance.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "O Lord, make haste to help me.",
+                "audio_role": "response"
               },
               {
                 "fragment_key": "glory_be",
@@ -419,7 +666,12 @@
               },
               {
                 "kind": "text",
-                "text": "to the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen"
+                "text": "to the Father, and to the Son, and to the Holy Spirit."
+              },
+              {
+                "kind": "text",
+                "text": "As it was in the beginning, is now and ever shall be, world without end. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -427,7 +679,16 @@
               },
               {
                 "kind": "text",
-                "text": "Dearest Mother, please pray for me and for these my intentions. Pause here to mention your request."
+                "text": "Dearest Mother, please pray for me and for these my intentions."
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "fragment_key": "hail_mary",
@@ -435,7 +696,17 @@
               },
               {
                 "kind": "text",
-                "text": "x1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen"
+                "text": "Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting."
+              },
+              {
+                "kind": "text",
+                "text": "Let us celebrate with joy the birth of the Blessed Virgin Mary.",
+                "audio_role": "versicle"
+              },
+              {
+                "kind": "text",
+                "text": "That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen",
+                "audio_role": "response"
               },
               {
                 "kind": "text",
@@ -475,7 +746,7 @@
             "key": "day-1",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nV. O God, come to my assistance. R. O Lord, make haste to help me. V.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen\n\nHeavenly Child, lovable Mary, the Eternal Father delights in your birth, for He beholds in your coming into this world one of His creatures who is so perfect that she will become the worthy Mother of His divine Son. May your birth give joy to my soul also, by obtaining for me from the heavenly Father, the pardon of my sins, and an abiding sorrow for them.\n\nDearest Mother, please pray for me and for these my intentions. Pause here to mention your request.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nx1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, come to my assistance.\n\nO Lord, make haste to help me.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit.\n\nAs it was in the beginning, is now and ever shall be, world without end. Amen\n\nHeavenly Child, lovable Mary, the Eternal Father delights in your birth, for He beholds in your coming into this world one of His creatures who is so perfect that she will become the worthy Mother of His divine Son. May your birth give joy to my soul also, by obtaining for me from the heavenly Father, the pardon of my sins, and an abiding sorrow for them.\n\nDearest Mother, please pray for me and for these my intentions.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nYour Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting.\n\nLet us celebrate with joy the birth of the Blessed Virgin Mary.\n\nThat she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 1"
           },
           {
@@ -485,7 +756,7 @@
             "key": "day-2",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nV. O God, come to my assistance. R. O Lord, make haste to help me. V.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen\n\nO Chosen One among the daughters of Adam, admirable Mary, the Son of God delights in your birth, for He beholds the one chosen to be His Mother, and oh! such a beloved Mother. May your birth give joy to my soul also, by obtaining from your divine Son the grace to be born again spiritually to a holy life, perfectly conformed to yours, so that I may merit to obtain eternal glory.\n\nDearest Mother, please pray for me and for these my intentions. Pause here to mention your request.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nx1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, come to my assistance.\n\nO Lord, make haste to help me.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit.\n\nAs it was in the beginning, is now and ever shall be, world without end. Amen\n\nO Chosen One among the daughters of Adam, admirable Mary, the Son of God delights in your birth, for He beholds the one chosen to be His Mother, and oh! such a beloved Mother. May your birth give joy to my soul also, by obtaining from your divine Son the grace to be born again spiritually to a holy life, perfectly conformed to yours, so that I may merit to obtain eternal glory.\n\nDearest Mother, please pray for me and for these my intentions.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nYour Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting.\n\nLet us celebrate with joy the birth of the Blessed Virgin Mary.\n\nThat she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 2"
           },
           {
@@ -495,7 +766,7 @@
             "key": "day-3",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nV. O God, come to my assistance. R. O Lord, make haste to help me. V.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen\n\nO Chosen One among the daughters of Adam, lovable Mary, the Eternal Word takes delight in your birth, for He sees the source of His Immaculate Blood. May your birth give joy to my soul also, by obtaining for me from the Word made Flesh, the grace to find in this Divine Blood the eternal happiness of my soul.\n\nDearest Mother, please pray for me and for these my intentions. Pause here to mention your request.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nx1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, come to my assistance.\n\nO Lord, make haste to help me.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit.\n\nAs it was in the beginning, is now and ever shall be, world without end. Amen\n\nO Chosen One among the daughters of Adam, lovable Mary, the Eternal Word takes delight in your birth, for He sees the source of His Immaculate Blood. May your birth give joy to my soul also, by obtaining for me from the Word made Flesh, the grace to find in this Divine Blood the eternal happiness of my soul.\n\nDearest Mother, please pray for me and for these my intentions.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nYour Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting.\n\nLet us celebrate with joy the birth of the Blessed Virgin Mary.\n\nThat she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 3"
           },
           {
@@ -505,7 +776,7 @@
             "key": "day-4",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nV. O God, come to my assistance. R. O Lord, make haste to help me. V.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen\n\nO Chosen One among the daughters of Adam, admirable Mary: the Redeemer, promised to mankind from the beginning of the world, takes delight in your birth, for He sees the one who is destined to become the Co-redemptress of souls by uniting her tears to the Blood shed on the Cross to save mankind.\n\nDearest Mother, please pray for me and for these my intentions. Pause here to mention your request.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nx1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, come to my assistance.\n\nO Lord, make haste to help me.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit.\n\nAs it was in the beginning, is now and ever shall be, world without end. Amen\n\nO Chosen One among the daughters of Adam, admirable Mary: the Redeemer, promised to mankind from the beginning of the world, takes delight in your birth, for He sees the one who is destined to become the Co-redemptress of souls by uniting her tears to the Blood shed on the Cross to save mankind.\n\nDearest Mother, please pray for me and for these my intentions.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nYour Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting.\n\nLet us celebrate with joy the birth of the Blessed Virgin Mary.\n\nThat she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 4"
           },
           {
@@ -515,7 +786,7 @@
             "key": "day-5",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nV. O God, come to my assistance. R. O Lord, make haste to help me. V.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen\n\nResplendent Lily of Paradise, lovable Mary, the Holy Spirit takes delight in your birth for He sees in you the soul never stained by sin, which would forever be His worthy Temple. May your birth give joy to my soul also, by obtaining for me from the Holy Spirit His divine love and final perseverance.\n\nDearest Mother, please pray for me and for these my intentions. Pause here to mention your request.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nx1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, come to my assistance.\n\nO Lord, make haste to help me.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit.\n\nAs it was in the beginning, is now and ever shall be, world without end. Amen\n\nResplendent Lily of Paradise, lovable Mary, the Holy Spirit takes delight in your birth for He sees in you the soul never stained by sin, which would forever be His worthy Temple. May your birth give joy to my soul also, by obtaining for me from the Holy Spirit His divine love and final perseverance.\n\nDearest Mother, please pray for me and for these my intentions.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nYour Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting.\n\nLet us celebrate with joy the birth of the Blessed Virgin Mary.\n\nThat she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 5"
           },
           {
@@ -525,7 +796,7 @@
             "key": "day-6",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nV. O God, come to my assistance. R. O Lord, make haste to help me. V.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen\n\nMost Beautiful Branch of the tree of David, most admirable Mary, whose birth was such a consolation to St. Joachim and St. Anne who were delighted to be the parents of so holy a child, may your birth be the consolation of my soul, by obtaining for me from God, victory over the world and detachment from all the things of this earth.\n\nDearest Mother, please pray for me and for these my intentions. Pause here to mention your request.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nx1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, come to my assistance.\n\nO Lord, make haste to help me.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit.\n\nAs it was in the beginning, is now and ever shall be, world without end. Amen\n\nMost Beautiful Branch of the tree of David, most admirable Mary, whose birth was such a consolation to Saint Joachim and Saint Anne who were delighted to be the parents of so holy a child, may your birth be the consolation of my soul, by obtaining for me from God, victory over the world and detachment from all the things of this earth.\n\nDearest Mother, please pray for me and for these my intentions.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nYour Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting.\n\nLet us celebrate with joy the birth of the Blessed Virgin Mary.\n\nThat she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 6"
           },
           {
@@ -535,7 +806,7 @@
             "key": "day-7",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nV. O God, come to my assistance. R. O Lord, make haste to help me. V.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen\n\nResplendent Morning Star, lovable Mary, your birth was the cause of great joy to the angels, for they beheld in you the Mother of the Redeemer of the world, who by His Death would repair the loss sustained by the fall of rebellious angels in paradise. May your birth give joy to my soul also, by obtaining for me from God, victory over the infernal enemy, deliverance from all his snares, and the grace to be associated in glory with the angels in heaven.\n\nDearest Mother, please pray for me and for these my intentions. Pause here to mention your request.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nx1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, come to my assistance.\n\nO Lord, make haste to help me.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit.\n\nAs it was in the beginning, is now and ever shall be, world without end. Amen\n\nResplendent Morning Star, lovable Mary, your birth was the cause of great joy to the angels, for they beheld in you the Mother of the Redeemer of the world, who by His Death would repair the loss sustained by the fall of rebellious angels in paradise. May your birth give joy to my soul also, by obtaining for me from God, victory over the infernal enemy, deliverance from all his snares, and the grace to be associated in glory with the angels in heaven.\n\nDearest Mother, please pray for me and for these my intentions.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nYour Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting.\n\nLet us celebrate with joy the birth of the Blessed Virgin Mary.\n\nThat she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 7"
           },
           {
@@ -545,7 +816,7 @@
             "key": "day-8",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nV. O God, come to my assistance. R. O Lord, make haste to help me. V.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen\n\nBrilliant Aurora of Heaven, lovable Mary, your birth brought great consolation to the souls of the saints detained in limbo, for it announced the approach of the Sun of Justice, Jesus Christ, who would enlighten their darkness and then conduct them to paradise. May your birth give joy to my soul also, and obtain for me from God, patience in all adversities, a perfect and constant conformity to His most holy will.\n\nDearest Mother, please pray for me and for these my intentions. Pause here to mention your request.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nx1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, come to my assistance.\n\nO Lord, make haste to help me.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit.\n\nAs it was in the beginning, is now and ever shall be, world without end. Amen\n\nBrilliant Aurora of Heaven, lovable Mary, your birth brought great consolation to the souls of the saints detained in limbo, for it announced the approach of the Sun of Justice, Jesus Christ, who would enlighten their darkness and then conduct them to paradise. May your birth give joy to my soul also, and obtain for me from God, patience in all adversities, a perfect and constant conformity to His most holy will.\n\nDearest Mother, please pray for me and for these my intentions.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nYour Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting.\n\nLet us celebrate with joy the birth of the Blessed Virgin Mary.\n\nThat she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 8"
           },
           {
@@ -555,7 +826,7 @@
             "key": "day-9",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nV. O God, come to my assistance. R. O Lord, make haste to help me. V.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit. R. As it was in the beginning, is now and ever shall be, world without end. Amen\n\nMediatrix between God and mankind, admirable Mary, by your birth you perfected the joy of all the children of Adam, who, through you, have received the Author of Grace, for He has made you the treasurer of all the graces which are imparted to us. May your birth be a special cause of joy to my soul by obtaining for me from God, eternal salvation and all the graces necessary to obtain it.\n\nDearest Mother, please pray for me and for these my intentions. Pause here to mention your request.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nx1 Your Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting. V. Let us celebrate with joy the birth of the Blessed Virgin Mary. R. That she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, come to my assistance.\n\nO Lord, make haste to help me.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nto the Father, and to the Son, and to the Holy Spirit.\n\nAs it was in the beginning, is now and ever shall be, world without end. Amen\n\nMediatrix between God and mankind, admirable Mary, by your birth you perfected the joy of all the children of Adam, who, through you, have received the Author of Grace, for He has made you the treasurer of all the graces which are imparted to us. May your birth be a special cause of joy to my soul by obtaining for me from God, eternal salvation and all the graces necessary to obtain it.\n\nDearest Mother, please pray for me and for these my intentions.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nYour Nativity, O Virgin Mother of God, was the herald of joy to the whole world; since from you arose the Sun of Justice, Christ our God, who, destroying the curse, bestowed the blessing, and confounding death, rewarded us with life everlasting.\n\nLet us celebrate with joy the birth of the Blessed Virgin Mary.\n\nThat she may intercede for us with Our Lord Jesus Christ. Grant to us your servants, we beseech you, O Lord, the gift of Your heavenly grace, that as our salvation was begun in the child-bearing of the Blessed Virgin, so from this solemn festival of her Nativity may we obtain an increase of peace. Through Our Lord Jesus Christ. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 9"
           }
         ],
@@ -568,7 +839,21 @@
         "format": "mp3",
         "model": "gpt-4o-mini-tts",
         "speed": 1.0,
-        "voice": "ash"
+        "voice": "ash",
+        "role_overrides": {
+          "response": {
+            "providers": [
+              {
+                "provider": "openai",
+                "api_key_env": "OPENAI_API_KEY",
+                "model": "gpt-4o-mini-tts",
+                "voice": "alloy",
+                "format": "mp3",
+                "speed": 1.0
+              }
+            ]
+          }
+        }
       },
       "rss": {
         "enabled": true,

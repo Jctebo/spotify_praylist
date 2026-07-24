@@ -18,7 +18,7 @@
           {
             "key": "introduction",
             "kind": "fixed",
-            "text": "You can pray the full St. John Vianney Novena below.",
+            "text": "You can pray the full Saint John Vianney Novena below.",
             "title": "Introduction"
           },
           {
@@ -35,11 +35,24 @@
               },
               {
                 "kind": "text",
-                "text": "St. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen."
+                "text": "Saint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of"
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "kind": "text",
-                "text": "God, you raised up humble St. John Vianney to show what one priest can do. Pour out your graces upon my parish priest, and all priests, that they follow the saint\u2019s example."
+                "text": "Amen."
+              },
+              {
+                "kind": "text",
+                "text": "God, you raised up humble Saint John Vianney to show what one priest can do. Pour out your graces upon my parish priest, and all priests, that they follow the saint’s example."
               },
               {
                 "fragment_key": "our_father",
@@ -74,11 +87,24 @@
               },
               {
                 "kind": "text",
-                "text": "St. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen."
+                "text": "Saint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of"
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "kind": "text",
-                "text": "Jesus, St. John Vianney was a priest after your own priesthood. Give me the courage to proclaim and live the Gospel boldly, as he did."
+                "text": "Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Jesus, Saint John Vianney was a priest after your own priesthood. Give me the courage to proclaim and live the Gospel boldly, as he did."
               },
               {
                 "fragment_key": "our_father",
@@ -113,11 +139,24 @@
               },
               {
                 "kind": "text",
-                "text": "St. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen."
+                "text": "Saint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of"
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "kind": "text",
-                "text": "Lord, St. John Vianney sat in the confessional for hours on end. Help me go to Confession frequently and make good confessions, so that I might overcome my faults and grow in holiness."
+                "text": "Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Lord, Saint John Vianney sat in the confessional for hours on end. Help me go to Confession frequently and make good confessions, so that I might overcome my faults and grow in holiness."
               },
               {
                 "fragment_key": "our_father",
@@ -152,11 +191,24 @@
               },
               {
                 "kind": "text",
-                "text": "St. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen."
+                "text": "Saint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of"
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "kind": "text",
-                "text": "St. John Vianney, you were gentle with sinners who came to you, seeking the forgiveness of God. Pray that I may be merciful to those who sin against me, and forgive them, remembering how much our Lord has forgiven me of."
+                "text": "Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Saint John Vianney, you were gentle with sinners who came to you, seeking the forgiveness of God. Pray that I may be merciful to those who sin against me, and forgive them, remembering how much our Lord has forgiven me of."
               },
               {
                 "fragment_key": "our_father",
@@ -191,11 +243,24 @@
               },
               {
                 "kind": "text",
-                "text": "St. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen."
+                "text": "Saint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of"
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "kind": "text",
-                "text": "St. John Vianney, you spent hours in prayer, in quiet contemplation, and so were molded into the shape of Jesus Christ. Help me to learn to pray better and spend time in silence with God."
+                "text": "Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Saint John Vianney, you spent hours in prayer, in quiet contemplation, and so were molded into the shape of Jesus Christ. Help me to learn to pray better and spend time in silence with God."
               },
               {
                 "fragment_key": "our_father",
@@ -230,11 +295,24 @@
               },
               {
                 "kind": "text",
-                "text": "St. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen."
+                "text": "Saint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of"
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "kind": "text",
-                "text": "St. John Vianney, you prized purity of heart highly and led others to purity. Obtain for me the graces I need to conquer all sins against holy purity and resist temptations against this great virtue."
+                "text": "Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Saint John Vianney, you prized purity of heart highly and led others to purity. Obtain for me the graces I need to conquer all sins against holy purity and resist temptations against this great virtue."
               },
               {
                 "fragment_key": "our_father",
@@ -269,11 +347,24 @@
               },
               {
                 "kind": "text",
-                "text": "St. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen."
+                "text": "Saint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of"
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "kind": "text",
-                "text": "St. John Vianney, you lived for Heaven and the Beatific Vision with the Holy Trinity, encouraging your flock to do the same. Pray for me, that I won\u2019t be choked by the cares and worries of this world, but will keep my eyes firmly set on Heaven\u2019s unending joy."
+                "text": "Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Saint John Vianney, you lived for Heaven and the Beatific Vision with the Holy Trinity, encouraging your flock to do the same. Pray for me, that I won’t be choked by the cares and worries of this world, but will keep my eyes firmly set on Heaven’s unending joy."
               },
               {
                 "fragment_key": "our_father",
@@ -308,11 +399,24 @@
               },
               {
                 "kind": "text",
-                "text": "St. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen."
+                "text": "Saint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of"
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
               },
               {
                 "kind": "text",
-                "text": "St. John Vianney, you fervently received Jesus in the Eucharist at each Mass you celebrated. Pray that I am kept free from mortal sin and obtain for me a share in the devotion with which you received Jesus in the Sacrament."
+                "text": "Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Saint John Vianney, you fervently received Jesus in the Eucharist at each Mass you celebrated. Pray that I am kept free from mortal sin and obtain for me a share in the devotion with which you received Jesus in the Sacrament."
               },
               {
                 "fragment_key": "our_father",
@@ -347,7 +451,20 @@
               },
               {
                 "kind": "text",
-                "text": "St. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen."
+                "text": "Saint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of"
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
+              },
+              {
+                "kind": "text",
+                "text": "Amen."
               },
               {
                 "kind": "text",
@@ -400,7 +517,7 @@
           {
             "key": "introduction",
             "kind": "fixed",
-            "text": "You can pray the full St. John Vianney Novena below.",
+            "text": "You can pray the full Saint John Vianney Novena below.",
             "title": "Introduction"
           },
           {
@@ -410,7 +527,7 @@
             "key": "day-1",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen.\n\nGod, you raised up humble St. John Vianney to show what one priest can do. Pour out your graces upon my parish priest, and all priests, that they follow the saint\u2019s example.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of\n\nAmen.\n\nGod, you raised up humble Saint John Vianney to show what one priest can do. Pour out your graces upon my parish priest, and all priests, that they follow the saint’s example.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 1"
           },
           {
@@ -420,7 +537,7 @@
             "key": "day-2",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen.\n\nJesus, St. John Vianney was a priest after your own priesthood. Give me the courage to proclaim and live the Gospel boldly, as he did.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of\n\nAmen.\n\nJesus, Saint John Vianney was a priest after your own priesthood. Give me the courage to proclaim and live the Gospel boldly, as he did.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 2"
           },
           {
@@ -430,7 +547,7 @@
             "key": "day-3",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen.\n\nLord, St. John Vianney sat in the confessional for hours on end. Help me go to Confession frequently and make good confessions, so that I might overcome my faults and grow in holiness.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of\n\nAmen.\n\nLord, Saint John Vianney sat in the confessional for hours on end. Help me go to Confession frequently and make good confessions, so that I might overcome my faults and grow in holiness.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 3"
           },
           {
@@ -440,7 +557,7 @@
             "key": "day-4",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen.\n\nSt. John Vianney, you were gentle with sinners who came to you, seeking the forgiveness of God. Pray that I may be merciful to those who sin against me, and forgive them, remembering how much our Lord has forgiven me of.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of\n\nAmen.\n\nSaint John Vianney, you were gentle with sinners who came to you, seeking the forgiveness of God. Pray that I may be merciful to those who sin against me, and forgive them, remembering how much our Lord has forgiven me of.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 4"
           },
           {
@@ -450,7 +567,7 @@
             "key": "day-5",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen.\n\nSt. John Vianney, you spent hours in prayer, in quiet contemplation, and so were molded into the shape of Jesus Christ. Help me to learn to pray better and spend time in silence with God.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of\n\nAmen.\n\nSaint John Vianney, you spent hours in prayer, in quiet contemplation, and so were molded into the shape of Jesus Christ. Help me to learn to pray better and spend time in silence with God.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 5"
           },
           {
@@ -460,7 +577,7 @@
             "key": "day-6",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen.\n\nSt. John Vianney, you prized purity of heart highly and led others to purity. Obtain for me the graces I need to conquer all sins against holy purity and resist temptations against this great virtue.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of\n\nAmen.\n\nSaint John Vianney, you prized purity of heart highly and led others to purity. Obtain for me the graces I need to conquer all sins against holy purity and resist temptations against this great virtue.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 6"
           },
           {
@@ -470,7 +587,7 @@
             "key": "day-7",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen.\n\nSt. John Vianney, you lived for Heaven and the Beatific Vision with the Holy Trinity, encouraging your flock to do the same. Pray for me, that I won\u2019t be choked by the cares and worries of this world, but will keep my eyes firmly set on Heaven\u2019s unending joy.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of\n\nAmen.\n\nSaint John Vianney, you lived for Heaven and the Beatific Vision with the Holy Trinity, encouraging your flock to do the same. Pray for me, that I won’t be choked by the cares and worries of this world, but will keep my eyes firmly set on Heaven’s unending joy.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 7"
           },
           {
@@ -480,7 +597,7 @@
             "key": "day-8",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen.\n\nSt. John Vianney, you fervently received Jesus in the Eucharist at each Mass you celebrated. Pray that I am kept free from mortal sin and obtain for me a share in the devotion with which you received Jesus in the Sacrament.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of\n\nAmen.\n\nSaint John Vianney, you fervently received Jesus in the Eucharist at each Mass you celebrated. Pray that I am kept free from mortal sin and obtain for me a share in the devotion with which you received Jesus in the Sacrament.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 8"
           },
           {
@@ -490,7 +607,7 @@
             "key": "day-9",
             "kind": "fixed",
             "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt. John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of Pause here to mention your request. Amen.\n\nHoly priest of Ars, your coming to that town was like a spiritual avalanche in a time of great persecution and darkness. Pray for us that in our dark time, the light of Christ shines forth from us and shows the way to Heaven for all to see.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSaint John Vianney, you exemplified what a holy priest of Christ should be. Your patience and fortitude in the confessional demonstrated the mercy of God to the penitents who sought forgiveness for their sins. Like Christ, you were gracious and merciful, yet also you called your flock to repentance and amendment of life. Help me through your powerful intercession along the path to sanctity that our Lord has prepared for me. In particular, I ask that you obtain for me the graces of\n\nAmen.\n\nHoly priest of Ars, your coming to that town was like a spiritual avalanche in a time of great persecution and darkness. Pray for us that in our dark time, the light of Christ shines forth from us and shows the way to Heaven for all to see.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 9"
           }
         ],

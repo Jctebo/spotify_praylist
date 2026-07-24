@@ -1,5 +1,20 @@
 # Release Log
 
+## [0.3.10.0] - 2026-07-24
+
+### Added
+- Novena listeners now hear a sacred bell followed by a personal-intention pause wherever the printed prayer calls for one.
+- Versicles and responses now have distinct spoken roles: OpenAI responses use Alloy while Ash remains the primary and versicle voice.
+
+### Changed
+- All repo-owned novenas now speak expanded titles and consistent prayer text while retaining editorial notes such as the Father McGivney Guild contact note.
+- Printed repetitions now play as complete repeated prayer segments.
+- The sacred bell now has a lower, more reverent tone and a longer natural decay.
+
+### Fixed
+- Role-specific voice choices now remain intact when the renderer falls back between audio providers.
+- Text prayer segments can now declare repetitions without failing contract validation.
+
 ## [0.3.9.1] - 2026-07-24
 
 ### Changed

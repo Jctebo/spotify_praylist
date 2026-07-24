@@ -307,6 +307,9 @@ def _block_parts_to_fragments(
                 "repeat_count": repeat,
                 "source_fragment_key": source_fragment_key,
             }
+            audio_role = str(part.get("audio_role", "")).strip().lower()
+            if audio_role:
+                fragment_row["audio_role"] = audio_role
             if part_kind == "audio_cue":
                 fragment_row["cue"] = str(part.get("cue", "")).strip()
             elif part_kind == "pause":
