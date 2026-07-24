@@ -1,5 +1,20 @@
 # Release Log
 
+## [0.3.8.0] - 2026-07-23
+
+### Added
+- Added one coherent Rosary devotional package containing a flexible introduction, one overall intention, and five distinct decade intentions paired with mystery reflections.
+- Added separate announcement, intention, 750ms pause, and reflection audio fragments for every decade, with expanded priority and intention audit metadata.
+
+### Changed
+- Applied season-dependent Rosary priorities so one dominant solemnity, feast, seasonal, Gospel, memorial, Ordinary Time, or mystery-fruit focus shapes all five decades.
+- Replaced rigid sentence templates with bounded semantic validation, structured generation, one provider-compatible JSON retry, and a complete deterministic fallback.
+- Preserved canonical prayer wording, counts, effective TTS inputs, Spotify lookup behavior, and all non-Rosary introduction behavior.
+
+### Fixed
+- Prevented shared daily-theme display prose from overwriting the Rosary's authoritative liturgical focus.
+- Distinguished memorials and optional memorials from solemnities and feasts, while keeping Easter Octave weekdays centered on the Easter season.
+
 ## [0.3.7.0] - 2026-07-23
 
 ### Added

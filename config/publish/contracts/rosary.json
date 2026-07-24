@@ -48,6 +48,7 @@
         "calendar": "general_roman",
         "locale": "en",
         "prompt_model": "gpt-4.1-mini",
+        "temperature": 0.65,
         "allow_missing_gospel": true
       }
     }
@@ -98,6 +99,10 @@
         {
           "kind": "rosary_intro",
           "title": "Rosary Intro"
+        },
+        {
+          "kind": "rosary_overall_intention",
+          "title": "Rosary Intention"
         },
         {
           "kind": "sequence",

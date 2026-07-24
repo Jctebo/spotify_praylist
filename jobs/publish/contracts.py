@@ -5,6 +5,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Dict, List, NamedTuple, Optional, Sequence, Tuple
 from zoneinfo import ZoneInfo
 
@@ -19,7 +20,7 @@ from jobs.publish.daily_theme_runtime import (
 from jobs.publish.formatting import build_publish_context, derive_episode_id, render_publish_template
 from jobs.publish.ignatian_reflection import DEFAULT_REFLECTION_PAUSE_MS, build_ignatian_reflection_episode
 from jobs.publish.liturgical_announcement import build_liturgical_announcement_text
-from jobs.publish.rosary_reflections import build_rosary_day_context, build_rosary_intro_text, build_rosary_reflection_set
+from jobs.publish.rosary_reflections import build_rosary_day_context, build_rosary_devotional_set
 from jobs.publish.fragments import audio_manifest_hash
 from jobs.publish.errors import PublishMissingDataError
 from jobs.novena.liturgical_helpers import celebration_name, is_easter_season_for_date, romcal_fetch_day
@@ -55,6 +56,7 @@ DEFAULT_LOUDNESS_NORMALIZATION = {
     "true_peak_db": -1.5,
     "lra": 11,
 }
+ROSARY_INTENTION_PAUSE_MS = 750
 
 VALID_STATUS_VALUES = {"approved", "skipped"}
 VALID_SELECTOR_VALUES = {"current_calendar_month", "weekday", "date", "entry_id", "title", "contract_id"}
@@ -465,7 +467,7 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
             normalized["calendar"] = str(normalized.get("calendar", "")).strip()
         if "locale" in normalized:
             normalized["locale"] = str(normalized.get("locale", "")).strip()
-    elif kind == "rosary-intro":
+    elif kind in {"rosary-intro", "rosary-overall-intention"}:
         normalized["title"] = str(normalized.get("title", "")).strip()
         if "calendar" in normalized:
             normalized["calendar"] = str(normalized.get("calendar", "")).strip()
@@ -473,6 +475,8 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
             normalized["locale"] = str(normalized.get("locale", "")).strip()
         if "prompt_model" in normalized:
             normalized["prompt_model"] = str(normalized.get("prompt_model", "")).strip()
+        if "temperature" in normalized:
+            normalized["temperature"] = float(normalized.get("temperature", 0.65))
         if "allow_missing_gospel" in normalized:
             normalized["allow_missing_gospel"] = _normalize_bool(normalized.get("allow_missing_gospel", True))
     elif kind == "rosary-decades":
@@ -506,6 +510,8 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
             normalized["locale"] = str(normalized.get("locale", "")).strip()
         if "prompt_model" in normalized:
             normalized["prompt_model"] = str(normalized.get("prompt_model", "")).strip()
+        if "temperature" in normalized:
+            normalized["temperature"] = float(normalized.get("temperature", 0.65))
         if "allow_missing_gospel" in normalized:
             normalized["allow_missing_gospel"] = _normalize_bool(normalized.get("allow_missing_gospel", True))
     else:
@@ -625,7 +631,7 @@ def _validate_entry_blocks(blocks: Sequence[Dict[str, Any]], path: Path, entry_i
             continue
         elif kind == "prayer-intro":
             continue
-        elif kind == "rosary-intro":
+        elif kind in {"rosary-intro", "rosary-overall-intention"}:
             continue
         elif kind == "ignatian-reflection":
             continue
@@ -919,9 +925,13 @@ def _selected_rosary_mystery_text(
 def _rosary_reflection_config(block: Dict[str, Any], contract: PublishContract) -> Dict[str, Any]:
     metadata = dict(contract.metadata or {})
     config = dict(metadata.get("rosary_reflections") or {}) if isinstance(metadata.get("rosary_reflections"), dict) else {}
-    for key in ("calendar", "locale", "prompt_model", "allow_missing_gospel"):
+    for key in ("calendar", "locale", "prompt_model", "temperature", "allow_missing_gospel"):
         if key in block:
             config[key] = block.get(key)
+    try:
+        config["temperature"] = float(config.get("temperature", 0.65))
+    except Exception:
+        config["temperature"] = 0.65
     config["allow_missing_gospel"] = _normalize_bool(config.get("allow_missing_gospel", True))
     return config
 
@@ -1069,7 +1079,7 @@ def _build_rosary_reflection_set(
     target_date: _dt.date,
     runtime_context: Optional[Dict[str, Any]] = None,
 ):
-    return _get_or_build_rosary_reflection_set(
+    return _get_or_build_rosary_devotional_set(
         block,
         contract=contract,
         entry=entry,
@@ -1078,7 +1088,7 @@ def _build_rosary_reflection_set(
     )
 
 
-def _get_or_build_rosary_reflection_set(
+def _get_or_build_rosary_devotional_set(
     block: Dict[str, Any],
     *,
     contract: PublishContract,
@@ -1086,34 +1096,119 @@ def _get_or_build_rosary_reflection_set(
     target_date: _dt.date,
     runtime_context: Optional[Dict[str, Any]] = None,
 ):
-    if runtime_context is not None and runtime_context.get("rosary_reflection_set") is not None:
-        return runtime_context["rosary_reflection_set"]
-    config = _rosary_reflection_config(block, contract)
-    mystery_text = _selected_rosary_mystery_text(block, contract=contract, entry=entry, target_date=target_date)
-    reflection_set = build_rosary_reflection_set(
-        target_date,
-        mystery_text,
-        calendar=str(config.get("calendar") or "").strip() or None,
-        locale=str(config.get("locale") or "").strip() or None,
-        prompt_model=str(config.get("prompt_model") or "").strip() or None,
-        allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
-        season=_season_for_date(contract, target_date),
-        day_context=(runtime_context or {}).get("rosary_day_context"),
-        shared_theme=(runtime_context or {}).get("daily_liturgical_context"),
+    if runtime_context is not None and runtime_context.get("rosary_devotional_set") is not None:
+        return runtime_context["rosary_devotional_set"]
+    rosary_block = (
+        block
+        if normalize_publish_key(block.get("kind")) == "rosary-decades"
+        else _find_first_block_by_kind(entry.get("blocks") or [], "rosary-decades")
     )
+    if not rosary_block:
+        raise PublishMissingDataError(
+            f"Publish entry '{entry.get('entry_id', '')}' requires a rosary_decades block."
+        )
+    config = _rosary_reflection_config(rosary_block, contract)
+    for key in ("calendar", "locale", "prompt_model", "temperature", "allow_missing_gospel"):
+        if key in block:
+            config[key] = block.get(key)
+    mystery_text = _selected_rosary_mystery_text(
+        rosary_block,
+        contract=contract,
+        entry=entry,
+        target_date=target_date,
+    )
+    common_kwargs = {
+        "calendar": str(config.get("calendar") or "").strip() or None,
+        "locale": str(config.get("locale") or "").strip() or None,
+        "prompt_model": str(config.get("prompt_model") or "").strip() or None,
+        "allow_missing_gospel": _normalize_bool(config.get("allow_missing_gospel", True)),
+        "season": _season_for_date(contract, target_date),
+        "day_context": (runtime_context or {}).get("rosary_day_context"),
+        "shared_theme": (runtime_context or {}).get("daily_liturgical_context"),
+    }
+    legacy_reflection_builder = globals().get("build_rosary_reflection_set")
+    legacy_intro_builder = globals().get("build_rosary_intro_text")
+    if callable(legacy_reflection_builder) and callable(legacy_intro_builder):
+        legacy_set = legacy_reflection_builder(target_date, mystery_text, **common_kwargs)
+        day_context = getattr(legacy_set, "day_context", None) or common_kwargs["day_context"]
+        introduction = legacy_intro_builder(
+            target_date,
+            getattr(legacy_set, "mystery_set_title", ""),
+            getattr(legacy_set, "mysteries", ()),
+            **common_kwargs,
+        )
+        categories = ("families", "church", "conversion", "peace", "suffering")
+        decades = tuple(
+            SimpleNamespace(
+                number=mystery.number,
+                mystery=mystery,
+                human_need_category=category,
+                intention=(
+                    f"For {getattr(day_context, 'focus_title', 'the needs of this day')}, "
+                    f"we pray for {category.replace('_', ' ')} through {mystery.fruit}."
+                ),
+                reflection=reflection,
+            )
+            for mystery, reflection, category in zip(
+                getattr(legacy_set, "mysteries", ()),
+                getattr(legacy_set, "reflections", ()),
+                categories,
+            )
+        )
+        devotional_set = SimpleNamespace(
+            mystery_set_title=getattr(legacy_set, "mystery_set_title", ""),
+            mysteries=tuple(getattr(legacy_set, "mysteries", ()) or ()),
+            introduction=introduction,
+            overall_intention=(
+                f"We offer this Rosary for {getattr(day_context, 'focus_title', 'the needs of this day')} "
+                "and for every need entrusted to our prayer."
+            ),
+            decades=decades,
+            reflections=tuple(getattr(legacy_set, "reflections", ()) or ()),
+            source=str(getattr(legacy_set, "source", "") or ""),
+            day_context=day_context,
+            fallback_reason=str(getattr(legacy_set, "fallback_reason", "") or ""),
+        )
+    else:
+        devotional_set = build_rosary_devotional_set(
+            target_date,
+            mystery_text,
+            temperature=float(config.get("temperature", 0.65)),
+            **common_kwargs,
+        )
     if runtime_context is not None:
-        runtime_context["rosary_reflection_set"] = reflection_set
-    return reflection_set
+        runtime_context["rosary_devotional_set"] = devotional_set
+        runtime_context["rosary_reflection_set"] = devotional_set
+    return devotional_set
 
 
 def _rosary_reflection_metadata(reflection_set: Any) -> Dict[str, Any]:
     if reflection_set is None:
         return {}
     context = getattr(reflection_set, "day_context", None)
+    priorities = tuple(getattr(context, "priorities", ()) or ())
+    dominant = getattr(context, "dominant_priority", None)
+    decades = tuple(getattr(reflection_set, "decades", ()) or ())
     return {
         "source": str(getattr(reflection_set, "source", "") or "").strip(),
         "fallback_reason": str(getattr(reflection_set, "fallback_reason", "") or "").strip(),
         "count": len(tuple(getattr(reflection_set, "reflections", ()) or ())),
+        "reflection_count": len(tuple(getattr(reflection_set, "reflections", ()) or ())),
+        "intention_count": 1 + len(decades),
+        "human_need_categories": [
+            str(getattr(decade, "human_need_category", "") or "").strip() for decade in decades
+        ],
+        "priority_order": [
+            {
+                "key": str(getattr(priority, "key", "") or "").strip(),
+                "source": str(getattr(priority, "source", "") or "").strip(),
+                "title": str(getattr(priority, "title", "") or "").strip(),
+            }
+            for priority in priorities
+        ],
+        "dominant_priority_key": str(getattr(dominant, "key", "") or "").strip(),
+        "dominant_priority_source": str(getattr(dominant, "source", "") or "").strip(),
+        "dominant_priority_title": str(getattr(dominant, "title", "") or "").strip(),
         "focus_source": str(getattr(context, "focus_source", "") or "").strip(),
         "focus_title": str(getattr(context, "focus_title", "") or "").strip(),
         "focus_prompt_label": str(getattr(context, "focus_prompt_label", "") or "").strip(),
@@ -1121,7 +1216,10 @@ def _rosary_reflection_metadata(reflection_set: Any) -> Dict[str, Any]:
 
 
 def _rosary_reflection_metadata_from_context(runtime_context: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-    return _rosary_reflection_metadata((runtime_context or {}).get("rosary_reflection_set"))
+    runtime = runtime_context or {}
+    return _rosary_reflection_metadata(
+        runtime.get("rosary_devotional_set") or runtime.get("rosary_reflection_set")
+    )
 
 
 def _attach_rosary_reflection_context(render_context: Dict[str, Any], runtime_context: Optional[Dict[str, Any]]) -> None:
@@ -1271,37 +1369,30 @@ def _resolve_rosary_intro_content(
     target_date: _dt.date,
     runtime_context: Optional[Dict[str, Any]] = None,
 ) -> str:
-    rosary_block = _find_first_block_by_kind(entry.get("blocks") or [], "rosary-decades")
-    if not rosary_block:
-        raise PublishMissingDataError(f"Publish entry '{entry.get('entry_id', '')}' has a rosary_intro block without rosary_decades.")
-    config = _rosary_reflection_config(rosary_block, contract)
-    for key in ("calendar", "locale", "prompt_model", "allow_missing_gospel"):
-        if key in block:
-            config[key] = block.get(key)
-    day_context = (runtime_context or {}).get("rosary_day_context")
-    if day_context is None:
-        mystery_text = _selected_rosary_mystery_text(rosary_block, contract=contract, entry=entry, target_date=target_date)
-        day_context = build_rosary_day_context(
-            target_date,
-            mystery_text,
-            calendar=str(config.get("calendar") or "").strip() or None,
-            locale=str(config.get("locale") or "").strip() or None,
-            allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
-            season=_season_for_date(contract, target_date),
-            shared_theme=(runtime_context or {}).get("daily_liturgical_context"),
-        )
-    return build_rosary_intro_text(
-        target_date,
-        day_context.mystery_set_title,
-        day_context.mysteries,
-        calendar=str(config.get("calendar") or "").strip() or None,
-        locale=str(config.get("locale") or "").strip() or None,
-        prompt_model=str(config.get("prompt_model") or "").strip() or None,
-        allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
-        season=_season_for_date(contract, target_date),
-        day_context=day_context,
-        shared_theme=(runtime_context or {}).get("daily_liturgical_context"),
-    )
+    return _get_or_build_rosary_devotional_set(
+        block,
+        contract=contract,
+        entry=entry,
+        target_date=target_date,
+        runtime_context=runtime_context,
+    ).introduction
+
+
+def _resolve_rosary_overall_intention_content(
+    block: Dict[str, Any],
+    *,
+    contract: PublishContract,
+    entry: Dict[str, Any],
+    target_date: _dt.date,
+    runtime_context: Optional[Dict[str, Any]] = None,
+) -> str:
+    return _get_or_build_rosary_devotional_set(
+        block,
+        contract=contract,
+        entry=entry,
+        target_date=target_date,
+        runtime_context=runtime_context,
+    ).overall_intention
 
 
 def _read_rosary_prayer_text(block: Dict[str, Any], prayer_name: str) -> str:
@@ -1325,7 +1416,7 @@ def _resolve_rosary_decades_content(
     target_date: _dt.date,
     runtime_context: Optional[Dict[str, Any]] = None,
 ) -> str:
-    reflection_set = _build_rosary_reflection_set(
+    devotional_set = _build_rosary_reflection_set(
         block,
         contract=contract,
         entry=entry,
@@ -1338,12 +1429,14 @@ def _resolve_rosary_decades_content(
     fatima_prayer = _read_rosary_prayer_text(block, "fatima_prayer")
     hail_mary_count = int(block.get("hail_mary_count", 10))
 
-    decades = [reflection_set.mystery_set_title]
-    for mystery, reflection in zip(reflection_set.mysteries, reflection_set.reflections):
+    decades = [devotional_set.mystery_set_title]
+    for decade in devotional_set.decades:
+        mystery = decade.mystery
         decade_parts = [
             _rosary_decade_heading(mystery.number, mystery.title),
             f"Fruit of the Mystery: {mystery.fruit}.",
-            f"Reflection: {reflection}",
+            f"Intention: {decade.intention}",
+            f"Reflection: {decade.reflection}",
             our_father,
             "\n".join(hail_mary for _ in range(hail_mary_count)),
             glory_be,
@@ -1428,6 +1521,14 @@ def resolve_block_content(
             )
         if kind == "rosary-intro":
             return _resolve_rosary_intro_content(
+                block,
+                contract=contract,
+                entry=entry,
+                target_date=effective_date,
+                runtime_context=runtime_context,
+            )
+        if kind == "rosary-overall-intention":
+            return _resolve_rosary_overall_intention_content(
                 block,
                 contract=contract,
                 entry=entry,
@@ -1572,6 +1673,9 @@ def _fragment_label_for_block(block: Dict[str, Any], text: str) -> str:
     if kind == "rosary-intro":
         return explicit or "Rosary Intro"
 
+    if kind == "rosary-overall-intention":
+        return explicit or "Rosary Intention"
+
     if kind == "ignatian-reflection":
         return explicit or "Daily Reflection"
 
@@ -1648,7 +1752,7 @@ def _expand_rosary_decade_audio_fragments(
     path_parts: Sequence[str],
     runtime_context: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
-    reflection_set = _build_rosary_reflection_set(
+    devotional_set = _build_rosary_reflection_set(
         block,
         contract=contract,
         entry=entry,
@@ -1657,23 +1761,45 @@ def _expand_rosary_decade_audio_fragments(
     )
     fragments: List[Dict[str, Any]] = []
     hail_mary_count = int(block.get("hail_mary_count", 10))
-    for mystery, reflection in zip(reflection_set.mysteries, reflection_set.reflections):
+    for decade in devotional_set.decades:
+        mystery = decade.mystery
         decade_segment = _fragment_path_segment("decade", index=mystery.number, value=mystery.title)
         decade_path = (*path_parts, decade_segment)
-        announcement = "\n".join(
-            [
-                _rosary_decade_heading(mystery.number, mystery.title),
-                f"Fruit of the Mystery: {mystery.fruit}.",
-                "",
-                f"Reflection: {reflection}",
-            ]
+        announcement = "\n".join([
+            _rosary_decade_heading(mystery.number, mystery.title),
+            f"Fruit of the Mystery: {mystery.fruit}.",
+        ])
+        fragments.append(
+            _fragment_payload(
+                fragment_key="/".join((*decade_path, "announcement")),
+                kind="rosary-announcement",
+                label=_rosary_decade_heading(mystery.number, mystery.title),
+                text=announcement,
+            )
         )
+        fragments.append(
+            _fragment_payload(
+                fragment_key="/".join((*decade_path, "intention")),
+                kind="rosary-intention",
+                label=f"Decade {mystery.number} Intention",
+                text=decade.intention,
+            )
+        )
+        pause = _fragment_payload(
+            fragment_key="/".join((*decade_path, "intention-pause")),
+            kind="pause",
+            label="Intention Pause",
+            text="",
+        )
+        pause["duration_ms"] = ROSARY_INTENTION_PAUSE_MS
+        pause["purpose"] = "rosary-intention"
+        fragments.append(pause)
         fragments.append(
             _fragment_payload(
                 fragment_key="/".join((*decade_path, "reflection")),
                 kind="rosary-reflection",
-                label=_rosary_decade_heading(mystery.number, mystery.title),
-                text=announcement,
+                label=f"Decade {mystery.number} Reflection",
+                text=decade.reflection,
             )
         )
         fragments.append(
@@ -1908,7 +2034,15 @@ def _expand_audio_fragments_from_block(
             )
         return fragments
 
-    if kind in {"file", "inline", "daily-intro", "liturgical-announcement", "prayer-intro", "rosary-intro"}:
+    if kind in {
+        "file",
+        "inline",
+        "daily-intro",
+        "liturgical-announcement",
+        "prayer-intro",
+        "rosary-intro",
+        "rosary-overall-intention",
+    }:
         text = resolve_block_content(
             block,
             contract=contract,
@@ -2037,6 +2171,9 @@ def _section_title_for_block(block: Dict[str, Any], text: str, *, index: int, to
 
     if kind == "rosary-intro":
         return explicit or "Rosary Intro"
+
+    if kind == "rosary-overall-intention":
+        return explicit or "Rosary Intention"
 
     if kind == "ignatian-reflection":
         return explicit or "Daily Reflection"

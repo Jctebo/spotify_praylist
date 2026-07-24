@@ -30,12 +30,7 @@ class TestPublishContracts(unittest.TestCase):
         )
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
         self.mod.build_rosary_day_context = self._fake_rosary_day_context
-        self.mod.build_rosary_intro_text = lambda date_value, mystery_set_title, mysteries, **kwargs: (
-            "Today is Monday, April 6, 2026, in the Easter season. "
-            "For today's rosary, we will focus on the feast of Saint Example. "
-            f"As we pray the {mystery_set_title}, we ask for grace."
-        )
-        self.mod.build_rosary_reflection_set = self._fake_rosary_reflection_set
+        self.mod.build_rosary_devotional_set = self._fake_rosary_reflection_set
         self.mod.build_daily_liturgical_context = self._fake_daily_liturgical_context
         self.mod.build_ignatian_reflection_episode = self._fake_ignatian_reflection_episode
 
@@ -46,16 +41,27 @@ class TestPublishContracts(unittest.TestCase):
             number, rest = line.split(".", 1)
             title, fruit = rest.split(" - ", 1)
             mysteries.append(SimpleNamespace(number=int(number), title=title.strip(), fruit=fruit.strip()))
+        dominant = SimpleNamespace(
+            key="major-celebration",
+            source="major",
+            title="Saint Example",
+            prompt_context="the solemnity or feast of Saint Example",
+            anchors=("Saint Example",),
+        )
         return SimpleNamespace(
             date=date_value,
             mystery_set_title=lines[0],
             mysteries=tuple(mysteries),
-            focus_source="feast",
+            season_mode="nonordinary",
+            priorities=(dominant,),
+            dominant_priority=dominant,
+            focus_source="major",
             focus_title="Saint Example",
-            focus_prompt_label="the feast of Saint Example",
+            focus_prompt_label="the solemnity or feast of Saint Example",
             celebration_clause="Saint Example",
             season_label="Easter season",
             feast_names=("Saint Example",),
+            memorial_names=(),
             gospel_citation="John 10:1-10",
             gospel_text="Jesus calls his sheep by name.",
             calendar="general_roman",
@@ -70,12 +76,33 @@ class TestPublishContracts(unittest.TestCase):
             number, rest = line.split(".", 1)
             title, fruit = rest.split(" - ", 1)
             mysteries.append(SimpleNamespace(number=int(number), title=title.strip(), fruit=fruit.strip()))
+        day_context = self._fake_rosary_day_context(date_value, mystery_text)
+        decades = tuple(
+            SimpleNamespace(
+                number=mystery.number,
+                mystery=mystery,
+                human_need_category=category,
+                intention=f"For Saint Example, we pray for {category.replace('_', ' ')} through {mystery.fruit}.",
+                reflection=f"Reflection for {mystery.title} through Saint Example and {mystery.fruit}.",
+            )
+            for mystery, category in zip(
+                mysteries,
+                ("families", "church", "conversion", "peace", "suffering"),
+            )
+        )
         return SimpleNamespace(
             mystery_set_title=lines[0],
             mysteries=tuple(mysteries),
-            reflections=tuple(f"Reflection for {mystery.title}." for mystery in mysteries),
-            source="generated_feast",
-            day_context=self._fake_rosary_day_context(date_value, mystery_text),
+            introduction=(
+                "Today we receive the Joyful Mysteries through Saint Example, carrying one coherent focus into prayer."
+            ),
+            overall_intention=(
+                "We offer this Rosary through Saint Example for the needs of the Church and the world."
+            ),
+            decades=decades,
+            reflections=tuple(decade.reflection for decade in decades),
+            source="generated_structured",
+            day_context=day_context,
             fallback_reason="",
         )
 
@@ -617,7 +644,8 @@ class TestPublishContracts(unittest.TestCase):
         self.assertIn("April", morning["text"])
         self.assertIn("Joyful Mysteries", rosary["text"])
         self.assertIn("The First Mystery: The Annunciation", rosary["text"])
-        self.assertIn("Reflection for The Annunciation.", rosary["text"])
+        self.assertIn("Intention: For Saint Example, we pray for families through Humility.", rosary["text"])
+        self.assertIn("Reflection for The Annunciation through Saint Example and Humility.", rosary["text"])
         self.assertEqual(rosary["title"], "Daily Rosary - Joyful Mysteries - Saint Example - April 6, 2026")
         self.assertEqual(rosary["render_context"]["rosary_mystery_set_title"], "Joyful Mysteries")
         self.assertEqual(rosary["render_context"]["rosary_focus_title"], "Saint Example")
@@ -634,7 +662,7 @@ class TestPublishContracts(unittest.TestCase):
         )
         self.assertEqual(
             [section["title"] for section in rosary["sections"]],
-            ["Rosary Intro", "Opening Prayers", "Joyful Mysteries", "Closing Prayers"],
+            ["Rosary Intro", "Rosary Intention", "Opening Prayers", "Joyful Mysteries", "Closing Prayers"],
         )
         self.assertEqual([section["title"] for section in daily_reflection["sections"]], ["Daily Reflection"])
 
@@ -763,9 +791,20 @@ class TestPublishContracts(unittest.TestCase):
         fragments = job["audio_fragments"]
         self.assertEqual(fragments[0]["kind"], "rosary-intro")
         self.assertEqual(fragments[0]["label"], "Rosary Intro")
+        self.assertEqual(fragments[1]["kind"], "rosary-overall-intention")
+        self.assertEqual(fragments[1]["label"], "Rosary Intention")
+        self.assertTrue(any(fragment["kind"] == "rosary-announcement" for fragment in fragments))
+        self.assertTrue(any(fragment["kind"] == "rosary-intention" for fragment in fragments))
         self.assertTrue(any(fragment["kind"] == "rosary-reflection" for fragment in fragments))
         reflection_fragment = next(fragment for fragment in fragments if fragment["kind"] == "rosary-reflection")
-        self.assertIn(".\n\nReflection:", reflection_fragment["text"])
+        self.assertEqual(reflection_fragment["text"], "Reflection for The Annunciation through Saint Example and Humility.")
+        intention_pauses = [
+            fragment
+            for fragment in fragments
+            if fragment["kind"] == "pause" and fragment.get("purpose") == "rosary-intention"
+        ]
+        self.assertEqual(len(intention_pauses), 5)
+        self.assertTrue(all(fragment["duration_ms"] == 750 for fragment in intention_pauses))
         hail_mary_fragments = [fragment for fragment in fragments if fragment["label"] == "Hail Mary"]
         decade_hail_mary_fragments = [fragment for fragment in hail_mary_fragments if "/decade-" in fragment["fragment_key"]]
         our_father_fragments = [fragment for fragment in fragments if fragment["label"] == "Our Father"]
@@ -778,7 +817,9 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(len(fatima_fragments), 5)
         self.assertEqual(len({fragment["text"] for fragment in decade_hail_mary_fragments}), 1)
         self.assertEqual(len({fragment["effective_audio_config"]["providers"][0]["provider"] for fragment in decade_hail_mary_fragments}), 1)
-        self.assertEqual(len(job["resume_markers"]), len(fragments))
+        self.assertEqual(len(job["resume_markers"]), len(fragments) - len(intention_pauses))
+        self.assertEqual(job["rosary_reflections"]["intention_count"], 6)
+        self.assertEqual(job["rosary_reflections"]["reflection_count"], 5)
 
     def test_auxilium_weekday_map_selects_each_weekday_prayer(self):
         contracts = self.mod.load_publish_contracts()
