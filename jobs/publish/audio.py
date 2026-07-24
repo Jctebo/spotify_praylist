@@ -29,6 +29,7 @@ from jobs.publish.fragments import (
     _run_ffmpeg,
     publish_audio_cache_root,
     normalize_audio_settings,
+    render_control_fragment_audio,
     render_fragment_audio,
 )
 from jobs.publish.formatting import compose_rss_guid, episode_date_from_episode_id
@@ -1033,35 +1034,51 @@ def render_audio_job(
     fragment_results: List[Dict[str, Any]] = []
     rendered_providers: List[str] = []
     try:
+        target_format = str(audio_config.get("format", "mp3")).strip().lower() or "mp3"
         for fragment in fragments:
             fragment_audio_config = effective_fragment_audio_config(fragment, audio_config)
-            rendered_fragment = render_fragment_audio_with_provider_fallback(
-                fragment,
-                fragment_audio_config,
-                renderer,
-                cache_root=fragment_root,
-                force_rebuild=force_rebuild,
-            )
-            rendered_effective_config = dict(rendered_fragment["audio_config"])
+            fragment_kind = str(fragment.get("kind", "")).strip().lower().replace("_", "-")
+            if fragment_kind in {"audio-cue", "pause"}:
+                rendered_fragment = render_control_fragment_audio(
+                    fragment,
+                    fragment_audio_config,
+                    cache_root=fragment_root,
+                )
+                rendered_effective_config: Dict[str, Any] = {}
+            else:
+                rendered_fragment = render_fragment_audio_with_provider_fallback(
+                    fragment,
+                    fragment_audio_config,
+                    renderer,
+                    cache_root=fragment_root,
+                    force_rebuild=force_rebuild,
+                )
+                rendered_effective_config = dict(rendered_fragment["audio_config"])
+                provider_name = str(rendered_fragment.get("provider", "")).strip() or "openai"
+                rendered_providers.append(provider_name)
             fragment_paths.append(Path(rendered_fragment["audio_path"]))
-            provider_name = str(rendered_fragment.get("provider", "")).strip() or "openai"
-            rendered_providers.append(provider_name)
-            fragment_results.append(
-                {
-                    "fragment_key": str(fragment.get("fragment_key", "")).strip(),
-                    "block_path": str(fragment.get("block_path", "")).strip(),
-                    "kind": str(fragment.get("kind", "")).strip(),
-                    "label": str(fragment.get("label", "")).strip(),
-                    "text": str(fragment.get("text", "")).strip(),
-                    "audio_role": str(fragment.get("audio_role", "")).strip(),
-                    "tts": normalize_audio_settings(rendered_effective_config),
-                    "fragment_hash": rendered_fragment["fragment_hash"],
-                    "audio_path": str(rendered_fragment["audio_path"]),
-                    "rendered": bool(rendered_fragment.get("rendered", False)),
-                }
-            )
+            fragment_result: Dict[str, Any] = {
+                "fragment_key": str(fragment.get("fragment_key", "")).strip(),
+                "block_path": str(fragment.get("block_path", "")).strip(),
+                "kind": str(fragment.get("kind", "")).strip(),
+                "label": str(fragment.get("label", "")).strip(),
+                "text": str(fragment.get("text", "")).strip(),
+                "audio_role": str(fragment.get("audio_role", "")).strip(),
+                "fragment_hash": rendered_fragment["fragment_hash"],
+                "audio_path": str(rendered_fragment["audio_path"]),
+                "rendered": bool(rendered_fragment.get("rendered", False)),
+            }
+            if fragment_kind in {"audio-cue", "pause"}:
+                fragment_result["source"] = "generated"
+                if fragment_kind == "audio-cue":
+                    fragment_result["cue"] = str(fragment.get("cue", "")).strip()
+                else:
+                    fragment_result["duration_ms"] = int(fragment.get("duration_ms", 0) or 0)
+                    fragment_result["purpose"] = str(fragment.get("purpose", "")).strip()
+            else:
+                fragment_result["tts"] = normalize_audio_settings(rendered_effective_config)
+            fragment_results.append(fragment_result)
 
-        target_format = str(audio_config.get("format", "mp3")).strip().lower() or "mp3"
         if len(fragment_paths) == 1 and fragment_paths[0].suffix.lower().lstrip(".") == target_format:
             raw_audio = fragment_paths[0].read_bytes()
         else:
@@ -1069,11 +1086,20 @@ def render_audio_job(
                 silence_ms = int(audio_config.get("silence_ms", 350))
             except Exception:
                 silence_ms = 350
+            fragment_kinds = [
+                str(fragment.get("kind", "")).strip().lower().replace("_", "-")
+                for fragment in fragments
+            ]
+            boundary_silence_ms = [
+                0 if "pause" in {fragment_kinds[index], fragment_kinds[index + 1]} else silence_ms
+                for index in range(max(0, len(fragment_kinds) - 1))
+            ]
             raw_audio = assemble_audio_fragments(
                 fragment_paths,
                 target_format,
                 cache_root=fragment_root,
                 silence_ms=silence_ms,
+                boundary_silence_ms=boundary_silence_ms,
             )
         if not raw_audio:
             raise RuntimeError(f"Audio assembly returned empty output for entry '{job.get('entry_id', '')}'.")
@@ -1102,8 +1128,12 @@ def render_audio_job(
         audio_path.write_bytes(raw_audio)
         rendered_audio_config = normalize_audio_settings(audio_config)
         fragment_manifest_hash = audio_manifest_hash(job, fragments, audio_config)
-        provider_name = rendered_providers[0] if len(set(rendered_providers)) == 1 else "mixed"
-        if provider_name != "mixed":
+        provider_name = (
+            rendered_providers[0]
+            if rendered_providers and len(set(rendered_providers)) == 1
+            else "mixed" if rendered_providers else "generated"
+        )
+        if provider_name not in {"mixed", "generated"}:
             rendered_audio_config["provider"] = provider_name
         sidecar_path.write_text(
             json.dumps(

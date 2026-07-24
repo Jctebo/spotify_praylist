@@ -117,6 +117,53 @@ class TestNovenaArtifacts(unittest.TestCase):
         self.assertEqual(payload["feast"]["color"], "green")
         self.assertIn("June 3, 2026", payload["title"])
 
+    def test_audio_rendering_generates_control_fragments_without_tts(self):
+        runtime = self._runtime()
+        rendered = engine_mod.render_novena(
+            runtime,
+            generate_text_fn=lambda prompt, context: f"{prompt} ({context['theme']})",
+        )
+        rendered["audio_fragments"] = [
+            {"kind": "text", "fragment_key": "before", "label": "Before", "text": "Name your intention."},
+            {"kind": "audio_cue", "fragment_key": "bell", "label": "Sacred Bell", "text": "", "cue": "sacred_bell"},
+            {
+                "kind": "pause",
+                "fragment_key": "intention",
+                "label": "Personal Intention",
+                "text": "",
+                "duration_ms": 500,
+                "purpose": "personal_intention",
+            },
+            {"kind": "text", "fragment_key": "after", "label": "After", "text": "Let us continue."},
+        ]
+        rendered["content"]["text"] = "Name your intention.\n\nLet us continue."
+        job = audio_mod.build_novena_audio_job(runtime, rendered)
+        tts_inputs = []
+
+        def fake_renderer(text, audio_config):
+            tts_inputs.append(text)
+            return make_test_mp3_bytes()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = audio_mod.render_novena_audio_job(
+                job,
+                renderer=fake_renderer,
+                docs_root=Path(tmpdir) / "docs",
+                cache_root=Path(tmpdir) / ".cache",
+                write_sidecar=True,
+            )
+            payload = json.loads(Path(result["audio_path"]).with_suffix(".json").read_text(encoding="utf-8"))
+
+        fragment_results = payload["fragments"]
+        self.assertEqual([item["kind"] for item in fragment_results], ["text", "audio_cue", "pause", "text"])
+        self.assertEqual(fragment_results[1]["source"], "generated")
+        self.assertEqual(fragment_results[1]["cue"], "sacred_bell")
+        self.assertEqual(fragment_results[2]["duration_ms"], 500)
+        self.assertEqual(fragment_results[2]["purpose"], "personal_intention")
+        self.assertNotIn("", tts_inputs)
+        self.assertNotIn("Sacred Bell", tts_inputs)
+        self.assertNotIn("Personal Intention", tts_inputs)
+
     def test_artifact_writer_persists_top_level_daily_liturgical_context(self):
         runtime = self._runtime()
         rendered = engine_mod.render_novena(

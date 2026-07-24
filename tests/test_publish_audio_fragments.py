@@ -504,3 +504,141 @@ class TestPublishAudioFragments(unittest.TestCase):
             self.assertEqual(calls["count"], 1)
             self.assertTrue((Path(tmpdir) / "docs-restored" / "audio" / "repeat-test.mp3").exists())
             self.assertTrue((restored_cache_root / "silence").exists())
+
+    def test_control_fragment_hash_changes_with_cue_and_pause_metadata(self):
+        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        pause = {"kind": "pause", "duration_ms": 5000, "purpose": "personal-intention", "text": ""}
+        self.assertNotEqual(
+            self.fragments_mod.fragment_content_hash(pause, settings),
+            self.fragments_mod.fragment_content_hash({**pause, "duration_ms": 7000}, settings),
+        )
+        cue = {"kind": "audio-cue", "cue": "sacred-bell", "text": ""}
+        self.assertNotEqual(
+            self.fragments_mod.fragment_content_hash(cue, settings),
+            self.fragments_mod.fragment_content_hash({**cue, "cue": "other"}, settings),
+        )
+        self.assertEqual(
+            self.fragments_mod.fragment_content_hash(cue, settings),
+            self.fragments_mod.fragment_content_hash(cue, {**settings, "voice": "echo"}),
+        )
+
+    def test_sacred_bell_is_generated_and_cached_without_tts(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cache_root = Path(tmpdir)
+            fragment = {
+                "fragment_key": "block-1/audio-cue-sacred-bell",
+                "kind": "audio-cue",
+                "cue": "sacred-bell",
+                "text": "",
+            }
+            settings = {"format": "mp3", "model": "gpt-4o-mini-tts", "voice": "alloy"}
+            first = self.fragments_mod.render_control_fragment_audio(fragment, settings, cache_root=cache_root)
+            first_mtime = Path(first["audio_path"]).stat().st_mtime_ns
+            first_size = Path(first["audio_path"]).stat().st_size
+            second = self.fragments_mod.render_control_fragment_audio(fragment, settings, cache_root=cache_root)
+            second_mtime = Path(second["audio_path"]).stat().st_mtime_ns
+
+        self.assertTrue(first["rendered"])
+        self.assertFalse(second["rendered"])
+        self.assertGreater(first_size, 0)
+        self.assertEqual(first["audio_path"], second["audio_path"])
+        self.assertEqual(first_mtime, second_mtime)
+
+    def test_assembly_accepts_explicit_boundary_silence(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            inputs = []
+            for index in range(4):
+                path = root / f"fragment-{index}.mp3"
+                path.write_bytes(b"fragment")
+                inputs.append(path)
+            silence_calls = []
+
+            def fake_silence(cache_root, audio_format, silence_ms):
+                silence_calls.append(silence_ms)
+                if silence_ms <= 0:
+                    return None
+                path = root / f"silence-{silence_ms}.mp3"
+                path.write_bytes(b"silence")
+                return path
+
+            def fake_ffmpeg(args):
+                Path(args[-1]).write_bytes(b"assembled")
+
+            with mock.patch.object(self.fragments_mod, "ensure_silence_fragment", side_effect=fake_silence), mock.patch.object(
+                self.fragments_mod, "_run_ffmpeg", side_effect=fake_ffmpeg
+            ):
+                result = self.fragments_mod.assemble_audio_fragments(
+                    inputs,
+                    "mp3",
+                    cache_root=root / "cache",
+                    boundary_silence_ms=[350, 0, 0],
+                )
+
+        self.assertEqual(result, b"assembled")
+        self.assertEqual(silence_calls, [350, 0, 0])
+
+    def test_render_audio_job_routes_cue_and_pause_around_tts(self):
+        calls = []
+
+        def renderer(text, audio_config):
+            calls.append(text)
+            return make_test_mp3_bytes()
+
+        job = {
+            "entry_id": "control-test",
+            "episode_id": "control-test",
+            "contract_id": "control-test",
+            "contract_type": "daily-prayer",
+            "frequency": "daily",
+            "title": "Control Test",
+            "description": "Control Test",
+            "published_date": "2026-04-06",
+            "audio_config": {
+                "enabled": True,
+                "model": "gpt-4o-mini-tts",
+                "voice": "alloy",
+                "format": "mp3",
+                "speed": 1.0,
+                "silence_ms": 350,
+            },
+            "audio_fragments": [
+                {"fragment_key": "one", "block_path": "one", "kind": "inline", "label": "One", "text": "First."},
+                {
+                    "fragment_key": "bell",
+                    "block_path": "bell",
+                    "kind": "audio-cue",
+                    "label": "Sacred Bell",
+                    "text": "",
+                    "cue": "sacred-bell",
+                },
+                {
+                    "fragment_key": "pause",
+                    "block_path": "pause",
+                    "kind": "pause",
+                    "label": "Pause",
+                    "text": "",
+                    "duration_ms": 100,
+                    "purpose": "personal-intention",
+                },
+                {"fragment_key": "two", "block_path": "two", "kind": "inline", "label": "Two", "text": "Second."},
+            ],
+        }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            docs_root = Path(tmpdir) / "docs"
+            rendered = self.audio_mod.render_audio_job(
+                job,
+                renderer=renderer,
+                docs_root=docs_root,
+                cache_root=Path(tmpdir) / "cache",
+            )
+            sidecar = json.loads((docs_root / "audio" / "control-test.json").read_text(encoding="utf-8"))
+
+        self.assertTrue(rendered["rendered"])
+        self.assertEqual(calls[:2], ["First.", "Second."])
+        self.assertNotIn("", calls)
+        self.assertEqual([row["kind"] for row in sidecar["fragments"]], ["inline", "audio-cue", "pause", "inline"])
+        self.assertEqual(sidecar["fragments"][1]["source"], "generated")
+        self.assertNotIn("tts", sidecar["fragments"][1])
+        self.assertEqual(sidecar["fragments"][2]["duration_ms"], 100)

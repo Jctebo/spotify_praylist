@@ -247,7 +247,11 @@ def _render_part_text(
     context: Mapping[str, Any],
     fragment_lookup: Mapping[str, TemplateFragment],
 ) -> Tuple[str, str]:
-    part_kind = str(part.get("kind", "")).strip().lower()
+    part_kind = str(part.get("kind", "")).strip().lower().replace("-", "_")
+    if part_kind == "audio_cue":
+        return str(part.get("label", "")).strip() or "Sacred Bell", ""
+    if part_kind == "pause":
+        return str(part.get("label", "")).strip() or "Pause", ""
     if part_kind == "fragment":
         fragment_key = str(part.get("fragment_key", "")).strip()
         fragment = fragment_lookup.get(fragment_key)
@@ -273,25 +277,31 @@ def _block_parts_to_fragments(
     for part_index, part in enumerate(parts, start=1):
         label, text = _render_part_text(part, context, fragment_lookup)
         repeat = _part_repeat_count(part)
-        part_kind = str(part.get("kind", "")).strip().lower()
+        part_kind = str(part.get("kind", "")).strip().lower().replace("-", "_")
         source_fragment_key = str(part.get("fragment_key", "")).strip() if part_kind == "fragment" else ""
         for repeat_index in range(1, repeat + 1):
             fragment_key = f"{episode_id}/block-{block.key}/part-{part_index}"
             if repeat > 1:
                 fragment_key = f"{fragment_key}/repeat-{repeat_index}"
-            fragments.append(
-                {
-                    "fragment_key": fragment_key,
-                    "block_path": f"block-{block.key}/part-{part_index}",
-                    "kind": part_kind or block.kind,
-                    "label": label,
-                    "text": text,
-                    "days": list(days),
-                    "repeat_index": repeat_index,
-                    "repeat_count": repeat,
-                    "source_fragment_key": source_fragment_key,
-                }
-            )
+            fragment_row = {
+                "fragment_key": fragment_key,
+                "block_path": f"block-{block.key}/part-{part_index}",
+                "kind": part_kind or block.kind,
+                "label": label,
+                "text": text,
+                "days": list(days),
+                "repeat_index": repeat_index,
+                "repeat_count": repeat,
+                "source_fragment_key": source_fragment_key,
+            }
+            if part_kind == "audio_cue":
+                fragment_row["cue"] = str(part.get("cue", "")).strip()
+            elif part_kind == "pause":
+                fragment_row["duration_ms"] = int(part.get("duration_ms", 0) or 0)
+                purpose = str(part.get("purpose", "")).strip()
+                if purpose:
+                    fragment_row["purpose"] = purpose
+            fragments.append(fragment_row)
     return fragments
 
 

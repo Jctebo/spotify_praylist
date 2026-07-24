@@ -912,3 +912,56 @@ class TestPublishContracts(unittest.TestCase):
                 self.mod.load_publish_contracts(contracts_dir)
 
         self.assertIn("Duplicate publish entry_id 'duplicate'", str(ctx.exception))
+
+    def test_audio_cue_and_pause_blocks_expand_without_readable_text_or_resume_markers(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            contract_dir = Path(tmpdir)
+            payload = {
+                "contract": {
+                    "id": "control-blocks",
+                    "type": "daily-prayer",
+                    "frequency": "daily",
+                    "timezone": "America/Chicago",
+                    "version": "1",
+                },
+                "entries": [
+                    {
+                        "entry_id": "control-blocks",
+                        "title": "Control Blocks",
+                        "status": "approved",
+                        "text": "Control Blocks",
+                        "audio_config": {"enabled": True},
+                        "blocks": [
+                            {"kind": "inline", "text": "Bring your intention before God."},
+                            {"kind": "audio_cue", "cue": "sacred_bell"},
+                            {"kind": "pause", "duration_ms": 5000, "purpose": "personal_intention"},
+                            {"kind": "inline", "text": "Lord, hear our prayer."},
+                        ],
+                    }
+                ],
+            }
+            (contract_dir / "control-blocks.json").write_text(json.dumps(payload), encoding="utf-8")
+            contract = self.mod.load_publish_contracts(contract_dir)[0]
+
+        entry = contract.entries[0]
+        self.assertEqual(self.mod._entry_text_body(contract, entry), "Bring your intention before God.\n\nLord, hear our prayer.")
+        fragments = self.mod.expand_audio_fragments(contract, entry)
+        self.assertEqual([fragment["kind"] for fragment in fragments], ["inline", "audio-cue", "pause", "inline"])
+        self.assertEqual(fragments[1]["cue"], "sacred-bell")
+        self.assertEqual(fragments[2]["duration_ms"], 5000)
+        self.assertEqual(fragments[2]["purpose"], "personal-intention")
+        markers = self.mod.build_resume_markers(fragments=fragments)
+        self.assertEqual([marker["order"] for marker in markers], [1, 2])
+        self.assertEqual([marker["kind"] for marker in markers], ["inline", "inline"])
+
+    def test_audio_control_blocks_reject_unknown_cues_and_invalid_durations(self):
+        source = Path("sample.json")
+        with self.assertRaisesRegex(RuntimeError, "unsupported audio cue"):
+            self.mod._normalize_block({"kind": "audio_cue", "cue": "gong"}, source, "sample")
+        for duration in (0, -1, 120001, 1.5, True, "5000", "not-a-number", None):
+            with self.subTest(duration=duration), self.assertRaisesRegex(RuntimeError, "pause"):
+                self.mod._normalize_block(
+                    {"kind": "pause", "duration_ms": duration},
+                    source,
+                    "sample",
+                )

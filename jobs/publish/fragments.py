@@ -125,6 +125,19 @@ def _hash_payload(payload: Dict[str, Any]) -> str:
 
 def fragment_content_hash(fragment: Dict[str, Any], audio_config: Dict[str, Any]) -> str:
     effective_audio_config = effective_fragment_audio_config(fragment, audio_config)
+    kind = str(fragment.get("kind", "")).strip().lower().replace("_", "-")
+    if kind in {"audio-cue", "pause"}:
+        payload = {
+            "control": {
+                "kind": kind,
+                "cue": str(fragment.get("cue", "")).strip(),
+                "duration_ms": int(fragment.get("duration_ms", 0) or 0),
+                "purpose": str(fragment.get("purpose", "")).strip(),
+                "synthesis_version": SACRED_BELL_SYNTH_VERSION if kind == "audio-cue" else None,
+            },
+            "format": normalize_audio_settings(effective_audio_config)["format"],
+        }
+        return _hash_payload(payload)
     payload = {
         "text": sanitize_tts_input(fragment.get("text", "")),
         "audio_role": str(fragment.get("audio_role", "")).strip(),
@@ -228,6 +241,95 @@ def ensure_silence_fragment(cache_root: Path, audio_format: str, silence_ms: int
     return silence_path
 
 
+SACRED_BELL_SYNTH_VERSION = 1
+
+
+def _sacred_bell_cache_path(cache_root: Path, audio_format: str) -> Path:
+    target_format = str(audio_format or "").strip().lower() or "mp3"
+    cue_hash = _hash_payload(
+        {
+            "kind": "audio-cue",
+            "cue": "sacred-bell",
+            "format": target_format,
+            "synthesis_version": SACRED_BELL_SYNTH_VERSION,
+        }
+    )
+    return cache_root / "cues" / cue_hash[:2] / cue_hash[2:4] / f"{cue_hash}.{target_format}"
+
+
+def ensure_sacred_bell_fragment(cache_root: Path, audio_format: str) -> Path:
+    target_format = str(audio_format or "").strip().lower() or "mp3"
+    cue_path = _sacred_bell_cache_path(cache_root, target_format)
+    if cue_path.exists():
+        return cue_path
+    cue_path.parent.mkdir(parents=True, exist_ok=True)
+    _run_ffmpeg(
+        [
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=784:sample_rate=44100:duration=2.2",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=1176:sample_rate=44100:duration=2.2",
+            "-f",
+            "lavfi",
+            "-i",
+            "sine=frequency=1568:sample_rate=44100:duration=2.2",
+            "-filter_complex",
+            (
+                "[0:a]volume=0.52,afade=t=out:st=0.15:d=2.05[a0];"
+                "[1:a]volume=0.22,afade=t=out:st=0.10:d=2.10[a1];"
+                "[2:a]volume=0.10,afade=t=out:st=0.05:d=2.15[a2];"
+                "[a0][a1][a2]amix=inputs=3:normalize=0,alimiter=limit=0.90[bell]"
+            ),
+            "-map",
+            "[bell]",
+            "-vn",
+            *_audio_output_args(target_format),
+            str(cue_path),
+        ]
+    )
+    return cue_path
+
+
+def render_control_fragment_audio(
+    fragment: Dict[str, Any],
+    audio_config: Dict[str, Any],
+    *,
+    cache_root: Optional[Path] = None,
+) -> Dict[str, Any]:
+    root = publish_audio_cache_root(cache_root)
+    settings = normalize_audio_settings(audio_config)
+    target_format = settings["format"]
+    kind = str(fragment.get("kind", "")).strip().lower().replace("_", "-")
+    fragment_hash = fragment_content_hash(fragment, settings)
+    if kind == "pause":
+        duration_ms = int(fragment.get("duration_ms", 0) or 0)
+        expected_path = _silence_cache_path(root, target_format, duration_ms)
+        existed = expected_path.exists()
+        audio_path = ensure_silence_fragment(root, target_format, duration_ms)
+        if audio_path is None:
+            raise RuntimeError(f"Pause fragment '{fragment.get('fragment_key', '')}' must have a positive duration_ms.")
+    elif kind == "audio-cue":
+        cue = str(fragment.get("cue", "")).strip().lower().replace("_", "-")
+        if cue != "sacred-bell":
+            raise RuntimeError(f"Unsupported audio cue '{fragment.get('cue', '')}'.")
+        expected_path = _sacred_bell_cache_path(root, target_format)
+        existed = expected_path.exists()
+        audio_path = ensure_sacred_bell_fragment(root, target_format)
+    else:
+        raise RuntimeError(f"Unsupported control fragment kind '{fragment.get('kind', '')}'.")
+    return {
+        "audio_path": audio_path,
+        "fragment_hash": fragment_hash,
+        "rendered": not existed,
+        "source": "generated",
+    }
+
+
 def _fragment_sidecar_payload(
     fragment: Dict[str, Any],
     audio_config: Dict[str, Any],
@@ -296,17 +398,26 @@ def assemble_audio_fragments(
     *,
     cache_root: Optional[Path] = None,
     silence_ms: int = DEFAULT_FRAGMENT_SILENCE_MS,
+    boundary_silence_ms: Optional[Sequence[int]] = None,
 ) -> bytes:
     if not fragment_paths:
         raise RuntimeError("No audio fragments were assembled.")
     target_format = str(audio_format or "").strip().lower() or "mp3"
     root = publish_audio_cache_root(cache_root)
-    silence_path = ensure_silence_fragment(root, target_format, silence_ms)
+    if boundary_silence_ms is not None and len(boundary_silence_ms) != max(0, len(fragment_paths) - 1):
+        raise ValueError("boundary_silence_ms must contain one value for each fragment boundary.")
     ordered_paths: List[Path] = []
     for index, path in enumerate(fragment_paths):
         ordered_paths.append(Path(path))
-        if silence_path is not None and index + 1 < len(fragment_paths):
-            ordered_paths.append(silence_path)
+        if index + 1 < len(fragment_paths):
+            boundary_ms = (
+                int(boundary_silence_ms[index])
+                if boundary_silence_ms is not None
+                else int(silence_ms)
+            )
+            silence_path = ensure_silence_fragment(root, target_format, boundary_ms)
+            if silence_path is not None:
+                ordered_paths.append(silence_path)
     tmp_dir = root / "tmp"
     tmp_dir.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(dir=tmp_dir) as temp_dir:

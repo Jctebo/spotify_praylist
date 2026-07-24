@@ -1,0 +1,4 @@
+interface:
+  display_name: "Normalize Prayer TTS"
+  short_description: "Clean prayer text for natural spoken audio"
+  default_prompt: "Use $normalize-prayer-tts to audit and normalize this prayer text for text-to-speech."
