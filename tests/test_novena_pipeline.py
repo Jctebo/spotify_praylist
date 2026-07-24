@@ -157,7 +157,7 @@ class TestNovenaPipeline(unittest.TestCase):
                                 "ai_config": {"theme_prompt": self._short_form_theme_prompt()},
                             },
                             "publishing": {
-                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0},
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
@@ -187,7 +187,7 @@ class TestNovenaPipeline(unittest.TestCase):
                             "ai_config": {"theme_prompt": self._short_form_theme_prompt()},
                         },
                         "publishing": {
-                            "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                            "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0},
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
@@ -462,7 +462,7 @@ class TestNovenaPipeline(unittest.TestCase):
                                 "ai_config": {"theme_prompt": self._short_form_theme_prompt()},
                             },
                             "publishing": {
-                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0},
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",
@@ -666,7 +666,7 @@ class TestNovenaPipeline(unittest.TestCase):
                                 "ai_config": {"theme_prompt": self._short_form_theme_prompt()},
                             },
                             "publishing": {
-                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+                                "audio": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0},
                                 "rss": {
                                     "enabled": True,
                                     "feed_id": "ora-pro-nobis",

@@ -1114,7 +1114,7 @@ def custom_tts_runtime_settings(contract: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(tts, dict):
         tts = {}
     model = str(tts.get("model", "")).strip() or str(header.get("model", "")).strip() or "gpt-4o-mini-tts"
-    voice = str(tts.get("voice", "")).strip() or "alloy"
+    voice = str(tts.get("voice", "")).strip() or "ash"
     audio_format = str(tts.get("format", "")).strip().lower() or "mp3"
     try:
         speed = float(tts.get("speed", 1.0))
@@ -1580,7 +1580,7 @@ def apply_audio_output_overrides(base_config: Dict[str, Any], overrides: Dict[st
 def default_output_tts_settings() -> Dict[str, Any]:
     return {
         "model": "gpt-4o-mini-tts",
-        "voice": "alloy",
+        "voice": "ash",
         "format": "mp3",
         "speed": 1.0,
     }
@@ -1842,7 +1842,7 @@ def spec_fragment_order(spec: Dict[str, Any]) -> float:
 def opus_dei_row_tts_settings(page: Dict[str, Any]) -> Dict[str, Any]:
     tts: Dict[str, Any] = {
         "model": page_property_text(page, OPUS_DEI_TTS_MODEL_PROPERTY).strip() or "gpt-4o-mini-tts",
-        "voice": page_property_text(page, OPUS_DEI_TTS_VOICE_PROPERTY).strip() or "alloy",
+        "voice": page_property_text(page, OPUS_DEI_TTS_VOICE_PROPERTY).strip() or "ash",
         "format": page_property_text(page, OPUS_DEI_TTS_FORMAT_PROPERTY).strip().lower() or "mp3",
         "speed": 1.0,
     }
@@ -2090,7 +2090,7 @@ def tts_settings_from_config(config: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(tts, dict):
         raise RuntimeError("Invalid page audio config: 'tts' must be an object.")
     model = str(tts.get("model", "gpt-4o-mini-tts")).strip() or "gpt-4o-mini-tts"
-    voice = str(tts.get("voice", "alloy")).strip() or "alloy"
+    voice = str(tts.get("voice", "ash")).strip() or "ash"
     audio_format = str(tts.get("format", "mp3")).strip().lower() or "mp3"
     if audio_format not in {"mp3", "opus", "aac", "flac", "wav"}:
         raise RuntimeError(f"Invalid page audio format '{audio_format}'.")

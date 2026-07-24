@@ -71,7 +71,7 @@ NOTION_AUDIO_SAVED_PROPERTY = "NOTION_AUDIO_SAVED_PROPERTY"  # optional, default
 NOVENA_AUDIO_ENABLED = "NOVENA_AUDIO_ENABLED"  # default false
 NOVENA_AUDIO_LIBRARY_DIR = "NOVENA_AUDIO_LIBRARY_DIR"
 NOVENA_AUDIO_MODEL = "NOVENA_AUDIO_MODEL"  # default gpt-4o-mini-tts
-NOVENA_AUDIO_VOICE = "NOVENA_AUDIO_VOICE"  # default alloy
+NOVENA_AUDIO_VOICE = "NOVENA_AUDIO_VOICE"  # default ash
 NOVENA_AUDIO_FORMAT = "NOVENA_AUDIO_FORMAT"  # default mp3
 NOVENA_AUDIO_SPEED = "NOVENA_AUDIO_SPEED"  # default 1.0
 NOVENA_AUDIO_CAPTION = "NOVENA_AUDIO_CAPTION"  # default Daily Novena Prayer (Audio)
@@ -1213,7 +1213,7 @@ def notion_append_audio_block(
 
 def novena_audio_settings() -> Dict[str, Any]:
     audio_model = os.getenv(NOVENA_AUDIO_MODEL, "gpt-4o-mini-tts").strip() or "gpt-4o-mini-tts"
-    audio_voice = os.getenv(NOVENA_AUDIO_VOICE, "alloy").strip() or "alloy"
+    audio_voice = os.getenv(NOVENA_AUDIO_VOICE, "ash").strip() or "ash"
     audio_format = os.getenv(NOVENA_AUDIO_FORMAT, "mp3").strip().lower() or "mp3"
     if audio_format not in {"mp3", "opus", "aac", "flac", "wav", "pcm"}:
         raise RuntimeError(f"Invalid {NOVENA_AUDIO_FORMAT} '{audio_format}'.")

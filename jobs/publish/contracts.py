@@ -52,7 +52,7 @@ DEFAULT_NOTION_FIELDS = {
 DEFAULT_AUDIO_SETTINGS = {
     "enabled": False,
     "model": "gpt-4o-mini-tts",
-    "voice": "alloy",
+    "voice": "ash",
     "format": "mp3",
     "speed": 1.0,
 }

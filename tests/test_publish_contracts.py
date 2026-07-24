@@ -916,7 +916,7 @@ class TestPublishContracts(unittest.TestCase):
             all(fragment["effective_audio_config"]["providers"][0]["voice_id"] == "nPczCjzI2devNBz1zQrb" for fragment in versicle_fragments)
         )
         self.assertTrue(
-            all(fragment["effective_audio_config"]["providers"][1]["voice"] == "alloy" for fragment in versicle_fragments)
+            all(fragment["effective_audio_config"]["providers"][1]["voice"] == "ash" for fragment in versicle_fragments)
         )
         self.assertTrue(
             all(fragment["effective_audio_config"]["providers"][0]["voice_id"] == "nPczCjzI2devNBz1zQrb" for fragment in response_fragments)

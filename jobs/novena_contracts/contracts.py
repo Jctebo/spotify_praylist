@@ -41,14 +41,14 @@ DEFAULT_OPENAI_PROVIDER = {
     "provider": "openai",
     "api_key_env": "OPENAI_API_KEY",
     "model": "gpt-4o-mini-tts",
-    "voice": "alloy",
+    "voice": "ash",
     "format": "mp3",
     "speed": 1.0,
 }
 DEFAULT_AUDIO_CONFIG = {
     "enabled": True,
     "model": "gpt-4o-mini-tts",
-    "voice": "alloy",
+    "voice": "ash",
     "format": "mp3",
     "speed": 1.0,
     "providers": [

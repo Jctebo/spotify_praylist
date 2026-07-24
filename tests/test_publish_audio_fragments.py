@@ -76,7 +76,7 @@ class TestPublishAudioFragments(unittest.TestCase):
             "label": "Morning Offering",
             "text": "Test fragment text.",
         }
-        base = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        base = {"model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0}
 
         base_hash = self.fragments_mod.fragment_content_hash(fragment, base)
         self.assertNotEqual(base_hash, self.fragments_mod.fragment_content_hash(fragment, {**base, "model": "gpt-4o"}))
@@ -147,7 +147,7 @@ class TestPublishAudioFragments(unittest.TestCase):
         )
 
     def test_tts_sanitization_controls_fragment_hash_and_renderer_input(self):
-        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        settings = {"model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0}
         clean_fragment = {
             "fragment_key": "block-1/inline",
             "block_path": "block-1/inline",
@@ -196,7 +196,7 @@ class TestPublishAudioFragments(unittest.TestCase):
             "text": "Who made heaven and earth.",
             "audio_role": "response",
         }
-        base = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        base = {"model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0}
         echo_fragment = {
             **fragment,
             "effective_audio_config": {"model": "gpt-4o-mini-tts", "voice": "echo", "format": "mp3", "speed": 1.0},
@@ -286,7 +286,7 @@ class TestPublishAudioFragments(unittest.TestCase):
                         "provider": "openai",
                         "api_key_env": "OPENAI_API_KEY",
                         "model": "gpt-4o-mini-tts",
-                        "voice": "alloy",
+                        "voice": "ash",
                         "format": "mp3",
                         "speed": 1.0,
                     },
@@ -333,7 +333,7 @@ class TestPublishAudioFragments(unittest.TestCase):
             "title": "Role Fallback Test",
             "date": "daily",
             "text": "Role Fallback Test",
-            "audio_config": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "audio_config": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0},
             "audio_fragments": [
                 {
                     "fragment_key": "block-1/inline",
@@ -392,7 +392,7 @@ class TestPublishAudioFragments(unittest.TestCase):
             "title": "Repeat Test",
             "date": "daily",
             "text": "Repeat Test",
-            "audio_config": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "audio_config": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0},
             "audio_fragments": [
                 {
                     "fragment_key": "block-1/repeat-1/file",
@@ -444,7 +444,7 @@ class TestPublishAudioFragments(unittest.TestCase):
             "title": "Repeat Test",
             "date": "daily",
             "text": "Repeat Test",
-            "audio_config": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0},
+            "audio_config": {"enabled": True, "model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0},
             "audio_fragments": [
                 {
                     "fragment_key": "block-1/repeat-1/file",
@@ -514,7 +514,7 @@ class TestPublishAudioFragments(unittest.TestCase):
             self.assertTrue((restored_cache_root / "silence").exists())
 
     def test_control_fragment_hash_changes_with_cue_and_pause_metadata(self):
-        settings = {"model": "gpt-4o-mini-tts", "voice": "alloy", "format": "mp3", "speed": 1.0}
+        settings = {"model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0}
         pause = {"kind": "pause", "duration_ms": 5000, "purpose": "personal-intention", "text": ""}
         self.assertNotEqual(
             self.fragments_mod.fragment_content_hash(pause, settings),
@@ -539,7 +539,7 @@ class TestPublishAudioFragments(unittest.TestCase):
                 "cue": "sacred-bell",
                 "text": "",
             }
-            settings = {"format": "mp3", "model": "gpt-4o-mini-tts", "voice": "alloy"}
+            settings = {"format": "mp3", "model": "gpt-4o-mini-tts", "voice": "ash"}
             first = self.fragments_mod.render_control_fragment_audio(fragment, settings, cache_root=cache_root)
             first_mtime = Path(first["audio_path"]).stat().st_mtime_ns
             first_size = Path(first["audio_path"]).stat().st_size
@@ -605,7 +605,7 @@ class TestPublishAudioFragments(unittest.TestCase):
             "audio_config": {
                 "enabled": True,
                 "model": "gpt-4o-mini-tts",
-                "voice": "alloy",
+                "voice": "ash",
                 "format": "mp3",
                 "speed": 1.0,
                 "silence_ms": 350,

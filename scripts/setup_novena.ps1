@@ -216,7 +216,7 @@ $novenaAudioModel = if ($env:NOVENA_AUDIO_MODEL) {
 $novenaAudioVoice = if ($env:NOVENA_AUDIO_VOICE) {
   Read-WithDefault "NOVENA_AUDIO_VOICE" $env:NOVENA_AUDIO_VOICE
 } else {
-  Read-WithDefault "NOVENA_AUDIO_VOICE" "alloy"
+  Read-WithDefault "NOVENA_AUDIO_VOICE" "ash"
 }
 
 $novenaAudioFormat = if ($env:NOVENA_AUDIO_FORMAT) {

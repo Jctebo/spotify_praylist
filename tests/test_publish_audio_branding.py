@@ -192,7 +192,7 @@ class TestPublishAudioBranding(unittest.TestCase):
                 "text": "Test text.",
             }
         ]
-        base_audio = {"format": "mp3", "model": "gpt-4o-mini-tts", "voice": "alloy", "speed": 1.0}
+        base_audio = {"format": "mp3", "model": "gpt-4o-mini-tts", "voice": "ash", "speed": 1.0}
 
         first = self.fragments_mod.audio_manifest_hash(
             job,

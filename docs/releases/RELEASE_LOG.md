@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.3.9.1] - 2026-07-24
+
+### Changed
+- OpenAI-generated prayer audio now uses the approved `ash` voice instead of `alloy` across publishing and novena workflows.
+- Preserved provider routing, `gpt-4o-mini-tts`, audio format and speed, role-specific voices, ElevenLabs settings, devotional wording, and voice-aware cache invalidation.
+
 ## [0.3.9.0] - 2026-07-24
 
 ### Added

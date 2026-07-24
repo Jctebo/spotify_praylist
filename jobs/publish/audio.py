@@ -175,7 +175,7 @@ def openai_tts_renderer(text: str, audio_config: Dict[str, Any]) -> bytes:
     client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
     response = client.audio.speech.create(
         model=str(audio_config.get("model", "gpt-4o-mini-tts")).strip() or "gpt-4o-mini-tts",
-        voice=str(audio_config.get("voice", "alloy")).strip() or "alloy",
+        voice=str(audio_config.get("voice", "ash")).strip() or "ash",
         input=str(text or ""),
         response_format=str(audio_config.get("format", "mp3")).strip().lower() or "mp3",
         speed=float(audio_config.get("speed", 1.0)),
@@ -195,7 +195,7 @@ def _base_provider_config(audio_config: Dict[str, Any]) -> Dict[str, Any]:
         "provider": "openai",
         "api_key_env": OPENAI_API_KEY,
         "model": str(audio_config.get("model", "gpt-4o-mini-tts")).strip() or "gpt-4o-mini-tts",
-        "voice": str(audio_config.get("voice", "alloy")).strip() or "alloy",
+        "voice": str(audio_config.get("voice", "ash")).strip() or "ash",
         "format": str(audio_config.get("format", "mp3")).strip().lower() or "mp3",
         "speed": float(audio_config.get("speed", 1.0)),
     }
@@ -220,7 +220,7 @@ def _effective_provider_audio_config(audio_config: Dict[str, Any], provider_conf
         effective["speed"] = 1.0
     if effective["provider"] == "openai":
         effective["model"] = str(effective.get("model", "gpt-4o-mini-tts")).strip() or "gpt-4o-mini-tts"
-        effective["voice"] = str(effective.get("voice", "alloy")).strip() or "alloy"
+        effective["voice"] = str(effective.get("voice", "ash")).strip() or "ash"
         effective.pop("voice_settings", None)
         effective.pop("voice_id", None)
         effective.pop("model_id", None)
