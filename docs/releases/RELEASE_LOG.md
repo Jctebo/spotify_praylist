@@ -3,8 +3,8 @@
 ## [0.3.9.0] - 2026-07-24
 
 ### Added
-- Added a shared, auditable devotional-introduction policy with prayer-specific profiles, semantic validation, one corrective retry, deterministic fallbacks, per-job caching, and `devotional-intro-v1` metadata.
-- Added policy-aware novena sidecar freshness so current artifacts regenerate when the introduction policy changes.
+- Prayer introductions can now vary naturally by devotion while remaining grounded, concise, auditable, and protected by validation, one corrective retry, and reliable fallbacks.
+- Current novena artifacts now refresh automatically when the devotional-introduction policy changes.
 
 ### Changed
 - Gave Morning Prayer and Rosary introductions flexible 2–4 sentence prompt guidance without enforcing exact sentence counts.
