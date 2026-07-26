@@ -341,8 +341,7 @@ class TestNovenaArtifacts(unittest.TestCase):
         self.assertTrue(any(call.get("provider") == "openai" for call in calls))
         self.assertEqual(payload["fragments"][0]["provider"], "openai")
         self.assertEqual(payload["fragments"][0]["tts"]["provider"], "openai")
-        self.assertEqual(payload["audio_branding"]["status"], "skipped")
-        self.assertIn("branding_failed", payload["audio_branding"]["skip_reason"])
+        self.assertEqual(payload["audio_branding"]["status"], "applied")
 
     def test_existing_novena_sidecar_is_refreshed_when_branding_changes_hash(self):
         runtime = self._runtime()
