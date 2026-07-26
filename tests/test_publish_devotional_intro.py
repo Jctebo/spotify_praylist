@@ -164,6 +164,55 @@ class TestPublishDevotionalIntro(unittest.TestCase):
         self.assertIn("model unavailable", result.fallback_reason)
         self.assertIn("Day 3", result.text)
         self.assertIn("Novena to Saint Joseph", result.text)
+        self.assertIn("faithful work", result.text)
+        self.assertNotIn("Trust", result.text)
+
+    def test_novena_prompt_and_validation_prioritize_the_specific_prayer(self):
+        context = {
+            "prayer_title": "Novena to Saint Joseph",
+            "saint_name": "Saint Joseph",
+            "day": "3",
+            "daily_focus": "faithful work",
+            "daily_theme_title": "Trust",
+            "daily_gospel_bridge": "Christ teaches us to remain in him",
+        }
+
+        prompt = build_devotional_intro_prompt(NOVENA_PROFILE, context)
+        text = (
+            "On Day 3 of the Novena to Saint Joseph, we ask for the grace of faithful work in the duties before us. "
+            "With Saint Joseph, let us begin this day's prayer."
+        )
+
+        self.assertIn("not a summary of the day's liturgy", prompt)
+        self.assertIn("explicitly name Day 3", prompt)
+        self.assertIn("major solemnity or feast first, then the Gospel, then a memorial", prompt)
+        self.assertIn("When none is available, give only a brief introduction", prompt)
+        self.assertNotIn("shared theme as a fallback", prompt)
+        self.assertIn("adapt it naturally to this saint and novena", prompt)
+        self.assertEqual(validate_devotional_intro(text, NOVENA_PROFILE, context), text)
+
+    def test_novena_validation_requires_day_and_focus_but_not_daily_theme(self):
+        context = {
+            "prayer_title": "Novena to Saint Joseph",
+            "saint_name": "Saint Joseph",
+            "day": "3",
+            "daily_focus": "faithful work",
+            "daily_theme_title": "Trust",
+        }
+        with self.assertRaisesRegex(RuntimeError, "identify Day 3"):
+            validate_devotional_intro(
+                "The Novena to Saint Joseph asks for the grace of faithful work in every duty before us. "
+                "With Saint Joseph, let us begin this day's prayer.",
+                NOVENA_PROFILE,
+                context,
+            )
+        with self.assertRaisesRegex(RuntimeError, "novena focus"):
+            validate_devotional_intro(
+                "On Day 3 of the Novena to Saint Joseph, we bring our needs before God with humble confidence. "
+                "With Saint Joseph, let us begin this day's prayer.",
+                NOVENA_PROFILE,
+                context,
+            )
 
     def test_fallback_reason_redacts_credentials_and_urls(self):
         def fail(model, system, prompt, temperature):

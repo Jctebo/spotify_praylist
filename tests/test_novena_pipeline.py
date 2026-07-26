@@ -70,7 +70,7 @@ class TestNovenaPipeline(unittest.TestCase):
         return engine_mod.DevotionalIntroResult(
             text=f"Welcome to Day {day} of the Novena to {saint_name}, joining today's focus of {theme} to our prayer.",
             profile="novena",
-            policy_version="devotional-intro-v1",
+            policy_version=pipeline_mod.DEVOTIONAL_INTRO_POLICY_VERSION,
             source="openai",
         )
 
@@ -92,7 +92,7 @@ class TestNovenaPipeline(unittest.TestCase):
             "daily_liturgical_context": dict(expected["daily_liturgical_context"]),
             "devotional_intro": {
                 "profile": "novena",
-                "policy_version": "devotional-intro-v1",
+                "policy_version": pipeline_mod.DEVOTIONAL_INTRO_POLICY_VERSION,
                 "source": "openai",
                 "text": "Welcome.",
                 "fallback_reason": "",
@@ -104,7 +104,7 @@ class TestNovenaPipeline(unittest.TestCase):
                 "daily_theme_reflection_focus": expected["daily_theme_reflection_focus"],
                 "devotional_intro": {
                     "profile": "novena",
-                    "policy_version": "devotional-intro-v1",
+                    "policy_version": pipeline_mod.DEVOTIONAL_INTRO_POLICY_VERSION,
                     "source": "openai",
                     "text": "Welcome.",
                     "fallback_reason": "",
@@ -113,7 +113,7 @@ class TestNovenaPipeline(unittest.TestCase):
         }
 
         self.assertTrue(pipeline_mod._sidecar_has_current_daily_theme(payload, expected))
-        payload["devotional_intro"]["policy_version"] = "devotional-intro-v0"
+        payload["devotional_intro"]["policy_version"] = "devotional-intro-v1"
         self.assertFalse(pipeline_mod._sidecar_has_current_daily_theme(payload, expected))
 
     def _write_contracts(self, root: Path, *, include_selector_family: bool = False) -> Path:
