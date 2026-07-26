@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.3.10.3] - 2026-07-25
+
+### Fixed
+- URL novena imports now convert `(mention request here…)` into a sacred bell and a five-second personal-intention pause instead of speaking an instruction aloud.
+- Optional OpenAI normalization now receives a protected non-spoken control marker and falls back safely if the marker is not preserved.
+
 ## [0.3.10.2] - 2026-07-25
 
 ### Added
