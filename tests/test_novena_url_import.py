@@ -283,6 +283,7 @@ class TestNovenaUrlImport(unittest.TestCase):
         glory_be = importer_mod._load_prayer_text("Glory Be")
         resolved_text = (
             "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\n"
+            f"Please pray for our intention in this novena, {importer_mod.TTS_INTENTION_MARKER}\n\n"
             "You are going to say this three times: Our Father.\n\n"
             f"{our_father}\n\n"
             f"{our_father}\n\n"
@@ -320,6 +321,7 @@ class TestNovenaUrlImport(unittest.TestCase):
         fragments = draft.payload["contract"]["novena"]["template"]["fragments"]
 
         self.assertTrue(openai_mock.called)
+        self.assertIn(importer_mod.TTS_INTENTION_MARKER, openai_mock.call_args.args[0])
         self.assertEqual(draft.status, "written")
         self.assertIn("Day 1: expanded canonical prayer references into full rosary texts and repeated each prayer three times", draft.notes)
         self.assertTrue(any("expanded repetition instruction into three explicit spoken recitations" in note for note in draft.notes))
@@ -421,6 +423,53 @@ class TestNovenaUrlImport(unittest.TestCase):
         self.assertIn(hail_mary_text, day_one)
         self.assertIn(glory_be_text, day_one)
         self.assertIn("expanded canonical prayer references into full rosary texts", draft.notes[0])
+
+    def test_single_import_converts_request_marker_to_non_spoken_intention_controls(self):
+        url = "https://catholicnovenaapp.com/novenas/our-lady-of-fatima-novena/"
+        html = _repeated_canonical_prayer_page_html(
+            title="Our Lady of Fatima Novena",
+            subject="Our Lady of Fatima Novena",
+            starts="May 4",
+            feast="May 13",
+        )
+
+        report = importer_mod.import_single_url(url, fetcher=lambda _: html, dry_run=True, resolve_with_openai=False)
+        template = report.entries[0].payload["contract"]["novena"]["template"]
+        day_one_section = template["sections"][1]
+        day_block = next(block for block in template["blocks"] if block.get("days") == list(range(1, 10)))
+        parts = day_block["parts"]
+        cue_index = next(index for index, part in enumerate(parts) if part.get("kind") == "audio_cue")
+
+        self.assertNotIn("mention request here", day_one_section["text"].lower())
+        self.assertNotIn("Pause here to mention your request.", day_one_section["text"])
+        self.assertIn("Please pray for our intention in this novena,", day_one_section["text"])
+        self.assertEqual(parts[cue_index], {"kind": "audio_cue", "cue": "sacred_bell"})
+        self.assertEqual(
+            parts[cue_index + 1],
+            {"kind": "pause", "duration_ms": 5000, "purpose": "personal_intention"},
+        )
+        self.assertTrue(any(part.get("kind") == "text" and "Please pray for our intention" in part.get("text", "") for part in parts))
+        self.assertFalse(any("Pause here to mention your request." in str(part) for part in parts))
+
+    def test_openai_normalization_falls_back_when_it_drops_an_intention_marker(self):
+        source = "Please pray for our intention in this novena, (mention request here…)"
+        with patch.object(
+            importer_mod,
+            "_openai_tts_resolution",
+            return_value=importer_mod.TtsResolution(text="Please pray for our intention in this novena.", notes=()),
+        ):
+            resolution = importer_mod._resolve_tts_text(
+                source,
+                page_title="Example Novena",
+                section_title="Day 1",
+                resolve_with_openai=True,
+                openai_api_key="test-key",
+                openai_base_url="https://example.invalid/v1",
+                openai_model="test-model",
+            )
+
+        self.assertIn(importer_mod.TTS_INTENTION_MARKER, resolution.text)
+        self.assertTrue(any("did not preserve personal-intention controls" in note for note in resolution.notes))
 
     def test_single_import_reuses_compacted_prompt_source_for_identical_days(self):
         url = "https://catholicnovenaapp.com/novenas/our-lady-of-fatima-novena/"

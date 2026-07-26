@@ -36,6 +36,7 @@ OAI_MODEL = "OAI_MODEL"
 ROSARY_TEMPLATE_DIR = Path(__file__).resolve().parents[2] / "config" / "publish" / "templates" / "rosary"
 DAY_HEADING_ID_RE = re.compile(r"^day-(\d+)$", re.IGNORECASE)
 TTS_PLACEHOLDER_RE = re.compile(r"\(mention request here…\)", re.IGNORECASE)
+TTS_INTENTION_MARKER = "[[PERSONAL_INTENTION_PAUSE]]"
 TTS_REPETITION_MARKER_RE = re.compile(r"\((?:three times each|say 3 times|repeat 3 times)\)", re.IGNORECASE)
 TTS_REPETITION_PHRASE_RE = re.compile(r"\b(?:three times each|say 3 times|repeat 3 times)\b", re.IGNORECASE)
 TTS_PROMPT_PREFIX_RE = re.compile(r"^\s*Pray the(?:\.{2,}|…)?\s*", re.IGNORECASE)
@@ -549,6 +550,22 @@ def _text_to_parts(text: str) -> Tuple[List[Dict[str, Any]], Tuple[str, ...]]:
     index = 0
     while index < len(paragraphs):
         paragraph = paragraphs[index]
+        if TTS_INTENTION_MARKER in paragraph:
+            segments = paragraph.split(TTS_INTENTION_MARKER)
+            for segment_index, segment in enumerate(segments):
+                cleaned_segment = _clean_paragraph_text(segment)
+                if cleaned_segment:
+                    parts.append({"kind": "text", "text": cleaned_segment})
+                if segment_index < len(segments) - 1:
+                    parts.extend(
+                        [
+                            {"kind": "audio_cue", "cue": "sacred_bell"},
+                            {"kind": "pause", "duration_ms": 5000, "purpose": "personal_intention"},
+                        ]
+                    )
+            notes.append("converted intention marker into sacred bell and personal-intention pause")
+            index += 1
+            continue
         canonical_key = lookup.get(_clean_paragraph_text(paragraph))
         if canonical_key:
             repeat = 1
@@ -680,12 +697,16 @@ def _compact_template_sections(sections: List[Dict[str, Any]]) -> Tuple[List[Dic
         combined_notes = list(bucket["notes"]) + list(part_notes)
         if combined_notes:
             block["notes"] = "; ".join(_dedupe_preserve_order(combined_notes))
-        if parts and any(str(part.get("kind", "")).strip().lower() == "fragment" for part in parts):
+        if parts and any(str(part.get("kind", "")).strip().lower() != "text" for part in parts):
             block["parts"] = parts
         else:
             block["text"] = bucket["text"]
         grouped.append(block)
 
+    for section in expanded:
+        text = str(section.get("text", ""))
+        if TTS_INTENTION_MARKER in text:
+            section["text"] = text.replace(TTS_INTENTION_MARKER, "").strip()
     intro_sections = [section for section in expanded if _parse_day_number(section) is None]
     fragment_library = [fragment for fragment in _canonical_prayer_fragments() if fragment["key"] in used_fragment_keys]
     return intro_sections + [section for section in expanded if _parse_day_number(section) is not None], intro_sections + grouped, fragment_library
@@ -792,9 +813,9 @@ def _local_tts_resolution(text: str) -> TtsResolution:
                 resolved.append(paragraph)
                 notes.append("kept repetition instruction because the repeated prayer text could not be isolated")
         else:
-            replaced = TTS_PLACEHOLDER_RE.sub("Pause here to mention your request.", paragraph)
+            replaced = TTS_PLACEHOLDER_RE.sub(TTS_INTENTION_MARKER, paragraph)
             if replaced != paragraph:
-                notes.append('replaced "mention request here" with a spoken pause prompt')
+                notes.append('converted "mention request here" into a personal-intention pause marker')
             replaced = re.sub(r"^\s*Pray the…\s*", "Pray the following: ", replaced, flags=re.IGNORECASE)
             if replaced != paragraph and "Pray the following:" in replaced:
                 notes.append("normalized a truncated prayer prompt into a spoken instruction")
@@ -830,7 +851,7 @@ def _openai_tts_resolution(
         "- Preserve paragraph breaks where they help pacing.\n"
         "- The source has already been simplified so repeated novena blocks can be reused across days.\n"
         "- Canonical prayer names like Our Father, Hail Mary, and Glory Be have already been expanded to their full traditional text from the repo's rosary library.\n"
-        "- When the source says 'mention request here', replace it with: 'Pause here to mention your request.'\n"
+        f"- Preserve {TTS_INTENTION_MARKER} exactly; it is a non-spoken personal-intention control marker.\n"
         "- Keep any spoken repetition preamble concise and clear.\n"
         "- Do not invent new devotional content.\n"
         "- If no normalization is needed, keep the text nearly unchanged and set notes to an empty string.\n"
@@ -901,13 +922,19 @@ def _resolve_tts_text(
         return local_resolution
     try:
         remote_resolution = _openai_tts_resolution(
-            prepared_resolution.text,
+            local_resolution.text,
             page_title=page_title,
             section_title=section_title,
             api_key=openai_api_key,
             base_url=openai_base_url,
             model=openai_model,
         )
+        if remote_resolution.text.count(TTS_INTENTION_MARKER) != local_resolution.text.count(TTS_INTENTION_MARKER):
+            fallback_notes = list(local_resolution.notes)
+            fallback_notes.append(
+                "OpenAI normalization did not preserve personal-intention controls; used local TTS fallback"
+            )
+            return TtsResolution(text=local_resolution.text, notes=_dedupe_preserve_order(fallback_notes))
         merged_notes = _dedupe_preserve_order(list(remote_resolution.notes) + list(local_resolution.notes))
         return TtsResolution(text=remote_resolution.text, notes=merged_notes)
     except Exception:
