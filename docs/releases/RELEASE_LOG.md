@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.3.10.4] - 2026-07-25
+
+### Changed
+- Updated the Ora Pro Nobis branded audio welcome to “Welcome to Ora Pro Nobis. Where we pray with the saints.” and render it with OpenAI Ash.
+- Excluded Daily Reflection from branded audio welcome insertion because its spoken reflection already includes the welcome.
+
 ## [0.3.10.3] - 2026-07-25
 
 ### Fixed

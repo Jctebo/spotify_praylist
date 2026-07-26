@@ -98,6 +98,7 @@ def normalize_audio_branding_config(payload: Dict[str, Any]) -> Dict[str, Any]:
             normalized_seasons[season] = str(value).strip()
     return {
         "enabled": _bool_value(payload.get("enabled"), False),
+        "exclude_entry_ids": [str(value).strip() for value in payload.get("exclude_entry_ids", []) if str(value).strip()],
         "missing_config": str(payload.get("missing_config", "")).strip(),
         "calendar": str(payload.get("calendar", "general_roman")).strip() or "general_roman",
         "locale": str(payload.get("locale", "en")).strip() or "en",
@@ -167,6 +168,10 @@ def audio_branding_hash_metadata(
     }
     if not resolved_config.get("enabled"):
         metadata["status"] = "disabled"
+        return metadata
+    if str(job.get("entry_id", "")).strip() in set(resolved_config.get("exclude_entry_ids") or []):
+        metadata["status"] = "skipped"
+        metadata["skip_reason"] = "entry_excluded"
         return metadata
     target_date = _published_date(job)
     if target_date is None:

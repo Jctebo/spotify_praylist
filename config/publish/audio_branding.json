@@ -1,23 +1,17 @@
 {
   "enabled": true,
+  "exclude_entry_ids": ["daily-reflection"],
   "calendar": "general_roman",
   "locale": "en",
   "welcome": {
-    "text": "Welcome to Ora Pro Nobis, where we pray with the Saints.",
-    "tts_text": "Welcome to Oh-rah Pro No-bees, where we pray with the Saints.",
+    "text": "Welcome to Ora Pro Nobis. Where we pray with the saints.",
+    "tts_text": "Welcome to Ora Pro Nobis. Where we pray with the saints.",
     "providers": [
       {
-        "provider": "elevenlabs",
-        "api_key_env": "ELEVENLABS_API_KEY",
-        "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
-        "model_id": "eleven_multilingual_v2",
-        "voice_settings": {
-          "stability": 0.65,
-          "similarity_boost": 0.8,
-          "use_speaker_boost": true,
-          "style": 0,
-          "speed": 1.0
-        },
+        "provider": "openai",
+        "api_key_env": "OPENAI_API_KEY",
+        "model": "gpt-4o-mini-tts",
+        "voice": "ash",
         "format": "mp3",
         "speed": 1.0
       }
