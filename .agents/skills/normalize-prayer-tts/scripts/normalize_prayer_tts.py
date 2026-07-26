@@ -25,6 +25,10 @@ INTENTION_RE = re.compile(
             (?:request|intention)s?|for\s+(?:your|a\s+personal|personal)\s+intentions?)
         |
         mention\s+your\s+(?:request|intention)s?\s+here
+        |
+        (?:^|(?<=[.!?])\s+|\r?\n\s*)
+        (?:mention|state|offer)\s+(?:your\s+)?(?:personal\s+)?
+        (?:request|intention)s?(?:\s+here)?
     )
     \s*\)?[.!]?
     """
@@ -313,6 +317,25 @@ def audit_json(value: Any, source: str = "<json>", options: Optional[Normalizati
     }
 
 
+def audit_directory(path: Path, options: Optional[NormalizationOptions] = None) -> Dict[str, Any]:
+    if not path.is_dir():
+        raise ValueError(f"Expected a directory: {path}")
+    results: List[Dict[str, Any]] = []
+    for child in sorted(path.rglob("*.json"), key=lambda item: item.as_posix()):
+        results.append(audit_json(json.loads(child.read_text(encoding="utf-8")), str(child), options))
+    return {
+        "source": str(path),
+        "kind": "directory",
+        "results": results,
+        "summary": {
+            "files_scanned": len(results),
+            "fields_scanned": sum(row["summary"]["fields_scanned"] for row in results),
+            "diagnostics": sum(row["summary"]["diagnostics"] for row in results),
+            "review_required": sum(row["summary"]["review_required"] for row in results),
+        },
+    }
+
+
 def _read_input(path_text: str) -> Tuple[str, str]:
     if path_text == "-":
         return sys.stdin.read(), "<stdin>"
@@ -333,21 +356,27 @@ def _parse_args(argv: Optional[Sequence[str]]) -> argparse.Namespace:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = _parse_args(argv)
     try:
-        raw, source = _read_input(args.path)
         input_format = args.input_format
-        if input_format == "auto":
-            input_format = "json" if source.lower().endswith(".json") else "text"
         options = NormalizationOptions(
             include_bell=not args.no_bell,
             intention_pause_ms=args.pause_ms,
         )
-        if input_format == "json":
-            payload = audit_json(json.loads(raw), source, options)
+        path = Path(args.path) if args.path != "-" else None
+        if path is not None and path.is_dir():
+            if input_format == "text":
+                raise ValueError("Directory input supports JSON contracts only")
+            payload = audit_directory(path, options)
         else:
-            result = normalize_text(raw, options)
-            for diagnostic in result["diagnostics"]:
-                diagnostic["source_path"] = source
-            payload = {"source": source, "kind": "text", **result}
+            raw, source = _read_input(args.path)
+            if input_format == "auto":
+                input_format = "json" if source.lower().endswith(".json") else "text"
+            if input_format == "json":
+                payload = audit_json(json.loads(raw), source, options)
+            else:
+                result = normalize_text(raw, options)
+                for diagnostic in result["diagnostics"]:
+                    diagnostic["source_path"] = source
+                payload = {"source": source, "kind": "text", **result}
     except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2

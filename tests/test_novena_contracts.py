@@ -110,6 +110,29 @@ class TestNovenaContracts(unittest.TestCase):
         self.assertEqual([provider["provider"] for provider in response_providers], ["openai"])
         self.assertEqual(response_providers[0]["voice"], "alloy")
 
+    def test_st_clare_embedded_intention_directions_use_structured_controls(self):
+        contracts = self.contracts_mod.load_novena_contracts()
+        contract = next(item for item in contracts if item.contract_id == "st_clare")
+        day_blocks = [block for block in contract.novena.template.blocks if block.key in {"days_1", "days_2", "days_3"}]
+
+        self.assertEqual(len(day_blocks), 3)
+        for block in day_blocks:
+            parts = list(block.parts)
+            pairs = [
+                index
+                for index in range(len(parts) - 1)
+                if parts[index].get("kind") == "audio_cue"
+                and parts[index].get("cue") == "sacred_bell"
+                and parts[index + 1].get("kind") == "pause"
+                and parts[index + 1].get("purpose") == "personal_intention"
+                and parts[index + 1].get("duration_ms") == 5000
+            ]
+            self.assertGreaterEqual(len(pairs), 2)
+            self.assertNotIn(
+                "mention your intentions here",
+                " ".join(str(part.get("text", "")).lower() for part in parts),
+            )
+
     def test_load_novena_contracts_reads_pentecost_fixture_with_one_one_seven_pattern(self):
         contracts = self.contracts_mod.load_novena_contracts()
         contract = next(item for item in contracts if item.contract_id == "pentecost_sunday")
