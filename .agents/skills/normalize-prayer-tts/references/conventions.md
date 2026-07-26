@@ -51,7 +51,7 @@ Use `audio_config.role_overrides` for distinct voices. In this repository, follo
 
 ### Personal Intention
 
-Replace a clear instruction such as “Pause here to mention your request” with:
+Replace a clear listener instruction such as “Pause here to mention your request”, “Mention your request”, “State your intention”, or “Offer your personal intention” with:
 
 ```json
 [
@@ -60,7 +60,9 @@ Replace a clear instruction such as “Pause here to mention your request” wit
 ]
 ```
 
-The user may change the pause duration or disable the bell. Never send cue labels or pause directions to TTS. The active publish schema renders `sacred_bell` as a deterministic cached bell and `pause` as exact generated silence.
+The user may change the pause duration or disable the bell. Match only standalone imperative directions to the listener; prayer prose that merely mentions a request or intention remains spoken. Never send cue labels or pause directions to TTS. The active publish schema renders `sacred_bell` as a deterministic cached bell and `pause` as exact generated silence.
+
+The audited embedded form `grace we ask/implore mention your intentions here` is also a listener direction: split it at `mention your intentions here`, then insert the bell and personal-intention pause. Keep the surrounding petition text unchanged.
 
 ### Repetition
 
@@ -115,6 +117,7 @@ Default to `review` rather than deletion.
 ### Validation
 
 - Preview with this skill’s script.
+- Audit a catalog read-only with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py contracts/novenas --format auto`.
 - Inspect exact source paths in diagnostics.
 - Run contract-specific unit tests.
 - Rerun with `--strict`.

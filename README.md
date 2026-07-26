@@ -110,7 +110,7 @@ Optional variables:
 - `publish_audio.yml` restores the current devotional image folders from OneDrive via rclone on `main` before site generation, while `daily_devotional_image_remote.yml` generates/syncs the devotional images and builds the same public image tree under `pages/devotional/DCIM`.
 
 ## Files
-- `.agents/skills/normalize-prayer-tts/`: preview-only prayer TTS audit skill for expanding supported abbreviations, separating Versicle/Response voices, converting intention directions into bell/pause controls, and flagging ambiguous print artifacts for review; run it with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py <path> --format auto`
+- `.agents/skills/normalize-prayer-tts/`: preview-only prayer TTS audit skill for expanding supported abbreviations, separating Versicle/Response voices, converting intention directions into bell/pause controls, and flagging ambiguous print artifacts for review; run it with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py <path> --format auto`, or audit every novena contract read-only with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py contracts/novenas --format auto`
 - `jobs/playlist/refresh_playlist.py`: active Spotify refresh runtime with Notion-owned membership/order
 - `jobs/playlist/spotify_contracts.py`: loader and validation for `config/spotify/contracts/*.json` and `config/spotify/playlists/*.json`
 - `config/spotify/contracts/*.json`: one resolver-backed, fixed-URI, or `spotify_episode_lookup` queue contract per file; the three Marian Antiphon Spotify contracts resolve the daily Ora Pro Nobis episode through ordered lookup searches

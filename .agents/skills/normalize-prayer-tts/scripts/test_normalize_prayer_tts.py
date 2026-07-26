@@ -63,6 +63,72 @@ class NormalizePrayerTtsTests(unittest.TestCase):
         result = MODULE.normalize_text("Pause for your intention.", options)
         self.assertEqual(result["segments"], [{"kind": "pause", "purpose": "personal_intention", "duration_ms": 7000}])
 
+    def test_standalone_request_and_intention_variants_become_bell_and_pause(self):
+        for prompt in (
+            "Mention your request.",
+            "Mention your intention here.",
+            "State your intention.",
+            "Offer your personal intention.",
+        ):
+            with self.subTest(prompt=prompt):
+                result = MODULE.normalize_text(f"Pray. {prompt} Continue praying.")
+                self.assertEqual(
+                    [row["kind"] for row in result["segments"]],
+                    ["speech", "audio_cue", "pause", "speech"],
+                )
+                self.assertEqual(result["segments"][1]["cue"], "sacred_bell")
+                self.assertEqual(result["segments"][2]["purpose"], "personal_intention")
+
+    def test_standalone_request_prompt_at_start_becomes_bell_and_pause(self):
+        result = MODULE.normalize_text("Mention your request.")
+        self.assertEqual(
+            result["segments"],
+            [
+                {"kind": "audio_cue", "cue": "sacred_bell"},
+                {"kind": "pause", "purpose": "personal_intention", "duration_ms": 5000},
+            ],
+        )
+
+    def test_devotional_request_language_is_not_mistaken_for_a_listener_instruction(self):
+        text = "Lord, we mention your request in prayer and offer our intention to you."
+        result = MODULE.normalize_text(text)
+        self.assertEqual(result["segments"], [{"kind": "speech", "text": text}])
+        self.assertNotIn("personal-intention-pause", {item["rule"] for item in result["diagnostics"]})
+
+    def test_embedded_intention_prompt_becomes_bell_and_pause(self):
+        result = MODULE.normalize_text("Obtain for us the grace we implore mention your intentions here, Christian charity.")
+        self.assertEqual([row["kind"] for row in result["segments"]], ["speech", "audio_cue", "pause", "speech"])
+        self.assertEqual(result["segments"][0]["text"], "Obtain for us the grace we implore")
+        self.assertEqual(result["segments"][3]["text"], ", Christian charity.")
+
+    def test_directory_audit_scans_json_files_without_mutating_them(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            first = root / "a.json"
+            nested = root / "nested" / "b.json"
+            nested.parent.mkdir()
+            first.write_text(json.dumps({"text": "Mention your request."}), encoding="utf-8")
+            nested.write_text(json.dumps({"text": "Pray."}), encoding="utf-8")
+            before = {path: path.read_text(encoding="utf-8") for path in (first, nested)}
+            result = MODULE.audit_directory(root)
+            self.assertEqual(result["kind"], "directory")
+            self.assertEqual(result["summary"]["files_scanned"], 2)
+            self.assertEqual([Path(row["source"]).name for row in result["results"]], ["a.json", "b.json"])
+            self.assertEqual({path: path.read_text(encoding="utf-8") for path in (first, nested)}, before)
+
+    def test_catalog_audit_has_no_unresolved_personal_intention_instructions(self):
+        repo_root = SCRIPT_PATH.parents[4]
+        result = MODULE.audit_directory(repo_root / "contracts" / "novenas")
+        personal_intention_findings = [
+            diagnostic
+            for file_result in result["results"]
+            for row in file_result["results"]
+            for diagnostic in row["diagnostics"]
+            if diagnostic["rule"] == "personal-intention-pause"
+        ]
+        self.assertEqual(result["summary"]["files_scanned"], 93)
+        self.assertEqual(personal_intention_findings, [])
+
     def test_multiple_intention_prompts_preserve_order(self):
         result = MODULE.normalize_text("First. Pause for your intention. Second. Pause here to mention your request. Third.")
         self.assertEqual([row["kind"] for row in result["segments"]], ["speech", "audio_cue", "pause", "speech", "audio_cue", "pause", "speech"])

@@ -45,7 +45,20 @@
               },
               {
                 "kind": "text",
-                "text": "Amen.\n\nO Seraphic Saint Clare, first disciple of the Poor Man of Assisi, who hast abandoned all riches and honours for a life of sacrifice and of highest poverty, obtain from God for us the grace we ask mention your intentions here , that of always submitting to the Divine Will and of living confidently in the providence of our Heavenly Father. Amen.\n\nPray for us, Saint Clare. That we may be made worthy of the promises of Christ. Let us Pray. We pray Thee, Lord, Grant us Thy servants who celebrate the festival of blessed Clare Thy Virgin, by her intercession, to be partakers of the joys of heaven and coheirs with Thine only-begotten Son, Who being God, lives and reigns forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen.\n\nO Seraphic Saint Clare, first disciple of the Poor Man of Assisi, who hast abandoned all riches and honours for a life of sacrifice and of highest poverty, obtain from God for us the grace we ask"
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
+              },
+              {
+                "kind": "text",
+                "text": ", that of always submitting to the Divine Will and of living confidently in the providence of our Heavenly Father. Amen.\n\nPray for us, Saint Clare. That we may be made worthy of the promises of Christ. Let us Pray. We pray Thee, Lord, Grant us Thy servants who celebrate the festival of blessed Clare Thy Virgin, by her intercession, to be partakers of the joys of heaven and coheirs with Thine only-begotten Son, Who being God, lives and reigns forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ]
           },
@@ -73,7 +86,20 @@
               },
               {
                 "kind": "text",
-                "text": "Amen.\n\nO Seraphic Saint Clare who, notwithstanding living separated from the world hast not forgotten the poor and the afflicted, but hast become a mother to them, sacrificing for them your riches and working for them innumerable miracles; obtain from God for us the grace we implore mention your intentions here , Christian charity towards our brethren in all their spiritual and temporal needs. Amen.\n\nPray for us, Saint Clare. That we may be made worthy of the promises of Christ. Let us Pray. We pray Thee, Lord, Grant us Thy servants who celebrate the festival of blessed Clare Thy Virgin, by her intercession, to be partakers of the joys of heaven and coheirs with Thine only-begotten Son, Who being God, lives and reigns forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen.\n\nO Seraphic Saint Clare who, notwithstanding living separated from the world hast not forgotten the poor and the afflicted, but hast become a mother to them, sacrificing for them your riches and working for them innumerable miracles; obtain from God for us the grace we implore"
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
+              },
+              {
+                "kind": "text",
+                "text": ", Christian charity towards our brethren in all their spiritual and temporal needs. Amen.\n\nPray for us, Saint Clare. That we may be made worthy of the promises of Christ. Let us Pray. We pray Thee, Lord, Grant us Thy servants who celebrate the festival of blessed Clare Thy Virgin, by her intercession, to be partakers of the joys of heaven and coheirs with Thine only-begotten Son, Who being God, lives and reigns forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ]
           },
@@ -101,7 +127,20 @@
               },
               {
                 "kind": "text",
-                "text": "Amen.\n\nO Seraphic Saint Clare, light of your country, who hast delivered Italy from barbarous invaders; obtain from God for us the grace we implore mention your intentions here , that of overcoming all attacks of the world against faith and morals thus preserving in our families true Christian peace with a holy fear of God and a devotion to the Blessed Sacrament. Amen.\n\nPray for us, Saint Clare. That we may be made worthy of the promises of Christ. Let us Pray. We pray Thee, Lord, Grant us Thy servants who celebrate the festival of blessed Clare Thy Virgin, by her intercession, to be partakers of the joys of heaven and coheirs with Thine only-begotten Son, Who being God, lives and reigns forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen.\n\nO Seraphic Saint Clare, light of your country, who hast delivered Italy from barbarous invaders; obtain from God for us the grace we implore"
+              },
+              {
+                "kind": "audio_cue",
+                "cue": "sacred_bell"
+              },
+              {
+                "kind": "pause",
+                "purpose": "personal_intention",
+                "duration_ms": 5000
+              },
+              {
+                "kind": "text",
+                "text": ", that of overcoming all attacks of the world against faith and morals thus preserving in our families true Christian peace with a holy fear of God and a devotion to the Blessed Sacrament. Amen.\n\nPray for us, Saint Clare. That we may be made worthy of the promises of Christ. Let us Pray. We pray Thee, Lord, Grant us Thy servants who celebrate the festival of blessed Clare Thy Virgin, by her intercession, to be partakers of the joys of heaven and coheirs with Thine only-begotten Son, Who being God, lives and reigns forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ]
           },
@@ -288,7 +327,7 @@
             "key": "day-1",
             "kind": "fixed",
             "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO most Holy Trinity, Father, Son and Holy Spirit, we praise Thy Holy Name and the wonders of grace Thou hast worked in Thy servant, Saint Clare. Through her powerful intercession grant us the favours we beg in this novena, above all the grace to live and die as she did in Thy most Holy Love and also this intention\n\nAmen.\n\nO Seraphic Saint Clare, first disciple of the Poor Man of Assisi, who hast abandoned all riches and honours for a life of sacrifice and of highest poverty, obtain from God for us the grace we ask mention your intentions here , that of always submitting to the Divine Will and of living confidently in the providence of our Heavenly Father. Amen.\n\nPray for us, Saint Clare. That we may be made worthy of the promises of Christ. Let us Pray. We pray Thee, Lord, Grant us Thy servants who celebrate the festival of blessed Clare Thy Virgin, by her intercession, to be partakers of the joys of heaven and coheirs with Thine only-begotten Son, Who being God, lives and reigns forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO most Holy Trinity, Father, Son and Holy Spirit, we praise Thy Holy Name and the wonders of grace Thou hast worked in Thy servant, Saint Clare. Through her powerful intercession grant us the favours we beg in this novena, above all the grace to live and die as she did in Thy most Holy Love and also this intention\n\nAmen.\n\nO Seraphic Saint Clare, first disciple of the Poor Man of Assisi, who hast abandoned all riches and honours for a life of sacrifice and of highest poverty, obtain from God for us the grace we ask, that of always submitting to the Divine Will and of living confidently in the providence of our Heavenly Father. Amen.\n\nPray for us, Saint Clare. That we may be made worthy of the promises of Christ. Let us Pray. We pray Thee, Lord, Grant us Thy servants who celebrate the festival of blessed Clare Thy Virgin, by her intercession, to be partakers of the joys of heaven and coheirs with Thine only-begotten Son, Who being God, lives and reigns forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 1"
           },
           {
@@ -298,7 +337,7 @@
             "key": "day-2",
             "kind": "fixed",
             "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO most Holy Trinity, Father, Son and Holy Spirit, we praise Thy Holy Name and the wonders of grace Thou hast worked in Thy servant, Saint Clare. Through her powerful intercession grant us the favours we beg in this novena, above all the grace to live and die as she did in Thy most Holy Love and also this intention\n\nAmen.\n\nO Seraphic Saint Clare who, notwithstanding living separated from the world hast not forgotten the poor and the afflicted, but hast become a mother to them, sacrificing for them your riches and working for them innumerable miracles; obtain from God for us the grace we implore mention your intentions here , Christian charity towards our brethren in all their spiritual and temporal needs. Amen.\n\nPray for us, Saint Clare. That we may be made worthy of the promises of Christ. Let us Pray. We pray Thee, Lord, Grant us Thy servants who celebrate the festival of blessed Clare Thy Virgin, by her intercession, to be partakers of the joys of heaven and coheirs with Thine only-begotten Son, Who being God, lives and reigns forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO most Holy Trinity, Father, Son and Holy Spirit, we praise Thy Holy Name and the wonders of grace Thou hast worked in Thy servant, Saint Clare. Through her powerful intercession grant us the favours we beg in this novena, above all the grace to live and die as she did in Thy most Holy Love and also this intention\n\nAmen.\n\nO Seraphic Saint Clare who, notwithstanding living separated from the world hast not forgotten the poor and the afflicted, but hast become a mother to them, sacrificing for them your riches and working for them innumerable miracles; obtain from God for us the grace we implore, Christian charity towards our brethren in all their spiritual and temporal needs. Amen.\n\nPray for us, Saint Clare. That we may be made worthy of the promises of Christ. Let us Pray. We pray Thee, Lord, Grant us Thy servants who celebrate the festival of blessed Clare Thy Virgin, by her intercession, to be partakers of the joys of heaven and coheirs with Thine only-begotten Son, Who being God, lives and reigns forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 2"
           },
           {
@@ -308,7 +347,7 @@
             "key": "day-3",
             "kind": "fixed",
             "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO most Holy Trinity, Father, Son and Holy Spirit, we praise Thy Holy Name and the wonders of grace Thou hast worked in Thy servant, Saint Clare. Through her powerful intercession grant us the favours we beg in this novena, above all the grace to live and die as she did in Thy most Holy Love and also this intention\n\nAmen.\n\nO Seraphic Saint Clare, light of your country, who hast delivered Italy from barbarous invaders; obtain from God for us the grace we implore mention your intentions here , that of overcoming all attacks of the world against faith and morals thus preserving in our families true Christian peace with a holy fear of God and a devotion to the Blessed Sacrament. Amen.\n\nPray for us, Saint Clare. That we may be made worthy of the promises of Christ. Let us Pray. We pray Thee, Lord, Grant us Thy servants who celebrate the festival of blessed Clare Thy Virgin, by her intercession, to be partakers of the joys of heaven and coheirs with Thine only-begotten Son, Who being God, lives and reigns forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO most Holy Trinity, Father, Son and Holy Spirit, we praise Thy Holy Name and the wonders of grace Thou hast worked in Thy servant, Saint Clare. Through her powerful intercession grant us the favours we beg in this novena, above all the grace to live and die as she did in Thy most Holy Love and also this intention\n\nAmen.\n\nO Seraphic Saint Clare, light of your country, who hast delivered Italy from barbarous invaders; obtain from God for us the grace we implore, that of overcoming all attacks of the world against faith and morals thus preserving in our families true Christian peace with a holy fear of God and a devotion to the Blessed Sacrament. Amen.\n\nPray for us, Saint Clare. That we may be made worthy of the promises of Christ. Let us Pray. We pray Thee, Lord, Grant us Thy servants who celebrate the festival of blessed Clare Thy Virgin, by her intercession, to be partakers of the joys of heaven and coheirs with Thine only-begotten Son, Who being God, lives and reigns forever and ever. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 3"
           },
           {
