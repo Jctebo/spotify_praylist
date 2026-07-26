@@ -1,5 +1,14 @@
 # Release Log
 
+## [0.3.10.2] - 2026-07-25
+
+### Added
+- Added a read-only recursive novena-contract audit to the prayer TTS normalizer, with stable per-file JSON results.
+
+### Changed
+- Saint Clare novena days 1–3 now use a sacred bell and five-second personal-intention pause where their embedded request directions previously reached TTS.
+- Documented catalog-wide intention-pause auditing and added regressions for the 93 checked-in novena contracts.
+
 ## [0.3.10.1] - 2026-07-24
 
 ### Changed
