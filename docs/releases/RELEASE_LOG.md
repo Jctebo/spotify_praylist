@@ -1,5 +1,14 @@
 # Release Log
 
+## [0.3.11.0] - 2026-07-26
+
+### Changed
+- Novena openings now direct the LLM to weight solemnities and feasts, the Gospel, memorials, and liturgical seasons in that order, while adapting the result to the particular saint and novena day.
+- Removed the shared daily theme as a novena-intro fallback; ordinary-day intros instead give a brief saint-and-current-novena welcome.
+
+### Fixed
+- Every generated, short-form, and traditional novena continues to receive a brief first audio fragment, including when no higher-priority liturgical material is available.
+
 ## [0.3.10.4] - 2026-07-25
 
 ### Changed
