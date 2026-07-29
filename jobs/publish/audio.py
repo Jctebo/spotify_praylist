@@ -204,7 +204,11 @@ def _base_provider_config(audio_config: Dict[str, Any]) -> Dict[str, Any]:
 def _provider_preferences(audio_config: Dict[str, Any]) -> List[Dict[str, Any]]:
     providers = audio_config.get("providers")
     if isinstance(providers, list) and providers:
-        return [dict(provider) for provider in providers if isinstance(provider, dict)]
+        configured = [dict(provider) for provider in providers if isinstance(provider, dict)]
+        return sorted(
+            configured,
+            key=lambda provider: 0 if _provider_name(provider) in {"", "openai"} else 1,
+        )
     return [_base_provider_config(audio_config)]
 
 
@@ -220,7 +224,7 @@ def _effective_provider_audio_config(audio_config: Dict[str, Any], provider_conf
         effective["speed"] = 1.0
     if effective["provider"] == "openai":
         effective["model"] = str(effective.get("model", "gpt-4o-mini-tts")).strip() or "gpt-4o-mini-tts"
-        effective["voice"] = str(effective.get("voice", "ash")).strip() or "ash"
+        effective["voice"] = "ash"
         effective.pop("voice_settings", None)
         effective.pop("voice_id", None)
         effective.pop("model_id", None)

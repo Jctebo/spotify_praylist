@@ -489,12 +489,34 @@ def _fallback_text(profile: DevotionalIntroProfile, context: Mapping[str, Any]) 
     )
 
 
+def _truncate_at_word_boundary(value: str, max_chars: int) -> str:
+    normalized = _normalize_whitespace(value)
+    if len(normalized) <= max_chars:
+        return normalized
+    candidate = normalized[: max(1, max_chars - 1)].rsplit(" ", 1)[0].rstrip(" ,;:")
+    return f"{candidate or normalized[: max(1, max_chars - 1)].rstrip()}…"
+
+
+def _compact_novena_fallback_context(
+    profile: DevotionalIntroProfile,
+    context: Mapping[str, Any],
+) -> Dict[str, Any]:
+    compact = dict(context)
+    if profile.key != "novena":
+        return compact
+    compact["intro_summary"] = _truncate_at_word_boundary(_context_value(context, "intro_summary"), 70)
+    compact["intro_patronage"] = _truncate_at_word_boundary(_context_value(context, "intro_patronage"), 20)
+    compact["calendar_bridge"] = _truncate_at_word_boundary(_context_value(context, "calendar_bridge"), 50)
+    return compact
+
+
 def _fallback_result(
     profile: DevotionalIntroProfile,
     context: Mapping[str, Any],
     reason: str,
 ) -> DevotionalIntroResult:
-    text = validate_devotional_intro(_fallback_text(profile, context), profile, context)
+    fallback_context = _compact_novena_fallback_context(profile, context)
+    text = validate_devotional_intro(_fallback_text(profile, fallback_context), profile, fallback_context)
     return DevotionalIntroResult(
         text=text,
         profile=profile.key,

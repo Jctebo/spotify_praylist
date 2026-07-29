@@ -1,5 +1,13 @@
 # Release Log
 
+## [0.3.12.1] - 2026-07-29
+
+### Changed
+- OpenAI Ash is now the preferred audio provider for prayer and novena rendering; ElevenLabs remains an automatic fallback.
+
+### Fixed
+- Deterministic novena introductions now compact long metadata before validation, preventing the scheduled audio pipeline from failing on the intro character limit.
+
 ## [0.3.12.0] - 2026-07-28
 
 ### Added

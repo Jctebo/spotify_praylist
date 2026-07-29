@@ -313,9 +313,8 @@ class TestPublishAudioFragments(unittest.TestCase):
         self.assertTrue(rendered["rendered"])
         self.assertEqual(rendered["provider"], "openai")
         self.assertEqual(rendered["audio_config"]["provider"], "openai")
-        self.assertGreaterEqual(len(calls), 2)
-        self.assertEqual(calls[0]["provider"], "elevenlabs")
-        self.assertEqual(calls[-1]["provider"], "openai")
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0]["provider"], "openai")
 
     def test_render_audio_job_uses_role_specific_provider_fallback(self):
         mp3_bytes = make_test_mp3_bytes()
@@ -374,9 +373,9 @@ class TestPublishAudioFragments(unittest.TestCase):
 
         self.assertTrue(rendered["rendered"])
         self.assertEqual(rendered["provider"], "openai")
-        self.assertEqual(calls[0][1]["provider"], "elevenlabs")
+        self.assertEqual(calls[0][1]["provider"], "openai")
         self.assertEqual(calls[-1][1]["provider"], "openai")
-        self.assertEqual(calls[-1][1]["voice"], "echo")
+        self.assertEqual(calls[-1][1]["voice"], "ash")
 
     def test_render_audio_job_reuses_identical_leaf_text(self):
         mp3_bytes = make_test_mp3_bytes()
