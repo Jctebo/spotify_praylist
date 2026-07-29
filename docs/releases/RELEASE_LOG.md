@@ -1,5 +1,10 @@
 # Release Log
 
+## [0.3.12.4] - 2026-07-29
+
+### Removed
+- Removed the duplicate short-form novena for the Dedication of the Basilica of Saint Mary Major; Our Lady of the Snows remains the single August 5 novena.
+
 ## [0.3.12.3] - 2026-07-29
 
 ### Fixed
