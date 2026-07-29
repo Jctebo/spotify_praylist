@@ -1,5 +1,13 @@
 # Release Log
 
+## [0.3.12.2] - 2026-07-29
+
+### Changed
+- R2 audio publishing now uses a checksum-backed delta sync: unchanged archive files are skipped, while missing or changed files upload with bounded concurrency.
+
+### Fixed
+- Daily audio publishing no longer re-uploads the complete R2 archive after every run.
+
 ## [0.3.12.1] - 2026-07-29
 
 ### Changed
