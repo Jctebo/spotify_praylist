@@ -173,7 +173,7 @@ class TestPublishDevotionalIntro(unittest.TestCase):
         self.assertIn("model unavailable", result.fallback_reason)
         self.assertIn("Day 3", result.text)
         self.assertIn("Novena to Saint Joseph", result.text)
-        self.assertIn("faithful work", result.text)
+        self.assertNotIn("faithful work", result.text)
         self.assertNotIn("Trust", result.text)
 
     def test_all_profile_fallbacks_use_complete_spoken_sentences(self):
@@ -225,16 +225,21 @@ class TestPublishDevotionalIntro(unittest.TestCase):
 
         prompt = build_devotional_intro_prompt(NOVENA_PROFILE, context)
         text = (
-            "On Day 3 of the Novena to Saint Joseph, we ask for the grace of faithful work in the duties before us. "
-            "With Saint Joseph, let us begin this day's prayer."
+            "Saint Joseph teaches us faithful service in the ordinary duties of life. "
+            "His quiet obedience makes room for God's work in every home and workplace. "
+            "On Day 3 of the Novena to Saint Joseph, we gather to pray together. "
+            "Let us begin this novena in prayer."
         )
 
         self.assertIn("not a summary of the day's liturgy", prompt)
-        self.assertIn("explicitly name Day 3", prompt)
-        self.assertIn("major solemnity or feast first, then the Gospel, then a memorial", prompt)
-        self.assertIn("When none is available, give only a brief introduction", prompt)
+        self.assertIn("exactly 4 to 6 sentences", prompt)
+        self.assertIn("explicitly names Day 3", prompt)
+        self.assertIn('beginning with "Let us"', prompt)
+        self.assertIn("Do not mention any daily theme, Gospel, Scripture, calendar bridge, feast, liturgical season, or novena focus.", prompt)
+        self.assertNotIn("Gospel bridge:", prompt)
+        self.assertNotIn("Novena focus:", prompt)
         self.assertNotIn("shared theme as a fallback", prompt)
-        self.assertIn("adapt it naturally to this saint and novena", prompt)
+        self.assertIn("saint's life and witness give shape to the opening", prompt)
         self.assertEqual(validate_devotional_intro(text, NOVENA_PROFILE, context), text)
 
     def test_novena_validation_requires_day_but_accepts_natural_context(self):
@@ -247,14 +252,16 @@ class TestPublishDevotionalIntro(unittest.TestCase):
         }
         with self.assertRaisesRegex(RuntimeError, "identify Day 3"):
             validate_devotional_intro(
-                "The Novena to Saint Joseph asks for the grace of faithful work in every duty before us. "
-                "With Saint Joseph, let us begin this day's prayer.",
+                "Saint Joseph teaches us faithful service. His obedience leads us to God. "
+                "The Novena to Saint Joseph gathers us in prayer. Let us begin this novena in prayer.",
                 NOVENA_PROFILE,
                 context,
             )
         natural_intro = (
+            "Saint Joseph shows us how to serve God quietly and faithfully. "
+            "His humble work helps us serve the Lord in ordinary responsibilities. "
             "On Day 3 of the Novena to Saint Joseph, we bring our needs before God with humble confidence. "
-            "With Saint Joseph, let us begin this day's prayer."
+            "Let us begin this novena in prayer."
         )
         self.assertEqual(validate_devotional_intro(natural_intro, NOVENA_PROFILE, context), natural_intro)
 
@@ -271,11 +278,82 @@ class TestPublishDevotionalIntro(unittest.TestCase):
             "intro_patronage": "Australia, Catholic education, teachers",
         }
         text = (
-            "On Day 1 of the Novena to St Mary MacKillop, we remember the Australian sister whose work opened "
-            "Catholic education to the poor. May hidden holiness and trust shape the needs we bring before God."
+            "We remember the Australian sister whose work opened Catholic education to the poor. "
+            "Her courage still encourages generous service today. "
+            "Her witness invites us to see Christ in the needs around us. "
+            "On Day 1 of the Novena to St Mary MacKillop, we gather before God in prayer. "
+            "Let us begin this novena in prayer."
         )
 
         self.assertEqual(validate_devotional_intro(text, NOVENA_PROFILE, context), text)
+
+    def test_novena_validation_rejects_daily_liturgical_context(self):
+        context = {
+            "prayer_title": "Novena to St Mary MacKillop",
+            "saint_name": "St Mary MacKillop",
+            "day": "1",
+            "daily_focus": "hidden holiness and trust",
+        }
+        daily_context = (
+            "St Mary MacKillop served the poor through Catholic education. "
+            "Her witness calls us to generous service. "
+            "On Day 1 of the Novena to St Mary MacKillop, we ask for hidden holiness and trust. "
+            "Let us begin this novena in prayer."
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "must not use daily liturgical context"):
+            validate_devotional_intro(daily_context, NOVENA_PROFILE, context)
+
+    def test_novena_validation_requires_one_day_sentence(self):
+        context = {
+            "prayer_title": "Novena to Saint Joseph",
+            "saint_name": "Saint Joseph",
+            "day": "3",
+            "daily_focus": "faithful work",
+        }
+        repeated_day = (
+            "On Day 3, Saint Joseph shows us faithful service. "
+            "His obedience helps us trust God in ordinary duties. "
+            "On Day 3 of the Novena to Saint Joseph, we gather before God in prayer. "
+            "Let us begin this novena in prayer."
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "exactly one sentence"):
+            validate_devotional_intro(repeated_day, NOVENA_PROFILE, context)
+
+    def test_novena_generation_retries_daily_liturgical_context_before_rendering_audio(self):
+        context = {
+            "prayer_title": "Novena to St Mary MacKillop",
+            "saint_name": "St Mary MacKillop",
+            "day": "1",
+            "daily_focus": "hidden holiness and trust",
+        }
+        responses = iter(
+            (
+                (
+                    "St Mary MacKillop served the poor through Catholic education. "
+                    "Her witness calls us to generous service. "
+                    "On Day 1 of the Novena to St Mary MacKillop, we ask for hidden holiness and trust. "
+                    "Let us begin this novena in prayer."
+                ),
+                (
+                    "St Mary MacKillop served the poor through Catholic education. "
+                    "Her witness calls us to generous service. "
+                    "On Day 1 of the Novena to St Mary MacKillop, we gather before God in prayer. "
+                    "Let us begin this novena in prayer."
+                ),
+            )
+        )
+
+        result = build_devotional_intro(
+            NOVENA_PROFILE,
+            context,
+            generate_text_fn=lambda *_args: next(responses),
+        )
+
+        self.assertEqual(result.source, SOURCE_OPENAI)
+        self.assertTrue(result.text.endswith("Let us begin this novena in prayer."))
+        self.assertNotIn("hidden holiness and trust", result.text.lower())
 
     def test_fallback_reason_redacts_credentials_and_urls(self):
         def fail(model, system, prompt, temperature):

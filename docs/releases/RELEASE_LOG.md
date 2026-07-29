@@ -1,5 +1,12 @@
 # Release Log
 
+## [0.3.12.7] - 2026-07-29
+
+### Changed
+- Novena introductions now contain only saint or devotion context, one novena-day sentence, and a final invitation into prayer; daily themes, Gospel, Scripture, calendar bridges, feasts, seasons, and novena-focus text are excluded.
+- Added structural validation and a corrective retry for the 4–6 sentence novena format, exactly one day sentence, a final “Let us” transition, and accidental daily-liturgical prose.
+- Advanced the devotional-intro policy to refresh cached novena sidecars with the new structure.
+
 ## [0.3.12.6] - 2026-07-29
 
 ### Changed
