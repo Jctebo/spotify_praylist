@@ -1,0 +1,224 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "seven_sorrows_and_joys_of_st_joseph",
+    "feast": {
+      "day": 22,
+      "mode": "fixed",
+      "month": 3,
+      "name": "Seven Sorrows and Joys of St Joseph"
+    },
+    "id": "seven_sorrows_and_joys_of_st_joseph",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A novena honoring St Joseph by meditating on his seven sorrows and seven joys, seeking his intercession through prayer over nine days."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Seven Sorrows and Joys of St Joseph Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief pacing line breaks and standardized a few headings for clearer text-to-speech delivery without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "First Sorrow and Joy. St. Joseph, Chaste Spouse of the Holy Mother of God, by the sorrow with which thy heart was pierced at the thought of a cruel separation from Mary, and by the deep joy that thou didst feel when the angel revealed to thee the ineffable mystery of the Incarnation, obtain for us from Jesus and Mary the grace of surmounting all anxiety. Win for us from the Adorable Heart of Jesus the unspeakable peace of which He is the Eternal Source. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Now pray all seven sorrows and joys of Saint Joseph. Fifth Sorrow and Joy. St. Joseph, by thy sorrow when told to fly into Egypt, and by thy joy in seeing the idols overthrown at the arrival of the living God, grant that no idol of earthly affection may any longer occupy our hearts, but being like thee entirely devoted to the service of Jesus and Mary, we may live and happily die for them alone. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Let us pray. O God, Who in Thine ineffable Providence has vouchsafed to choose Blessed Joseph to be the Spouse of Thy most holy Mother, grant, we beseech Thee, that we may deserve to have him for our intercessor in heaven whom on earth we venerate as our holy protector: Who lives and reigns forever and ever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Seven Sorrows and Joys of St Joseph Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief pacing line breaks and standardized a few headings for clearer text-to-speech delivery without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  First Sorrow and Joy. St. Joseph, Chaste Spouse of the Holy Mother of God, by the sorrow with which thy heart was pierced at the thought of a cruel separation from Mary, and by the deep joy that thou didst feel when the angel revealed to thee the ineffable mystery of the Incarnation, obtain for us from Jesus and Mary the grace of surmounting all anxiety. Win for us from the Adorable Heart of Jesus the unspeakable peace of which He is the Eternal Source. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Now pray all seven sorrows and joys of Saint Joseph. Fifth Sorrow and Joy. St. Joseph, by thy sorrow when told to fly into Egypt, and by thy joy in seeing the idols overthrown at the arrival of the living God, grant that no idol of earthly affection may any longer occupy our hearts, but being like thee entirely devoted to the service of Jesus and Mary, we may live and happily die for them alone. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Let us pray. O God, Who in Thine ineffable Providence has vouchsafed to choose Blessed Joseph to be the Spouse of Thy most holy Mother, grant, we beseech Thee, that we may deserve to have him for our intercessor in heaven whom on earth we venerate as our holy protector: Who lives and reigns forever and ever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief pacing line breaks and standardized a few headings for clearer text-to-speech delivery without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  First Sorrow and Joy. St. Joseph, Chaste Spouse of the Holy Mother of God, by the sorrow with which thy heart was pierced at the thought of a cruel separation from Mary, and by the deep joy that thou didst feel when the angel revealed to thee the ineffable mystery of the Incarnation, obtain for us from Jesus and Mary the grace of surmounting all anxiety. Win for us from the Adorable Heart of Jesus the unspeakable peace of which He is the Eternal Source. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Now pray all seven sorrows and joys of Saint Joseph. Fifth Sorrow and Joy. St. Joseph, by thy sorrow when told to fly into Egypt, and by thy joy in seeing the idols overthrown at the arrival of the living God, grant that no idol of earthly affection may any longer occupy our hearts, but being like thee entirely devoted to the service of Jesus and Mary, we may live and happily die for them alone. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Let us pray. O God, Who in Thine ineffable Providence has vouchsafed to choose Blessed Joseph to be the Spouse of Thy most holy Mother, grant, we beseech Thee, that we may deserve to have him for our intercessor in heaven whom on earth we venerate as our holy protector: Who lives and reigns forever and ever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief pacing line breaks and standardized a few headings for clearer text-to-speech delivery without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  First Sorrow and Joy. St. Joseph, Chaste Spouse of the Holy Mother of God, by the sorrow with which thy heart was pierced at the thought of a cruel separation from Mary, and by the deep joy that thou didst feel when the angel revealed to thee the ineffable mystery of the Incarnation, obtain for us from Jesus and Mary the grace of surmounting all anxiety. Win for us from the Adorable Heart of Jesus the unspeakable peace of which He is the Eternal Source. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Now pray all seven sorrows and joys of Saint Joseph. Fifth Sorrow and Joy. St. Joseph, by thy sorrow when told to fly into Egypt, and by thy joy in seeing the idols overthrown at the arrival of the living God, grant that no idol of earthly affection may any longer occupy our hearts, but being like thee entirely devoted to the service of Jesus and Mary, we may live and happily die for them alone. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Let us pray. O God, Who in Thine ineffable Providence has vouchsafed to choose Blessed Joseph to be the Spouse of Thy most holy Mother, grant, we beseech Thee, that we may deserve to have him for our intercessor in heaven whom on earth we venerate as our holy protector: Who lives and reigns forever and ever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief pacing line breaks and standardized a few headings for clearer text-to-speech delivery without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  First Sorrow and Joy. St. Joseph, Chaste Spouse of the Holy Mother of God, by the sorrow with which thy heart was pierced at the thought of a cruel separation from Mary, and by the deep joy that thou didst feel when the angel revealed to thee the ineffable mystery of the Incarnation, obtain for us from Jesus and Mary the grace of surmounting all anxiety. Win for us from the Adorable Heart of Jesus the unspeakable peace of which He is the Eternal Source. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Now pray all seven sorrows and joys of Saint Joseph. Fifth Sorrow and Joy. St. Joseph, by thy sorrow when told to fly into Egypt, and by thy joy in seeing the idols overthrown at the arrival of the living God, grant that no idol of earthly affection may any longer occupy our hearts, but being like thee entirely devoted to the service of Jesus and Mary, we may live and happily die for them alone. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Let us pray. O God, Who in Thine ineffable Providence has vouchsafed to choose Blessed Joseph to be the Spouse of Thy most holy Mother, grant, we beseech Thee, that we may deserve to have him for our intercessor in heaven whom on earth we venerate as our holy protector: Who lives and reigns forever and ever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief pacing line breaks and standardized a few headings for clearer text-to-speech delivery without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  First Sorrow and Joy. St. Joseph, Chaste Spouse of the Holy Mother of God, by the sorrow with which thy heart was pierced at the thought of a cruel separation from Mary, and by the deep joy that thou didst feel when the angel revealed to thee the ineffable mystery of the Incarnation, obtain for us from Jesus and Mary the grace of surmounting all anxiety. Win for us from the Adorable Heart of Jesus the unspeakable peace of which He is the Eternal Source. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Now pray all seven sorrows and joys of Saint Joseph. Fifth Sorrow and Joy. St. Joseph, by thy sorrow when told to fly into Egypt, and by thy joy in seeing the idols overthrown at the arrival of the living God, grant that no idol of earthly affection may any longer occupy our hearts, but being like thee entirely devoted to the service of Jesus and Mary, we may live and happily die for them alone. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Let us pray. O God, Who in Thine ineffable Providence has vouchsafed to choose Blessed Joseph to be the Spouse of Thy most holy Mother, grant, we beseech Thee, that we may deserve to have him for our intercessor in heaven whom on earth we venerate as our holy protector: Who lives and reigns forever and ever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief pacing line breaks and standardized a few headings for clearer text-to-speech delivery without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  First Sorrow and Joy. St. Joseph, Chaste Spouse of the Holy Mother of God, by the sorrow with which thy heart was pierced at the thought of a cruel separation from Mary, and by the deep joy that thou didst feel when the angel revealed to thee the ineffable mystery of the Incarnation, obtain for us from Jesus and Mary the grace of surmounting all anxiety. Win for us from the Adorable Heart of Jesus the unspeakable peace of which He is the Eternal Source. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Now pray all seven sorrows and joys of Saint Joseph. Fifth Sorrow and Joy. St. Joseph, by thy sorrow when told to fly into Egypt, and by thy joy in seeing the idols overthrown at the arrival of the living God, grant that no idol of earthly affection may any longer occupy our hearts, but being like thee entirely devoted to the service of Jesus and Mary, we may live and happily die for them alone. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Let us pray. O God, Who in Thine ineffable Providence has vouchsafed to choose Blessed Joseph to be the Spouse of Thy most holy Mother, grant, we beseech Thee, that we may deserve to have him for our intercessor in heaven whom on earth we venerate as our holy protector: Who lives and reigns forever and ever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief pacing line breaks and standardized a few headings for clearer text-to-speech delivery without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  First Sorrow and Joy. St. Joseph, Chaste Spouse of the Holy Mother of God, by the sorrow with which thy heart was pierced at the thought of a cruel separation from Mary, and by the deep joy that thou didst feel when the angel revealed to thee the ineffable mystery of the Incarnation, obtain for us from Jesus and Mary the grace of surmounting all anxiety. Win for us from the Adorable Heart of Jesus the unspeakable peace of which He is the Eternal Source. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Now pray all seven sorrows and joys of Saint Joseph. Fifth Sorrow and Joy. St. Joseph, by thy sorrow when told to fly into Egypt, and by thy joy in seeing the idols overthrown at the arrival of the living God, grant that no idol of earthly affection may any longer occupy our hearts, but being like thee entirely devoted to the service of Jesus and Mary, we may live and happily die for them alone. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Let us pray. O God, Who in Thine ineffable Providence has vouchsafed to choose Blessed Joseph to be the Spouse of Thy most holy Mother, grant, we beseech Thee, that we may deserve to have him for our intercessor in heaven whom on earth we venerate as our holy protector: Who lives and reigns forever and ever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief pacing line breaks and standardized a few headings for clearer text-to-speech delivery without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  First Sorrow and Joy. St. Joseph, Chaste Spouse of the Holy Mother of God, by the sorrow with which thy heart was pierced at the thought of a cruel separation from Mary, and by the deep joy that thou didst feel when the angel revealed to thee the ineffable mystery of the Incarnation, obtain for us from Jesus and Mary the grace of surmounting all anxiety. Win for us from the Adorable Heart of Jesus the unspeakable peace of which He is the Eternal Source. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Now pray all seven sorrows and joys of Saint Joseph. Fifth Sorrow and Joy. St. Joseph, by thy sorrow when told to fly into Egypt, and by thy joy in seeing the idols overthrown at the arrival of the living God, grant that no idol of earthly affection may any longer occupy our hearts, but being like thee entirely devoted to the service of Jesus and Mary, we may live and happily die for them alone. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Let us pray. O God, Who in Thine ineffable Providence has vouchsafed to choose Blessed Joseph to be the Spouse of Thy most holy Mother, grant, we beseech Thee, that we may deserve to have him for our intercessor in heaven whom on earth we venerate as our holy protector: Who lives and reigns forever and ever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief pacing line breaks and standardized a few headings for clearer text-to-speech delivery without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  First Sorrow and Joy. St. Joseph, Chaste Spouse of the Holy Mother of God, by the sorrow with which thy heart was pierced at the thought of a cruel separation from Mary, and by the deep joy that thou didst feel when the angel revealed to thee the ineffable mystery of the Incarnation, obtain for us from Jesus and Mary the grace of surmounting all anxiety. Win for us from the Adorable Heart of Jesus the unspeakable peace of which He is the Eternal Source. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Now pray all seven sorrows and joys of Saint Joseph. Fifth Sorrow and Joy. St. Joseph, by thy sorrow when told to fly into Egypt, and by thy joy in seeing the idols overthrown at the arrival of the living God, grant that no idol of earthly affection may any longer occupy our hearts, but being like thee entirely devoted to the service of Jesus and Mary, we may live and happily die for them alone. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Let us pray. O God, Who in Thine ineffable Providence has vouchsafed to choose Blessed Joseph to be the Spouse of Thy most holy Mother, grant, we beseech Thee, that we may deserve to have him for our intercessor in heaven whom on earth we venerate as our holy protector: Who lives and reigns forever and ever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-seven_sorrows_and_joys_of_st_joseph"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "seven_sorrows_and_joys_of_st_joseph",
+      "name": "Seven Sorrows and Joys of St Joseph"
+    },
+    "type": "novena_feast_rule"
+  }
+}

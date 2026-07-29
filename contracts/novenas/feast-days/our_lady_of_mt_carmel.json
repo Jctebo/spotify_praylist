@@ -9,6 +9,16 @@
       "name": "Our Lady of Mt. Carmel"
     },
     "id": "our_lady_of_mt_carmel",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "Our Lady of Mount Carmel honors the Blessed Virgin Mary under the Carmelite title, recalling her special protection and the scapular devotion."
+    },
     "novena": {
       "content_mode": "fixed",
       "duration_days": 9,
@@ -27,52 +37,24 @@
             ],
             "key": "days-1",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Lightly adjusted punctuation and a few sentence breaks for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit. Look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and by your presence, console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
               },
               {
-                "kind": "text",
-                "text": "Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen."
-              },
-              {
-                "kind": "text",
-                "text": "O Beautiful Flower of Carmel, most fruitful vine, splendor of heaven, holy and singular, who brought forth the Son of God, still ever remaining a pure virgin, assist us in our necessity! O Star of the Sea, help and protect us! Show us that you are our Mother!"
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "Our Lady of Mount Carmel, pray for us!"
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. O Beautiful Flower of Carmel, most fruitful vine, splendor of heaven, holy and singular, who brought forth the Son of God, still ever remaining a pure virgin, assist us in our necessity. O Star of the Sea, help and protect us. Show us that you are our Mother. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 1"
@@ -83,52 +65,24 @@
             ],
             "key": "days-2",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and spacing adjustments were made for clearer text-to-speech pacing while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and by your presence, console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
               },
               {
-                "kind": "text",
-                "text": "Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen."
-              },
-              {
-                "kind": "text",
-                "text": "Most Holy Mary, Our Mother, in your great love for us you gave us the Holy Scapular of Mount Carmel, having heard the prayers of your chosen son Saint Simon Stock. Help us now to wear it faithfully and with devotion. May it be a sign to us of our desire to grow in holiness."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "Our Lady of Mount Carmel, pray for us!"
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. Most Holy Mary, Our Mother, in your great love for us you gave us the Holy Scapular of Mount Carmel, having heard the prayers of your chosen son Saint Simon Stock. Help us now to wear it faithfully and with devotion. May it be a sign to us of our desire to grow in holiness. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 2"
@@ -139,52 +93,24 @@
             ],
             "key": "days-3",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation for clearer text-to-speech pacing and placed the personal-intention marker on its own line.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence, console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
               },
               {
-                "kind": "text",
-                "text": "Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen."
-              },
-              {
-                "kind": "text",
-                "text": "O Queen of Heaven, you gave us the Scapular as an outward sign by which we might be known as your faithful children. May we always wear it with honor by avoiding sin and imitating your virtues. Help us to be faithful to this desire of ours."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "Our Lady of Mount Carmel, pray for us!"
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. O Queen of Heaven, you gave us the Scapular as an outward sign by which we might be known as your faithful children. May we always wear it with honor by avoiding sin and imitating your virtues. Help us to be faithful to this desire of ours. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 3"
@@ -195,52 +121,24 @@
             ],
             "key": "days-4",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and line-break adjustments were made for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit. Look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and by your presence console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
               },
               {
-                "kind": "text",
-                "text": "Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen."
-              },
-              {
-                "kind": "text",
-                "text": "When you gave us, Gracious Lady, the Scapular as our Habit, you called us to be not only servants, but also your own children. We ask you to gain for us from your Son the grace to live as your children in joy, peace and love."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "Our Lady of Mount Carmel, pray for us!"
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. When you gave us, Gracious Lady, the Scapular as our Habit, you called us to be not only servants, but also your own children. We ask you to gain for us from your Son the grace to live as your children in joy, peace, and love. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 4"
@@ -251,52 +149,24 @@
             ],
             "key": "days-5",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Lightly adjusted punctuation and sentence breaks for clearer text-to-speech pacing while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit. Look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and by your presence, console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
               },
               {
-                "kind": "text",
-                "text": "Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen."
-              },
-              {
-                "kind": "text",
-                "text": "O Mother of Fair Love, through your goodness, as your children, we are called to live in the spirit of Carmel. Help us to live in charity with one another, prayerful as Elijah of old, and mindful of our call to minister to God’s people."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "Our Lady of Mount Carmel, pray for us!"
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. O Mother of Fair Love, through your goodness, as your children, we are called to live in the spirit of Carmel. Help us to live in charity with one another, prayerful as Elijah of old, and mindful of our call to minister to God\u2019s people. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 5"
@@ -307,52 +177,24 @@
             ],
             "key": "days-6",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation adjustments for clearer text-to-speech pacing while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and by your presence console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
               },
               {
-                "kind": "text",
-                "text": "Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen."
-              },
-              {
-                "kind": "text",
-                "text": "With loving provident care, O Mother Most Amiable, you covered us with your Scapular as a shield of defense against the Evil One. Through your assistance, may we bravely struggle against the powers of evil, always open to your Son Jesus Christ."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "Our Lady of Mount Carmel, pray for us!"
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. With loving, provident care, O Mother Most Amiable, you covered us with your Scapular as a shield of defense against the Evil One. Through your assistance, may we bravely struggle against the powers of evil, always open to your Son, Jesus Christ. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 6"
@@ -363,52 +205,24 @@
             ],
             "key": "days-7",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and by your presence, console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
               },
               {
-                "kind": "text",
-                "text": "Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen."
-              },
-              {
-                "kind": "text",
-                "text": "O Mary, Help of Christians, you assured us that wearing your Scapular worthily would keep us safe from harm. Protect us in both body and soul with your continual aid. May all that we do be pleasing to your Son and to you."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "Our Lady of Mount Carmel, pray for us!"
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. O Mary, Help of Christians, you assured us that wearing your Scapular worthily would keep us safe from harm. Protect us in both body and soul with your continual aid. May all that we do be pleasing to your Son and to you. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 7"
@@ -419,52 +233,24 @@
             ],
             "key": "days-8",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Lightly adjusted punctuation and a few sentence breaks for clearer text-to-speech pacing while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit. Look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and by your presence console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
               },
               {
-                "kind": "text",
-                "text": "Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen."
-              },
-              {
-                "kind": "text",
-                "text": "You give us hope, O Mother of Mercy, that through your Scapular promise we might quickly pass through the fires of purgatory to the Kingdom of your Son. Be our comfort and our hope. Grant that our hope may not be in vain but that, ever faithful to your Son and to you, we may speedily enjoy after death the blessed company of Jesus and the saints."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "Our Lady of Mount Carmel, pray for us!"
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. You give us hope, O Mother of Mercy, that through your Scapular promise we might quickly pass through the fires of purgatory to the Kingdom of your Son. Be our comfort and our hope. Grant that our hope may not be in vain, but that, ever faithful to your Son and to you, we may speedily enjoy after death the blessed company of Jesus and the saints. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 8"
@@ -475,78 +261,27 @@
             ],
             "key": "days-9",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and capitalization adjustments for smoother text-to-speech pacing; preserved all prayers, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence, console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
               },
               {
-                "kind": "text",
-                "text": "Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen."
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen."
-              },
-              {
-                "kind": "text",
-                "text": "O Most Holy Mother of Mount Carmel, when asked by a saint to grant privileges to the family of Carmel, you gave assurance of your Motherly love and help to those faithful to you and to your Son. Behold us, your children. We glory in wearing your holy habit, which makes us members of your family of Carmel, through which we shall have your powerful protection in life, at death and even after death. Look down with love, O Gate of Heaven, on all those now in their last agony! Look down graciously, O Virgin, Flower of Carmel, on all those in need of help! Look down mercifully, O Mother of our Savior, on all those who do not know that they are numbered among your children. Look down tenderly, O Queen of All Saints, on the poor souls!"
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "Our Lady of Mount Carmel, pray for us!"
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. O Most Holy Mother of Mount Carmel, when asked by a saint to grant privileges to the family of Carmel, you gave assurance of your motherly love and help to those faithful to you and to your Son. Behold us, your children. We glory in wearing your holy habit, which makes us members of your family of Carmel, through which we shall have your powerful protection in life, at death, and even after death. Look down with love, O Gate of Heaven, on all those now in their last agony. Look down graciously, O Virgin, Flower of Carmel, on all those in need of help. Look down mercifully, O Mother of our Savior, on all those who do not know that they are numbered among your children. Look down tenderly, O Queen of All Saints, on the poor souls. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 9"
-          }
-        ],
-        "fragments": [
-          {
-            "key": "our_father",
-            "kind": "fixed",
-            "notes": "canonical rosary prayer text",
-            "text": "Our Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.",
-            "title": "Our Father"
-          },
-          {
-            "key": "hail_mary",
-            "kind": "fixed",
-            "notes": "canonical rosary prayer text",
-            "text": "Hail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.",
-            "title": "Hail Mary"
-          },
-          {
-            "key": "glory_be",
-            "kind": "fixed",
-            "notes": "canonical rosary prayer text",
-            "text": "Glory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.",
-            "title": "Glory Be"
           }
         ],
         "sections": [
@@ -562,8 +297,8 @@
             ],
             "key": "day-1",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nBlessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.\n\nO Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen.\n\nO Beautiful Flower of Carmel, most fruitful vine, splendor of heaven, holy and singular, who brought forth the Son of God, still ever remaining a pure virgin, assist us in our necessity! O Star of the Sea, help and protect us! Show us that you are our Mother!\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nOur Lady of Mount Carmel, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Lightly adjusted punctuation and a few sentence breaks for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit. Look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and by your presence, console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.  O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. O Beautiful Flower of Carmel, most fruitful vine, splendor of heaven, holy and singular, who brought forth the Son of God, still ever remaining a pure virgin, assist us in our necessity. O Star of the Sea, help and protect us. Show us that you are our Mother. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 1"
           },
           {
@@ -572,8 +307,8 @@
             ],
             "key": "day-2",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nBlessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.\n\nO Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen.\n\nMost Holy Mary, Our Mother, in your great love for us you gave us the Holy Scapular of Mount Carmel, having heard the prayers of your chosen son Saint Simon Stock. Help us now to wear it faithfully and with devotion. May it be a sign to us of our desire to grow in holiness.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nOur Lady of Mount Carmel, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and spacing adjustments were made for clearer text-to-speech pacing while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and by your presence, console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.  O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. Most Holy Mary, Our Mother, in your great love for us you gave us the Holy Scapular of Mount Carmel, having heard the prayers of your chosen son Saint Simon Stock. Help us now to wear it faithfully and with devotion. May it be a sign to us of our desire to grow in holiness. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 2"
           },
           {
@@ -582,8 +317,8 @@
             ],
             "key": "day-3",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nBlessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.\n\nO Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen.\n\nO Queen of Heaven, you gave us the Scapular as an outward sign by which we might be known as your faithful children. May we always wear it with honor by avoiding sin and imitating your virtues. Help us to be faithful to this desire of ours.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nOur Lady of Mount Carmel, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation for clearer text-to-speech pacing and placed the personal-intention marker on its own line.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence, console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.  O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. O Queen of Heaven, you gave us the Scapular as an outward sign by which we might be known as your faithful children. May we always wear it with honor by avoiding sin and imitating your virtues. Help us to be faithful to this desire of ours. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 3"
           },
           {
@@ -592,8 +327,8 @@
             ],
             "key": "day-4",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nBlessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.\n\nO Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen.\n\nWhen you gave us, Gracious Lady, the Scapular as our Habit, you called us to be not only servants, but also your own children. We ask you to gain for us from your Son the grace to live as your children in joy, peace and love.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nOur Lady of Mount Carmel, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and line-break adjustments were made for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit. Look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and by your presence console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.  O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. When you gave us, Gracious Lady, the Scapular as our Habit, you called us to be not only servants, but also your own children. We ask you to gain for us from your Son the grace to live as your children in joy, peace, and love. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 4"
           },
           {
@@ -602,8 +337,8 @@
             ],
             "key": "day-5",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nBlessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.\n\nO Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen.\n\nO Mother of Fair Love, through your goodness, as your children, we are called to live in the spirit of Carmel. Help us to live in charity with one another, prayerful as Elijah of old, and mindful of our call to minister to God’s people.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nOur Lady of Mount Carmel, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Lightly adjusted punctuation and sentence breaks for clearer text-to-speech pacing while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit. Look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and by your presence, console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.  O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. O Mother of Fair Love, through your goodness, as your children, we are called to live in the spirit of Carmel. Help us to live in charity with one another, prayerful as Elijah of old, and mindful of our call to minister to God\u2019s people. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 5"
           },
           {
@@ -612,8 +347,8 @@
             ],
             "key": "day-6",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nBlessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.\n\nO Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen.\n\nWith loving provident care, O Mother Most Amiable, you covered us with your Scapular as a shield of defense against the Evil One. Through your assistance, may we bravely struggle against the powers of evil, always open to your Son Jesus Christ.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nOur Lady of Mount Carmel, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation adjustments for clearer text-to-speech pacing while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and by your presence console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.  O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. With loving, provident care, O Mother Most Amiable, you covered us with your Scapular as a shield of defense against the Evil One. Through your assistance, may we bravely struggle against the powers of evil, always open to your Son, Jesus Christ. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 6"
           },
           {
@@ -622,8 +357,8 @@
             ],
             "key": "day-7",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nBlessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.\n\nO Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen.\n\nO Mary, Help of Christians, you assured us that wearing your Scapular worthily would keep us safe from harm. Protect us in both body and soul with your continual aid. May all that we do be pleasing to your Son and to you.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nOur Lady of Mount Carmel, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and by your presence, console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.  O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. O Mary, Help of Christians, you assured us that wearing your Scapular worthily would keep us safe from harm. Protect us in both body and soul with your continual aid. May all that we do be pleasing to your Son and to you. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 7"
           },
           {
@@ -632,8 +367,8 @@
             ],
             "key": "day-8",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nBlessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.\n\nO Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen.\n\nYou give us hope, O Mother of Mercy, that through your Scapular promise we might quickly pass through the fires of purgatory to the Kingdom of your Son. Be our comfort and our hope. Grant that our hope may not be in vain but that, ever faithful to your Son and to you, we may speedily enjoy after death the blessed company of Jesus and the saints.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nOur Lady of Mount Carmel, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Lightly adjusted punctuation and a few sentence breaks for clearer text-to-speech pacing while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit. Look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and by your presence console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.  O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. You give us hope, O Mother of Mercy, that through your Scapular promise we might quickly pass through the fires of purgatory to the Kingdom of your Son. Be our comfort and our hope. Grant that our hope may not be in vain, but that, ever faithful to your Son and to you, we may speedily enjoy after death the blessed company of Jesus and the saints. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 8"
           },
           {
@@ -642,8 +377,8 @@
             ],
             "key": "day-9",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nBlessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me and spread the mantle of your loving protection over all mankind. By the power of your intercession strengthen my weakness, and by your wisdom light up the darkness of my mind. Increase in me those virtues in which you excelled - faith, hope and love; adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence console me at the time of my death. In that hour present me to the Blessed Trinity as your child redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.\n\nO Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen.\n\nO Most Holy Mother of Mount Carmel, when asked by a saint to grant privileges to the family of Carmel, you gave assurance of your Motherly love and help to those faithful to you and to your Son. Behold us, your children. We glory in wearing your holy habit, which makes us members of your family of Carmel, through which we shall have your powerful protection in life, at death and even after death. Look down with love, O Gate of Heaven, on all those now in their last agony! Look down graciously, O Virgin, Flower of Carmel, on all those in need of help! Look down mercifully, O Mother of our Savior, on all those who do not know that they are numbered among your children. Look down tenderly, O Queen of All Saints, on the poor souls!\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nOur Lady of Mount Carmel, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and capitalization adjustments for smoother text-to-speech pacing; preserved all prayers, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed and Immaculate Virgin, splendid beauty of Carmel, you look with love on all who wear your blessed habit; look kindly on me, and spread the mantle of your loving protection over all mankind. By the power of your intercession, strengthen my weakness, and by your wisdom, light up the darkness of my mind. Increase in me those virtues in which you excelled: faith, hope, and love. Adorn my soul with such graces and virtues that it may ever be pleasing to your divine Son. Assist me in all the activities of life, and, by your presence, console me at the time of my death. In that hour, present me to the Blessed Trinity as your child, redeemed by the blood of your Son, Jesus Christ, our Lord. Amen.  O Queen, who are the beauty of Carmel, pray for us now and at the hour of our death. Amen. O Most Holy Mother of Mount Carmel, when asked by a saint to grant privileges to the family of Carmel, you gave assurance of your motherly love and help to those faithful to you and to your Son. Behold us, your children. We glory in wearing your holy habit, which makes us members of your family of Carmel, through which we shall have your powerful protection in life, at death, and even after death. Look down with love, O Gate of Heaven, on all those now in their last agony. Look down graciously, O Virgin, Flower of Carmel, on all those in need of help. Look down mercifully, O Mother of our Savior, on all those who do not know that they are numbered among your children. Look down tenderly, O Queen of All Saints, on the poor souls. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of Mount Carmel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 9"
           }
         ],
@@ -654,7 +389,38 @@
       "audio": {
         "enabled": true,
         "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
         "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
         "speed": 1.0,
         "voice": "ash"
       },

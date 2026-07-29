@@ -16,7 +16,7 @@ OPENAI_API_KEY_FILE = "OPENAI_API_KEY_FILE"
 OAI_API_BASE_URL = "OAI_API_BASE_URL"
 OAI_MODEL = "OAI_MODEL"
 
-DEVOTIONAL_INTRO_POLICY_VERSION = "devotional-intro-v4"
+DEVOTIONAL_INTRO_POLICY_VERSION = "devotional-intro-v5"
 SOURCE_OPENAI = "openai"
 SOURCE_FALLBACK_DETERMINISTIC = "fallback-deterministic"
 
@@ -94,7 +94,7 @@ NOVENA_PROFILE = DevotionalIntroProfile(
         "Welcome the listener into the current day of this specific novena, centering the saint "
         "and the novena's own daily focus before the prayer begins."
     ),
-    sentence_guidance="Write the introduction in 1-2 sentences.",
+    sentence_guidance="Write the introduction in 3-4 short sentences.",
     min_chars=40,
     max_chars=420,
 )
@@ -174,6 +174,10 @@ def _context_rows(context: Mapping[str, Any]) -> Tuple[Tuple[str, str], ...]:
         ("Gospel citation", _context_value(context, "daily_gospel_citation", "gospel_citation")),
         ("Gospel text", _context_value(context, "daily_gospel_text", "gospel_text")),
         ("Saint", _context_value(context, "saint_name")),
+        ("Identity description", _context_value(context, "intro_summary")),
+        ("Patronage", _context_value(context, "intro_patronage")),
+        ("Standard short-form guidance", _context_value(context, "short_form_intro_prompt")),
+        ("Calendar bridge", _context_value(context, "calendar_bridge")),
         ("Feast", _context_value(context, "feast_name")),
         ("Novena day", _context_value(context, "day", "active_day")),
         ("Novena focus", _context_value(context, "daily_focus", "theme", "novena_theme")),
@@ -213,9 +217,13 @@ def build_devotional_intro_prompt(
     if profile.key == "novena":
         novena_day = _context_value(context, "day", "active_day")
         novena_focus = _context_value(context, "daily_focus", "theme", "novena_theme")
+        short_form_guidance = _context_value(context, "short_form_intro_prompt")
         novena_rules = f"""
 For this novena, make the opening feel like a natural invitation to pray, not a summary of the day's liturgy.
 Lead with the specific novena: explicitly name Day {novena_day} and the named saint or devotion.
+After the Day announcement, include the supplied identity description verbatim or faithfully paraphrased; include supplied patronage when present.
+Conclude with exactly one sentence that connects this novena to the supplied Calendar bridge. Do not invent another calendar focus.
+{short_form_guidance}
 Let the novena focus ({novena_focus}) shape the prayerful transition when supplied.
 Honor the Church's liturgical hierarchy in the supplied context: major solemnity or feast first, then the Gospel, then a memorial, then the liturgical season.
 Let the highest available material give shape to the opening, but adapt it naturally to this saint and novena; do not explain the hierarchy or summarize the day's liturgy. When none is available, give only a brief introduction to this saint and today's novena.
@@ -230,7 +238,7 @@ Clearly identify the prayer as "{prayer_title}".
 Ground the prose in the supplied daily and prayer-specific context.
 {gospel_rule}
 {novena_rules}
-Do not invent quotations, saints, feasts, seasons, Scripture citations, doctrine, biography, or current events.
+Do not invent quotations, saints, feasts, seasons, Scripture citations, doctrine, or current events. When Standard short-form guidance is supplied, use only modest, well-known saint/event identity details and omit patronage if uncertain.
 Return plain prose only: no heading, markdown, bullets, production notes, or commentary.
 Keep the result between {profile.min_chars} and {profile.max_chars} characters.
 {correction_block}
@@ -398,6 +406,15 @@ def validate_devotional_intro(
         focus = _context_value(context, "daily_focus", "theme", "novena_theme")
         if focus and not _contains_any(rendered, (focus,)):
             raise RuntimeError(f"Novena intro must use the supplied novena focus '{focus}'.")
+        summary = _context_value(context, "intro_summary")
+        if summary and not _contains_any(rendered, (summary,)):
+            raise RuntimeError("Novena intro must use the supplied identity description.")
+        patronage = _context_value(context, "intro_patronage")
+        if patronage and not _contains_any(rendered, tuple(part.strip() for part in patronage.split(",") if part.strip())):
+            raise RuntimeError("Novena intro must use the supplied patronage.")
+        bridge = _context_value(context, "calendar_bridge")
+        if bridge and not _contains_any(rendered, (bridge,)):
+            raise RuntimeError("Novena intro must use the supplied calendar bridge.")
 
     gospel_citation = _context_value(context, "daily_gospel_citation", "gospel_citation")
     gospel_supplied = bool(
@@ -458,10 +475,17 @@ def _fallback_text(profile: DevotionalIntroProfile, context: Mapping[str, Any]) 
     day = _context_value(context, "day", "active_day") or "this day"
     saint_name = _context_value(context, "saint_name") or prayer_title
     focus = _context_value(context, "daily_focus", "theme", "novena_theme")
+    summary = _context_value(context, "intro_summary")
+    patronage = _context_value(context, "intro_patronage")
+    bridge = _context_value(context, "calendar_bridge")
     focus_clause = f" as we bring the grace of {focus} before God" if focus else " as we bring our needs before God"
+    identity_sentence = summary or f"We remember {saint_name} as we turn our hearts to God"
+    if patronage:
+        identity_sentence = f"{identity_sentence} and seek this patron's intercession for {patronage}"
+    bridge_sentence = bridge or f"In this day's focus of {focus or 'faithful prayer'}, we join this novena to the Church's prayer."
     return _normalize_whitespace(
-        f"Today, we pray Day {day} of the Novena to {saint_name}{focus_clause}. "
-        f"With {saint_name}, let us begin this day's prayer."
+        f"Welcome to Day {day} of the Novena to {saint_name}{focus_clause}. "
+        f"{identity_sentence}. {bridge_sentence}"
     )
 
 

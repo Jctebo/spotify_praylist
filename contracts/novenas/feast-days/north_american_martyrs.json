@@ -1,0 +1,224 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "north_american_martyrs",
+    "feast": {
+      "day": 19,
+      "mode": "fixed",
+      "month": 10,
+      "name": "North American Martyrs"
+    },
+    "id": "north_american_martyrs",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "The North American Martyrs were Jesuit missionaries and companions killed in the 1600s in New France, honored for their witness to the Catholic faith."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full North American Martyrs Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Normalized punctuation and spacing for clearer text-to-speech pacing, and separated invocations and headings into distinct paragraphs without changing wording.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Our Lady, Queen of Martyrs, pray for us. Saint Isaac Jogues, pray for us. Saint John de Br\u00e9beuf, pray for us. Saint Gabriel Lalemant, pray for us. Saint Charles Garnier, pray for us. Saint Anthony Daniel, pray for us. Saint No\u00ebl Chabanel, pray for us. Saint Ren\u00e9 Goupil, pray for us. Saint John Lalande, pray for us. Let us pray. O God, who by the preaching and blood of Thy sainted martyrs, Isaac and John and their companions, didst consecrate the first fruits of the Faith in the vast regions of North America, graciously grant that by their intercession, the flourishing harvest of Christians may everywhere and always be increased. Through Our Lord Jesus Christ, Who liveth and reigneth with Thee, in union with the Holy Spirit, one God, world without end. Amen. Prayer of Petition. O God, who didst inflame the hearts of Thy sainted martyrs with an admirable zeal for the salvation of souls, grant us, we beseech Thee, what we now implore"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "so that the favors obtained through their intercession may make manifest before men the power and glory of Thy Name. Amen. Final Prayer. Holy Martyrs and patrons, protect this land which you have blessed by the shedding of your blood. Renew in these days our Catholic faith which you helped to establish in this new land. Bring all our fellow citizens to a knowledge and love of the truth. Make us zealous in the profession of our faith so that we may continue and perfect the work which you have begun with so much labor and suffering. Pray for our homes, our schools, our missions, for vocations, for the conversion of sinners, the return of those who have wandered from the fold, and the perseverance of all the faithful. And foster a deeper and increasing unity among all Christians. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full North American Martyrs Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Normalized punctuation and spacing for clearer text-to-speech pacing, and separated invocations and headings into distinct paragraphs without changing wording.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Our Lady, Queen of Martyrs, pray for us. Saint Isaac Jogues, pray for us. Saint John de Br\u00e9beuf, pray for us. Saint Gabriel Lalemant, pray for us. Saint Charles Garnier, pray for us. Saint Anthony Daniel, pray for us. Saint No\u00ebl Chabanel, pray for us. Saint Ren\u00e9 Goupil, pray for us. Saint John Lalande, pray for us. Let us pray. O God, who by the preaching and blood of Thy sainted martyrs, Isaac and John and their companions, didst consecrate the first fruits of the Faith in the vast regions of North America, graciously grant that by their intercession, the flourishing harvest of Christians may everywhere and always be increased. Through Our Lord Jesus Christ, Who liveth and reigneth with Thee, in union with the Holy Spirit, one God, world without end. Amen. Prayer of Petition. O God, who didst inflame the hearts of Thy sainted martyrs with an admirable zeal for the salvation of souls, grant us, we beseech Thee, what we now implore  so that the favors obtained through their intercession may make manifest before men the power and glory of Thy Name. Amen. Final Prayer. Holy Martyrs and patrons, protect this land which you have blessed by the shedding of your blood. Renew in these days our Catholic faith which you helped to establish in this new land. Bring all our fellow citizens to a knowledge and love of the truth. Make us zealous in the profession of our faith so that we may continue and perfect the work which you have begun with so much labor and suffering. Pray for our homes, our schools, our missions, for vocations, for the conversion of sinners, the return of those who have wandered from the fold, and the perseverance of all the faithful. And foster a deeper and increasing unity among all Christians. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Normalized punctuation and spacing for clearer text-to-speech pacing, and separated invocations and headings into distinct paragraphs without changing wording.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Our Lady, Queen of Martyrs, pray for us. Saint Isaac Jogues, pray for us. Saint John de Br\u00e9beuf, pray for us. Saint Gabriel Lalemant, pray for us. Saint Charles Garnier, pray for us. Saint Anthony Daniel, pray for us. Saint No\u00ebl Chabanel, pray for us. Saint Ren\u00e9 Goupil, pray for us. Saint John Lalande, pray for us. Let us pray. O God, who by the preaching and blood of Thy sainted martyrs, Isaac and John and their companions, didst consecrate the first fruits of the Faith in the vast regions of North America, graciously grant that by their intercession, the flourishing harvest of Christians may everywhere and always be increased. Through Our Lord Jesus Christ, Who liveth and reigneth with Thee, in union with the Holy Spirit, one God, world without end. Amen. Prayer of Petition. O God, who didst inflame the hearts of Thy sainted martyrs with an admirable zeal for the salvation of souls, grant us, we beseech Thee, what we now implore  so that the favors obtained through their intercession may make manifest before men the power and glory of Thy Name. Amen. Final Prayer. Holy Martyrs and patrons, protect this land which you have blessed by the shedding of your blood. Renew in these days our Catholic faith which you helped to establish in this new land. Bring all our fellow citizens to a knowledge and love of the truth. Make us zealous in the profession of our faith so that we may continue and perfect the work which you have begun with so much labor and suffering. Pray for our homes, our schools, our missions, for vocations, for the conversion of sinners, the return of those who have wandered from the fold, and the perseverance of all the faithful. And foster a deeper and increasing unity among all Christians. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Normalized punctuation and spacing for clearer text-to-speech pacing, and separated invocations and headings into distinct paragraphs without changing wording.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Our Lady, Queen of Martyrs, pray for us. Saint Isaac Jogues, pray for us. Saint John de Br\u00e9beuf, pray for us. Saint Gabriel Lalemant, pray for us. Saint Charles Garnier, pray for us. Saint Anthony Daniel, pray for us. Saint No\u00ebl Chabanel, pray for us. Saint Ren\u00e9 Goupil, pray for us. Saint John Lalande, pray for us. Let us pray. O God, who by the preaching and blood of Thy sainted martyrs, Isaac and John and their companions, didst consecrate the first fruits of the Faith in the vast regions of North America, graciously grant that by their intercession, the flourishing harvest of Christians may everywhere and always be increased. Through Our Lord Jesus Christ, Who liveth and reigneth with Thee, in union with the Holy Spirit, one God, world without end. Amen. Prayer of Petition. O God, who didst inflame the hearts of Thy sainted martyrs with an admirable zeal for the salvation of souls, grant us, we beseech Thee, what we now implore  so that the favors obtained through their intercession may make manifest before men the power and glory of Thy Name. Amen. Final Prayer. Holy Martyrs and patrons, protect this land which you have blessed by the shedding of your blood. Renew in these days our Catholic faith which you helped to establish in this new land. Bring all our fellow citizens to a knowledge and love of the truth. Make us zealous in the profession of our faith so that we may continue and perfect the work which you have begun with so much labor and suffering. Pray for our homes, our schools, our missions, for vocations, for the conversion of sinners, the return of those who have wandered from the fold, and the perseverance of all the faithful. And foster a deeper and increasing unity among all Christians. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Normalized punctuation and spacing for clearer text-to-speech pacing, and separated invocations and headings into distinct paragraphs without changing wording.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Our Lady, Queen of Martyrs, pray for us. Saint Isaac Jogues, pray for us. Saint John de Br\u00e9beuf, pray for us. Saint Gabriel Lalemant, pray for us. Saint Charles Garnier, pray for us. Saint Anthony Daniel, pray for us. Saint No\u00ebl Chabanel, pray for us. Saint Ren\u00e9 Goupil, pray for us. Saint John Lalande, pray for us. Let us pray. O God, who by the preaching and blood of Thy sainted martyrs, Isaac and John and their companions, didst consecrate the first fruits of the Faith in the vast regions of North America, graciously grant that by their intercession, the flourishing harvest of Christians may everywhere and always be increased. Through Our Lord Jesus Christ, Who liveth and reigneth with Thee, in union with the Holy Spirit, one God, world without end. Amen. Prayer of Petition. O God, who didst inflame the hearts of Thy sainted martyrs with an admirable zeal for the salvation of souls, grant us, we beseech Thee, what we now implore  so that the favors obtained through their intercession may make manifest before men the power and glory of Thy Name. Amen. Final Prayer. Holy Martyrs and patrons, protect this land which you have blessed by the shedding of your blood. Renew in these days our Catholic faith which you helped to establish in this new land. Bring all our fellow citizens to a knowledge and love of the truth. Make us zealous in the profession of our faith so that we may continue and perfect the work which you have begun with so much labor and suffering. Pray for our homes, our schools, our missions, for vocations, for the conversion of sinners, the return of those who have wandered from the fold, and the perseverance of all the faithful. And foster a deeper and increasing unity among all Christians. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Normalized punctuation and spacing for clearer text-to-speech pacing, and separated invocations and headings into distinct paragraphs without changing wording.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Our Lady, Queen of Martyrs, pray for us. Saint Isaac Jogues, pray for us. Saint John de Br\u00e9beuf, pray for us. Saint Gabriel Lalemant, pray for us. Saint Charles Garnier, pray for us. Saint Anthony Daniel, pray for us. Saint No\u00ebl Chabanel, pray for us. Saint Ren\u00e9 Goupil, pray for us. Saint John Lalande, pray for us. Let us pray. O God, who by the preaching and blood of Thy sainted martyrs, Isaac and John and their companions, didst consecrate the first fruits of the Faith in the vast regions of North America, graciously grant that by their intercession, the flourishing harvest of Christians may everywhere and always be increased. Through Our Lord Jesus Christ, Who liveth and reigneth with Thee, in union with the Holy Spirit, one God, world without end. Amen. Prayer of Petition. O God, who didst inflame the hearts of Thy sainted martyrs with an admirable zeal for the salvation of souls, grant us, we beseech Thee, what we now implore  so that the favors obtained through their intercession may make manifest before men the power and glory of Thy Name. Amen. Final Prayer. Holy Martyrs and patrons, protect this land which you have blessed by the shedding of your blood. Renew in these days our Catholic faith which you helped to establish in this new land. Bring all our fellow citizens to a knowledge and love of the truth. Make us zealous in the profession of our faith so that we may continue and perfect the work which you have begun with so much labor and suffering. Pray for our homes, our schools, our missions, for vocations, for the conversion of sinners, the return of those who have wandered from the fold, and the perseverance of all the faithful. And foster a deeper and increasing unity among all Christians. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Normalized punctuation and spacing for clearer text-to-speech pacing, and separated invocations and headings into distinct paragraphs without changing wording.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Our Lady, Queen of Martyrs, pray for us. Saint Isaac Jogues, pray for us. Saint John de Br\u00e9beuf, pray for us. Saint Gabriel Lalemant, pray for us. Saint Charles Garnier, pray for us. Saint Anthony Daniel, pray for us. Saint No\u00ebl Chabanel, pray for us. Saint Ren\u00e9 Goupil, pray for us. Saint John Lalande, pray for us. Let us pray. O God, who by the preaching and blood of Thy sainted martyrs, Isaac and John and their companions, didst consecrate the first fruits of the Faith in the vast regions of North America, graciously grant that by their intercession, the flourishing harvest of Christians may everywhere and always be increased. Through Our Lord Jesus Christ, Who liveth and reigneth with Thee, in union with the Holy Spirit, one God, world without end. Amen. Prayer of Petition. O God, who didst inflame the hearts of Thy sainted martyrs with an admirable zeal for the salvation of souls, grant us, we beseech Thee, what we now implore  so that the favors obtained through their intercession may make manifest before men the power and glory of Thy Name. Amen. Final Prayer. Holy Martyrs and patrons, protect this land which you have blessed by the shedding of your blood. Renew in these days our Catholic faith which you helped to establish in this new land. Bring all our fellow citizens to a knowledge and love of the truth. Make us zealous in the profession of our faith so that we may continue and perfect the work which you have begun with so much labor and suffering. Pray for our homes, our schools, our missions, for vocations, for the conversion of sinners, the return of those who have wandered from the fold, and the perseverance of all the faithful. And foster a deeper and increasing unity among all Christians. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Normalized punctuation and spacing for clearer text-to-speech pacing, and separated invocations and headings into distinct paragraphs without changing wording.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Our Lady, Queen of Martyrs, pray for us. Saint Isaac Jogues, pray for us. Saint John de Br\u00e9beuf, pray for us. Saint Gabriel Lalemant, pray for us. Saint Charles Garnier, pray for us. Saint Anthony Daniel, pray for us. Saint No\u00ebl Chabanel, pray for us. Saint Ren\u00e9 Goupil, pray for us. Saint John Lalande, pray for us. Let us pray. O God, who by the preaching and blood of Thy sainted martyrs, Isaac and John and their companions, didst consecrate the first fruits of the Faith in the vast regions of North America, graciously grant that by their intercession, the flourishing harvest of Christians may everywhere and always be increased. Through Our Lord Jesus Christ, Who liveth and reigneth with Thee, in union with the Holy Spirit, one God, world without end. Amen. Prayer of Petition. O God, who didst inflame the hearts of Thy sainted martyrs with an admirable zeal for the salvation of souls, grant us, we beseech Thee, what we now implore  so that the favors obtained through their intercession may make manifest before men the power and glory of Thy Name. Amen. Final Prayer. Holy Martyrs and patrons, protect this land which you have blessed by the shedding of your blood. Renew in these days our Catholic faith which you helped to establish in this new land. Bring all our fellow citizens to a knowledge and love of the truth. Make us zealous in the profession of our faith so that we may continue and perfect the work which you have begun with so much labor and suffering. Pray for our homes, our schools, our missions, for vocations, for the conversion of sinners, the return of those who have wandered from the fold, and the perseverance of all the faithful. And foster a deeper and increasing unity among all Christians. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Normalized punctuation and spacing for clearer text-to-speech pacing, and separated invocations and headings into distinct paragraphs without changing wording.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Our Lady, Queen of Martyrs, pray for us. Saint Isaac Jogues, pray for us. Saint John de Br\u00e9beuf, pray for us. Saint Gabriel Lalemant, pray for us. Saint Charles Garnier, pray for us. Saint Anthony Daniel, pray for us. Saint No\u00ebl Chabanel, pray for us. Saint Ren\u00e9 Goupil, pray for us. Saint John Lalande, pray for us. Let us pray. O God, who by the preaching and blood of Thy sainted martyrs, Isaac and John and their companions, didst consecrate the first fruits of the Faith in the vast regions of North America, graciously grant that by their intercession, the flourishing harvest of Christians may everywhere and always be increased. Through Our Lord Jesus Christ, Who liveth and reigneth with Thee, in union with the Holy Spirit, one God, world without end. Amen. Prayer of Petition. O God, who didst inflame the hearts of Thy sainted martyrs with an admirable zeal for the salvation of souls, grant us, we beseech Thee, what we now implore  so that the favors obtained through their intercession may make manifest before men the power and glory of Thy Name. Amen. Final Prayer. Holy Martyrs and patrons, protect this land which you have blessed by the shedding of your blood. Renew in these days our Catholic faith which you helped to establish in this new land. Bring all our fellow citizens to a knowledge and love of the truth. Make us zealous in the profession of our faith so that we may continue and perfect the work which you have begun with so much labor and suffering. Pray for our homes, our schools, our missions, for vocations, for the conversion of sinners, the return of those who have wandered from the fold, and the perseverance of all the faithful. And foster a deeper and increasing unity among all Christians. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Normalized punctuation and spacing for clearer text-to-speech pacing, and separated invocations and headings into distinct paragraphs without changing wording.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Our Lady, Queen of Martyrs, pray for us. Saint Isaac Jogues, pray for us. Saint John de Br\u00e9beuf, pray for us. Saint Gabriel Lalemant, pray for us. Saint Charles Garnier, pray for us. Saint Anthony Daniel, pray for us. Saint No\u00ebl Chabanel, pray for us. Saint Ren\u00e9 Goupil, pray for us. Saint John Lalande, pray for us. Let us pray. O God, who by the preaching and blood of Thy sainted martyrs, Isaac and John and their companions, didst consecrate the first fruits of the Faith in the vast regions of North America, graciously grant that by their intercession, the flourishing harvest of Christians may everywhere and always be increased. Through Our Lord Jesus Christ, Who liveth and reigneth with Thee, in union with the Holy Spirit, one God, world without end. Amen. Prayer of Petition. O God, who didst inflame the hearts of Thy sainted martyrs with an admirable zeal for the salvation of souls, grant us, we beseech Thee, what we now implore  so that the favors obtained through their intercession may make manifest before men the power and glory of Thy Name. Amen. Final Prayer. Holy Martyrs and patrons, protect this land which you have blessed by the shedding of your blood. Renew in these days our Catholic faith which you helped to establish in this new land. Bring all our fellow citizens to a knowledge and love of the truth. Make us zealous in the profession of our faith so that we may continue and perfect the work which you have begun with so much labor and suffering. Pray for our homes, our schools, our missions, for vocations, for the conversion of sinners, the return of those who have wandered from the fold, and the perseverance of all the faithful. And foster a deeper and increasing unity among all Christians. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-north_american_martyrs"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "north_american_martyrs",
+      "name": "North American Martyrs"
+    },
+    "type": "novena_feast_rule"
+  }
+}

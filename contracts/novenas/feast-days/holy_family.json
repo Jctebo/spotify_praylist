@@ -1,0 +1,223 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "holy_family",
+    "feast": {
+      "mode": "romcal_id",
+      "name": "Holy Family",
+      "romcal_id": "holy_family_of_jesus_mary_and_joseph"
+    },
+    "id": "holy_family",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "The Feast of the Holy Family honors Jesus, Mary, and Joseph as a model of family life rooted in faith, love, and obedience to God."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Holy Family Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Mary, and Joseph, bless me and grant me the grace of loving Holy Church as I should, above every earthly thing, and of ever showing my love by deeds. Jesus, Mary, and Joseph, bless me and grant me the grace of openly professing as I should, with courage and without fearing the opinions of others, the faith that I received as your gift in holy Baptism. Jesus, Mary, and Joseph, bless me and grant me the grace of sharing as I should in the defense and propagation of the Faith when duty calls, whether by word or by the sacrifice of my possessions and my life. Jesus, Mary, and Joseph, bless me and grant me the grace of loving my family and others in mutual charity as I should, and establish us in perfect harmony of thought, will, and action, under the rule and guidance of the shepherds of the Church. Jesus, Mary, and Joseph, bless me and grant me the grace of conforming my life fully as I should to the commandments of God\u2019s law and those of His Holy Church, so as to live always in that charity which they set forth. Jesus, Mary, and Joseph, I ask in particular this special favor:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Most loving Jesus, by Your sublime and beautiful virtues of humility, obedience, poverty, modesty, charity, patience, and gentleness, You blessed with peace and happiness the family which You chose on earth. In Your mercy look upon my family. We belong to You, for we have received Your many blessings over many years, and we entrust ourselves to Your loving care. Look upon my family in Your loving kindness, preserve us from danger, give us help in time of need, and grant us the grace to persevere to the end in imitation of Your holy Family, so that, having revered You and loved You faithfully on earth, we may praise You eternally in heaven. Mary, dearest Mother, to your intercession we have recourse, knowing that your Divine Son will hear your prayers. Glorious patriarch, Saint Joseph, help us by your powerful prayers and offer our prayers to Jesus through Mary\u2019s hands. Amen. Lord Jesus Christ, being subject to Mary and Joseph, You sanctified family life by Your beautiful virtues. Grant that we, with the help of Mary and Joseph, may be taught by the example of Your holy Family, and may after death enjoy its everlasting companionship. Lord Jesus, help us ever to follow the example of Your holy Family, that in the hour of our death Your glorious Virgin Mother, together with Saint Joseph, may come to meet us, and we may be worthy to be received by You into the everlasting joys of heaven. You who live and reign forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Holy Family Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Mary, and Joseph, bless me and grant me the grace of loving Holy Church as I should, above every earthly thing, and of ever showing my love by deeds. Jesus, Mary, and Joseph, bless me and grant me the grace of openly professing as I should, with courage and without fearing the opinions of others, the faith that I received as your gift in holy Baptism. Jesus, Mary, and Joseph, bless me and grant me the grace of sharing as I should in the defense and propagation of the Faith when duty calls, whether by word or by the sacrifice of my possessions and my life. Jesus, Mary, and Joseph, bless me and grant me the grace of loving my family and others in mutual charity as I should, and establish us in perfect harmony of thought, will, and action, under the rule and guidance of the shepherds of the Church. Jesus, Mary, and Joseph, bless me and grant me the grace of conforming my life fully as I should to the commandments of God\u2019s law and those of His Holy Church, so as to live always in that charity which they set forth. Jesus, Mary, and Joseph, I ask in particular this special favor:  Most loving Jesus, by Your sublime and beautiful virtues of humility, obedience, poverty, modesty, charity, patience, and gentleness, You blessed with peace and happiness the family which You chose on earth. In Your mercy look upon my family. We belong to You, for we have received Your many blessings over many years, and we entrust ourselves to Your loving care. Look upon my family in Your loving kindness, preserve us from danger, give us help in time of need, and grant us the grace to persevere to the end in imitation of Your holy Family, so that, having revered You and loved You faithfully on earth, we may praise You eternally in heaven. Mary, dearest Mother, to your intercession we have recourse, knowing that your Divine Son will hear your prayers. Glorious patriarch, Saint Joseph, help us by your powerful prayers and offer our prayers to Jesus through Mary\u2019s hands. Amen. Lord Jesus Christ, being subject to Mary and Joseph, You sanctified family life by Your beautiful virtues. Grant that we, with the help of Mary and Joseph, may be taught by the example of Your holy Family, and may after death enjoy its everlasting companionship. Lord Jesus, help us ever to follow the example of Your holy Family, that in the hour of our death Your glorious Virgin Mother, together with Saint Joseph, may come to meet us, and we may be worthy to be received by You into the everlasting joys of heaven. You who live and reign forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Mary, and Joseph, bless me and grant me the grace of loving Holy Church as I should, above every earthly thing, and of ever showing my love by deeds. Jesus, Mary, and Joseph, bless me and grant me the grace of openly professing as I should, with courage and without fearing the opinions of others, the faith that I received as your gift in holy Baptism. Jesus, Mary, and Joseph, bless me and grant me the grace of sharing as I should in the defense and propagation of the Faith when duty calls, whether by word or by the sacrifice of my possessions and my life. Jesus, Mary, and Joseph, bless me and grant me the grace of loving my family and others in mutual charity as I should, and establish us in perfect harmony of thought, will, and action, under the rule and guidance of the shepherds of the Church. Jesus, Mary, and Joseph, bless me and grant me the grace of conforming my life fully as I should to the commandments of God\u2019s law and those of His Holy Church, so as to live always in that charity which they set forth. Jesus, Mary, and Joseph, I ask in particular this special favor:  Most loving Jesus, by Your sublime and beautiful virtues of humility, obedience, poverty, modesty, charity, patience, and gentleness, You blessed with peace and happiness the family which You chose on earth. In Your mercy look upon my family. We belong to You, for we have received Your many blessings over many years, and we entrust ourselves to Your loving care. Look upon my family in Your loving kindness, preserve us from danger, give us help in time of need, and grant us the grace to persevere to the end in imitation of Your holy Family, so that, having revered You and loved You faithfully on earth, we may praise You eternally in heaven. Mary, dearest Mother, to your intercession we have recourse, knowing that your Divine Son will hear your prayers. Glorious patriarch, Saint Joseph, help us by your powerful prayers and offer our prayers to Jesus through Mary\u2019s hands. Amen. Lord Jesus Christ, being subject to Mary and Joseph, You sanctified family life by Your beautiful virtues. Grant that we, with the help of Mary and Joseph, may be taught by the example of Your holy Family, and may after death enjoy its everlasting companionship. Lord Jesus, help us ever to follow the example of Your holy Family, that in the hour of our death Your glorious Virgin Mother, together with Saint Joseph, may come to meet us, and we may be worthy to be received by You into the everlasting joys of heaven. You who live and reign forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Mary, and Joseph, bless me and grant me the grace of loving Holy Church as I should, above every earthly thing, and of ever showing my love by deeds. Jesus, Mary, and Joseph, bless me and grant me the grace of openly professing as I should, with courage and without fearing the opinions of others, the faith that I received as your gift in holy Baptism. Jesus, Mary, and Joseph, bless me and grant me the grace of sharing as I should in the defense and propagation of the Faith when duty calls, whether by word or by the sacrifice of my possessions and my life. Jesus, Mary, and Joseph, bless me and grant me the grace of loving my family and others in mutual charity as I should, and establish us in perfect harmony of thought, will, and action, under the rule and guidance of the shepherds of the Church. Jesus, Mary, and Joseph, bless me and grant me the grace of conforming my life fully as I should to the commandments of God\u2019s law and those of His Holy Church, so as to live always in that charity which they set forth. Jesus, Mary, and Joseph, I ask in particular this special favor:  Most loving Jesus, by Your sublime and beautiful virtues of humility, obedience, poverty, modesty, charity, patience, and gentleness, You blessed with peace and happiness the family which You chose on earth. In Your mercy look upon my family. We belong to You, for we have received Your many blessings over many years, and we entrust ourselves to Your loving care. Look upon my family in Your loving kindness, preserve us from danger, give us help in time of need, and grant us the grace to persevere to the end in imitation of Your holy Family, so that, having revered You and loved You faithfully on earth, we may praise You eternally in heaven. Mary, dearest Mother, to your intercession we have recourse, knowing that your Divine Son will hear your prayers. Glorious patriarch, Saint Joseph, help us by your powerful prayers and offer our prayers to Jesus through Mary\u2019s hands. Amen. Lord Jesus Christ, being subject to Mary and Joseph, You sanctified family life by Your beautiful virtues. Grant that we, with the help of Mary and Joseph, may be taught by the example of Your holy Family, and may after death enjoy its everlasting companionship. Lord Jesus, help us ever to follow the example of Your holy Family, that in the hour of our death Your glorious Virgin Mother, together with Saint Joseph, may come to meet us, and we may be worthy to be received by You into the everlasting joys of heaven. You who live and reign forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Mary, and Joseph, bless me and grant me the grace of loving Holy Church as I should, above every earthly thing, and of ever showing my love by deeds. Jesus, Mary, and Joseph, bless me and grant me the grace of openly professing as I should, with courage and without fearing the opinions of others, the faith that I received as your gift in holy Baptism. Jesus, Mary, and Joseph, bless me and grant me the grace of sharing as I should in the defense and propagation of the Faith when duty calls, whether by word or by the sacrifice of my possessions and my life. Jesus, Mary, and Joseph, bless me and grant me the grace of loving my family and others in mutual charity as I should, and establish us in perfect harmony of thought, will, and action, under the rule and guidance of the shepherds of the Church. Jesus, Mary, and Joseph, bless me and grant me the grace of conforming my life fully as I should to the commandments of God\u2019s law and those of His Holy Church, so as to live always in that charity which they set forth. Jesus, Mary, and Joseph, I ask in particular this special favor:  Most loving Jesus, by Your sublime and beautiful virtues of humility, obedience, poverty, modesty, charity, patience, and gentleness, You blessed with peace and happiness the family which You chose on earth. In Your mercy look upon my family. We belong to You, for we have received Your many blessings over many years, and we entrust ourselves to Your loving care. Look upon my family in Your loving kindness, preserve us from danger, give us help in time of need, and grant us the grace to persevere to the end in imitation of Your holy Family, so that, having revered You and loved You faithfully on earth, we may praise You eternally in heaven. Mary, dearest Mother, to your intercession we have recourse, knowing that your Divine Son will hear your prayers. Glorious patriarch, Saint Joseph, help us by your powerful prayers and offer our prayers to Jesus through Mary\u2019s hands. Amen. Lord Jesus Christ, being subject to Mary and Joseph, You sanctified family life by Your beautiful virtues. Grant that we, with the help of Mary and Joseph, may be taught by the example of Your holy Family, and may after death enjoy its everlasting companionship. Lord Jesus, help us ever to follow the example of Your holy Family, that in the hour of our death Your glorious Virgin Mother, together with Saint Joseph, may come to meet us, and we may be worthy to be received by You into the everlasting joys of heaven. You who live and reign forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Mary, and Joseph, bless me and grant me the grace of loving Holy Church as I should, above every earthly thing, and of ever showing my love by deeds. Jesus, Mary, and Joseph, bless me and grant me the grace of openly professing as I should, with courage and without fearing the opinions of others, the faith that I received as your gift in holy Baptism. Jesus, Mary, and Joseph, bless me and grant me the grace of sharing as I should in the defense and propagation of the Faith when duty calls, whether by word or by the sacrifice of my possessions and my life. Jesus, Mary, and Joseph, bless me and grant me the grace of loving my family and others in mutual charity as I should, and establish us in perfect harmony of thought, will, and action, under the rule and guidance of the shepherds of the Church. Jesus, Mary, and Joseph, bless me and grant me the grace of conforming my life fully as I should to the commandments of God\u2019s law and those of His Holy Church, so as to live always in that charity which they set forth. Jesus, Mary, and Joseph, I ask in particular this special favor:  Most loving Jesus, by Your sublime and beautiful virtues of humility, obedience, poverty, modesty, charity, patience, and gentleness, You blessed with peace and happiness the family which You chose on earth. In Your mercy look upon my family. We belong to You, for we have received Your many blessings over many years, and we entrust ourselves to Your loving care. Look upon my family in Your loving kindness, preserve us from danger, give us help in time of need, and grant us the grace to persevere to the end in imitation of Your holy Family, so that, having revered You and loved You faithfully on earth, we may praise You eternally in heaven. Mary, dearest Mother, to your intercession we have recourse, knowing that your Divine Son will hear your prayers. Glorious patriarch, Saint Joseph, help us by your powerful prayers and offer our prayers to Jesus through Mary\u2019s hands. Amen. Lord Jesus Christ, being subject to Mary and Joseph, You sanctified family life by Your beautiful virtues. Grant that we, with the help of Mary and Joseph, may be taught by the example of Your holy Family, and may after death enjoy its everlasting companionship. Lord Jesus, help us ever to follow the example of Your holy Family, that in the hour of our death Your glorious Virgin Mother, together with Saint Joseph, may come to meet us, and we may be worthy to be received by You into the everlasting joys of heaven. You who live and reign forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Mary, and Joseph, bless me and grant me the grace of loving Holy Church as I should, above every earthly thing, and of ever showing my love by deeds. Jesus, Mary, and Joseph, bless me and grant me the grace of openly professing as I should, with courage and without fearing the opinions of others, the faith that I received as your gift in holy Baptism. Jesus, Mary, and Joseph, bless me and grant me the grace of sharing as I should in the defense and propagation of the Faith when duty calls, whether by word or by the sacrifice of my possessions and my life. Jesus, Mary, and Joseph, bless me and grant me the grace of loving my family and others in mutual charity as I should, and establish us in perfect harmony of thought, will, and action, under the rule and guidance of the shepherds of the Church. Jesus, Mary, and Joseph, bless me and grant me the grace of conforming my life fully as I should to the commandments of God\u2019s law and those of His Holy Church, so as to live always in that charity which they set forth. Jesus, Mary, and Joseph, I ask in particular this special favor:  Most loving Jesus, by Your sublime and beautiful virtues of humility, obedience, poverty, modesty, charity, patience, and gentleness, You blessed with peace and happiness the family which You chose on earth. In Your mercy look upon my family. We belong to You, for we have received Your many blessings over many years, and we entrust ourselves to Your loving care. Look upon my family in Your loving kindness, preserve us from danger, give us help in time of need, and grant us the grace to persevere to the end in imitation of Your holy Family, so that, having revered You and loved You faithfully on earth, we may praise You eternally in heaven. Mary, dearest Mother, to your intercession we have recourse, knowing that your Divine Son will hear your prayers. Glorious patriarch, Saint Joseph, help us by your powerful prayers and offer our prayers to Jesus through Mary\u2019s hands. Amen. Lord Jesus Christ, being subject to Mary and Joseph, You sanctified family life by Your beautiful virtues. Grant that we, with the help of Mary and Joseph, may be taught by the example of Your holy Family, and may after death enjoy its everlasting companionship. Lord Jesus, help us ever to follow the example of Your holy Family, that in the hour of our death Your glorious Virgin Mother, together with Saint Joseph, may come to meet us, and we may be worthy to be received by You into the everlasting joys of heaven. You who live and reign forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Mary, and Joseph, bless me and grant me the grace of loving Holy Church as I should, above every earthly thing, and of ever showing my love by deeds. Jesus, Mary, and Joseph, bless me and grant me the grace of openly professing as I should, with courage and without fearing the opinions of others, the faith that I received as your gift in holy Baptism. Jesus, Mary, and Joseph, bless me and grant me the grace of sharing as I should in the defense and propagation of the Faith when duty calls, whether by word or by the sacrifice of my possessions and my life. Jesus, Mary, and Joseph, bless me and grant me the grace of loving my family and others in mutual charity as I should, and establish us in perfect harmony of thought, will, and action, under the rule and guidance of the shepherds of the Church. Jesus, Mary, and Joseph, bless me and grant me the grace of conforming my life fully as I should to the commandments of God\u2019s law and those of His Holy Church, so as to live always in that charity which they set forth. Jesus, Mary, and Joseph, I ask in particular this special favor:  Most loving Jesus, by Your sublime and beautiful virtues of humility, obedience, poverty, modesty, charity, patience, and gentleness, You blessed with peace and happiness the family which You chose on earth. In Your mercy look upon my family. We belong to You, for we have received Your many blessings over many years, and we entrust ourselves to Your loving care. Look upon my family in Your loving kindness, preserve us from danger, give us help in time of need, and grant us the grace to persevere to the end in imitation of Your holy Family, so that, having revered You and loved You faithfully on earth, we may praise You eternally in heaven. Mary, dearest Mother, to your intercession we have recourse, knowing that your Divine Son will hear your prayers. Glorious patriarch, Saint Joseph, help us by your powerful prayers and offer our prayers to Jesus through Mary\u2019s hands. Amen. Lord Jesus Christ, being subject to Mary and Joseph, You sanctified family life by Your beautiful virtues. Grant that we, with the help of Mary and Joseph, may be taught by the example of Your holy Family, and may after death enjoy its everlasting companionship. Lord Jesus, help us ever to follow the example of Your holy Family, that in the hour of our death Your glorious Virgin Mother, together with Saint Joseph, may come to meet us, and we may be worthy to be received by You into the everlasting joys of heaven. You who live and reign forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Mary, and Joseph, bless me and grant me the grace of loving Holy Church as I should, above every earthly thing, and of ever showing my love by deeds. Jesus, Mary, and Joseph, bless me and grant me the grace of openly professing as I should, with courage and without fearing the opinions of others, the faith that I received as your gift in holy Baptism. Jesus, Mary, and Joseph, bless me and grant me the grace of sharing as I should in the defense and propagation of the Faith when duty calls, whether by word or by the sacrifice of my possessions and my life. Jesus, Mary, and Joseph, bless me and grant me the grace of loving my family and others in mutual charity as I should, and establish us in perfect harmony of thought, will, and action, under the rule and guidance of the shepherds of the Church. Jesus, Mary, and Joseph, bless me and grant me the grace of conforming my life fully as I should to the commandments of God\u2019s law and those of His Holy Church, so as to live always in that charity which they set forth. Jesus, Mary, and Joseph, I ask in particular this special favor:  Most loving Jesus, by Your sublime and beautiful virtues of humility, obedience, poverty, modesty, charity, patience, and gentleness, You blessed with peace and happiness the family which You chose on earth. In Your mercy look upon my family. We belong to You, for we have received Your many blessings over many years, and we entrust ourselves to Your loving care. Look upon my family in Your loving kindness, preserve us from danger, give us help in time of need, and grant us the grace to persevere to the end in imitation of Your holy Family, so that, having revered You and loved You faithfully on earth, we may praise You eternally in heaven. Mary, dearest Mother, to your intercession we have recourse, knowing that your Divine Son will hear your prayers. Glorious patriarch, Saint Joseph, help us by your powerful prayers and offer our prayers to Jesus through Mary\u2019s hands. Amen. Lord Jesus Christ, being subject to Mary and Joseph, You sanctified family life by Your beautiful virtues. Grant that we, with the help of Mary and Joseph, may be taught by the example of Your holy Family, and may after death enjoy its everlasting companionship. Lord Jesus, help us ever to follow the example of Your holy Family, that in the hour of our death Your glorious Virgin Mother, together with Saint Joseph, may come to meet us, and we may be worthy to be received by You into the everlasting joys of heaven. You who live and reign forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Mary, and Joseph, bless me and grant me the grace of loving Holy Church as I should, above every earthly thing, and of ever showing my love by deeds. Jesus, Mary, and Joseph, bless me and grant me the grace of openly professing as I should, with courage and without fearing the opinions of others, the faith that I received as your gift in holy Baptism. Jesus, Mary, and Joseph, bless me and grant me the grace of sharing as I should in the defense and propagation of the Faith when duty calls, whether by word or by the sacrifice of my possessions and my life. Jesus, Mary, and Joseph, bless me and grant me the grace of loving my family and others in mutual charity as I should, and establish us in perfect harmony of thought, will, and action, under the rule and guidance of the shepherds of the Church. Jesus, Mary, and Joseph, bless me and grant me the grace of conforming my life fully as I should to the commandments of God\u2019s law and those of His Holy Church, so as to live always in that charity which they set forth. Jesus, Mary, and Joseph, I ask in particular this special favor:  Most loving Jesus, by Your sublime and beautiful virtues of humility, obedience, poverty, modesty, charity, patience, and gentleness, You blessed with peace and happiness the family which You chose on earth. In Your mercy look upon my family. We belong to You, for we have received Your many blessings over many years, and we entrust ourselves to Your loving care. Look upon my family in Your loving kindness, preserve us from danger, give us help in time of need, and grant us the grace to persevere to the end in imitation of Your holy Family, so that, having revered You and loved You faithfully on earth, we may praise You eternally in heaven. Mary, dearest Mother, to your intercession we have recourse, knowing that your Divine Son will hear your prayers. Glorious patriarch, Saint Joseph, help us by your powerful prayers and offer our prayers to Jesus through Mary\u2019s hands. Amen. Lord Jesus Christ, being subject to Mary and Joseph, You sanctified family life by Your beautiful virtues. Grant that we, with the help of Mary and Joseph, may be taught by the example of Your holy Family, and may after death enjoy its everlasting companionship. Lord Jesus, help us ever to follow the example of Your holy Family, that in the hour of our death Your glorious Virgin Mother, together with Saint Joseph, may come to meet us, and we may be worthy to be received by You into the everlasting joys of heaven. You who live and reign forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-holy_family"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "holy_family",
+      "name": "Holy Family"
+    },
+    "type": "novena_feast_rule"
+  }
+}

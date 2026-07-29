@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_gertrude_of_nivelles",
+    "feast": {
+      "day": 17,
+      "mode": "fixed",
+      "month": 3,
+      "name": "St Gertrude of Nivelles"
+    },
+    "id": "st_gertrude_of_nivelles",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "cats",
+        "gardeners",
+        "travelers"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St Gertrude of Nivelles was a 7th-century abbess in present-day Belgium, known for her monastic leadership and hospitality to pilgrims and the poor."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Gertrude of Nivelles Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious Saint Gertrude of Nivelles, virgin and abbess, beloved daughter of holy Church and faithful servant of the Most High God, we come before thee with confidence in thy powerful intercession. Thou didst forsake the honors of this world to consecrate thyself wholly to the love of God, and in thy holy monastery at Nivelles thou didst shine as a lamp of charity and contemplation. Look down upon us, thy devoted clients, and present our petitions before the throne of Almighty God."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "O Saint Gertrude, patroness of the recently departed, thou dost extend thy charitable care even beyond the veil of death, receiving the souls of the faithful into thy holy keeping on their journey to their eternal home. We beg thee to intercede for all those who have gone before us marked with the sign of faith, that they may be swiftly brought through the purifying fires to the beatific vision of God. O holy abbess, thou art likewise invoked as the friend of travelers and of all who wander far from home. As thou dost watch over those who journey through this earthly life, guard our steps and guide us safely along the path of virtue, that we may not stray from the narrow way that leads to eternal life. O gentle Gertrude, the faithful have long commended to thy care their homes and hearths, praying through thy intercession for deliverance from the tiny creatures that trouble our dwellings. From ancient times the poor creatures of cats have been associated with thy memory, and those who fear the scurrying of mice and rats have sought thy aid. Be thou a protector of our households, and intercede for all who keep faithful watch, whether by day or by night, over the homes and granaries entrusted to their care. O Saint Gertrude, thou didst die young, having spent thyself utterly in the service of God and neighbor. Thy holy soul, according to pious tradition, was met by the souls of pilgrims whom thou hadst charitably refreshed in this life, and they accompanied thee on thy journey to God. May we, following thy example of charity and detachment from the world, so live upon this earth that we too may be met with mercy at the hour of our death. Pray for us, O Saint Gertrude of Nivelles, that we may persevere in faith, hope, and charity to the end of our days. Obtain for us the grace to live as thou didst live, detached from earthly things, devoted to prayer, and generous in service to all who are placed in our care. May we share one day in the glory which thou dost now enjoy in the company of the angels and saints. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Gertrude of Nivelles, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Gertrude of Nivelles Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious Saint Gertrude of Nivelles, virgin and abbess, beloved daughter of holy Church and faithful servant of the Most High God, we come before thee with confidence in thy powerful intercession. Thou didst forsake the honors of this world to consecrate thyself wholly to the love of God, and in thy holy monastery at Nivelles thou didst shine as a lamp of charity and contemplation. Look down upon us, thy devoted clients, and present our petitions before the throne of Almighty God.  O Saint Gertrude, patroness of the recently departed, thou dost extend thy charitable care even beyond the veil of death, receiving the souls of the faithful into thy holy keeping on their journey to their eternal home. We beg thee to intercede for all those who have gone before us marked with the sign of faith, that they may be swiftly brought through the purifying fires to the beatific vision of God. O holy abbess, thou art likewise invoked as the friend of travelers and of all who wander far from home. As thou dost watch over those who journey through this earthly life, guard our steps and guide us safely along the path of virtue, that we may not stray from the narrow way that leads to eternal life. O gentle Gertrude, the faithful have long commended to thy care their homes and hearths, praying through thy intercession for deliverance from the tiny creatures that trouble our dwellings. From ancient times the poor creatures of cats have been associated with thy memory, and those who fear the scurrying of mice and rats have sought thy aid. Be thou a protector of our households, and intercede for all who keep faithful watch, whether by day or by night, over the homes and granaries entrusted to their care. O Saint Gertrude, thou didst die young, having spent thyself utterly in the service of God and neighbor. Thy holy soul, according to pious tradition, was met by the souls of pilgrims whom thou hadst charitably refreshed in this life, and they accompanied thee on thy journey to God. May we, following thy example of charity and detachment from the world, so live upon this earth that we too may be met with mercy at the hour of our death. Pray for us, O Saint Gertrude of Nivelles, that we may persevere in faith, hope, and charity to the end of our days. Obtain for us the grace to live as thou didst live, detached from earthly things, devoted to prayer, and generous in service to all who are placed in our care. May we share one day in the glory which thou dost now enjoy in the company of the angels and saints. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Gertrude of Nivelles, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious Saint Gertrude of Nivelles, virgin and abbess, beloved daughter of holy Church and faithful servant of the Most High God, we come before thee with confidence in thy powerful intercession. Thou didst forsake the honors of this world to consecrate thyself wholly to the love of God, and in thy holy monastery at Nivelles thou didst shine as a lamp of charity and contemplation. Look down upon us, thy devoted clients, and present our petitions before the throne of Almighty God.  O Saint Gertrude, patroness of the recently departed, thou dost extend thy charitable care even beyond the veil of death, receiving the souls of the faithful into thy holy keeping on their journey to their eternal home. We beg thee to intercede for all those who have gone before us marked with the sign of faith, that they may be swiftly brought through the purifying fires to the beatific vision of God. O holy abbess, thou art likewise invoked as the friend of travelers and of all who wander far from home. As thou dost watch over those who journey through this earthly life, guard our steps and guide us safely along the path of virtue, that we may not stray from the narrow way that leads to eternal life. O gentle Gertrude, the faithful have long commended to thy care their homes and hearths, praying through thy intercession for deliverance from the tiny creatures that trouble our dwellings. From ancient times the poor creatures of cats have been associated with thy memory, and those who fear the scurrying of mice and rats have sought thy aid. Be thou a protector of our households, and intercede for all who keep faithful watch, whether by day or by night, over the homes and granaries entrusted to their care. O Saint Gertrude, thou didst die young, having spent thyself utterly in the service of God and neighbor. Thy holy soul, according to pious tradition, was met by the souls of pilgrims whom thou hadst charitably refreshed in this life, and they accompanied thee on thy journey to God. May we, following thy example of charity and detachment from the world, so live upon this earth that we too may be met with mercy at the hour of our death. Pray for us, O Saint Gertrude of Nivelles, that we may persevere in faith, hope, and charity to the end of our days. Obtain for us the grace to live as thou didst live, detached from earthly things, devoted to prayer, and generous in service to all who are placed in our care. May we share one day in the glory which thou dost now enjoy in the company of the angels and saints. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Gertrude of Nivelles, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious Saint Gertrude of Nivelles, virgin and abbess, beloved daughter of holy Church and faithful servant of the Most High God, we come before thee with confidence in thy powerful intercession. Thou didst forsake the honors of this world to consecrate thyself wholly to the love of God, and in thy holy monastery at Nivelles thou didst shine as a lamp of charity and contemplation. Look down upon us, thy devoted clients, and present our petitions before the throne of Almighty God.  O Saint Gertrude, patroness of the recently departed, thou dost extend thy charitable care even beyond the veil of death, receiving the souls of the faithful into thy holy keeping on their journey to their eternal home. We beg thee to intercede for all those who have gone before us marked with the sign of faith, that they may be swiftly brought through the purifying fires to the beatific vision of God. O holy abbess, thou art likewise invoked as the friend of travelers and of all who wander far from home. As thou dost watch over those who journey through this earthly life, guard our steps and guide us safely along the path of virtue, that we may not stray from the narrow way that leads to eternal life. O gentle Gertrude, the faithful have long commended to thy care their homes and hearths, praying through thy intercession for deliverance from the tiny creatures that trouble our dwellings. From ancient times the poor creatures of cats have been associated with thy memory, and those who fear the scurrying of mice and rats have sought thy aid. Be thou a protector of our households, and intercede for all who keep faithful watch, whether by day or by night, over the homes and granaries entrusted to their care. O Saint Gertrude, thou didst die young, having spent thyself utterly in the service of God and neighbor. Thy holy soul, according to pious tradition, was met by the souls of pilgrims whom thou hadst charitably refreshed in this life, and they accompanied thee on thy journey to God. May we, following thy example of charity and detachment from the world, so live upon this earth that we too may be met with mercy at the hour of our death. Pray for us, O Saint Gertrude of Nivelles, that we may persevere in faith, hope, and charity to the end of our days. Obtain for us the grace to live as thou didst live, detached from earthly things, devoted to prayer, and generous in service to all who are placed in our care. May we share one day in the glory which thou dost now enjoy in the company of the angels and saints. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Gertrude of Nivelles, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious Saint Gertrude of Nivelles, virgin and abbess, beloved daughter of holy Church and faithful servant of the Most High God, we come before thee with confidence in thy powerful intercession. Thou didst forsake the honors of this world to consecrate thyself wholly to the love of God, and in thy holy monastery at Nivelles thou didst shine as a lamp of charity and contemplation. Look down upon us, thy devoted clients, and present our petitions before the throne of Almighty God.  O Saint Gertrude, patroness of the recently departed, thou dost extend thy charitable care even beyond the veil of death, receiving the souls of the faithful into thy holy keeping on their journey to their eternal home. We beg thee to intercede for all those who have gone before us marked with the sign of faith, that they may be swiftly brought through the purifying fires to the beatific vision of God. O holy abbess, thou art likewise invoked as the friend of travelers and of all who wander far from home. As thou dost watch over those who journey through this earthly life, guard our steps and guide us safely along the path of virtue, that we may not stray from the narrow way that leads to eternal life. O gentle Gertrude, the faithful have long commended to thy care their homes and hearths, praying through thy intercession for deliverance from the tiny creatures that trouble our dwellings. From ancient times the poor creatures of cats have been associated with thy memory, and those who fear the scurrying of mice and rats have sought thy aid. Be thou a protector of our households, and intercede for all who keep faithful watch, whether by day or by night, over the homes and granaries entrusted to their care. O Saint Gertrude, thou didst die young, having spent thyself utterly in the service of God and neighbor. Thy holy soul, according to pious tradition, was met by the souls of pilgrims whom thou hadst charitably refreshed in this life, and they accompanied thee on thy journey to God. May we, following thy example of charity and detachment from the world, so live upon this earth that we too may be met with mercy at the hour of our death. Pray for us, O Saint Gertrude of Nivelles, that we may persevere in faith, hope, and charity to the end of our days. Obtain for us the grace to live as thou didst live, detached from earthly things, devoted to prayer, and generous in service to all who are placed in our care. May we share one day in the glory which thou dost now enjoy in the company of the angels and saints. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Gertrude of Nivelles, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious Saint Gertrude of Nivelles, virgin and abbess, beloved daughter of holy Church and faithful servant of the Most High God, we come before thee with confidence in thy powerful intercession. Thou didst forsake the honors of this world to consecrate thyself wholly to the love of God, and in thy holy monastery at Nivelles thou didst shine as a lamp of charity and contemplation. Look down upon us, thy devoted clients, and present our petitions before the throne of Almighty God.  O Saint Gertrude, patroness of the recently departed, thou dost extend thy charitable care even beyond the veil of death, receiving the souls of the faithful into thy holy keeping on their journey to their eternal home. We beg thee to intercede for all those who have gone before us marked with the sign of faith, that they may be swiftly brought through the purifying fires to the beatific vision of God. O holy abbess, thou art likewise invoked as the friend of travelers and of all who wander far from home. As thou dost watch over those who journey through this earthly life, guard our steps and guide us safely along the path of virtue, that we may not stray from the narrow way that leads to eternal life. O gentle Gertrude, the faithful have long commended to thy care their homes and hearths, praying through thy intercession for deliverance from the tiny creatures that trouble our dwellings. From ancient times the poor creatures of cats have been associated with thy memory, and those who fear the scurrying of mice and rats have sought thy aid. Be thou a protector of our households, and intercede for all who keep faithful watch, whether by day or by night, over the homes and granaries entrusted to their care. O Saint Gertrude, thou didst die young, having spent thyself utterly in the service of God and neighbor. Thy holy soul, according to pious tradition, was met by the souls of pilgrims whom thou hadst charitably refreshed in this life, and they accompanied thee on thy journey to God. May we, following thy example of charity and detachment from the world, so live upon this earth that we too may be met with mercy at the hour of our death. Pray for us, O Saint Gertrude of Nivelles, that we may persevere in faith, hope, and charity to the end of our days. Obtain for us the grace to live as thou didst live, detached from earthly things, devoted to prayer, and generous in service to all who are placed in our care. May we share one day in the glory which thou dost now enjoy in the company of the angels and saints. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Gertrude of Nivelles, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious Saint Gertrude of Nivelles, virgin and abbess, beloved daughter of holy Church and faithful servant of the Most High God, we come before thee with confidence in thy powerful intercession. Thou didst forsake the honors of this world to consecrate thyself wholly to the love of God, and in thy holy monastery at Nivelles thou didst shine as a lamp of charity and contemplation. Look down upon us, thy devoted clients, and present our petitions before the throne of Almighty God.  O Saint Gertrude, patroness of the recently departed, thou dost extend thy charitable care even beyond the veil of death, receiving the souls of the faithful into thy holy keeping on their journey to their eternal home. We beg thee to intercede for all those who have gone before us marked with the sign of faith, that they may be swiftly brought through the purifying fires to the beatific vision of God. O holy abbess, thou art likewise invoked as the friend of travelers and of all who wander far from home. As thou dost watch over those who journey through this earthly life, guard our steps and guide us safely along the path of virtue, that we may not stray from the narrow way that leads to eternal life. O gentle Gertrude, the faithful have long commended to thy care their homes and hearths, praying through thy intercession for deliverance from the tiny creatures that trouble our dwellings. From ancient times the poor creatures of cats have been associated with thy memory, and those who fear the scurrying of mice and rats have sought thy aid. Be thou a protector of our households, and intercede for all who keep faithful watch, whether by day or by night, over the homes and granaries entrusted to their care. O Saint Gertrude, thou didst die young, having spent thyself utterly in the service of God and neighbor. Thy holy soul, according to pious tradition, was met by the souls of pilgrims whom thou hadst charitably refreshed in this life, and they accompanied thee on thy journey to God. May we, following thy example of charity and detachment from the world, so live upon this earth that we too may be met with mercy at the hour of our death. Pray for us, O Saint Gertrude of Nivelles, that we may persevere in faith, hope, and charity to the end of our days. Obtain for us the grace to live as thou didst live, detached from earthly things, devoted to prayer, and generous in service to all who are placed in our care. May we share one day in the glory which thou dost now enjoy in the company of the angels and saints. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Gertrude of Nivelles, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious Saint Gertrude of Nivelles, virgin and abbess, beloved daughter of holy Church and faithful servant of the Most High God, we come before thee with confidence in thy powerful intercession. Thou didst forsake the honors of this world to consecrate thyself wholly to the love of God, and in thy holy monastery at Nivelles thou didst shine as a lamp of charity and contemplation. Look down upon us, thy devoted clients, and present our petitions before the throne of Almighty God.  O Saint Gertrude, patroness of the recently departed, thou dost extend thy charitable care even beyond the veil of death, receiving the souls of the faithful into thy holy keeping on their journey to their eternal home. We beg thee to intercede for all those who have gone before us marked with the sign of faith, that they may be swiftly brought through the purifying fires to the beatific vision of God. O holy abbess, thou art likewise invoked as the friend of travelers and of all who wander far from home. As thou dost watch over those who journey through this earthly life, guard our steps and guide us safely along the path of virtue, that we may not stray from the narrow way that leads to eternal life. O gentle Gertrude, the faithful have long commended to thy care their homes and hearths, praying through thy intercession for deliverance from the tiny creatures that trouble our dwellings. From ancient times the poor creatures of cats have been associated with thy memory, and those who fear the scurrying of mice and rats have sought thy aid. Be thou a protector of our households, and intercede for all who keep faithful watch, whether by day or by night, over the homes and granaries entrusted to their care. O Saint Gertrude, thou didst die young, having spent thyself utterly in the service of God and neighbor. Thy holy soul, according to pious tradition, was met by the souls of pilgrims whom thou hadst charitably refreshed in this life, and they accompanied thee on thy journey to God. May we, following thy example of charity and detachment from the world, so live upon this earth that we too may be met with mercy at the hour of our death. Pray for us, O Saint Gertrude of Nivelles, that we may persevere in faith, hope, and charity to the end of our days. Obtain for us the grace to live as thou didst live, detached from earthly things, devoted to prayer, and generous in service to all who are placed in our care. May we share one day in the glory which thou dost now enjoy in the company of the angels and saints. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Gertrude of Nivelles, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious Saint Gertrude of Nivelles, virgin and abbess, beloved daughter of holy Church and faithful servant of the Most High God, we come before thee with confidence in thy powerful intercession. Thou didst forsake the honors of this world to consecrate thyself wholly to the love of God, and in thy holy monastery at Nivelles thou didst shine as a lamp of charity and contemplation. Look down upon us, thy devoted clients, and present our petitions before the throne of Almighty God.  O Saint Gertrude, patroness of the recently departed, thou dost extend thy charitable care even beyond the veil of death, receiving the souls of the faithful into thy holy keeping on their journey to their eternal home. We beg thee to intercede for all those who have gone before us marked with the sign of faith, that they may be swiftly brought through the purifying fires to the beatific vision of God. O holy abbess, thou art likewise invoked as the friend of travelers and of all who wander far from home. As thou dost watch over those who journey through this earthly life, guard our steps and guide us safely along the path of virtue, that we may not stray from the narrow way that leads to eternal life. O gentle Gertrude, the faithful have long commended to thy care their homes and hearths, praying through thy intercession for deliverance from the tiny creatures that trouble our dwellings. From ancient times the poor creatures of cats have been associated with thy memory, and those who fear the scurrying of mice and rats have sought thy aid. Be thou a protector of our households, and intercede for all who keep faithful watch, whether by day or by night, over the homes and granaries entrusted to their care. O Saint Gertrude, thou didst die young, having spent thyself utterly in the service of God and neighbor. Thy holy soul, according to pious tradition, was met by the souls of pilgrims whom thou hadst charitably refreshed in this life, and they accompanied thee on thy journey to God. May we, following thy example of charity and detachment from the world, so live upon this earth that we too may be met with mercy at the hour of our death. Pray for us, O Saint Gertrude of Nivelles, that we may persevere in faith, hope, and charity to the end of our days. Obtain for us the grace to live as thou didst live, detached from earthly things, devoted to prayer, and generous in service to all who are placed in our care. May we share one day in the glory which thou dost now enjoy in the company of the angels and saints. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Gertrude of Nivelles, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious Saint Gertrude of Nivelles, virgin and abbess, beloved daughter of holy Church and faithful servant of the Most High God, we come before thee with confidence in thy powerful intercession. Thou didst forsake the honors of this world to consecrate thyself wholly to the love of God, and in thy holy monastery at Nivelles thou didst shine as a lamp of charity and contemplation. Look down upon us, thy devoted clients, and present our petitions before the throne of Almighty God.  O Saint Gertrude, patroness of the recently departed, thou dost extend thy charitable care even beyond the veil of death, receiving the souls of the faithful into thy holy keeping on their journey to their eternal home. We beg thee to intercede for all those who have gone before us marked with the sign of faith, that they may be swiftly brought through the purifying fires to the beatific vision of God. O holy abbess, thou art likewise invoked as the friend of travelers and of all who wander far from home. As thou dost watch over those who journey through this earthly life, guard our steps and guide us safely along the path of virtue, that we may not stray from the narrow way that leads to eternal life. O gentle Gertrude, the faithful have long commended to thy care their homes and hearths, praying through thy intercession for deliverance from the tiny creatures that trouble our dwellings. From ancient times the poor creatures of cats have been associated with thy memory, and those who fear the scurrying of mice and rats have sought thy aid. Be thou a protector of our households, and intercede for all who keep faithful watch, whether by day or by night, over the homes and granaries entrusted to their care. O Saint Gertrude, thou didst die young, having spent thyself utterly in the service of God and neighbor. Thy holy soul, according to pious tradition, was met by the souls of pilgrims whom thou hadst charitably refreshed in this life, and they accompanied thee on thy journey to God. May we, following thy example of charity and detachment from the world, so live upon this earth that we too may be met with mercy at the hour of our death. Pray for us, O Saint Gertrude of Nivelles, that we may persevere in faith, hope, and charity to the end of our days. Obtain for us the grace to live as thou didst live, detached from earthly things, devoted to prayer, and generous in service to all who are placed in our care. May we share one day in the glory which thou dost now enjoy in the company of the angels and saints. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Gertrude of Nivelles, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_gertrude_of_nivelles"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_gertrude_of_nivelles",
+      "name": "St Gertrude of Nivelles"
+    },
+    "type": "novena_feast_rule"
+  }
+}

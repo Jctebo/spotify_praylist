@@ -9,6 +9,19 @@
       "name": "St Mary Magdalene de Pazzi"
     },
     "id": "st_mary_magdalene_de_pazzi",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "Carmelite Order",
+        "mystics"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Mary Magdalene de Pazzi was a Carmelite nun and mystic from Florence known for her intense prayer, visions, and devotion to Christ and the Church."
+    },
     "novena": {
       "content_mode": "fixed",
       "duration_days": 9,
@@ -201,7 +214,38 @@
       "audio": {
         "enabled": true,
         "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
         "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
         "speed": 1.0,
         "voice": "ash"
       },

@@ -1,5 +1,6 @@
 {
   "contract": {
+    "enabled": false,
     "id": "standard_9_day",
     "type": "novena_feast_rule",
     "selector": {
@@ -17,6 +18,7 @@
       "content_mode": "hybrid",
       "template_id": "standard-9-day",
       "ai_config": {
+        "intro_prompt": "Welcome the listener to the named day of this standard short-form novena. Briefly identify the calendar saint or sacred celebration and, for a saint, name a well-known patronage only when you are confident. Then connect this novena to the selected daily calendar focus in one prayerful sentence.",
         "theme_prompt": "Create a 9-day saint-life outline for {saint_name}. Return nine distinct daily focus lines, each rooted in a different stage or witness of the saint's life, so the arc moves from call and formation through prayer, trial, charity, fidelity, hidden sacrifice, hope, and final perseverance."
       }
     },

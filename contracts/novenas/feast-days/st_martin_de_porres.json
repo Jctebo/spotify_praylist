@@ -1,0 +1,444 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_martin_de_porres",
+    "feast": {
+      "day": 3,
+      "mode": "fixed",
+      "month": 11,
+      "name": "St. Martin de Porres"
+    },
+    "id": "st_martin_de_porres",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "social justice",
+        "racial harmony",
+        "the poor"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Martin de Porres was a Peruvian Dominican lay brother known for humble service, care for the sick, and charity to the poor."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Martin de Porres Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized punctuation and added brief section breaks for clearer text-to-speech pacing while preserving wording and canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "St. Martin\u2019s Humility. St. Martin imitated our Lord, who was meek and humble of heart. There was no pride or vanity in his soul. He knew that God is our Creator, and that we are but His creatures. He understood that God loves us as children, and only wants us to be happy. So he submitted entirely to the Holy Will of God. Let us all imitate St. Martin by humbly doing the Will of God in all things. O humble St. Martin, ask our Lord to give us the grace of true humility, that we may not be puffed up with foolish pride, but may be contented with the gifts that God gives us. Obtain for us the light of the Holy Ghost, that we may understand, as you did, that pride is a deceit of the devil, and that only by doing the Will of God can we be truly happy. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing the canonical prayers or meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "St. Martin\u2019s Love of God. St. Martin\u2019s whole soul was filled with God\u2019s love. He knew that Almighty God sent His Only Son into the world to suffer and die on the Cross for our sins. His heart was stirred with deep affection for so loving a Redeemer, and his whole life gives evidence of his sincere gratitude. May we, too, learn to love our Saviour more and more, and show our love by our good works. Let us pray. O St. Martin, why are our hearts so cold and lacking in love for the Son of God, Who became a little Child for our salvation? Why are we so slow to love One Who loved us so much that He gave His life for mankind? Ask God to make us realise that the only way to happiness is by loving and serving Him with all our hearts and souls. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added minimal punctuation and paragraph breaks for clearer text-to-speech pacing without changing meaning or canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "St Martin\u2019s Love for the Poor. St Martin was called \u201cthe Father of the Poor\u201d. He saw in the poor, sick, and dying, the children of God, and he helped them in a thousand practical ways. He studied medicine so that he might know how to cure the sick. Every day he distributed alms to the poor. He built an orphanage for children. Let us imitate the charity of St Martin, that God may bless us as He blessed him. Let us pray. Dear St Martin, teach us to be generous with the gifts that God has given us. Make us sympathetic towards those who are suffering and afflicted. Pray to our Redeemer and to Our Lady of Mercy that our hearts may not be hardened by sin and selfishness, but that we may always be kind and generous to our neighbours, because they are the children of our Heavenly Father. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing meaning or canonical prayer wording.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "St Martin\u2019s Faith. St Martin had a lively faith in all the teachings of the Catholic Church, because he knew that it was founded by Jesus Christ, the Son of God, who can neither deceive nor be deceived. God rewarded St Martin\u2019s humble faith by enlightening his mind, that he might believe the mysteries of our Holy Religion. May God give us the grace always to believe the truths which He has revealed. Let us pray. O glorious St Martin, we need strong faith in God and His Holy Church, especially in these days when so many people have turned against religion. Bring non-Catholics to conversion and love for the Church, that they may find the way to salvation and happiness. Ask God to make us faithful soldiers of Jesus Christ in life and in death. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing the canonical prayers or meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "St Martin\u2019s Confidence in God. St Martin firmly relied on the goodness and promises of God. He hoped, through the grace of God and the merits of Jesus Christ, one day to obtain an eternal reward. We know that St Martin\u2019s trust in God was not in vain. We, too, are confident that God will forgive us our sins if we are truly sorry, and that He will give us everlasting life if we serve Him faithfully by obeying His commandments. Let us pray. St Martin, help us to have a great trust in Almighty God. Make us understand that He is one Friend who will never desert us as long as we are true to Him. Keep us from foolishly presuming that we will be saved without doing our part, but keep us also from despair, which forgets the mercy of God. Ask the Child Jesus to increase in our hearts faith, hope, and charity. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized \u201cSt\u201d to \u201cSaint,\u201d added brief section heading punctuation, and adjusted a few commas and quotation punctuation for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Saint Martin\u2019s devotion to prayer. Saint Martin kept his mind and heart always lifted up to the Creator of all things. His prayer came from the depths of his soul. He constantly turned to God to adore Him, to thank Him, and to ask Him for help. Saint Martin prayed with humility and perseverance, and God was pleased to answer his prayers in miraculous ways. He will pray for us before the Throne of God in Heaven. Let us pray. Saint Martin, help us to realise that Christ meant what He said when He promised: \u201cAsk, and it shall be given you; seek, and you shall find.\u201d Make us faithful in attending Holy Mass and other devotions. Remind us to say our daily prayers to obtain the blessing of God. Ask the Queen of the Most Holy Rosary to obtain for us a share of the treasures of the Holy Rosary. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation, spacing, and sentence breaks for clearer text-to-speech pacing while preserving wording and prayer order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "St. Martin\u2019s Spirit of Penance. St. Martin was a brave man. He was not afraid of hard work. He did not weakly seek for comforts, as we often do. Even though he laboured so hard, he was glad to do severe penances for his sins and for the salvation of souls. If so holy a man did penances, how much more should we, who have seriously offended Almighty God by our sinfulness. Let us pray. St. Martin, from you we learn how to be courageous and valiant. From your life we learn to avoid idleness and self-seeking. Give us some of that spirit of penance which you had, so that we may be brave in the struggle with temptation. Ask Jesus Crucified to give us the grace to fight the good fight for victory. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized punctuation and spacing for clearer text-to-speech, added brief section breaks, and normalized \u201cSt\u201d to \u201cSt.\u201d while keeping all prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "St. Martin\u2019s Reward. St. Martin died a holy and peaceful death. He had spent his life in doing good as a humble lay-brother of the Dominican Order. But he that humbleth himself shall be exalted. Soon his heroic life became widely known, and Pope John the Twenty-Third solemnly proclaimed Martin de Porres a Saint of God. Let us rejoice that we have such a noble brother among the Saints of God in Heaven. Let us pray. Dear St. Martin, you have been raised up by Almighty God to show us the way to our true home. You have given us the good example and the encouragement that we need. We know from your life that to win the reward of glory we have but to love and serve the Best of Masters. May we ever be humble, that we, too, may be exalted unto everlasting life. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and line breaks for clearer text-to-speech pacing, and separated the \u201cSt Martin\u2019s Miracles\u201d heading and \u201cLet us pray\u201d into their own paragraphs.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "St Martin\u2019s Miracles. St Martin performed many miracles during his life and after his holy death. We can go to him with confidence, for he will grant our petitions if they are for the good of our souls. His heart is very big, and he loves to help us. He is kind in every way. We have only to tell him our troubles and to ask him to help us. If we do our part, we can be sure that our dear friend St Martin will do his. Let us pray. O Lord Jesus Christ, Who didst inflame the heart of St Martin with an ardent love of the poor, and Who didst teach him the wonderful joy of true humility and the wisdom of accepting God\u2019s Holy Will, grant that, like him, we may be ever truly humble of heart and full of Christ-like love for suffering humanity. Deign, we beseech Thee, that, by imitating the holy life and enjoying the powerful help of this saintly man, the whole world may be drawn nearer to Thee, the Saviour of the human race. Who livest and reignest, with God the Father, in the unity of the Holy Ghost, God, world without end. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Martin de Porres Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized punctuation and added brief section breaks for clearer text-to-speech pacing while preserving wording and canonical prayers.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us.  St. Martin\u2019s Humility. St. Martin imitated our Lord, who was meek and humble of heart. There was no pride or vanity in his soul. He knew that God is our Creator, and that we are but His creatures. He understood that God loves us as children, and only wants us to be happy. So he submitted entirely to the Holy Will of God. Let us all imitate St. Martin by humbly doing the Will of God in all things. O humble St. Martin, ask our Lord to give us the grace of true humility, that we may not be puffed up with foolish pride, but may be contented with the gifts that God gives us. Obtain for us the light of the Holy Ghost, that we may understand, as you did, that pride is a deceit of the devil, and that only by doing the Will of God can we be truly happy. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing the canonical prayers or meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us.  St. Martin\u2019s Love of God. St. Martin\u2019s whole soul was filled with God\u2019s love. He knew that Almighty God sent His Only Son into the world to suffer and die on the Cross for our sins. His heart was stirred with deep affection for so loving a Redeemer, and his whole life gives evidence of his sincere gratitude. May we, too, learn to love our Saviour more and more, and show our love by our good works. Let us pray. O St. Martin, why are our hearts so cold and lacking in love for the Son of God, Who became a little Child for our salvation? Why are we so slow to love One Who loved us so much that He gave His life for mankind? Ask God to make us realise that the only way to happiness is by loving and serving Him with all our hearts and souls. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added minimal punctuation and paragraph breaks for clearer text-to-speech pacing without changing meaning or canonical prayers.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us.  St Martin\u2019s Love for the Poor. St Martin was called \u201cthe Father of the Poor\u201d. He saw in the poor, sick, and dying, the children of God, and he helped them in a thousand practical ways. He studied medicine so that he might know how to cure the sick. Every day he distributed alms to the poor. He built an orphanage for children. Let us imitate the charity of St Martin, that God may bless us as He blessed him. Let us pray. Dear St Martin, teach us to be generous with the gifts that God has given us. Make us sympathetic towards those who are suffering and afflicted. Pray to our Redeemer and to Our Lady of Mercy that our hearts may not be hardened by sin and selfishness, but that we may always be kind and generous to our neighbours, because they are the children of our Heavenly Father. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing meaning or canonical prayer wording.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us.  St Martin\u2019s Faith. St Martin had a lively faith in all the teachings of the Catholic Church, because he knew that it was founded by Jesus Christ, the Son of God, who can neither deceive nor be deceived. God rewarded St Martin\u2019s humble faith by enlightening his mind, that he might believe the mysteries of our Holy Religion. May God give us the grace always to believe the truths which He has revealed. Let us pray. O glorious St Martin, we need strong faith in God and His Holy Church, especially in these days when so many people have turned against religion. Bring non-Catholics to conversion and love for the Church, that they may find the way to salvation and happiness. Ask God to make us faithful soldiers of Jesus Christ in life and in death. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing the canonical prayers or meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us.  St Martin\u2019s Confidence in God. St Martin firmly relied on the goodness and promises of God. He hoped, through the grace of God and the merits of Jesus Christ, one day to obtain an eternal reward. We know that St Martin\u2019s trust in God was not in vain. We, too, are confident that God will forgive us our sins if we are truly sorry, and that He will give us everlasting life if we serve Him faithfully by obeying His commandments. Let us pray. St Martin, help us to have a great trust in Almighty God. Make us understand that He is one Friend who will never desert us as long as we are true to Him. Keep us from foolishly presuming that we will be saved without doing our part, but keep us also from despair, which forgets the mercy of God. Ask the Child Jesus to increase in our hearts faith, hope, and charity. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized \u201cSt\u201d to \u201cSaint,\u201d added brief section heading punctuation, and adjusted a few commas and quotation punctuation for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us.  Saint Martin\u2019s devotion to prayer. Saint Martin kept his mind and heart always lifted up to the Creator of all things. His prayer came from the depths of his soul. He constantly turned to God to adore Him, to thank Him, and to ask Him for help. Saint Martin prayed with humility and perseverance, and God was pleased to answer his prayers in miraculous ways. He will pray for us before the Throne of God in Heaven. Let us pray. Saint Martin, help us to realise that Christ meant what He said when He promised: \u201cAsk, and it shall be given you; seek, and you shall find.\u201d Make us faithful in attending Holy Mass and other devotions. Remind us to say our daily prayers to obtain the blessing of God. Ask the Queen of the Most Holy Rosary to obtain for us a share of the treasures of the Holy Rosary. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation, spacing, and sentence breaks for clearer text-to-speech pacing while preserving wording and prayer order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us.  St. Martin\u2019s Spirit of Penance. St. Martin was a brave man. He was not afraid of hard work. He did not weakly seek for comforts, as we often do. Even though he laboured so hard, he was glad to do severe penances for his sins and for the salvation of souls. If so holy a man did penances, how much more should we, who have seriously offended Almighty God by our sinfulness. Let us pray. St. Martin, from you we learn how to be courageous and valiant. From your life we learn to avoid idleness and self-seeking. Give us some of that spirit of penance which you had, so that we may be brave in the struggle with temptation. Ask Jesus Crucified to give us the grace to fight the good fight for victory. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized punctuation and spacing for clearer text-to-speech, added brief section breaks, and normalized \u201cSt\u201d to \u201cSt.\u201d while keeping all prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us.  St. Martin\u2019s Reward. St. Martin died a holy and peaceful death. He had spent his life in doing good as a humble lay-brother of the Dominican Order. But he that humbleth himself shall be exalted. Soon his heroic life became widely known, and Pope John the Twenty-Third solemnly proclaimed Martin de Porres a Saint of God. Let us rejoice that we have such a noble brother among the Saints of God in Heaven. Let us pray. Dear St. Martin, you have been raised up by Almighty God to show us the way to our true home. You have given us the good example and the encouragement that we need. We know from your life that to win the reward of glory we have but to love and serve the Best of Masters. May we ever be humble, that we, too, may be exalted unto everlasting life. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and line breaks for clearer text-to-speech pacing, and separated the \u201cSt Martin\u2019s Miracles\u201d heading and \u201cLet us pray\u201d into their own paragraphs.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most humble Martin de Porres, your burning charity embraced not only the poor and needy, but even the animals of the field. For your splendid example of charity, we honour you and invoke your help. From your place in heaven, hear the requests of your needy brethren, so that, by imitating your virtues, we may live contentedly in that state in which God has placed us.  St Martin\u2019s Miracles. St Martin performed many miracles during his life and after his holy death. We can go to him with confidence, for he will grant our petitions if they are for the good of our souls. His heart is very big, and he loves to help us. He is kind in every way. We have only to tell him our troubles and to ask him to help us. If we do our part, we can be sure that our dear friend St Martin will do his. Let us pray. O Lord Jesus Christ, Who didst inflame the heart of St Martin with an ardent love of the poor, and Who didst teach him the wonderful joy of true humility and the wisdom of accepting God\u2019s Holy Will, grant that, like him, we may be ever truly humble of heart and full of Christ-like love for suffering humanity. Deign, we beseech Thee, that, by imitating the holy life and enjoying the powerful help of this saintly man, the whole world may be drawn nearer to Thee, the Saviour of the human race. Who livest and reignest, with God the Father, in the unity of the Holy Ghost, God, world without end. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_martin_de_porres"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_martin_de_porres",
+      "name": "St. Martin de Porres"
+    },
+    "type": "novena_feast_rule"
+  }
+}

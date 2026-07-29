@@ -1,0 +1,440 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "our_lady_of_sorrows",
+    "feast": {
+      "day": 15,
+      "mode": "fixed",
+      "month": 9,
+      "name": "Our Lady of Sorrows"
+    },
+    "id": "our_lady_of_sorrows",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "Our Lady of Sorrows honors Mary\u2019s deep suffering with Christ, especially as she stood by the Cross, inviting prayerful compassion and trust in God amid sorrow."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of Sorrows Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks slightly for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. On the Cross her Son was dying. Mary stood beneath Him crying, sharing in His saving Cross. As He hangs, her soul is grieving, and a sword her heart is cleaving, and she weeps the bitter loss. O Mother of Sorrows, through thy First Sorrow, the Prophecy of Holy Simeon, intercede for me with the Sacred Heart of Jesus, and grant me the favor I implore."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and capitalization slightly for clearer text-to-speech pacing while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. O sad, afflicted Mother of the Son beyond all others, only Son of God Most High. Full of grief, her heart is aching. Watching Him, her body quaking, trembles as her offspring dies. O Mother of Sorrows, through thy Second Sorrow, the Flight into Egypt, intercede for me with the Sacred Heart of Jesus, and grant me the favor I implore."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "Added light punctuation and paragraph breaks for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. Who would see Christ\u2019s mother crying at the bitter crucifying without tears of sympathy? Who could see her depth of feeling, thoughts of many hearts revealing, and not share her agony? O Mother of Sorrows, through thy Third Sorrow, the Loss of the Child Jesus, intercede for me with the Sacred Heart of Jesus, and grant me the favor I implore."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "Lightly adjusted punctuation and capitalization for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. Pardon for our sins entreating, she saw Him endure the beating. All our guilt on Him was cast. She stood by in contemplation, when her Son, in desolation, breathed His spirit forth at last. O Mother of Sorrows, through thy Fourth Sorrow, meeting thy Jesus on His Way to Calvary, intercede for me with the Sacred Heart of Jesus, and grant me the favor I implore."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "Added punctuation and minor wording normalization for clearer text-to-speech pacing while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. Font of love, O Blessed Mother, lend me tears to mourn my Brother. Never let my ardor dim. Let my heart be burning freely. Christ my God, be pleased to see me all on fire with love for Him. O Mother of Sorrows, through thy Fifth Sorrow, standing beneath thy dying Son on Mount Calvary, intercede for me with the Sacred Heart of Jesus, and grant me the favor I implore."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks slightly for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. This I ask, O Holy Mary: that His wounds I too may carry; fix them deeply in my heart. Mine the burden He was bearing; let me in His pain be sharing; of His suffering take a part. O Mother of Sorrows, through thy Sixth Sorrow, thy Jesus is laid in thy arms, intercede for me with the Sacred Heart of Jesus, and grant me the favor I implore."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while keeping wording faithful and preserving the control marker.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. Let me join in your lamenting. Through my life, weep unrelenting tears for Jesus Crucified. Let me stand and share your weeping, all the day death\u2019s vigil keeping, glad to stand close by your side. O Mother of Sorrows, through thy Seventh Sorrow, the Burial of thy Jesus, intercede for me with the Sacred Heart of Jesus, and grant me the favor I implore."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "Lightly normalized punctuation and phrasing for clearer text-to-speech while preserving meaning, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. Queen of all the virgin choir, judge me not when I aspire to emulate your pure tears. Let me share in Christ\u2019s affliction, His death by bitter crucifixion, and commemorate His wounds. We give God thanks for the exaltation of His holy Cross, and ask, dear Mother of Sorrows, that you pray for us."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and corrected minor spelling for readability.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. Let me taste the pains He offered, drunk with love for Him who suffered. May His wounds become my own. On the day of Christ\u2019s returning, may my heart be lit and burning. Virgin, aid me at His throne. May His Cross be interceding, and His death my victory pleading. May He hold me in His grace. When my flesh by death is taken, may my soul to glory waken, and in heaven take a place. Amen. Blessed Mother, on this last day of our novena to you, we entrust ourselves to your heart, pierced with love for your Divine Son."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of Sorrows Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks slightly for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. On the Cross her Son was dying. Mary stood beneath Him crying, sharing in His saving Cross. As He hangs, her soul is grieving, and a sword her heart is cleaving, and she weeps the bitter loss. O Mother of Sorrows, through thy First Sorrow, the Prophecy of Holy Simeon, intercede for me with the Sacred Heart of Jesus, and grant me the favor I implore.  Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and capitalization slightly for clearer text-to-speech pacing while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. O sad, afflicted Mother of the Son beyond all others, only Son of God Most High. Full of grief, her heart is aching. Watching Him, her body quaking, trembles as her offspring dies. O Mother of Sorrows, through thy Second Sorrow, the Flight into Egypt, intercede for me with the Sacred Heart of Jesus, and grant me the favor I implore.  Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Added light punctuation and paragraph breaks for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. Who would see Christ\u2019s mother crying at the bitter crucifying without tears of sympathy? Who could see her depth of feeling, thoughts of many hearts revealing, and not share her agony? O Mother of Sorrows, through thy Third Sorrow, the Loss of the Child Jesus, intercede for me with the Sacred Heart of Jesus, and grant me the favor I implore.  Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Lightly adjusted punctuation and capitalization for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. Pardon for our sins entreating, she saw Him endure the beating. All our guilt on Him was cast. She stood by in contemplation, when her Son, in desolation, breathed His spirit forth at last. O Mother of Sorrows, through thy Fourth Sorrow, meeting thy Jesus on His Way to Calvary, intercede for me with the Sacred Heart of Jesus, and grant me the favor I implore.  Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Added punctuation and minor wording normalization for clearer text-to-speech pacing while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. Font of love, O Blessed Mother, lend me tears to mourn my Brother. Never let my ardor dim. Let my heart be burning freely. Christ my God, be pleased to see me all on fire with love for Him. O Mother of Sorrows, through thy Fifth Sorrow, standing beneath thy dying Son on Mount Calvary, intercede for me with the Sacred Heart of Jesus, and grant me the favor I implore.  Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks slightly for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. This I ask, O Holy Mary: that His wounds I too may carry; fix them deeply in my heart. Mine the burden He was bearing; let me in His pain be sharing; of His suffering take a part. O Mother of Sorrows, through thy Sixth Sorrow, thy Jesus is laid in thy arms, intercede for me with the Sacred Heart of Jesus, and grant me the favor I implore.  Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while keeping wording faithful and preserving the control marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. Let me join in your lamenting. Through my life, weep unrelenting tears for Jesus Crucified. Let me stand and share your weeping, all the day death\u2019s vigil keeping, glad to stand close by your side. O Mother of Sorrows, through thy Seventh Sorrow, the Burial of thy Jesus, intercede for me with the Sacred Heart of Jesus, and grant me the favor I implore.  Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Lightly normalized punctuation and phrasing for clearer text-to-speech while preserving meaning, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. Queen of all the virgin choir, judge me not when I aspire to emulate your pure tears. Let me share in Christ\u2019s affliction, His death by bitter crucifixion, and commemorate His wounds. We give God thanks for the exaltation of His holy Cross, and ask, dear Mother of Sorrows, that you pray for us.  Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and corrected minor spelling for readability.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O sorrowful Mother, I turn to you in total trust. You suffered the sharpest pains in life, watching your Son die upon the Cross, and yet you remained by Him to the end. Look with favor upon me, a poor sinner, and obtain for me from your Son all the graces I need to endure the sufferings God allows me to face. Let me taste the pains He offered, drunk with love for Him who suffered. May His wounds become my own. On the day of Christ\u2019s returning, may my heart be lit and burning. Virgin, aid me at His throne. May His Cross be interceding, and His death my victory pleading. May He hold me in His grace. When my flesh by death is taken, may my soul to glory waken, and in heaven take a place. Amen. Blessed Mother, on this last day of our novena to you, we entrust ourselves to your heart, pierced with love for your Divine Son.  Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, I fly unto you, O Virgin of Virgins, my Mother. To you do I come, before you I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in your clemency, hear and answer me. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-our_lady_of_sorrows"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "our_lady_of_sorrows",
+      "name": "Our Lady of Sorrows"
+    },
+    "type": "novena_feast_rule"
+  }
+}

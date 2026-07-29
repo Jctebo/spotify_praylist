@@ -1,0 +1,224 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "our_lady_of_graces",
+    "feast": {
+      "day": 7,
+      "mode": "fixed",
+      "month": 2,
+      "name": "Our Lady of Graces"
+    },
+    "id": "our_lady_of_graces",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "Our Lady of Graces honors the Virgin Mary under this title, seeking her intercession and thanking God for the graces received through her maternal care."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of Graces Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Separated the Hail Holy Queen into its canonical prayer text on its own paragraph block and adjusted line breaks for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O heavenly treasurer of all graces, Mother of God and my Mother Mary, since you are the first-born daughter of the Eternal Father and hold in your hand His Omnipotence, be moved to pity my soul and grant me the graces which I fervently ask of You. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. I pray especially in this novena for the graces of"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "O my Mother, treasurer of all graces, refuge of poor sinners, consolation of the afflicted, hope of those who despair and most powerful help of Christians, I place all my confidence in you, being sure that you will obtain for me from Jesus the graces which I so much desire, if they are for the good of my soul. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O Holy Mother of God, That we may be made worthy of the promises of Christ. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of Graces Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Separated the Hail Holy Queen into its canonical prayer text on its own paragraph block and adjusted line breaks for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O heavenly treasurer of all graces, Mother of God and my Mother Mary, since you are the first-born daughter of the Eternal Father and hold in your hand His Omnipotence, be moved to pity my soul and grant me the graces which I fervently ask of You. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. I pray especially in this novena for the graces of  O my Mother, treasurer of all graces, refuge of poor sinners, consolation of the afflicted, hope of those who despair and most powerful help of Christians, I place all my confidence in you, being sure that you will obtain for me from Jesus the graces which I so much desire, if they are for the good of my soul. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O Holy Mother of God, That we may be made worthy of the promises of Christ. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Separated the Hail Holy Queen into its canonical prayer text on its own paragraph block and adjusted line breaks for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O heavenly treasurer of all graces, Mother of God and my Mother Mary, since you are the first-born daughter of the Eternal Father and hold in your hand His Omnipotence, be moved to pity my soul and grant me the graces which I fervently ask of You. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. I pray especially in this novena for the graces of  O my Mother, treasurer of all graces, refuge of poor sinners, consolation of the afflicted, hope of those who despair and most powerful help of Christians, I place all my confidence in you, being sure that you will obtain for me from Jesus the graces which I so much desire, if they are for the good of my soul. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O Holy Mother of God, That we may be made worthy of the promises of Christ. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Separated the Hail Holy Queen into its canonical prayer text on its own paragraph block and adjusted line breaks for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O heavenly treasurer of all graces, Mother of God and my Mother Mary, since you are the first-born daughter of the Eternal Father and hold in your hand His Omnipotence, be moved to pity my soul and grant me the graces which I fervently ask of You. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. I pray especially in this novena for the graces of  O my Mother, treasurer of all graces, refuge of poor sinners, consolation of the afflicted, hope of those who despair and most powerful help of Christians, I place all my confidence in you, being sure that you will obtain for me from Jesus the graces which I so much desire, if they are for the good of my soul. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O Holy Mother of God, That we may be made worthy of the promises of Christ. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Separated the Hail Holy Queen into its canonical prayer text on its own paragraph block and adjusted line breaks for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O heavenly treasurer of all graces, Mother of God and my Mother Mary, since you are the first-born daughter of the Eternal Father and hold in your hand His Omnipotence, be moved to pity my soul and grant me the graces which I fervently ask of You. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. I pray especially in this novena for the graces of  O my Mother, treasurer of all graces, refuge of poor sinners, consolation of the afflicted, hope of those who despair and most powerful help of Christians, I place all my confidence in you, being sure that you will obtain for me from Jesus the graces which I so much desire, if they are for the good of my soul. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O Holy Mother of God, That we may be made worthy of the promises of Christ. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Separated the Hail Holy Queen into its canonical prayer text on its own paragraph block and adjusted line breaks for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O heavenly treasurer of all graces, Mother of God and my Mother Mary, since you are the first-born daughter of the Eternal Father and hold in your hand His Omnipotence, be moved to pity my soul and grant me the graces which I fervently ask of You. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. I pray especially in this novena for the graces of  O my Mother, treasurer of all graces, refuge of poor sinners, consolation of the afflicted, hope of those who despair and most powerful help of Christians, I place all my confidence in you, being sure that you will obtain for me from Jesus the graces which I so much desire, if they are for the good of my soul. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O Holy Mother of God, That we may be made worthy of the promises of Christ. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Separated the Hail Holy Queen into its canonical prayer text on its own paragraph block and adjusted line breaks for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O heavenly treasurer of all graces, Mother of God and my Mother Mary, since you are the first-born daughter of the Eternal Father and hold in your hand His Omnipotence, be moved to pity my soul and grant me the graces which I fervently ask of You. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. I pray especially in this novena for the graces of  O my Mother, treasurer of all graces, refuge of poor sinners, consolation of the afflicted, hope of those who despair and most powerful help of Christians, I place all my confidence in you, being sure that you will obtain for me from Jesus the graces which I so much desire, if they are for the good of my soul. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O Holy Mother of God, That we may be made worthy of the promises of Christ. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Separated the Hail Holy Queen into its canonical prayer text on its own paragraph block and adjusted line breaks for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O heavenly treasurer of all graces, Mother of God and my Mother Mary, since you are the first-born daughter of the Eternal Father and hold in your hand His Omnipotence, be moved to pity my soul and grant me the graces which I fervently ask of You. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. I pray especially in this novena for the graces of  O my Mother, treasurer of all graces, refuge of poor sinners, consolation of the afflicted, hope of those who despair and most powerful help of Christians, I place all my confidence in you, being sure that you will obtain for me from Jesus the graces which I so much desire, if they are for the good of my soul. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O Holy Mother of God, That we may be made worthy of the promises of Christ. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Separated the Hail Holy Queen into its canonical prayer text on its own paragraph block and adjusted line breaks for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O heavenly treasurer of all graces, Mother of God and my Mother Mary, since you are the first-born daughter of the Eternal Father and hold in your hand His Omnipotence, be moved to pity my soul and grant me the graces which I fervently ask of You. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. I pray especially in this novena for the graces of  O my Mother, treasurer of all graces, refuge of poor sinners, consolation of the afflicted, hope of those who despair and most powerful help of Christians, I place all my confidence in you, being sure that you will obtain for me from Jesus the graces which I so much desire, if they are for the good of my soul. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O Holy Mother of God, That we may be made worthy of the promises of Christ. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Separated the Hail Holy Queen into its canonical prayer text on its own paragraph block and adjusted line breaks for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O heavenly treasurer of all graces, Mother of God and my Mother Mary, since you are the first-born daughter of the Eternal Father and hold in your hand His Omnipotence, be moved to pity my soul and grant me the graces which I fervently ask of You. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. I pray especially in this novena for the graces of  O my Mother, treasurer of all graces, refuge of poor sinners, consolation of the afflicted, hope of those who despair and most powerful help of Christians, I place all my confidence in you, being sure that you will obtain for me from Jesus the graces which I so much desire, if they are for the good of my soul. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope. To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. Pray for us, O Holy Mother of God, That we may be made worthy of the promises of Christ. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-our_lady_of_graces"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "our_lady_of_graces",
+      "name": "Our Lady of Graces"
+    },
+    "type": "novena_feast_rule"
+  }
+}

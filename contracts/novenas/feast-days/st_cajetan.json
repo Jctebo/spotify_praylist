@@ -9,6 +9,20 @@
       "name": "St. Cajetan"
     },
     "id": "st_cajetan",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "job seekers",
+        "the unemployed",
+        "bankers"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Cajetan was an Italian priest who co-founded the Theatines and worked to renew the Church through preaching, charity, and care for the poor."
+    },
     "novena": {
       "content_mode": "fixed",
       "duration_days": 9,
@@ -27,52 +41,24 @@
             ],
             "key": "days-1",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Made minor punctuation and phrasing adjustments for smoother text-to-speech while preserving meaning, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
               },
               {
-                "kind": "text",
-                "text": "O glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "You were a model of virtue among the priests of your time, O Saint Cajetan. You sought not to receive payments from your ministry, and you taught people how to pray the rosary and develop devotions to saints. You were truly a spiritual shepherd, and your concern was always focused on the salvation of souls. But despite this, you were also aware that with hungry stomachs, the faithful would have difficulty in understanding God’s Word. You embarked to help them, not just by giving them bread but helping them gain their living by work. Look on us with pity, O glorious saint. We have many unemployed people in our midst and their families go hungry. We ask you to guide the fathers and mothers who are looking for work. Amen."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "St Cajetan, pray for us."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. You were a model of virtue among the priests of your time, O St. Cajetan. You sought not to receive payments from your ministry, and you taught people how to pray the rosary and develop devotions to saints. You were truly a spiritual shepherd, and your concern was always focused on the salvation of souls. But despite this, you were also aware that with hungry stomachs, the faithful would have difficulty in understanding God\u2019s Word. You embarked to help them, not just by giving them bread, but helping them gain their living by work. Look on us with pity, O glorious saint. We have many unemployed people in our midst, and their families go hungry. We ask you to guide the fathers and mothers who are looking for work. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 1"
@@ -83,52 +69,24 @@
             ],
             "key": "days-2",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Made minor punctuation and capitalization adjustments for smoother text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, and helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint. You, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
               },
               {
-                "kind": "text",
-                "text": "O glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "Despite your busy schedule, dear saint, you spent eight hours a day in prayer. Your happiness consists in being united with Jesus, to savor his presence in the Eucharist. Guide us to be like you by giving priority to prayer in our life. Enable us to savor Jesus’ presence and help us become contemplatives like you. Inspire us to understand that prayer is not just asking Jesus for our needs, but being with him, delighting in his presence. We ask you, dear saint, to lead us in this direction that we may learn to delight in Jesus’ presence. Amen."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "St Cajetan, pray for us."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. Despite your busy schedule, dear saint, you spent eight hours a day in prayer. Your happiness consists in being united with Jesus, to savor His presence in the Eucharist. Guide us to be like you by giving priority to prayer in our life. Enable us to savor Jesus\u2019 presence, and help us become contemplatives like you. Inspire us to understand that prayer is not just asking Jesus for our needs, but being with Him, delighting in His presence. We ask you, dear saint, to lead us in this direction, that we may learn to delight in Jesus\u2019 presence. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 2"
@@ -139,52 +97,24 @@
             ],
             "key": "days-3",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and a few contractions for clearer text-to-speech pacing while preserving meaning and canonical prayers verbatim.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint. You, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
               },
               {
-                "kind": "text",
-                "text": "O glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "Since your death, dear Saint Cajetan, the unemployed people of the world had sought your intercession. Work is the key to a happy life. Look with pity on the millions of people in our country who wake up each morning without certainty of finding food because they don’t have work. These people become victims of desperation and some even resort to crimes to survive. Help our government leaders formulate policies that will bring about employment. You who established a bank for the needy inspire our leaders to extend loans for the poor so that they may provide for the needs of their families. Amen."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "St Cajetan, pray for us."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. Since your death, dear St. Cajetan, the unemployed people of the world have sought your intercession. Work is the key to a happy life. Look with pity on the millions of people in our country who wake up each morning without certainty of finding food because they do not have work. These people become victims of desperation, and some even resort to crimes to survive. Help our government leaders formulate policies that will bring about employment. You who established a bank for the needy, inspire our leaders to extend loans for the poor so that they may provide for the needs of their families. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 3"
@@ -195,52 +125,24 @@
             ],
             "key": "days-4",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Made minor punctuation and line-break adjustments for clearer text-to-speech pacing, and expanded \u201cSt\u201d to \u201cSaint\u201d in spoken lines.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint. You, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
               },
               {
-                "kind": "text",
-                "text": "O glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "O glorious Saint Cajetan, like the society where you lived, we are also beset by the same economic set up where the poor are becoming poorer and the rich, richer. You fasted so that the money you saved could be used to buy food for the poor, you did not accept any payment for your ministries because you wanted people to help the needy. You lived very frugally because you wanted to teach the rich about the need to share. Look with pity on our society where resources are wasted in buying useless goods, while the poor and the needy among us have not received the basic necessities. Inspire us to share that nobody among us would go hungry, and that everybody may live with dignity. Amen."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "St Cajetan, pray for us."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. O glorious Saint Cajetan, like the society where you lived, we are also beset by the same economic set up, where the poor are becoming poorer and the rich, richer. You fasted so that the money you saved could be used to buy food for the poor. You did not accept any payment for your ministries because you wanted people to help the needy. You lived very frugally because you wanted to teach the rich about the need to share. Look with pity on our society, where resources are wasted in buying useless goods, while the poor and the needy among us have not received the basic necessities. Inspire us to share, that nobody among us would go hungry, and that everybody may live with dignity. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 4"
@@ -251,52 +153,24 @@
             ],
             "key": "days-5",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Made minor punctuation and phrasing adjustments for smoother text-to-speech while preserving meaning, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint. You, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
               },
               {
-                "kind": "text",
-                "text": "O glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "O glorious Saint Cajetan, you spent long hours helping the sick and worked yourself to exhaustion in helping victims of plagues which were frequent in your time. You cared for the sick not just to heal them, but to guide them to a happy death. You wanted their souls, not their bodies. Help us to understand that we have to prepare ourselves to a happy death. May we likewise see that the most terrible sickness is our sinfulness, and we always have to examine ourselves for the sins we commit daily. Inspire us to have repentant hearts that we may always be prepared to meet the Lord. Amen."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "St Cajetan, pray for us."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. O glorious St. Cajetan, you spent long hours helping the sick, and worked yourself to exhaustion in helping victims of plagues which were frequent in your time. You cared for the sick not just to heal them, but to guide them to a happy death. You wanted their souls, not their bodies. Help us to understand that we have to prepare ourselves for a happy death. May we likewise see that the most terrible sickness is our sinfulness, and that we always have to examine ourselves for the sins we commit daily. Inspire us to have repentant hearts, that we may always be prepared to meet the Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 5"
@@ -307,52 +181,24 @@
             ],
             "key": "days-6",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and standardized \u201cSt.\u201d with a period.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint. You, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
               },
               {
-                "kind": "text",
-                "text": "O glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "O humble Saint Cajetan, you spoke with rulers and kings, but you never gave them much importance. You know that prestige, honor, and positions in society could only be good if they are used to help the needy and the poor. For this reason, you also confronted tyrants and stood against armies that looted, killed, and raped. Your humility did not prevent you from becoming a prophet. You only feared Jesus. Help us to remain humble and self-effacing, knowing that before God, we remain nothing. We can only be someone if we stand close to Jesus. Inspire us to follow your footsteps so that we, too, may fight for justice and help stop corruption in our government. Amen."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "St Cajetan, pray for us."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. O humble St. Cajetan, you spoke with rulers and kings, but you never gave them much importance. You know that prestige, honor, and positions in society could only be good if they are used to help the needy and the poor. For this reason, you also confronted tyrants and stood against armies that looted, killed, and raped. Your humility did not prevent you from becoming a prophet. You only feared Jesus. Help us to remain humble and self-effacing, knowing that before God, we remain nothing. We can only be someone if we stand close to Jesus. Inspire us to follow your footsteps so that we, too, may fight for justice and help stop corruption in our government. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 6"
@@ -363,52 +209,24 @@
             ],
             "key": "days-7",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Minor punctuation and phrasing adjustments for smoother text-to-speech while preserving meaning, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint. You, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
               },
               {
-                "kind": "text",
-                "text": "O glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "O glorious Saint Cajetan, your unceasing fasting and penance help people understand that God must be loved above all things and above all persons. You sacrificed anything or anyone that could block you from loving God with your whole soul, mind, heart and body. By eating little, you showed to others that man does not live on bread alone. You renewed the faith of many people, touched their hearts, and helped much in the reformation of the Church. Inspire us to fast and do penance for our sins. Instill in us the spirit of sacrifice that we, too, may love God intensely as you did. Amen."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "St Cajetan, pray for us."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. O glorious St. Cajetan, your unceasing fasting and penance help people understand that God must be loved above all things and above all persons. You sacrificed anything or anyone that could block you from loving God with your whole soul, mind, heart, and body. By eating little, you showed others that man does not live on bread alone. You renewed the faith of many people, touched their hearts, and helped much in the reformation of the Church. Inspire us to fast and do penance for our sins. Instill in us the spirit of sacrifice, that we, too, may love God intensely as you did. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 7"
@@ -419,52 +237,24 @@
             ],
             "key": "days-8",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and prayer order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint. You, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
               },
               {
-                "kind": "text",
-                "text": "O glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "O glorious Saint Cajetan, it pained you to see the Catholic Church divided into hostile groups. You always prayed for unity in the Church, asking laypersons, priests, and bishops to support the Pope through preaching, prayer, and sacrifices. You see the Church as the bride of Christ, the sacrament by which men and women can become holy. You worked hard for the return of the Protestants to the Catholic Church, and you preached against Protestant reformers who were attacking the heart of Catholic teachings. Teach us then to work for unity in our Church and at the same time, to defend her from sects and religious movements that attack her. Inspire us to follow your path. Amen."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "St Cajetan, pray for us."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. O glorious St. Cajetan, it pained you to see the Catholic Church divided into hostile groups. You always prayed for unity in the Church, asking laypersons, priests, and bishops to support the Pope through preaching, prayer, and sacrifices. You saw the Church as the bride of Christ, the sacrament by which men and women can become holy. You worked hard for the return of the Protestants to the Catholic Church, and you preached against Protestant reformers who were attacking the heart of Catholic teachings. Teach us, then, to work for unity in our Church and, at the same time, to defend her from sects and religious movements that attack her. Inspire us to follow your path. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 8"
@@ -475,78 +265,27 @@
             ],
             "key": "days-9",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized capitalization for divine titles and added a period in \u201cSt. Cajetan\u201d for consistent TTS pacing.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
               },
               {
-                "kind": "text",
-                "text": "O glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "O glorious Saint Cajetan, you received many special blessings from Jesus, visions and mystical experiences because of your union with him. While contemplating the mystery of incarnation, Mary appeared to you and put on your lap the baby Jesus. You held on to the baby and made your heart his dwelling place. Jesus truly loved you and his Mother trusted you. Listen then to our petitions on this last day of our novena and bring them to Jesus. Prove to us that now in heaven you are closer to Jesus and he listens to you. Amen."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "St Cajetan, pray for us."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. O glorious St. Cajetan, you received many special blessings from Jesus, visions and mystical experiences because of your union with Him. While contemplating the mystery of the Incarnation, Mary appeared to you and put on your lap the baby Jesus. You held on to the baby and made your heart His dwelling place. Jesus truly loved you and His Mother trusted you. Listen then to our petitions on this last day of our novena and bring them to Jesus. Prove to us that now in heaven you are closer to Jesus and He listens to you. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 9"
-          }
-        ],
-        "fragments": [
-          {
-            "key": "our_father",
-            "kind": "fixed",
-            "notes": "canonical rosary prayer text",
-            "text": "Our Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.",
-            "title": "Our Father"
-          },
-          {
-            "key": "hail_mary",
-            "kind": "fixed",
-            "notes": "canonical rosary prayer text",
-            "text": "Hail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.",
-            "title": "Hail Mary"
-          },
-          {
-            "key": "glory_be",
-            "kind": "fixed",
-            "notes": "canonical rosary prayer text",
-            "text": "Glory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.",
-            "title": "Glory Be"
           }
         ],
         "sections": [
@@ -562,8 +301,8 @@
             ],
             "key": "day-1",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus\n\nAmen.\n\nYou were a model of virtue among the priests of your time, O Saint Cajetan. You sought not to receive payments from your ministry, and you taught people how to pray the rosary and develop devotions to saints. You were truly a spiritual shepherd, and your concern was always focused on the salvation of souls. But despite this, you were also aware that with hungry stomachs, the faithful would have difficulty in understanding God’s Word. You embarked to help them, not just by giving them bread but helping them gain their living by work. Look on us with pity, O glorious saint. We have many unemployed people in our midst and their families go hungry. We ask you to guide the fathers and mothers who are looking for work. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt Cajetan, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Made minor punctuation and phrasing adjustments for smoother text-to-speech while preserving meaning, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus  Amen. You were a model of virtue among the priests of your time, O St. Cajetan. You sought not to receive payments from your ministry, and you taught people how to pray the rosary and develop devotions to saints. You were truly a spiritual shepherd, and your concern was always focused on the salvation of souls. But despite this, you were also aware that with hungry stomachs, the faithful would have difficulty in understanding God\u2019s Word. You embarked to help them, not just by giving them bread, but helping them gain their living by work. Look on us with pity, O glorious saint. We have many unemployed people in our midst, and their families go hungry. We ask you to guide the fathers and mothers who are looking for work. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 1"
           },
           {
@@ -572,8 +311,8 @@
             ],
             "key": "day-2",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus\n\nAmen.\n\nDespite your busy schedule, dear saint, you spent eight hours a day in prayer. Your happiness consists in being united with Jesus, to savor his presence in the Eucharist. Guide us to be like you by giving priority to prayer in our life. Enable us to savor Jesus’ presence and help us become contemplatives like you. Inspire us to understand that prayer is not just asking Jesus for our needs, but being with him, delighting in his presence. We ask you, dear saint, to lead us in this direction that we may learn to delight in Jesus’ presence. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt Cajetan, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Made minor punctuation and capitalization adjustments for smoother text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, and helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint. You, who could easily give up the food on your table for the needy, bring our petitions to Jesus  Amen. Despite your busy schedule, dear saint, you spent eight hours a day in prayer. Your happiness consists in being united with Jesus, to savor His presence in the Eucharist. Guide us to be like you by giving priority to prayer in our life. Enable us to savor Jesus\u2019 presence, and help us become contemplatives like you. Inspire us to understand that prayer is not just asking Jesus for our needs, but being with Him, delighting in His presence. We ask you, dear saint, to lead us in this direction, that we may learn to delight in Jesus\u2019 presence. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 2"
           },
           {
@@ -582,8 +321,8 @@
             ],
             "key": "day-3",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus\n\nAmen.\n\nSince your death, dear Saint Cajetan, the unemployed people of the world had sought your intercession. Work is the key to a happy life. Look with pity on the millions of people in our country who wake up each morning without certainty of finding food because they don’t have work. These people become victims of desperation and some even resort to crimes to survive. Help our government leaders formulate policies that will bring about employment. You who established a bank for the needy inspire our leaders to extend loans for the poor so that they may provide for the needs of their families. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt Cajetan, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and a few contractions for clearer text-to-speech pacing while preserving meaning and canonical prayers verbatim.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint. You, who could easily give up the food on your table for the needy, bring our petitions to Jesus  Amen. Since your death, dear St. Cajetan, the unemployed people of the world have sought your intercession. Work is the key to a happy life. Look with pity on the millions of people in our country who wake up each morning without certainty of finding food because they do not have work. These people become victims of desperation, and some even resort to crimes to survive. Help our government leaders formulate policies that will bring about employment. You who established a bank for the needy, inspire our leaders to extend loans for the poor so that they may provide for the needs of their families. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 3"
           },
           {
@@ -592,8 +331,8 @@
             ],
             "key": "day-4",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus\n\nAmen.\n\nO glorious Saint Cajetan, like the society where you lived, we are also beset by the same economic set up where the poor are becoming poorer and the rich, richer. You fasted so that the money you saved could be used to buy food for the poor, you did not accept any payment for your ministries because you wanted people to help the needy. You lived very frugally because you wanted to teach the rich about the need to share. Look with pity on our society where resources are wasted in buying useless goods, while the poor and the needy among us have not received the basic necessities. Inspire us to share that nobody among us would go hungry, and that everybody may live with dignity. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt Cajetan, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Made minor punctuation and line-break adjustments for clearer text-to-speech pacing, and expanded \u201cSt\u201d to \u201cSaint\u201d in spoken lines.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint. You, who could easily give up the food on your table for the needy, bring our petitions to Jesus  Amen. O glorious Saint Cajetan, like the society where you lived, we are also beset by the same economic set up, where the poor are becoming poorer and the rich, richer. You fasted so that the money you saved could be used to buy food for the poor. You did not accept any payment for your ministries because you wanted people to help the needy. You lived very frugally because you wanted to teach the rich about the need to share. Look with pity on our society, where resources are wasted in buying useless goods, while the poor and the needy among us have not received the basic necessities. Inspire us to share, that nobody among us would go hungry, and that everybody may live with dignity. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 4"
           },
           {
@@ -602,8 +341,8 @@
             ],
             "key": "day-5",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus\n\nAmen.\n\nO glorious Saint Cajetan, you spent long hours helping the sick and worked yourself to exhaustion in helping victims of plagues which were frequent in your time. You cared for the sick not just to heal them, but to guide them to a happy death. You wanted their souls, not their bodies. Help us to understand that we have to prepare ourselves to a happy death. May we likewise see that the most terrible sickness is our sinfulness, and we always have to examine ourselves for the sins we commit daily. Inspire us to have repentant hearts that we may always be prepared to meet the Lord. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt Cajetan, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Made minor punctuation and phrasing adjustments for smoother text-to-speech while preserving meaning, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint. You, who could easily give up the food on your table for the needy, bring our petitions to Jesus  Amen. O glorious St. Cajetan, you spent long hours helping the sick, and worked yourself to exhaustion in helping victims of plagues which were frequent in your time. You cared for the sick not just to heal them, but to guide them to a happy death. You wanted their souls, not their bodies. Help us to understand that we have to prepare ourselves for a happy death. May we likewise see that the most terrible sickness is our sinfulness, and that we always have to examine ourselves for the sins we commit daily. Inspire us to have repentant hearts, that we may always be prepared to meet the Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 5"
           },
           {
@@ -612,8 +351,8 @@
             ],
             "key": "day-6",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus\n\nAmen.\n\nO humble Saint Cajetan, you spoke with rulers and kings, but you never gave them much importance. You know that prestige, honor, and positions in society could only be good if they are used to help the needy and the poor. For this reason, you also confronted tyrants and stood against armies that looted, killed, and raped. Your humility did not prevent you from becoming a prophet. You only feared Jesus. Help us to remain humble and self-effacing, knowing that before God, we remain nothing. We can only be someone if we stand close to Jesus. Inspire us to follow your footsteps so that we, too, may fight for justice and help stop corruption in our government. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt Cajetan, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and standardized \u201cSt.\u201d with a period.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint. You, who could easily give up the food on your table for the needy, bring our petitions to Jesus  Amen. O humble St. Cajetan, you spoke with rulers and kings, but you never gave them much importance. You know that prestige, honor, and positions in society could only be good if they are used to help the needy and the poor. For this reason, you also confronted tyrants and stood against armies that looted, killed, and raped. Your humility did not prevent you from becoming a prophet. You only feared Jesus. Help us to remain humble and self-effacing, knowing that before God, we remain nothing. We can only be someone if we stand close to Jesus. Inspire us to follow your footsteps so that we, too, may fight for justice and help stop corruption in our government. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 6"
           },
           {
@@ -622,8 +361,8 @@
             ],
             "key": "day-7",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus\n\nAmen.\n\nO glorious Saint Cajetan, your unceasing fasting and penance help people understand that God must be loved above all things and above all persons. You sacrificed anything or anyone that could block you from loving God with your whole soul, mind, heart and body. By eating little, you showed to others that man does not live on bread alone. You renewed the faith of many people, touched their hearts, and helped much in the reformation of the Church. Inspire us to fast and do penance for our sins. Instill in us the spirit of sacrifice that we, too, may love God intensely as you did. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt Cajetan, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Minor punctuation and phrasing adjustments for smoother text-to-speech while preserving meaning, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint. You, who could easily give up the food on your table for the needy, bring our petitions to Jesus  Amen. O glorious St. Cajetan, your unceasing fasting and penance help people understand that God must be loved above all things and above all persons. You sacrificed anything or anyone that could block you from loving God with your whole soul, mind, heart, and body. By eating little, you showed others that man does not live on bread alone. You renewed the faith of many people, touched their hearts, and helped much in the reformation of the Church. Inspire us to fast and do penance for our sins. Instill in us the spirit of sacrifice, that we, too, may love God intensely as you did. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 7"
           },
           {
@@ -632,8 +371,8 @@
             ],
             "key": "day-8",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus\n\nAmen.\n\nO glorious Saint Cajetan, it pained you to see the Catholic Church divided into hostile groups. You always prayed for unity in the Church, asking laypersons, priests, and bishops to support the Pope through preaching, prayer, and sacrifices. You see the Church as the bride of Christ, the sacrament by which men and women can become holy. You worked hard for the return of the Protestants to the Catholic Church, and you preached against Protestant reformers who were attacking the heart of Catholic teachings. Teach us then to work for unity in our Church and at the same time, to defend her from sects and religious movements that attack her. Inspire us to follow your path. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt Cajetan, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and prayer order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint. You, who could easily give up the food on your table for the needy, bring our petitions to Jesus  Amen. O glorious St. Cajetan, it pained you to see the Catholic Church divided into hostile groups. You always prayed for unity in the Church, asking laypersons, priests, and bishops to support the Pope through preaching, prayer, and sacrifices. You saw the Church as the bride of Christ, the sacrament by which men and women can become holy. You worked hard for the return of the Protestants to the Catholic Church, and you preached against Protestant reformers who were attacking the heart of Catholic teachings. Teach us, then, to work for unity in our Church and, at the same time, to defend her from sects and religious movements that attack her. Inspire us to follow your path. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 8"
           },
           {
@@ -642,8 +381,8 @@
             ],
             "key": "day-9",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO glorious Saint Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus\n\nAmen.\n\nO glorious Saint Cajetan, you received many special blessings from Jesus, visions and mystical experiences because of your union with him. While contemplating the mystery of incarnation, Mary appeared to you and put on your lap the baby Jesus. You held on to the baby and made your heart his dwelling place. Jesus truly loved you and his Mother trusted you. Listen then to our petitions on this last day of our novena and bring them to Jesus. Prove to us that now in heaven you are closer to Jesus and he listens to you. Amen.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt Cajetan, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized capitalization for divine titles and added a period in \u201cSt. Cajetan\u201d for consistent TTS pacing.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Cajetan, you studied to be a lawyer, but when you felt that the Lord was calling you to His service, you abandoned everything and became a priest. You excelled in virtues, shunning all material rewards for your labor, helping the many unemployed people of your time. You provided loans without interest, and you attracted benefactors who donated to your resources so that you could go on with your activities. Look on us with mercy. We wish to find employment that could help us and our families live with dignity. Listen to our petitions, dear saint; you, who could easily give up the food on your table for the needy, bring our petitions to Jesus  Amen. O glorious St. Cajetan, you received many special blessings from Jesus, visions and mystical experiences because of your union with Him. While contemplating the mystery of the Incarnation, Mary appeared to you and put on your lap the baby Jesus. You held on to the baby and made your heart His dwelling place. Jesus truly loved you and His Mother trusted you. Listen then to our petitions on this last day of our novena and bring them to Jesus. Prove to us that now in heaven you are closer to Jesus and He listens to you. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Cajetan, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 9"
           }
         ],
@@ -654,7 +393,38 @@
       "audio": {
         "enabled": true,
         "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
         "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
         "speed": 1.0,
         "voice": "ash"
       },

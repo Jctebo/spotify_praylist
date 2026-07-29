@@ -1,0 +1,440 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "our_lady_of_lourdes",
+    "feast": {
+      "day": 11,
+      "mode": "fixed",
+      "month": 2,
+      "name": "Our Lady of Lourdes"
+    },
+    "id": "our_lady_of_lourdes",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "Our Lady of Lourdes recalls the Marian apparitions to Saint Bernadette at Lourdes in 1858, calling people to prayer, penance, and trust in God\u2019s healing mercy."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of Lourdes Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "Minor punctuation adjustments for clearer text-to-speech pacing; content and structure preserved.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. Our Lady of Lourdes, chosen from all eternity to be the Mother of the Eternal Word, and in virtue of being the Immaculate Conception, we kneel before you as did young Bernadette at Lourdes, and pray with childlike trust in you, that as we contemplate your glorious appearance at Lourdes, you will look with mercy on our present petition, and secure for us a favorable answer to the request for which we are making this novena. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation slightly for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. We give you thanks, Almighty God, for sending your Blessed Mother to the Grotto of Lourdes, saying to Saint Bernadette: I am the Immaculate Conception. O Immaculate Mary, inflame our hearts with one ray of the burning love of your pure heart. Let them be consumed with love for Jesus and for you, in order that we may merit one day to enjoy your glorious eternity. O dispenser of His graces here below, take into your keeping and present to your Divine Son the petition for which we are making this novena. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "Minor punctuation adjustments for clearer text-to-speech pacing; meaning and structure preserved.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. O Mary, conceived without sin, pray for us who have recourse to thee. O star of sanctity, as on that day in Lourdes you spoke to Bernadette, and a fountain sprang forth from the ground, bringing with it miracles from our Lord. Now I beseech you to hear our fervent prayer, and grant us the petition we now so earnestly seek. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "Corrected a duplicated word and added light punctuation for clearer text-to-speech pacing while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. Queen of Heaven, we your wayward children join our unworthy prayers of praise and thanksgiving to those of the angels and saints, and your own. We pray the Holy Trinity may be glorified in heaven and on earth. Our Lady of Lourdes, as you looked down with love and mercy upon Bernadette as she prayed her rosary in the grotto, look down now, we beseech you, with love and mercy upon us. Obtain for us the graces from your Divine Son, and dispense them to us in our needs, in particular for the special favor we seek in this novena. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "Light punctuation adjustments for clearer text-to-speech pacing; meaning and paragraph structure preserved.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. O Mother of God and our mother, from the heights of your dignity look down mercifully upon us. While we, full of confidence in your unbounded goodness, and confident that your Divine Son will look favorably upon any request you make of Him in our behalf, beseech you to come to our aid and secure for us the favor we seek in this novena. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "Added minor punctuation and line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. O Blessed Mother, so powerful under your title of Our Lady of Lourdes, to you we raise our hearts and hands to implore your powerful intercession in obtaining from the gracious Heart of Jesus all the helps and graces necessary for our spiritual and temporal welfare, and for the special favor we so earnestly seek in this novena. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "Added a few commas for clearer text-to-speech pacing while keeping wording and structure the same.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. Father in Heaven, who by the Immaculate Conception of the Blessed Virgin Mary did prepare a worthy dwelling place for your Son, we humbly beseech you that as we contemplate the apparition of Our Lady of Lourdes, we may be blessed with health of mind and body. O most gracious Mother Mary, beloved Mother of Our Redeemer, look with favor upon us as you did that day on Bernadette, and intercede with Him for us, that the favor we now so earnestly seek may be granted to us. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while keeping wording faithful and preserving the intention marker.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. O Mary our Queen, from heaven itself you came to appear to Bernadette in the Grotto of Lourdes. And as Bernadette knelt at your feet, and the miraculous spring burst forth, O Mother of God, we kneel before you today to ask that, in your mercy, you plead with your Divine Son to grant the special favor we seek in this novena. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "Added a comma for clearer pacing and split the final invocations into their own paragraph for easier text-to-speech delivery.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. Immaculate Mother of our Lord Jesus Christ, to you we raise our hearts to implore your intercession in obtaining from the benign Heart of Jesus all the graces necessary for our spiritual and temporal welfare, particularly for the grace of a happy death. O Mother of our Divine Lord, graciously pray for us as we conclude this novena for the special favor we seek at this time. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of Lourdes Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Minor punctuation adjustments for clearer text-to-speech pacing; content and structure preserved.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests  Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. Our Lady of Lourdes, chosen from all eternity to be the Mother of the Eternal Word, and in virtue of being the Immaculate Conception, we kneel before you as did young Bernadette at Lourdes, and pray with childlike trust in you, that as we contemplate your glorious appearance at Lourdes, you will look with mercy on our present petition, and secure for us a favorable answer to the request for which we are making this novena. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation slightly for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests  Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. We give you thanks, Almighty God, for sending your Blessed Mother to the Grotto of Lourdes, saying to Saint Bernadette: I am the Immaculate Conception. O Immaculate Mary, inflame our hearts with one ray of the burning love of your pure heart. Let them be consumed with love for Jesus and for you, in order that we may merit one day to enjoy your glorious eternity. O dispenser of His graces here below, take into your keeping and present to your Divine Son the petition for which we are making this novena. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Minor punctuation adjustments for clearer text-to-speech pacing; meaning and structure preserved.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests  Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. O Mary, conceived without sin, pray for us who have recourse to thee. O star of sanctity, as on that day in Lourdes you spoke to Bernadette, and a fountain sprang forth from the ground, bringing with it miracles from our Lord. Now I beseech you to hear our fervent prayer, and grant us the petition we now so earnestly seek. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Corrected a duplicated word and added light punctuation for clearer text-to-speech pacing while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests  Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. Queen of Heaven, we your wayward children join our unworthy prayers of praise and thanksgiving to those of the angels and saints, and your own. We pray the Holy Trinity may be glorified in heaven and on earth. Our Lady of Lourdes, as you looked down with love and mercy upon Bernadette as she prayed her rosary in the grotto, look down now, we beseech you, with love and mercy upon us. Obtain for us the graces from your Divine Son, and dispense them to us in our needs, in particular for the special favor we seek in this novena. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Light punctuation adjustments for clearer text-to-speech pacing; meaning and paragraph structure preserved.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests  Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. O Mother of God and our mother, from the heights of your dignity look down mercifully upon us. While we, full of confidence in your unbounded goodness, and confident that your Divine Son will look favorably upon any request you make of Him in our behalf, beseech you to come to our aid and secure for us the favor we seek in this novena. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Added minor punctuation and line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests  Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. O Blessed Mother, so powerful under your title of Our Lady of Lourdes, to you we raise our hearts and hands to implore your powerful intercession in obtaining from the gracious Heart of Jesus all the helps and graces necessary for our spiritual and temporal welfare, and for the special favor we so earnestly seek in this novena. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Added a few commas for clearer text-to-speech pacing while keeping wording and structure the same.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests  Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. Father in Heaven, who by the Immaculate Conception of the Blessed Virgin Mary did prepare a worthy dwelling place for your Son, we humbly beseech you that as we contemplate the apparition of Our Lady of Lourdes, we may be blessed with health of mind and body. O most gracious Mother Mary, beloved Mother of Our Redeemer, look with favor upon us as you did that day on Bernadette, and intercede with Him for us, that the favor we now so earnestly seek may be granted to us. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while keeping wording faithful and preserving the intention marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests  Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. O Mary our Queen, from heaven itself you came to appear to Bernadette in the Grotto of Lourdes. And as Bernadette knelt at your feet, and the miraculous spring burst forth, O Mother of God, we kneel before you today to ask that, in your mercy, you plead with your Divine Son to grant the special favor we seek in this novena. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Added a comma for clearer pacing and split the final invocations into their own paragraph for easier text-to-speech delivery.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever Immaculate Virgin, Mother of Mercy, we call upon you as Health of the Sick, Refuge of Sinners, and Comfort to the Afflicted. You know my wants, my troubles, my sufferings. Deign to cast upon me a look of mercy. By appearing in the Grotto of Lourdes, you were pleased to make it a sanctuary whence you dispense your favors, and already many sufferers have obtained the cure of their infirmities, both spiritual and physical. I come, therefore, with the most unbounded confidence to implore your maternal intercession. Obtain, O loving Mother, the granting of my requests  Through gratitude for favors, I will endeavor to imitate your virtues, that I may one day share your glory. Immaculate Mother of our Lord Jesus Christ, to you we raise our hearts to implore your intercession in obtaining from the benign Heart of Jesus all the graces necessary for our spiritual and temporal welfare, particularly for the grace of a happy death. O Mother of our Divine Lord, graciously pray for us as we conclude this novena for the special favor we seek at this time. O star of purity, Mary Immaculate, Our Lady of Lourdes, glorious in your assumption, triumphant in your coronation, show unto us the mercy of thy Son. Virgin Mary, Queen and Mother, be our comfort, hope, strength, and consolation. Amen. Our Lady of Lourdes, pray for us. Saint Bernadette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-our_lady_of_lourdes"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "our_lady_of_lourdes",
+      "name": "Our Lady of Lourdes"
+    },
+    "type": "novena_feast_rule"
+  }
+}

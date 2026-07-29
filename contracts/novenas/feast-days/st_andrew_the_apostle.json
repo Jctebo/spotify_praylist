@@ -1,0 +1,602 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_andrew_the_apostle",
+    "feast": {
+      "day": 30,
+      "mode": "fixed",
+      "month": 11,
+      "name": "St Andrew the Apostle"
+    },
+    "id": "st_andrew_the_apostle",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "fishermen",
+        "Scotland",
+        "Greece"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St Andrew the Apostle was one of Jesus\u2019 first disciples and the brother of St Peter, who preached the Gospel and was martyred on an X-shaped cross."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Andrew the Apostle Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Glorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Dear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his openness to Your call in our own lives, that we may be as ready to serve You as he was. St. Andrew, you were one of the first people to be called personally by Our Lord. He called you and your brother St. Peter to leave behind your lives as fishermen and to follow Him as Apostles. You followed His call to become \u201cfishers of men.\u201d And you remained faithful to that call, staying with Him throughout His ministry and spreading the Gospel after His death. You probably never would have guessed that you would be invited to be one of the closest friends of the Son of God, but you left everything behind in order to follow Him. Pray for me, that I may be as ready to serve Christ as you were. St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Glorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Dear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his virtue in our daily lives, throughout the work we do each day. St. Andrew, you were no stranger to hard work. You spent much of your life performing the physical labor involved in the life of a professional fisherman. You did not move away from the demands of this work. Instead, you embraced it and attempted to do it well. When Jesus called you to leave your work behind and become a \u201cfisher of men,\u201d you immediately left your old life and dived into a new kind of work for the glory of God. Pray for me, as I strive for holiness amidst my daily work. Pray that, like you, my life may revolve around devotion to Christ. St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Glorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Dear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his faith in our own lives, that we may follow You as unreservedly as he did. St. Andrew, you left behind your old life as a fisherman when Our Lord called you to be His apostle. You did not know what this new life might entail, but you chose to follow Him readily in faith. Throughout Christ\u2019s public ministry, you remained close with Him and did not desert Him. After His death and resurrection, you carried out the mission of preaching the Gospel despite persecution. You had faith that God would reward you in Heaven. Pray for me, that I may remain faithful to God in my life, despite fears of the unknown or of suffering. St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Glorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Dear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his devotion and his close friendship with You, that we too may have a deep friendship with You. St. Andrew, you were one of the people who was closest to Jesus during His time on earth. Along with the other Apostles, you saw Him perform miracles and heard Him teach. You were with Him at the Last Supper when He gave us Himself in the Eucharist. You saw Him after He had risen from the dead. During the time you spent with Him, you developed a deep friendship with Him. Pray for me, that I may have a deep friendship with Christ. Pray that I may grow to love Him and serve Him as faithfully as you did. St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Glorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Dear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his zeal for Your glory and his deep desire to win souls for You. St. Andrew, you became a missionary for Christ after His death. He once called you to become a \u201cfisher of men,\u201d and you carried out this call by preaching the Gospel to others in the area near the Black Sea. Though Christians were persecuted and you knew that preaching about Christ could cause you to be killed, you did not waver in your mission. You continued trying to bring souls to God, until you were martyred for your missionary work. Pray for me, that I may be as zealous for souls as you were. Pray that I may never waver in preaching the Gospel, even if I must suffer because of it. St. Andrew, pray for us!"
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Glorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Dear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his love for You, especially for the Eucharist that he encountered for the first time at the Last Supper. St. Andrew, you were one of Our Lord\u2019s closest friends while He was on earth. With the other Apostles, you spent much time with Christ. You were one of the privileged men who shared the Last Supper with Him. You were there when He gave us His own Body and Blood in the Eucharist. You received from Him the immense gift of Himself that He continues to give us at each Mass. Pray for me, that I may always show the Eucharist the reverence It is due. Pray that I may always recognize what a gift Christ has given us in His Body and Blood. St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Glorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Dear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his courage in preaching the Gospel, that we may always be firm in our faith, no matter what it may cost us. St. Andrew, you readily accepted the mission from Jesus to become a \u201cfisher of men,\u201d and you carried out that mission until the end of your life. After Christ\u2019s death, resurrection, and ascension, Christians were often persecuted and killed. But despite this, you carried on courageously in your mission to preach the Gospel. You continued trying to win souls for Christ until your martyrdom, and you did not let the threat of suffering or death stop you. Pray for me, that I may have the courage to preach the Gospel against all obstacles as you did. St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Glorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Dear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his courage amidst suffering, that we may be ready to even give our lives for our faith if necessary. St. Andrew, you knew that being a Christian and spreading the Gospel would not be easy. You knew that Our Lord\u2019s words about the need to suffer for Him would be true in your own life. But even though remaining faithful to Him would mean your death, you did not waver in your faith. You willingly suffered for Christ and ultimately died for Him, knowing that your reward would be great in Heaven. Pray for me and for all who face the threat of suffering or death over their faith in Christ. Pray that we may have the strength to stand strong in our faith, even to the point of death if necessary. St. Andrew, pray for us!"
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Glorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Dear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his humility, that we may be as humble as he was when he thought himself unworthy to die in the same manner as Christ. St. Andrew, you worked with great bravery for the sake of the Gospel throughout your life, even continuing on courageously to the point of death. But like your brother St. Peter, you did not feel worthy to die in the same manner as Jesus did. When you were sentenced to death by crucifixion, you requested your cross to be different from Our Lord\u2019s, feeling that your death as a sinful man should not look outwardly identical to the death of Jesus. Pray for me, that I may have a true, humble understanding of my own sinfulness. St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "St. Andrew the Apostle, pray for us!"
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "fragments": [
+          {
+            "key": "our_father",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Our Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.",
+            "title": "Our Father"
+          },
+          {
+            "key": "hail_mary",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Hail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.",
+            "title": "Hail Mary"
+          },
+          {
+            "key": "glory_be",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Glory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.",
+            "title": "Glory Be"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Andrew the Apostle Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nGlorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen.\n\nDear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his openness to Your call in our own lives, that we may be as ready to serve You as he was. St. Andrew, you were one of the first people to be called personally by Our Lord. He called you and your brother St. Peter to leave behind your lives as fishermen and to follow Him as Apostles. You followed His call to become \u201cfishers of men.\u201d And you remained faithful to that call, staying with Him throughout His ministry and spreading the Gospel after His death. You probably never would have guessed that you would be invited to be one of the closest friends of the Son of God, but you left everything behind in order to follow Him. Pray for me, that I may be as ready to serve Christ as you were. St. Andrew the Apostle, pray for us!\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt. Andrew the Apostle, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nGlorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen.\n\nDear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his virtue in our daily lives, throughout the work we do each day. St. Andrew, you were no stranger to hard work. You spent much of your life performing the physical labor involved in the life of a professional fisherman. You did not move away from the demands of this work. Instead, you embraced it and attempted to do it well. When Jesus called you to leave your work behind and become a \u201cfisher of men,\u201d you immediately left your old life and dived into a new kind of work for the glory of God. Pray for me, as I strive for holiness amidst my daily work. Pray that, like you, my life may revolve around devotion to Christ. St. Andrew the Apostle, pray for us!\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt. Andrew the Apostle, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nGlorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen.\n\nDear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his faith in our own lives, that we may follow You as unreservedly as he did. St. Andrew, you left behind your old life as a fisherman when Our Lord called you to be His apostle. You did not know what this new life might entail, but you chose to follow Him readily in faith. Throughout Christ\u2019s public ministry, you remained close with Him and did not desert Him. After His death and resurrection, you carried out the mission of preaching the Gospel despite persecution. You had faith that God would reward you in Heaven. Pray for me, that I may remain faithful to God in my life, despite fears of the unknown or of suffering. St. Andrew the Apostle, pray for us!\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt. Andrew the Apostle, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nGlorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen.\n\nDear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his devotion and his close friendship with You, that we too may have a deep friendship with You. St. Andrew, you were one of the people who was closest to Jesus during His time on earth. Along with the other Apostles, you saw Him perform miracles and heard Him teach. You were with Him at the Last Supper when He gave us Himself in the Eucharist. You saw Him after He had risen from the dead. During the time you spent with Him, you developed a deep friendship with Him. Pray for me, that I may have a deep friendship with Christ. Pray that I may grow to love Him and serve Him as faithfully as you did. St. Andrew the Apostle, pray for us!\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt. Andrew the Apostle, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nGlorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen.\n\nDear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his zeal for Your glory and his deep desire to win souls for You. St. Andrew, you became a missionary for Christ after His death. He once called you to become a \u201cfisher of men,\u201d and you carried out this call by preaching the Gospel to others in the area near the Black Sea. Though Christians were persecuted and you knew that preaching about Christ could cause you to be killed, you did not waver in your mission. You continued trying to bring souls to God, until you were martyred for your missionary work. Pray for me, that I may be as zealous for souls as you were. Pray that I may never waver in preaching the Gospel, even if I must suffer because of it. St. Andrew, pray for us!\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt. Andrew the Apostle, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nGlorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen.\n\nDear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his love for You, especially for the Eucharist that he encountered for the first time at the Last Supper. St. Andrew, you were one of Our Lord\u2019s closest friends while He was on earth. With the other Apostles, you spent much time with Christ. You were one of the privileged men who shared the Last Supper with Him. You were there when He gave us His own Body and Blood in the Eucharist. You received from Him the immense gift of Himself that He continues to give us at each Mass. Pray for me, that I may always show the Eucharist the reverence It is due. Pray that I may always recognize what a gift Christ has given us in His Body and Blood. St. Andrew the Apostle, pray for us!\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt. Andrew the Apostle, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nGlorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen.\n\nDear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his courage in preaching the Gospel, that we may always be firm in our faith, no matter what it may cost us. St. Andrew, you readily accepted the mission from Jesus to become a \u201cfisher of men,\u201d and you carried out that mission until the end of your life. After Christ\u2019s death, resurrection, and ascension, Christians were often persecuted and killed. But despite this, you carried on courageously in your mission to preach the Gospel. You continued trying to win souls for Christ until your martyrdom, and you did not let the threat of suffering or death stop you. Pray for me, that I may have the courage to preach the Gospel against all obstacles as you did. St. Andrew the Apostle, pray for us!\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt. Andrew the Apostle, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nGlorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen.\n\nDear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his courage amidst suffering, that we may be ready to even give our lives for our faith if necessary. St. Andrew, you knew that being a Christian and spreading the Gospel would not be easy. You knew that Our Lord\u2019s words about the need to suffer for Him would be true in your own life. But even though remaining faithful to Him would mean your death, you did not waver in your faith. You willingly suffered for Christ and ultimately died for Him, knowing that your reward would be great in Heaven. Pray for me and for all who face the threat of suffering or death over their faith in Christ. Pray that we may have the strength to stand strong in our faith, even to the point of death if necessary. St. Andrew, pray for us!\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt. Andrew the Apostle, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nGlorious St. Andrew, you were the first to recognize and follow the Lamb of God. With your friend, St. John, you remained with Jesus for the first day, for your entire life, and now throughout eternity. As you led your brother, St. Peter, to Christ, and many others after him, draw us also to Him. Teach us to lead others to Christ solely out of love for Him and dedication to His service. Help us to learn the lesson of the Cross and carry our daily crosses without complaint, so that they may carry us to God the Almighty Father. Amen.\n\nDear Lord, we thank You for giving us St. Andrew the Apostle as an example of holiness. Help us to imitate his humility, that we may be as humble as he was when he thought himself unworthy to die in the same manner as Christ. St. Andrew, you worked with great bravery for the sake of the Gospel throughout your life, even continuing on courageously to the point of death. But like your brother St. Peter, you did not feel worthy to die in the same manner as Jesus did. When you were sentenced to death by crucifixion, you requested your cross to be different from Our Lord\u2019s, feeling that your death as a sinful man should not look outwardly identical to the death of Jesus. Pray for me, that I may have a true, humble understanding of my own sinfulness. St. Andrew the Apostle, pray for us!\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nSt. Andrew the Apostle, pray for us!\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_andrew_the_apostle"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_andrew_the_apostle",
+      "name": "St Andrew the Apostle"
+    },
+    "type": "novena_feast_rule"
+  }
+}

@@ -1,0 +1,440 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "holy_face_of_jesus",
+    "feast": {
+      "mode": "relative_to_romcal",
+      "name": "Holy Face of Jesus",
+      "romcal_id": "ash_wednesday",
+      "offset_days": -1
+    },
+    "id": "holy_face_of_jesus",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A novena honoring the Holy Face of Jesus, contemplating Christ\u2019s suffering and love and seeking mercy, reparation for sins, and spiritual renewal."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Holy Face of Jesus Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and capitalization for clearer TTS, added brief pacing breaks and a concise repetition cue, and separated headings into their own paragraphs without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face, reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured. Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. Daily Preparatory Prayer O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love, and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus, and for the glory of the Most Holy Trinity, Father, Son, and Holy Spirit."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Psalm 51, verses 3 and 4. Have mercy on me, O God, in Thy goodness. In Thy great tenderness, wipe away my faults. Wash me clean of my guilt. Purify me from my sin. O Most Holy Face of Jesus, look with tenderness on us who are sinners. Thou art a merciful God, full of love and compassion. Keep us pure of heart, so that we may see Thee always. Mary, our Mother, intercede for us. Saint Joseph, pray for us. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition: pardon and mercy. Prayer to Our Almighty Father Almighty Father, come into our hearts, and so fill us with Thy love that, forsaking all evil desires, we may embrace Thee, our only good. Show us, O Lord our God, what Thou art to us. Say to our souls, \u201cI am Thy salvation.\u201d Speak so that we may hear. Our hearts are before Thee. Open our ears. Let us hasten after Thy voice. Hide not Thy Face from us. We beseech Thee, O Lord. Open our hearts so that Thou mayst enter in. Repair the ruined mansions that Thou mayst dwell therein. Hear us, O Heavenly Father, for the sake of Thy only Son, Our Lord Jesus Christ, who lives and reigns with Thee and the Holy Spirit, one God, now and forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, added a brief repetition cue, and separated headings into their own paragraphs.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face, reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured. Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. DAILY PREPARATORY PRAYER O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus and for the glory of the most Holy Trinity, Father, Son and Holy Spirit."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Psalm 51, 5 to 6a. My offenses truly I know them; my sin is always before me. Against Thee, Thee alone, have I sinned; what is evil in Thy sight I have done. Prayer Most Holy Face of Jesus, we are truly sorry that we have hurt Thee so much by constantly doing what is wrong; and for all the good works we have failed to do. Immaculate Heart of Mary; Saint Joseph, intercede for us, help us to console the Most Holy Face of Jesus. Pray that we may share in the tremendous love Thou hast for one another and for the most Holy and Blessed Trinity. Amen. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; pardon and mercy. Prayer to the Holy Spirit Come, Holy Spirit, Sanctifier, all powerful God of love, Thou Who didst fill the Virgin Mary with grace, Thou Who didst wonderfully transform the hearts of the Apostles, Thou Who didst endow all Thy martyrs with a miraculous heroism, come and sanctify us; illumine our minds, strengthen our wills, purify our consciences, rectify our judgments, set our hearts on fire and preserve us from the misfortune of resisting Thine inspirations. We consecrate to Thee our understanding, our heart and our will, our whole being for time and for eternity. May our understanding be always submissive to Thy heavenly inspirations and to the teachings of Thy Holy Catholic Church, of which Thou art the infallible guide; may our heart be ever inflamed with love of God and neighbor; may our will be ever conformed to the divine will, and may our whole life be a faithful imitation of the life and virtues of Our Lord and Savior, Jesus Christ, to whom with the Father and Thee be honor and glory forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added line breaks and a brief repetition cue for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured! Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. DAILY PREPARATORY PRAYER O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus and for the glory of the most Holy Trinity, Father, Son and Holy Spirit."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Psalm 51, 6b-7. Thou art just when Thou dost pass sentence on me, blameless when Thou givest judgment. Thou knowest I was born guilty, a sinner from the moment of conception. Prayer of Pope Pius IX O Jesus! Cast upon us a look of mercy; turn Thy Face towards each of us as Thou didst to Veronica; not that we may see it with our bodily eyes, for this we do not deserve, but turn it towards our hearts, so that, remembering Thee, we may ever draw from this fountain of strength the vigor necessary to sustain the combats of life. Amen. Mary, Our Mother, and Saint Joseph, pray for us. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; Pardon and Mercy. Prayer of Saint Francis All highest, glorious God, cast Thy light into the darkness of our hearts, give us true faith, firm hope, perfect charity and profound humility, so that with wisdom, courage and perception, O Lord, we may do what is truly Thy holy will. Amen. Prayer to the Angels and Saints We salute Thee, through the Holy Face and Sacred Heart of Jesus, O all ye Holy Angels and Saints of God. We rejoice in Thy glory, and we give thanks to Our Lord for all the benefits which He has showered upon ye; we praise Him and glorify Him, and offer ye, for an increase of Thy joy and honor, the most Holy Face and gentle Heart of Jesus. Pray that we may become formed according to the heart of God. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added punctuation and line breaks for clearer text-to-speech pacing, and made the threefold repetition cue explicit without changing the prayer text.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured! Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. DAILY PREPARATORY PRAYER O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus and for the glory of the most Holy Trinity, Father, Son and Holy Spirit."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Indeed, Thou dost love truth in the heart; then in the secret of my heart teach me Wisdom. O purify me, then I shall be clean; O wash me, I shall be whiter than snow. Prayer O Lord Jesus, Who has said, learn of me for I am meek and humble of heart, and Who did manifest upon Thy Holy Face the sentiments of Thy divine heart, grant that we may love to come frequently and meditate upon Thy divine features. We may read there Thy gentleness and Thy humility, and learn how to form our hearts in the practice of these two virtues which Thou desirest to see shine in Thy servants. Mary our Mother and Saint Joseph help us. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; Pardon and Mercy. Prayer in Honor of the Dolors of the Blessed Virgin O Most Holy and afflicted Virgin, Queen of Martyrs! Who stood beneath the cross, witnessing the agony of thy dying Son, look down with a mother\u2019s tenderness and pity on us as we kneel before thee to venerate thy Dolors, and place our requests, with filial confidence, in the sanctuary of thy wounded heart. Present them on our behalf to Jesus, through the merits of His most sacred Passion and Death, together with thy sufferings at the foot of the cross, and, through the united efficacy of both, obtain the favor which we humbly ask. To whom shall we go in our wants and miseries if not to thee? O Mother of Mercy, who having so deeply drunk of the chalice of thy Son, graciously alleviate the sufferings of those who still sigh in this land of exile. Amen. Prayer to the Souls in Purgatory My Jesus, by the sorrows Thou didst suffer in Thine agony in the garden, in Thine scourging and crowning with thorns, in the way to Calvary, in Thine crucifixion and death, have mercy on the souls in Purgatory, and especially on those that are most forsaken. Deliver them from the dire torments they endure. Call them and admit them to Thy most sweet embrace in Paradise. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, added brief repetition cue, and separated headings and attribution into speakable lines.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face, reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured! Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. Daily Preparatory Prayer O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus, and for the glory of the Most Holy Trinity, Father, Son, and Holy Spirit."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Make me hear rejoicing and gladness, that the bones Thou hast crushed may revive. From my sins turn away Thy Face, and blot out all my guilt. Prayer Holy Face of Jesus, Sacred Countenance of God, how great is Thy patience with humankind, how infinite Thy forgiveness. We are sinners, yet Thou lovest us. This gives us courage. For the glory of Thy Holy Face and of the Blessed Trinity, hear and answer us. Mary our Mother, intercede for us; Saint Joseph, pray for us. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; Pardon and Mercy. Prayer to Saint Joseph Dear Saint Joseph! Adopt us as thy children, take charge of our salvation; watch over us day and night; preserve us from occasions of sin; obtain for us purity of body and soul, and the spirit of prayer. Through thy intercession with Jesus, grant us a spirit of sacrifice, of humility and self-denial; obtain for us a burning love for Jesus in the Blessed Sacrament, and a sweet, tender love for Mary, our Mother. Saint Joseph, be with us in life, be with us in death, and obtain for us a favorable judgment from Jesus, our merciful Savior. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added pacing paragraph breaks, clarified the quote attribution for speech, and inserted a concise repetition cue while preserving all canonical prayers and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face, reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured. Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. DAILY PREPARATORY PRAYER O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus and for the glory of the most Holy Trinity, Father, Son and Holy Spirit."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. A pure heart create for us, O God; put a steadfast spirit within us. Do not cast us away from Thy presence nor deprive us of Thy Holy Spirit. Prayer May our hearts be cleansed, O Lord, by the inpouring of the Holy Spirit, and may He render them fruitful by watering them with His heavenly dew. Mary, most chaste spouse of the Holy Spirit, intercede for us. Saint Joseph, pray for us. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; Pardon and Mercy. Prayer to Saint Michael the Archangel O Victorious Prince, most humble guardian of the Church of God and of faithful souls, who with such charity and zeal took part in so many conflicts and gained such great victories over the enemy; for the conservation and protection of the honor and glory we all owe to God, as well as for the promotion of our salvation, come, we pray Thee, to our assistance, for we are continually besieged with such great perils by Thy enemies: the flesh, the world, and the devil; and as Thou wast a leader for the people of God through the desert, so also be our faithful leader and companion through the desert of this world, until Thou conduct us safely into the happy land of the living, in that blessed fatherland from which we are all exiles. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation, spacing, and line breaks for clearer text-to-speech pacing, and restored the missing \u201cO Mary\u201d at the start of the Marian prayer.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured! Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. DAILY PREPARATORY PRAYER O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus and for the glory of the most Holy Trinity, Father, Son and Holy Spirit."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Give me again the joy of Thy help, with a spirit of fervor sustain me; that I may teach transgressors Thy ways and sinners may return to Thee. Prayer Lord Jesus! After contemplating Thy features, disfigured by grief, after meditating upon Thy passion with compunction and love, how can our hearts fail to be inflamed with a holy hatred of sin, which even now outrages Thy Adorable Face! Lord, suffer us not to be content with mere compassion, but give us grace to so closely follow Thee in this Calvary, so that the opprobrium destined for Thee may fall on us, O Jesus, that thus we may have a share, small though it may be, in expiation of sin. Amen. Mary, our Mother, intercede for us. Saint Joseph, pray for us. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; Pardon and Mercy. Prayer in Honor of Mary Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. O Mary, our mistress, our wealth, our mystic rose, Queen of our hearts, our Mother, our life, our sweetness, and our dearest hope! We are all thine, and all we have is thine. O Virgin blessed above all things, may thy soul be in us to magnify the Lord; may thy spirit be in us to rejoice in God. Place thyself, O faithful Virgin, as a seal upon our hearts, that in thee and through thee we may be found faithful to God. Grant, most gracious Virgin, that we may be numbered among those whom thou art pleased to love, to teach and to guide, to favor and to protect as thy children. Grant that with the help of thy love, we may despise all earthly consolation and cling to heavenly things, until through the Holy Spirit, thy faithful spouse, and through thee, His faithful spouse, Jesus Christ, thy Son, be formed within us for the glory of the Father. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and spacing for clearer text-to-speech pacing, added headings on separate lines, and clarified the threefold repetition with a brief cue.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face, reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured. Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. Daily Preparatory Prayer O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus, and for the glory of the Most Holy Trinity, Father, Son and Holy Spirit."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. O rescue me, God my helper, and my tongue shall ring out Thy goodness. O Lord, open my lips, and my mouth shall declare Thy praise. Prayer Most merciful Face of Jesus, Who in this vale of tears was so moved by our misfortunes to call Thyself the healer of the sick, and the good Shepherd of the souls gone astray, allow not Satan to draw us away from Thee, but keep us always under Thy loving protection, together with all souls who endeavor to console Thee. Mary, our Mother, intercede for us. Saint Joseph, pray for us. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; Pardon and Mercy. Prayer to Saint Peter O glorious Saint Peter, who, in return for thy lively and generous faith, thy profound and sincere humility and thy burning love, was honored by Jesus Christ with singular privileges, and in particular, with the leadership of the other apostles and the primacy of the whole Church, of which thou wast made the foundation stone, do thou obtain for us the grace of a lively faith that shall not fear to profess itself openly in its entirety and in all of its manifestations, even to the shedding of blood, if occasion should demand it, and to the sacrifice of life itself in preference to surrender. Obtain for us likewise a sincere loyalty to our Holy Mother the Church. Grant that we may ever remain most closely and sincerely united to the Holy Father, who is the heir of thy faith and of thy authority, the one true visible head of the Catholic Church. Grant, moreover, that we may follow, in all humility and meekness, the Church\u2019s teaching and counsels and may be obedient to all her precepts, in order to be able here on earth to enjoy a peace that is sure and undisturbed, and to attain one day in heaven to everlasting happiness. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized headings and spacing for clearer pacing, removed a duplicated partial doxology line by restoring the full Glory Be, and added a brief cue for the threefold repetition.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face, reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured. Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. Daily Preparatory Prayer O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus and for the glory of the most Holy Trinity, Father, Son and Holy Spirit."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. For in sacrifice Thou take no delight, a burnt offering from me Thou wouldst refuse; my sacrifice a contrite spirit. A humbled, contrite heart Thou wilt not spurn. In Thy goodness, show favor to Zion; rebuild the walls of Jerusalem. Then Thou shalt be pleased with lawful sacrifice; holocausts offered on Thy altar. Prayer Sacred Face of Our Lord and Our God, what words can we say to express our gratitude? How can we speak of our joy? That Thou hast deigned to hear us, that Thou hast chosen to answer us in our hour of need. We say this because we know that our prayers will be granted. We know that Thou, in Thy loving kindness, listened to our pleading hearts, and will give, out of Thy fullness, the answer to our problems. Mary, our Mother, we thank Thee for Thy intercession on our behalf. Saint Joseph, we thank Thee for Thine prayers. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; Pardon and Mercy. Prayer to the Holy Trinity Most Holy Trinity, Godhead indivisible, Father, Son, and Holy Spirit, our first beginning and our last end. Since Thou hast made us after Thy own image and likeness, grant that all the thoughts of our minds, all the words of our tongues, all the affections of our hearts, and all our actions may be always conformed to Thy most Holy Will, so that after having seen Thee here on earth in appearances and in a dark manner by the means of faith, we may come at last to contemplate Thee face to face, in the perfect possession of Thee forever in paradise. Amen. Act of Consecration O Lord Jesus, we believe most firmly in You, we love You. You are the Eternal Son of God and the Son Incarnate of the Blessed Virgin Mary. You are the Lord and Absolute Ruler of all creation. We acknowledge You, therefore, as the Universal Sovereign of all creatures. You are the Lord and Supreme Ruler of all mankind, and we, in acknowledging this Your dominion, consecrate ourselves to You now and forever. Loving Jesus, we place our family under the protection of Your Holy Face, and of Your Virgin Mother, Mary most sorrowful. We promise to be faithful to You for the rest of our lives and to observe with fidelity Your Holy Commandments. We will never deny before men, You and Your Divine rights over us and all mankind. Grant us the grace to never sin again; nevertheless, should we fail, O Divine Saviour, have mercy on us and restore us to Your grace. Radiate Your Divine Countenance upon us and bless us now and forever. Embrace us at the hour of death in Your Kingdom for all eternity, through the intercession of Your Blessed Mother, of all Your Saints who behold You in Heaven, and the just who glorify You on earth. O Jesus, be mindful of us forever and never forsake us; protect our family. O Mother of Sorrows, by the eternal glory which you enjoy in Heaven, through the merits of your bitter anguish in the Sacred Passion of your Beloved Son, our Lord Jesus Christ, obtain for us the grace that the Precious Blood shed by Jesus for the redemption of our souls, be not shed for us in vain. We love you, O Mary. Embrace us and bless us, O Mother. Protect us in life and in death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and will be forever. Amen. The Golden Arrow Prayer May the most holy, most sacred, most adorable, most incomprehensible and ineffable Name of God be forever praised, blessed, loved, adored, and glorified in Heaven, on earth, and under the earth, by all the creatures of God, and by the Sacred Heart of Our Lord Jesus Christ, in the Most Holy Sacrament of the Altar. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Holy Face of Jesus Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and capitalization for clearer TTS, added brief pacing breaks and a concise repetition cue, and separated headings into their own paragraphs without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face, reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured. Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. Daily Preparatory Prayer O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love, and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus, and for the glory of the Most Holy Trinity, Father, Son, and Holy Spirit.  Amen. Psalm 51, verses 3 and 4. Have mercy on me, O God, in Thy goodness. In Thy great tenderness, wipe away my faults. Wash me clean of my guilt. Purify me from my sin. O Most Holy Face of Jesus, look with tenderness on us who are sinners. Thou art a merciful God, full of love and compassion. Keep us pure of heart, so that we may see Thee always. Mary, our Mother, intercede for us. Saint Joseph, pray for us. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition: pardon and mercy. Prayer to Our Almighty Father Almighty Father, come into our hearts, and so fill us with Thy love that, forsaking all evil desires, we may embrace Thee, our only good. Show us, O Lord our God, what Thou art to us. Say to our souls, \u201cI am Thy salvation.\u201d Speak so that we may hear. Our hearts are before Thee. Open our ears. Let us hasten after Thy voice. Hide not Thy Face from us. We beseech Thee, O Lord. Open our hearts so that Thou mayst enter in. Repair the ruined mansions that Thou mayst dwell therein. Hear us, O Heavenly Father, for the sake of Thy only Son, Our Lord Jesus Christ, who lives and reigns with Thee and the Holy Spirit, one God, now and forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, added a brief repetition cue, and separated headings into their own paragraphs.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face, reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured. Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. DAILY PREPARATORY PRAYER O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus and for the glory of the most Holy Trinity, Father, Son and Holy Spirit.  Amen. Psalm 51, 5 to 6a. My offenses truly I know them; my sin is always before me. Against Thee, Thee alone, have I sinned; what is evil in Thy sight I have done. Prayer Most Holy Face of Jesus, we are truly sorry that we have hurt Thee so much by constantly doing what is wrong; and for all the good works we have failed to do. Immaculate Heart of Mary; Saint Joseph, intercede for us, help us to console the Most Holy Face of Jesus. Pray that we may share in the tremendous love Thou hast for one another and for the most Holy and Blessed Trinity. Amen. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; pardon and mercy. Prayer to the Holy Spirit Come, Holy Spirit, Sanctifier, all powerful God of love, Thou Who didst fill the Virgin Mary with grace, Thou Who didst wonderfully transform the hearts of the Apostles, Thou Who didst endow all Thy martyrs with a miraculous heroism, come and sanctify us; illumine our minds, strengthen our wills, purify our consciences, rectify our judgments, set our hearts on fire and preserve us from the misfortune of resisting Thine inspirations. We consecrate to Thee our understanding, our heart and our will, our whole being for time and for eternity. May our understanding be always submissive to Thy heavenly inspirations and to the teachings of Thy Holy Catholic Church, of which Thou art the infallible guide; may our heart be ever inflamed with love of God and neighbor; may our will be ever conformed to the divine will, and may our whole life be a faithful imitation of the life and virtues of Our Lord and Savior, Jesus Christ, to whom with the Father and Thee be honor and glory forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added line breaks and a brief repetition cue for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured! Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. DAILY PREPARATORY PRAYER O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus and for the glory of the most Holy Trinity, Father, Son and Holy Spirit.  Amen. Psalm 51, 6b-7. Thou art just when Thou dost pass sentence on me, blameless when Thou givest judgment. Thou knowest I was born guilty, a sinner from the moment of conception. Prayer of Pope Pius IX O Jesus! Cast upon us a look of mercy; turn Thy Face towards each of us as Thou didst to Veronica; not that we may see it with our bodily eyes, for this we do not deserve, but turn it towards our hearts, so that, remembering Thee, we may ever draw from this fountain of strength the vigor necessary to sustain the combats of life. Amen. Mary, Our Mother, and Saint Joseph, pray for us. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; Pardon and Mercy. Prayer of Saint Francis All highest, glorious God, cast Thy light into the darkness of our hearts, give us true faith, firm hope, perfect charity and profound humility, so that with wisdom, courage and perception, O Lord, we may do what is truly Thy holy will. Amen. Prayer to the Angels and Saints We salute Thee, through the Holy Face and Sacred Heart of Jesus, O all ye Holy Angels and Saints of God. We rejoice in Thy glory, and we give thanks to Our Lord for all the benefits which He has showered upon ye; we praise Him and glorify Him, and offer ye, for an increase of Thy joy and honor, the most Holy Face and gentle Heart of Jesus. Pray that we may become formed according to the heart of God. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added punctuation and line breaks for clearer text-to-speech pacing, and made the threefold repetition cue explicit without changing the prayer text.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured! Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. DAILY PREPARATORY PRAYER O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus and for the glory of the most Holy Trinity, Father, Son and Holy Spirit.  Amen. Indeed, Thou dost love truth in the heart; then in the secret of my heart teach me Wisdom. O purify me, then I shall be clean; O wash me, I shall be whiter than snow. Prayer O Lord Jesus, Who has said, learn of me for I am meek and humble of heart, and Who did manifest upon Thy Holy Face the sentiments of Thy divine heart, grant that we may love to come frequently and meditate upon Thy divine features. We may read there Thy gentleness and Thy humility, and learn how to form our hearts in the practice of these two virtues which Thou desirest to see shine in Thy servants. Mary our Mother and Saint Joseph help us. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; Pardon and Mercy. Prayer in Honor of the Dolors of the Blessed Virgin O Most Holy and afflicted Virgin, Queen of Martyrs! Who stood beneath the cross, witnessing the agony of thy dying Son, look down with a mother\u2019s tenderness and pity on us as we kneel before thee to venerate thy Dolors, and place our requests, with filial confidence, in the sanctuary of thy wounded heart. Present them on our behalf to Jesus, through the merits of His most sacred Passion and Death, together with thy sufferings at the foot of the cross, and, through the united efficacy of both, obtain the favor which we humbly ask. To whom shall we go in our wants and miseries if not to thee? O Mother of Mercy, who having so deeply drunk of the chalice of thy Son, graciously alleviate the sufferings of those who still sigh in this land of exile. Amen. Prayer to the Souls in Purgatory My Jesus, by the sorrows Thou didst suffer in Thine agony in the garden, in Thine scourging and crowning with thorns, in the way to Calvary, in Thine crucifixion and death, have mercy on the souls in Purgatory, and especially on those that are most forsaken. Deliver them from the dire torments they endure. Call them and admit them to Thy most sweet embrace in Paradise. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, added brief repetition cue, and separated headings and attribution into speakable lines.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face, reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured! Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. Daily Preparatory Prayer O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus, and for the glory of the Most Holy Trinity, Father, Son, and Holy Spirit.  Amen. Make me hear rejoicing and gladness, that the bones Thou hast crushed may revive. From my sins turn away Thy Face, and blot out all my guilt. Prayer Holy Face of Jesus, Sacred Countenance of God, how great is Thy patience with humankind, how infinite Thy forgiveness. We are sinners, yet Thou lovest us. This gives us courage. For the glory of Thy Holy Face and of the Blessed Trinity, hear and answer us. Mary our Mother, intercede for us; Saint Joseph, pray for us. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; Pardon and Mercy. Prayer to Saint Joseph Dear Saint Joseph! Adopt us as thy children, take charge of our salvation; watch over us day and night; preserve us from occasions of sin; obtain for us purity of body and soul, and the spirit of prayer. Through thy intercession with Jesus, grant us a spirit of sacrifice, of humility and self-denial; obtain for us a burning love for Jesus in the Blessed Sacrament, and a sweet, tender love for Mary, our Mother. Saint Joseph, be with us in life, be with us in death, and obtain for us a favorable judgment from Jesus, our merciful Savior. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added pacing paragraph breaks, clarified the quote attribution for speech, and inserted a concise repetition cue while preserving all canonical prayers and the intention marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face, reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured. Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. DAILY PREPARATORY PRAYER O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus and for the glory of the most Holy Trinity, Father, Son and Holy Spirit.  Amen. A pure heart create for us, O God; put a steadfast spirit within us. Do not cast us away from Thy presence nor deprive us of Thy Holy Spirit. Prayer May our hearts be cleansed, O Lord, by the inpouring of the Holy Spirit, and may He render them fruitful by watering them with His heavenly dew. Mary, most chaste spouse of the Holy Spirit, intercede for us. Saint Joseph, pray for us. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; Pardon and Mercy. Prayer to Saint Michael the Archangel O Victorious Prince, most humble guardian of the Church of God and of faithful souls, who with such charity and zeal took part in so many conflicts and gained such great victories over the enemy; for the conservation and protection of the honor and glory we all owe to God, as well as for the promotion of our salvation, come, we pray Thee, to our assistance, for we are continually besieged with such great perils by Thy enemies: the flesh, the world, and the devil; and as Thou wast a leader for the people of God through the desert, so also be our faithful leader and companion through the desert of this world, until Thou conduct us safely into the happy land of the living, in that blessed fatherland from which we are all exiles. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation, spacing, and line breaks for clearer text-to-speech pacing, and restored the missing \u201cO Mary\u201d at the start of the Marian prayer.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured! Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. DAILY PREPARATORY PRAYER O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus and for the glory of the most Holy Trinity, Father, Son and Holy Spirit.  Amen. Give me again the joy of Thy help, with a spirit of fervor sustain me; that I may teach transgressors Thy ways and sinners may return to Thee. Prayer Lord Jesus! After contemplating Thy features, disfigured by grief, after meditating upon Thy passion with compunction and love, how can our hearts fail to be inflamed with a holy hatred of sin, which even now outrages Thy Adorable Face! Lord, suffer us not to be content with mere compassion, but give us grace to so closely follow Thee in this Calvary, so that the opprobrium destined for Thee may fall on us, O Jesus, that thus we may have a share, small though it may be, in expiation of sin. Amen. Mary, our Mother, intercede for us. Saint Joseph, pray for us. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; Pardon and Mercy. Prayer in Honor of Mary Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. O Mary, our mistress, our wealth, our mystic rose, Queen of our hearts, our Mother, our life, our sweetness, and our dearest hope! We are all thine, and all we have is thine. O Virgin blessed above all things, may thy soul be in us to magnify the Lord; may thy spirit be in us to rejoice in God. Place thyself, O faithful Virgin, as a seal upon our hearts, that in thee and through thee we may be found faithful to God. Grant, most gracious Virgin, that we may be numbered among those whom thou art pleased to love, to teach and to guide, to favor and to protect as thy children. Grant that with the help of thy love, we may despise all earthly consolation and cling to heavenly things, until through the Holy Spirit, thy faithful spouse, and through thee, His faithful spouse, Jesus Christ, thy Son, be formed within us for the glory of the Father. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and spacing for clearer text-to-speech pacing, added headings on separate lines, and clarified the threefold repetition with a brief cue.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face, reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured. Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. Daily Preparatory Prayer O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus, and for the glory of the Most Holy Trinity, Father, Son and Holy Spirit.  Amen. O rescue me, God my helper, and my tongue shall ring out Thy goodness. O Lord, open my lips, and my mouth shall declare Thy praise. Prayer Most merciful Face of Jesus, Who in this vale of tears was so moved by our misfortunes to call Thyself the healer of the sick, and the good Shepherd of the souls gone astray, allow not Satan to draw us away from Thee, but keep us always under Thy loving protection, together with all souls who endeavor to console Thee. Mary, our Mother, intercede for us. Saint Joseph, pray for us. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; Pardon and Mercy. Prayer to Saint Peter O glorious Saint Peter, who, in return for thy lively and generous faith, thy profound and sincere humility and thy burning love, was honored by Jesus Christ with singular privileges, and in particular, with the leadership of the other apostles and the primacy of the whole Church, of which thou wast made the foundation stone, do thou obtain for us the grace of a lively faith that shall not fear to profess itself openly in its entirety and in all of its manifestations, even to the shedding of blood, if occasion should demand it, and to the sacrifice of life itself in preference to surrender. Obtain for us likewise a sincere loyalty to our Holy Mother the Church. Grant that we may ever remain most closely and sincerely united to the Holy Father, who is the heir of thy faith and of thy authority, the one true visible head of the Catholic Church. Grant, moreover, that we may follow, in all humility and meekness, the Church\u2019s teaching and counsels and may be obedient to all her precepts, in order to be able here on earth to enjoy a peace that is sure and undisturbed, and to attain one day in heaven to everlasting happiness. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized headings and spacing for clearer pacing, removed a duplicated partial doxology line by restoring the full Glory Be, and added a brief cue for the threefold repetition.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. \u201cI firmly wish that my face, reflecting the intimate pains of my soul, the suffering and love of my heart, be more honoured. Whoever gazes upon me already consoles me.\u201d Our Lord Jesus Christ to Sister Pierre. Daily Preparatory Prayer O Most Holy and Blessed Trinity, through the intercession of Holy Mary, whose soul was pierced through by a sword of sorrow at the sight of the passion of her Divine Son, we ask your help in making a perfect Novena of reparation with Jesus, united with all His sorrows, love and total abandonment. We now implore all the Angels and Saints to intercede for us as we pray this Holy Novena to the Most Holy Face of Jesus and for the glory of the most Holy Trinity, Father, Son and Holy Spirit.  Amen. For in sacrifice Thou take no delight, a burnt offering from me Thou wouldst refuse; my sacrifice a contrite spirit. A humbled, contrite heart Thou wilt not spurn. In Thy goodness, show favor to Zion; rebuild the walls of Jerusalem. Then Thou shalt be pleased with lawful sacrifice; holocausts offered on Thy altar. Prayer Sacred Face of Our Lord and Our God, what words can we say to express our gratitude? How can we speak of our joy? That Thou hast deigned to hear us, that Thou hast chosen to answer us in our hour of need. We say this because we know that our prayers will be granted. We know that Thou, in Thy loving kindness, listened to our pleading hearts, and will give, out of Thy fullness, the answer to our problems. Mary, our Mother, we thank Thee for Thy intercession on our behalf. Saint Joseph, we thank Thee for Thine prayers. Through the merits of Thy precious blood and Thy Holy Face, O Jesus, grant us our petition; Pardon and Mercy. Prayer to the Holy Trinity Most Holy Trinity, Godhead indivisible, Father, Son, and Holy Spirit, our first beginning and our last end. Since Thou hast made us after Thy own image and likeness, grant that all the thoughts of our minds, all the words of our tongues, all the affections of our hearts, and all our actions may be always conformed to Thy most Holy Will, so that after having seen Thee here on earth in appearances and in a dark manner by the means of faith, we may come at last to contemplate Thee face to face, in the perfect possession of Thee forever in paradise. Amen. Act of Consecration O Lord Jesus, we believe most firmly in You, we love You. You are the Eternal Son of God and the Son Incarnate of the Blessed Virgin Mary. You are the Lord and Absolute Ruler of all creation. We acknowledge You, therefore, as the Universal Sovereign of all creatures. You are the Lord and Supreme Ruler of all mankind, and we, in acknowledging this Your dominion, consecrate ourselves to You now and forever. Loving Jesus, we place our family under the protection of Your Holy Face, and of Your Virgin Mother, Mary most sorrowful. We promise to be faithful to You for the rest of our lives and to observe with fidelity Your Holy Commandments. We will never deny before men, You and Your Divine rights over us and all mankind. Grant us the grace to never sin again; nevertheless, should we fail, O Divine Saviour, have mercy on us and restore us to Your grace. Radiate Your Divine Countenance upon us and bless us now and forever. Embrace us at the hour of death in Your Kingdom for all eternity, through the intercession of Your Blessed Mother, of all Your Saints who behold You in Heaven, and the just who glorify You on earth. O Jesus, be mindful of us forever and never forsake us; protect our family. O Mother of Sorrows, by the eternal glory which you enjoy in Heaven, through the merits of your bitter anguish in the Sacred Passion of your Beloved Son, our Lord Jesus Christ, obtain for us the grace that the Precious Blood shed by Jesus for the redemption of our souls, be not shed for us in vain. We love you, O Mary. Embrace us and bless us, O Mother. Protect us in life and in death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and will be forever. Amen. The Golden Arrow Prayer May the most holy, most sacred, most adorable, most incomprehensible and ineffable Name of God be forever praised, blessed, loved, adored, and glorified in Heaven, on earth, and under the earth, by all the creatures of God, and by the Sacred Heart of Our Lord Jesus Christ, in the Most Holy Sacrament of the Altar. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Repeat three times: O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. O Bleeding Face, O Face Divine, be every adoration Thine. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-holy_face_of_jesus"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "holy_face_of_jesus",
+      "name": "Holy Face of Jesus"
+    },
+    "type": "novena_feast_rule"
+  }
+}

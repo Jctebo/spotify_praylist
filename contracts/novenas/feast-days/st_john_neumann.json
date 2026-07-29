@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_john_neumann",
+    "feast": {
+      "day": 5,
+      "mode": "fixed",
+      "month": 1,
+      "name": "St John Neumann"
+    },
+    "id": "st_john_neumann",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "immigrants",
+        "Catholic education",
+        "diocese of Philadelphia"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. John Neumann was a 19th-century Catholic bishop of Philadelphia, known for serving immigrants and expanding Catholic schools and parishes."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St John Neumann Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken title line and adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer of St John Neumann, from his diary. My God, possess me, that I may become a fit instrument of your graces and mercies to the souls you have confided to my care. If you know that success will make me vain, do not, on that account, allow me to fail. Humble me in some other way, but do not punish me through those you have confided to me. My heart is pierced with sorrow when I hear of the loss of one of my sheep. Lord Jesus, have mercy. Permit not that any one of those whom you have entrusted to me should be lost. O my Jesus, I will pray, fast, suffer, and, with the help of your grace, sacrifice life itself. O Lord, imbue my words with power and healing, that they may glorify the truth. As for myself, I am fully satisfied with the labors assigned to me in your vineyard, for I came here to atone for my sins and to win souls for God. Nowhere can a better opportunity be found for doing good. May God grant me the grace to discharge my duties in a worthy and fruitful manner, especially"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "O my Jesus, though I am poor in so many ways and so ignorant, I have been chosen as a shepherd to your sheep. Give me an ever-increasing love for those souls redeemed by your Precious Blood, that I may labor at their salvation in wisdom, patience, and holiness. Grant that not one of those you have confided to me may be lost through my fault. O my Jesus, help me to sanctify those committed to my care. O holy Mother of my Lord, pray for me and for those in my vineyard. Holy guardian angels of these dear ones, teach me how to act toward them, so as to be able to instill into their hearts the maxims of faith and true love of God. Lord, teach me how to live and, if need be, to die, that all may be saved, that all may love and praise you throughout all eternity, that they may also love and cherish your dear Mother. Saint John Neumann, you organized Catholic education for countless children. Please watch over all Catholic schools and help them be a model of the Faith in their actions as well as their words. Dear Lord, make me selfless as St. John Neumann was. Throughout my life, give me the grace to direct my first thoughts to the service of Thee and of others. Make my prayer, Thy will be done, knowing that in Thy mercy and love, Thy will for me is my sanctification. Merciful Father, Thou hast given me all that I have in this world, even life itself. In all my daily needs, help me to remember the needs of others too. Make me aware of the need to pray always, not just for myself but also for the Church, the pope, the clergy, and all people who suffer any need. I ask this through Jesus Christ, Our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Neumann, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St John Neumann Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken title line and adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer of St John Neumann, from his diary. My God, possess me, that I may become a fit instrument of your graces and mercies to the souls you have confided to my care. If you know that success will make me vain, do not, on that account, allow me to fail. Humble me in some other way, but do not punish me through those you have confided to me. My heart is pierced with sorrow when I hear of the loss of one of my sheep. Lord Jesus, have mercy. Permit not that any one of those whom you have entrusted to me should be lost. O my Jesus, I will pray, fast, suffer, and, with the help of your grace, sacrifice life itself. O Lord, imbue my words with power and healing, that they may glorify the truth. As for myself, I am fully satisfied with the labors assigned to me in your vineyard, for I came here to atone for my sins and to win souls for God. Nowhere can a better opportunity be found for doing good. May God grant me the grace to discharge my duties in a worthy and fruitful manner, especially  O my Jesus, though I am poor in so many ways and so ignorant, I have been chosen as a shepherd to your sheep. Give me an ever-increasing love for those souls redeemed by your Precious Blood, that I may labor at their salvation in wisdom, patience, and holiness. Grant that not one of those you have confided to me may be lost through my fault. O my Jesus, help me to sanctify those committed to my care. O holy Mother of my Lord, pray for me and for those in my vineyard. Holy guardian angels of these dear ones, teach me how to act toward them, so as to be able to instill into their hearts the maxims of faith and true love of God. Lord, teach me how to live and, if need be, to die, that all may be saved, that all may love and praise you throughout all eternity, that they may also love and cherish your dear Mother. Saint John Neumann, you organized Catholic education for countless children. Please watch over all Catholic schools and help them be a model of the Faith in their actions as well as their words. Dear Lord, make me selfless as St. John Neumann was. Throughout my life, give me the grace to direct my first thoughts to the service of Thee and of others. Make my prayer, Thy will be done, knowing that in Thy mercy and love, Thy will for me is my sanctification. Merciful Father, Thou hast given me all that I have in this world, even life itself. In all my daily needs, help me to remember the needs of others too. Make me aware of the need to pray always, not just for myself but also for the Church, the pope, the clergy, and all people who suffer any need. I ask this through Jesus Christ, Our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Neumann, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken title line and adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer of St John Neumann, from his diary. My God, possess me, that I may become a fit instrument of your graces and mercies to the souls you have confided to my care. If you know that success will make me vain, do not, on that account, allow me to fail. Humble me in some other way, but do not punish me through those you have confided to me. My heart is pierced with sorrow when I hear of the loss of one of my sheep. Lord Jesus, have mercy. Permit not that any one of those whom you have entrusted to me should be lost. O my Jesus, I will pray, fast, suffer, and, with the help of your grace, sacrifice life itself. O Lord, imbue my words with power and healing, that they may glorify the truth. As for myself, I am fully satisfied with the labors assigned to me in your vineyard, for I came here to atone for my sins and to win souls for God. Nowhere can a better opportunity be found for doing good. May God grant me the grace to discharge my duties in a worthy and fruitful manner, especially  O my Jesus, though I am poor in so many ways and so ignorant, I have been chosen as a shepherd to your sheep. Give me an ever-increasing love for those souls redeemed by your Precious Blood, that I may labor at their salvation in wisdom, patience, and holiness. Grant that not one of those you have confided to me may be lost through my fault. O my Jesus, help me to sanctify those committed to my care. O holy Mother of my Lord, pray for me and for those in my vineyard. Holy guardian angels of these dear ones, teach me how to act toward them, so as to be able to instill into their hearts the maxims of faith and true love of God. Lord, teach me how to live and, if need be, to die, that all may be saved, that all may love and praise you throughout all eternity, that they may also love and cherish your dear Mother. Saint John Neumann, you organized Catholic education for countless children. Please watch over all Catholic schools and help them be a model of the Faith in their actions as well as their words. Dear Lord, make me selfless as St. John Neumann was. Throughout my life, give me the grace to direct my first thoughts to the service of Thee and of others. Make my prayer, Thy will be done, knowing that in Thy mercy and love, Thy will for me is my sanctification. Merciful Father, Thou hast given me all that I have in this world, even life itself. In all my daily needs, help me to remember the needs of others too. Make me aware of the need to pray always, not just for myself but also for the Church, the pope, the clergy, and all people who suffer any need. I ask this through Jesus Christ, Our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Neumann, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken title line and adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer of St John Neumann, from his diary. My God, possess me, that I may become a fit instrument of your graces and mercies to the souls you have confided to my care. If you know that success will make me vain, do not, on that account, allow me to fail. Humble me in some other way, but do not punish me through those you have confided to me. My heart is pierced with sorrow when I hear of the loss of one of my sheep. Lord Jesus, have mercy. Permit not that any one of those whom you have entrusted to me should be lost. O my Jesus, I will pray, fast, suffer, and, with the help of your grace, sacrifice life itself. O Lord, imbue my words with power and healing, that they may glorify the truth. As for myself, I am fully satisfied with the labors assigned to me in your vineyard, for I came here to atone for my sins and to win souls for God. Nowhere can a better opportunity be found for doing good. May God grant me the grace to discharge my duties in a worthy and fruitful manner, especially  O my Jesus, though I am poor in so many ways and so ignorant, I have been chosen as a shepherd to your sheep. Give me an ever-increasing love for those souls redeemed by your Precious Blood, that I may labor at their salvation in wisdom, patience, and holiness. Grant that not one of those you have confided to me may be lost through my fault. O my Jesus, help me to sanctify those committed to my care. O holy Mother of my Lord, pray for me and for those in my vineyard. Holy guardian angels of these dear ones, teach me how to act toward them, so as to be able to instill into their hearts the maxims of faith and true love of God. Lord, teach me how to live and, if need be, to die, that all may be saved, that all may love and praise you throughout all eternity, that they may also love and cherish your dear Mother. Saint John Neumann, you organized Catholic education for countless children. Please watch over all Catholic schools and help them be a model of the Faith in their actions as well as their words. Dear Lord, make me selfless as St. John Neumann was. Throughout my life, give me the grace to direct my first thoughts to the service of Thee and of others. Make my prayer, Thy will be done, knowing that in Thy mercy and love, Thy will for me is my sanctification. Merciful Father, Thou hast given me all that I have in this world, even life itself. In all my daily needs, help me to remember the needs of others too. Make me aware of the need to pray always, not just for myself but also for the Church, the pope, the clergy, and all people who suffer any need. I ask this through Jesus Christ, Our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Neumann, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken title line and adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer of St John Neumann, from his diary. My God, possess me, that I may become a fit instrument of your graces and mercies to the souls you have confided to my care. If you know that success will make me vain, do not, on that account, allow me to fail. Humble me in some other way, but do not punish me through those you have confided to me. My heart is pierced with sorrow when I hear of the loss of one of my sheep. Lord Jesus, have mercy. Permit not that any one of those whom you have entrusted to me should be lost. O my Jesus, I will pray, fast, suffer, and, with the help of your grace, sacrifice life itself. O Lord, imbue my words with power and healing, that they may glorify the truth. As for myself, I am fully satisfied with the labors assigned to me in your vineyard, for I came here to atone for my sins and to win souls for God. Nowhere can a better opportunity be found for doing good. May God grant me the grace to discharge my duties in a worthy and fruitful manner, especially  O my Jesus, though I am poor in so many ways and so ignorant, I have been chosen as a shepherd to your sheep. Give me an ever-increasing love for those souls redeemed by your Precious Blood, that I may labor at their salvation in wisdom, patience, and holiness. Grant that not one of those you have confided to me may be lost through my fault. O my Jesus, help me to sanctify those committed to my care. O holy Mother of my Lord, pray for me and for those in my vineyard. Holy guardian angels of these dear ones, teach me how to act toward them, so as to be able to instill into their hearts the maxims of faith and true love of God. Lord, teach me how to live and, if need be, to die, that all may be saved, that all may love and praise you throughout all eternity, that they may also love and cherish your dear Mother. Saint John Neumann, you organized Catholic education for countless children. Please watch over all Catholic schools and help them be a model of the Faith in their actions as well as their words. Dear Lord, make me selfless as St. John Neumann was. Throughout my life, give me the grace to direct my first thoughts to the service of Thee and of others. Make my prayer, Thy will be done, knowing that in Thy mercy and love, Thy will for me is my sanctification. Merciful Father, Thou hast given me all that I have in this world, even life itself. In all my daily needs, help me to remember the needs of others too. Make me aware of the need to pray always, not just for myself but also for the Church, the pope, the clergy, and all people who suffer any need. I ask this through Jesus Christ, Our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Neumann, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken title line and adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer of St John Neumann, from his diary. My God, possess me, that I may become a fit instrument of your graces and mercies to the souls you have confided to my care. If you know that success will make me vain, do not, on that account, allow me to fail. Humble me in some other way, but do not punish me through those you have confided to me. My heart is pierced with sorrow when I hear of the loss of one of my sheep. Lord Jesus, have mercy. Permit not that any one of those whom you have entrusted to me should be lost. O my Jesus, I will pray, fast, suffer, and, with the help of your grace, sacrifice life itself. O Lord, imbue my words with power and healing, that they may glorify the truth. As for myself, I am fully satisfied with the labors assigned to me in your vineyard, for I came here to atone for my sins and to win souls for God. Nowhere can a better opportunity be found for doing good. May God grant me the grace to discharge my duties in a worthy and fruitful manner, especially  O my Jesus, though I am poor in so many ways and so ignorant, I have been chosen as a shepherd to your sheep. Give me an ever-increasing love for those souls redeemed by your Precious Blood, that I may labor at their salvation in wisdom, patience, and holiness. Grant that not one of those you have confided to me may be lost through my fault. O my Jesus, help me to sanctify those committed to my care. O holy Mother of my Lord, pray for me and for those in my vineyard. Holy guardian angels of these dear ones, teach me how to act toward them, so as to be able to instill into their hearts the maxims of faith and true love of God. Lord, teach me how to live and, if need be, to die, that all may be saved, that all may love and praise you throughout all eternity, that they may also love and cherish your dear Mother. Saint John Neumann, you organized Catholic education for countless children. Please watch over all Catholic schools and help them be a model of the Faith in their actions as well as their words. Dear Lord, make me selfless as St. John Neumann was. Throughout my life, give me the grace to direct my first thoughts to the service of Thee and of others. Make my prayer, Thy will be done, knowing that in Thy mercy and love, Thy will for me is my sanctification. Merciful Father, Thou hast given me all that I have in this world, even life itself. In all my daily needs, help me to remember the needs of others too. Make me aware of the need to pray always, not just for myself but also for the Church, the pope, the clergy, and all people who suffer any need. I ask this through Jesus Christ, Our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Neumann, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken title line and adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer of St John Neumann, from his diary. My God, possess me, that I may become a fit instrument of your graces and mercies to the souls you have confided to my care. If you know that success will make me vain, do not, on that account, allow me to fail. Humble me in some other way, but do not punish me through those you have confided to me. My heart is pierced with sorrow when I hear of the loss of one of my sheep. Lord Jesus, have mercy. Permit not that any one of those whom you have entrusted to me should be lost. O my Jesus, I will pray, fast, suffer, and, with the help of your grace, sacrifice life itself. O Lord, imbue my words with power and healing, that they may glorify the truth. As for myself, I am fully satisfied with the labors assigned to me in your vineyard, for I came here to atone for my sins and to win souls for God. Nowhere can a better opportunity be found for doing good. May God grant me the grace to discharge my duties in a worthy and fruitful manner, especially  O my Jesus, though I am poor in so many ways and so ignorant, I have been chosen as a shepherd to your sheep. Give me an ever-increasing love for those souls redeemed by your Precious Blood, that I may labor at their salvation in wisdom, patience, and holiness. Grant that not one of those you have confided to me may be lost through my fault. O my Jesus, help me to sanctify those committed to my care. O holy Mother of my Lord, pray for me and for those in my vineyard. Holy guardian angels of these dear ones, teach me how to act toward them, so as to be able to instill into their hearts the maxims of faith and true love of God. Lord, teach me how to live and, if need be, to die, that all may be saved, that all may love and praise you throughout all eternity, that they may also love and cherish your dear Mother. Saint John Neumann, you organized Catholic education for countless children. Please watch over all Catholic schools and help them be a model of the Faith in their actions as well as their words. Dear Lord, make me selfless as St. John Neumann was. Throughout my life, give me the grace to direct my first thoughts to the service of Thee and of others. Make my prayer, Thy will be done, knowing that in Thy mercy and love, Thy will for me is my sanctification. Merciful Father, Thou hast given me all that I have in this world, even life itself. In all my daily needs, help me to remember the needs of others too. Make me aware of the need to pray always, not just for myself but also for the Church, the pope, the clergy, and all people who suffer any need. I ask this through Jesus Christ, Our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Neumann, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken title line and adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer of St John Neumann, from his diary. My God, possess me, that I may become a fit instrument of your graces and mercies to the souls you have confided to my care. If you know that success will make me vain, do not, on that account, allow me to fail. Humble me in some other way, but do not punish me through those you have confided to me. My heart is pierced with sorrow when I hear of the loss of one of my sheep. Lord Jesus, have mercy. Permit not that any one of those whom you have entrusted to me should be lost. O my Jesus, I will pray, fast, suffer, and, with the help of your grace, sacrifice life itself. O Lord, imbue my words with power and healing, that they may glorify the truth. As for myself, I am fully satisfied with the labors assigned to me in your vineyard, for I came here to atone for my sins and to win souls for God. Nowhere can a better opportunity be found for doing good. May God grant me the grace to discharge my duties in a worthy and fruitful manner, especially  O my Jesus, though I am poor in so many ways and so ignorant, I have been chosen as a shepherd to your sheep. Give me an ever-increasing love for those souls redeemed by your Precious Blood, that I may labor at their salvation in wisdom, patience, and holiness. Grant that not one of those you have confided to me may be lost through my fault. O my Jesus, help me to sanctify those committed to my care. O holy Mother of my Lord, pray for me and for those in my vineyard. Holy guardian angels of these dear ones, teach me how to act toward them, so as to be able to instill into their hearts the maxims of faith and true love of God. Lord, teach me how to live and, if need be, to die, that all may be saved, that all may love and praise you throughout all eternity, that they may also love and cherish your dear Mother. Saint John Neumann, you organized Catholic education for countless children. Please watch over all Catholic schools and help them be a model of the Faith in their actions as well as their words. Dear Lord, make me selfless as St. John Neumann was. Throughout my life, give me the grace to direct my first thoughts to the service of Thee and of others. Make my prayer, Thy will be done, knowing that in Thy mercy and love, Thy will for me is my sanctification. Merciful Father, Thou hast given me all that I have in this world, even life itself. In all my daily needs, help me to remember the needs of others too. Make me aware of the need to pray always, not just for myself but also for the Church, the pope, the clergy, and all people who suffer any need. I ask this through Jesus Christ, Our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Neumann, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken title line and adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer of St John Neumann, from his diary. My God, possess me, that I may become a fit instrument of your graces and mercies to the souls you have confided to my care. If you know that success will make me vain, do not, on that account, allow me to fail. Humble me in some other way, but do not punish me through those you have confided to me. My heart is pierced with sorrow when I hear of the loss of one of my sheep. Lord Jesus, have mercy. Permit not that any one of those whom you have entrusted to me should be lost. O my Jesus, I will pray, fast, suffer, and, with the help of your grace, sacrifice life itself. O Lord, imbue my words with power and healing, that they may glorify the truth. As for myself, I am fully satisfied with the labors assigned to me in your vineyard, for I came here to atone for my sins and to win souls for God. Nowhere can a better opportunity be found for doing good. May God grant me the grace to discharge my duties in a worthy and fruitful manner, especially  O my Jesus, though I am poor in so many ways and so ignorant, I have been chosen as a shepherd to your sheep. Give me an ever-increasing love for those souls redeemed by your Precious Blood, that I may labor at their salvation in wisdom, patience, and holiness. Grant that not one of those you have confided to me may be lost through my fault. O my Jesus, help me to sanctify those committed to my care. O holy Mother of my Lord, pray for me and for those in my vineyard. Holy guardian angels of these dear ones, teach me how to act toward them, so as to be able to instill into their hearts the maxims of faith and true love of God. Lord, teach me how to live and, if need be, to die, that all may be saved, that all may love and praise you throughout all eternity, that they may also love and cherish your dear Mother. Saint John Neumann, you organized Catholic education for countless children. Please watch over all Catholic schools and help them be a model of the Faith in their actions as well as their words. Dear Lord, make me selfless as St. John Neumann was. Throughout my life, give me the grace to direct my first thoughts to the service of Thee and of others. Make my prayer, Thy will be done, knowing that in Thy mercy and love, Thy will for me is my sanctification. Merciful Father, Thou hast given me all that I have in this world, even life itself. In all my daily needs, help me to remember the needs of others too. Make me aware of the need to pray always, not just for myself but also for the Church, the pope, the clergy, and all people who suffer any need. I ask this through Jesus Christ, Our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Neumann, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken title line and adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer of St John Neumann, from his diary. My God, possess me, that I may become a fit instrument of your graces and mercies to the souls you have confided to my care. If you know that success will make me vain, do not, on that account, allow me to fail. Humble me in some other way, but do not punish me through those you have confided to me. My heart is pierced with sorrow when I hear of the loss of one of my sheep. Lord Jesus, have mercy. Permit not that any one of those whom you have entrusted to me should be lost. O my Jesus, I will pray, fast, suffer, and, with the help of your grace, sacrifice life itself. O Lord, imbue my words with power and healing, that they may glorify the truth. As for myself, I am fully satisfied with the labors assigned to me in your vineyard, for I came here to atone for my sins and to win souls for God. Nowhere can a better opportunity be found for doing good. May God grant me the grace to discharge my duties in a worthy and fruitful manner, especially  O my Jesus, though I am poor in so many ways and so ignorant, I have been chosen as a shepherd to your sheep. Give me an ever-increasing love for those souls redeemed by your Precious Blood, that I may labor at their salvation in wisdom, patience, and holiness. Grant that not one of those you have confided to me may be lost through my fault. O my Jesus, help me to sanctify those committed to my care. O holy Mother of my Lord, pray for me and for those in my vineyard. Holy guardian angels of these dear ones, teach me how to act toward them, so as to be able to instill into their hearts the maxims of faith and true love of God. Lord, teach me how to live and, if need be, to die, that all may be saved, that all may love and praise you throughout all eternity, that they may also love and cherish your dear Mother. Saint John Neumann, you organized Catholic education for countless children. Please watch over all Catholic schools and help them be a model of the Faith in their actions as well as their words. Dear Lord, make me selfless as St. John Neumann was. Throughout my life, give me the grace to direct my first thoughts to the service of Thee and of others. Make my prayer, Thy will be done, knowing that in Thy mercy and love, Thy will for me is my sanctification. Merciful Father, Thou hast given me all that I have in this world, even life itself. In all my daily needs, help me to remember the needs of others too. Make me aware of the need to pray always, not just for myself but also for the Church, the pope, the clergy, and all people who suffer any need. I ask this through Jesus Christ, Our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Neumann, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_john_neumann"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_john_neumann",
+      "name": "St John Neumann"
+    },
+    "type": "novena_feast_rule"
+  }
+}

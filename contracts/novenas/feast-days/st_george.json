@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_george",
+    "feast": {
+      "day": 23,
+      "mode": "fixed",
+      "month": 4,
+      "name": "St George"
+    },
+    "id": "st_george",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "soldiers",
+        "scouts",
+        "England"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St George is a Christian martyr venerated for steadfast faith and courage, commemorated on the Feast of St George."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St George Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks and minor punctuation adjustments for smoother text-to-speech, and standardized \u201cSt\u201d to \u201cSaint\u201d in headings and references.; converted \"mention request here\" into a personal-intention pause marker; expanded repetition instruction into three explicit spoken recitations; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Almighty and eternal God, with lively faith and reverently worshipping Thy divine Majesty, I prostrate myself before Thee and invoke with filial trust Thy supreme bounty and mercy. Illumine the darkness of my intellect with a ray of Thy heavenly light, and inflame my heart with the fire of Thy Divine love, that I may contemplate the great virtues and merits of Saint George, in whose honor I make this novena, and, following his example, imitate, like him, the life of Thy Divine Son. Moreover, I beseech Thee to grant graciously, through the merits and intercession of this powerful Helper, the petition which through him I humbly place before Thee, devoutly saying: Thy will be done on earth as it is in heaven, especially for this intention"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Vouchsafe graciously to hear it, if it redounds to Thy greater glory and to the salvation of my soul. Amen. Prayer in Honor of Saint George O God, who didst grant to Saint George strength and constancy in the various torments which he sustained for our holy faith, we beseech Thee to preserve, through his intercession, our faith from wavering and doubt, so that we may serve Thee with a sincere heart faithfully unto death. Through Christ our Lord. Amen. Invocation of Saint George Faithful servant of God and invincible martyr, Saint George, favored by God with the gift of faith, and inflamed with an ardent love of Christ, thou didst fight valiantly against the dragon of pride, falsehood, and deceit. Neither pain nor torture, sword nor death could part thee from the love of Christ. I fervently implore thee, for the sake of this love, to help me by thy intercession to overcome the temptations that surround me, and to bear bravely the trials that oppress me, so that I may patiently carry the cross which is placed upon me, and let neither distress nor difficulties separate me from the love of Our Lord Jesus Christ. Valiant champion of the Faith, assist me in the combat against evil, that I may win the crown promised to them that persevere unto the end. Amen. Now repeat the novena prayers above three times. The novena prayers above. The novena prayers above. The novena prayers above. My Lord and my God! I offer up to Thee my petition in union with the bitter passion and death of Jesus Christ, Thy Son, together with the merits of His immaculate and blessed Mother, Mary ever Virgin, and of all the saints, particularly with those of the holy Helper Saint George, in whose honor I make this novena. Look down upon me, merciful Lord, and grant me Thy grace and Thy love, and graciously hear my prayer. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint George, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St George Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks and minor punctuation adjustments for smoother text-to-speech, and standardized \u201cSt\u201d to \u201cSaint\u201d in headings and references.; converted \"mention request here\" into a personal-intention pause marker; expanded repetition instruction into three explicit spoken recitations",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Almighty and eternal God, with lively faith and reverently worshipping Thy divine Majesty, I prostrate myself before Thee and invoke with filial trust Thy supreme bounty and mercy. Illumine the darkness of my intellect with a ray of Thy heavenly light, and inflame my heart with the fire of Thy Divine love, that I may contemplate the great virtues and merits of Saint George, in whose honor I make this novena, and, following his example, imitate, like him, the life of Thy Divine Son. Moreover, I beseech Thee to grant graciously, through the merits and intercession of this powerful Helper, the petition which through him I humbly place before Thee, devoutly saying: Thy will be done on earth as it is in heaven, especially for this intention  Vouchsafe graciously to hear it, if it redounds to Thy greater glory and to the salvation of my soul. Amen. Prayer in Honor of Saint George O God, who didst grant to Saint George strength and constancy in the various torments which he sustained for our holy faith, we beseech Thee to preserve, through his intercession, our faith from wavering and doubt, so that we may serve Thee with a sincere heart faithfully unto death. Through Christ our Lord. Amen. Invocation of Saint George Faithful servant of God and invincible martyr, Saint George, favored by God with the gift of faith, and inflamed with an ardent love of Christ, thou didst fight valiantly against the dragon of pride, falsehood, and deceit. Neither pain nor torture, sword nor death could part thee from the love of Christ. I fervently implore thee, for the sake of this love, to help me by thy intercession to overcome the temptations that surround me, and to bear bravely the trials that oppress me, so that I may patiently carry the cross which is placed upon me, and let neither distress nor difficulties separate me from the love of Our Lord Jesus Christ. Valiant champion of the Faith, assist me in the combat against evil, that I may win the crown promised to them that persevere unto the end. Amen. Now repeat the novena prayers above three times. The novena prayers above. The novena prayers above. The novena prayers above. My Lord and my God! I offer up to Thee my petition in union with the bitter passion and death of Jesus Christ, Thy Son, together with the merits of His immaculate and blessed Mother, Mary ever Virgin, and of all the saints, particularly with those of the holy Helper Saint George, in whose honor I make this novena. Look down upon me, merciful Lord, and grant me Thy grace and Thy love, and graciously hear my prayer. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint George, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks and minor punctuation adjustments for smoother text-to-speech, and standardized \u201cSt\u201d to \u201cSaint\u201d in headings and references.; converted \"mention request here\" into a personal-intention pause marker; expanded repetition instruction into three explicit spoken recitations; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Almighty and eternal God, with lively faith and reverently worshipping Thy divine Majesty, I prostrate myself before Thee and invoke with filial trust Thy supreme bounty and mercy. Illumine the darkness of my intellect with a ray of Thy heavenly light, and inflame my heart with the fire of Thy Divine love, that I may contemplate the great virtues and merits of Saint George, in whose honor I make this novena, and, following his example, imitate, like him, the life of Thy Divine Son. Moreover, I beseech Thee to grant graciously, through the merits and intercession of this powerful Helper, the petition which through him I humbly place before Thee, devoutly saying: Thy will be done on earth as it is in heaven, especially for this intention  Vouchsafe graciously to hear it, if it redounds to Thy greater glory and to the salvation of my soul. Amen. Prayer in Honor of Saint George O God, who didst grant to Saint George strength and constancy in the various torments which he sustained for our holy faith, we beseech Thee to preserve, through his intercession, our faith from wavering and doubt, so that we may serve Thee with a sincere heart faithfully unto death. Through Christ our Lord. Amen. Invocation of Saint George Faithful servant of God and invincible martyr, Saint George, favored by God with the gift of faith, and inflamed with an ardent love of Christ, thou didst fight valiantly against the dragon of pride, falsehood, and deceit. Neither pain nor torture, sword nor death could part thee from the love of Christ. I fervently implore thee, for the sake of this love, to help me by thy intercession to overcome the temptations that surround me, and to bear bravely the trials that oppress me, so that I may patiently carry the cross which is placed upon me, and let neither distress nor difficulties separate me from the love of Our Lord Jesus Christ. Valiant champion of the Faith, assist me in the combat against evil, that I may win the crown promised to them that persevere unto the end. Amen. Now repeat the novena prayers above three times. The novena prayers above. The novena prayers above. The novena prayers above. My Lord and my God! I offer up to Thee my petition in union with the bitter passion and death of Jesus Christ, Thy Son, together with the merits of His immaculate and blessed Mother, Mary ever Virgin, and of all the saints, particularly with those of the holy Helper Saint George, in whose honor I make this novena. Look down upon me, merciful Lord, and grant me Thy grace and Thy love, and graciously hear my prayer. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint George, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks and minor punctuation adjustments for smoother text-to-speech, and standardized \u201cSt\u201d to \u201cSaint\u201d in headings and references.; converted \"mention request here\" into a personal-intention pause marker; expanded repetition instruction into three explicit spoken recitations; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Almighty and eternal God, with lively faith and reverently worshipping Thy divine Majesty, I prostrate myself before Thee and invoke with filial trust Thy supreme bounty and mercy. Illumine the darkness of my intellect with a ray of Thy heavenly light, and inflame my heart with the fire of Thy Divine love, that I may contemplate the great virtues and merits of Saint George, in whose honor I make this novena, and, following his example, imitate, like him, the life of Thy Divine Son. Moreover, I beseech Thee to grant graciously, through the merits and intercession of this powerful Helper, the petition which through him I humbly place before Thee, devoutly saying: Thy will be done on earth as it is in heaven, especially for this intention  Vouchsafe graciously to hear it, if it redounds to Thy greater glory and to the salvation of my soul. Amen. Prayer in Honor of Saint George O God, who didst grant to Saint George strength and constancy in the various torments which he sustained for our holy faith, we beseech Thee to preserve, through his intercession, our faith from wavering and doubt, so that we may serve Thee with a sincere heart faithfully unto death. Through Christ our Lord. Amen. Invocation of Saint George Faithful servant of God and invincible martyr, Saint George, favored by God with the gift of faith, and inflamed with an ardent love of Christ, thou didst fight valiantly against the dragon of pride, falsehood, and deceit. Neither pain nor torture, sword nor death could part thee from the love of Christ. I fervently implore thee, for the sake of this love, to help me by thy intercession to overcome the temptations that surround me, and to bear bravely the trials that oppress me, so that I may patiently carry the cross which is placed upon me, and let neither distress nor difficulties separate me from the love of Our Lord Jesus Christ. Valiant champion of the Faith, assist me in the combat against evil, that I may win the crown promised to them that persevere unto the end. Amen. Now repeat the novena prayers above three times. The novena prayers above. The novena prayers above. The novena prayers above. My Lord and my God! I offer up to Thee my petition in union with the bitter passion and death of Jesus Christ, Thy Son, together with the merits of His immaculate and blessed Mother, Mary ever Virgin, and of all the saints, particularly with those of the holy Helper Saint George, in whose honor I make this novena. Look down upon me, merciful Lord, and grant me Thy grace and Thy love, and graciously hear my prayer. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint George, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks and minor punctuation adjustments for smoother text-to-speech, and standardized \u201cSt\u201d to \u201cSaint\u201d in headings and references.; converted \"mention request here\" into a personal-intention pause marker; expanded repetition instruction into three explicit spoken recitations; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Almighty and eternal God, with lively faith and reverently worshipping Thy divine Majesty, I prostrate myself before Thee and invoke with filial trust Thy supreme bounty and mercy. Illumine the darkness of my intellect with a ray of Thy heavenly light, and inflame my heart with the fire of Thy Divine love, that I may contemplate the great virtues and merits of Saint George, in whose honor I make this novena, and, following his example, imitate, like him, the life of Thy Divine Son. Moreover, I beseech Thee to grant graciously, through the merits and intercession of this powerful Helper, the petition which through him I humbly place before Thee, devoutly saying: Thy will be done on earth as it is in heaven, especially for this intention  Vouchsafe graciously to hear it, if it redounds to Thy greater glory and to the salvation of my soul. Amen. Prayer in Honor of Saint George O God, who didst grant to Saint George strength and constancy in the various torments which he sustained for our holy faith, we beseech Thee to preserve, through his intercession, our faith from wavering and doubt, so that we may serve Thee with a sincere heart faithfully unto death. Through Christ our Lord. Amen. Invocation of Saint George Faithful servant of God and invincible martyr, Saint George, favored by God with the gift of faith, and inflamed with an ardent love of Christ, thou didst fight valiantly against the dragon of pride, falsehood, and deceit. Neither pain nor torture, sword nor death could part thee from the love of Christ. I fervently implore thee, for the sake of this love, to help me by thy intercession to overcome the temptations that surround me, and to bear bravely the trials that oppress me, so that I may patiently carry the cross which is placed upon me, and let neither distress nor difficulties separate me from the love of Our Lord Jesus Christ. Valiant champion of the Faith, assist me in the combat against evil, that I may win the crown promised to them that persevere unto the end. Amen. Now repeat the novena prayers above three times. The novena prayers above. The novena prayers above. The novena prayers above. My Lord and my God! I offer up to Thee my petition in union with the bitter passion and death of Jesus Christ, Thy Son, together with the merits of His immaculate and blessed Mother, Mary ever Virgin, and of all the saints, particularly with those of the holy Helper Saint George, in whose honor I make this novena. Look down upon me, merciful Lord, and grant me Thy grace and Thy love, and graciously hear my prayer. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint George, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks and minor punctuation adjustments for smoother text-to-speech, and standardized \u201cSt\u201d to \u201cSaint\u201d in headings and references.; converted \"mention request here\" into a personal-intention pause marker; expanded repetition instruction into three explicit spoken recitations; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Almighty and eternal God, with lively faith and reverently worshipping Thy divine Majesty, I prostrate myself before Thee and invoke with filial trust Thy supreme bounty and mercy. Illumine the darkness of my intellect with a ray of Thy heavenly light, and inflame my heart with the fire of Thy Divine love, that I may contemplate the great virtues and merits of Saint George, in whose honor I make this novena, and, following his example, imitate, like him, the life of Thy Divine Son. Moreover, I beseech Thee to grant graciously, through the merits and intercession of this powerful Helper, the petition which through him I humbly place before Thee, devoutly saying: Thy will be done on earth as it is in heaven, especially for this intention  Vouchsafe graciously to hear it, if it redounds to Thy greater glory and to the salvation of my soul. Amen. Prayer in Honor of Saint George O God, who didst grant to Saint George strength and constancy in the various torments which he sustained for our holy faith, we beseech Thee to preserve, through his intercession, our faith from wavering and doubt, so that we may serve Thee with a sincere heart faithfully unto death. Through Christ our Lord. Amen. Invocation of Saint George Faithful servant of God and invincible martyr, Saint George, favored by God with the gift of faith, and inflamed with an ardent love of Christ, thou didst fight valiantly against the dragon of pride, falsehood, and deceit. Neither pain nor torture, sword nor death could part thee from the love of Christ. I fervently implore thee, for the sake of this love, to help me by thy intercession to overcome the temptations that surround me, and to bear bravely the trials that oppress me, so that I may patiently carry the cross which is placed upon me, and let neither distress nor difficulties separate me from the love of Our Lord Jesus Christ. Valiant champion of the Faith, assist me in the combat against evil, that I may win the crown promised to them that persevere unto the end. Amen. Now repeat the novena prayers above three times. The novena prayers above. The novena prayers above. The novena prayers above. My Lord and my God! I offer up to Thee my petition in union with the bitter passion and death of Jesus Christ, Thy Son, together with the merits of His immaculate and blessed Mother, Mary ever Virgin, and of all the saints, particularly with those of the holy Helper Saint George, in whose honor I make this novena. Look down upon me, merciful Lord, and grant me Thy grace and Thy love, and graciously hear my prayer. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint George, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks and minor punctuation adjustments for smoother text-to-speech, and standardized \u201cSt\u201d to \u201cSaint\u201d in headings and references.; converted \"mention request here\" into a personal-intention pause marker; expanded repetition instruction into three explicit spoken recitations; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Almighty and eternal God, with lively faith and reverently worshipping Thy divine Majesty, I prostrate myself before Thee and invoke with filial trust Thy supreme bounty and mercy. Illumine the darkness of my intellect with a ray of Thy heavenly light, and inflame my heart with the fire of Thy Divine love, that I may contemplate the great virtues and merits of Saint George, in whose honor I make this novena, and, following his example, imitate, like him, the life of Thy Divine Son. Moreover, I beseech Thee to grant graciously, through the merits and intercession of this powerful Helper, the petition which through him I humbly place before Thee, devoutly saying: Thy will be done on earth as it is in heaven, especially for this intention  Vouchsafe graciously to hear it, if it redounds to Thy greater glory and to the salvation of my soul. Amen. Prayer in Honor of Saint George O God, who didst grant to Saint George strength and constancy in the various torments which he sustained for our holy faith, we beseech Thee to preserve, through his intercession, our faith from wavering and doubt, so that we may serve Thee with a sincere heart faithfully unto death. Through Christ our Lord. Amen. Invocation of Saint George Faithful servant of God and invincible martyr, Saint George, favored by God with the gift of faith, and inflamed with an ardent love of Christ, thou didst fight valiantly against the dragon of pride, falsehood, and deceit. Neither pain nor torture, sword nor death could part thee from the love of Christ. I fervently implore thee, for the sake of this love, to help me by thy intercession to overcome the temptations that surround me, and to bear bravely the trials that oppress me, so that I may patiently carry the cross which is placed upon me, and let neither distress nor difficulties separate me from the love of Our Lord Jesus Christ. Valiant champion of the Faith, assist me in the combat against evil, that I may win the crown promised to them that persevere unto the end. Amen. Now repeat the novena prayers above three times. The novena prayers above. The novena prayers above. The novena prayers above. My Lord and my God! I offer up to Thee my petition in union with the bitter passion and death of Jesus Christ, Thy Son, together with the merits of His immaculate and blessed Mother, Mary ever Virgin, and of all the saints, particularly with those of the holy Helper Saint George, in whose honor I make this novena. Look down upon me, merciful Lord, and grant me Thy grace and Thy love, and graciously hear my prayer. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint George, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks and minor punctuation adjustments for smoother text-to-speech, and standardized \u201cSt\u201d to \u201cSaint\u201d in headings and references.; converted \"mention request here\" into a personal-intention pause marker; expanded repetition instruction into three explicit spoken recitations; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Almighty and eternal God, with lively faith and reverently worshipping Thy divine Majesty, I prostrate myself before Thee and invoke with filial trust Thy supreme bounty and mercy. Illumine the darkness of my intellect with a ray of Thy heavenly light, and inflame my heart with the fire of Thy Divine love, that I may contemplate the great virtues and merits of Saint George, in whose honor I make this novena, and, following his example, imitate, like him, the life of Thy Divine Son. Moreover, I beseech Thee to grant graciously, through the merits and intercession of this powerful Helper, the petition which through him I humbly place before Thee, devoutly saying: Thy will be done on earth as it is in heaven, especially for this intention  Vouchsafe graciously to hear it, if it redounds to Thy greater glory and to the salvation of my soul. Amen. Prayer in Honor of Saint George O God, who didst grant to Saint George strength and constancy in the various torments which he sustained for our holy faith, we beseech Thee to preserve, through his intercession, our faith from wavering and doubt, so that we may serve Thee with a sincere heart faithfully unto death. Through Christ our Lord. Amen. Invocation of Saint George Faithful servant of God and invincible martyr, Saint George, favored by God with the gift of faith, and inflamed with an ardent love of Christ, thou didst fight valiantly against the dragon of pride, falsehood, and deceit. Neither pain nor torture, sword nor death could part thee from the love of Christ. I fervently implore thee, for the sake of this love, to help me by thy intercession to overcome the temptations that surround me, and to bear bravely the trials that oppress me, so that I may patiently carry the cross which is placed upon me, and let neither distress nor difficulties separate me from the love of Our Lord Jesus Christ. Valiant champion of the Faith, assist me in the combat against evil, that I may win the crown promised to them that persevere unto the end. Amen. Now repeat the novena prayers above three times. The novena prayers above. The novena prayers above. The novena prayers above. My Lord and my God! I offer up to Thee my petition in union with the bitter passion and death of Jesus Christ, Thy Son, together with the merits of His immaculate and blessed Mother, Mary ever Virgin, and of all the saints, particularly with those of the holy Helper Saint George, in whose honor I make this novena. Look down upon me, merciful Lord, and grant me Thy grace and Thy love, and graciously hear my prayer. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint George, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks and minor punctuation adjustments for smoother text-to-speech, and standardized \u201cSt\u201d to \u201cSaint\u201d in headings and references.; converted \"mention request here\" into a personal-intention pause marker; expanded repetition instruction into three explicit spoken recitations; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Almighty and eternal God, with lively faith and reverently worshipping Thy divine Majesty, I prostrate myself before Thee and invoke with filial trust Thy supreme bounty and mercy. Illumine the darkness of my intellect with a ray of Thy heavenly light, and inflame my heart with the fire of Thy Divine love, that I may contemplate the great virtues and merits of Saint George, in whose honor I make this novena, and, following his example, imitate, like him, the life of Thy Divine Son. Moreover, I beseech Thee to grant graciously, through the merits and intercession of this powerful Helper, the petition which through him I humbly place before Thee, devoutly saying: Thy will be done on earth as it is in heaven, especially for this intention  Vouchsafe graciously to hear it, if it redounds to Thy greater glory and to the salvation of my soul. Amen. Prayer in Honor of Saint George O God, who didst grant to Saint George strength and constancy in the various torments which he sustained for our holy faith, we beseech Thee to preserve, through his intercession, our faith from wavering and doubt, so that we may serve Thee with a sincere heart faithfully unto death. Through Christ our Lord. Amen. Invocation of Saint George Faithful servant of God and invincible martyr, Saint George, favored by God with the gift of faith, and inflamed with an ardent love of Christ, thou didst fight valiantly against the dragon of pride, falsehood, and deceit. Neither pain nor torture, sword nor death could part thee from the love of Christ. I fervently implore thee, for the sake of this love, to help me by thy intercession to overcome the temptations that surround me, and to bear bravely the trials that oppress me, so that I may patiently carry the cross which is placed upon me, and let neither distress nor difficulties separate me from the love of Our Lord Jesus Christ. Valiant champion of the Faith, assist me in the combat against evil, that I may win the crown promised to them that persevere unto the end. Amen. Now repeat the novena prayers above three times. The novena prayers above. The novena prayers above. The novena prayers above. My Lord and my God! I offer up to Thee my petition in union with the bitter passion and death of Jesus Christ, Thy Son, together with the merits of His immaculate and blessed Mother, Mary ever Virgin, and of all the saints, particularly with those of the holy Helper Saint George, in whose honor I make this novena. Look down upon me, merciful Lord, and grant me Thy grace and Thy love, and graciously hear my prayer. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint George, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks and minor punctuation adjustments for smoother text-to-speech, and standardized \u201cSt\u201d to \u201cSaint\u201d in headings and references.; converted \"mention request here\" into a personal-intention pause marker; expanded repetition instruction into three explicit spoken recitations; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Almighty and eternal God, with lively faith and reverently worshipping Thy divine Majesty, I prostrate myself before Thee and invoke with filial trust Thy supreme bounty and mercy. Illumine the darkness of my intellect with a ray of Thy heavenly light, and inflame my heart with the fire of Thy Divine love, that I may contemplate the great virtues and merits of Saint George, in whose honor I make this novena, and, following his example, imitate, like him, the life of Thy Divine Son. Moreover, I beseech Thee to grant graciously, through the merits and intercession of this powerful Helper, the petition which through him I humbly place before Thee, devoutly saying: Thy will be done on earth as it is in heaven, especially for this intention  Vouchsafe graciously to hear it, if it redounds to Thy greater glory and to the salvation of my soul. Amen. Prayer in Honor of Saint George O God, who didst grant to Saint George strength and constancy in the various torments which he sustained for our holy faith, we beseech Thee to preserve, through his intercession, our faith from wavering and doubt, so that we may serve Thee with a sincere heart faithfully unto death. Through Christ our Lord. Amen. Invocation of Saint George Faithful servant of God and invincible martyr, Saint George, favored by God with the gift of faith, and inflamed with an ardent love of Christ, thou didst fight valiantly against the dragon of pride, falsehood, and deceit. Neither pain nor torture, sword nor death could part thee from the love of Christ. I fervently implore thee, for the sake of this love, to help me by thy intercession to overcome the temptations that surround me, and to bear bravely the trials that oppress me, so that I may patiently carry the cross which is placed upon me, and let neither distress nor difficulties separate me from the love of Our Lord Jesus Christ. Valiant champion of the Faith, assist me in the combat against evil, that I may win the crown promised to them that persevere unto the end. Amen. Now repeat the novena prayers above three times. The novena prayers above. The novena prayers above. The novena prayers above. My Lord and my God! I offer up to Thee my petition in union with the bitter passion and death of Jesus Christ, Thy Son, together with the merits of His immaculate and blessed Mother, Mary ever Virgin, and of all the saints, particularly with those of the holy Helper Saint George, in whose honor I make this novena. Look down upon me, merciful Lord, and grant me Thy grace and Thy love, and graciously hear my prayer. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint George, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_george"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_george",
+      "name": "St George"
+    },
+    "type": "novena_feast_rule"
+  }
+}

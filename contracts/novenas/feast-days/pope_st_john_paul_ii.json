@@ -1,0 +1,495 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "pope_st_john_paul_ii",
+    "feast": {
+      "day": 22,
+      "mode": "fixed",
+      "month": 10,
+      "name": "Pope St. John Paul II"
+    },
+    "id": "pope_st_john_paul_ii",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "World Youth Day",
+        "families",
+        "human dignity"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "Pope St. John Paul II led the Catholic Church from 1978 to 2005, promoting human dignity, evangelization, and devotion to Divine Mercy."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Pope St. John Paul II Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and spelled out \u201cII\u201d as \u201cthe Second\u201d for pronunciation.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life, and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "through Christ our Lord. Amen. Dear Saint John Paul the Second, you told us: The future starts today, not tomorrow. So, as we start our nine days with you, thank you for reminding me that with God\u2019s help, I can start again, but I need to start now, not at some point in the future. Your words are encouraging and motivating to me. Please be with me as I progress through these nine days in prayer with you. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and spacing for clearer text-to-speech, and expanded \u201cSaint John Paul II\u201d to \u201cSaint John Paul the Second\u201d for pronunciation.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "through Christ our Lord. Amen. Dear John Paul, you told us: \u201cI plead with you: never, ever give up on hope, never doubt, never tire, and never become discouraged. Be not afraid.\u201d With your help, I will not give up my hope. I will be persistent and unafraid. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; converted \"mention request here\" into a personal-intention pause marker; OpenAI normalization failed; used local TTS fallback; converted intention marker into sacred bell and personal-intention pause; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "O Blessed Trinity, we thank you for having graced the Church with Saint John Paul II and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "through Christ our Lord. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Dear St. John Paul, you told us: \u201cHave no fear of moving into the unknown. Simply step out fearlessly knowing that I am with you, therefore no harm can befall you; all is very, very well. Do this in complete faith and confidence.\u201d What more can I say, but thank you for your confidence in me. Help me have complete faith in God. Stand with me at all times as my intercessor and spiritual guide until I get to Heaven."
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "(Optional) Divine Mercy Chaplet"
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and spelled out \u201cII\u201d as \u201cthe Second\u201d for pronunciation.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life, and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "through Christ our Lord. Amen. Life with Christ is a wonderful adventure. Dear Saint John Paul, just like Saint Paul, who described his journey as a race, you tell me that life with Jesus is a wonderful adventure. Life is not a sprint for me, but rather a winding marathon, with its curves and its ups and downs. Help me by being with me at all times, as I struggle in this race toward Christ. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and spelled out \u201cII\u201d as \u201cthe Second\u201d for speech.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life, and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "through Christ our Lord. Amen. Dear Saint John Paul, you tell me: Do not abandon yourselves to despair. We are the Easter people, and hallelujah is our song. Let me be joyful on this wonderful adventure. Let me always have a true Christian joy in my path in life. Help me always do the will of God in my life. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and spelled out \u201cII\u201d as \u201cthe Second\u201d while preserving the original wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life, and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "through Christ our Lord. Amen. Anything done for another is done for oneself. Dear John Paul, you tell us, just as Christ did, the Golden Rule. How simple it is to hear, yet so difficult, at times, to do. Be with me and help me see God in my neighbor, and in those I find unbearable. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and a few phrases for clearer text-to-speech pacing while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life, and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "through Christ our Lord. Amen. The goal and target of our life is He, the Christ who awaits us, each one singly and altogether, to lead us across the boundaries of time to the eternal embrace of the God who loves us. Help me, dear Saint John Paul, to remember that God is the end all. In every moment of my life, I need to be focused on my life with Christ, so that when my earthly life ends, my eternal life can begin with Jesus. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, removed an extra space before a comma, and rendered \u201cII\u201d as \u201cthe Second\u201d for spoken clarity.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "through Christ our Lord. Amen. People are made for happiness. Rightly, then, you thirst for happiness. Christ has the answer to this desire of yours. But He asks you to trust Him. True joy is a victory, something which cannot be obtained without a long and difficult struggle. Christ holds the secret of this victory. Dear Saint John Paul the Second, once again, you in simple words tell us that God is our victorious Savior; nothing is more important than life with Him. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and capitalization for clearer text-to-speech pacing, and spelled out \u201cSaint John Paul II\u201d as \u201cSaint John Paul the Second\u201d while preserving all canonical prayers and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life, and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "through Christ our Lord. Amen. Your motto was Totus Tuus, or, Totally Yours, Blessed Virgin Mary. Dear Saint John Paul, the surest, straightest road to Christ is through his Mother. When I am lost in life\u2019s brambles, ask Our Lady to come rescue me and bring me back to the road that Jesus wants me on. Teach me your love for Mary. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "fragments": [
+          {
+            "key": "our_father",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Our Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.",
+            "title": "Our Father"
+          },
+          {
+            "key": "hail_mary",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Hail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.",
+            "title": "Hail Mary"
+          },
+          {
+            "key": "glory_be",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Glory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.",
+            "title": "Glory Be"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Pope St. John Paul II Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and spelled out \u201cII\u201d as \u201cthe Second\u201d for pronunciation.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life, and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore  through Christ our Lord. Amen. Dear Saint John Paul the Second, you told us: The future starts today, not tomorrow. So, as we start our nine days with you, thank you for reminding me that with God\u2019s help, I can start again, but I need to start now, not at some point in the future. Your words are encouraging and motivating to me. Please be with me as I progress through these nine days in prayer with you. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and spacing for clearer text-to-speech, and expanded \u201cSaint John Paul II\u201d to \u201cSaint John Paul the Second\u201d for pronunciation.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore  through Christ our Lord. Amen. Dear John Paul, you told us: \u201cI plead with you: never, ever give up on hope, never doubt, never tire, and never become discouraged. Be not afraid.\u201d With your help, I will not give up my hope. I will be persistent and unafraid. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; converted \"mention request here\" into a personal-intention pause marker; OpenAI normalization failed; used local TTS fallback",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Blessed Trinity, we thank you for having graced the Church with Saint John Paul II and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore  through Christ our Lord. Amen.\n\nDear St. John Paul, you told us: \u201cHave no fear of moving into the unknown. Simply step out fearlessly knowing that I am with you, therefore no harm can befall you; all is very, very well. Do this in complete faith and confidence.\u201d What more can I say, but thank you for your confidence in me. Help me have complete faith in God. Stand with me at all times as my intercessor and spiritual guide until I get to Heaven.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\n(Optional) Divine Mercy Chaplet\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and spelled out \u201cII\u201d as \u201cthe Second\u201d for pronunciation.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life, and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore  through Christ our Lord. Amen. Life with Christ is a wonderful adventure. Dear Saint John Paul, just like Saint Paul, who described his journey as a race, you tell me that life with Jesus is a wonderful adventure. Life is not a sprint for me, but rather a winding marathon, with its curves and its ups and downs. Help me by being with me at all times, as I struggle in this race toward Christ. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and spelled out \u201cII\u201d as \u201cthe Second\u201d for speech.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life, and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore  through Christ our Lord. Amen. Dear Saint John Paul, you tell me: Do not abandon yourselves to despair. We are the Easter people, and hallelujah is our song. Let me be joyful on this wonderful adventure. Let me always have a true Christian joy in my path in life. Help me always do the will of God in my life. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and spelled out \u201cII\u201d as \u201cthe Second\u201d while preserving the original wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life, and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore  through Christ our Lord. Amen. Anything done for another is done for oneself. Dear John Paul, you tell us, just as Christ did, the Golden Rule. How simple it is to hear, yet so difficult, at times, to do. Be with me and help me see God in my neighbor, and in those I find unbearable. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and a few phrases for clearer text-to-speech pacing while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life, and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore  through Christ our Lord. Amen. The goal and target of our life is He, the Christ who awaits us, each one singly and altogether, to lead us across the boundaries of time to the eternal embrace of the God who loves us. Help me, dear Saint John Paul, to remember that God is the end all. In every moment of my life, I need to be focused on my life with Christ, so that when my earthly life ends, my eternal life can begin with Jesus. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, removed an extra space before a comma, and rendered \u201cII\u201d as \u201cthe Second\u201d for spoken clarity.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore  through Christ our Lord. Amen. People are made for happiness. Rightly, then, you thirst for happiness. Christ has the answer to this desire of yours. But He asks you to trust Him. True joy is a victory, something which cannot be obtained without a long and difficult struggle. Christ holds the secret of this victory. Dear Saint John Paul the Second, once again, you in simple words tell us that God is our victorious Savior; nothing is more important than life with Him. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and capitalization for clearer text-to-speech pacing, and spelled out \u201cSaint John Paul II\u201d as \u201cSaint John Paul the Second\u201d while preserving all canonical prayers and the intention marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Blessed Trinity, we thank you for having graced the Church with Saint John Paul the Second, and for allowing the tenderness of your fatherly care, the glory of the Cross of Christ, and the splendor of the Spirit of love to shine through him. Trusting fully in your infinite mercy and in the maternal intercession of Mary, he has given us a living image of Jesus the Good Shepherd. He has shown us that holiness is the necessary measure of ordinary Christian life, and is the way of achieving eternal communion with you. Grant us, by his intercession, and according to your will, the graces we implore  through Christ our Lord. Amen. Your motto was Totus Tuus, or, Totally Yours, Blessed Virgin Mary. Dear Saint John Paul, the surest, straightest road to Christ is through his Mother. When I am lost in life\u2019s brambles, ask Our Lady to come rescue me and bring me back to the road that Jesus wants me on. Teach me your love for Mary. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Optional: Divine Mercy Chaplet. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-pope_st_john_paul_ii"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "pope_st_john_paul_ii",
+      "name": "Pope St. John Paul II"
+    },
+    "type": "novena_feast_rule"
+  }
+}

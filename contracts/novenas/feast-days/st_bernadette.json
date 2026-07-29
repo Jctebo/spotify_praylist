@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_bernadette",
+    "feast": {
+      "day": 16,
+      "mode": "fixed",
+      "month": 4,
+      "name": "St. Bernadette"
+    },
+    "id": "st_bernadette",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "the sick",
+        "pilgrims",
+        "Lourdes"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Bernadette Soubirous was a French visionary of Lourdes whose reported Marian apparitions led to a major pilgrimage shrine and devotion to the Immaculate Conception."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Bernadette of Lourdes Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks for pacing and standardized a few phrases for clearer text-to-speech, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Bernadette, chosen by Almighty God as a channel of His graces and blessings, and through your humble obedience to the requests of our Blessed Mother, Mary, you gained for us the miraculous waters of spiritual and physical healing. We implore you to listen to our prayers, that we may be healed of our imperfections. Place our petitions in the hands of our Holy Mother, Mary, so that she may place them at the feet of her beloved Son, Our Lord and Savior Jesus Christ, that He may look on us with mercy and compassion:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Help us, dear Saint Bernadette, to follow your example, so that irrespective of our own pain and suffering we may always be mindful of the needs of others, especially those whose sufferings are greater than ours. As we await the mercy of God, remind us to offer up our pain and suffering for the conversion of sinners, and in reparation for the sins and blasphemies of mankind. Pray for us, Saint Bernadette, that like you, we may always be obedient to the will of our Heavenly Father, and that through our prayers and humility we may bring consolation to the most Sacred Heart of Jesus and the Immaculate Heart of Mary that have been so grievously wounded by our sins. Holy Saint Bernadette of Lourdes, pray for us. Amen. Pray one decade of the Rosary. Pray the Memorare: Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thine intercession was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my mother; to thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. O Mary conceived without sin, pray for us who have recourse to Thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Bernadette of Lourdes Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks for pacing and standardized a few phrases for clearer text-to-speech, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Bernadette, chosen by Almighty God as a channel of His graces and blessings, and through your humble obedience to the requests of our Blessed Mother, Mary, you gained for us the miraculous waters of spiritual and physical healing. We implore you to listen to our prayers, that we may be healed of our imperfections. Place our petitions in the hands of our Holy Mother, Mary, so that she may place them at the feet of her beloved Son, Our Lord and Savior Jesus Christ, that He may look on us with mercy and compassion:  Help us, dear Saint Bernadette, to follow your example, so that irrespective of our own pain and suffering we may always be mindful of the needs of others, especially those whose sufferings are greater than ours. As we await the mercy of God, remind us to offer up our pain and suffering for the conversion of sinners, and in reparation for the sins and blasphemies of mankind. Pray for us, Saint Bernadette, that like you, we may always be obedient to the will of our Heavenly Father, and that through our prayers and humility we may bring consolation to the most Sacred Heart of Jesus and the Immaculate Heart of Mary that have been so grievously wounded by our sins. Holy Saint Bernadette of Lourdes, pray for us. Amen. Pray one decade of the Rosary. Pray the Memorare: Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thine intercession was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my mother; to thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. O Mary conceived without sin, pray for us who have recourse to Thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks for pacing and standardized a few phrases for clearer text-to-speech, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Bernadette, chosen by Almighty God as a channel of His graces and blessings, and through your humble obedience to the requests of our Blessed Mother, Mary, you gained for us the miraculous waters of spiritual and physical healing. We implore you to listen to our prayers, that we may be healed of our imperfections. Place our petitions in the hands of our Holy Mother, Mary, so that she may place them at the feet of her beloved Son, Our Lord and Savior Jesus Christ, that He may look on us with mercy and compassion:  Help us, dear Saint Bernadette, to follow your example, so that irrespective of our own pain and suffering we may always be mindful of the needs of others, especially those whose sufferings are greater than ours. As we await the mercy of God, remind us to offer up our pain and suffering for the conversion of sinners, and in reparation for the sins and blasphemies of mankind. Pray for us, Saint Bernadette, that like you, we may always be obedient to the will of our Heavenly Father, and that through our prayers and humility we may bring consolation to the most Sacred Heart of Jesus and the Immaculate Heart of Mary that have been so grievously wounded by our sins. Holy Saint Bernadette of Lourdes, pray for us. Amen. Pray one decade of the Rosary. Pray the Memorare: Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thine intercession was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my mother; to thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. O Mary conceived without sin, pray for us who have recourse to Thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks for pacing and standardized a few phrases for clearer text-to-speech, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Bernadette, chosen by Almighty God as a channel of His graces and blessings, and through your humble obedience to the requests of our Blessed Mother, Mary, you gained for us the miraculous waters of spiritual and physical healing. We implore you to listen to our prayers, that we may be healed of our imperfections. Place our petitions in the hands of our Holy Mother, Mary, so that she may place them at the feet of her beloved Son, Our Lord and Savior Jesus Christ, that He may look on us with mercy and compassion:  Help us, dear Saint Bernadette, to follow your example, so that irrespective of our own pain and suffering we may always be mindful of the needs of others, especially those whose sufferings are greater than ours. As we await the mercy of God, remind us to offer up our pain and suffering for the conversion of sinners, and in reparation for the sins and blasphemies of mankind. Pray for us, Saint Bernadette, that like you, we may always be obedient to the will of our Heavenly Father, and that through our prayers and humility we may bring consolation to the most Sacred Heart of Jesus and the Immaculate Heart of Mary that have been so grievously wounded by our sins. Holy Saint Bernadette of Lourdes, pray for us. Amen. Pray one decade of the Rosary. Pray the Memorare: Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thine intercession was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my mother; to thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. O Mary conceived without sin, pray for us who have recourse to Thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks for pacing and standardized a few phrases for clearer text-to-speech, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Bernadette, chosen by Almighty God as a channel of His graces and blessings, and through your humble obedience to the requests of our Blessed Mother, Mary, you gained for us the miraculous waters of spiritual and physical healing. We implore you to listen to our prayers, that we may be healed of our imperfections. Place our petitions in the hands of our Holy Mother, Mary, so that she may place them at the feet of her beloved Son, Our Lord and Savior Jesus Christ, that He may look on us with mercy and compassion:  Help us, dear Saint Bernadette, to follow your example, so that irrespective of our own pain and suffering we may always be mindful of the needs of others, especially those whose sufferings are greater than ours. As we await the mercy of God, remind us to offer up our pain and suffering for the conversion of sinners, and in reparation for the sins and blasphemies of mankind. Pray for us, Saint Bernadette, that like you, we may always be obedient to the will of our Heavenly Father, and that through our prayers and humility we may bring consolation to the most Sacred Heart of Jesus and the Immaculate Heart of Mary that have been so grievously wounded by our sins. Holy Saint Bernadette of Lourdes, pray for us. Amen. Pray one decade of the Rosary. Pray the Memorare: Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thine intercession was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my mother; to thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. O Mary conceived without sin, pray for us who have recourse to Thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks for pacing and standardized a few phrases for clearer text-to-speech, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Bernadette, chosen by Almighty God as a channel of His graces and blessings, and through your humble obedience to the requests of our Blessed Mother, Mary, you gained for us the miraculous waters of spiritual and physical healing. We implore you to listen to our prayers, that we may be healed of our imperfections. Place our petitions in the hands of our Holy Mother, Mary, so that she may place them at the feet of her beloved Son, Our Lord and Savior Jesus Christ, that He may look on us with mercy and compassion:  Help us, dear Saint Bernadette, to follow your example, so that irrespective of our own pain and suffering we may always be mindful of the needs of others, especially those whose sufferings are greater than ours. As we await the mercy of God, remind us to offer up our pain and suffering for the conversion of sinners, and in reparation for the sins and blasphemies of mankind. Pray for us, Saint Bernadette, that like you, we may always be obedient to the will of our Heavenly Father, and that through our prayers and humility we may bring consolation to the most Sacred Heart of Jesus and the Immaculate Heart of Mary that have been so grievously wounded by our sins. Holy Saint Bernadette of Lourdes, pray for us. Amen. Pray one decade of the Rosary. Pray the Memorare: Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thine intercession was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my mother; to thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. O Mary conceived without sin, pray for us who have recourse to Thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks for pacing and standardized a few phrases for clearer text-to-speech, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Bernadette, chosen by Almighty God as a channel of His graces and blessings, and through your humble obedience to the requests of our Blessed Mother, Mary, you gained for us the miraculous waters of spiritual and physical healing. We implore you to listen to our prayers, that we may be healed of our imperfections. Place our petitions in the hands of our Holy Mother, Mary, so that she may place them at the feet of her beloved Son, Our Lord and Savior Jesus Christ, that He may look on us with mercy and compassion:  Help us, dear Saint Bernadette, to follow your example, so that irrespective of our own pain and suffering we may always be mindful of the needs of others, especially those whose sufferings are greater than ours. As we await the mercy of God, remind us to offer up our pain and suffering for the conversion of sinners, and in reparation for the sins and blasphemies of mankind. Pray for us, Saint Bernadette, that like you, we may always be obedient to the will of our Heavenly Father, and that through our prayers and humility we may bring consolation to the most Sacred Heart of Jesus and the Immaculate Heart of Mary that have been so grievously wounded by our sins. Holy Saint Bernadette of Lourdes, pray for us. Amen. Pray one decade of the Rosary. Pray the Memorare: Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thine intercession was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my mother; to thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. O Mary conceived without sin, pray for us who have recourse to Thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks for pacing and standardized a few phrases for clearer text-to-speech, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Bernadette, chosen by Almighty God as a channel of His graces and blessings, and through your humble obedience to the requests of our Blessed Mother, Mary, you gained for us the miraculous waters of spiritual and physical healing. We implore you to listen to our prayers, that we may be healed of our imperfections. Place our petitions in the hands of our Holy Mother, Mary, so that she may place them at the feet of her beloved Son, Our Lord and Savior Jesus Christ, that He may look on us with mercy and compassion:  Help us, dear Saint Bernadette, to follow your example, so that irrespective of our own pain and suffering we may always be mindful of the needs of others, especially those whose sufferings are greater than ours. As we await the mercy of God, remind us to offer up our pain and suffering for the conversion of sinners, and in reparation for the sins and blasphemies of mankind. Pray for us, Saint Bernadette, that like you, we may always be obedient to the will of our Heavenly Father, and that through our prayers and humility we may bring consolation to the most Sacred Heart of Jesus and the Immaculate Heart of Mary that have been so grievously wounded by our sins. Holy Saint Bernadette of Lourdes, pray for us. Amen. Pray one decade of the Rosary. Pray the Memorare: Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thine intercession was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my mother; to thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. O Mary conceived without sin, pray for us who have recourse to Thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks for pacing and standardized a few phrases for clearer text-to-speech, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Bernadette, chosen by Almighty God as a channel of His graces and blessings, and through your humble obedience to the requests of our Blessed Mother, Mary, you gained for us the miraculous waters of spiritual and physical healing. We implore you to listen to our prayers, that we may be healed of our imperfections. Place our petitions in the hands of our Holy Mother, Mary, so that she may place them at the feet of her beloved Son, Our Lord and Savior Jesus Christ, that He may look on us with mercy and compassion:  Help us, dear Saint Bernadette, to follow your example, so that irrespective of our own pain and suffering we may always be mindful of the needs of others, especially those whose sufferings are greater than ours. As we await the mercy of God, remind us to offer up our pain and suffering for the conversion of sinners, and in reparation for the sins and blasphemies of mankind. Pray for us, Saint Bernadette, that like you, we may always be obedient to the will of our Heavenly Father, and that through our prayers and humility we may bring consolation to the most Sacred Heart of Jesus and the Immaculate Heart of Mary that have been so grievously wounded by our sins. Holy Saint Bernadette of Lourdes, pray for us. Amen. Pray one decade of the Rosary. Pray the Memorare: Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thine intercession was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my mother; to thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. O Mary conceived without sin, pray for us who have recourse to Thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks for pacing and standardized a few phrases for clearer text-to-speech, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Bernadette, chosen by Almighty God as a channel of His graces and blessings, and through your humble obedience to the requests of our Blessed Mother, Mary, you gained for us the miraculous waters of spiritual and physical healing. We implore you to listen to our prayers, that we may be healed of our imperfections. Place our petitions in the hands of our Holy Mother, Mary, so that she may place them at the feet of her beloved Son, Our Lord and Savior Jesus Christ, that He may look on us with mercy and compassion:  Help us, dear Saint Bernadette, to follow your example, so that irrespective of our own pain and suffering we may always be mindful of the needs of others, especially those whose sufferings are greater than ours. As we await the mercy of God, remind us to offer up our pain and suffering for the conversion of sinners, and in reparation for the sins and blasphemies of mankind. Pray for us, Saint Bernadette, that like you, we may always be obedient to the will of our Heavenly Father, and that through our prayers and humility we may bring consolation to the most Sacred Heart of Jesus and the Immaculate Heart of Mary that have been so grievously wounded by our sins. Holy Saint Bernadette of Lourdes, pray for us. Amen. Pray one decade of the Rosary. Pray the Memorare: Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thine intercession was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my mother; to thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. O Mary conceived without sin, pray for us who have recourse to Thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_bernadette"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_bernadette",
+      "name": "St. Bernadette"
+    },
+    "type": "novena_feast_rule"
+  }
+}

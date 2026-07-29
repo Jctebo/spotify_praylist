@@ -1,0 +1,224 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_gertrude_prayer",
+    "feast": {
+      "day": 16,
+      "mode": "fixed",
+      "month": 11,
+      "name": "St. Gertrude Prayer"
+    },
+    "id": "st_gertrude_prayer",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A novena centered on the St. Gertrude Prayer, traditionally offered for the relief of souls in purgatory and for God\u2019s mercy on the departed."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Gertrude the Great Prayers for the Souls in Purgatory Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Lowercased a few mid-sentence capitalizations for smoother text-to-speech while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Eternal Father, I offer Thee the Most Precious Blood of Thy Divine Son, Jesus, in union with the Masses said throughout the world today, for all the holy souls in Purgatory, for sinners everywhere, for sinners in the universal Church, those in my own home and within my family. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Accept, O compassionate Jesus, this my prayer with that exceeding love wherewith Thou didst endure a bitter death, and didst offer it, together with all the fruit of Thy most sacred Humanity, to God the Father on the day of Thine Ascension; and by the depth of those wounds which scarred Thy flesh and pierced Thy hands and feet and heart, I beseech Thee, raise me up, who am steeped and sunk in sin, and render me well-pleasing to Thee in all things. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Gertrude the Great Prayers for the Souls in Purgatory Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Lowercased a few mid-sentence capitalizations for smoother text-to-speech while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Eternal Father, I offer Thee the Most Precious Blood of Thy Divine Son, Jesus, in union with the Masses said throughout the world today, for all the holy souls in Purgatory, for sinners everywhere, for sinners in the universal Church, those in my own home and within my family. Amen.  Accept, O compassionate Jesus, this my prayer with that exceeding love wherewith Thou didst endure a bitter death, and didst offer it, together with all the fruit of Thy most sacred Humanity, to God the Father on the day of Thine Ascension; and by the depth of those wounds which scarred Thy flesh and pierced Thy hands and feet and heart, I beseech Thee, raise me up, who am steeped and sunk in sin, and render me well-pleasing to Thee in all things. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Lowercased a few mid-sentence capitalizations for smoother text-to-speech while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Eternal Father, I offer Thee the Most Precious Blood of Thy Divine Son, Jesus, in union with the Masses said throughout the world today, for all the holy souls in Purgatory, for sinners everywhere, for sinners in the universal Church, those in my own home and within my family. Amen.  Accept, O compassionate Jesus, this my prayer with that exceeding love wherewith Thou didst endure a bitter death, and didst offer it, together with all the fruit of Thy most sacred Humanity, to God the Father on the day of Thine Ascension; and by the depth of those wounds which scarred Thy flesh and pierced Thy hands and feet and heart, I beseech Thee, raise me up, who am steeped and sunk in sin, and render me well-pleasing to Thee in all things. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Lowercased a few mid-sentence capitalizations for smoother text-to-speech while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Eternal Father, I offer Thee the Most Precious Blood of Thy Divine Son, Jesus, in union with the Masses said throughout the world today, for all the holy souls in Purgatory, for sinners everywhere, for sinners in the universal Church, those in my own home and within my family. Amen.  Accept, O compassionate Jesus, this my prayer with that exceeding love wherewith Thou didst endure a bitter death, and didst offer it, together with all the fruit of Thy most sacred Humanity, to God the Father on the day of Thine Ascension; and by the depth of those wounds which scarred Thy flesh and pierced Thy hands and feet and heart, I beseech Thee, raise me up, who am steeped and sunk in sin, and render me well-pleasing to Thee in all things. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Lowercased a few mid-sentence capitalizations for smoother text-to-speech while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Eternal Father, I offer Thee the Most Precious Blood of Thy Divine Son, Jesus, in union with the Masses said throughout the world today, for all the holy souls in Purgatory, for sinners everywhere, for sinners in the universal Church, those in my own home and within my family. Amen.  Accept, O compassionate Jesus, this my prayer with that exceeding love wherewith Thou didst endure a bitter death, and didst offer it, together with all the fruit of Thy most sacred Humanity, to God the Father on the day of Thine Ascension; and by the depth of those wounds which scarred Thy flesh and pierced Thy hands and feet and heart, I beseech Thee, raise me up, who am steeped and sunk in sin, and render me well-pleasing to Thee in all things. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Lowercased a few mid-sentence capitalizations for smoother text-to-speech while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Eternal Father, I offer Thee the Most Precious Blood of Thy Divine Son, Jesus, in union with the Masses said throughout the world today, for all the holy souls in Purgatory, for sinners everywhere, for sinners in the universal Church, those in my own home and within my family. Amen.  Accept, O compassionate Jesus, this my prayer with that exceeding love wherewith Thou didst endure a bitter death, and didst offer it, together with all the fruit of Thy most sacred Humanity, to God the Father on the day of Thine Ascension; and by the depth of those wounds which scarred Thy flesh and pierced Thy hands and feet and heart, I beseech Thee, raise me up, who am steeped and sunk in sin, and render me well-pleasing to Thee in all things. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Lowercased a few mid-sentence capitalizations for smoother text-to-speech while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Eternal Father, I offer Thee the Most Precious Blood of Thy Divine Son, Jesus, in union with the Masses said throughout the world today, for all the holy souls in Purgatory, for sinners everywhere, for sinners in the universal Church, those in my own home and within my family. Amen.  Accept, O compassionate Jesus, this my prayer with that exceeding love wherewith Thou didst endure a bitter death, and didst offer it, together with all the fruit of Thy most sacred Humanity, to God the Father on the day of Thine Ascension; and by the depth of those wounds which scarred Thy flesh and pierced Thy hands and feet and heart, I beseech Thee, raise me up, who am steeped and sunk in sin, and render me well-pleasing to Thee in all things. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Lowercased a few mid-sentence capitalizations for smoother text-to-speech while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Eternal Father, I offer Thee the Most Precious Blood of Thy Divine Son, Jesus, in union with the Masses said throughout the world today, for all the holy souls in Purgatory, for sinners everywhere, for sinners in the universal Church, those in my own home and within my family. Amen.  Accept, O compassionate Jesus, this my prayer with that exceeding love wherewith Thou didst endure a bitter death, and didst offer it, together with all the fruit of Thy most sacred Humanity, to God the Father on the day of Thine Ascension; and by the depth of those wounds which scarred Thy flesh and pierced Thy hands and feet and heart, I beseech Thee, raise me up, who am steeped and sunk in sin, and render me well-pleasing to Thee in all things. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Lowercased a few mid-sentence capitalizations for smoother text-to-speech while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Eternal Father, I offer Thee the Most Precious Blood of Thy Divine Son, Jesus, in union with the Masses said throughout the world today, for all the holy souls in Purgatory, for sinners everywhere, for sinners in the universal Church, those in my own home and within my family. Amen.  Accept, O compassionate Jesus, this my prayer with that exceeding love wherewith Thou didst endure a bitter death, and didst offer it, together with all the fruit of Thy most sacred Humanity, to God the Father on the day of Thine Ascension; and by the depth of those wounds which scarred Thy flesh and pierced Thy hands and feet and heart, I beseech Thee, raise me up, who am steeped and sunk in sin, and render me well-pleasing to Thee in all things. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Lowercased a few mid-sentence capitalizations for smoother text-to-speech while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Eternal Father, I offer Thee the Most Precious Blood of Thy Divine Son, Jesus, in union with the Masses said throughout the world today, for all the holy souls in Purgatory, for sinners everywhere, for sinners in the universal Church, those in my own home and within my family. Amen.  Accept, O compassionate Jesus, this my prayer with that exceeding love wherewith Thou didst endure a bitter death, and didst offer it, together with all the fruit of Thy most sacred Humanity, to God the Father on the day of Thine Ascension; and by the depth of those wounds which scarred Thy flesh and pierced Thy hands and feet and heart, I beseech Thee, raise me up, who am steeped and sunk in sin, and render me well-pleasing to Thee in all things. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_gertrude_prayer"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_gertrude_prayer",
+      "name": "St. Gertrude Prayer"
+    },
+    "type": "novena_feast_rule"
+  }
+}

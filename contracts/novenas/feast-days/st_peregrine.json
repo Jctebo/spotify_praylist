@@ -1,0 +1,443 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_peregrine",
+    "feast": {
+      "day": 1,
+      "mode": "fixed",
+      "month": 5,
+      "name": "St. Peregrine"
+    },
+    "id": "st_peregrine",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "cancer patients",
+        "those with serious illness"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Peregrine Laziosi was a Servite friar known for his holiness and endurance in suffering, honored by Catholics in a novena for his intercession."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Peregrine Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "Made minor punctuation adjustments for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good St. Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill)."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. O great St. Peregrine, who were yourself converted from a violent and sinful life, grant that those who have strayed from the way of Christ may, like you, be given the grace to repent and amend their ways. Amen. St. Peregrine, pray for us. Glorious wonder-worker, St. Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world, to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg, by a touch of His divine Hand. Obtain for me the grace to answer every call of God, and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "Made minor punctuation adjustments for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good St. Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill)."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. Good St. Peregrine, who bore the agonies of cancer patiently for so many years, grant us the courage and faith to stand up under our own sickness or weakness. Amen. St. Peregrine, pray for our fortitude. Glorious wonder-worker, St. Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world, to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg by a touch of His divine Hand. Obtain for me the grace to answer every call of God, and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "Normalized \u201cSt.\u201d to \u201cSaint\u201d for clearer text-to-speech and adjusted paragraph breaks for pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good Saint Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill)."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. Saint Peregrine, as His priest, you dwelt for many years in peace in the House of the Lord. Intercede for us with Him, then, that this troubled world, torn by hatred and violence, may at last know the blessedness of peace with justice. Amen. Saint Peregrine, help us bring lasting peace to the world. Glorious wonder-worker, Saint Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg by a touch of His divine Hand. Obtain for me the grace to answer every call of God and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "Standardized \u201cSt.\u201d to \u201cSaint\u201d and added light punctuation and paragraph breaks for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good Saint Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill)."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. Saint Peregrine, you became a model priest and eloquent preacher. Grant us more vocations in these troubled times. Amen. Saint Peregrine, inspire more young men and women to follow in the footsteps of Christ, just as you did. Glorious wonder-worker, Saint Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world, to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg, by a touch of His divine Hand. Obtain for me the grace to answer every call of God, and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "Made minor punctuation adjustments for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good St. Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill)."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. O St. Peregrine, just as you were cured from cancer of the body, intercede for us that the cancer of disregard for life may be removed from the world today. Amen. St. Peregrine, pray that the people of the world may heed the teachings of Christ. Glorious wonder-worker, St. Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world, to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg by a touch of His divine Hand. Obtain for me the grace to answer every call of God and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "Made minor punctuation and line-break adjustments for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good St. Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill)."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. St. Peregrine, as a youth you led a life of sin. May our Divine Lord grant that your own conversion may inspire our wayward young people today to change their lives as you did, and return to Christ. Amen. St. Peregrine, pray for our young people. Glorious wonder-worker, St. Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world, to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg by a touch of His divine Hand. Obtain for me the grace to answer every call of God and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "Minor punctuation and line-break adjustments for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good St. Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill)."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. St. Peregrine, God granted you the grace of a long and fruitful life. Ask Our Lord Jesus Christ to lighten the burden of so many of our aged today who are spending their twilight years in pain, sorrow, and loneliness. Amen. St. Peregrine, bring comfort to our aged in their last days. Glorious wonder-worker, St. Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg by a touch of His divine Hand. Obtain for me the grace to answer every call of God and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "Made minor punctuation adjustments for clearer text-to-speech pacing while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good St. Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill)."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. O St. Peregrine, we ask you to heed the anguished cries of those dying from starvation throughout the world today, especially children and old people. Amen. St. Peregrine, pray that relief may come to those who are suffering from hunger and thirst in body and soul. Glorious wonder-worker, St. Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world, to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg by a touch of His divine Hand. Obtain for me the grace to answer every call of God and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "Standardized \u201cSt.\u201d to \u201cSaint\u201d and added a comma for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good Saint Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill)."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. Finally, O good Saint Peregrine, we ask that you intercede for those whom God sees fit to call home. May they die in happiness and peace, confident that they will be with you forever in the presence of Jesus and Mary. Amen. Saint Peregrine, pray that we may have strength and comfort in the hour of our death. Glorious wonder-worker, Saint Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg by a touch of His divine Hand. Obtain for me the grace to answer every call of God and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Savior and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Peregrine Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Made minor punctuation adjustments for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good St. Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill).  In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. O great St. Peregrine, who were yourself converted from a violent and sinful life, grant that those who have strayed from the way of Christ may, like you, be given the grace to repent and amend their ways. Amen. St. Peregrine, pray for us. Glorious wonder-worker, St. Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world, to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg, by a touch of His divine Hand. Obtain for me the grace to answer every call of God, and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Made minor punctuation adjustments for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good St. Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill).  In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. Good St. Peregrine, who bore the agonies of cancer patiently for so many years, grant us the courage and faith to stand up under our own sickness or weakness. Amen. St. Peregrine, pray for our fortitude. Glorious wonder-worker, St. Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world, to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg by a touch of His divine Hand. Obtain for me the grace to answer every call of God, and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Normalized \u201cSt.\u201d to \u201cSaint\u201d for clearer text-to-speech and adjusted paragraph breaks for pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good Saint Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill).  In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. Saint Peregrine, as His priest, you dwelt for many years in peace in the House of the Lord. Intercede for us with Him, then, that this troubled world, torn by hatred and violence, may at last know the blessedness of peace with justice. Amen. Saint Peregrine, help us bring lasting peace to the world. Glorious wonder-worker, Saint Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg by a touch of His divine Hand. Obtain for me the grace to answer every call of God and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Standardized \u201cSt.\u201d to \u201cSaint\u201d and added light punctuation and paragraph breaks for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good Saint Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill).  In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. Saint Peregrine, you became a model priest and eloquent preacher. Grant us more vocations in these troubled times. Amen. Saint Peregrine, inspire more young men and women to follow in the footsteps of Christ, just as you did. Glorious wonder-worker, Saint Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world, to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg, by a touch of His divine Hand. Obtain for me the grace to answer every call of God, and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Made minor punctuation adjustments for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good St. Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill).  In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. O St. Peregrine, just as you were cured from cancer of the body, intercede for us that the cancer of disregard for life may be removed from the world today. Amen. St. Peregrine, pray that the people of the world may heed the teachings of Christ. Glorious wonder-worker, St. Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world, to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg by a touch of His divine Hand. Obtain for me the grace to answer every call of God and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Made minor punctuation and line-break adjustments for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good St. Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill).  In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. St. Peregrine, as a youth you led a life of sin. May our Divine Lord grant that your own conversion may inspire our wayward young people today to change their lives as you did, and return to Christ. Amen. St. Peregrine, pray for our young people. Glorious wonder-worker, St. Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world, to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg by a touch of His divine Hand. Obtain for me the grace to answer every call of God and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Minor punctuation and line-break adjustments for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good St. Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill).  In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. St. Peregrine, God granted you the grace of a long and fruitful life. Ask Our Lord Jesus Christ to lighten the burden of so many of our aged today who are spending their twilight years in pain, sorrow, and loneliness. Amen. St. Peregrine, bring comfort to our aged in their last days. Glorious wonder-worker, St. Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg by a touch of His divine Hand. Obtain for me the grace to answer every call of God and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Made minor punctuation adjustments for clearer text-to-speech pacing while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good St. Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill).  In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. O St. Peregrine, we ask you to heed the anguished cries of those dying from starvation throughout the world today, especially children and old people. Amen. St. Peregrine, pray that relief may come to those who are suffering from hunger and thirst in body and soul. Glorious wonder-worker, St. Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world, to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg by a touch of His divine Hand. Obtain for me the grace to answer every call of God and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Saviour and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Standardized \u201cSt.\u201d to \u201cSaint\u201d and added a comma for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O good Saint Peregrine, patron of those suffering from foot ailments, cancer, and incurable diseases, grant, we beseech you, relief from suffering to (name the names of the persons who are ill).  In your compassion, we beg you to intercede with Our Lord Jesus Christ that mankind may soon find a cure for the dreaded disease of physical cancer, as well as for the moral cancer which grips so much of our world today. Amen. Finally, O good Saint Peregrine, we ask that you intercede for those whom God sees fit to call home. May they die in happiness and peace, confident that they will be with you forever in the presence of Jesus and Mary. Amen. Saint Peregrine, pray that we may have strength and comfort in the hour of our death. Glorious wonder-worker, Saint Peregrine, you answered the divine call with a ready spirit, and forsook all the comforts of a life of ease and all the empty honors of the world to dedicate yourself to God in the Order of His holy Mother. You labored manfully for the salvation of souls. In union with Jesus crucified, you endured painful sufferings with such patience as to deserve to be healed miraculously of an incurable cancer in your leg by a touch of His divine Hand. Obtain for me the grace to answer every call of God and to fulfill His will in all the events of life. Enkindle in my heart a consuming zeal for the salvation of all men. Deliver me from the infirmities that afflict my body, especially (name any ailments you may have). Obtain for me also a perfect resignation to the sufferings it may please God to send me, so that, imitating our crucified Savior and His sorrowful Mother, I may merit eternal glory in heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_peregrine"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_peregrine",
+      "name": "St. Peregrine"
+    },
+    "type": "novena_feast_rule"
+  }
+}

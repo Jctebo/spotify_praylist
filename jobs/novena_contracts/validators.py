@@ -53,6 +53,57 @@ def _romcal_identifier_index(years: tuple[int, ...]) -> Dict[str, str]:
     return index
 
 
+@lru_cache(maxsize=16)
+def _romcal_mass_identifier_index(years: tuple[int, ...]) -> Dict[str, str]:
+    from jobs.novena.liturgical_helpers import romcal_fetch_day
+
+    index: Dict[str, str] = {}
+    for year in years:
+        current = _dt.date(year, 1, 1)
+        while current.year == year:
+            for event in romcal_fetch_day("general_roman", "en", current):
+                identifier = str(event.get("id", "")).strip()
+                if not identifier:
+                    continue
+                for candidate in (identifier, event.get("name", ""), event.get("fullname", ""), event.get("title", "")):
+                    for normal in _normal_forms(candidate):
+                        if normal and normal not in index:
+                            index[normal] = identifier
+            current += _dt.timedelta(days=1)
+    return index
+
+
+@lru_cache(maxsize=16)
+def _romcal_mass_dates(year: int) -> Dict[str, _dt.date]:
+    from jobs.novena.liturgical_helpers import romcal_fetch_day
+
+    dates: Dict[str, _dt.date] = {}
+    current = _dt.date(year, 1, 1)
+    while current.year == year:
+        for event in romcal_fetch_day("general_roman", "en", current):
+            identifier = str(event.get("id", "")).strip()
+            if identifier and identifier not in dates:
+                dates[identifier] = current
+        current += _dt.timedelta(days=1)
+    return dates
+
+
+def _suppressed_romcal_date(identifier: str, year: int) -> Optional[_dt.date]:
+    """Recover a suppressed fixed celebration from Romcal's nearby canonical years."""
+    observed = [
+        value
+        for candidate_year in range(year - 6, year + 7)
+        if candidate_year != year
+        for key, value in _romcal_mass_dates(candidate_year).items()
+        if key == identifier
+    ]
+    month_days = {(value.month, value.day) for value in observed}
+    if len(month_days) != 1:
+        return None
+    month, day = next(iter(month_days))
+    return _dt.date(year, month, day)
+
+
 def resolve_romcal_identifier(value: Any, *, years: Optional[Iterable[int]] = None) -> str:
     candidate = str(value or "").strip()
     if not candidate:
@@ -71,6 +122,11 @@ def resolve_romcal_identifier(value: Any, *, years: Optional[Iterable[int]] = No
         resolved = index.get(normal)
         if resolved:
             return resolved
+    mass_index = _romcal_mass_identifier_index(search_years)
+    for normal in _normal_forms(candidate):
+        resolved = mass_index.get(normal)
+        if resolved:
+            return resolved
     return normalized_candidate
 
 
@@ -83,6 +139,12 @@ def resolve_romcal_date(value: Any, *, year: int) -> Optional[_dt.date]:
         for day in days:
             if day.id == identifier:
                 return date_value
+    mass_date = _romcal_mass_dates(year).get(identifier)
+    if mass_date is not None:
+        return mass_date
+    suppressed_date = _suppressed_romcal_date(identifier, year)
+    if suppressed_date is not None:
+        return suppressed_date
     derived = DERIVED_ROMCAL_DATE_OFFSETS.get(original_identifier)
     if derived is not None:
         base_identifier, offset_days = derived
@@ -277,15 +339,19 @@ def _validate_feast_record(
             _dt.date(2000, month, day)
         except ValueError as exc:
             raise RuntimeError(f"Invalid novena contract in {source}: feast day is not valid for month {month}.") from exc
-    elif feast_mode == "romcal_id":
+    elif feast_mode in {"romcal_id", "relative_to_romcal"}:
         romcal_id = str(feast.get("romcal_id", "")).strip()
         if not romcal_id:
             raise RuntimeError(f"Invalid novena contract in {source}: feast.romcal_id is required for movable feasts.")
         resolved = resolve_romcal_identifier(romcal_id)
         if not resolved:
             raise RuntimeError(f"Invalid novena contract in {source}: feast.romcal_id is invalid.")
+        if feast_mode == "relative_to_romcal":
+            offset_days = feast.get("offset_days")
+            if isinstance(offset_days, bool) or not isinstance(offset_days, int):
+                raise RuntimeError(f"Invalid novena contract in {source}: feast.offset_days must be an integer.")
     else:
-        raise RuntimeError(f"Invalid novena contract in {source}: feast.mode must be fixed or romcal_id.")
+        raise RuntimeError(f"Invalid novena contract in {source}: feast.mode must be fixed, romcal_id, or relative_to_romcal.")
     if not str(feast.get("name", "")).strip():
         raise RuntimeError(f"Invalid novena contract in {source}: feast requires a name.")
     if not entry_id:
@@ -319,6 +385,23 @@ def validate_novena_contract(payload: Dict[str, Any], *, source: str, template_d
         saint_name = str(saint.get("name", "")).strip()
         if not saint_id or not saint_name:
             raise RuntimeError(f"Invalid novena contract in {source}: saint requires id and name.")
+
+    intro = contract.get("intro")
+    if intro is not None:
+        if not isinstance(intro, dict):
+            raise RuntimeError(f"Invalid novena contract in {source}: intro must be an object when present.")
+        kind = str(intro.get("kind", "")).strip().lower()
+        if kind not in {"saint", "event"}:
+            raise RuntimeError(f"Invalid novena contract in {source}: intro.kind must be saint or event.")
+        if not str(intro.get("summary", "")).strip():
+            raise RuntimeError(f"Invalid novena contract in {source}: intro.summary is required.")
+        patronage = intro.get("patronage", [])
+        if not isinstance(patronage, list) or any(not str(item).strip() for item in patronage):
+            raise RuntimeError(f"Invalid novena contract in {source}: intro.patronage must be an array of text.")
+        if kind == "saint" and not patronage:
+            raise RuntimeError(f"Invalid novena contract in {source}: saint intro requires patronage.")
+        if kind == "event" and patronage:
+            raise RuntimeError(f"Invalid novena contract in {source}: event intro must not define patronage.")
 
     novena = contract.get("novena")
     if not isinstance(novena, dict):

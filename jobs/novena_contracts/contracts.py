@@ -140,22 +140,25 @@ class FeastRule:
     day: int
     name: str
     romcal_id: str = ""
+    offset_days: int = 0
 
     def feast_date(self, year: int) -> _dt.date:
-        if self.mode == "romcal_id":
+        if self.mode in {"romcal_id", "relative_to_romcal"}:
             from .validators import resolve_romcal_date
 
             resolved = resolve_romcal_date(self.romcal_id or self.name, year=year)
             if resolved is None:
                 raise RuntimeError(f"Unable to resolve movable feast date for '{self.romcal_id or self.name}' in {year}.")
-            return resolved
+            return resolved + _dt.timedelta(days=self.offset_days)
         return _dt.date(year, self.month, self.day)
 
     def to_dict(self) -> Dict[str, Any]:
         payload = {"id": self.entry_id, "mode": self.mode, "name": self.name}
-        if self.mode == "romcal_id":
+        if self.mode in {"romcal_id", "relative_to_romcal"}:
             payload["romcal_id"] = self.romcal_id
-        else:
+        if self.mode == "relative_to_romcal":
+            payload["offset_days"] = self.offset_days
+        elif self.mode == "fixed":
             payload["month"] = self.month
             payload["day"] = self.day
         return payload
@@ -218,6 +221,7 @@ class NovenaContract:
     publishing: PublishingRule
     source_path: Path
     enabled: bool = True
+    intro: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         payload = {
@@ -227,6 +231,7 @@ class NovenaContract:
                 "type": self.contract_type,
                 "enabled": self.enabled,
                 "saint": dict(self.saint),
+                "intro": dict(self.intro),
                 "novena": self.novena.to_dict(),
                 "publishing": self.publishing.to_dict(),
             }
@@ -251,12 +256,14 @@ class NovenaRuntime:
     active_day: int
     publishing: Dict[str, Any]
     source_path: Path
+    intro: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "family_id": self.family_id,
             "contract_id": self.contract_id,
             "saint": dict(self.saint),
+            "intro": dict(self.intro),
             "feast": dict(self.feast),
             "novena": dict(self.novena),
             "resolved_template": self.resolved_template.to_dict(),
@@ -545,7 +552,7 @@ def _feast_payload_to_rule(
     source: Path,
 ) -> FeastRule:
     feast_mode = str(feast_payload.get("mode", "")).strip().lower() or ("romcal_id" if feast_payload.get("romcal_id") else "fixed")
-    if feast_mode == "romcal_id":
+    if feast_mode in {"romcal_id", "relative_to_romcal"}:
         month = 1
         day = 1
     else:
@@ -558,6 +565,7 @@ def _feast_payload_to_rule(
         day=day,
         name=str(feast_payload["name"]).strip(),
         romcal_id=str(feast_payload.get("romcal_id", "")).strip(),
+        offset_days=int(feast_payload.get("offset_days", 0)),
     )
 
 
@@ -582,6 +590,7 @@ def _contract_entries_from_payload(payload: Dict[str, Any], *, source: Path, tem
     entries: List[NovenaContract] = []
     family_id = _normalize_token(contract["id"])
     shared_saint = contract.get("saint")
+    shared_intro = contract.get("intro")
     selector_payload = contract.get("selector")
     if isinstance(selector_payload, dict):
         entries.append(
@@ -591,6 +600,7 @@ def _contract_entries_from_payload(payload: Dict[str, Any], *, source: Path, tem
                 contract_type=str(contract["type"]).strip(),
                 enabled=enabled,
                 saint=dict(shared_saint or {}),
+                intro=dict(shared_intro or {}),
                 selector=_selector_payload_to_rule(selector_payload, source=source),
                 feast=None,
                 novena=novena_rule,
@@ -611,6 +621,7 @@ def _contract_entries_from_payload(payload: Dict[str, Any], *, source: Path, tem
         )
         feast_payload = dict(item.get("feast") or item)
         saint_payload = item.get("saint") or shared_saint
+        intro_payload = item.get("intro") or shared_intro
         feast = _feast_payload_to_rule(feast_payload=feast_payload, entry_id=entry_id, source=source)
         if not _template_matches_content_mode(template_spec, novena_rule.content_mode):
             raise RuntimeError(
@@ -623,6 +634,7 @@ def _contract_entries_from_payload(payload: Dict[str, Any], *, source: Path, tem
                 contract_type=str(contract["type"]).strip(),
                 enabled=enabled,
                 saint=dict(saint_payload or {}),
+                intro=dict(intro_payload or {}),
                 selector=None,
                 feast=feast,
                 novena=novena_rule,

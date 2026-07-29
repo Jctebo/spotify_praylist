@@ -1,0 +1,440 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "our_lady_of_guadalupe",
+    "feast": {
+      "day": 12,
+      "mode": "fixed",
+      "month": 12,
+      "name": "Our Lady of Guadalupe"
+    },
+    "id": "our_lady_of_guadalupe",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "Our Lady of Guadalupe honors Mary\u2019s 1531 apparitions to Saint Juan Diego near Mexico City and her enduring role as a sign of faith and unity."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of Guadalupe Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing while keeping wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Dearest Lady of Guadalupe, fruitful Mother of holiness, teach me your ways of gentleness and strength. Hear my humble prayer offered with heartfelt confidence to beg this favor. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks slightly for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "O Mary, conceived without sin, I come to your throne of grace to share the fervent devotion of your faithful children who call to you under the glorious title of Guadalupe. Obtain for me a lively faith to do your Son\u2019s holy will always. May His will be done on earth as it is in heaven. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Minor punctuation and paragraph breaks adjusted for clearer text-to-speech pacing; canonical prayers and the control marker were preserved verbatim.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "O Mary, whose Immaculate Heart was pierced by seven swords of grief, help me to walk valiantly amid the sharp thorns strewn across my pathway. Obtain for me the strength to be a true imitator of you. This I ask you, my dear Mother. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God! Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Dearest Mother of Guadalupe, I beg you for a fortified will to imitate your divine Son\u2019s charity, to always seek the good of others in need. Grant me this, I humbly ask of you. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks and minor punctuation for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "O most holy Mother, I beg you to obtain for me pardon of all my sins, abundant graces to serve your Son more faithfully from now on, and lastly, the grace to praise Him with you forever in heaven. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping wording and prayer order unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Mary, Mother of vocations, multiply priestly vocations and fill the earth with religious houses which will be light and warmth for the world, safety in stormy nights. Beg your Son to send us many priests and religious. This we ask of you, O Mother. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks slightly for clearer text-to-speech pacing while keeping the prayer text faithful.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "O Lady of Guadalupe, we beg you that parents live a holy life and educate their children in a Christian manner; that children obey and follow the directions of their parents; that all members of the family pray and worship together. This we ask of you, O Mother. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Split the long opening prayer into shorter paragraphs for clearer pacing in text-to-speech while keeping wording and order unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "With my heart full of the most sincere veneration, I prostrate myself before you, O Mother, to ask you to obtain for me the grace to fulfill the duties of my state in life with faithfulness and constancy. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks slightly for clearer text-to-speech pacing while preserving the original wording and prayer order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "O God, You have been pleased to bestow upon us unceasing favors by having placed us under the special protection of the Most Blessed Virgin Mary. Grant us, your humble servants, who rejoice in honoring her today upon earth, the happiness of seeing her face to face in heaven. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of Guadalupe Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing while keeping wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen  Dearest Lady of Guadalupe, fruitful Mother of holiness, teach me your ways of gentleness and strength. Hear my humble prayer offered with heartfelt confidence to beg this favor. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks slightly for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen  O Mary, conceived without sin, I come to your throne of grace to share the fervent devotion of your faithful children who call to you under the glorious title of Guadalupe. Obtain for me a lively faith to do your Son\u2019s holy will always. May His will be done on earth as it is in heaven. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Minor punctuation and paragraph breaks adjusted for clearer text-to-speech pacing; canonical prayers and the control marker were preserved verbatim.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen  O Mary, whose Immaculate Heart was pierced by seven swords of grief, help me to walk valiantly amid the sharp thorns strewn across my pathway. Obtain for me the strength to be a true imitator of you. This I ask you, my dear Mother. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God! Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen  Dearest Mother of Guadalupe, I beg you for a fortified will to imitate your divine Son\u2019s charity, to always seek the good of others in need. Grant me this, I humbly ask of you. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks and minor punctuation for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen  O most holy Mother, I beg you to obtain for me pardon of all my sins, abundant graces to serve your Son more faithfully from now on, and lastly, the grace to praise Him with you forever in heaven. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping wording and prayer order unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen  Mary, Mother of vocations, multiply priestly vocations and fill the earth with religious houses which will be light and warmth for the world, safety in stormy nights. Beg your Son to send us many priests and religious. This we ask of you, O Mother. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks slightly for clearer text-to-speech pacing while keeping the prayer text faithful.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen  O Lady of Guadalupe, we beg you that parents live a holy life and educate their children in a Christian manner; that children obey and follow the directions of their parents; that all members of the family pray and worship together. This we ask of you, O Mother. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Split the long opening prayer into shorter paragraphs for clearer pacing in text-to-speech while keeping wording and order unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen  With my heart full of the most sincere veneration, I prostrate myself before you, O Mother, to ask you to obtain for me the grace to fulfill the duties of my state in life with faithfulness and constancy. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks slightly for clearer text-to-speech pacing while preserving the original wording and prayer order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Remember, O most gracious Virgin of Guadalupe, that in your heavenly apparitions on the mount of Tepeyac, you promised to show your compassion and pity toward all who, loving and trusting you, seek your help and call upon you in their necessities and afflictions. You promised to hear our supplications, to dry our tears, and to give us consolation and relief. Never has it been known that anyone who fled to your protection, implored your help, or sought your intercession, was left unaided. Inspired by this confidence, we fly to you, O Mary, ever-Virgin Mother of the true God. Though grieving under the weight of our sins, we come to prostrate ourselves before you. We fully trust that, standing beneath your shadow and protection, nothing will trouble or afflict us, nor do we need to fear illness or misfortune, or any other sorrow. O Virgin of Guadalupe, you want to remain with us through your admirable Image, you who are our Mother, our health, and our life. Placing ourselves beneath your maternal gaze, and having recourse to you in all our necessities, we need do nothing more. O Holy Mother of God, despise not our petitions, but in your mercy hear and answer us. Amen  O God, You have been pleased to bestow upon us unceasing favors by having placed us under the special protection of the Most Blessed Virgin Mary. Grant us, your humble servants, who rejoice in honoring her today upon earth, the happiness of seeing her face to face in heaven. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-our_lady_of_guadalupe"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "our_lady_of_guadalupe",
+      "name": "Our Lady of Guadalupe"
+    },
+    "type": "novena_feast_rule"
+  }
+}

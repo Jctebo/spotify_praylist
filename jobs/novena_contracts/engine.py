@@ -185,6 +185,9 @@ def _build_novena_intro_result(
 ) -> DevotionalIntroResult:
     saint_name = _normalize_whitespace(context.get("saint_name", runtime.saint.get("name", runtime.contract_id)))
     intro_context = dict(context)
+    calendar_bridge = _normalize_whitespace(
+        intro_context.get("daily_theme_transition", "") or intro_context.get("sharedThemeTransition", "")
+    )
     intro_context.update(
         {
             "date": runtime.date.isoformat(),
@@ -193,6 +196,7 @@ def _build_novena_intro_result(
             "saint_name": saint_name,
             "day": str(runtime.active_day),
             "active_day": str(runtime.active_day),
+            "calendar_bridge": calendar_bridge,
         }
     )
     return generate_intro_fn(NOVENA_PROFILE, intro_context)
@@ -399,12 +403,17 @@ def runtime_context(runtime: NovenaRuntime, *, daily_theme_context: Optional[Map
         "saint_id": runtime.saint.get("id", runtime.contract_id),
         "saint_name": saint_name,
         "saint": dict(runtime.saint),
+        "intro": dict(runtime.intro),
+        "intro_kind": str(runtime.intro.get("kind", "")).strip(),
+        "intro_summary": str(runtime.intro.get("summary", "")).strip(),
+        "intro_patronage": ", ".join(str(item).strip() for item in runtime.intro.get("patronage", []) if str(item).strip()),
         "feast_name": feast_name,
         "feast": dict(runtime.feast),
         "theme": theme,
         "daily_focus": theme,
         "novena_daily_focus": theme,
         "themes": themes,
+        "short_form_intro_prompt": str(ai_config.get("intro_prompt", "")).strip(),
         "themes_text": ", ".join(str(item).strip() for item in themes if str(item).strip()),
         "date": runtime.date,
         "date_iso": runtime.date.isoformat(),

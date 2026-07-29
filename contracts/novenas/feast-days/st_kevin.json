@@ -1,0 +1,444 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_kevin",
+    "feast": {
+      "day": 3,
+      "mode": "fixed",
+      "month": 6,
+      "name": "St Kevin"
+    },
+    "id": "st_kevin",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "Glendalough",
+        "Dublin",
+        "blackbirds"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St Kevin was an Irish monk and hermit who founded the monastic settlement at Glendalough and is remembered for his prayerful life and holiness."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Kevin Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and added a few paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through Christ our Lord. Amen. For the Grace of Solitude and Prayer. Blessed Kevin, you forsook comfort and worldly ease to dwell alone with God in the wilderness. You taught us that the soul finds its truest home not in the clamour of the world, but in the quiet where the Lord speaks. Pray for us, that we may carve out sacred silence in our daily lives, and there encounter the living God who waits for us with patient love. Help us to be still, to listen, and to surrender our restless hearts into His keeping. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Kevin, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through Christ our Lord. Amen. For Humility. Holy Kevin, though God adorned you with great gifts and drew many souls to your door, you never ceased to think yourself the least of His servants. You fled human praise as others flee suffering. Obtain for us the grace of true humility, that we may know ourselves as we truly are before God, give Him glory for every good within us, and serve our neighbours without pride or ambition. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Kevin, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and added a period after the Day 3 heading phrase.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through Christ our Lord. Amen. For Harmony with Creation. Dear Saint, the birds of the air and the beasts of the field came to you as to a new Adam, sensing in you the innocence God intended for mankind. You held out your hand in prayer and the creatures of the earth found shelter there. Intercede for us, that we may recover our sense of wonder at the created world, treat it with reverence as God\u2019s handiwork, and recognise in every living thing the fingerprint of its Maker. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Kevin, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through Christ our Lord. Amen. For Perseverance in Trial. O Kevin, your years of solitude were not without suffering. Cold, hunger, and the long dark nights of the spirit were your companions in the cave above the lake. Yet you did not turn back. Pray for all who endure trials of body or soul, that they may be given the grace of perseverance. When the way is hard and the end unseen, may they hold fast to the hand of God, and trust that He who calls them will not abandon them. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Kevin, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted capitalization and added brief spoken headings and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and prayer order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through Christ our Lord. Amen. For those who teach and learn: Saint Kevin, your monastery became a great lamp of learning in a tumultuous age, and scholars came from distant lands to sit at its feet. You understood that faith and knowledge are not enemies but friends, and that the mind, like the soul, is made for truth. We pray for all teachers and students, for seminaries and schools, for those who labour to pass the faith to the next generation. May wisdom and piety grow together, and may all learning find its source and end in God. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Kevin, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the canonical prayers and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through Christ our Lord. Amen. For the Conversion of Sinners. Gentle Kevin, sinners came to you and found not condemnation but compassion, not harshness but healing. Through your prayer many turned from darkness to light. We bring before you now all who are far from God, those hardened by sin, those despairing of mercy, those who do not yet know the love that pursues them. Intercede for their conversion, that no soul placed in your care may be lost, and that the mercy of God may reach where human words cannot. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Kevin, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted capitalization and punctuation for clearer text-to-speech pacing, and added a brief spoken label before the sick-and-suffering petition.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through Christ our Lord. Amen. For the sick and suffering: Holy saint, to whom the afflicted turned in their need, look with compassion upon all who carry the burden of illness of body, of mind, or of spirit. You knew the weakness of the flesh and the healing power of God\u2019s grace. Lay your intercession before the throne of the Most High on behalf of all who suffer, that they may know Christ\u2019s presence in their pain, and receive either the healing He wills or the strength to carry their cross with peace. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Kevin, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief punctuation and line breaks for clearer text-to-speech pacing, and normalized \u201cSt\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through Christ our Lord. Amen. For the Dying and the Faithful Departed. O Kevin, who lived so long upon this earth and crossed at last into the eternal life you had long sought in prayer, we commend to your care all who stand at the threshold of death. May they pass from this life in peace, fortified by the sacraments of the Church and surrounded by the mercy of God. We remember also all the faithful departed, especially those for whom no one prays. May they rest in the light of God\u2019s face, and may we one day join them in that valley of peace that has no ending. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Kevin, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Through Christ our Lord. Amen. For the Grace of Final Perseverance. Dear patron, we come to the end of these nine days of prayer, yet we know that the journey of faith does not end until we breathe our last. We ask for the greatest of all gifts, the grace of final perseverance, that we may remain faithful to God through every season of life, in joy and in sorrow, in youth and in age, and that at the last we may hear those words for which every soul longs: Well done, good and faithful servant. Through your intercession, may we, like you, find our rest in Heaven. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Kevin, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Kevin Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and added a few paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,  Through Christ our Lord. Amen. For the Grace of Solitude and Prayer. Blessed Kevin, you forsook comfort and worldly ease to dwell alone with God in the wilderness. You taught us that the soul finds its truest home not in the clamour of the world, but in the quiet where the Lord speaks. Pray for us, that we may carve out sacred silence in our daily lives, and there encounter the living God who waits for us with patient love. Help us to be still, to listen, and to surrender our restless hearts into His keeping. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Kevin, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and canonical prayers.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,  Through Christ our Lord. Amen. For Humility. Holy Kevin, though God adorned you with great gifts and drew many souls to your door, you never ceased to think yourself the least of His servants. You fled human praise as others flee suffering. Obtain for us the grace of true humility, that we may know ourselves as we truly are before God, give Him glory for every good within us, and serve our neighbours without pride or ambition. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Kevin, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and added a period after the Day 3 heading phrase.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,  Through Christ our Lord. Amen. For Harmony with Creation. Dear Saint, the birds of the air and the beasts of the field came to you as to a new Adam, sensing in you the innocence God intended for mankind. You held out your hand in prayer and the creatures of the earth found shelter there. Intercede for us, that we may recover our sense of wonder at the created world, treat it with reverence as God\u2019s handiwork, and recognise in every living thing the fingerprint of its Maker. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Kevin, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,  Through Christ our Lord. Amen. For Perseverance in Trial. O Kevin, your years of solitude were not without suffering. Cold, hunger, and the long dark nights of the spirit were your companions in the cave above the lake. Yet you did not turn back. Pray for all who endure trials of body or soul, that they may be given the grace of perseverance. When the way is hard and the end unseen, may they hold fast to the hand of God, and trust that He who calls them will not abandon them. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Kevin, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted capitalization and added brief spoken headings and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and prayer order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,  Through Christ our Lord. Amen. For those who teach and learn: Saint Kevin, your monastery became a great lamp of learning in a tumultuous age, and scholars came from distant lands to sit at its feet. You understood that faith and knowledge are not enemies but friends, and that the mind, like the soul, is made for truth. We pray for all teachers and students, for seminaries and schools, for those who labour to pass the faith to the next generation. May wisdom and piety grow together, and may all learning find its source and end in God. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Kevin, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the canonical prayers and the intention marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,  Through Christ our Lord. Amen. For the Conversion of Sinners. Gentle Kevin, sinners came to you and found not condemnation but compassion, not harshness but healing. Through your prayer many turned from darkness to light. We bring before you now all who are far from God, those hardened by sin, those despairing of mercy, those who do not yet know the love that pursues them. Intercede for their conversion, that no soul placed in your care may be lost, and that the mercy of God may reach where human words cannot. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Kevin, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted capitalization and punctuation for clearer text-to-speech pacing, and added a brief spoken label before the sick-and-suffering petition.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,  Through Christ our Lord. Amen. For the sick and suffering: Holy saint, to whom the afflicted turned in their need, look with compassion upon all who carry the burden of illness of body, of mind, or of spirit. You knew the weakness of the flesh and the healing power of God\u2019s grace. Lay your intercession before the throne of the Most High on behalf of all who suffer, that they may know Christ\u2019s presence in their pain, and receive either the healing He wills or the strength to carry their cross with peace. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Kevin, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief punctuation and line breaks for clearer text-to-speech pacing, and normalized \u201cSt\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,  Through Christ our Lord. Amen. For the Dying and the Faithful Departed. O Kevin, who lived so long upon this earth and crossed at last into the eternal life you had long sought in prayer, we commend to your care all who stand at the threshold of death. May they pass from this life in peace, fortified by the sacraments of the Church and surrounded by the mercy of God. We remember also all the faithful departed, especially those for whom no one prays. May they rest in the light of God\u2019s face, and may we one day join them in that valley of peace that has no ending. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Kevin, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who called your servant Kevin from the noise of the world into the silence of your presence, and made him a light of holiness in the valley of Glendalough, grant that through his intercession we may seek you above all things, and find in you our rest and our joy. In particular we ask for this request in the novena,  Through Christ our Lord. Amen. For the Grace of Final Perseverance. Dear patron, we come to the end of these nine days of prayer, yet we know that the journey of faith does not end until we breathe our last. We ask for the greatest of all gifts, the grace of final perseverance, that we may remain faithful to God through every season of life, in joy and in sorrow, in youth and in age, and that at the last we may hear those words for which every soul longs: Well done, good and faithful servant. Through your intercession, may we, like you, find our rest in Heaven. Saint Kevin of Glendalough, hermit, abbot, and friend of God, you sought the Lord in the silent places and He filled you with His Spirit. Look upon us, your children in faith, and carry our prayers before the throne of grace. As once the wild creatures came to rest in your outstretched hand, so may we rest in the mercy of God, today and at the hour of our death. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Kevin, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_kevin"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_kevin",
+      "name": "St Kevin"
+    },
+    "type": "novena_feast_rule"
+  }
+}

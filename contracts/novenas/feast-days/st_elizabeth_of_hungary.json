@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_elizabeth_of_hungary",
+    "feast": {
+      "day": 17,
+      "mode": "fixed",
+      "month": 11,
+      "name": "St. Elizabeth of Hungary"
+    },
+    "id": "st_elizabeth_of_hungary",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "charity workers",
+        "the poor",
+        "hospitals"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Elizabeth of Hungary was a 13th-century Hungarian princess who became a Franciscan tertiary, known for charity to the poor and founding a hospital."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Elizabeth of Hungary Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Made minor punctuation and capitalization adjustments for smoother text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Elizabeth, vessel elect of exalted virtues, thou dost show forth to the world by thy example what the virtues of Faith, Hope, and Charity are able to do in a Christian soul. Thou didst employ all the powers of thy heart to love thy God alone. Thou didst love Him with a love so pure and fervent that it rendered thee worthy to taste upon earth beforehand those favours and those sweetnesses of Paradise which are communicated to souls invited to the nuptials of the Divine adorable Lamb of God. Thou, illuminated by supernatural light and faith immovable, didst show thyself to be a true daughter of the Holy Gospel, by seeing in the person of thy neighbour the Person of our Lord Jesus Christ, sole object of thy affections. Therefore didst thou place all thy delight in holding converse with the poor, in serving them, in drying their tears and comforting their spirits, in assisting them with every pious good office, in the midst of pestilence and the miseries to which our human nature is subject."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Thou didst make thyself poor in order to succour thy neighbour in his poverty; poor in the good things of earth, to enrich thyself with the goods of heaven. Thou wast so humble that, after thou hadst exchanged a throne for a poor hovel, and a royal mantle for the modest habit of Saint Francis, thou didst subject thyself, innocent though thou wast, to a life of privation and of penance, and with holy joy didst embrace the cross of thy Redeemer, with goodwill accepting with Him insults and the most unjust persecution. Thus didst thou forget the world and thyself, to remember thy God alone. Dearest Saint, who wast so beloved by God, vouchsafe to be the heavenly friend of our souls, and help them to become ever more and more acceptable to Jesus. Cast down upon us from the height of heaven one of those tender looks which, when thou wast upon earth, healed the most distressing infirmities. In this our age, so depraved and corrupt, and at the same time so cold and indifferent to the things of God, we have recourse to thee with confidence, in order that we may receive from our Lord light for the understanding and strength for the will, and thence obtain peace of soul. Whilst we bless the Lord for having glorified His Name in this world with the splendour of thy heroic virtues and the eternal reward accorded to them, dear Saint Elizabeth, from that blessed throne which thou dost occupy close to the Saint of Saints, protect us in our dangerous pilgrimage; obtain for us the pardon of our sins, and open for us the way to enter and share with thee the Kingdom of God. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Elizabeth of Hungary Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Made minor punctuation and capitalization adjustments for smoother text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Elizabeth, vessel elect of exalted virtues, thou dost show forth to the world by thy example what the virtues of Faith, Hope, and Charity are able to do in a Christian soul. Thou didst employ all the powers of thy heart to love thy God alone. Thou didst love Him with a love so pure and fervent that it rendered thee worthy to taste upon earth beforehand those favours and those sweetnesses of Paradise which are communicated to souls invited to the nuptials of the Divine adorable Lamb of God. Thou, illuminated by supernatural light and faith immovable, didst show thyself to be a true daughter of the Holy Gospel, by seeing in the person of thy neighbour the Person of our Lord Jesus Christ, sole object of thy affections. Therefore didst thou place all thy delight in holding converse with the poor, in serving them, in drying their tears and comforting their spirits, in assisting them with every pious good office, in the midst of pestilence and the miseries to which our human nature is subject.  Thou didst make thyself poor in order to succour thy neighbour in his poverty; poor in the good things of earth, to enrich thyself with the goods of heaven. Thou wast so humble that, after thou hadst exchanged a throne for a poor hovel, and a royal mantle for the modest habit of Saint Francis, thou didst subject thyself, innocent though thou wast, to a life of privation and of penance, and with holy joy didst embrace the cross of thy Redeemer, with goodwill accepting with Him insults and the most unjust persecution. Thus didst thou forget the world and thyself, to remember thy God alone. Dearest Saint, who wast so beloved by God, vouchsafe to be the heavenly friend of our souls, and help them to become ever more and more acceptable to Jesus. Cast down upon us from the height of heaven one of those tender looks which, when thou wast upon earth, healed the most distressing infirmities. In this our age, so depraved and corrupt, and at the same time so cold and indifferent to the things of God, we have recourse to thee with confidence, in order that we may receive from our Lord light for the understanding and strength for the will, and thence obtain peace of soul. Whilst we bless the Lord for having glorified His Name in this world with the splendour of thy heroic virtues and the eternal reward accorded to them, dear Saint Elizabeth, from that blessed throne which thou dost occupy close to the Saint of Saints, protect us in our dangerous pilgrimage; obtain for us the pardon of our sins, and open for us the way to enter and share with thee the Kingdom of God. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Made minor punctuation and capitalization adjustments for smoother text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Elizabeth, vessel elect of exalted virtues, thou dost show forth to the world by thy example what the virtues of Faith, Hope, and Charity are able to do in a Christian soul. Thou didst employ all the powers of thy heart to love thy God alone. Thou didst love Him with a love so pure and fervent that it rendered thee worthy to taste upon earth beforehand those favours and those sweetnesses of Paradise which are communicated to souls invited to the nuptials of the Divine adorable Lamb of God. Thou, illuminated by supernatural light and faith immovable, didst show thyself to be a true daughter of the Holy Gospel, by seeing in the person of thy neighbour the Person of our Lord Jesus Christ, sole object of thy affections. Therefore didst thou place all thy delight in holding converse with the poor, in serving them, in drying their tears and comforting their spirits, in assisting them with every pious good office, in the midst of pestilence and the miseries to which our human nature is subject.  Thou didst make thyself poor in order to succour thy neighbour in his poverty; poor in the good things of earth, to enrich thyself with the goods of heaven. Thou wast so humble that, after thou hadst exchanged a throne for a poor hovel, and a royal mantle for the modest habit of Saint Francis, thou didst subject thyself, innocent though thou wast, to a life of privation and of penance, and with holy joy didst embrace the cross of thy Redeemer, with goodwill accepting with Him insults and the most unjust persecution. Thus didst thou forget the world and thyself, to remember thy God alone. Dearest Saint, who wast so beloved by God, vouchsafe to be the heavenly friend of our souls, and help them to become ever more and more acceptable to Jesus. Cast down upon us from the height of heaven one of those tender looks which, when thou wast upon earth, healed the most distressing infirmities. In this our age, so depraved and corrupt, and at the same time so cold and indifferent to the things of God, we have recourse to thee with confidence, in order that we may receive from our Lord light for the understanding and strength for the will, and thence obtain peace of soul. Whilst we bless the Lord for having glorified His Name in this world with the splendour of thy heroic virtues and the eternal reward accorded to them, dear Saint Elizabeth, from that blessed throne which thou dost occupy close to the Saint of Saints, protect us in our dangerous pilgrimage; obtain for us the pardon of our sins, and open for us the way to enter and share with thee the Kingdom of God. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Made minor punctuation and capitalization adjustments for smoother text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Elizabeth, vessel elect of exalted virtues, thou dost show forth to the world by thy example what the virtues of Faith, Hope, and Charity are able to do in a Christian soul. Thou didst employ all the powers of thy heart to love thy God alone. Thou didst love Him with a love so pure and fervent that it rendered thee worthy to taste upon earth beforehand those favours and those sweetnesses of Paradise which are communicated to souls invited to the nuptials of the Divine adorable Lamb of God. Thou, illuminated by supernatural light and faith immovable, didst show thyself to be a true daughter of the Holy Gospel, by seeing in the person of thy neighbour the Person of our Lord Jesus Christ, sole object of thy affections. Therefore didst thou place all thy delight in holding converse with the poor, in serving them, in drying their tears and comforting their spirits, in assisting them with every pious good office, in the midst of pestilence and the miseries to which our human nature is subject.  Thou didst make thyself poor in order to succour thy neighbour in his poverty; poor in the good things of earth, to enrich thyself with the goods of heaven. Thou wast so humble that, after thou hadst exchanged a throne for a poor hovel, and a royal mantle for the modest habit of Saint Francis, thou didst subject thyself, innocent though thou wast, to a life of privation and of penance, and with holy joy didst embrace the cross of thy Redeemer, with goodwill accepting with Him insults and the most unjust persecution. Thus didst thou forget the world and thyself, to remember thy God alone. Dearest Saint, who wast so beloved by God, vouchsafe to be the heavenly friend of our souls, and help them to become ever more and more acceptable to Jesus. Cast down upon us from the height of heaven one of those tender looks which, when thou wast upon earth, healed the most distressing infirmities. In this our age, so depraved and corrupt, and at the same time so cold and indifferent to the things of God, we have recourse to thee with confidence, in order that we may receive from our Lord light for the understanding and strength for the will, and thence obtain peace of soul. Whilst we bless the Lord for having glorified His Name in this world with the splendour of thy heroic virtues and the eternal reward accorded to them, dear Saint Elizabeth, from that blessed throne which thou dost occupy close to the Saint of Saints, protect us in our dangerous pilgrimage; obtain for us the pardon of our sins, and open for us the way to enter and share with thee the Kingdom of God. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Made minor punctuation and capitalization adjustments for smoother text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Elizabeth, vessel elect of exalted virtues, thou dost show forth to the world by thy example what the virtues of Faith, Hope, and Charity are able to do in a Christian soul. Thou didst employ all the powers of thy heart to love thy God alone. Thou didst love Him with a love so pure and fervent that it rendered thee worthy to taste upon earth beforehand those favours and those sweetnesses of Paradise which are communicated to souls invited to the nuptials of the Divine adorable Lamb of God. Thou, illuminated by supernatural light and faith immovable, didst show thyself to be a true daughter of the Holy Gospel, by seeing in the person of thy neighbour the Person of our Lord Jesus Christ, sole object of thy affections. Therefore didst thou place all thy delight in holding converse with the poor, in serving them, in drying their tears and comforting their spirits, in assisting them with every pious good office, in the midst of pestilence and the miseries to which our human nature is subject.  Thou didst make thyself poor in order to succour thy neighbour in his poverty; poor in the good things of earth, to enrich thyself with the goods of heaven. Thou wast so humble that, after thou hadst exchanged a throne for a poor hovel, and a royal mantle for the modest habit of Saint Francis, thou didst subject thyself, innocent though thou wast, to a life of privation and of penance, and with holy joy didst embrace the cross of thy Redeemer, with goodwill accepting with Him insults and the most unjust persecution. Thus didst thou forget the world and thyself, to remember thy God alone. Dearest Saint, who wast so beloved by God, vouchsafe to be the heavenly friend of our souls, and help them to become ever more and more acceptable to Jesus. Cast down upon us from the height of heaven one of those tender looks which, when thou wast upon earth, healed the most distressing infirmities. In this our age, so depraved and corrupt, and at the same time so cold and indifferent to the things of God, we have recourse to thee with confidence, in order that we may receive from our Lord light for the understanding and strength for the will, and thence obtain peace of soul. Whilst we bless the Lord for having glorified His Name in this world with the splendour of thy heroic virtues and the eternal reward accorded to them, dear Saint Elizabeth, from that blessed throne which thou dost occupy close to the Saint of Saints, protect us in our dangerous pilgrimage; obtain for us the pardon of our sins, and open for us the way to enter and share with thee the Kingdom of God. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Made minor punctuation and capitalization adjustments for smoother text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Elizabeth, vessel elect of exalted virtues, thou dost show forth to the world by thy example what the virtues of Faith, Hope, and Charity are able to do in a Christian soul. Thou didst employ all the powers of thy heart to love thy God alone. Thou didst love Him with a love so pure and fervent that it rendered thee worthy to taste upon earth beforehand those favours and those sweetnesses of Paradise which are communicated to souls invited to the nuptials of the Divine adorable Lamb of God. Thou, illuminated by supernatural light and faith immovable, didst show thyself to be a true daughter of the Holy Gospel, by seeing in the person of thy neighbour the Person of our Lord Jesus Christ, sole object of thy affections. Therefore didst thou place all thy delight in holding converse with the poor, in serving them, in drying their tears and comforting their spirits, in assisting them with every pious good office, in the midst of pestilence and the miseries to which our human nature is subject.  Thou didst make thyself poor in order to succour thy neighbour in his poverty; poor in the good things of earth, to enrich thyself with the goods of heaven. Thou wast so humble that, after thou hadst exchanged a throne for a poor hovel, and a royal mantle for the modest habit of Saint Francis, thou didst subject thyself, innocent though thou wast, to a life of privation and of penance, and with holy joy didst embrace the cross of thy Redeemer, with goodwill accepting with Him insults and the most unjust persecution. Thus didst thou forget the world and thyself, to remember thy God alone. Dearest Saint, who wast so beloved by God, vouchsafe to be the heavenly friend of our souls, and help them to become ever more and more acceptable to Jesus. Cast down upon us from the height of heaven one of those tender looks which, when thou wast upon earth, healed the most distressing infirmities. In this our age, so depraved and corrupt, and at the same time so cold and indifferent to the things of God, we have recourse to thee with confidence, in order that we may receive from our Lord light for the understanding and strength for the will, and thence obtain peace of soul. Whilst we bless the Lord for having glorified His Name in this world with the splendour of thy heroic virtues and the eternal reward accorded to them, dear Saint Elizabeth, from that blessed throne which thou dost occupy close to the Saint of Saints, protect us in our dangerous pilgrimage; obtain for us the pardon of our sins, and open for us the way to enter and share with thee the Kingdom of God. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Made minor punctuation and capitalization adjustments for smoother text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Elizabeth, vessel elect of exalted virtues, thou dost show forth to the world by thy example what the virtues of Faith, Hope, and Charity are able to do in a Christian soul. Thou didst employ all the powers of thy heart to love thy God alone. Thou didst love Him with a love so pure and fervent that it rendered thee worthy to taste upon earth beforehand those favours and those sweetnesses of Paradise which are communicated to souls invited to the nuptials of the Divine adorable Lamb of God. Thou, illuminated by supernatural light and faith immovable, didst show thyself to be a true daughter of the Holy Gospel, by seeing in the person of thy neighbour the Person of our Lord Jesus Christ, sole object of thy affections. Therefore didst thou place all thy delight in holding converse with the poor, in serving them, in drying their tears and comforting their spirits, in assisting them with every pious good office, in the midst of pestilence and the miseries to which our human nature is subject.  Thou didst make thyself poor in order to succour thy neighbour in his poverty; poor in the good things of earth, to enrich thyself with the goods of heaven. Thou wast so humble that, after thou hadst exchanged a throne for a poor hovel, and a royal mantle for the modest habit of Saint Francis, thou didst subject thyself, innocent though thou wast, to a life of privation and of penance, and with holy joy didst embrace the cross of thy Redeemer, with goodwill accepting with Him insults and the most unjust persecution. Thus didst thou forget the world and thyself, to remember thy God alone. Dearest Saint, who wast so beloved by God, vouchsafe to be the heavenly friend of our souls, and help them to become ever more and more acceptable to Jesus. Cast down upon us from the height of heaven one of those tender looks which, when thou wast upon earth, healed the most distressing infirmities. In this our age, so depraved and corrupt, and at the same time so cold and indifferent to the things of God, we have recourse to thee with confidence, in order that we may receive from our Lord light for the understanding and strength for the will, and thence obtain peace of soul. Whilst we bless the Lord for having glorified His Name in this world with the splendour of thy heroic virtues and the eternal reward accorded to them, dear Saint Elizabeth, from that blessed throne which thou dost occupy close to the Saint of Saints, protect us in our dangerous pilgrimage; obtain for us the pardon of our sins, and open for us the way to enter and share with thee the Kingdom of God. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Made minor punctuation and capitalization adjustments for smoother text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Elizabeth, vessel elect of exalted virtues, thou dost show forth to the world by thy example what the virtues of Faith, Hope, and Charity are able to do in a Christian soul. Thou didst employ all the powers of thy heart to love thy God alone. Thou didst love Him with a love so pure and fervent that it rendered thee worthy to taste upon earth beforehand those favours and those sweetnesses of Paradise which are communicated to souls invited to the nuptials of the Divine adorable Lamb of God. Thou, illuminated by supernatural light and faith immovable, didst show thyself to be a true daughter of the Holy Gospel, by seeing in the person of thy neighbour the Person of our Lord Jesus Christ, sole object of thy affections. Therefore didst thou place all thy delight in holding converse with the poor, in serving them, in drying their tears and comforting their spirits, in assisting them with every pious good office, in the midst of pestilence and the miseries to which our human nature is subject.  Thou didst make thyself poor in order to succour thy neighbour in his poverty; poor in the good things of earth, to enrich thyself with the goods of heaven. Thou wast so humble that, after thou hadst exchanged a throne for a poor hovel, and a royal mantle for the modest habit of Saint Francis, thou didst subject thyself, innocent though thou wast, to a life of privation and of penance, and with holy joy didst embrace the cross of thy Redeemer, with goodwill accepting with Him insults and the most unjust persecution. Thus didst thou forget the world and thyself, to remember thy God alone. Dearest Saint, who wast so beloved by God, vouchsafe to be the heavenly friend of our souls, and help them to become ever more and more acceptable to Jesus. Cast down upon us from the height of heaven one of those tender looks which, when thou wast upon earth, healed the most distressing infirmities. In this our age, so depraved and corrupt, and at the same time so cold and indifferent to the things of God, we have recourse to thee with confidence, in order that we may receive from our Lord light for the understanding and strength for the will, and thence obtain peace of soul. Whilst we bless the Lord for having glorified His Name in this world with the splendour of thy heroic virtues and the eternal reward accorded to them, dear Saint Elizabeth, from that blessed throne which thou dost occupy close to the Saint of Saints, protect us in our dangerous pilgrimage; obtain for us the pardon of our sins, and open for us the way to enter and share with thee the Kingdom of God. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Made minor punctuation and capitalization adjustments for smoother text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Elizabeth, vessel elect of exalted virtues, thou dost show forth to the world by thy example what the virtues of Faith, Hope, and Charity are able to do in a Christian soul. Thou didst employ all the powers of thy heart to love thy God alone. Thou didst love Him with a love so pure and fervent that it rendered thee worthy to taste upon earth beforehand those favours and those sweetnesses of Paradise which are communicated to souls invited to the nuptials of the Divine adorable Lamb of God. Thou, illuminated by supernatural light and faith immovable, didst show thyself to be a true daughter of the Holy Gospel, by seeing in the person of thy neighbour the Person of our Lord Jesus Christ, sole object of thy affections. Therefore didst thou place all thy delight in holding converse with the poor, in serving them, in drying their tears and comforting their spirits, in assisting them with every pious good office, in the midst of pestilence and the miseries to which our human nature is subject.  Thou didst make thyself poor in order to succour thy neighbour in his poverty; poor in the good things of earth, to enrich thyself with the goods of heaven. Thou wast so humble that, after thou hadst exchanged a throne for a poor hovel, and a royal mantle for the modest habit of Saint Francis, thou didst subject thyself, innocent though thou wast, to a life of privation and of penance, and with holy joy didst embrace the cross of thy Redeemer, with goodwill accepting with Him insults and the most unjust persecution. Thus didst thou forget the world and thyself, to remember thy God alone. Dearest Saint, who wast so beloved by God, vouchsafe to be the heavenly friend of our souls, and help them to become ever more and more acceptable to Jesus. Cast down upon us from the height of heaven one of those tender looks which, when thou wast upon earth, healed the most distressing infirmities. In this our age, so depraved and corrupt, and at the same time so cold and indifferent to the things of God, we have recourse to thee with confidence, in order that we may receive from our Lord light for the understanding and strength for the will, and thence obtain peace of soul. Whilst we bless the Lord for having glorified His Name in this world with the splendour of thy heroic virtues and the eternal reward accorded to them, dear Saint Elizabeth, from that blessed throne which thou dost occupy close to the Saint of Saints, protect us in our dangerous pilgrimage; obtain for us the pardon of our sins, and open for us the way to enter and share with thee the Kingdom of God. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Made minor punctuation and capitalization adjustments for smoother text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Elizabeth, vessel elect of exalted virtues, thou dost show forth to the world by thy example what the virtues of Faith, Hope, and Charity are able to do in a Christian soul. Thou didst employ all the powers of thy heart to love thy God alone. Thou didst love Him with a love so pure and fervent that it rendered thee worthy to taste upon earth beforehand those favours and those sweetnesses of Paradise which are communicated to souls invited to the nuptials of the Divine adorable Lamb of God. Thou, illuminated by supernatural light and faith immovable, didst show thyself to be a true daughter of the Holy Gospel, by seeing in the person of thy neighbour the Person of our Lord Jesus Christ, sole object of thy affections. Therefore didst thou place all thy delight in holding converse with the poor, in serving them, in drying their tears and comforting their spirits, in assisting them with every pious good office, in the midst of pestilence and the miseries to which our human nature is subject.  Thou didst make thyself poor in order to succour thy neighbour in his poverty; poor in the good things of earth, to enrich thyself with the goods of heaven. Thou wast so humble that, after thou hadst exchanged a throne for a poor hovel, and a royal mantle for the modest habit of Saint Francis, thou didst subject thyself, innocent though thou wast, to a life of privation and of penance, and with holy joy didst embrace the cross of thy Redeemer, with goodwill accepting with Him insults and the most unjust persecution. Thus didst thou forget the world and thyself, to remember thy God alone. Dearest Saint, who wast so beloved by God, vouchsafe to be the heavenly friend of our souls, and help them to become ever more and more acceptable to Jesus. Cast down upon us from the height of heaven one of those tender looks which, when thou wast upon earth, healed the most distressing infirmities. In this our age, so depraved and corrupt, and at the same time so cold and indifferent to the things of God, we have recourse to thee with confidence, in order that we may receive from our Lord light for the understanding and strength for the will, and thence obtain peace of soul. Whilst we bless the Lord for having glorified His Name in this world with the splendour of thy heroic virtues and the eternal reward accorded to them, dear Saint Elizabeth, from that blessed throne which thou dost occupy close to the Saint of Saints, protect us in our dangerous pilgrimage; obtain for us the pardon of our sins, and open for us the way to enter and share with thee the Kingdom of God. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_elizabeth_of_hungary"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_elizabeth_of_hungary",
+      "name": "St. Elizabeth of Hungary"
+    },
+    "type": "novena_feast_rule"
+  }
+}

@@ -1,0 +1,224 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "fertility_to_conceive",
+    "feast": {
+      "day": 15,
+      "mode": "fixed",
+      "month": 3,
+      "name": "Fertility to Conceive"
+    },
+    "id": "fertility_to_conceive",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A nine-day prayer asking God for the grace of fertility and the gift of conceiving a child, seeking comfort, hope, and trust in His will."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Novena for Fertility to Conceive a Baby below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Added paragraph breaks and headings for pacing, and inserted minimal punctuation for clearer text-to-speech without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who said, \u201cLet the little children come to Me,\u201d and who love children, please answer the prayers I ask in this novena through the saints\u2019 intercession, especially"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Prayer to Our Blessed Mother Most Holy Mother, hear the cries of my heart right now. Blessed Virgin, I want to be fruitful, but I have not yet been blessed with fertility. Grant me fertility over my life and end my suffering. Help make me a fruitful vine within my house. My children will be like olive shoots around my table. Mother of Mercy, I know I was not created so that I would be fruitless, but your Son created me to be effective in all that I do. I know that my season of fertility will come according to your Son\u2019s timing. Amen. Prayer to St Gerard Majella O good St Gerard, powerful intercessor before God and wonder worker of our day, confidently I call upon you and seek your aid. You always fulfilled God\u2019s designs; help me now to do the holy will of God. Implore the Master of Life, from whom all parenthood proceeds, to render me fruitful in offspring, that I may raise up children to God in this life, and in the world to come, heirs to the Kingdom of His Glory. Amen. Prayer to Sts Joachim and Anne Most Holy Saints Anne and Joachim, come close to us and guide our hand and our hearts in the way of virtue. Help us to conceive a child so that we may parent them with a gentle heart as you did. Obtain from God the grace to overcome all infertility so that we may raise our children in faith and bring our families into the Light of Jesus. Sts Anne and Joachim, we place our petitions in your hands and ask that you lay them before the child Jesus. Amen. Prayer to St Collette O glorious St. Colette, I beseech you through the burning love which inflamed your heart for Jesus in the Most Blessed Sacrament, through the marvelous graces with which He enriched you, and through the loving compassion you did bear to Him in His bitter sufferings, obtain from Him for me my request for fertility which I hope to receive through your powerful intercession. Amen. Prayer to St Raphael to Heal Infertility Glorious Archangel St. Raphael, great prince of the heavenly court, you are illustrious for your gifts of wisdom and grace. You are a guide of those who journey by land or sea or air, consoler of the afflicted, and refuge of sinners. I beg you, assist me in all my needs and in all the sufferings of this life, as once you helped the young Tobias on his travels. Because you are the Medicine of God, I humbly pray you to heal the many infirmities of my soul and the ills that afflict my body, especially of infertility. I also ask for the great grace of purity to prepare me to be the temple of the Holy Spirit. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Novena for Fertility to Conceive a Baby below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Added paragraph breaks and headings for pacing, and inserted minimal punctuation for clearer text-to-speech without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who said, \u201cLet the little children come to Me,\u201d and who love children, please answer the prayers I ask in this novena through the saints\u2019 intercession, especially  Prayer to Our Blessed Mother Most Holy Mother, hear the cries of my heart right now. Blessed Virgin, I want to be fruitful, but I have not yet been blessed with fertility. Grant me fertility over my life and end my suffering. Help make me a fruitful vine within my house. My children will be like olive shoots around my table. Mother of Mercy, I know I was not created so that I would be fruitless, but your Son created me to be effective in all that I do. I know that my season of fertility will come according to your Son\u2019s timing. Amen. Prayer to St Gerard Majella O good St Gerard, powerful intercessor before God and wonder worker of our day, confidently I call upon you and seek your aid. You always fulfilled God\u2019s designs; help me now to do the holy will of God. Implore the Master of Life, from whom all parenthood proceeds, to render me fruitful in offspring, that I may raise up children to God in this life, and in the world to come, heirs to the Kingdom of His Glory. Amen. Prayer to Sts Joachim and Anne Most Holy Saints Anne and Joachim, come close to us and guide our hand and our hearts in the way of virtue. Help us to conceive a child so that we may parent them with a gentle heart as you did. Obtain from God the grace to overcome all infertility so that we may raise our children in faith and bring our families into the Light of Jesus. Sts Anne and Joachim, we place our petitions in your hands and ask that you lay them before the child Jesus. Amen. Prayer to St Collette O glorious St. Colette, I beseech you through the burning love which inflamed your heart for Jesus in the Most Blessed Sacrament, through the marvelous graces with which He enriched you, and through the loving compassion you did bear to Him in His bitter sufferings, obtain from Him for me my request for fertility which I hope to receive through your powerful intercession. Amen. Prayer to St Raphael to Heal Infertility Glorious Archangel St. Raphael, great prince of the heavenly court, you are illustrious for your gifts of wisdom and grace. You are a guide of those who journey by land or sea or air, consoler of the afflicted, and refuge of sinners. I beg you, assist me in all my needs and in all the sufferings of this life, as once you helped the young Tobias on his travels. Because you are the Medicine of God, I humbly pray you to heal the many infirmities of my soul and the ills that afflict my body, especially of infertility. I also ask for the great grace of purity to prepare me to be the temple of the Holy Spirit. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Added paragraph breaks and headings for pacing, and inserted minimal punctuation for clearer text-to-speech without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who said, \u201cLet the little children come to Me,\u201d and who love children, please answer the prayers I ask in this novena through the saints\u2019 intercession, especially  Prayer to Our Blessed Mother Most Holy Mother, hear the cries of my heart right now. Blessed Virgin, I want to be fruitful, but I have not yet been blessed with fertility. Grant me fertility over my life and end my suffering. Help make me a fruitful vine within my house. My children will be like olive shoots around my table. Mother of Mercy, I know I was not created so that I would be fruitless, but your Son created me to be effective in all that I do. I know that my season of fertility will come according to your Son\u2019s timing. Amen. Prayer to St Gerard Majella O good St Gerard, powerful intercessor before God and wonder worker of our day, confidently I call upon you and seek your aid. You always fulfilled God\u2019s designs; help me now to do the holy will of God. Implore the Master of Life, from whom all parenthood proceeds, to render me fruitful in offspring, that I may raise up children to God in this life, and in the world to come, heirs to the Kingdom of His Glory. Amen. Prayer to Sts Joachim and Anne Most Holy Saints Anne and Joachim, come close to us and guide our hand and our hearts in the way of virtue. Help us to conceive a child so that we may parent them with a gentle heart as you did. Obtain from God the grace to overcome all infertility so that we may raise our children in faith and bring our families into the Light of Jesus. Sts Anne and Joachim, we place our petitions in your hands and ask that you lay them before the child Jesus. Amen. Prayer to St Collette O glorious St. Colette, I beseech you through the burning love which inflamed your heart for Jesus in the Most Blessed Sacrament, through the marvelous graces with which He enriched you, and through the loving compassion you did bear to Him in His bitter sufferings, obtain from Him for me my request for fertility which I hope to receive through your powerful intercession. Amen. Prayer to St Raphael to Heal Infertility Glorious Archangel St. Raphael, great prince of the heavenly court, you are illustrious for your gifts of wisdom and grace. You are a guide of those who journey by land or sea or air, consoler of the afflicted, and refuge of sinners. I beg you, assist me in all my needs and in all the sufferings of this life, as once you helped the young Tobias on his travels. Because you are the Medicine of God, I humbly pray you to heal the many infirmities of my soul and the ills that afflict my body, especially of infertility. I also ask for the great grace of purity to prepare me to be the temple of the Holy Spirit. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Added paragraph breaks and headings for pacing, and inserted minimal punctuation for clearer text-to-speech without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who said, \u201cLet the little children come to Me,\u201d and who love children, please answer the prayers I ask in this novena through the saints\u2019 intercession, especially  Prayer to Our Blessed Mother Most Holy Mother, hear the cries of my heart right now. Blessed Virgin, I want to be fruitful, but I have not yet been blessed with fertility. Grant me fertility over my life and end my suffering. Help make me a fruitful vine within my house. My children will be like olive shoots around my table. Mother of Mercy, I know I was not created so that I would be fruitless, but your Son created me to be effective in all that I do. I know that my season of fertility will come according to your Son\u2019s timing. Amen. Prayer to St Gerard Majella O good St Gerard, powerful intercessor before God and wonder worker of our day, confidently I call upon you and seek your aid. You always fulfilled God\u2019s designs; help me now to do the holy will of God. Implore the Master of Life, from whom all parenthood proceeds, to render me fruitful in offspring, that I may raise up children to God in this life, and in the world to come, heirs to the Kingdom of His Glory. Amen. Prayer to Sts Joachim and Anne Most Holy Saints Anne and Joachim, come close to us and guide our hand and our hearts in the way of virtue. Help us to conceive a child so that we may parent them with a gentle heart as you did. Obtain from God the grace to overcome all infertility so that we may raise our children in faith and bring our families into the Light of Jesus. Sts Anne and Joachim, we place our petitions in your hands and ask that you lay them before the child Jesus. Amen. Prayer to St Collette O glorious St. Colette, I beseech you through the burning love which inflamed your heart for Jesus in the Most Blessed Sacrament, through the marvelous graces with which He enriched you, and through the loving compassion you did bear to Him in His bitter sufferings, obtain from Him for me my request for fertility which I hope to receive through your powerful intercession. Amen. Prayer to St Raphael to Heal Infertility Glorious Archangel St. Raphael, great prince of the heavenly court, you are illustrious for your gifts of wisdom and grace. You are a guide of those who journey by land or sea or air, consoler of the afflicted, and refuge of sinners. I beg you, assist me in all my needs and in all the sufferings of this life, as once you helped the young Tobias on his travels. Because you are the Medicine of God, I humbly pray you to heal the many infirmities of my soul and the ills that afflict my body, especially of infertility. I also ask for the great grace of purity to prepare me to be the temple of the Holy Spirit. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Added paragraph breaks and headings for pacing, and inserted minimal punctuation for clearer text-to-speech without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who said, \u201cLet the little children come to Me,\u201d and who love children, please answer the prayers I ask in this novena through the saints\u2019 intercession, especially  Prayer to Our Blessed Mother Most Holy Mother, hear the cries of my heart right now. Blessed Virgin, I want to be fruitful, but I have not yet been blessed with fertility. Grant me fertility over my life and end my suffering. Help make me a fruitful vine within my house. My children will be like olive shoots around my table. Mother of Mercy, I know I was not created so that I would be fruitless, but your Son created me to be effective in all that I do. I know that my season of fertility will come according to your Son\u2019s timing. Amen. Prayer to St Gerard Majella O good St Gerard, powerful intercessor before God and wonder worker of our day, confidently I call upon you and seek your aid. You always fulfilled God\u2019s designs; help me now to do the holy will of God. Implore the Master of Life, from whom all parenthood proceeds, to render me fruitful in offspring, that I may raise up children to God in this life, and in the world to come, heirs to the Kingdom of His Glory. Amen. Prayer to Sts Joachim and Anne Most Holy Saints Anne and Joachim, come close to us and guide our hand and our hearts in the way of virtue. Help us to conceive a child so that we may parent them with a gentle heart as you did. Obtain from God the grace to overcome all infertility so that we may raise our children in faith and bring our families into the Light of Jesus. Sts Anne and Joachim, we place our petitions in your hands and ask that you lay them before the child Jesus. Amen. Prayer to St Collette O glorious St. Colette, I beseech you through the burning love which inflamed your heart for Jesus in the Most Blessed Sacrament, through the marvelous graces with which He enriched you, and through the loving compassion you did bear to Him in His bitter sufferings, obtain from Him for me my request for fertility which I hope to receive through your powerful intercession. Amen. Prayer to St Raphael to Heal Infertility Glorious Archangel St. Raphael, great prince of the heavenly court, you are illustrious for your gifts of wisdom and grace. You are a guide of those who journey by land or sea or air, consoler of the afflicted, and refuge of sinners. I beg you, assist me in all my needs and in all the sufferings of this life, as once you helped the young Tobias on his travels. Because you are the Medicine of God, I humbly pray you to heal the many infirmities of my soul and the ills that afflict my body, especially of infertility. I also ask for the great grace of purity to prepare me to be the temple of the Holy Spirit. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Added paragraph breaks and headings for pacing, and inserted minimal punctuation for clearer text-to-speech without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who said, \u201cLet the little children come to Me,\u201d and who love children, please answer the prayers I ask in this novena through the saints\u2019 intercession, especially  Prayer to Our Blessed Mother Most Holy Mother, hear the cries of my heart right now. Blessed Virgin, I want to be fruitful, but I have not yet been blessed with fertility. Grant me fertility over my life and end my suffering. Help make me a fruitful vine within my house. My children will be like olive shoots around my table. Mother of Mercy, I know I was not created so that I would be fruitless, but your Son created me to be effective in all that I do. I know that my season of fertility will come according to your Son\u2019s timing. Amen. Prayer to St Gerard Majella O good St Gerard, powerful intercessor before God and wonder worker of our day, confidently I call upon you and seek your aid. You always fulfilled God\u2019s designs; help me now to do the holy will of God. Implore the Master of Life, from whom all parenthood proceeds, to render me fruitful in offspring, that I may raise up children to God in this life, and in the world to come, heirs to the Kingdom of His Glory. Amen. Prayer to Sts Joachim and Anne Most Holy Saints Anne and Joachim, come close to us and guide our hand and our hearts in the way of virtue. Help us to conceive a child so that we may parent them with a gentle heart as you did. Obtain from God the grace to overcome all infertility so that we may raise our children in faith and bring our families into the Light of Jesus. Sts Anne and Joachim, we place our petitions in your hands and ask that you lay them before the child Jesus. Amen. Prayer to St Collette O glorious St. Colette, I beseech you through the burning love which inflamed your heart for Jesus in the Most Blessed Sacrament, through the marvelous graces with which He enriched you, and through the loving compassion you did bear to Him in His bitter sufferings, obtain from Him for me my request for fertility which I hope to receive through your powerful intercession. Amen. Prayer to St Raphael to Heal Infertility Glorious Archangel St. Raphael, great prince of the heavenly court, you are illustrious for your gifts of wisdom and grace. You are a guide of those who journey by land or sea or air, consoler of the afflicted, and refuge of sinners. I beg you, assist me in all my needs and in all the sufferings of this life, as once you helped the young Tobias on his travels. Because you are the Medicine of God, I humbly pray you to heal the many infirmities of my soul and the ills that afflict my body, especially of infertility. I also ask for the great grace of purity to prepare me to be the temple of the Holy Spirit. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Added paragraph breaks and headings for pacing, and inserted minimal punctuation for clearer text-to-speech without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who said, \u201cLet the little children come to Me,\u201d and who love children, please answer the prayers I ask in this novena through the saints\u2019 intercession, especially  Prayer to Our Blessed Mother Most Holy Mother, hear the cries of my heart right now. Blessed Virgin, I want to be fruitful, but I have not yet been blessed with fertility. Grant me fertility over my life and end my suffering. Help make me a fruitful vine within my house. My children will be like olive shoots around my table. Mother of Mercy, I know I was not created so that I would be fruitless, but your Son created me to be effective in all that I do. I know that my season of fertility will come according to your Son\u2019s timing. Amen. Prayer to St Gerard Majella O good St Gerard, powerful intercessor before God and wonder worker of our day, confidently I call upon you and seek your aid. You always fulfilled God\u2019s designs; help me now to do the holy will of God. Implore the Master of Life, from whom all parenthood proceeds, to render me fruitful in offspring, that I may raise up children to God in this life, and in the world to come, heirs to the Kingdom of His Glory. Amen. Prayer to Sts Joachim and Anne Most Holy Saints Anne and Joachim, come close to us and guide our hand and our hearts in the way of virtue. Help us to conceive a child so that we may parent them with a gentle heart as you did. Obtain from God the grace to overcome all infertility so that we may raise our children in faith and bring our families into the Light of Jesus. Sts Anne and Joachim, we place our petitions in your hands and ask that you lay them before the child Jesus. Amen. Prayer to St Collette O glorious St. Colette, I beseech you through the burning love which inflamed your heart for Jesus in the Most Blessed Sacrament, through the marvelous graces with which He enriched you, and through the loving compassion you did bear to Him in His bitter sufferings, obtain from Him for me my request for fertility which I hope to receive through your powerful intercession. Amen. Prayer to St Raphael to Heal Infertility Glorious Archangel St. Raphael, great prince of the heavenly court, you are illustrious for your gifts of wisdom and grace. You are a guide of those who journey by land or sea or air, consoler of the afflicted, and refuge of sinners. I beg you, assist me in all my needs and in all the sufferings of this life, as once you helped the young Tobias on his travels. Because you are the Medicine of God, I humbly pray you to heal the many infirmities of my soul and the ills that afflict my body, especially of infertility. I also ask for the great grace of purity to prepare me to be the temple of the Holy Spirit. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Added paragraph breaks and headings for pacing, and inserted minimal punctuation for clearer text-to-speech without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who said, \u201cLet the little children come to Me,\u201d and who love children, please answer the prayers I ask in this novena through the saints\u2019 intercession, especially  Prayer to Our Blessed Mother Most Holy Mother, hear the cries of my heart right now. Blessed Virgin, I want to be fruitful, but I have not yet been blessed with fertility. Grant me fertility over my life and end my suffering. Help make me a fruitful vine within my house. My children will be like olive shoots around my table. Mother of Mercy, I know I was not created so that I would be fruitless, but your Son created me to be effective in all that I do. I know that my season of fertility will come according to your Son\u2019s timing. Amen. Prayer to St Gerard Majella O good St Gerard, powerful intercessor before God and wonder worker of our day, confidently I call upon you and seek your aid. You always fulfilled God\u2019s designs; help me now to do the holy will of God. Implore the Master of Life, from whom all parenthood proceeds, to render me fruitful in offspring, that I may raise up children to God in this life, and in the world to come, heirs to the Kingdom of His Glory. Amen. Prayer to Sts Joachim and Anne Most Holy Saints Anne and Joachim, come close to us and guide our hand and our hearts in the way of virtue. Help us to conceive a child so that we may parent them with a gentle heart as you did. Obtain from God the grace to overcome all infertility so that we may raise our children in faith and bring our families into the Light of Jesus. Sts Anne and Joachim, we place our petitions in your hands and ask that you lay them before the child Jesus. Amen. Prayer to St Collette O glorious St. Colette, I beseech you through the burning love which inflamed your heart for Jesus in the Most Blessed Sacrament, through the marvelous graces with which He enriched you, and through the loving compassion you did bear to Him in His bitter sufferings, obtain from Him for me my request for fertility which I hope to receive through your powerful intercession. Amen. Prayer to St Raphael to Heal Infertility Glorious Archangel St. Raphael, great prince of the heavenly court, you are illustrious for your gifts of wisdom and grace. You are a guide of those who journey by land or sea or air, consoler of the afflicted, and refuge of sinners. I beg you, assist me in all my needs and in all the sufferings of this life, as once you helped the young Tobias on his travels. Because you are the Medicine of God, I humbly pray you to heal the many infirmities of my soul and the ills that afflict my body, especially of infertility. I also ask for the great grace of purity to prepare me to be the temple of the Holy Spirit. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Added paragraph breaks and headings for pacing, and inserted minimal punctuation for clearer text-to-speech without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who said, \u201cLet the little children come to Me,\u201d and who love children, please answer the prayers I ask in this novena through the saints\u2019 intercession, especially  Prayer to Our Blessed Mother Most Holy Mother, hear the cries of my heart right now. Blessed Virgin, I want to be fruitful, but I have not yet been blessed with fertility. Grant me fertility over my life and end my suffering. Help make me a fruitful vine within my house. My children will be like olive shoots around my table. Mother of Mercy, I know I was not created so that I would be fruitless, but your Son created me to be effective in all that I do. I know that my season of fertility will come according to your Son\u2019s timing. Amen. Prayer to St Gerard Majella O good St Gerard, powerful intercessor before God and wonder worker of our day, confidently I call upon you and seek your aid. You always fulfilled God\u2019s designs; help me now to do the holy will of God. Implore the Master of Life, from whom all parenthood proceeds, to render me fruitful in offspring, that I may raise up children to God in this life, and in the world to come, heirs to the Kingdom of His Glory. Amen. Prayer to Sts Joachim and Anne Most Holy Saints Anne and Joachim, come close to us and guide our hand and our hearts in the way of virtue. Help us to conceive a child so that we may parent them with a gentle heart as you did. Obtain from God the grace to overcome all infertility so that we may raise our children in faith and bring our families into the Light of Jesus. Sts Anne and Joachim, we place our petitions in your hands and ask that you lay them before the child Jesus. Amen. Prayer to St Collette O glorious St. Colette, I beseech you through the burning love which inflamed your heart for Jesus in the Most Blessed Sacrament, through the marvelous graces with which He enriched you, and through the loving compassion you did bear to Him in His bitter sufferings, obtain from Him for me my request for fertility which I hope to receive through your powerful intercession. Amen. Prayer to St Raphael to Heal Infertility Glorious Archangel St. Raphael, great prince of the heavenly court, you are illustrious for your gifts of wisdom and grace. You are a guide of those who journey by land or sea or air, consoler of the afflicted, and refuge of sinners. I beg you, assist me in all my needs and in all the sufferings of this life, as once you helped the young Tobias on his travels. Because you are the Medicine of God, I humbly pray you to heal the many infirmities of my soul and the ills that afflict my body, especially of infertility. I also ask for the great grace of purity to prepare me to be the temple of the Holy Spirit. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Added paragraph breaks and headings for pacing, and inserted minimal punctuation for clearer text-to-speech without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, who said, \u201cLet the little children come to Me,\u201d and who love children, please answer the prayers I ask in this novena through the saints\u2019 intercession, especially  Prayer to Our Blessed Mother Most Holy Mother, hear the cries of my heart right now. Blessed Virgin, I want to be fruitful, but I have not yet been blessed with fertility. Grant me fertility over my life and end my suffering. Help make me a fruitful vine within my house. My children will be like olive shoots around my table. Mother of Mercy, I know I was not created so that I would be fruitless, but your Son created me to be effective in all that I do. I know that my season of fertility will come according to your Son\u2019s timing. Amen. Prayer to St Gerard Majella O good St Gerard, powerful intercessor before God and wonder worker of our day, confidently I call upon you and seek your aid. You always fulfilled God\u2019s designs; help me now to do the holy will of God. Implore the Master of Life, from whom all parenthood proceeds, to render me fruitful in offspring, that I may raise up children to God in this life, and in the world to come, heirs to the Kingdom of His Glory. Amen. Prayer to Sts Joachim and Anne Most Holy Saints Anne and Joachim, come close to us and guide our hand and our hearts in the way of virtue. Help us to conceive a child so that we may parent them with a gentle heart as you did. Obtain from God the grace to overcome all infertility so that we may raise our children in faith and bring our families into the Light of Jesus. Sts Anne and Joachim, we place our petitions in your hands and ask that you lay them before the child Jesus. Amen. Prayer to St Collette O glorious St. Colette, I beseech you through the burning love which inflamed your heart for Jesus in the Most Blessed Sacrament, through the marvelous graces with which He enriched you, and through the loving compassion you did bear to Him in His bitter sufferings, obtain from Him for me my request for fertility which I hope to receive through your powerful intercession. Amen. Prayer to St Raphael to Heal Infertility Glorious Archangel St. Raphael, great prince of the heavenly court, you are illustrious for your gifts of wisdom and grace. You are a guide of those who journey by land or sea or air, consoler of the afflicted, and refuge of sinners. I beg you, assist me in all my needs and in all the sufferings of this life, as once you helped the young Tobias on his travels. Because you are the Medicine of God, I humbly pray you to heal the many infirmities of my soul and the ills that afflict my body, especially of infertility. I also ask for the great grace of purity to prepare me to be the temple of the Holy Spirit. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-fertility_to_conceive"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "fertility_to_conceive",
+      "name": "Fertility to Conceive"
+    },
+    "type": "novena_feast_rule"
+  }
+}

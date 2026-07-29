@@ -1,0 +1,253 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "the_three_hail_marys",
+    "feast": {
+      "day": 29,
+      "mode": "fixed",
+      "month": 3,
+      "name": "The Three Hail Marys"
+    },
+    "id": "the_three_hail_marys",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A novena of praying three Hail Marys daily, asking the Blessed Virgin Mary for purity, protection from sin, and perseverance in grace."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full The Three Hail Marys Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; converted \"mention request here\" into a personal-intention pause marker; OpenAI normalization failed; used local TTS fallback; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause; reused canonical prayer fragment 'hail_mary'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "Oh, Immaculate Mary, Virgin most Powerful, I beseech you, through that immense Power which you have received from the Eternal Father, obtain for me Purity of heart, - Strength to overcome all the enemies of my soul; -and the special favor I implore in my present necessity."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Mother most pure! Forsake me not, despise not my prayer, graciously hear me for God\u2019s glory, your honor, and the welfare of my soul. To obtain this favor I honor your Power by reciting:"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": ", Full of Grace, The Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners now, and at the hour of death."
+              },
+              {
+                "kind": "text",
+                "text": "Amen."
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "fragments": [
+          {
+            "key": "hail_mary",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Hail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.",
+            "title": "Hail Mary"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full The Three Hail Marys Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; converted \"mention request here\" into a personal-intention pause marker; OpenAI normalization failed; used local TTS fallback",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nOh, Immaculate Mary, Virgin most Powerful, I beseech you, through that immense Power which you have received from the Eternal Father, obtain for me Purity of heart, - Strength to overcome all the enemies of my soul; -and the special favor I implore in my present necessity.  Mother most pure! Forsake me not, despise not my prayer, graciously hear me for God\u2019s glory, your honor, and the welfare of my soul. To obtain this favor I honor your Power by reciting:\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\n, Full of Grace, The Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners now, and at the hour of death.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; converted \"mention request here\" into a personal-intention pause marker; OpenAI normalization failed; used local TTS fallback; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nOh, Immaculate Mary, Virgin most Powerful, I beseech you, through that immense Power which you have received from the Eternal Father, obtain for me Purity of heart, - Strength to overcome all the enemies of my soul; -and the special favor I implore in my present necessity.  Mother most pure! Forsake me not, despise not my prayer, graciously hear me for God\u2019s glory, your honor, and the welfare of my soul. To obtain this favor I honor your Power by reciting:\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\n, Full of Grace, The Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners now, and at the hour of death.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; converted \"mention request here\" into a personal-intention pause marker; OpenAI normalization failed; used local TTS fallback; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nOh, Immaculate Mary, Virgin most Powerful, I beseech you, through that immense Power which you have received from the Eternal Father, obtain for me Purity of heart, - Strength to overcome all the enemies of my soul; -and the special favor I implore in my present necessity.  Mother most pure! Forsake me not, despise not my prayer, graciously hear me for God\u2019s glory, your honor, and the welfare of my soul. To obtain this favor I honor your Power by reciting:\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\n, Full of Grace, The Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners now, and at the hour of death.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; converted \"mention request here\" into a personal-intention pause marker; OpenAI normalization failed; used local TTS fallback; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nOh, Immaculate Mary, Virgin most Powerful, I beseech you, through that immense Power which you have received from the Eternal Father, obtain for me Purity of heart, - Strength to overcome all the enemies of my soul; -and the special favor I implore in my present necessity.  Mother most pure! Forsake me not, despise not my prayer, graciously hear me for God\u2019s glory, your honor, and the welfare of my soul. To obtain this favor I honor your Power by reciting:\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\n, Full of Grace, The Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners now, and at the hour of death.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; converted \"mention request here\" into a personal-intention pause marker; OpenAI normalization failed; used local TTS fallback; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nOh, Immaculate Mary, Virgin most Powerful, I beseech you, through that immense Power which you have received from the Eternal Father, obtain for me Purity of heart, - Strength to overcome all the enemies of my soul; -and the special favor I implore in my present necessity.  Mother most pure! Forsake me not, despise not my prayer, graciously hear me for God\u2019s glory, your honor, and the welfare of my soul. To obtain this favor I honor your Power by reciting:\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\n, Full of Grace, The Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners now, and at the hour of death.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; converted \"mention request here\" into a personal-intention pause marker; OpenAI normalization failed; used local TTS fallback; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nOh, Immaculate Mary, Virgin most Powerful, I beseech you, through that immense Power which you have received from the Eternal Father, obtain for me Purity of heart, - Strength to overcome all the enemies of my soul; -and the special favor I implore in my present necessity.  Mother most pure! Forsake me not, despise not my prayer, graciously hear me for God\u2019s glory, your honor, and the welfare of my soul. To obtain this favor I honor your Power by reciting:\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\n, Full of Grace, The Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners now, and at the hour of death.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; converted \"mention request here\" into a personal-intention pause marker; OpenAI normalization failed; used local TTS fallback; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nOh, Immaculate Mary, Virgin most Powerful, I beseech you, through that immense Power which you have received from the Eternal Father, obtain for me Purity of heart, - Strength to overcome all the enemies of my soul; -and the special favor I implore in my present necessity.  Mother most pure! Forsake me not, despise not my prayer, graciously hear me for God\u2019s glory, your honor, and the welfare of my soul. To obtain this favor I honor your Power by reciting:\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\n, Full of Grace, The Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners now, and at the hour of death.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; converted \"mention request here\" into a personal-intention pause marker; OpenAI normalization failed; used local TTS fallback; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nOh, Immaculate Mary, Virgin most Powerful, I beseech you, through that immense Power which you have received from the Eternal Father, obtain for me Purity of heart, - Strength to overcome all the enemies of my soul; -and the special favor I implore in my present necessity.  Mother most pure! Forsake me not, despise not my prayer, graciously hear me for God\u2019s glory, your honor, and the welfare of my soul. To obtain this favor I honor your Power by reciting:\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\n, Full of Grace, The Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners now, and at the hour of death.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; converted \"mention request here\" into a personal-intention pause marker; OpenAI normalization failed; used local TTS fallback; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nOh, Immaculate Mary, Virgin most Powerful, I beseech you, through that immense Power which you have received from the Eternal Father, obtain for me Purity of heart, - Strength to overcome all the enemies of my soul; -and the special favor I implore in my present necessity.  Mother most pure! Forsake me not, despise not my prayer, graciously hear me for God\u2019s glory, your honor, and the welfare of my soul. To obtain this favor I honor your Power by reciting:\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\n, Full of Grace, The Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners now, and at the hour of death.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-the_three_hail_marys"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "the_three_hail_marys",
+      "name": "The Three Hail Marys"
+    },
+    "type": "novena_feast_rule"
+  }
+}

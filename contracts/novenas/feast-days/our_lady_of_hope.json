@@ -1,0 +1,224 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "our_lady_of_hope",
+    "feast": {
+      "day": 17,
+      "mode": "fixed",
+      "month": 1,
+      "name": "Our Lady of Hope"
+    },
+    "id": "our_lady_of_hope",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "Our Lady of Hope honors the Blessed Virgin Mary under the title of hope, inviting prayer for trust in God and steadfast confidence in Mary\u2019s intercession."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of Hope Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken cues for the scripture citation, \u201cLet us pray,\u201d the prayer title, and clarified the x3 repetition as \u201cRepeat three times,\u201d while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I am the mother of fair love, and of fear, and of knowledge, and of holy hope. In me is all grace of the way and of the truth; in me is all hope of life and of virtue. Come to me all that desire me and be filled with my fruits. Sirach, chapter 24, verses 24 through 26. O Blessed Virgin Mary, Mother of Grace, Hope of the world, hear us, your children, who cry to you. Let us pray. O God, who by the marvelous protection of the Blessed Virgin Mary has strengthened us firmly in hope, grant, we beseech You, that by persevering in prayer at her admonition, we may obtain the favors we devoutly implore. Through Christ Our Lord. Amen. Prayer to Our Lady of Hope. O Mary, my Mother, I kneel before you with heavy heart. The burden of my sins oppresses me. The knowledge of my weakness discourages me. I am beset by fears and temptations of every sort. Yet I am so attached to the things of this world that instead of longing for Heaven I am filled with dread at the thought of death. O Mother of Mercy, have pity on me in my distress. You are all-powerful with your Divine Son. He can refuse no request of your Immaculate Heart. Show yourself a true Mother to me by being my advocate before His throne. O Refuge of Sinners and Hope of the Hopeless, to whom shall I turn if not you? Obtain for me, then, O Mother of Hope, the grace of true sorrow for my sins, the gift of perfect resignation to God\u2019s Holy Will, and the courage to take up my cross and follow Jesus. Beg of His Sacred Heart the special favor that I ask in this novena."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "But above all I pray, O dearest Mother, that through your most powerful intercession my heart may be filled with Holy Hope, so that in life\u2019s darkest hour I may never fail to trust in God my Saviour, but by walking in the way of His commandments I may merit to be united with Him, and with you in the eternal joys of Heaven. Amen. Mary, our Hope, have pity on us. Hope of the Hopeless, pray for us. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of Hope Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken cues for the scripture citation, \u201cLet us pray,\u201d the prayer title, and clarified the x3 repetition as \u201cRepeat three times,\u201d while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I am the mother of fair love, and of fear, and of knowledge, and of holy hope. In me is all grace of the way and of the truth; in me is all hope of life and of virtue. Come to me all that desire me and be filled with my fruits. Sirach, chapter 24, verses 24 through 26. O Blessed Virgin Mary, Mother of Grace, Hope of the world, hear us, your children, who cry to you. Let us pray. O God, who by the marvelous protection of the Blessed Virgin Mary has strengthened us firmly in hope, grant, we beseech You, that by persevering in prayer at her admonition, we may obtain the favors we devoutly implore. Through Christ Our Lord. Amen. Prayer to Our Lady of Hope. O Mary, my Mother, I kneel before you with heavy heart. The burden of my sins oppresses me. The knowledge of my weakness discourages me. I am beset by fears and temptations of every sort. Yet I am so attached to the things of this world that instead of longing for Heaven I am filled with dread at the thought of death. O Mother of Mercy, have pity on me in my distress. You are all-powerful with your Divine Son. He can refuse no request of your Immaculate Heart. Show yourself a true Mother to me by being my advocate before His throne. O Refuge of Sinners and Hope of the Hopeless, to whom shall I turn if not you? Obtain for me, then, O Mother of Hope, the grace of true sorrow for my sins, the gift of perfect resignation to God\u2019s Holy Will, and the courage to take up my cross and follow Jesus. Beg of His Sacred Heart the special favor that I ask in this novena.  But above all I pray, O dearest Mother, that through your most powerful intercession my heart may be filled with Holy Hope, so that in life\u2019s darkest hour I may never fail to trust in God my Saviour, but by walking in the way of His commandments I may merit to be united with Him, and with you in the eternal joys of Heaven. Amen. Mary, our Hope, have pity on us. Hope of the Hopeless, pray for us. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken cues for the scripture citation, \u201cLet us pray,\u201d the prayer title, and clarified the x3 repetition as \u201cRepeat three times,\u201d while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I am the mother of fair love, and of fear, and of knowledge, and of holy hope. In me is all grace of the way and of the truth; in me is all hope of life and of virtue. Come to me all that desire me and be filled with my fruits. Sirach, chapter 24, verses 24 through 26. O Blessed Virgin Mary, Mother of Grace, Hope of the world, hear us, your children, who cry to you. Let us pray. O God, who by the marvelous protection of the Blessed Virgin Mary has strengthened us firmly in hope, grant, we beseech You, that by persevering in prayer at her admonition, we may obtain the favors we devoutly implore. Through Christ Our Lord. Amen. Prayer to Our Lady of Hope. O Mary, my Mother, I kneel before you with heavy heart. The burden of my sins oppresses me. The knowledge of my weakness discourages me. I am beset by fears and temptations of every sort. Yet I am so attached to the things of this world that instead of longing for Heaven I am filled with dread at the thought of death. O Mother of Mercy, have pity on me in my distress. You are all-powerful with your Divine Son. He can refuse no request of your Immaculate Heart. Show yourself a true Mother to me by being my advocate before His throne. O Refuge of Sinners and Hope of the Hopeless, to whom shall I turn if not you? Obtain for me, then, O Mother of Hope, the grace of true sorrow for my sins, the gift of perfect resignation to God\u2019s Holy Will, and the courage to take up my cross and follow Jesus. Beg of His Sacred Heart the special favor that I ask in this novena.  But above all I pray, O dearest Mother, that through your most powerful intercession my heart may be filled with Holy Hope, so that in life\u2019s darkest hour I may never fail to trust in God my Saviour, but by walking in the way of His commandments I may merit to be united with Him, and with you in the eternal joys of Heaven. Amen. Mary, our Hope, have pity on us. Hope of the Hopeless, pray for us. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken cues for the scripture citation, \u201cLet us pray,\u201d the prayer title, and clarified the x3 repetition as \u201cRepeat three times,\u201d while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I am the mother of fair love, and of fear, and of knowledge, and of holy hope. In me is all grace of the way and of the truth; in me is all hope of life and of virtue. Come to me all that desire me and be filled with my fruits. Sirach, chapter 24, verses 24 through 26. O Blessed Virgin Mary, Mother of Grace, Hope of the world, hear us, your children, who cry to you. Let us pray. O God, who by the marvelous protection of the Blessed Virgin Mary has strengthened us firmly in hope, grant, we beseech You, that by persevering in prayer at her admonition, we may obtain the favors we devoutly implore. Through Christ Our Lord. Amen. Prayer to Our Lady of Hope. O Mary, my Mother, I kneel before you with heavy heart. The burden of my sins oppresses me. The knowledge of my weakness discourages me. I am beset by fears and temptations of every sort. Yet I am so attached to the things of this world that instead of longing for Heaven I am filled with dread at the thought of death. O Mother of Mercy, have pity on me in my distress. You are all-powerful with your Divine Son. He can refuse no request of your Immaculate Heart. Show yourself a true Mother to me by being my advocate before His throne. O Refuge of Sinners and Hope of the Hopeless, to whom shall I turn if not you? Obtain for me, then, O Mother of Hope, the grace of true sorrow for my sins, the gift of perfect resignation to God\u2019s Holy Will, and the courage to take up my cross and follow Jesus. Beg of His Sacred Heart the special favor that I ask in this novena.  But above all I pray, O dearest Mother, that through your most powerful intercession my heart may be filled with Holy Hope, so that in life\u2019s darkest hour I may never fail to trust in God my Saviour, but by walking in the way of His commandments I may merit to be united with Him, and with you in the eternal joys of Heaven. Amen. Mary, our Hope, have pity on us. Hope of the Hopeless, pray for us. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken cues for the scripture citation, \u201cLet us pray,\u201d the prayer title, and clarified the x3 repetition as \u201cRepeat three times,\u201d while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I am the mother of fair love, and of fear, and of knowledge, and of holy hope. In me is all grace of the way and of the truth; in me is all hope of life and of virtue. Come to me all that desire me and be filled with my fruits. Sirach, chapter 24, verses 24 through 26. O Blessed Virgin Mary, Mother of Grace, Hope of the world, hear us, your children, who cry to you. Let us pray. O God, who by the marvelous protection of the Blessed Virgin Mary has strengthened us firmly in hope, grant, we beseech You, that by persevering in prayer at her admonition, we may obtain the favors we devoutly implore. Through Christ Our Lord. Amen. Prayer to Our Lady of Hope. O Mary, my Mother, I kneel before you with heavy heart. The burden of my sins oppresses me. The knowledge of my weakness discourages me. I am beset by fears and temptations of every sort. Yet I am so attached to the things of this world that instead of longing for Heaven I am filled with dread at the thought of death. O Mother of Mercy, have pity on me in my distress. You are all-powerful with your Divine Son. He can refuse no request of your Immaculate Heart. Show yourself a true Mother to me by being my advocate before His throne. O Refuge of Sinners and Hope of the Hopeless, to whom shall I turn if not you? Obtain for me, then, O Mother of Hope, the grace of true sorrow for my sins, the gift of perfect resignation to God\u2019s Holy Will, and the courage to take up my cross and follow Jesus. Beg of His Sacred Heart the special favor that I ask in this novena.  But above all I pray, O dearest Mother, that through your most powerful intercession my heart may be filled with Holy Hope, so that in life\u2019s darkest hour I may never fail to trust in God my Saviour, but by walking in the way of His commandments I may merit to be united with Him, and with you in the eternal joys of Heaven. Amen. Mary, our Hope, have pity on us. Hope of the Hopeless, pray for us. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken cues for the scripture citation, \u201cLet us pray,\u201d the prayer title, and clarified the x3 repetition as \u201cRepeat three times,\u201d while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I am the mother of fair love, and of fear, and of knowledge, and of holy hope. In me is all grace of the way and of the truth; in me is all hope of life and of virtue. Come to me all that desire me and be filled with my fruits. Sirach, chapter 24, verses 24 through 26. O Blessed Virgin Mary, Mother of Grace, Hope of the world, hear us, your children, who cry to you. Let us pray. O God, who by the marvelous protection of the Blessed Virgin Mary has strengthened us firmly in hope, grant, we beseech You, that by persevering in prayer at her admonition, we may obtain the favors we devoutly implore. Through Christ Our Lord. Amen. Prayer to Our Lady of Hope. O Mary, my Mother, I kneel before you with heavy heart. The burden of my sins oppresses me. The knowledge of my weakness discourages me. I am beset by fears and temptations of every sort. Yet I am so attached to the things of this world that instead of longing for Heaven I am filled with dread at the thought of death. O Mother of Mercy, have pity on me in my distress. You are all-powerful with your Divine Son. He can refuse no request of your Immaculate Heart. Show yourself a true Mother to me by being my advocate before His throne. O Refuge of Sinners and Hope of the Hopeless, to whom shall I turn if not you? Obtain for me, then, O Mother of Hope, the grace of true sorrow for my sins, the gift of perfect resignation to God\u2019s Holy Will, and the courage to take up my cross and follow Jesus. Beg of His Sacred Heart the special favor that I ask in this novena.  But above all I pray, O dearest Mother, that through your most powerful intercession my heart may be filled with Holy Hope, so that in life\u2019s darkest hour I may never fail to trust in God my Saviour, but by walking in the way of His commandments I may merit to be united with Him, and with you in the eternal joys of Heaven. Amen. Mary, our Hope, have pity on us. Hope of the Hopeless, pray for us. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken cues for the scripture citation, \u201cLet us pray,\u201d the prayer title, and clarified the x3 repetition as \u201cRepeat three times,\u201d while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I am the mother of fair love, and of fear, and of knowledge, and of holy hope. In me is all grace of the way and of the truth; in me is all hope of life and of virtue. Come to me all that desire me and be filled with my fruits. Sirach, chapter 24, verses 24 through 26. O Blessed Virgin Mary, Mother of Grace, Hope of the world, hear us, your children, who cry to you. Let us pray. O God, who by the marvelous protection of the Blessed Virgin Mary has strengthened us firmly in hope, grant, we beseech You, that by persevering in prayer at her admonition, we may obtain the favors we devoutly implore. Through Christ Our Lord. Amen. Prayer to Our Lady of Hope. O Mary, my Mother, I kneel before you with heavy heart. The burden of my sins oppresses me. The knowledge of my weakness discourages me. I am beset by fears and temptations of every sort. Yet I am so attached to the things of this world that instead of longing for Heaven I am filled with dread at the thought of death. O Mother of Mercy, have pity on me in my distress. You are all-powerful with your Divine Son. He can refuse no request of your Immaculate Heart. Show yourself a true Mother to me by being my advocate before His throne. O Refuge of Sinners and Hope of the Hopeless, to whom shall I turn if not you? Obtain for me, then, O Mother of Hope, the grace of true sorrow for my sins, the gift of perfect resignation to God\u2019s Holy Will, and the courage to take up my cross and follow Jesus. Beg of His Sacred Heart the special favor that I ask in this novena.  But above all I pray, O dearest Mother, that through your most powerful intercession my heart may be filled with Holy Hope, so that in life\u2019s darkest hour I may never fail to trust in God my Saviour, but by walking in the way of His commandments I may merit to be united with Him, and with you in the eternal joys of Heaven. Amen. Mary, our Hope, have pity on us. Hope of the Hopeless, pray for us. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken cues for the scripture citation, \u201cLet us pray,\u201d the prayer title, and clarified the x3 repetition as \u201cRepeat three times,\u201d while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I am the mother of fair love, and of fear, and of knowledge, and of holy hope. In me is all grace of the way and of the truth; in me is all hope of life and of virtue. Come to me all that desire me and be filled with my fruits. Sirach, chapter 24, verses 24 through 26. O Blessed Virgin Mary, Mother of Grace, Hope of the world, hear us, your children, who cry to you. Let us pray. O God, who by the marvelous protection of the Blessed Virgin Mary has strengthened us firmly in hope, grant, we beseech You, that by persevering in prayer at her admonition, we may obtain the favors we devoutly implore. Through Christ Our Lord. Amen. Prayer to Our Lady of Hope. O Mary, my Mother, I kneel before you with heavy heart. The burden of my sins oppresses me. The knowledge of my weakness discourages me. I am beset by fears and temptations of every sort. Yet I am so attached to the things of this world that instead of longing for Heaven I am filled with dread at the thought of death. O Mother of Mercy, have pity on me in my distress. You are all-powerful with your Divine Son. He can refuse no request of your Immaculate Heart. Show yourself a true Mother to me by being my advocate before His throne. O Refuge of Sinners and Hope of the Hopeless, to whom shall I turn if not you? Obtain for me, then, O Mother of Hope, the grace of true sorrow for my sins, the gift of perfect resignation to God\u2019s Holy Will, and the courage to take up my cross and follow Jesus. Beg of His Sacred Heart the special favor that I ask in this novena.  But above all I pray, O dearest Mother, that through your most powerful intercession my heart may be filled with Holy Hope, so that in life\u2019s darkest hour I may never fail to trust in God my Saviour, but by walking in the way of His commandments I may merit to be united with Him, and with you in the eternal joys of Heaven. Amen. Mary, our Hope, have pity on us. Hope of the Hopeless, pray for us. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken cues for the scripture citation, \u201cLet us pray,\u201d the prayer title, and clarified the x3 repetition as \u201cRepeat three times,\u201d while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I am the mother of fair love, and of fear, and of knowledge, and of holy hope. In me is all grace of the way and of the truth; in me is all hope of life and of virtue. Come to me all that desire me and be filled with my fruits. Sirach, chapter 24, verses 24 through 26. O Blessed Virgin Mary, Mother of Grace, Hope of the world, hear us, your children, who cry to you. Let us pray. O God, who by the marvelous protection of the Blessed Virgin Mary has strengthened us firmly in hope, grant, we beseech You, that by persevering in prayer at her admonition, we may obtain the favors we devoutly implore. Through Christ Our Lord. Amen. Prayer to Our Lady of Hope. O Mary, my Mother, I kneel before you with heavy heart. The burden of my sins oppresses me. The knowledge of my weakness discourages me. I am beset by fears and temptations of every sort. Yet I am so attached to the things of this world that instead of longing for Heaven I am filled with dread at the thought of death. O Mother of Mercy, have pity on me in my distress. You are all-powerful with your Divine Son. He can refuse no request of your Immaculate Heart. Show yourself a true Mother to me by being my advocate before His throne. O Refuge of Sinners and Hope of the Hopeless, to whom shall I turn if not you? Obtain for me, then, O Mother of Hope, the grace of true sorrow for my sins, the gift of perfect resignation to God\u2019s Holy Will, and the courage to take up my cross and follow Jesus. Beg of His Sacred Heart the special favor that I ask in this novena.  But above all I pray, O dearest Mother, that through your most powerful intercession my heart may be filled with Holy Hope, so that in life\u2019s darkest hour I may never fail to trust in God my Saviour, but by walking in the way of His commandments I may merit to be united with Him, and with you in the eternal joys of Heaven. Amen. Mary, our Hope, have pity on us. Hope of the Hopeless, pray for us. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken cues for the scripture citation, \u201cLet us pray,\u201d the prayer title, and clarified the x3 repetition as \u201cRepeat three times,\u201d while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I am the mother of fair love, and of fear, and of knowledge, and of holy hope. In me is all grace of the way and of the truth; in me is all hope of life and of virtue. Come to me all that desire me and be filled with my fruits. Sirach, chapter 24, verses 24 through 26. O Blessed Virgin Mary, Mother of Grace, Hope of the world, hear us, your children, who cry to you. Let us pray. O God, who by the marvelous protection of the Blessed Virgin Mary has strengthened us firmly in hope, grant, we beseech You, that by persevering in prayer at her admonition, we may obtain the favors we devoutly implore. Through Christ Our Lord. Amen. Prayer to Our Lady of Hope. O Mary, my Mother, I kneel before you with heavy heart. The burden of my sins oppresses me. The knowledge of my weakness discourages me. I am beset by fears and temptations of every sort. Yet I am so attached to the things of this world that instead of longing for Heaven I am filled with dread at the thought of death. O Mother of Mercy, have pity on me in my distress. You are all-powerful with your Divine Son. He can refuse no request of your Immaculate Heart. Show yourself a true Mother to me by being my advocate before His throne. O Refuge of Sinners and Hope of the Hopeless, to whom shall I turn if not you? Obtain for me, then, O Mother of Hope, the grace of true sorrow for my sins, the gift of perfect resignation to God\u2019s Holy Will, and the courage to take up my cross and follow Jesus. Beg of His Sacred Heart the special favor that I ask in this novena.  But above all I pray, O dearest Mother, that through your most powerful intercession my heart may be filled with Holy Hope, so that in life\u2019s darkest hour I may never fail to trust in God my Saviour, but by walking in the way of His commandments I may merit to be united with Him, and with you in the eternal joys of Heaven. Amen. Mary, our Hope, have pity on us. Hope of the Hopeless, pray for us. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-our_lady_of_hope"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "our_lady_of_hope",
+      "name": "Our Lady of Hope"
+    },
+    "type": "novena_feast_rule"
+  }
+}

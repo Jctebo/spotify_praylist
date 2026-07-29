@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_charles_borromeo",
+    "feast": {
+      "day": 4,
+      "mode": "fixed",
+      "month": 11,
+      "name": "St Charles Borromeo"
+    },
+    "id": "st_charles_borromeo",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "catechists",
+        "seminarians",
+        "bishops"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St Charles Borromeo was a 16th-century Italian cardinal and archbishop of Milan who led Catholic reform, founded seminaries, and served the sick during plague."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Charles Borromeo Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and spacing adjustments were made for smoother text-to-speech while preserving wording, order, and paragraph breaks.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Charles, the father of the clergy, and the perfect model of holy prelates. You are that good pastor who, like your divine Master, gave up your life for your flock, if not by death, at least by the numerous sacrifices of your painful mission. Your sanctified life on earth was a spur to the most fervent, your exemplary penance was a reproach to the slothful, and your untiring zeal was the support of the Church. O great Prelate, since the glory of God and the salvation of souls are the only objects of solicitude to the blessed in heaven, vouchsafe to intercede for me now, and to offer up, for the intention of this novena, those fervent prayers which were so successful while you were on earth"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "You are, O great St. Charles, among all the Saints of God, one in whose intercession I should most confide, because you were chosen by God to promote the interests of religion by promoting the Christian education of youth. You were, like Jesus Christ himself, always accessible to little ones, for whom you broke the bread of the word of God, and procured for them also the blessings of a Christian education. To you, then, I have recourse with confidence, beseeching you to obtain for me the grace to profit of the advantages I enjoy, and for which I am so considerably indebted to your zeal. Preserve me by your prayers from the dangers of the world. Obtain that my heart may be impressed with a lively horror of sin, a deep sense of my duty as a Christian, a sincere contempt for the opinion and false maxims of the world, an ardent love for God, and that holy fear which is the beginning of wisdom. Amen. Preserve Your Church, O Lord, under the continual protection of Your glorious Confessor and Bishop, St. Charles, that as he was eminent for the discharge of his pastoral duties, so his prayers may make us zealous in the love of Your holy name, through Jesus Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Charles Borromeo, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Charles Borromeo Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and spacing adjustments were made for smoother text-to-speech while preserving wording, order, and paragraph breaks.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Charles, the father of the clergy, and the perfect model of holy prelates. You are that good pastor who, like your divine Master, gave up your life for your flock, if not by death, at least by the numerous sacrifices of your painful mission. Your sanctified life on earth was a spur to the most fervent, your exemplary penance was a reproach to the slothful, and your untiring zeal was the support of the Church. O great Prelate, since the glory of God and the salvation of souls are the only objects of solicitude to the blessed in heaven, vouchsafe to intercede for me now, and to offer up, for the intention of this novena, those fervent prayers which were so successful while you were on earth  You are, O great St. Charles, among all the Saints of God, one in whose intercession I should most confide, because you were chosen by God to promote the interests of religion by promoting the Christian education of youth. You were, like Jesus Christ himself, always accessible to little ones, for whom you broke the bread of the word of God, and procured for them also the blessings of a Christian education. To you, then, I have recourse with confidence, beseeching you to obtain for me the grace to profit of the advantages I enjoy, and for which I am so considerably indebted to your zeal. Preserve me by your prayers from the dangers of the world. Obtain that my heart may be impressed with a lively horror of sin, a deep sense of my duty as a Christian, a sincere contempt for the opinion and false maxims of the world, an ardent love for God, and that holy fear which is the beginning of wisdom. Amen. Preserve Your Church, O Lord, under the continual protection of Your glorious Confessor and Bishop, St. Charles, that as he was eminent for the discharge of his pastoral duties, so his prayers may make us zealous in the love of Your holy name, through Jesus Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Charles Borromeo, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and spacing adjustments were made for smoother text-to-speech while preserving wording, order, and paragraph breaks.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Charles, the father of the clergy, and the perfect model of holy prelates. You are that good pastor who, like your divine Master, gave up your life for your flock, if not by death, at least by the numerous sacrifices of your painful mission. Your sanctified life on earth was a spur to the most fervent, your exemplary penance was a reproach to the slothful, and your untiring zeal was the support of the Church. O great Prelate, since the glory of God and the salvation of souls are the only objects of solicitude to the blessed in heaven, vouchsafe to intercede for me now, and to offer up, for the intention of this novena, those fervent prayers which were so successful while you were on earth  You are, O great St. Charles, among all the Saints of God, one in whose intercession I should most confide, because you were chosen by God to promote the interests of religion by promoting the Christian education of youth. You were, like Jesus Christ himself, always accessible to little ones, for whom you broke the bread of the word of God, and procured for them also the blessings of a Christian education. To you, then, I have recourse with confidence, beseeching you to obtain for me the grace to profit of the advantages I enjoy, and for which I am so considerably indebted to your zeal. Preserve me by your prayers from the dangers of the world. Obtain that my heart may be impressed with a lively horror of sin, a deep sense of my duty as a Christian, a sincere contempt for the opinion and false maxims of the world, an ardent love for God, and that holy fear which is the beginning of wisdom. Amen. Preserve Your Church, O Lord, under the continual protection of Your glorious Confessor and Bishop, St. Charles, that as he was eminent for the discharge of his pastoral duties, so his prayers may make us zealous in the love of Your holy name, through Jesus Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Charles Borromeo, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and spacing adjustments were made for smoother text-to-speech while preserving wording, order, and paragraph breaks.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Charles, the father of the clergy, and the perfect model of holy prelates. You are that good pastor who, like your divine Master, gave up your life for your flock, if not by death, at least by the numerous sacrifices of your painful mission. Your sanctified life on earth was a spur to the most fervent, your exemplary penance was a reproach to the slothful, and your untiring zeal was the support of the Church. O great Prelate, since the glory of God and the salvation of souls are the only objects of solicitude to the blessed in heaven, vouchsafe to intercede for me now, and to offer up, for the intention of this novena, those fervent prayers which were so successful while you were on earth  You are, O great St. Charles, among all the Saints of God, one in whose intercession I should most confide, because you were chosen by God to promote the interests of religion by promoting the Christian education of youth. You were, like Jesus Christ himself, always accessible to little ones, for whom you broke the bread of the word of God, and procured for them also the blessings of a Christian education. To you, then, I have recourse with confidence, beseeching you to obtain for me the grace to profit of the advantages I enjoy, and for which I am so considerably indebted to your zeal. Preserve me by your prayers from the dangers of the world. Obtain that my heart may be impressed with a lively horror of sin, a deep sense of my duty as a Christian, a sincere contempt for the opinion and false maxims of the world, an ardent love for God, and that holy fear which is the beginning of wisdom. Amen. Preserve Your Church, O Lord, under the continual protection of Your glorious Confessor and Bishop, St. Charles, that as he was eminent for the discharge of his pastoral duties, so his prayers may make us zealous in the love of Your holy name, through Jesus Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Charles Borromeo, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and spacing adjustments were made for smoother text-to-speech while preserving wording, order, and paragraph breaks.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Charles, the father of the clergy, and the perfect model of holy prelates. You are that good pastor who, like your divine Master, gave up your life for your flock, if not by death, at least by the numerous sacrifices of your painful mission. Your sanctified life on earth was a spur to the most fervent, your exemplary penance was a reproach to the slothful, and your untiring zeal was the support of the Church. O great Prelate, since the glory of God and the salvation of souls are the only objects of solicitude to the blessed in heaven, vouchsafe to intercede for me now, and to offer up, for the intention of this novena, those fervent prayers which were so successful while you were on earth  You are, O great St. Charles, among all the Saints of God, one in whose intercession I should most confide, because you were chosen by God to promote the interests of religion by promoting the Christian education of youth. You were, like Jesus Christ himself, always accessible to little ones, for whom you broke the bread of the word of God, and procured for them also the blessings of a Christian education. To you, then, I have recourse with confidence, beseeching you to obtain for me the grace to profit of the advantages I enjoy, and for which I am so considerably indebted to your zeal. Preserve me by your prayers from the dangers of the world. Obtain that my heart may be impressed with a lively horror of sin, a deep sense of my duty as a Christian, a sincere contempt for the opinion and false maxims of the world, an ardent love for God, and that holy fear which is the beginning of wisdom. Amen. Preserve Your Church, O Lord, under the continual protection of Your glorious Confessor and Bishop, St. Charles, that as he was eminent for the discharge of his pastoral duties, so his prayers may make us zealous in the love of Your holy name, through Jesus Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Charles Borromeo, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and spacing adjustments were made for smoother text-to-speech while preserving wording, order, and paragraph breaks.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Charles, the father of the clergy, and the perfect model of holy prelates. You are that good pastor who, like your divine Master, gave up your life for your flock, if not by death, at least by the numerous sacrifices of your painful mission. Your sanctified life on earth was a spur to the most fervent, your exemplary penance was a reproach to the slothful, and your untiring zeal was the support of the Church. O great Prelate, since the glory of God and the salvation of souls are the only objects of solicitude to the blessed in heaven, vouchsafe to intercede for me now, and to offer up, for the intention of this novena, those fervent prayers which were so successful while you were on earth  You are, O great St. Charles, among all the Saints of God, one in whose intercession I should most confide, because you were chosen by God to promote the interests of religion by promoting the Christian education of youth. You were, like Jesus Christ himself, always accessible to little ones, for whom you broke the bread of the word of God, and procured for them also the blessings of a Christian education. To you, then, I have recourse with confidence, beseeching you to obtain for me the grace to profit of the advantages I enjoy, and for which I am so considerably indebted to your zeal. Preserve me by your prayers from the dangers of the world. Obtain that my heart may be impressed with a lively horror of sin, a deep sense of my duty as a Christian, a sincere contempt for the opinion and false maxims of the world, an ardent love for God, and that holy fear which is the beginning of wisdom. Amen. Preserve Your Church, O Lord, under the continual protection of Your glorious Confessor and Bishop, St. Charles, that as he was eminent for the discharge of his pastoral duties, so his prayers may make us zealous in the love of Your holy name, through Jesus Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Charles Borromeo, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and spacing adjustments were made for smoother text-to-speech while preserving wording, order, and paragraph breaks.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Charles, the father of the clergy, and the perfect model of holy prelates. You are that good pastor who, like your divine Master, gave up your life for your flock, if not by death, at least by the numerous sacrifices of your painful mission. Your sanctified life on earth was a spur to the most fervent, your exemplary penance was a reproach to the slothful, and your untiring zeal was the support of the Church. O great Prelate, since the glory of God and the salvation of souls are the only objects of solicitude to the blessed in heaven, vouchsafe to intercede for me now, and to offer up, for the intention of this novena, those fervent prayers which were so successful while you were on earth  You are, O great St. Charles, among all the Saints of God, one in whose intercession I should most confide, because you were chosen by God to promote the interests of religion by promoting the Christian education of youth. You were, like Jesus Christ himself, always accessible to little ones, for whom you broke the bread of the word of God, and procured for them also the blessings of a Christian education. To you, then, I have recourse with confidence, beseeching you to obtain for me the grace to profit of the advantages I enjoy, and for which I am so considerably indebted to your zeal. Preserve me by your prayers from the dangers of the world. Obtain that my heart may be impressed with a lively horror of sin, a deep sense of my duty as a Christian, a sincere contempt for the opinion and false maxims of the world, an ardent love for God, and that holy fear which is the beginning of wisdom. Amen. Preserve Your Church, O Lord, under the continual protection of Your glorious Confessor and Bishop, St. Charles, that as he was eminent for the discharge of his pastoral duties, so his prayers may make us zealous in the love of Your holy name, through Jesus Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Charles Borromeo, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and spacing adjustments were made for smoother text-to-speech while preserving wording, order, and paragraph breaks.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Charles, the father of the clergy, and the perfect model of holy prelates. You are that good pastor who, like your divine Master, gave up your life for your flock, if not by death, at least by the numerous sacrifices of your painful mission. Your sanctified life on earth was a spur to the most fervent, your exemplary penance was a reproach to the slothful, and your untiring zeal was the support of the Church. O great Prelate, since the glory of God and the salvation of souls are the only objects of solicitude to the blessed in heaven, vouchsafe to intercede for me now, and to offer up, for the intention of this novena, those fervent prayers which were so successful while you were on earth  You are, O great St. Charles, among all the Saints of God, one in whose intercession I should most confide, because you were chosen by God to promote the interests of religion by promoting the Christian education of youth. You were, like Jesus Christ himself, always accessible to little ones, for whom you broke the bread of the word of God, and procured for them also the blessings of a Christian education. To you, then, I have recourse with confidence, beseeching you to obtain for me the grace to profit of the advantages I enjoy, and for which I am so considerably indebted to your zeal. Preserve me by your prayers from the dangers of the world. Obtain that my heart may be impressed with a lively horror of sin, a deep sense of my duty as a Christian, a sincere contempt for the opinion and false maxims of the world, an ardent love for God, and that holy fear which is the beginning of wisdom. Amen. Preserve Your Church, O Lord, under the continual protection of Your glorious Confessor and Bishop, St. Charles, that as he was eminent for the discharge of his pastoral duties, so his prayers may make us zealous in the love of Your holy name, through Jesus Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Charles Borromeo, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and spacing adjustments were made for smoother text-to-speech while preserving wording, order, and paragraph breaks.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Charles, the father of the clergy, and the perfect model of holy prelates. You are that good pastor who, like your divine Master, gave up your life for your flock, if not by death, at least by the numerous sacrifices of your painful mission. Your sanctified life on earth was a spur to the most fervent, your exemplary penance was a reproach to the slothful, and your untiring zeal was the support of the Church. O great Prelate, since the glory of God and the salvation of souls are the only objects of solicitude to the blessed in heaven, vouchsafe to intercede for me now, and to offer up, for the intention of this novena, those fervent prayers which were so successful while you were on earth  You are, O great St. Charles, among all the Saints of God, one in whose intercession I should most confide, because you were chosen by God to promote the interests of religion by promoting the Christian education of youth. You were, like Jesus Christ himself, always accessible to little ones, for whom you broke the bread of the word of God, and procured for them also the blessings of a Christian education. To you, then, I have recourse with confidence, beseeching you to obtain for me the grace to profit of the advantages I enjoy, and for which I am so considerably indebted to your zeal. Preserve me by your prayers from the dangers of the world. Obtain that my heart may be impressed with a lively horror of sin, a deep sense of my duty as a Christian, a sincere contempt for the opinion and false maxims of the world, an ardent love for God, and that holy fear which is the beginning of wisdom. Amen. Preserve Your Church, O Lord, under the continual protection of Your glorious Confessor and Bishop, St. Charles, that as he was eminent for the discharge of his pastoral duties, so his prayers may make us zealous in the love of Your holy name, through Jesus Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Charles Borromeo, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and spacing adjustments were made for smoother text-to-speech while preserving wording, order, and paragraph breaks.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Charles, the father of the clergy, and the perfect model of holy prelates. You are that good pastor who, like your divine Master, gave up your life for your flock, if not by death, at least by the numerous sacrifices of your painful mission. Your sanctified life on earth was a spur to the most fervent, your exemplary penance was a reproach to the slothful, and your untiring zeal was the support of the Church. O great Prelate, since the glory of God and the salvation of souls are the only objects of solicitude to the blessed in heaven, vouchsafe to intercede for me now, and to offer up, for the intention of this novena, those fervent prayers which were so successful while you were on earth  You are, O great St. Charles, among all the Saints of God, one in whose intercession I should most confide, because you were chosen by God to promote the interests of religion by promoting the Christian education of youth. You were, like Jesus Christ himself, always accessible to little ones, for whom you broke the bread of the word of God, and procured for them also the blessings of a Christian education. To you, then, I have recourse with confidence, beseeching you to obtain for me the grace to profit of the advantages I enjoy, and for which I am so considerably indebted to your zeal. Preserve me by your prayers from the dangers of the world. Obtain that my heart may be impressed with a lively horror of sin, a deep sense of my duty as a Christian, a sincere contempt for the opinion and false maxims of the world, an ardent love for God, and that holy fear which is the beginning of wisdom. Amen. Preserve Your Church, O Lord, under the continual protection of Your glorious Confessor and Bishop, St. Charles, that as he was eminent for the discharge of his pastoral duties, so his prayers may make us zealous in the love of Your holy name, through Jesus Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Charles Borromeo, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_charles_borromeo"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_charles_borromeo",
+      "name": "St Charles Borromeo"
+    },
+    "type": "novena_feast_rule"
+  }
+}

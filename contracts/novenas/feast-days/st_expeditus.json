@@ -1,0 +1,444 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_expeditus",
+    "feast": {
+      "day": 19,
+      "mode": "fixed",
+      "month": 4,
+      "name": "St. Expeditus"
+    },
+    "id": "st_expeditus",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "urgent causes",
+        "quick solutions",
+        "procrastination"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Expeditus is venerated as a Christian martyr, invoked for urgent needs and prompt help in difficult situations."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Expeditus Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "Added brief punctuation and line breaks for clearer text-to-speech pacing, and spelled out \u201cSt.\u201d as \u201cSaint.\u201d; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "O Glorious Martyr, Saint Expeditus, through the lively faith which was granted you by God, I ask you to awaken the same faith in my heart, that I may also believe wholeheartedly that there is God, but most particularly that I may be saved from sinning against Him. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "Added brief punctuation and line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "O Glorious Martyr, Saint Expeditus, through the enviable hope given you by God, pray that those of little belief may be penetrated by some rays of hope, so that they may also receive eternal things. Please pray that ardent hope in God be also given me, and hold me steadfast in the midst of sufferings. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted, if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "Added brief spoken cues and adjusted punctuation for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Oh Glorious Martyr, Saint Expeditus, through the endless love which our Lord planted in your heart, please remove from mine all shackles tied by worldliness, that without them I may love only God in all eternity. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "Added brief pacing punctuation and separated the Act of Contrition heading into its own line for clearer text-to-speech delivery.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Oh Glorious Martyr, Saint Expeditus, who knew fully well the teaching of the Divine Teacher to carry the cross and follow Him, ask Him for the graces I need, that I may fight my own passions. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted, if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena. I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "Added brief spoken cues and adjusted punctuation and capitalization for clearer text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Oh Glorious Martyr, Saint Expeditus, through the bountiful graces you received from Heaven, that you may conserve all your virtues, grant also that I may get rid of all the feelings that block my way to Heaven. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "Added brief punctuation and line breaks for clearer text-to-speech pacing, and spelled out \u201cSt.\u201d as \u201cSaint.\u201d; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Oh Glorious Martyr, Saint Expeditus, through the sufferings and humiliations which you received for the love of God, grant me also this grace which is very pleasing to God, and free me from angers and hardness of heart which is the stumbling block of my soul. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "Added brief punctuation and line breaks for clearer text-to-speech pacing, and made the instruction to pray three Our Fathers a standalone sentence.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Oh Glorious Martyr, Saint Expeditus, you know that prayer is the golden key that will open the Kingdom of Heaven. Teach me to pray in a manner which is desirable to Our Lord and to His Heart, that I may live only for Him, that I may die only for Him, and that I may pray only to Him in all eternity. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "Added brief punctuation and line breaks for clearer text-to-speech pacing, and separated the Act of Contrition heading.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "O Glorious Martyr, Saint Expeditus, through the clean desire that reigned in all your feelings, word, and actions, please let them guide me also in my endless search for the glory of God and the good of my fellowmen. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "Added brief spoken headings and adjusted minor wording and punctuation for clarity and text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Oh Glorious Martyr, Saint Expeditus, who was so much loved by the Queen of Heaven that nothing was denied you, ask her, please, my advocate, that through the sufferings of her Divine Son and her own sorrows, I may receive this day the grace I ask of you, but above all the grace to die first before I commit any mortal sin. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Expeditus Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Added brief punctuation and line breaks for clearer text-to-speech pacing, and spelled out \u201cSt.\u201d as \u201cSaint.\u201d; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus.  O Glorious Martyr, Saint Expeditus, through the lively faith which was granted you by God, I ask you to awaken the same faith in my heart, that I may also believe wholeheartedly that there is God, but most particularly that I may be saved from sinning against Him. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Added brief punctuation and line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus.  O Glorious Martyr, Saint Expeditus, through the enviable hope given you by God, pray that those of little belief may be penetrated by some rays of hope, so that they may also receive eternal things. Please pray that ardent hope in God be also given me, and hold me steadfast in the midst of sufferings. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted, if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Added brief spoken cues and adjusted punctuation for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus.  Oh Glorious Martyr, Saint Expeditus, through the endless love which our Lord planted in your heart, please remove from mine all shackles tied by worldliness, that without them I may love only God in all eternity. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Added brief pacing punctuation and separated the Act of Contrition heading into its own line for clearer text-to-speech delivery.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus.  Oh Glorious Martyr, Saint Expeditus, who knew fully well the teaching of the Divine Teacher to carry the cross and follow Him, ask Him for the graces I need, that I may fight my own passions. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted, if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena. I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Added brief spoken cues and adjusted punctuation and capitalization for clearer text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus.  Oh Glorious Martyr, Saint Expeditus, through the bountiful graces you received from Heaven, that you may conserve all your virtues, grant also that I may get rid of all the feelings that block my way to Heaven. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Added brief punctuation and line breaks for clearer text-to-speech pacing, and spelled out \u201cSt.\u201d as \u201cSaint.\u201d; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus.  Oh Glorious Martyr, Saint Expeditus, through the sufferings and humiliations which you received for the love of God, grant me also this grace which is very pleasing to God, and free me from angers and hardness of heart which is the stumbling block of my soul. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Added brief punctuation and line breaks for clearer text-to-speech pacing, and made the instruction to pray three Our Fathers a standalone sentence.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus.  Oh Glorious Martyr, Saint Expeditus, you know that prayer is the golden key that will open the Kingdom of Heaven. Teach me to pray in a manner which is desirable to Our Lord and to His Heart, that I may live only for Him, that I may die only for Him, and that I may pray only to Him in all eternity. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Added brief punctuation and line breaks for clearer text-to-speech pacing, and separated the Act of Contrition heading.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus.  O Glorious Martyr, Saint Expeditus, through the clean desire that reigned in all your feelings, word, and actions, please let them guide me also in my endless search for the glory of God and the good of my fellowmen. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Added brief spoken headings and adjusted minor wording and punctuation for clarity and text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Act of Contrition. Lord Jesus Christ, I am heartily sorry for my sins. Grant me, therefore, pardon of my sins and the grace I ask of You through the merits of the sorrows of Your loving Mother and the virtues of Your martyr, Saint Expeditus.  Oh Glorious Martyr, Saint Expeditus, who was so much loved by the Queen of Heaven that nothing was denied you, ask her, please, my advocate, that through the sufferings of her Divine Son and her own sorrows, I may receive this day the grace I ask of you, but above all the grace to die first before I commit any mortal sin. O Saint Expeditus, my protector, in you I place my hope that my petitions may be granted if they are for my own good. Please ask Our Lord, through the intercession of the Blessed Virgin, for the forgiveness of my sins, and the grace to change my life, particularly the grace I ask in this novena, and I promise to follow your example and propagate this devotion to you. Now pray three Our Fathers in honor of the Most Holy Trinity. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_expeditus"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_expeditus",
+      "name": "St. Expeditus"
+    },
+    "type": "novena_feast_rule"
+  }
+}

@@ -1,0 +1,440 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "surrender",
+    "feast": {
+      "day": 11,
+      "mode": "fixed",
+      "month": 1,
+      "name": "Surrender"
+    },
+    "id": "surrender",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A nine-day prayer inviting God to take full control of one\u2019s life, trusting His will and providence in every circumstance."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Surrender Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "Added light punctuation for clearer text-to-speech pacing and made the repetition instruction explicit and concise.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Why do you confuse yourselves by worrying? Leave the care of your affairs to Me, and everything will be peaceful. I say to you in truth that every act of true, blind, complete surrender to Me produces the effect that you desire, and resolves all difficult situations. O Jesus, I surrender myself to You, take care of everything! Repeat 10 times. Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraphing for clearer text-to-speech pacing, and made the repetition cue explicit without changing the prayer text.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Surrender to Me does not mean to fret, to be upset, or to lose hope. Nor does it mean offering to Me a worried prayer, asking Me to follow you and change your worry into prayer. It is against this surrender, deeply against it, to worry, to be nervous, and to desire to think about the consequences of anything. It is like the confusion that children feel when they ask their mother to see to their needs, and then try to take care of those needs for themselves, so that their childlike efforts get in their mother\u2019s way. Surrender means to placidly close the eyes of the soul, to turn away from thoughts of tribulation, and to put yourself in My care, so that only I act. Just say to Me: You take care of it, Jesus. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and quotation marks for clearer text-to-speech, and made the tenfold repetition explicit by printing the line ten times.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "How many things I do when the soul, in so much spiritual and material need, turns to Me, looks at Me, and says to Me, \u201cYou take care of it,\u201d then closes its eyes and rests. In pain you pray for Me to act, but that I act in the way you want. You do not turn to Me; instead, you want Me to adapt to your ideas. You are not sick people who ask the doctor to cure you, but rather sick people who tell the doctor how to. So do not act this way, but pray as I taught you in the: Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. \u201cHallowed be Thy Name,\u201d that is, be glorified in my need. \u201cThy kingdom come,\u201d that is, let all that is in us and in the world be in accord with Your kingdom. \u201cThy will be done on Earth as it is in Heaven,\u201d that is, in our need, decide as You see fit for our temporal and eternal life. If you say to Me truly, \u201cThy will be done,\u201d which is the same as saying, \u201cYou take care of it,\u201d I will intervene with all My omnipotence, and I will resolve the most difficult situations. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and made the repetition cue concise.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "You see evil growing instead of weakening? Do not worry. Close your eyes and say to Me with faith: Thy will be done. You take care of it. I say to you that I will take care of it, and that I will intervene as does a doctor, and I will accomplish miracles when they are needed. Do you see that the sick person is getting worse? Do not be upset, but close your eyes and say: You take care of it. I say to you that I will take care of it, and that there is no medicine more powerful than my loving intervention. By my love, I promise this to you. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "Split the long meditation into shorter paragraphs for pacing and changed \u201c(10 times)\u201d to a clear spoken repetition cue.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "And when I must lead you on a path different from the one you see, I will prepare you; I will carry you in my arms; I will let you find yourself, like children who have fallen asleep in their mother\u2019s arms, on the other bank of the river. What troubles you and hurts you immensely are your reason, your thoughts and worry, and your desire at all costs to deal with what afflicts you. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and sentence breaks for clearer text-to-speech pacing, and made the repetition instruction explicit.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "You are sleepless. You want to judge everything, direct everything, and see to everything. And you surrender to human strength, or worse, to men themselves, trusting in their intervention. This is what hinders my words and my views. Oh, how much I wish from you this surrender, to help you. And how I suffer when I see you so agitated. Satan tries to do exactly this: to agitate you, and to remove you from My protection, and to throw you into the jaws of human initiative. So, trust only in Me. Rest in Me. Surrender to Me in everything. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and made the ten-times repetition instruction concise.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "I perform miracles in proportion to your full surrender to Me, and to your not thinking of yourselves. I sow treasure troves of graces when you are in the deepest poverty. No person of reason, no thinker, has ever performed miracles, not even among the saints. He does divine works, whosoever surrenders to God. So don\u2019t think about it any more, because your mind is acute, and for you it is very hard to see evil, and to trust in Me, and to not think of yourself. Do this for all your needs. Do this, all of you, and you will see great, continual, silent miracles. I will take care of things. I promise this to you. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. Mother, I am yours now and forever. Through you and with you, I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and made the repetition instruction concise.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Close your eyes and let yourself be carried away on the flowing current of my grace. Close your eyes and do not think of the present, turning your thoughts away from the future just as you would from temptation. Repose in Me, believing in my goodness, and I promise you by my love that if you say, \u201cYou take care of it,\u201d I will take care of it all. I will console you, liberate you, and guide you. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "Added quotation marks for spoken clarity, split long text into shorter paragraphs for pacing, and replaced \u201c(10 times)\u201d with a clear spoken repetition cue.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Pray always in readiness to surrender, and you will receive from it great peace and great rewards, even when I confer on you the grace of immolation, of repentance and of love. Then what does suffering matter? It seems impossible to you? Close your eyes and say with all your soul, \u201cJesus, You take care of it.\u201d Do not be afraid, I will take care of things and you will bless my name by humbling yourself. A thousand prayers cannot equal one single act of surrender, remember this well. There is no novena more effective than this. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Surrender Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Added light punctuation for clearer text-to-speech pacing and made the repetition instruction explicit and concise.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you  Why do you confuse yourselves by worrying? Leave the care of your affairs to Me, and everything will be peaceful. I say to you in truth that every act of true, blind, complete surrender to Me produces the effect that you desire, and resolves all difficult situations. O Jesus, I surrender myself to You, take care of everything! Repeat 10 times. Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraphing for clearer text-to-speech pacing, and made the repetition cue explicit without changing the prayer text.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you  Surrender to Me does not mean to fret, to be upset, or to lose hope. Nor does it mean offering to Me a worried prayer, asking Me to follow you and change your worry into prayer. It is against this surrender, deeply against it, to worry, to be nervous, and to desire to think about the consequences of anything. It is like the confusion that children feel when they ask their mother to see to their needs, and then try to take care of those needs for themselves, so that their childlike efforts get in their mother\u2019s way. Surrender means to placidly close the eyes of the soul, to turn away from thoughts of tribulation, and to put yourself in My care, so that only I act. Just say to Me: You take care of it, Jesus. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and quotation marks for clearer text-to-speech, and made the tenfold repetition explicit by printing the line ten times.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you  How many things I do when the soul, in so much spiritual and material need, turns to Me, looks at Me, and says to Me, \u201cYou take care of it,\u201d then closes its eyes and rests. In pain you pray for Me to act, but that I act in the way you want. You do not turn to Me; instead, you want Me to adapt to your ideas. You are not sick people who ask the doctor to cure you, but rather sick people who tell the doctor how to. So do not act this way, but pray as I taught you in the: Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. \u201cHallowed be Thy Name,\u201d that is, be glorified in my need. \u201cThy kingdom come,\u201d that is, let all that is in us and in the world be in accord with Your kingdom. \u201cThy will be done on Earth as it is in Heaven,\u201d that is, in our need, decide as You see fit for our temporal and eternal life. If you say to Me truly, \u201cThy will be done,\u201d which is the same as saying, \u201cYou take care of it,\u201d I will intervene with all My omnipotence, and I will resolve the most difficult situations. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! O Jesus, I surrender myself to You, take care of everything! Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and made the repetition cue concise.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you  You see evil growing instead of weakening? Do not worry. Close your eyes and say to Me with faith: Thy will be done. You take care of it. I say to you that I will take care of it, and that I will intervene as does a doctor, and I will accomplish miracles when they are needed. Do you see that the sick person is getting worse? Do not be upset, but close your eyes and say: You take care of it. I say to you that I will take care of it, and that there is no medicine more powerful than my loving intervention. By my love, I promise this to you. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Split the long meditation into shorter paragraphs for pacing and changed \u201c(10 times)\u201d to a clear spoken repetition cue.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you  And when I must lead you on a path different from the one you see, I will prepare you; I will carry you in my arms; I will let you find yourself, like children who have fallen asleep in their mother\u2019s arms, on the other bank of the river. What troubles you and hurts you immensely are your reason, your thoughts and worry, and your desire at all costs to deal with what afflicts you. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and sentence breaks for clearer text-to-speech pacing, and made the repetition instruction explicit.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you  You are sleepless. You want to judge everything, direct everything, and see to everything. And you surrender to human strength, or worse, to men themselves, trusting in their intervention. This is what hinders my words and my views. Oh, how much I wish from you this surrender, to help you. And how I suffer when I see you so agitated. Satan tries to do exactly this: to agitate you, and to remove you from My protection, and to throw you into the jaws of human initiative. So, trust only in Me. Rest in Me. Surrender to Me in everything. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and made the ten-times repetition instruction concise.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you  I perform miracles in proportion to your full surrender to Me, and to your not thinking of yourselves. I sow treasure troves of graces when you are in the deepest poverty. No person of reason, no thinker, has ever performed miracles, not even among the saints. He does divine works, whosoever surrenders to God. So don\u2019t think about it any more, because your mind is acute, and for you it is very hard to see evil, and to trust in Me, and to not think of yourself. Do this for all your needs. Do this, all of you, and you will see great, continual, silent miracles. I will take care of things. I promise this to you. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. Mother, I am yours now and forever. Through you and with you, I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and made the repetition instruction concise.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you  Close your eyes and let yourself be carried away on the flowing current of my grace. Close your eyes and do not think of the present, turning your thoughts away from the future just as you would from temptation. Repose in Me, believing in my goodness, and I promise you by my love that if you say, \u201cYou take care of it,\u201d I will take care of it all. I will console you, liberate you, and guide you. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Added quotation marks for spoken clarity, split long text into shorter paragraphs for pacing, and replaced \u201c(10 times)\u201d with a clear spoken repetition cue.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, please hear my prayer in this novena, especially that I can surrender to you  Pray always in readiness to surrender, and you will receive from it great peace and great rewards, even when I confer on you the grace of immolation, of repentance and of love. Then what does suffering matter? It seems impossible to you? Close your eyes and say with all your soul, \u201cJesus, You take care of it.\u201d Do not be afraid, I will take care of things and you will bless my name by humbling yourself. A thousand prayers cannot equal one single act of surrender, remember this well. There is no novena more effective than this. O Jesus, I surrender myself to You, take care of everything! Repeat ten times. Mother, I am yours now and forever. Through you and with you I always want to belong completely to Jesus. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-surrender"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "surrender",
+      "name": "Surrender"
+    },
+    "type": "novena_feast_rule"
+  }
+}

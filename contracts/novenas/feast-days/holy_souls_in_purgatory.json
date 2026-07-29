@@ -1,0 +1,440 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "holy_souls_in_purgatory",
+    "feast": {
+      "day": 2,
+      "mode": "fixed",
+      "month": 11,
+      "name": "Holy Souls in Purgatory"
+    },
+    "id": "holy_souls_in_purgatory",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A novena praying for the faithful departed in purgatory, asking God to grant them mercy, purification, and entry into the fullness of heaven."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Novena for the Holy Souls in Purgatory below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added punctuation and paragraph breaks for clearer text-to-speech pacing while keeping wording and order faithful.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Jesus, my Savior, I have so often deserved to be cast into hell. How great would be my suffering if I were now cast away, and obliged to think that I myself had caused my damnation. I thank Thee for the patience with which Thou hast endured me. My God, I love Thee above all things, and I am heartily sorry for having offended Thee, because Thou art infinite goodness. I will rather die than offend Thee again. Grant me the grace of perseverance. Have pity on me, and at the same time on those blessed souls suffering in Purgatory. Mary, Mother of God, come to their assistance with thy powerful intercession. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me, a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized pacing for text-to-speech by adding brief line breaks, clarifying the prayer title with a period, and separating responses onto their own lines without changing wording.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Woe to me, unhappy being, so many years have I already spent on earth and have earned naught but hell! I give Thee thanks, O Lord, for granting me time even now to atone for my sins. My good God, I am heartily sorry for having offended Thee. Send me Thy assistance, that I may apply the time yet remaining to me for Thy love and service; have compassion on me, and, at the same time, on the holy souls suffering in Purgatory. O Mary, Mother of God, come to their assistance with thy powerful intercession. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added punctuation and line breaks for clearer text-to-speech pacing, and expanded \u201cR.\u201d to \u201cResponse\u201d without changing the prayer text.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. My God! because Thou art infinite goodness, I love Thee above all things, and repent with my whole heart of my offenses against Thee. Grant me the grace of holy perseverance. Have compassion on me, and, at the same time, on the holy souls suffering in Purgatory. And thou, Mary, Mother of God, come to their assistance with thy powerful intercession. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. Response: Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. Response: Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. Response: Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. Response: Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. Response: Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. Response: Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. Response: Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing while keeping wording and order unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. My God! because Thou art infinite goodness, I am sorry with my whole heart for having offended Thee. I promise to die rather than ever offend Thee more. Give me holy perseverance; have pity on me, and have pity on those holy souls that burn in the cleansing fire and love Thee with all their hearts. O Mary, Mother of God, assist them by thy powerful prayers. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and added paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Woe to me, unhappy being, if Thou, O Lord, hadst cast me into hell; for from that dungeon of eternal pain there is no deliverance. I love Thee above all things, O infinite God, and I am sincerely sorry for having offended Thee again. Grant me the grace of holy perseverance. Have compassion on me, and, at the same time, on the holy souls suffering in Purgatory. O Mary, Mother of God, come to their assistance with thy powerful intercession. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me, a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. My Divine Redeemer, Thou didst die for me on the Cross, and hast so often united Thyself with me in Holy Communion, and I have repaid Thee only with ingratitude. Now, however, I love Thee above all things, O supreme God; and I am more grieved at my offenses against Thee than at any other evil. I will rather die than offend Thee again. Grant me the grace of holy perseverance. Have compassion on me, and, at the same time, on the holy souls suffering in Purgatory. Mary, Mother of God, come to their aid with thy powerful intercession. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me, a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. God, Father of Mercy, satisfy this their ardent desire. Send them Thy holy Angel to announce to them that Thou, their Father, are now reconciled with them through the suffering and death of Jesus, and that the moment of their deliverance has arrived. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me, a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and spacing for clearer text-to-speech pacing, and formatted the responsory lines as separate spoken responses without changing the prayer text.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Oh my God, I also am one of these ungrateful beings, having received so much grace, and yet despised Thy love and deserved to be cast by Thee into hell. But Thy infinite goodness has spared me until now. Therefore, I now love Thee above all things, and I am heartily sorry for having offended Thee. I would rather die than ever offend Thee. Grant me the grace of holy perseverance. Have compassion on me and, at the same time, on the holy souls suffering in Purgatory. Mary, Mother of God, come to their aid with thy powerful intercession. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief punctuation and paragraph breaks for clearer text-to-speech pacing while keeping wording and order unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. My God! How was it possible that I, for so many years, have borne tranquilly the separation from Thee and Thy holy grace! O infinite Goodness, how long-suffering hast Thou shown Thyself to me! Henceforth, I shall love Thee above all things. I am deeply sorry for having offended Thee; I promise rather to die than to again offend Thee. Grant me the grace of holy perseverance, and do not permit that I should ever again fall into sin. Have compassion on the holy souls in Purgatory. I pray Thee, moderate their sufferings; shorten the time of their misery; call them soon unto Thee in heaven, that they may behold Thee face to face, and forever love Thee. Mary, Mother of Mercy, come to their aid with thy powerful intercession, and pray for us also who are still in danger of eternal damnation. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Novena for the Holy Souls in Purgatory below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added punctuation and paragraph breaks for clearer text-to-speech pacing while keeping wording and order faithful.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Jesus, my Savior, I have so often deserved to be cast into hell. How great would be my suffering if I were now cast away, and obliged to think that I myself had caused my damnation. I thank Thee for the patience with which Thou hast endured me. My God, I love Thee above all things, and I am heartily sorry for having offended Thee, because Thou art infinite goodness. I will rather die than offend Thee again. Grant me the grace of perseverance. Have pity on me, and at the same time on those blessed souls suffering in Purgatory. Mary, Mother of God, come to their assistance with thy powerful intercession. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention.  Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me, a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized pacing for text-to-speech by adding brief line breaks, clarifying the prayer title with a period, and separating responses onto their own lines without changing wording.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Woe to me, unhappy being, so many years have I already spent on earth and have earned naught but hell! I give Thee thanks, O Lord, for granting me time even now to atone for my sins. My good God, I am heartily sorry for having offended Thee. Send me Thy assistance, that I may apply the time yet remaining to me for Thy love and service; have compassion on me, and, at the same time, on the holy souls suffering in Purgatory. O Mary, Mother of God, come to their assistance with thy powerful intercession. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention.  Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added punctuation and line breaks for clearer text-to-speech pacing, and expanded \u201cR.\u201d to \u201cResponse\u201d without changing the prayer text.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. My God! because Thou art infinite goodness, I love Thee above all things, and repent with my whole heart of my offenses against Thee. Grant me the grace of holy perseverance. Have compassion on me, and, at the same time, on the holy souls suffering in Purgatory. And thou, Mary, Mother of God, come to their assistance with thy powerful intercession. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. Response: Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. Response: Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. Response: Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. Response: Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. Response: Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. Response: Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. Response: Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention.  Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing while keeping wording and order unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. My God! because Thou art infinite goodness, I am sorry with my whole heart for having offended Thee. I promise to die rather than ever offend Thee more. Give me holy perseverance; have pity on me, and have pity on those holy souls that burn in the cleansing fire and love Thee with all their hearts. O Mary, Mother of God, assist them by thy powerful prayers. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention.  Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and added paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Woe to me, unhappy being, if Thou, O Lord, hadst cast me into hell; for from that dungeon of eternal pain there is no deliverance. I love Thee above all things, O infinite God, and I am sincerely sorry for having offended Thee again. Grant me the grace of holy perseverance. Have compassion on me, and, at the same time, on the holy souls suffering in Purgatory. O Mary, Mother of God, come to their assistance with thy powerful intercession. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention.  Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me, a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. My Divine Redeemer, Thou didst die for me on the Cross, and hast so often united Thyself with me in Holy Communion, and I have repaid Thee only with ingratitude. Now, however, I love Thee above all things, O supreme God; and I am more grieved at my offenses against Thee than at any other evil. I will rather die than offend Thee again. Grant me the grace of holy perseverance. Have compassion on me, and, at the same time, on the holy souls suffering in Purgatory. Mary, Mother of God, come to their aid with thy powerful intercession. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention.  Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me, a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. God, Father of Mercy, satisfy this their ardent desire. Send them Thy holy Angel to announce to them that Thou, their Father, are now reconciled with them through the suffering and death of Jesus, and that the moment of their deliverance has arrived. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention.  Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me, a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and spacing for clearer text-to-speech pacing, and formatted the responsory lines as separate spoken responses without changing the prayer text.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Oh my God, I also am one of these ungrateful beings, having received so much grace, and yet despised Thy love and deserved to be cast by Thee into hell. But Thy infinite goodness has spared me until now. Therefore, I now love Thee above all things, and I am heartily sorry for having offended Thee. I would rather die than ever offend Thee. Grant me the grace of holy perseverance. Have compassion on me and, at the same time, on the holy souls suffering in Purgatory. Mary, Mother of God, come to their aid with thy powerful intercession. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention.  Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief punctuation and paragraph breaks for clearer text-to-speech pacing while keeping wording and order unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. My God! How was it possible that I, for so many years, have borne tranquilly the separation from Thee and Thy holy grace! O infinite Goodness, how long-suffering hast Thou shown Thyself to me! Henceforth, I shall love Thee above all things. I am deeply sorry for having offended Thee; I promise rather to die than to again offend Thee. Grant me the grace of holy perseverance, and do not permit that I should ever again fall into sin. Have compassion on the holy souls in Purgatory. I pray Thee, moderate their sufferings; shorten the time of their misery; call them soon unto Thee in heaven, that they may behold Thee face to face, and forever love Thee. Mary, Mother of Mercy, come to their aid with thy powerful intercession, and pray for us also who are still in danger of eternal damnation. Prayer to Our Suffering Savior for the Holy Souls in Purgatory. O most sweet Jesus, through the bloody sweat which Thou didst suffer in the Garden of Gethsemani, have mercy on these Blessed Souls. Have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel scourging, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most painful crowning with thorns, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in carrying Thy cross to Calvary, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer during Thy most cruel Crucifixion, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the pains which Thou didst suffer in Thy most bitter agony on the Cross, have mercy on them. R. Have mercy on them, O Lord. O most sweet Jesus, through the immense pain which Thou didst suffer in breathing forth Thy Blessed Soul, have mercy on them. R. Have mercy on them, O Lord. Recommend yourself to the Souls in Purgatory, and also pray for your intention.  Blessed Souls, I have prayed for thee; I entreat thee, who are so dear to God, and who are secure of never losing Him, to pray for me a miserable sinner, who is in danger of being damned, and of losing God forever. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-holy_souls_in_purgatory"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "holy_souls_in_purgatory",
+      "name": "Holy Souls in Purgatory"
+    },
+    "type": "novena_feast_rule"
+  }
+}

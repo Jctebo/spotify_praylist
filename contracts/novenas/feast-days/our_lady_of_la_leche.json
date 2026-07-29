@@ -1,0 +1,237 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "our_lady_of_la_leche",
+    "feast": {
+      "day": 11,
+      "mode": "fixed",
+      "month": 10,
+      "name": "Our Lady of La Leche"
+    },
+    "id": "our_lady_of_la_leche",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "Our Lady of La Leche honors Mary as the nursing Mother of Jesus, a devotion especially associated with St. Augustine, Florida."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of La Leche Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added headings and paragraph breaks for clearer pacing, and normalized minor capitalization for read-aloud flow without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for Conceiving a Child Lovely Lady of La Leche, most loving Mother of the Child Jesus, and my Mother, listen to my humble prayer. Your motherly heart knows my every wish, my every need. To you only, His spotless Virgin Mother, has your Divine Son given to understand the sentiments which fill my soul. Yours was the sacred privilege of being the Mother of the Savior. Intercede with Him now, my loving Mother, that, in accordance with His will, I may become the mother of other children of our heavenly Father. This I ask, O Lady of La Leche, in the Name of your Divine Son, my Lord and Redeemer. Amen. Prayer for Safe and Healthy Childbirth O Lord Jesus Christ, through the intercession of Your tender Mother, Our Lady of La Leche, who bore You close to her heart during those long months before Your birth, I place my baby and myself entirely in Your Hands. Free me, I beseech You, from useless and consuming worry. Accept the sacrifice of my aches and pains, which I unite to Your sufferings on the Cross. Above all, most merciful and loving Jesus, protect this child You have given to me from all harm, bestowing the health and vigor every baby needs. Implant in my heart and on my lips the words and prayers of Your Mother and mine, our Lovely Lady of La Leche. All I ask is that my child and I may live to praise forever Your Holy Name. Amen. Cherished Virgin, Heaven\u2019s Queen, chosen before all women to be the Mother of the Son of God, Mary, my mother, who in your maternity so sanctified the state of holy motherhood, imploringly I come to you, humbly I beseech you, confidently I trust in you. I know that, by your powerful intercession, you can help me in my need. In you I take refuge, dear Virgin. Poor and needy, I turn devoutly to you and place all confidently in your hands. Accept my humble trust, hear my petitions and come to my aid"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "dear Mother of mothers. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "For a Mother To you, lovely Lady of La Leche, and to your Divine Son, do I now dedicate this little baby whom Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of La Leche, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of La Leche Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added headings and paragraph breaks for clearer pacing, and normalized minor capitalization for read-aloud flow without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for Conceiving a Child Lovely Lady of La Leche, most loving Mother of the Child Jesus, and my Mother, listen to my humble prayer. Your motherly heart knows my every wish, my every need. To you only, His spotless Virgin Mother, has your Divine Son given to understand the sentiments which fill my soul. Yours was the sacred privilege of being the Mother of the Savior. Intercede with Him now, my loving Mother, that, in accordance with His will, I may become the mother of other children of our heavenly Father. This I ask, O Lady of La Leche, in the Name of your Divine Son, my Lord and Redeemer. Amen. Prayer for Safe and Healthy Childbirth O Lord Jesus Christ, through the intercession of Your tender Mother, Our Lady of La Leche, who bore You close to her heart during those long months before Your birth, I place my baby and myself entirely in Your Hands. Free me, I beseech You, from useless and consuming worry. Accept the sacrifice of my aches and pains, which I unite to Your sufferings on the Cross. Above all, most merciful and loving Jesus, protect this child You have given to me from all harm, bestowing the health and vigor every baby needs. Implant in my heart and on my lips the words and prayers of Your Mother and mine, our Lovely Lady of La Leche. All I ask is that my child and I may live to praise forever Your Holy Name. Amen. Cherished Virgin, Heaven\u2019s Queen, chosen before all women to be the Mother of the Son of God, Mary, my mother, who in your maternity so sanctified the state of holy motherhood, imploringly I come to you, humbly I beseech you, confidently I trust in you. I know that, by your powerful intercession, you can help me in my need. In you I take refuge, dear Virgin. Poor and needy, I turn devoutly to you and place all confidently in your hands. Accept my humble trust, hear my petitions and come to my aid  dear Mother of mothers. Amen.  For a Mother To you, lovely Lady of La Leche, and to your Divine Son, do I now dedicate this little baby whom Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of La Leche, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added headings and paragraph breaks for clearer pacing, and normalized minor capitalization for read-aloud flow without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for Conceiving a Child Lovely Lady of La Leche, most loving Mother of the Child Jesus, and my Mother, listen to my humble prayer. Your motherly heart knows my every wish, my every need. To you only, His spotless Virgin Mother, has your Divine Son given to understand the sentiments which fill my soul. Yours was the sacred privilege of being the Mother of the Savior. Intercede with Him now, my loving Mother, that, in accordance with His will, I may become the mother of other children of our heavenly Father. This I ask, O Lady of La Leche, in the Name of your Divine Son, my Lord and Redeemer. Amen. Prayer for Safe and Healthy Childbirth O Lord Jesus Christ, through the intercession of Your tender Mother, Our Lady of La Leche, who bore You close to her heart during those long months before Your birth, I place my baby and myself entirely in Your Hands. Free me, I beseech You, from useless and consuming worry. Accept the sacrifice of my aches and pains, which I unite to Your sufferings on the Cross. Above all, most merciful and loving Jesus, protect this child You have given to me from all harm, bestowing the health and vigor every baby needs. Implant in my heart and on my lips the words and prayers of Your Mother and mine, our Lovely Lady of La Leche. All I ask is that my child and I may live to praise forever Your Holy Name. Amen. Cherished Virgin, Heaven\u2019s Queen, chosen before all women to be the Mother of the Son of God, Mary, my mother, who in your maternity so sanctified the state of holy motherhood, imploringly I come to you, humbly I beseech you, confidently I trust in you. I know that, by your powerful intercession, you can help me in my need. In you I take refuge, dear Virgin. Poor and needy, I turn devoutly to you and place all confidently in your hands. Accept my humble trust, hear my petitions and come to my aid  dear Mother of mothers. Amen.  For a Mother To you, lovely Lady of La Leche, and to your Divine Son, do I now dedicate this little baby whom Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of La Leche, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added headings and paragraph breaks for clearer pacing, and normalized minor capitalization for read-aloud flow without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for Conceiving a Child Lovely Lady of La Leche, most loving Mother of the Child Jesus, and my Mother, listen to my humble prayer. Your motherly heart knows my every wish, my every need. To you only, His spotless Virgin Mother, has your Divine Son given to understand the sentiments which fill my soul. Yours was the sacred privilege of being the Mother of the Savior. Intercede with Him now, my loving Mother, that, in accordance with His will, I may become the mother of other children of our heavenly Father. This I ask, O Lady of La Leche, in the Name of your Divine Son, my Lord and Redeemer. Amen. Prayer for Safe and Healthy Childbirth O Lord Jesus Christ, through the intercession of Your tender Mother, Our Lady of La Leche, who bore You close to her heart during those long months before Your birth, I place my baby and myself entirely in Your Hands. Free me, I beseech You, from useless and consuming worry. Accept the sacrifice of my aches and pains, which I unite to Your sufferings on the Cross. Above all, most merciful and loving Jesus, protect this child You have given to me from all harm, bestowing the health and vigor every baby needs. Implant in my heart and on my lips the words and prayers of Your Mother and mine, our Lovely Lady of La Leche. All I ask is that my child and I may live to praise forever Your Holy Name. Amen. Cherished Virgin, Heaven\u2019s Queen, chosen before all women to be the Mother of the Son of God, Mary, my mother, who in your maternity so sanctified the state of holy motherhood, imploringly I come to you, humbly I beseech you, confidently I trust in you. I know that, by your powerful intercession, you can help me in my need. In you I take refuge, dear Virgin. Poor and needy, I turn devoutly to you and place all confidently in your hands. Accept my humble trust, hear my petitions and come to my aid  dear Mother of mothers. Amen.  For a Mother To you, lovely Lady of La Leche, and to your Divine Son, do I now dedicate this little baby whom Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of La Leche, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added headings and paragraph breaks for clearer pacing, and normalized minor capitalization for read-aloud flow without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for Conceiving a Child Lovely Lady of La Leche, most loving Mother of the Child Jesus, and my Mother, listen to my humble prayer. Your motherly heart knows my every wish, my every need. To you only, His spotless Virgin Mother, has your Divine Son given to understand the sentiments which fill my soul. Yours was the sacred privilege of being the Mother of the Savior. Intercede with Him now, my loving Mother, that, in accordance with His will, I may become the mother of other children of our heavenly Father. This I ask, O Lady of La Leche, in the Name of your Divine Son, my Lord and Redeemer. Amen. Prayer for Safe and Healthy Childbirth O Lord Jesus Christ, through the intercession of Your tender Mother, Our Lady of La Leche, who bore You close to her heart during those long months before Your birth, I place my baby and myself entirely in Your Hands. Free me, I beseech You, from useless and consuming worry. Accept the sacrifice of my aches and pains, which I unite to Your sufferings on the Cross. Above all, most merciful and loving Jesus, protect this child You have given to me from all harm, bestowing the health and vigor every baby needs. Implant in my heart and on my lips the words and prayers of Your Mother and mine, our Lovely Lady of La Leche. All I ask is that my child and I may live to praise forever Your Holy Name. Amen. Cherished Virgin, Heaven\u2019s Queen, chosen before all women to be the Mother of the Son of God, Mary, my mother, who in your maternity so sanctified the state of holy motherhood, imploringly I come to you, humbly I beseech you, confidently I trust in you. I know that, by your powerful intercession, you can help me in my need. In you I take refuge, dear Virgin. Poor and needy, I turn devoutly to you and place all confidently in your hands. Accept my humble trust, hear my petitions and come to my aid  dear Mother of mothers. Amen.  For a Mother To you, lovely Lady of La Leche, and to your Divine Son, do I now dedicate this little baby whom Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of La Leche, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added headings and paragraph breaks for clearer pacing, and normalized minor capitalization for read-aloud flow without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for Conceiving a Child Lovely Lady of La Leche, most loving Mother of the Child Jesus, and my Mother, listen to my humble prayer. Your motherly heart knows my every wish, my every need. To you only, His spotless Virgin Mother, has your Divine Son given to understand the sentiments which fill my soul. Yours was the sacred privilege of being the Mother of the Savior. Intercede with Him now, my loving Mother, that, in accordance with His will, I may become the mother of other children of our heavenly Father. This I ask, O Lady of La Leche, in the Name of your Divine Son, my Lord and Redeemer. Amen. Prayer for Safe and Healthy Childbirth O Lord Jesus Christ, through the intercession of Your tender Mother, Our Lady of La Leche, who bore You close to her heart during those long months before Your birth, I place my baby and myself entirely in Your Hands. Free me, I beseech You, from useless and consuming worry. Accept the sacrifice of my aches and pains, which I unite to Your sufferings on the Cross. Above all, most merciful and loving Jesus, protect this child You have given to me from all harm, bestowing the health and vigor every baby needs. Implant in my heart and on my lips the words and prayers of Your Mother and mine, our Lovely Lady of La Leche. All I ask is that my child and I may live to praise forever Your Holy Name. Amen. Cherished Virgin, Heaven\u2019s Queen, chosen before all women to be the Mother of the Son of God, Mary, my mother, who in your maternity so sanctified the state of holy motherhood, imploringly I come to you, humbly I beseech you, confidently I trust in you. I know that, by your powerful intercession, you can help me in my need. In you I take refuge, dear Virgin. Poor and needy, I turn devoutly to you and place all confidently in your hands. Accept my humble trust, hear my petitions and come to my aid  dear Mother of mothers. Amen.  For a Mother To you, lovely Lady of La Leche, and to your Divine Son, do I now dedicate this little baby whom Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of La Leche, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added headings and paragraph breaks for clearer pacing, and normalized minor capitalization for read-aloud flow without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for Conceiving a Child Lovely Lady of La Leche, most loving Mother of the Child Jesus, and my Mother, listen to my humble prayer. Your motherly heart knows my every wish, my every need. To you only, His spotless Virgin Mother, has your Divine Son given to understand the sentiments which fill my soul. Yours was the sacred privilege of being the Mother of the Savior. Intercede with Him now, my loving Mother, that, in accordance with His will, I may become the mother of other children of our heavenly Father. This I ask, O Lady of La Leche, in the Name of your Divine Son, my Lord and Redeemer. Amen. Prayer for Safe and Healthy Childbirth O Lord Jesus Christ, through the intercession of Your tender Mother, Our Lady of La Leche, who bore You close to her heart during those long months before Your birth, I place my baby and myself entirely in Your Hands. Free me, I beseech You, from useless and consuming worry. Accept the sacrifice of my aches and pains, which I unite to Your sufferings on the Cross. Above all, most merciful and loving Jesus, protect this child You have given to me from all harm, bestowing the health and vigor every baby needs. Implant in my heart and on my lips the words and prayers of Your Mother and mine, our Lovely Lady of La Leche. All I ask is that my child and I may live to praise forever Your Holy Name. Amen. Cherished Virgin, Heaven\u2019s Queen, chosen before all women to be the Mother of the Son of God, Mary, my mother, who in your maternity so sanctified the state of holy motherhood, imploringly I come to you, humbly I beseech you, confidently I trust in you. I know that, by your powerful intercession, you can help me in my need. In you I take refuge, dear Virgin. Poor and needy, I turn devoutly to you and place all confidently in your hands. Accept my humble trust, hear my petitions and come to my aid  dear Mother of mothers. Amen.  For a Mother To you, lovely Lady of La Leche, and to your Divine Son, do I now dedicate this little baby whom Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of La Leche, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added headings and paragraph breaks for clearer pacing, and normalized minor capitalization for read-aloud flow without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for Conceiving a Child Lovely Lady of La Leche, most loving Mother of the Child Jesus, and my Mother, listen to my humble prayer. Your motherly heart knows my every wish, my every need. To you only, His spotless Virgin Mother, has your Divine Son given to understand the sentiments which fill my soul. Yours was the sacred privilege of being the Mother of the Savior. Intercede with Him now, my loving Mother, that, in accordance with His will, I may become the mother of other children of our heavenly Father. This I ask, O Lady of La Leche, in the Name of your Divine Son, my Lord and Redeemer. Amen. Prayer for Safe and Healthy Childbirth O Lord Jesus Christ, through the intercession of Your tender Mother, Our Lady of La Leche, who bore You close to her heart during those long months before Your birth, I place my baby and myself entirely in Your Hands. Free me, I beseech You, from useless and consuming worry. Accept the sacrifice of my aches and pains, which I unite to Your sufferings on the Cross. Above all, most merciful and loving Jesus, protect this child You have given to me from all harm, bestowing the health and vigor every baby needs. Implant in my heart and on my lips the words and prayers of Your Mother and mine, our Lovely Lady of La Leche. All I ask is that my child and I may live to praise forever Your Holy Name. Amen. Cherished Virgin, Heaven\u2019s Queen, chosen before all women to be the Mother of the Son of God, Mary, my mother, who in your maternity so sanctified the state of holy motherhood, imploringly I come to you, humbly I beseech you, confidently I trust in you. I know that, by your powerful intercession, you can help me in my need. In you I take refuge, dear Virgin. Poor and needy, I turn devoutly to you and place all confidently in your hands. Accept my humble trust, hear my petitions and come to my aid  dear Mother of mothers. Amen.  For a Mother To you, lovely Lady of La Leche, and to your Divine Son, do I now dedicate this little baby whom Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of La Leche, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added headings and paragraph breaks for clearer pacing, and normalized minor capitalization for read-aloud flow without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for Conceiving a Child Lovely Lady of La Leche, most loving Mother of the Child Jesus, and my Mother, listen to my humble prayer. Your motherly heart knows my every wish, my every need. To you only, His spotless Virgin Mother, has your Divine Son given to understand the sentiments which fill my soul. Yours was the sacred privilege of being the Mother of the Savior. Intercede with Him now, my loving Mother, that, in accordance with His will, I may become the mother of other children of our heavenly Father. This I ask, O Lady of La Leche, in the Name of your Divine Son, my Lord and Redeemer. Amen. Prayer for Safe and Healthy Childbirth O Lord Jesus Christ, through the intercession of Your tender Mother, Our Lady of La Leche, who bore You close to her heart during those long months before Your birth, I place my baby and myself entirely in Your Hands. Free me, I beseech You, from useless and consuming worry. Accept the sacrifice of my aches and pains, which I unite to Your sufferings on the Cross. Above all, most merciful and loving Jesus, protect this child You have given to me from all harm, bestowing the health and vigor every baby needs. Implant in my heart and on my lips the words and prayers of Your Mother and mine, our Lovely Lady of La Leche. All I ask is that my child and I may live to praise forever Your Holy Name. Amen. Cherished Virgin, Heaven\u2019s Queen, chosen before all women to be the Mother of the Son of God, Mary, my mother, who in your maternity so sanctified the state of holy motherhood, imploringly I come to you, humbly I beseech you, confidently I trust in you. I know that, by your powerful intercession, you can help me in my need. In you I take refuge, dear Virgin. Poor and needy, I turn devoutly to you and place all confidently in your hands. Accept my humble trust, hear my petitions and come to my aid  dear Mother of mothers. Amen.  For a Mother To you, lovely Lady of La Leche, and to your Divine Son, do I now dedicate this little baby whom Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of La Leche, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added headings and paragraph breaks for clearer pacing, and normalized minor capitalization for read-aloud flow without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for Conceiving a Child Lovely Lady of La Leche, most loving Mother of the Child Jesus, and my Mother, listen to my humble prayer. Your motherly heart knows my every wish, my every need. To you only, His spotless Virgin Mother, has your Divine Son given to understand the sentiments which fill my soul. Yours was the sacred privilege of being the Mother of the Savior. Intercede with Him now, my loving Mother, that, in accordance with His will, I may become the mother of other children of our heavenly Father. This I ask, O Lady of La Leche, in the Name of your Divine Son, my Lord and Redeemer. Amen. Prayer for Safe and Healthy Childbirth O Lord Jesus Christ, through the intercession of Your tender Mother, Our Lady of La Leche, who bore You close to her heart during those long months before Your birth, I place my baby and myself entirely in Your Hands. Free me, I beseech You, from useless and consuming worry. Accept the sacrifice of my aches and pains, which I unite to Your sufferings on the Cross. Above all, most merciful and loving Jesus, protect this child You have given to me from all harm, bestowing the health and vigor every baby needs. Implant in my heart and on my lips the words and prayers of Your Mother and mine, our Lovely Lady of La Leche. All I ask is that my child and I may live to praise forever Your Holy Name. Amen. Cherished Virgin, Heaven\u2019s Queen, chosen before all women to be the Mother of the Son of God, Mary, my mother, who in your maternity so sanctified the state of holy motherhood, imploringly I come to you, humbly I beseech you, confidently I trust in you. I know that, by your powerful intercession, you can help me in my need. In you I take refuge, dear Virgin. Poor and needy, I turn devoutly to you and place all confidently in your hands. Accept my humble trust, hear my petitions and come to my aid  dear Mother of mothers. Amen.  For a Mother To you, lovely Lady of La Leche, and to your Divine Son, do I now dedicate this little baby whom Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady of La Leche, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-our_lady_of_la_leche"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "our_lady_of_la_leche",
+      "name": "Our Lady of La Leche"
+    },
+    "type": "novena_feast_rule"
+  }
+}

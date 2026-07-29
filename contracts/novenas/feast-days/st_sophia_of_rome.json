@@ -1,0 +1,444 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_sophia_of_rome",
+    "feast": {
+      "day": 15,
+      "mode": "fixed",
+      "month": 5,
+      "name": "St Sophia of Rome"
+    },
+    "id": "st_sophia_of_rome",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "mothers",
+        "widows",
+        "Christian martyrs"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St Sophia of Rome is venerated as a Christian martyr, remembered with her daughters Faith, Hope, and Charity, and honored in the Church\u2019s tradition."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Sophia of Rome Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section headings and adjusted punctuation and paragraph breaks for smoother text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of Sophia\u2019s Steadfast Faith Saint Sophia, noble mother who carried the names of the three theological virtues in your very children, you stood unmoved before the throne of the emperor Hadrian and refused to deny the Lord Jesus Christ. Teach us to confess our faith openly, without shame or compromise, in the small trials of daily life as well as in times of great testing. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials; thou art not the patron of those who flee the Cross. But we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section headings on their own lines and adjusted punctuation and paragraph breaks for smoother text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of Sophia\u2019s Maternal Courage Saint Sophia, you watched your daughter Faith endure torments before your eyes, and you did not weaken but encouraged her with words of heavenly comfort. O courageous mother, intercede for all parents who must guide their children through suffering, temptation, and the hostility of a world that does not love Christ. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials; thou art not the patron of those who flee the Cross. But we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear spoken headings and inserted paragraph breaks in the Closing Prayer for better pacing while keeping wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of the Virtue of Hope Saint Sophia, your daughter Hope bore her name as a living testament to the anchor of the soul. You raised her to fix her eyes not on the things of this earth but on the eternal inheritance that cannot fade. Help us, dear saint, when earthly sorrows press upon us and the darkness seems unbroken, to lift our gaze toward Heaven where you now dwell in joy. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials, thou art not the patron of those who flee the Cross, but we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section headings and adjusted punctuation slightly for smoother text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of the Virtue of Charity Saint Sophia, your youngest daughter Charity, though a child of tender years, died for love of God with perfect serenity. Through your maternal example she had learned that love of God surpasses all earthly affection. Obtain for us, we beseech you, a charity that is not merely sentiment but sacrifice, a love willing to endure all things for the Beloved. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials; thou art not the patron of those who flee the Cross. But we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear spoken section headings and minor punctuation adjustments for smoother text-to-speech while preserving the canonical prayers and the original meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of Sophia\u2019s Sufferings After Her Daughters\u2019 Deaths Saint Sophia, having buried your three daughters with your own hands on the Appian Way, you lingered three days in prayer at their tomb before giving up your spirit. Yours was a grief no earthly consolation could reach, yet you persevered in prayer unto death. Intercede for all who are crushed beneath the weight of bereavement, that they may find in the graves of their beloved not an end but a door. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials; thou art not the patron of those who flee the Cross. But we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, in the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section headings on their own lines and adjusted a few punctuation marks for smoother text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of Sophia as Patron of the Persecuted Saint Sophia, you suffered under the Roman persecution not for any crime but for the Name of Christ alone. You now stand among that great cloud of witnesses who were slain for the Word of God and for their testimony. Remember before the throne of the Most High all who today endure persecution, imprisonment, and death for the faith, in every corner of the world. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials; thou art not the patron of those who flee the Cross. But we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, in the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section headings on their own lines and made minor punctuation adjustments for smoother text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of the Victory of the Cross Saint Sophia, you understood what the world accounts folly: that suffering united to the Cross of Christ is not defeat but triumph. Through what appeared to be the destruction of all you loved, you won eternal life for yourself and your daughters, and left to the Church a testimony that has endured for centuries. Teach us to embrace the crosses laid upon us with generosity and peace. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials; thou art not the patron of those who flee the Cross. But we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, in the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken section headings on their own lines for clearer text-to-speech pacing; otherwise kept wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of Sophia\u2019s Intercession for Families Saint Sophia, your household was a domestic church wherein the faith was passed from mother to daughter with fidelity and love. In an age when so many families are broken, scattered, or led away from the truth, be a heavenly mother to all Christian families. Guard the homes entrusted to your care from the snares of the enemy and from the corrosion of worldliness. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials, thou art not the patron of those who flee the Cross, but we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings, adjusted a few punctuation marks for clearer text-to-speech pacing, and expanded \u201cSt.\u201d to \u201cSaint.\u201d; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer. O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Thanksgiving and Final Petition. Saint Sophia, wisdom-bearing martyr, we come to the end of this novena with gratitude for your intercession and with confidence in your motherly care. You who named your daughters after the virtues by which we reach God, Faith, Hope, and Charity, pray that these same virtues may take deep root in our own souls. Present our petitions before Almighty God, and obtain for us, if it be His holy will, the graces we have sought throughout these nine days. Closing Prayer of the Novena. O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials; thou art not the patron of those who flee the Cross. But we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Sophia of Rome, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Sophia of Rome Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section headings and adjusted punctuation and paragraph breaks for smoother text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially  and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of Sophia\u2019s Steadfast Faith Saint Sophia, noble mother who carried the names of the three theological virtues in your very children, you stood unmoved before the throne of the emperor Hadrian and refused to deny the Lord Jesus Christ. Teach us to confess our faith openly, without shame or compromise, in the small trials of daily life as well as in times of great testing. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials; thou art not the patron of those who flee the Cross. But we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section headings on their own lines and adjusted punctuation and paragraph breaks for smoother text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially  and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of Sophia\u2019s Maternal Courage Saint Sophia, you watched your daughter Faith endure torments before your eyes, and you did not weaken but encouraged her with words of heavenly comfort. O courageous mother, intercede for all parents who must guide their children through suffering, temptation, and the hostility of a world that does not love Christ. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials; thou art not the patron of those who flee the Cross. But we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear spoken headings and inserted paragraph breaks in the Closing Prayer for better pacing while keeping wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially  and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of the Virtue of Hope Saint Sophia, your daughter Hope bore her name as a living testament to the anchor of the soul. You raised her to fix her eyes not on the things of this earth but on the eternal inheritance that cannot fade. Help us, dear saint, when earthly sorrows press upon us and the darkness seems unbroken, to lift our gaze toward Heaven where you now dwell in joy. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials, thou art not the patron of those who flee the Cross, but we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section headings and adjusted punctuation slightly for smoother text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially  and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of the Virtue of Charity Saint Sophia, your youngest daughter Charity, though a child of tender years, died for love of God with perfect serenity. Through your maternal example she had learned that love of God surpasses all earthly affection. Obtain for us, we beseech you, a charity that is not merely sentiment but sacrifice, a love willing to endure all things for the Beloved. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials; thou art not the patron of those who flee the Cross. But we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear spoken section headings and minor punctuation adjustments for smoother text-to-speech while preserving the canonical prayers and the original meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially  and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of Sophia\u2019s Sufferings After Her Daughters\u2019 Deaths Saint Sophia, having buried your three daughters with your own hands on the Appian Way, you lingered three days in prayer at their tomb before giving up your spirit. Yours was a grief no earthly consolation could reach, yet you persevered in prayer unto death. Intercede for all who are crushed beneath the weight of bereavement, that they may find in the graves of their beloved not an end but a door. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials; thou art not the patron of those who flee the Cross. But we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, in the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section headings on their own lines and adjusted a few punctuation marks for smoother text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially  and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of Sophia as Patron of the Persecuted Saint Sophia, you suffered under the Roman persecution not for any crime but for the Name of Christ alone. You now stand among that great cloud of witnesses who were slain for the Word of God and for their testimony. Remember before the throne of the Most High all who today endure persecution, imprisonment, and death for the faith, in every corner of the world. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials; thou art not the patron of those who flee the Cross. But we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, in the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section headings on their own lines and made minor punctuation adjustments for smoother text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially  and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of the Victory of the Cross Saint Sophia, you understood what the world accounts folly: that suffering united to the Cross of Christ is not defeat but triumph. Through what appeared to be the destruction of all you loved, you won eternal life for yourself and your daughters, and left to the Church a testimony that has endured for centuries. Teach us to embrace the crosses laid upon us with generosity and peace. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials; thou art not the patron of those who flee the Cross. But we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, in the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken section headings on their own lines for clearer text-to-speech pacing; otherwise kept wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially  and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Honor of Sophia\u2019s Intercession for Families Saint Sophia, your household was a domestic church wherein the faith was passed from mother to daughter with fidelity and love. In an age when so many families are broken, scattered, or led away from the truth, be a heavenly mother to all Christian families. Guard the homes entrusted to your care from the snares of the enemy and from the corrosion of worldliness. Closing Prayer of the Novena O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials, thou art not the patron of those who flee the Cross, but we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Sophia of Rome, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings, adjusted a few punctuation marks for clearer text-to-speech pacing, and expanded \u201cSt.\u201d to \u201cSaint.\u201d; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer. O God, who in Thine inscrutable providence didst call Saint Sophia to offer upon the altar of faith not only her own life but the lives of her three beloved daughters, Faith, Hope, and Charity, grant that through her powerful intercession we may receive the graces we seek in this novena, especially  and that, following her example of holy fortitude, we may cling to Thee above all earthly things. Through Christ our Lord. Amen. In Thanksgiving and Final Petition. Saint Sophia, wisdom-bearing martyr, we come to the end of this novena with gratitude for your intercession and with confidence in your motherly care. You who named your daughters after the virtues by which we reach God, Faith, Hope, and Charity, pray that these same virtues may take deep root in our own souls. Present our petitions before Almighty God, and obtain for us, if it be His holy will, the graces we have sought throughout these nine days. Closing Prayer of the Novena. O glorious Saint Sophia, noble among the martyrs and blessed among mothers, thou who didst lay down the dearest treasure of thy heart for the love of God, look with mercy upon us thy poor petitioners. We do not ask to be spared from trials; thou art not the patron of those who flee the Cross. But we ask for the grace to endure them as thou didst: with faith unshaken, hope undimmed, and love unconsumed. Carry our prayers before the throne of the Most High, and obtain for us what is truly for our good and for our eternal salvation. And when at last our days are spent, may we come to that same tomb where thou didst die in prayer and rise into glory, the company of God, and of thee, and of all the saints forever. Through Christ our Lord. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Sophia of Rome, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_sophia_of_rome"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_sophia_of_rome",
+      "name": "St Sophia of Rome"
+    },
+    "type": "novena_feast_rule"
+  }
+}

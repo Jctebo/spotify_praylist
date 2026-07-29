@@ -1,0 +1,237 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "epiphany_magi",
+    "feast": {
+      "day": 6,
+      "mode": "fixed",
+      "month": 1,
+      "name": "Epiphany Magi"
+    },
+    "id": "epiphany_magi",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A novena honoring the Epiphany, when the Magi visited the infant Jesus, offering gifts and worship as a sign of Christ revealed to all nations."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Novena to the Magi in Anticipation of the Epiphany below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and line breaks for clearer text-to-speech pacing, and separated the \u201cPrayer to the Infant Jesus\u201d heading into its own paragraph without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I salute Thee, O divine Heart, with the three Magi who offered their homage to Thee. Regard me, I beseech Thee, with the same love and kindness with which Thou didst receive them, that I may offer with my heart gold, frankincense, and myrrh; that is to say, my intellect, my memory, and my will, in complete subjection to Thee, in faith, hope, and charity, in thought, word, and deed. Accept my offering, accept my heart, and grant that I may live and die thanking Thee for the invaluable favor of being called to the true faith. Hence, I beg of Thee, by the joy which filled Thy heart when Thou didst see the first of the Gentiles at Thy feet, to hear my prayer and grant the request I make in this Novena"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. O Holy Magi, you were living in continual expectation of the rising of the Star of Jacob, which would announce the birth of the true Son of justice. Obtain for me an increase of faith and charity, and the grace to live in continual hope of beholding, one day, the light of heavenly glory and eternal joy"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Prayer to the Infant Jesus. Infant Jesus, meek and mild, look upon me as Thy little child. Look with pity upon me; suffer me to come to Thee. Heart of Jesus, I adore Thee. Heart of Mary, I implore Thee. Heart of Joseph, pure and just. In these three hearts, I put my trust. Help us, Joseph, in our early strife, ever to lead a pure and blameless life. O Holy Magi, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Novena to the Magi in Anticipation of the Epiphany below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and line breaks for clearer text-to-speech pacing, and separated the \u201cPrayer to the Infant Jesus\u201d heading into its own paragraph without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I salute Thee, O divine Heart, with the three Magi who offered their homage to Thee. Regard me, I beseech Thee, with the same love and kindness with which Thou didst receive them, that I may offer with my heart gold, frankincense, and myrrh; that is to say, my intellect, my memory, and my will, in complete subjection to Thee, in faith, hope, and charity, in thought, word, and deed. Accept my offering, accept my heart, and grant that I may live and die thanking Thee for the invaluable favor of being called to the true faith. Hence, I beg of Thee, by the joy which filled Thy heart when Thou didst see the first of the Gentiles at Thy feet, to hear my prayer and grant the request I make in this Novena  Amen. O Holy Magi, you were living in continual expectation of the rising of the Star of Jacob, which would announce the birth of the true Son of justice. Obtain for me an increase of faith and charity, and the grace to live in continual hope of beholding, one day, the light of heavenly glory and eternal joy  Prayer to the Infant Jesus. Infant Jesus, meek and mild, look upon me as Thy little child. Look with pity upon me; suffer me to come to Thee. Heart of Jesus, I adore Thee. Heart of Mary, I implore Thee. Heart of Joseph, pure and just. In these three hearts, I put my trust. Help us, Joseph, in our early strife, ever to lead a pure and blameless life. O Holy Magi, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and line breaks for clearer text-to-speech pacing, and separated the \u201cPrayer to the Infant Jesus\u201d heading into its own paragraph without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I salute Thee, O divine Heart, with the three Magi who offered their homage to Thee. Regard me, I beseech Thee, with the same love and kindness with which Thou didst receive them, that I may offer with my heart gold, frankincense, and myrrh; that is to say, my intellect, my memory, and my will, in complete subjection to Thee, in faith, hope, and charity, in thought, word, and deed. Accept my offering, accept my heart, and grant that I may live and die thanking Thee for the invaluable favor of being called to the true faith. Hence, I beg of Thee, by the joy which filled Thy heart when Thou didst see the first of the Gentiles at Thy feet, to hear my prayer and grant the request I make in this Novena  Amen. O Holy Magi, you were living in continual expectation of the rising of the Star of Jacob, which would announce the birth of the true Son of justice. Obtain for me an increase of faith and charity, and the grace to live in continual hope of beholding, one day, the light of heavenly glory and eternal joy  Prayer to the Infant Jesus. Infant Jesus, meek and mild, look upon me as Thy little child. Look with pity upon me; suffer me to come to Thee. Heart of Jesus, I adore Thee. Heart of Mary, I implore Thee. Heart of Joseph, pure and just. In these three hearts, I put my trust. Help us, Joseph, in our early strife, ever to lead a pure and blameless life. O Holy Magi, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and line breaks for clearer text-to-speech pacing, and separated the \u201cPrayer to the Infant Jesus\u201d heading into its own paragraph without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I salute Thee, O divine Heart, with the three Magi who offered their homage to Thee. Regard me, I beseech Thee, with the same love and kindness with which Thou didst receive them, that I may offer with my heart gold, frankincense, and myrrh; that is to say, my intellect, my memory, and my will, in complete subjection to Thee, in faith, hope, and charity, in thought, word, and deed. Accept my offering, accept my heart, and grant that I may live and die thanking Thee for the invaluable favor of being called to the true faith. Hence, I beg of Thee, by the joy which filled Thy heart when Thou didst see the first of the Gentiles at Thy feet, to hear my prayer and grant the request I make in this Novena  Amen. O Holy Magi, you were living in continual expectation of the rising of the Star of Jacob, which would announce the birth of the true Son of justice. Obtain for me an increase of faith and charity, and the grace to live in continual hope of beholding, one day, the light of heavenly glory and eternal joy  Prayer to the Infant Jesus. Infant Jesus, meek and mild, look upon me as Thy little child. Look with pity upon me; suffer me to come to Thee. Heart of Jesus, I adore Thee. Heart of Mary, I implore Thee. Heart of Joseph, pure and just. In these three hearts, I put my trust. Help us, Joseph, in our early strife, ever to lead a pure and blameless life. O Holy Magi, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and line breaks for clearer text-to-speech pacing, and separated the \u201cPrayer to the Infant Jesus\u201d heading into its own paragraph without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I salute Thee, O divine Heart, with the three Magi who offered their homage to Thee. Regard me, I beseech Thee, with the same love and kindness with which Thou didst receive them, that I may offer with my heart gold, frankincense, and myrrh; that is to say, my intellect, my memory, and my will, in complete subjection to Thee, in faith, hope, and charity, in thought, word, and deed. Accept my offering, accept my heart, and grant that I may live and die thanking Thee for the invaluable favor of being called to the true faith. Hence, I beg of Thee, by the joy which filled Thy heart when Thou didst see the first of the Gentiles at Thy feet, to hear my prayer and grant the request I make in this Novena  Amen. O Holy Magi, you were living in continual expectation of the rising of the Star of Jacob, which would announce the birth of the true Son of justice. Obtain for me an increase of faith and charity, and the grace to live in continual hope of beholding, one day, the light of heavenly glory and eternal joy  Prayer to the Infant Jesus. Infant Jesus, meek and mild, look upon me as Thy little child. Look with pity upon me; suffer me to come to Thee. Heart of Jesus, I adore Thee. Heart of Mary, I implore Thee. Heart of Joseph, pure and just. In these three hearts, I put my trust. Help us, Joseph, in our early strife, ever to lead a pure and blameless life. O Holy Magi, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and line breaks for clearer text-to-speech pacing, and separated the \u201cPrayer to the Infant Jesus\u201d heading into its own paragraph without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I salute Thee, O divine Heart, with the three Magi who offered their homage to Thee. Regard me, I beseech Thee, with the same love and kindness with which Thou didst receive them, that I may offer with my heart gold, frankincense, and myrrh; that is to say, my intellect, my memory, and my will, in complete subjection to Thee, in faith, hope, and charity, in thought, word, and deed. Accept my offering, accept my heart, and grant that I may live and die thanking Thee for the invaluable favor of being called to the true faith. Hence, I beg of Thee, by the joy which filled Thy heart when Thou didst see the first of the Gentiles at Thy feet, to hear my prayer and grant the request I make in this Novena  Amen. O Holy Magi, you were living in continual expectation of the rising of the Star of Jacob, which would announce the birth of the true Son of justice. Obtain for me an increase of faith and charity, and the grace to live in continual hope of beholding, one day, the light of heavenly glory and eternal joy  Prayer to the Infant Jesus. Infant Jesus, meek and mild, look upon me as Thy little child. Look with pity upon me; suffer me to come to Thee. Heart of Jesus, I adore Thee. Heart of Mary, I implore Thee. Heart of Joseph, pure and just. In these three hearts, I put my trust. Help us, Joseph, in our early strife, ever to lead a pure and blameless life. O Holy Magi, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and line breaks for clearer text-to-speech pacing, and separated the \u201cPrayer to the Infant Jesus\u201d heading into its own paragraph without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I salute Thee, O divine Heart, with the three Magi who offered their homage to Thee. Regard me, I beseech Thee, with the same love and kindness with which Thou didst receive them, that I may offer with my heart gold, frankincense, and myrrh; that is to say, my intellect, my memory, and my will, in complete subjection to Thee, in faith, hope, and charity, in thought, word, and deed. Accept my offering, accept my heart, and grant that I may live and die thanking Thee for the invaluable favor of being called to the true faith. Hence, I beg of Thee, by the joy which filled Thy heart when Thou didst see the first of the Gentiles at Thy feet, to hear my prayer and grant the request I make in this Novena  Amen. O Holy Magi, you were living in continual expectation of the rising of the Star of Jacob, which would announce the birth of the true Son of justice. Obtain for me an increase of faith and charity, and the grace to live in continual hope of beholding, one day, the light of heavenly glory and eternal joy  Prayer to the Infant Jesus. Infant Jesus, meek and mild, look upon me as Thy little child. Look with pity upon me; suffer me to come to Thee. Heart of Jesus, I adore Thee. Heart of Mary, I implore Thee. Heart of Joseph, pure and just. In these three hearts, I put my trust. Help us, Joseph, in our early strife, ever to lead a pure and blameless life. O Holy Magi, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and line breaks for clearer text-to-speech pacing, and separated the \u201cPrayer to the Infant Jesus\u201d heading into its own paragraph without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I salute Thee, O divine Heart, with the three Magi who offered their homage to Thee. Regard me, I beseech Thee, with the same love and kindness with which Thou didst receive them, that I may offer with my heart gold, frankincense, and myrrh; that is to say, my intellect, my memory, and my will, in complete subjection to Thee, in faith, hope, and charity, in thought, word, and deed. Accept my offering, accept my heart, and grant that I may live and die thanking Thee for the invaluable favor of being called to the true faith. Hence, I beg of Thee, by the joy which filled Thy heart when Thou didst see the first of the Gentiles at Thy feet, to hear my prayer and grant the request I make in this Novena  Amen. O Holy Magi, you were living in continual expectation of the rising of the Star of Jacob, which would announce the birth of the true Son of justice. Obtain for me an increase of faith and charity, and the grace to live in continual hope of beholding, one day, the light of heavenly glory and eternal joy  Prayer to the Infant Jesus. Infant Jesus, meek and mild, look upon me as Thy little child. Look with pity upon me; suffer me to come to Thee. Heart of Jesus, I adore Thee. Heart of Mary, I implore Thee. Heart of Joseph, pure and just. In these three hearts, I put my trust. Help us, Joseph, in our early strife, ever to lead a pure and blameless life. O Holy Magi, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and line breaks for clearer text-to-speech pacing, and separated the \u201cPrayer to the Infant Jesus\u201d heading into its own paragraph without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I salute Thee, O divine Heart, with the three Magi who offered their homage to Thee. Regard me, I beseech Thee, with the same love and kindness with which Thou didst receive them, that I may offer with my heart gold, frankincense, and myrrh; that is to say, my intellect, my memory, and my will, in complete subjection to Thee, in faith, hope, and charity, in thought, word, and deed. Accept my offering, accept my heart, and grant that I may live and die thanking Thee for the invaluable favor of being called to the true faith. Hence, I beg of Thee, by the joy which filled Thy heart when Thou didst see the first of the Gentiles at Thy feet, to hear my prayer and grant the request I make in this Novena  Amen. O Holy Magi, you were living in continual expectation of the rising of the Star of Jacob, which would announce the birth of the true Son of justice. Obtain for me an increase of faith and charity, and the grace to live in continual hope of beholding, one day, the light of heavenly glory and eternal joy  Prayer to the Infant Jesus. Infant Jesus, meek and mild, look upon me as Thy little child. Look with pity upon me; suffer me to come to Thee. Heart of Jesus, I adore Thee. Heart of Mary, I implore Thee. Heart of Joseph, pure and just. In these three hearts, I put my trust. Help us, Joseph, in our early strife, ever to lead a pure and blameless life. O Holy Magi, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and line breaks for clearer text-to-speech pacing, and separated the \u201cPrayer to the Infant Jesus\u201d heading into its own paragraph without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. I salute Thee, O divine Heart, with the three Magi who offered their homage to Thee. Regard me, I beseech Thee, with the same love and kindness with which Thou didst receive them, that I may offer with my heart gold, frankincense, and myrrh; that is to say, my intellect, my memory, and my will, in complete subjection to Thee, in faith, hope, and charity, in thought, word, and deed. Accept my offering, accept my heart, and grant that I may live and die thanking Thee for the invaluable favor of being called to the true faith. Hence, I beg of Thee, by the joy which filled Thy heart when Thou didst see the first of the Gentiles at Thy feet, to hear my prayer and grant the request I make in this Novena  Amen. O Holy Magi, you were living in continual expectation of the rising of the Star of Jacob, which would announce the birth of the true Son of justice. Obtain for me an increase of faith and charity, and the grace to live in continual hope of beholding, one day, the light of heavenly glory and eternal joy  Prayer to the Infant Jesus. Infant Jesus, meek and mild, look upon me as Thy little child. Look with pity upon me; suffer me to come to Thee. Heart of Jesus, I adore Thee. Heart of Mary, I implore Thee. Heart of Joseph, pure and just. In these three hearts, I put my trust. Help us, Joseph, in our early strife, ever to lead a pure and blameless life. O Holy Magi, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-epiphany_magi"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "epiphany_magi",
+      "name": "Epiphany Magi"
+    },
+    "type": "novena_feast_rule"
+  }
+}

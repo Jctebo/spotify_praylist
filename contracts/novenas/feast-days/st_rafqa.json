@@ -1,0 +1,444 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_rafqa",
+    "feast": {
+      "day": 23,
+      "mode": "fixed",
+      "month": 3,
+      "name": "St Rafqa"
+    },
+    "id": "st_rafqa",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "the sick",
+        "those who suffer",
+        "Lebanon"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St Rafqa, a Lebanese Maronite nun, is remembered for her prayerful endurance of long illness and suffering and her quiet devotion to Christ."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Rafqa Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings and adjusted paragraph breaks and punctuation for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. to You, O God the Father, Who called Rafqa to the holy monastic life and was for her a father and a mother. Adoration be to You, O Son, Who made her an apostle of redemptive suffering and joy. Thanks be to You, O Holy Spirit, Who strengthened her with patience in her struggles. Through her intercession, O Lord, answer my petition and grant me from Your Divine Bounty the grace that I am asking in this novena. Then, with her, I shall exalt You, Father, Son, and Holy Spirit, all the days of my life and forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings and adjusted punctuation and line breaks for clearer text-to-speech pacing without changing meaning or canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O Lord Jesus Christ, You immersed Saint Rafqa in compassion, nourished her life with the Blessed Sacrament, filled her with joy and peace, and made her a holy, spiritual temple, body and soul, so that she was able to combine in her monastic life the way of mission and work with the way of asceticism and prayer. O Lord, through the intercession of Saint Rafqa, send faithful laborers to Your Church and grant me the grace for which I am asking in this novena. Then, with her, I shall glorify You with the Father and the Holy Spirit, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings and adjusted punctuation and paragraph breaks for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O Holy Spirit, You set St. Rafqa as an example for us in carrying the cross; she repeated with Saint Paul, \u201cI know nothing \u2026 except Jesus Christ, and Him crucified,\u201d until she became a new apostle of redemptive suffering, and a patron and an example for suffering humanity. Enable us to carry the cross as she did with faith, hope, and charity. O Spirit of wisdom, if it be in accord with Your Holy Will, grant me through Saint Rafqa\u2019s intercession the grace for which I am asking in this novena. Then I shall glorify You with the Father and the Son, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Rafqa, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief pacing punctuation and a clear standalone title line for the Prayer to Saint Rafqa, and normalized \u201cSt.\u201d to \u201cSaint\u201d for text-to-speech.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O Christ, my God, when the child Rafqa lost her tender-hearted mother, You sought her out and gave her Your Virgin Mother as her own. O Lord, keep Saint Rafqa as a leaven of holiness for Christian families and as a living example for everyone who suffers, is handicapped or invalid, for everyone who is blind, sick, or sorrowful, for every child and orphan, so that all of them might carry your cross with love and joy. Answer me, O Lord, and grant me through the intercession of Saint Rafqa the grace for which I am asking in this novena. Then, with her, I shall praise You, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief punctuation and line breaks for clearer text-to-speech pacing, and expanded \u201cSt.\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O heavenly Spouse, You stole the heart of the pure Rafqa in the springtime of her life; she no longer saw beauty, happiness, or comfort except through You, in You, and with You. You called her to the mission of evangelization, and she worked and taught tirelessly, through her spiritual witness sowing in the hearts of young and old Your words, Your Gospel teachings, and the examples of Your saints. O Lord, through the intercession of Saint Rafqa, grant me the grace for which I am asking in this novena. Then I shall live that sincere love and true peace which have their source in You and, with her, glorify You, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings and adjusted paragraph breaks and punctuation for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O Lord Jesus, You guided and protected Saint Rafqa in times of difficulty. She prayed to You and felt deep within her heart that You were calling her to ever more sacrifice and self-denial. Therefore, she joined the Lebanese Maronite Order and was an example to her sisters in the observance of the rule, frequent prayer, and silent work. O Lord, through her intercession, grant help and Christian enlightenment to fathers and mothers, professional and spiritual knowledge to teachers, and a life of holiness to monks and nuns. If it be in accord with Your will, grant me, O Lord, through the intercession of Saint Rafqa, this grace in this novena, and I shall respond to Your call in my life and, with her, glorify You, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings and minor punctuation adjustments for clearer text-to-speech pacing while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O Saint Rafqa, you asked our Lord Jesus the grace of sharing His life-giving sufferings, and He immediately responded to you; you lost your sight, arthritis crippled you for the rest of your life, and you were nailed to the cross of suffering and pain for twenty-nine years. Nevertheless, you remained patient and thankful to God, saying again and again: \u201cIn union with Jesus\u2019 sufferings, in union with the crown of thorns which was driven into Your head, O Master.\u201d With a smile always on your radiant face, you accepted your sufferings with joy and happiness. I beg you, Saint Rafqa, to obtain for me from your Divine Spouse the grace that I am asking in this novena. Then, with you, I shall praise His Glory all the days of my life, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken heading punctuation for clarity and normalized \u201cSt.\u201d to \u201cSaint\u201d for text-to-speech.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O Saint Rafqa, friend of the Cross and partner of the Crucified in the work of Redemption, remain with us, in our age and in the generations to come, an apostle of redemptive suffering, joy, goodness, and love. Pray that those who suffer may accept their lot courageously as a cross for their salvation and that of the whole world so that they may complete in their bodies and souls the sufferings of the Divine Redeemer, be sanctified and sanctify the world. Join your prayer to ours. Ask God to forgive us and to be pleased with us. Request for us the grace of final perseverance. Obtain for me from the Lord Jesus Christ the grace that I am asking in this novena. Then, with you, I shall glorify Him, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings, adjusted punctuation for clearer text-to-speech pacing, and standardized \u201cSt.\u201d to \u201cSaint\u201d while preserving all prayer text and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O Saint Rafqa, true disciple of Jesus Christ and partner of the Redeemer in His salvific suffering, you hastened to serve the Lord and became for Him a complete and pure sacrifice. Through your intercession, I ask the Lord Jesus to bless my life, my family, and my country, and to help me to contribute in the fulfillment of His Kingdom. Obtain for me the grace that I am asking in this novena. Then, with you, I shall praise the Holy Trinity, Who crowned you with Eternal Glory. Amen. Thanksgiving Prayer, to be prayed after the grace has been obtained. O Saint Rafqa, my beloved patron saint, I wish to thank you with all my heart for the grace that I obtained from the Lord Jesus through your intercession, and I ask you to intercede for me always, to accompany me, and to enlighten my way. Teach me to love Christ as you loved Him and to follow your steps in loving and serving others with joy and faithfulness. Then, with you, I shall glorify Him, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Rafqa Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings and adjusted paragraph breaks and punctuation for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:  Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. to You, O God the Father, Who called Rafqa to the holy monastic life and was for her a father and a mother. Adoration be to You, O Son, Who made her an apostle of redemptive suffering and joy. Thanks be to You, O Holy Spirit, Who strengthened her with patience in her struggles. Through her intercession, O Lord, answer my petition and grant me from Your Divine Bounty the grace that I am asking in this novena. Then, with her, I shall exalt You, Father, Son, and Holy Spirit, all the days of my life and forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings and adjusted punctuation and line breaks for clearer text-to-speech pacing without changing meaning or canonical prayers.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:  Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O Lord Jesus Christ, You immersed Saint Rafqa in compassion, nourished her life with the Blessed Sacrament, filled her with joy and peace, and made her a holy, spiritual temple, body and soul, so that she was able to combine in her monastic life the way of mission and work with the way of asceticism and prayer. O Lord, through the intercession of Saint Rafqa, send faithful laborers to Your Church and grant me the grace for which I am asking in this novena. Then, with her, I shall glorify You with the Father and the Holy Spirit, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings and adjusted punctuation and paragraph breaks for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:  Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O Holy Spirit, You set St. Rafqa as an example for us in carrying the cross; she repeated with Saint Paul, \u201cI know nothing \u2026 except Jesus Christ, and Him crucified,\u201d until she became a new apostle of redemptive suffering, and a patron and an example for suffering humanity. Enable us to carry the cross as she did with faith, hope, and charity. O Spirit of wisdom, if it be in accord with Your Holy Will, grant me through Saint Rafqa\u2019s intercession the grace for which I am asking in this novena. Then I shall glorify You with the Father and the Son, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Rafqa, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief pacing punctuation and a clear standalone title line for the Prayer to Saint Rafqa, and normalized \u201cSt.\u201d to \u201cSaint\u201d for text-to-speech.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:  Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O Christ, my God, when the child Rafqa lost her tender-hearted mother, You sought her out and gave her Your Virgin Mother as her own. O Lord, keep Saint Rafqa as a leaven of holiness for Christian families and as a living example for everyone who suffers, is handicapped or invalid, for everyone who is blind, sick, or sorrowful, for every child and orphan, so that all of them might carry your cross with love and joy. Answer me, O Lord, and grant me through the intercession of Saint Rafqa the grace for which I am asking in this novena. Then, with her, I shall praise You, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief punctuation and line breaks for clearer text-to-speech pacing, and expanded \u201cSt.\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:  Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O heavenly Spouse, You stole the heart of the pure Rafqa in the springtime of her life; she no longer saw beauty, happiness, or comfort except through You, in You, and with You. You called her to the mission of evangelization, and she worked and taught tirelessly, through her spiritual witness sowing in the hearts of young and old Your words, Your Gospel teachings, and the examples of Your saints. O Lord, through the intercession of Saint Rafqa, grant me the grace for which I am asking in this novena. Then I shall live that sincere love and true peace which have their source in You and, with her, glorify You, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings and adjusted paragraph breaks and punctuation for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:  Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O Lord Jesus, You guided and protected Saint Rafqa in times of difficulty. She prayed to You and felt deep within her heart that You were calling her to ever more sacrifice and self-denial. Therefore, she joined the Lebanese Maronite Order and was an example to her sisters in the observance of the rule, frequent prayer, and silent work. O Lord, through her intercession, grant help and Christian enlightenment to fathers and mothers, professional and spiritual knowledge to teachers, and a life of holiness to monks and nuns. If it be in accord with Your will, grant me, O Lord, through the intercession of Saint Rafqa, this grace in this novena, and I shall respond to Your call in my life and, with her, glorify You, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings and minor punctuation adjustments for clearer text-to-speech pacing while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:  Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O Saint Rafqa, you asked our Lord Jesus the grace of sharing His life-giving sufferings, and He immediately responded to you; you lost your sight, arthritis crippled you for the rest of your life, and you were nailed to the cross of suffering and pain for twenty-nine years. Nevertheless, you remained patient and thankful to God, saying again and again: \u201cIn union with Jesus\u2019 sufferings, in union with the crown of thorns which was driven into Your head, O Master.\u201d With a smile always on your radiant face, you accepted your sufferings with joy and happiness. I beg you, Saint Rafqa, to obtain for me from your Divine Spouse the grace that I am asking in this novena. Then, with you, I shall praise His Glory all the days of my life, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken heading punctuation for clarity and normalized \u201cSt.\u201d to \u201cSaint\u201d for text-to-speech.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:  Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O Saint Rafqa, friend of the Cross and partner of the Crucified in the work of Redemption, remain with us, in our age and in the generations to come, an apostle of redemptive suffering, joy, goodness, and love. Pray that those who suffer may accept their lot courageously as a cross for their salvation and that of the whole world so that they may complete in their bodies and souls the sufferings of the Divine Redeemer, be sanctified and sanctify the world. Join your prayer to ours. Ask God to forgive us and to be pleased with us. Request for us the grace of final perseverance. Obtain for me from the Lord Jesus Christ the grace that I am asking in this novena. Then, with you, I shall glorify Him, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings, adjusted punctuation for clearer text-to-speech pacing, and standardized \u201cSt.\u201d to \u201cSaint\u201d while preserving all prayer text and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer to Saint Rafqa. O Saint Rafqa, you walked the soil of Lebanon: among its oaks and rocks, within your monastery and among your sisters, the nuns. O Sister, daughter of Lebanon and its Cedars, be a beacon to us and an example in bearing sufferings with love and joy. Saint Rafqa, our patron saint, let peace reign in our country and sanctify our monasteries and churches. Grant those who visit you and those who ask for your intercession the graces they need, especially the petition I now place in your hands:  Cure our sick with the blessed soil from your tomb. Comfort the sorrowful among us. Bless our children and young people and raise our orphans. Let harvests abound in our fields and blessings in our homes. Sow springtime in the seasons of our lives. Bless our workers, feed the hungry, accompany the traveling, and help emigrants return. Intercede for our faithful departed. Come, O Sister, messenger of faith, joy, and love, teach us to pray as you did to Christ the Redeemer, Who let you share in His sufferings, imprinted His wounds on your body, and added to you a sixth wound. With you, we thank the Virgin Mother of God and glorify the Father, the Son, and the Holy Spirit, forever. Amen. O Saint Rafqa, true disciple of Jesus Christ and partner of the Redeemer in His salvific suffering, you hastened to serve the Lord and became for Him a complete and pure sacrifice. Through your intercession, I ask the Lord Jesus to bless my life, my family, and my country, and to help me to contribute in the fulfillment of His Kingdom. Obtain for me the grace that I am asking in this novena. Then, with you, I shall praise the Holy Trinity, Who crowned you with Eternal Glory. Amen. Thanksgiving Prayer, to be prayed after the grace has been obtained. O Saint Rafqa, my beloved patron saint, I wish to thank you with all my heart for the grace that I obtained from the Lord Jesus through your intercession, and I ask you to intercede for me always, to accompany me, and to enlighten my way. Teach me to love Christ as you loved Him and to follow your steps in loving and serving others with joy and faithfulness. Then, with you, I shall glorify Him, forever. Amen. We ask you, Saint Rafqa, to pour true joy into our suffering world. Console the sorrowful and sow in them happiness, warmth, light, and life. Teach us to live as children of faith through prayer so that our life may be filled always with the Divine Presence. Medical art was incapable of curing you, but you cured the sick through your suffering and love. Wipe away tears, heal wounds, restore purity of love and praise, and remain a living example for us in everything so that, with you and the Virgin Mary, we may glorify the Holy Trinity, Father, Son, and Holy Spirit, forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Rafqa, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_rafqa"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_rafqa",
+      "name": "St Rafqa"
+    },
+    "type": "novena_feast_rule"
+  }
+}

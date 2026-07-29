@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_nicholas",
+    "feast": {
+      "day": 6,
+      "mode": "fixed",
+      "month": 12,
+      "name": "St. Nicholas"
+    },
+    "id": "st_nicholas",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "children",
+        "sailors",
+        "the poor"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Nicholas was a 4th-century bishop of Myra, remembered for his charity and care for the poor and vulnerable."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Nicholas of Myra Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and corrected the versicle/response line formatting.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glorious Nicholas, my own protector, from that bright throne where thou dost enjoy the vision of thy God, in pity turn thine eyes upon me. Ask for me from God those graces and helps most seasonable in my present necessities, whether spiritual or temporal, and especially the grace of"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "if such be expedient for my eternal welfare. Forget not, glorious and holy bishop, our true Sovereign Pontiff, the holy Church, and this pious city. Bring back to the right way of salvation those who live steeped in sin, or buried in the darkness of ignorance, error, and heresy. Comfort the sorrowing, provide for the needy, strengthen the weak-hearted, defend the oppressed, help the sick. Let all know the effects of thy powerful patronage with Him Who is the supreme giver of all good. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. Pray for us, blessed Nicholas. R. That we may be made worthy of the promises of Christ. Let us pray. God, Who has honored, and ceasest not daily to honor, Thy high-priest and glorious confessor, blessed Nicholas, with innumerable miracles, grant, we beseech Thee, that, by his merits and prayers, we may be delivered from the fires of hell and from all other dangers. Through Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Nicholas of Myra Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and corrected the versicle/response line formatting.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glorious Nicholas, my own protector, from that bright throne where thou dost enjoy the vision of thy God, in pity turn thine eyes upon me. Ask for me from God those graces and helps most seasonable in my present necessities, whether spiritual or temporal, and especially the grace of  if such be expedient for my eternal welfare. Forget not, glorious and holy bishop, our true Sovereign Pontiff, the holy Church, and this pious city. Bring back to the right way of salvation those who live steeped in sin, or buried in the darkness of ignorance, error, and heresy. Comfort the sorrowing, provide for the needy, strengthen the weak-hearted, defend the oppressed, help the sick. Let all know the effects of thy powerful patronage with Him Who is the supreme giver of all good. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. Pray for us, blessed Nicholas. R. That we may be made worthy of the promises of Christ. Let us pray. God, Who has honored, and ceasest not daily to honor, Thy high-priest and glorious confessor, blessed Nicholas, with innumerable miracles, grant, we beseech Thee, that, by his merits and prayers, we may be delivered from the fires of hell and from all other dangers. Through Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and corrected the versicle/response line formatting.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glorious Nicholas, my own protector, from that bright throne where thou dost enjoy the vision of thy God, in pity turn thine eyes upon me. Ask for me from God those graces and helps most seasonable in my present necessities, whether spiritual or temporal, and especially the grace of  if such be expedient for my eternal welfare. Forget not, glorious and holy bishop, our true Sovereign Pontiff, the holy Church, and this pious city. Bring back to the right way of salvation those who live steeped in sin, or buried in the darkness of ignorance, error, and heresy. Comfort the sorrowing, provide for the needy, strengthen the weak-hearted, defend the oppressed, help the sick. Let all know the effects of thy powerful patronage with Him Who is the supreme giver of all good. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. Pray for us, blessed Nicholas. R. That we may be made worthy of the promises of Christ. Let us pray. God, Who has honored, and ceasest not daily to honor, Thy high-priest and glorious confessor, blessed Nicholas, with innumerable miracles, grant, we beseech Thee, that, by his merits and prayers, we may be delivered from the fires of hell and from all other dangers. Through Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and corrected the versicle/response line formatting.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glorious Nicholas, my own protector, from that bright throne where thou dost enjoy the vision of thy God, in pity turn thine eyes upon me. Ask for me from God those graces and helps most seasonable in my present necessities, whether spiritual or temporal, and especially the grace of  if such be expedient for my eternal welfare. Forget not, glorious and holy bishop, our true Sovereign Pontiff, the holy Church, and this pious city. Bring back to the right way of salvation those who live steeped in sin, or buried in the darkness of ignorance, error, and heresy. Comfort the sorrowing, provide for the needy, strengthen the weak-hearted, defend the oppressed, help the sick. Let all know the effects of thy powerful patronage with Him Who is the supreme giver of all good. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. Pray for us, blessed Nicholas. R. That we may be made worthy of the promises of Christ. Let us pray. God, Who has honored, and ceasest not daily to honor, Thy high-priest and glorious confessor, blessed Nicholas, with innumerable miracles, grant, we beseech Thee, that, by his merits and prayers, we may be delivered from the fires of hell and from all other dangers. Through Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and corrected the versicle/response line formatting.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glorious Nicholas, my own protector, from that bright throne where thou dost enjoy the vision of thy God, in pity turn thine eyes upon me. Ask for me from God those graces and helps most seasonable in my present necessities, whether spiritual or temporal, and especially the grace of  if such be expedient for my eternal welfare. Forget not, glorious and holy bishop, our true Sovereign Pontiff, the holy Church, and this pious city. Bring back to the right way of salvation those who live steeped in sin, or buried in the darkness of ignorance, error, and heresy. Comfort the sorrowing, provide for the needy, strengthen the weak-hearted, defend the oppressed, help the sick. Let all know the effects of thy powerful patronage with Him Who is the supreme giver of all good. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. Pray for us, blessed Nicholas. R. That we may be made worthy of the promises of Christ. Let us pray. God, Who has honored, and ceasest not daily to honor, Thy high-priest and glorious confessor, blessed Nicholas, with innumerable miracles, grant, we beseech Thee, that, by his merits and prayers, we may be delivered from the fires of hell and from all other dangers. Through Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and corrected the versicle/response line formatting.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glorious Nicholas, my own protector, from that bright throne where thou dost enjoy the vision of thy God, in pity turn thine eyes upon me. Ask for me from God those graces and helps most seasonable in my present necessities, whether spiritual or temporal, and especially the grace of  if such be expedient for my eternal welfare. Forget not, glorious and holy bishop, our true Sovereign Pontiff, the holy Church, and this pious city. Bring back to the right way of salvation those who live steeped in sin, or buried in the darkness of ignorance, error, and heresy. Comfort the sorrowing, provide for the needy, strengthen the weak-hearted, defend the oppressed, help the sick. Let all know the effects of thy powerful patronage with Him Who is the supreme giver of all good. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. Pray for us, blessed Nicholas. R. That we may be made worthy of the promises of Christ. Let us pray. God, Who has honored, and ceasest not daily to honor, Thy high-priest and glorious confessor, blessed Nicholas, with innumerable miracles, grant, we beseech Thee, that, by his merits and prayers, we may be delivered from the fires of hell and from all other dangers. Through Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and corrected the versicle/response line formatting.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glorious Nicholas, my own protector, from that bright throne where thou dost enjoy the vision of thy God, in pity turn thine eyes upon me. Ask for me from God those graces and helps most seasonable in my present necessities, whether spiritual or temporal, and especially the grace of  if such be expedient for my eternal welfare. Forget not, glorious and holy bishop, our true Sovereign Pontiff, the holy Church, and this pious city. Bring back to the right way of salvation those who live steeped in sin, or buried in the darkness of ignorance, error, and heresy. Comfort the sorrowing, provide for the needy, strengthen the weak-hearted, defend the oppressed, help the sick. Let all know the effects of thy powerful patronage with Him Who is the supreme giver of all good. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. Pray for us, blessed Nicholas. R. That we may be made worthy of the promises of Christ. Let us pray. God, Who has honored, and ceasest not daily to honor, Thy high-priest and glorious confessor, blessed Nicholas, with innumerable miracles, grant, we beseech Thee, that, by his merits and prayers, we may be delivered from the fires of hell and from all other dangers. Through Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and corrected the versicle/response line formatting.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glorious Nicholas, my own protector, from that bright throne where thou dost enjoy the vision of thy God, in pity turn thine eyes upon me. Ask for me from God those graces and helps most seasonable in my present necessities, whether spiritual or temporal, and especially the grace of  if such be expedient for my eternal welfare. Forget not, glorious and holy bishop, our true Sovereign Pontiff, the holy Church, and this pious city. Bring back to the right way of salvation those who live steeped in sin, or buried in the darkness of ignorance, error, and heresy. Comfort the sorrowing, provide for the needy, strengthen the weak-hearted, defend the oppressed, help the sick. Let all know the effects of thy powerful patronage with Him Who is the supreme giver of all good. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. Pray for us, blessed Nicholas. R. That we may be made worthy of the promises of Christ. Let us pray. God, Who has honored, and ceasest not daily to honor, Thy high-priest and glorious confessor, blessed Nicholas, with innumerable miracles, grant, we beseech Thee, that, by his merits and prayers, we may be delivered from the fires of hell and from all other dangers. Through Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and corrected the versicle/response line formatting.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glorious Nicholas, my own protector, from that bright throne where thou dost enjoy the vision of thy God, in pity turn thine eyes upon me. Ask for me from God those graces and helps most seasonable in my present necessities, whether spiritual or temporal, and especially the grace of  if such be expedient for my eternal welfare. Forget not, glorious and holy bishop, our true Sovereign Pontiff, the holy Church, and this pious city. Bring back to the right way of salvation those who live steeped in sin, or buried in the darkness of ignorance, error, and heresy. Comfort the sorrowing, provide for the needy, strengthen the weak-hearted, defend the oppressed, help the sick. Let all know the effects of thy powerful patronage with Him Who is the supreme giver of all good. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. Pray for us, blessed Nicholas. R. That we may be made worthy of the promises of Christ. Let us pray. God, Who has honored, and ceasest not daily to honor, Thy high-priest and glorious confessor, blessed Nicholas, with innumerable miracles, grant, we beseech Thee, that, by his merits and prayers, we may be delivered from the fires of hell and from all other dangers. Through Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing, and corrected the versicle/response line formatting.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glorious Nicholas, my own protector, from that bright throne where thou dost enjoy the vision of thy God, in pity turn thine eyes upon me. Ask for me from God those graces and helps most seasonable in my present necessities, whether spiritual or temporal, and especially the grace of  if such be expedient for my eternal welfare. Forget not, glorious and holy bishop, our true Sovereign Pontiff, the holy Church, and this pious city. Bring back to the right way of salvation those who live steeped in sin, or buried in the darkness of ignorance, error, and heresy. Comfort the sorrowing, provide for the needy, strengthen the weak-hearted, defend the oppressed, help the sick. Let all know the effects of thy powerful patronage with Him Who is the supreme giver of all good. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. Pray for us, blessed Nicholas. R. That we may be made worthy of the promises of Christ. Let us pray. God, Who has honored, and ceasest not daily to honor, Thy high-priest and glorious confessor, blessed Nicholas, with innumerable miracles, grant, we beseech Thee, that, by his merits and prayers, we may be delivered from the fires of hell and from all other dangers. Through Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_nicholas"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_nicholas",
+      "name": "St. Nicholas"
+    },
+    "type": "novena_feast_rule"
+  }
+}

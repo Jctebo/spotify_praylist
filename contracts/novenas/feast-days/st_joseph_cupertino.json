@@ -1,0 +1,444 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_joseph_cupertino",
+    "feast": {
+      "day": 18,
+      "mode": "fixed",
+      "month": 9,
+      "name": "St. Joseph Cupertino"
+    },
+    "id": "st_joseph_cupertino",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "students",
+        "examinations",
+        "aviation"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Joseph of Cupertino was a 17th-century Franciscan friar known for ecstatic prayer and reported levitations, and he is honored on his feast day."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Joseph Cupertino Novena - Prayer for Tests and Exams below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Changed \u201cSt\u201d to \u201cSaint\u201d for clearer text-to-speech pronunciation; otherwise kept text and structure the same.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear Saint Joseph of Cupertino, you were an unwanted child and were thought worthless even by your own mother. Intercede for all unwanted children, that they may come to know they were born out of God\u2019s love for them. We pray especially for"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Joseph of Cupertino, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added periods to the abbreviation \u201cSt.\u201d for consistent text-to-speech pronunciation while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear St. Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear St. Joseph, you were an angry, frustrated child. We pray for all who struggle to express themselves, and that you help us overcome sins of anger. We pray especially for"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Joseph of Cupertino, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added periods to \u201cSt.\u201d for consistent spoken abbreviation; otherwise kept text unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear St. Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear St. Joseph, you experienced no love in your family and were considered of little account by all who knew you. We pray for all who have experienced the same. May we learn to treat everyone as having the worth they have in God\u2019s eyes. We pray especially for"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Joseph of Cupertino, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Expanded \u201cSt\u201d to \u201cSaint\u201d for clearer text-to-speech pronunciation.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear Saint Joseph, you suffered because you found it difficult to learn. We pray for all those who struggle at school. May they take comfort from the fact that although learning wasn\u2019t easy for you, this didn\u2019t stop you from becoming a saint. We pray especially for"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Joseph of Cupertino, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Changed \u201cSt.\u201d to \u201cSaint\u201d for clearer text-to-speech, and replaced the exclamation mark with a period for smoother pacing.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear Saint Joseph, you did the best with the intelligence you did have and put the rest in God\u2019s hands. That way you passed all your exams and became a priest. We pray for all those struggling with exams. May we also do our best in everything and trust in God to guide our lives. We pray especially for"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Joseph of Cupertino, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized \u201cSt.\u201d to \u201cSaint\u201d and replaced the exclamation mark with a period for smoother text-to-speech.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear Saint Joseph, even the thought or mention of anything holy made you levitate in ecstasy. Grant us something of the understanding and reverence for God and his saints that you had. We pray especially for"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Joseph of Cupertino, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added periods to the abbreviation \u201cSt.\u201d for consistent text-to-speech pronunciation; otherwise kept wording and structure unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear St. Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear St. Joseph, only when your superior ordered you to, were you able to come back down to earth. May we too have a love for and obedience to the teachings of the Church. We pray especially for"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Joseph of Cupertino, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized punctuation for TTS clarity (added periods to \u201cSt.\u201d and a comma in a list) while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear St. Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear St. Joseph, you were unjustly suspected, confined to your room, and neglected by those charged with looking after you. You accepted all this with humility. We pray for all those unjustly imprisoned, and that we too may have the humility to accept injustice for the love of Christ. We pray especially for"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Joseph of Cupertino, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized punctuation and spelling for smoother text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear St. Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear St. Joseph, because you could levitate, you are the patron of travelers, especially air travelers. We pray for all those traveling, that they may safely reach their destinations. We pray especially for"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Joseph of Cupertino, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Joseph Cupertino Novena - Prayer for Tests and Exams below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Changed \u201cSt\u201d to \u201cSaint\u201d for clearer text-to-speech pronunciation; otherwise kept text and structure the same.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear Saint Joseph of Cupertino, you were an unwanted child and were thought worthless even by your own mother. Intercede for all unwanted children, that they may come to know they were born out of God\u2019s love for them. We pray especially for  Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Joseph of Cupertino, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added periods to the abbreviation \u201cSt.\u201d for consistent text-to-speech pronunciation while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear St. Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear St. Joseph, you were an angry, frustrated child. We pray for all who struggle to express themselves, and that you help us overcome sins of anger. We pray especially for  Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Joseph of Cupertino, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added periods to \u201cSt.\u201d for consistent spoken abbreviation; otherwise kept text unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear St. Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear St. Joseph, you experienced no love in your family and were considered of little account by all who knew you. We pray for all who have experienced the same. May we learn to treat everyone as having the worth they have in God\u2019s eyes. We pray especially for  Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Joseph of Cupertino, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Expanded \u201cSt\u201d to \u201cSaint\u201d for clearer text-to-speech pronunciation.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear Saint Joseph, you suffered because you found it difficult to learn. We pray for all those who struggle at school. May they take comfort from the fact that although learning wasn\u2019t easy for you, this didn\u2019t stop you from becoming a saint. We pray especially for  Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Joseph of Cupertino, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Changed \u201cSt.\u201d to \u201cSaint\u201d for clearer text-to-speech, and replaced the exclamation mark with a period for smoother pacing.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear Saint Joseph, you did the best with the intelligence you did have and put the rest in God\u2019s hands. That way you passed all your exams and became a priest. We pray for all those struggling with exams. May we also do our best in everything and trust in God to guide our lives. We pray especially for  Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Joseph of Cupertino, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized \u201cSt.\u201d to \u201cSaint\u201d and replaced the exclamation mark with a period for smoother text-to-speech.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear Saint Joseph, even the thought or mention of anything holy made you levitate in ecstasy. Grant us something of the understanding and reverence for God and his saints that you had. We pray especially for  Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Joseph of Cupertino, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added periods to the abbreviation \u201cSt.\u201d for consistent text-to-speech pronunciation; otherwise kept wording and structure unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear St. Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear St. Joseph, only when your superior ordered you to, were you able to come back down to earth. May we too have a love for and obedience to the teachings of the Church. We pray especially for  Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Joseph of Cupertino, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized punctuation for TTS clarity (added periods to \u201cSt.\u201d and a comma in a list) while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear St. Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear St. Joseph, you were unjustly suspected, confined to your room, and neglected by those charged with looking after you. You accepted all this with humility. We pray for all those unjustly imprisoned, and that we too may have the humility to accept injustice for the love of Christ. We pray especially for  Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Joseph of Cupertino, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized punctuation and spelling for smoother text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear St. Joseph of Cupertino, who while on earth did obtain from God the grace to be asked at your examination only the questions you knew, obtain for me a like favor in the examinations for which I am now preparing, and in all the trials I face in life. In return I promise to make you known and cause you to be invoked. Through Christ our Lord. Amen. Dear St. Joseph, because you could levitate, you are the patron of travelers, especially air travelers. We pray for all those traveling, that they may safely reach their destinations. We pray especially for  Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Joseph of Cupertino, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_joseph_cupertino"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_joseph_cupertino",
+      "name": "St. Joseph Cupertino"
+    },
+    "type": "novena_feast_rule"
+  }
+}

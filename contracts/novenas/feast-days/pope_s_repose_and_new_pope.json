@@ -1,0 +1,224 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "pope_s_repose_and_new_pope",
+    "feast": {
+      "day": 13,
+      "mode": "fixed",
+      "month": 5,
+      "name": "Pope\u2019s Repose and New Pope"
+    },
+    "id": "pope_s_repose_and_new_pope",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A nine-day prayer for the repose of a deceased pope and for the Holy Spirit to guide the Church in the election of a new pope."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Novena for the Repose of Pope Francis and for the New Pope below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added pacing line breaks, clarified headings and cues for spoken delivery, and normalized the scripture reference for text-to-speech while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "For the soul of Pope Francis, we pray: Eternal rest grant unto him, O Lord, and let perpetual light shine upon him. May his soul and the souls of all the faithful departed, through the mercy of God, rest in peace. Amen. In your hands, O Lord, we humbly entrust our brothers and sisters. In this life you embraced them with your tender love; deliver them now from every evil and bid them eternal rest. The old order has passed away; welcome them into paradise, where there will be no sorrow, no weeping or pain, but the fullness of peace and joy with your Son and the Holy Spirit forever and ever. Amen. Prayer Imploring for Holy Popes Kyrie Eleison! Christe Eleison! Kyrie Eleison! Lord Jesus Christ, You are the Good Shepherd! With Your almighty hand You guide Your pilgrim Church through the storms of each age. Adorn the Holy See with a holy pope who neither fears the powerful of this world nor compromises with the spirit of the age, but preserves, strengthens, and defends the Catholic Faith unto the shedding of their blood, and observes, protects, and hands on the Tradition of the Church. O Lord, give us a holy pope who, inflamed with the zeal of the Apostles, proclaims to the whole world: Salvation is found in no other than in Jesus Christ. For there is no other name under heaven given to men by which they should be saved, see Acts 4:10 through 12. Through an era of holy popes, may the Holy See\u2014which is home to all who promote the Catholic and Apostolic Faith\u2014always shine as the cathedra of truth for the whole world. Hear us, O Lord, and through the intercession of the Immaculate Heart of Mary, Mother of the Church, grant us a holy Pope, grant us many holy Popes! Have mercy on us and hear us! Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Novena for the Repose of Pope Francis and for the New Pope below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added pacing line breaks, clarified headings and cues for spoken delivery, and normalized the scripture reference for text-to-speech while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  For the soul of Pope Francis, we pray: Eternal rest grant unto him, O Lord, and let perpetual light shine upon him. May his soul and the souls of all the faithful departed, through the mercy of God, rest in peace. Amen. In your hands, O Lord, we humbly entrust our brothers and sisters. In this life you embraced them with your tender love; deliver them now from every evil and bid them eternal rest. The old order has passed away; welcome them into paradise, where there will be no sorrow, no weeping or pain, but the fullness of peace and joy with your Son and the Holy Spirit forever and ever. Amen. Prayer Imploring for Holy Popes Kyrie Eleison! Christe Eleison! Kyrie Eleison! Lord Jesus Christ, You are the Good Shepherd! With Your almighty hand You guide Your pilgrim Church through the storms of each age. Adorn the Holy See with a holy pope who neither fears the powerful of this world nor compromises with the spirit of the age, but preserves, strengthens, and defends the Catholic Faith unto the shedding of their blood, and observes, protects, and hands on the Tradition of the Church. O Lord, give us a holy pope who, inflamed with the zeal of the Apostles, proclaims to the whole world: Salvation is found in no other than in Jesus Christ. For there is no other name under heaven given to men by which they should be saved, see Acts 4:10 through 12. Through an era of holy popes, may the Holy See\u2014which is home to all who promote the Catholic and Apostolic Faith\u2014always shine as the cathedra of truth for the whole world. Hear us, O Lord, and through the intercession of the Immaculate Heart of Mary, Mother of the Church, grant us a holy Pope, grant us many holy Popes! Have mercy on us and hear us! Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added pacing line breaks, clarified headings and cues for spoken delivery, and normalized the scripture reference for text-to-speech while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  For the soul of Pope Francis, we pray: Eternal rest grant unto him, O Lord, and let perpetual light shine upon him. May his soul and the souls of all the faithful departed, through the mercy of God, rest in peace. Amen. In your hands, O Lord, we humbly entrust our brothers and sisters. In this life you embraced them with your tender love; deliver them now from every evil and bid them eternal rest. The old order has passed away; welcome them into paradise, where there will be no sorrow, no weeping or pain, but the fullness of peace and joy with your Son and the Holy Spirit forever and ever. Amen. Prayer Imploring for Holy Popes Kyrie Eleison! Christe Eleison! Kyrie Eleison! Lord Jesus Christ, You are the Good Shepherd! With Your almighty hand You guide Your pilgrim Church through the storms of each age. Adorn the Holy See with a holy pope who neither fears the powerful of this world nor compromises with the spirit of the age, but preserves, strengthens, and defends the Catholic Faith unto the shedding of their blood, and observes, protects, and hands on the Tradition of the Church. O Lord, give us a holy pope who, inflamed with the zeal of the Apostles, proclaims to the whole world: Salvation is found in no other than in Jesus Christ. For there is no other name under heaven given to men by which they should be saved, see Acts 4:10 through 12. Through an era of holy popes, may the Holy See\u2014which is home to all who promote the Catholic and Apostolic Faith\u2014always shine as the cathedra of truth for the whole world. Hear us, O Lord, and through the intercession of the Immaculate Heart of Mary, Mother of the Church, grant us a holy Pope, grant us many holy Popes! Have mercy on us and hear us! Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added pacing line breaks, clarified headings and cues for spoken delivery, and normalized the scripture reference for text-to-speech while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  For the soul of Pope Francis, we pray: Eternal rest grant unto him, O Lord, and let perpetual light shine upon him. May his soul and the souls of all the faithful departed, through the mercy of God, rest in peace. Amen. In your hands, O Lord, we humbly entrust our brothers and sisters. In this life you embraced them with your tender love; deliver them now from every evil and bid them eternal rest. The old order has passed away; welcome them into paradise, where there will be no sorrow, no weeping or pain, but the fullness of peace and joy with your Son and the Holy Spirit forever and ever. Amen. Prayer Imploring for Holy Popes Kyrie Eleison! Christe Eleison! Kyrie Eleison! Lord Jesus Christ, You are the Good Shepherd! With Your almighty hand You guide Your pilgrim Church through the storms of each age. Adorn the Holy See with a holy pope who neither fears the powerful of this world nor compromises with the spirit of the age, but preserves, strengthens, and defends the Catholic Faith unto the shedding of their blood, and observes, protects, and hands on the Tradition of the Church. O Lord, give us a holy pope who, inflamed with the zeal of the Apostles, proclaims to the whole world: Salvation is found in no other than in Jesus Christ. For there is no other name under heaven given to men by which they should be saved, see Acts 4:10 through 12. Through an era of holy popes, may the Holy See\u2014which is home to all who promote the Catholic and Apostolic Faith\u2014always shine as the cathedra of truth for the whole world. Hear us, O Lord, and through the intercession of the Immaculate Heart of Mary, Mother of the Church, grant us a holy Pope, grant us many holy Popes! Have mercy on us and hear us! Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added pacing line breaks, clarified headings and cues for spoken delivery, and normalized the scripture reference for text-to-speech while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  For the soul of Pope Francis, we pray: Eternal rest grant unto him, O Lord, and let perpetual light shine upon him. May his soul and the souls of all the faithful departed, through the mercy of God, rest in peace. Amen. In your hands, O Lord, we humbly entrust our brothers and sisters. In this life you embraced them with your tender love; deliver them now from every evil and bid them eternal rest. The old order has passed away; welcome them into paradise, where there will be no sorrow, no weeping or pain, but the fullness of peace and joy with your Son and the Holy Spirit forever and ever. Amen. Prayer Imploring for Holy Popes Kyrie Eleison! Christe Eleison! Kyrie Eleison! Lord Jesus Christ, You are the Good Shepherd! With Your almighty hand You guide Your pilgrim Church through the storms of each age. Adorn the Holy See with a holy pope who neither fears the powerful of this world nor compromises with the spirit of the age, but preserves, strengthens, and defends the Catholic Faith unto the shedding of their blood, and observes, protects, and hands on the Tradition of the Church. O Lord, give us a holy pope who, inflamed with the zeal of the Apostles, proclaims to the whole world: Salvation is found in no other than in Jesus Christ. For there is no other name under heaven given to men by which they should be saved, see Acts 4:10 through 12. Through an era of holy popes, may the Holy See\u2014which is home to all who promote the Catholic and Apostolic Faith\u2014always shine as the cathedra of truth for the whole world. Hear us, O Lord, and through the intercession of the Immaculate Heart of Mary, Mother of the Church, grant us a holy Pope, grant us many holy Popes! Have mercy on us and hear us! Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added pacing line breaks, clarified headings and cues for spoken delivery, and normalized the scripture reference for text-to-speech while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  For the soul of Pope Francis, we pray: Eternal rest grant unto him, O Lord, and let perpetual light shine upon him. May his soul and the souls of all the faithful departed, through the mercy of God, rest in peace. Amen. In your hands, O Lord, we humbly entrust our brothers and sisters. In this life you embraced them with your tender love; deliver them now from every evil and bid them eternal rest. The old order has passed away; welcome them into paradise, where there will be no sorrow, no weeping or pain, but the fullness of peace and joy with your Son and the Holy Spirit forever and ever. Amen. Prayer Imploring for Holy Popes Kyrie Eleison! Christe Eleison! Kyrie Eleison! Lord Jesus Christ, You are the Good Shepherd! With Your almighty hand You guide Your pilgrim Church through the storms of each age. Adorn the Holy See with a holy pope who neither fears the powerful of this world nor compromises with the spirit of the age, but preserves, strengthens, and defends the Catholic Faith unto the shedding of their blood, and observes, protects, and hands on the Tradition of the Church. O Lord, give us a holy pope who, inflamed with the zeal of the Apostles, proclaims to the whole world: Salvation is found in no other than in Jesus Christ. For there is no other name under heaven given to men by which they should be saved, see Acts 4:10 through 12. Through an era of holy popes, may the Holy See\u2014which is home to all who promote the Catholic and Apostolic Faith\u2014always shine as the cathedra of truth for the whole world. Hear us, O Lord, and through the intercession of the Immaculate Heart of Mary, Mother of the Church, grant us a holy Pope, grant us many holy Popes! Have mercy on us and hear us! Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added pacing line breaks, clarified headings and cues for spoken delivery, and normalized the scripture reference for text-to-speech while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  For the soul of Pope Francis, we pray: Eternal rest grant unto him, O Lord, and let perpetual light shine upon him. May his soul and the souls of all the faithful departed, through the mercy of God, rest in peace. Amen. In your hands, O Lord, we humbly entrust our brothers and sisters. In this life you embraced them with your tender love; deliver them now from every evil and bid them eternal rest. The old order has passed away; welcome them into paradise, where there will be no sorrow, no weeping or pain, but the fullness of peace and joy with your Son and the Holy Spirit forever and ever. Amen. Prayer Imploring for Holy Popes Kyrie Eleison! Christe Eleison! Kyrie Eleison! Lord Jesus Christ, You are the Good Shepherd! With Your almighty hand You guide Your pilgrim Church through the storms of each age. Adorn the Holy See with a holy pope who neither fears the powerful of this world nor compromises with the spirit of the age, but preserves, strengthens, and defends the Catholic Faith unto the shedding of their blood, and observes, protects, and hands on the Tradition of the Church. O Lord, give us a holy pope who, inflamed with the zeal of the Apostles, proclaims to the whole world: Salvation is found in no other than in Jesus Christ. For there is no other name under heaven given to men by which they should be saved, see Acts 4:10 through 12. Through an era of holy popes, may the Holy See\u2014which is home to all who promote the Catholic and Apostolic Faith\u2014always shine as the cathedra of truth for the whole world. Hear us, O Lord, and through the intercession of the Immaculate Heart of Mary, Mother of the Church, grant us a holy Pope, grant us many holy Popes! Have mercy on us and hear us! Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added pacing line breaks, clarified headings and cues for spoken delivery, and normalized the scripture reference for text-to-speech while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  For the soul of Pope Francis, we pray: Eternal rest grant unto him, O Lord, and let perpetual light shine upon him. May his soul and the souls of all the faithful departed, through the mercy of God, rest in peace. Amen. In your hands, O Lord, we humbly entrust our brothers and sisters. In this life you embraced them with your tender love; deliver them now from every evil and bid them eternal rest. The old order has passed away; welcome them into paradise, where there will be no sorrow, no weeping or pain, but the fullness of peace and joy with your Son and the Holy Spirit forever and ever. Amen. Prayer Imploring for Holy Popes Kyrie Eleison! Christe Eleison! Kyrie Eleison! Lord Jesus Christ, You are the Good Shepherd! With Your almighty hand You guide Your pilgrim Church through the storms of each age. Adorn the Holy See with a holy pope who neither fears the powerful of this world nor compromises with the spirit of the age, but preserves, strengthens, and defends the Catholic Faith unto the shedding of their blood, and observes, protects, and hands on the Tradition of the Church. O Lord, give us a holy pope who, inflamed with the zeal of the Apostles, proclaims to the whole world: Salvation is found in no other than in Jesus Christ. For there is no other name under heaven given to men by which they should be saved, see Acts 4:10 through 12. Through an era of holy popes, may the Holy See\u2014which is home to all who promote the Catholic and Apostolic Faith\u2014always shine as the cathedra of truth for the whole world. Hear us, O Lord, and through the intercession of the Immaculate Heart of Mary, Mother of the Church, grant us a holy Pope, grant us many holy Popes! Have mercy on us and hear us! Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added pacing line breaks, clarified headings and cues for spoken delivery, and normalized the scripture reference for text-to-speech while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  For the soul of Pope Francis, we pray: Eternal rest grant unto him, O Lord, and let perpetual light shine upon him. May his soul and the souls of all the faithful departed, through the mercy of God, rest in peace. Amen. In your hands, O Lord, we humbly entrust our brothers and sisters. In this life you embraced them with your tender love; deliver them now from every evil and bid them eternal rest. The old order has passed away; welcome them into paradise, where there will be no sorrow, no weeping or pain, but the fullness of peace and joy with your Son and the Holy Spirit forever and ever. Amen. Prayer Imploring for Holy Popes Kyrie Eleison! Christe Eleison! Kyrie Eleison! Lord Jesus Christ, You are the Good Shepherd! With Your almighty hand You guide Your pilgrim Church through the storms of each age. Adorn the Holy See with a holy pope who neither fears the powerful of this world nor compromises with the spirit of the age, but preserves, strengthens, and defends the Catholic Faith unto the shedding of their blood, and observes, protects, and hands on the Tradition of the Church. O Lord, give us a holy pope who, inflamed with the zeal of the Apostles, proclaims to the whole world: Salvation is found in no other than in Jesus Christ. For there is no other name under heaven given to men by which they should be saved, see Acts 4:10 through 12. Through an era of holy popes, may the Holy See\u2014which is home to all who promote the Catholic and Apostolic Faith\u2014always shine as the cathedra of truth for the whole world. Hear us, O Lord, and through the intercession of the Immaculate Heart of Mary, Mother of the Church, grant us a holy Pope, grant us many holy Popes! Have mercy on us and hear us! Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added pacing line breaks, clarified headings and cues for spoken delivery, and normalized the scripture reference for text-to-speech while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.  For the soul of Pope Francis, we pray: Eternal rest grant unto him, O Lord, and let perpetual light shine upon him. May his soul and the souls of all the faithful departed, through the mercy of God, rest in peace. Amen. In your hands, O Lord, we humbly entrust our brothers and sisters. In this life you embraced them with your tender love; deliver them now from every evil and bid them eternal rest. The old order has passed away; welcome them into paradise, where there will be no sorrow, no weeping or pain, but the fullness of peace and joy with your Son and the Holy Spirit forever and ever. Amen. Prayer Imploring for Holy Popes Kyrie Eleison! Christe Eleison! Kyrie Eleison! Lord Jesus Christ, You are the Good Shepherd! With Your almighty hand You guide Your pilgrim Church through the storms of each age. Adorn the Holy See with a holy pope who neither fears the powerful of this world nor compromises with the spirit of the age, but preserves, strengthens, and defends the Catholic Faith unto the shedding of their blood, and observes, protects, and hands on the Tradition of the Church. O Lord, give us a holy pope who, inflamed with the zeal of the Apostles, proclaims to the whole world: Salvation is found in no other than in Jesus Christ. For there is no other name under heaven given to men by which they should be saved, see Acts 4:10 through 12. Through an era of holy popes, may the Holy See\u2014which is home to all who promote the Catholic and Apostolic Faith\u2014always shine as the cathedra of truth for the whole world. Hear us, O Lord, and through the intercession of the Immaculate Heart of Mary, Mother of the Church, grant us a holy Pope, grant us many holy Popes! Have mercy on us and hear us! Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-pope_s_repose_and_new_pope"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "pope_s_repose_and_new_pope",
+      "name": "Pope\u2019s Repose and New Pope"
+    },
+    "type": "novena_feast_rule"
+  }
+}

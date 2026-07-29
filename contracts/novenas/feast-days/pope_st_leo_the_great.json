@@ -1,0 +1,241 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "pope_st_leo_the_great",
+    "feast": {
+      "day": 10,
+      "mode": "fixed",
+      "month": 11,
+      "name": "Pope St Leo the Great"
+    },
+    "id": "pope_st_leo_the_great",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "popes",
+        "theologians",
+        "Church unity"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "Pope St Leo the Great was a 5th-century pope and Doctor of the Church who defended Catholic teaching and strengthened the Church\u2019s unity and pastoral leadership."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Pope St Leo the Great Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, punctuation, and scripture references for clearer text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. to thee, O Jesus, Lion of the Tribe of Judah, that hast raised up in thy Church a Lion to defend her in those dark times, when holy Faith was most exposed to danger. Thou charged Peter with confirming his Brethren, as it is written in Saint Luke, chapter 22, verse 32; and we have seen Leo, in whom Peter lived, fulfill this office with sovereign authority. We have heard the acclamation of the holy Council, which, in admiration at the heavenly teachings of Leo, proclaimed the signal favour thou conferred on thy Flock, when thou commanded Peter to feed both Sheep and Lambs. O holy Pontiff Leo, thou worthily represented Peter in his Chair, whence thy apostolic teaching ceased not to flow, ever beautiful in its truth and majesty. The Church of thine own day honored thee as the great Teacher of Faith; and the Church of every succeeding age has recognized thee as one of the most learned Doctors and preachers of the divine Word. From thy throne in heaven, where now thou reign, pour forth upon us the understanding of the great Mystery which thou was called on to defend. Under thy inspired pen, this mystery grows clear; we see how sublimely it harmonizes with all other mysteries; and Faith delights at gaining so close a view of the divine object of its belief. Oh, strengthen this Faith within us. The Incarnate Word is blasphemed in these our own times; avenge his glory, by sending us men of thy zeal and learning."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Thou triumphed over barbarian invaders: Attila acknowledged the influence of thy sanctity and eloquence, by withdrawing his troops from the Christian land they infested. In these our days, there have risen up new barbarians, civilized barbarians, who would persuade us that religion should be eliminated from Education, and that the State, in its laws and institutions, should simply ignore our Lord Jesus Christ, the King to whom all power has been given, not only in heaven but on Earth also, as it is written in Saint Matthew, chapter 28, verse 18. Oh, help us by thy powerful intercession, for our danger is extreme. Many are seduced, and are apostates whilst flattering themselves that they are still Christians. Pray that the light that is left within us may not be extinguished, and that the public scandals which now exist may be brought to an end. Attila was but a pagan; our modern statesmen and Governments are, or, at least, call themselves, Christians: have pity on them, and gain for them light to see the precipice to which they are hurrying society. These days of Paschal Time must remind thee, O holy Pontiff, of the Easters thou didst once spend, here on earth, when, surrounded by the Neophytes, thou gave them the nourishment of thy magnificent Discourses: pray for the Faithful, who have this Easter, risen to a new life with Christ. What they most stand in need of is a fuller and better knowledge of this their Saviour, in order that they may cling more closely to him, and persevere in his holy service. Thy prayers must get them this knowledge; by thy prayers, thou must teach them what he is both in his Divine and Human Nature: that, as God, He is their Last End, and their Judge after death; as Man, their Brother, their Redeemer, their Model. Bless, O Leo, and help the Pontiff who is now thy successor on the Chair of Peter. Show now thy love for that Rome, whose sacred and eternal destinies were so frequently the subject of thy glowing and heavenly eloquence. We also ask, Saint Leo, that you pray for us in our intention."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Pope Saint Leo the Great, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Pope St Leo the Great Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, punctuation, and scripture references for clearer text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. to thee, O Jesus, Lion of the Tribe of Judah, that hast raised up in thy Church a Lion to defend her in those dark times, when holy Faith was most exposed to danger. Thou charged Peter with confirming his Brethren, as it is written in Saint Luke, chapter 22, verse 32; and we have seen Leo, in whom Peter lived, fulfill this office with sovereign authority. We have heard the acclamation of the holy Council, which, in admiration at the heavenly teachings of Leo, proclaimed the signal favour thou conferred on thy Flock, when thou commanded Peter to feed both Sheep and Lambs. O holy Pontiff Leo, thou worthily represented Peter in his Chair, whence thy apostolic teaching ceased not to flow, ever beautiful in its truth and majesty. The Church of thine own day honored thee as the great Teacher of Faith; and the Church of every succeeding age has recognized thee as one of the most learned Doctors and preachers of the divine Word. From thy throne in heaven, where now thou reign, pour forth upon us the understanding of the great Mystery which thou was called on to defend. Under thy inspired pen, this mystery grows clear; we see how sublimely it harmonizes with all other mysteries; and Faith delights at gaining so close a view of the divine object of its belief. Oh, strengthen this Faith within us. The Incarnate Word is blasphemed in these our own times; avenge his glory, by sending us men of thy zeal and learning.  Thou triumphed over barbarian invaders: Attila acknowledged the influence of thy sanctity and eloquence, by withdrawing his troops from the Christian land they infested. In these our days, there have risen up new barbarians, civilized barbarians, who would persuade us that religion should be eliminated from Education, and that the State, in its laws and institutions, should simply ignore our Lord Jesus Christ, the King to whom all power has been given, not only in heaven but on Earth also, as it is written in Saint Matthew, chapter 28, verse 18. Oh, help us by thy powerful intercession, for our danger is extreme. Many are seduced, and are apostates whilst flattering themselves that they are still Christians. Pray that the light that is left within us may not be extinguished, and that the public scandals which now exist may be brought to an end. Attila was but a pagan; our modern statesmen and Governments are, or, at least, call themselves, Christians: have pity on them, and gain for them light to see the precipice to which they are hurrying society. These days of Paschal Time must remind thee, O holy Pontiff, of the Easters thou didst once spend, here on earth, when, surrounded by the Neophytes, thou gave them the nourishment of thy magnificent Discourses: pray for the Faithful, who have this Easter, risen to a new life with Christ. What they most stand in need of is a fuller and better knowledge of this their Saviour, in order that they may cling more closely to him, and persevere in his holy service. Thy prayers must get them this knowledge; by thy prayers, thou must teach them what he is both in his Divine and Human Nature: that, as God, He is their Last End, and their Judge after death; as Man, their Brother, their Redeemer, their Model. Bless, O Leo, and help the Pontiff who is now thy successor on the Chair of Peter. Show now thy love for that Rome, whose sacred and eternal destinies were so frequently the subject of thy glowing and heavenly eloquence. We also ask, Saint Leo, that you pray for us in our intention.  Pope Saint Leo the Great, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, punctuation, and scripture references for clearer text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. to thee, O Jesus, Lion of the Tribe of Judah, that hast raised up in thy Church a Lion to defend her in those dark times, when holy Faith was most exposed to danger. Thou charged Peter with confirming his Brethren, as it is written in Saint Luke, chapter 22, verse 32; and we have seen Leo, in whom Peter lived, fulfill this office with sovereign authority. We have heard the acclamation of the holy Council, which, in admiration at the heavenly teachings of Leo, proclaimed the signal favour thou conferred on thy Flock, when thou commanded Peter to feed both Sheep and Lambs. O holy Pontiff Leo, thou worthily represented Peter in his Chair, whence thy apostolic teaching ceased not to flow, ever beautiful in its truth and majesty. The Church of thine own day honored thee as the great Teacher of Faith; and the Church of every succeeding age has recognized thee as one of the most learned Doctors and preachers of the divine Word. From thy throne in heaven, where now thou reign, pour forth upon us the understanding of the great Mystery which thou was called on to defend. Under thy inspired pen, this mystery grows clear; we see how sublimely it harmonizes with all other mysteries; and Faith delights at gaining so close a view of the divine object of its belief. Oh, strengthen this Faith within us. The Incarnate Word is blasphemed in these our own times; avenge his glory, by sending us men of thy zeal and learning.  Thou triumphed over barbarian invaders: Attila acknowledged the influence of thy sanctity and eloquence, by withdrawing his troops from the Christian land they infested. In these our days, there have risen up new barbarians, civilized barbarians, who would persuade us that religion should be eliminated from Education, and that the State, in its laws and institutions, should simply ignore our Lord Jesus Christ, the King to whom all power has been given, not only in heaven but on Earth also, as it is written in Saint Matthew, chapter 28, verse 18. Oh, help us by thy powerful intercession, for our danger is extreme. Many are seduced, and are apostates whilst flattering themselves that they are still Christians. Pray that the light that is left within us may not be extinguished, and that the public scandals which now exist may be brought to an end. Attila was but a pagan; our modern statesmen and Governments are, or, at least, call themselves, Christians: have pity on them, and gain for them light to see the precipice to which they are hurrying society. These days of Paschal Time must remind thee, O holy Pontiff, of the Easters thou didst once spend, here on earth, when, surrounded by the Neophytes, thou gave them the nourishment of thy magnificent Discourses: pray for the Faithful, who have this Easter, risen to a new life with Christ. What they most stand in need of is a fuller and better knowledge of this their Saviour, in order that they may cling more closely to him, and persevere in his holy service. Thy prayers must get them this knowledge; by thy prayers, thou must teach them what he is both in his Divine and Human Nature: that, as God, He is their Last End, and their Judge after death; as Man, their Brother, their Redeemer, their Model. Bless, O Leo, and help the Pontiff who is now thy successor on the Chair of Peter. Show now thy love for that Rome, whose sacred and eternal destinies were so frequently the subject of thy glowing and heavenly eloquence. We also ask, Saint Leo, that you pray for us in our intention.  Pope Saint Leo the Great, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, punctuation, and scripture references for clearer text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. to thee, O Jesus, Lion of the Tribe of Judah, that hast raised up in thy Church a Lion to defend her in those dark times, when holy Faith was most exposed to danger. Thou charged Peter with confirming his Brethren, as it is written in Saint Luke, chapter 22, verse 32; and we have seen Leo, in whom Peter lived, fulfill this office with sovereign authority. We have heard the acclamation of the holy Council, which, in admiration at the heavenly teachings of Leo, proclaimed the signal favour thou conferred on thy Flock, when thou commanded Peter to feed both Sheep and Lambs. O holy Pontiff Leo, thou worthily represented Peter in his Chair, whence thy apostolic teaching ceased not to flow, ever beautiful in its truth and majesty. The Church of thine own day honored thee as the great Teacher of Faith; and the Church of every succeeding age has recognized thee as one of the most learned Doctors and preachers of the divine Word. From thy throne in heaven, where now thou reign, pour forth upon us the understanding of the great Mystery which thou was called on to defend. Under thy inspired pen, this mystery grows clear; we see how sublimely it harmonizes with all other mysteries; and Faith delights at gaining so close a view of the divine object of its belief. Oh, strengthen this Faith within us. The Incarnate Word is blasphemed in these our own times; avenge his glory, by sending us men of thy zeal and learning.  Thou triumphed over barbarian invaders: Attila acknowledged the influence of thy sanctity and eloquence, by withdrawing his troops from the Christian land they infested. In these our days, there have risen up new barbarians, civilized barbarians, who would persuade us that religion should be eliminated from Education, and that the State, in its laws and institutions, should simply ignore our Lord Jesus Christ, the King to whom all power has been given, not only in heaven but on Earth also, as it is written in Saint Matthew, chapter 28, verse 18. Oh, help us by thy powerful intercession, for our danger is extreme. Many are seduced, and are apostates whilst flattering themselves that they are still Christians. Pray that the light that is left within us may not be extinguished, and that the public scandals which now exist may be brought to an end. Attila was but a pagan; our modern statesmen and Governments are, or, at least, call themselves, Christians: have pity on them, and gain for them light to see the precipice to which they are hurrying society. These days of Paschal Time must remind thee, O holy Pontiff, of the Easters thou didst once spend, here on earth, when, surrounded by the Neophytes, thou gave them the nourishment of thy magnificent Discourses: pray for the Faithful, who have this Easter, risen to a new life with Christ. What they most stand in need of is a fuller and better knowledge of this their Saviour, in order that they may cling more closely to him, and persevere in his holy service. Thy prayers must get them this knowledge; by thy prayers, thou must teach them what he is both in his Divine and Human Nature: that, as God, He is their Last End, and their Judge after death; as Man, their Brother, their Redeemer, their Model. Bless, O Leo, and help the Pontiff who is now thy successor on the Chair of Peter. Show now thy love for that Rome, whose sacred and eternal destinies were so frequently the subject of thy glowing and heavenly eloquence. We also ask, Saint Leo, that you pray for us in our intention.  Pope Saint Leo the Great, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, punctuation, and scripture references for clearer text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. to thee, O Jesus, Lion of the Tribe of Judah, that hast raised up in thy Church a Lion to defend her in those dark times, when holy Faith was most exposed to danger. Thou charged Peter with confirming his Brethren, as it is written in Saint Luke, chapter 22, verse 32; and we have seen Leo, in whom Peter lived, fulfill this office with sovereign authority. We have heard the acclamation of the holy Council, which, in admiration at the heavenly teachings of Leo, proclaimed the signal favour thou conferred on thy Flock, when thou commanded Peter to feed both Sheep and Lambs. O holy Pontiff Leo, thou worthily represented Peter in his Chair, whence thy apostolic teaching ceased not to flow, ever beautiful in its truth and majesty. The Church of thine own day honored thee as the great Teacher of Faith; and the Church of every succeeding age has recognized thee as one of the most learned Doctors and preachers of the divine Word. From thy throne in heaven, where now thou reign, pour forth upon us the understanding of the great Mystery which thou was called on to defend. Under thy inspired pen, this mystery grows clear; we see how sublimely it harmonizes with all other mysteries; and Faith delights at gaining so close a view of the divine object of its belief. Oh, strengthen this Faith within us. The Incarnate Word is blasphemed in these our own times; avenge his glory, by sending us men of thy zeal and learning.  Thou triumphed over barbarian invaders: Attila acknowledged the influence of thy sanctity and eloquence, by withdrawing his troops from the Christian land they infested. In these our days, there have risen up new barbarians, civilized barbarians, who would persuade us that religion should be eliminated from Education, and that the State, in its laws and institutions, should simply ignore our Lord Jesus Christ, the King to whom all power has been given, not only in heaven but on Earth also, as it is written in Saint Matthew, chapter 28, verse 18. Oh, help us by thy powerful intercession, for our danger is extreme. Many are seduced, and are apostates whilst flattering themselves that they are still Christians. Pray that the light that is left within us may not be extinguished, and that the public scandals which now exist may be brought to an end. Attila was but a pagan; our modern statesmen and Governments are, or, at least, call themselves, Christians: have pity on them, and gain for them light to see the precipice to which they are hurrying society. These days of Paschal Time must remind thee, O holy Pontiff, of the Easters thou didst once spend, here on earth, when, surrounded by the Neophytes, thou gave them the nourishment of thy magnificent Discourses: pray for the Faithful, who have this Easter, risen to a new life with Christ. What they most stand in need of is a fuller and better knowledge of this their Saviour, in order that they may cling more closely to him, and persevere in his holy service. Thy prayers must get them this knowledge; by thy prayers, thou must teach them what he is both in his Divine and Human Nature: that, as God, He is their Last End, and their Judge after death; as Man, their Brother, their Redeemer, their Model. Bless, O Leo, and help the Pontiff who is now thy successor on the Chair of Peter. Show now thy love for that Rome, whose sacred and eternal destinies were so frequently the subject of thy glowing and heavenly eloquence. We also ask, Saint Leo, that you pray for us in our intention.  Pope Saint Leo the Great, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, punctuation, and scripture references for clearer text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. to thee, O Jesus, Lion of the Tribe of Judah, that hast raised up in thy Church a Lion to defend her in those dark times, when holy Faith was most exposed to danger. Thou charged Peter with confirming his Brethren, as it is written in Saint Luke, chapter 22, verse 32; and we have seen Leo, in whom Peter lived, fulfill this office with sovereign authority. We have heard the acclamation of the holy Council, which, in admiration at the heavenly teachings of Leo, proclaimed the signal favour thou conferred on thy Flock, when thou commanded Peter to feed both Sheep and Lambs. O holy Pontiff Leo, thou worthily represented Peter in his Chair, whence thy apostolic teaching ceased not to flow, ever beautiful in its truth and majesty. The Church of thine own day honored thee as the great Teacher of Faith; and the Church of every succeeding age has recognized thee as one of the most learned Doctors and preachers of the divine Word. From thy throne in heaven, where now thou reign, pour forth upon us the understanding of the great Mystery which thou was called on to defend. Under thy inspired pen, this mystery grows clear; we see how sublimely it harmonizes with all other mysteries; and Faith delights at gaining so close a view of the divine object of its belief. Oh, strengthen this Faith within us. The Incarnate Word is blasphemed in these our own times; avenge his glory, by sending us men of thy zeal and learning.  Thou triumphed over barbarian invaders: Attila acknowledged the influence of thy sanctity and eloquence, by withdrawing his troops from the Christian land they infested. In these our days, there have risen up new barbarians, civilized barbarians, who would persuade us that religion should be eliminated from Education, and that the State, in its laws and institutions, should simply ignore our Lord Jesus Christ, the King to whom all power has been given, not only in heaven but on Earth also, as it is written in Saint Matthew, chapter 28, verse 18. Oh, help us by thy powerful intercession, for our danger is extreme. Many are seduced, and are apostates whilst flattering themselves that they are still Christians. Pray that the light that is left within us may not be extinguished, and that the public scandals which now exist may be brought to an end. Attila was but a pagan; our modern statesmen and Governments are, or, at least, call themselves, Christians: have pity on them, and gain for them light to see the precipice to which they are hurrying society. These days of Paschal Time must remind thee, O holy Pontiff, of the Easters thou didst once spend, here on earth, when, surrounded by the Neophytes, thou gave them the nourishment of thy magnificent Discourses: pray for the Faithful, who have this Easter, risen to a new life with Christ. What they most stand in need of is a fuller and better knowledge of this their Saviour, in order that they may cling more closely to him, and persevere in his holy service. Thy prayers must get them this knowledge; by thy prayers, thou must teach them what he is both in his Divine and Human Nature: that, as God, He is their Last End, and their Judge after death; as Man, their Brother, their Redeemer, their Model. Bless, O Leo, and help the Pontiff who is now thy successor on the Chair of Peter. Show now thy love for that Rome, whose sacred and eternal destinies were so frequently the subject of thy glowing and heavenly eloquence. We also ask, Saint Leo, that you pray for us in our intention.  Pope Saint Leo the Great, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, punctuation, and scripture references for clearer text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. to thee, O Jesus, Lion of the Tribe of Judah, that hast raised up in thy Church a Lion to defend her in those dark times, when holy Faith was most exposed to danger. Thou charged Peter with confirming his Brethren, as it is written in Saint Luke, chapter 22, verse 32; and we have seen Leo, in whom Peter lived, fulfill this office with sovereign authority. We have heard the acclamation of the holy Council, which, in admiration at the heavenly teachings of Leo, proclaimed the signal favour thou conferred on thy Flock, when thou commanded Peter to feed both Sheep and Lambs. O holy Pontiff Leo, thou worthily represented Peter in his Chair, whence thy apostolic teaching ceased not to flow, ever beautiful in its truth and majesty. The Church of thine own day honored thee as the great Teacher of Faith; and the Church of every succeeding age has recognized thee as one of the most learned Doctors and preachers of the divine Word. From thy throne in heaven, where now thou reign, pour forth upon us the understanding of the great Mystery which thou was called on to defend. Under thy inspired pen, this mystery grows clear; we see how sublimely it harmonizes with all other mysteries; and Faith delights at gaining so close a view of the divine object of its belief. Oh, strengthen this Faith within us. The Incarnate Word is blasphemed in these our own times; avenge his glory, by sending us men of thy zeal and learning.  Thou triumphed over barbarian invaders: Attila acknowledged the influence of thy sanctity and eloquence, by withdrawing his troops from the Christian land they infested. In these our days, there have risen up new barbarians, civilized barbarians, who would persuade us that religion should be eliminated from Education, and that the State, in its laws and institutions, should simply ignore our Lord Jesus Christ, the King to whom all power has been given, not only in heaven but on Earth also, as it is written in Saint Matthew, chapter 28, verse 18. Oh, help us by thy powerful intercession, for our danger is extreme. Many are seduced, and are apostates whilst flattering themselves that they are still Christians. Pray that the light that is left within us may not be extinguished, and that the public scandals which now exist may be brought to an end. Attila was but a pagan; our modern statesmen and Governments are, or, at least, call themselves, Christians: have pity on them, and gain for them light to see the precipice to which they are hurrying society. These days of Paschal Time must remind thee, O holy Pontiff, of the Easters thou didst once spend, here on earth, when, surrounded by the Neophytes, thou gave them the nourishment of thy magnificent Discourses: pray for the Faithful, who have this Easter, risen to a new life with Christ. What they most stand in need of is a fuller and better knowledge of this their Saviour, in order that they may cling more closely to him, and persevere in his holy service. Thy prayers must get them this knowledge; by thy prayers, thou must teach them what he is both in his Divine and Human Nature: that, as God, He is their Last End, and their Judge after death; as Man, their Brother, their Redeemer, their Model. Bless, O Leo, and help the Pontiff who is now thy successor on the Chair of Peter. Show now thy love for that Rome, whose sacred and eternal destinies were so frequently the subject of thy glowing and heavenly eloquence. We also ask, Saint Leo, that you pray for us in our intention.  Pope Saint Leo the Great, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, punctuation, and scripture references for clearer text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. to thee, O Jesus, Lion of the Tribe of Judah, that hast raised up in thy Church a Lion to defend her in those dark times, when holy Faith was most exposed to danger. Thou charged Peter with confirming his Brethren, as it is written in Saint Luke, chapter 22, verse 32; and we have seen Leo, in whom Peter lived, fulfill this office with sovereign authority. We have heard the acclamation of the holy Council, which, in admiration at the heavenly teachings of Leo, proclaimed the signal favour thou conferred on thy Flock, when thou commanded Peter to feed both Sheep and Lambs. O holy Pontiff Leo, thou worthily represented Peter in his Chair, whence thy apostolic teaching ceased not to flow, ever beautiful in its truth and majesty. The Church of thine own day honored thee as the great Teacher of Faith; and the Church of every succeeding age has recognized thee as one of the most learned Doctors and preachers of the divine Word. From thy throne in heaven, where now thou reign, pour forth upon us the understanding of the great Mystery which thou was called on to defend. Under thy inspired pen, this mystery grows clear; we see how sublimely it harmonizes with all other mysteries; and Faith delights at gaining so close a view of the divine object of its belief. Oh, strengthen this Faith within us. The Incarnate Word is blasphemed in these our own times; avenge his glory, by sending us men of thy zeal and learning.  Thou triumphed over barbarian invaders: Attila acknowledged the influence of thy sanctity and eloquence, by withdrawing his troops from the Christian land they infested. In these our days, there have risen up new barbarians, civilized barbarians, who would persuade us that religion should be eliminated from Education, and that the State, in its laws and institutions, should simply ignore our Lord Jesus Christ, the King to whom all power has been given, not only in heaven but on Earth also, as it is written in Saint Matthew, chapter 28, verse 18. Oh, help us by thy powerful intercession, for our danger is extreme. Many are seduced, and are apostates whilst flattering themselves that they are still Christians. Pray that the light that is left within us may not be extinguished, and that the public scandals which now exist may be brought to an end. Attila was but a pagan; our modern statesmen and Governments are, or, at least, call themselves, Christians: have pity on them, and gain for them light to see the precipice to which they are hurrying society. These days of Paschal Time must remind thee, O holy Pontiff, of the Easters thou didst once spend, here on earth, when, surrounded by the Neophytes, thou gave them the nourishment of thy magnificent Discourses: pray for the Faithful, who have this Easter, risen to a new life with Christ. What they most stand in need of is a fuller and better knowledge of this their Saviour, in order that they may cling more closely to him, and persevere in his holy service. Thy prayers must get them this knowledge; by thy prayers, thou must teach them what he is both in his Divine and Human Nature: that, as God, He is their Last End, and their Judge after death; as Man, their Brother, their Redeemer, their Model. Bless, O Leo, and help the Pontiff who is now thy successor on the Chair of Peter. Show now thy love for that Rome, whose sacred and eternal destinies were so frequently the subject of thy glowing and heavenly eloquence. We also ask, Saint Leo, that you pray for us in our intention.  Pope Saint Leo the Great, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, punctuation, and scripture references for clearer text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. to thee, O Jesus, Lion of the Tribe of Judah, that hast raised up in thy Church a Lion to defend her in those dark times, when holy Faith was most exposed to danger. Thou charged Peter with confirming his Brethren, as it is written in Saint Luke, chapter 22, verse 32; and we have seen Leo, in whom Peter lived, fulfill this office with sovereign authority. We have heard the acclamation of the holy Council, which, in admiration at the heavenly teachings of Leo, proclaimed the signal favour thou conferred on thy Flock, when thou commanded Peter to feed both Sheep and Lambs. O holy Pontiff Leo, thou worthily represented Peter in his Chair, whence thy apostolic teaching ceased not to flow, ever beautiful in its truth and majesty. The Church of thine own day honored thee as the great Teacher of Faith; and the Church of every succeeding age has recognized thee as one of the most learned Doctors and preachers of the divine Word. From thy throne in heaven, where now thou reign, pour forth upon us the understanding of the great Mystery which thou was called on to defend. Under thy inspired pen, this mystery grows clear; we see how sublimely it harmonizes with all other mysteries; and Faith delights at gaining so close a view of the divine object of its belief. Oh, strengthen this Faith within us. The Incarnate Word is blasphemed in these our own times; avenge his glory, by sending us men of thy zeal and learning.  Thou triumphed over barbarian invaders: Attila acknowledged the influence of thy sanctity and eloquence, by withdrawing his troops from the Christian land they infested. In these our days, there have risen up new barbarians, civilized barbarians, who would persuade us that religion should be eliminated from Education, and that the State, in its laws and institutions, should simply ignore our Lord Jesus Christ, the King to whom all power has been given, not only in heaven but on Earth also, as it is written in Saint Matthew, chapter 28, verse 18. Oh, help us by thy powerful intercession, for our danger is extreme. Many are seduced, and are apostates whilst flattering themselves that they are still Christians. Pray that the light that is left within us may not be extinguished, and that the public scandals which now exist may be brought to an end. Attila was but a pagan; our modern statesmen and Governments are, or, at least, call themselves, Christians: have pity on them, and gain for them light to see the precipice to which they are hurrying society. These days of Paschal Time must remind thee, O holy Pontiff, of the Easters thou didst once spend, here on earth, when, surrounded by the Neophytes, thou gave them the nourishment of thy magnificent Discourses: pray for the Faithful, who have this Easter, risen to a new life with Christ. What they most stand in need of is a fuller and better knowledge of this their Saviour, in order that they may cling more closely to him, and persevere in his holy service. Thy prayers must get them this knowledge; by thy prayers, thou must teach them what he is both in his Divine and Human Nature: that, as God, He is their Last End, and their Judge after death; as Man, their Brother, their Redeemer, their Model. Bless, O Leo, and help the Pontiff who is now thy successor on the Chair of Peter. Show now thy love for that Rome, whose sacred and eternal destinies were so frequently the subject of thy glowing and heavenly eloquence. We also ask, Saint Leo, that you pray for us in our intention.  Pope Saint Leo the Great, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, punctuation, and scripture references for clearer text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. to thee, O Jesus, Lion of the Tribe of Judah, that hast raised up in thy Church a Lion to defend her in those dark times, when holy Faith was most exposed to danger. Thou charged Peter with confirming his Brethren, as it is written in Saint Luke, chapter 22, verse 32; and we have seen Leo, in whom Peter lived, fulfill this office with sovereign authority. We have heard the acclamation of the holy Council, which, in admiration at the heavenly teachings of Leo, proclaimed the signal favour thou conferred on thy Flock, when thou commanded Peter to feed both Sheep and Lambs. O holy Pontiff Leo, thou worthily represented Peter in his Chair, whence thy apostolic teaching ceased not to flow, ever beautiful in its truth and majesty. The Church of thine own day honored thee as the great Teacher of Faith; and the Church of every succeeding age has recognized thee as one of the most learned Doctors and preachers of the divine Word. From thy throne in heaven, where now thou reign, pour forth upon us the understanding of the great Mystery which thou was called on to defend. Under thy inspired pen, this mystery grows clear; we see how sublimely it harmonizes with all other mysteries; and Faith delights at gaining so close a view of the divine object of its belief. Oh, strengthen this Faith within us. The Incarnate Word is blasphemed in these our own times; avenge his glory, by sending us men of thy zeal and learning.  Thou triumphed over barbarian invaders: Attila acknowledged the influence of thy sanctity and eloquence, by withdrawing his troops from the Christian land they infested. In these our days, there have risen up new barbarians, civilized barbarians, who would persuade us that religion should be eliminated from Education, and that the State, in its laws and institutions, should simply ignore our Lord Jesus Christ, the King to whom all power has been given, not only in heaven but on Earth also, as it is written in Saint Matthew, chapter 28, verse 18. Oh, help us by thy powerful intercession, for our danger is extreme. Many are seduced, and are apostates whilst flattering themselves that they are still Christians. Pray that the light that is left within us may not be extinguished, and that the public scandals which now exist may be brought to an end. Attila was but a pagan; our modern statesmen and Governments are, or, at least, call themselves, Christians: have pity on them, and gain for them light to see the precipice to which they are hurrying society. These days of Paschal Time must remind thee, O holy Pontiff, of the Easters thou didst once spend, here on earth, when, surrounded by the Neophytes, thou gave them the nourishment of thy magnificent Discourses: pray for the Faithful, who have this Easter, risen to a new life with Christ. What they most stand in need of is a fuller and better knowledge of this their Saviour, in order that they may cling more closely to him, and persevere in his holy service. Thy prayers must get them this knowledge; by thy prayers, thou must teach them what he is both in his Divine and Human Nature: that, as God, He is their Last End, and their Judge after death; as Man, their Brother, their Redeemer, their Model. Bless, O Leo, and help the Pontiff who is now thy successor on the Chair of Peter. Show now thy love for that Rome, whose sacred and eternal destinies were so frequently the subject of thy glowing and heavenly eloquence. We also ask, Saint Leo, that you pray for us in our intention.  Pope Saint Leo the Great, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-pope_st_leo_the_great"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "pope_st_leo_the_great",
+      "name": "Pope St Leo the Great"
+    },
+    "type": "novena_feast_rule"
+  }
+}

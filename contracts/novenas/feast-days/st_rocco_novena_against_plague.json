@@ -9,6 +9,20 @@
       "name": "St. Rocco Novena Against Plague"
     },
     "id": "st_rocco_novena_against_plague",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "plague",
+        "infectious disease",
+        "the sick"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A nine-day prayer to St. Rocco, asking his intercession for protection from plague and contagious disease and for healing and mercy for the sick."
+    },
     "novena": {
       "content_mode": "fixed",
       "duration_days": 9,
@@ -19,8 +33,7 @@
             "key": "introduction",
             "kind": "fixed",
             "text": "You can pray the full St Rocco Novena Against Plagues below.",
-            "title": "Introduction",
-            "parts": []
+            "title": "Introduction"
           },
           {
             "days": [
@@ -36,32 +49,27 @@
             ],
             "key": "days-1-9",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "title": "Days 1-9",
+            "notes": "Standardized \u201cSt.\u201d to \u201cSaint,\u201d corrected \u201cthou has\u201d to \u201cthou hast,\u201d and made the threefold repetition instruction clearer for speaking.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou has merited by thy virtues."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou hast merited by thy virtues."
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Saint Rocco, pray for us.",
-                "repeat": 3
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Saint Rocco, pray for us. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Days 1-9"
           }
         ],
         "sections": [
@@ -77,8 +85,8 @@
             ],
             "key": "day-1",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou has merited by thy virtues.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Standardized \u201cSt.\u201d to \u201cSaint,\u201d corrected \u201cthou has\u201d to \u201cthou hast,\u201d and made the threefold repetition instruction clearer for speaking.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou hast merited by thy virtues.  Saint Rocco, pray for us. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 1"
           },
           {
@@ -87,8 +95,8 @@
             ],
             "key": "day-2",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou has merited by thy virtues.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Standardized \u201cSt.\u201d to \u201cSaint,\u201d corrected \u201cthou has\u201d to \u201cthou hast,\u201d and made the threefold repetition instruction clearer for speaking.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou hast merited by thy virtues.  Saint Rocco, pray for us. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 2"
           },
           {
@@ -97,8 +105,8 @@
             ],
             "key": "day-3",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou has merited by thy virtues.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Standardized \u201cSt.\u201d to \u201cSaint,\u201d corrected \u201cthou has\u201d to \u201cthou hast,\u201d and made the threefold repetition instruction clearer for speaking.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou hast merited by thy virtues.  Saint Rocco, pray for us. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 3"
           },
           {
@@ -107,8 +115,8 @@
             ],
             "key": "day-4",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou has merited by thy virtues.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Standardized \u201cSt.\u201d to \u201cSaint,\u201d corrected \u201cthou has\u201d to \u201cthou hast,\u201d and made the threefold repetition instruction clearer for speaking.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou hast merited by thy virtues.  Saint Rocco, pray for us. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 4"
           },
           {
@@ -117,8 +125,8 @@
             ],
             "key": "day-5",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou has merited by thy virtues.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Standardized \u201cSt.\u201d to \u201cSaint,\u201d corrected \u201cthou has\u201d to \u201cthou hast,\u201d and made the threefold repetition instruction clearer for speaking.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou hast merited by thy virtues.  Saint Rocco, pray for us. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 5"
           },
           {
@@ -127,8 +135,8 @@
             ],
             "key": "day-6",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou has merited by thy virtues.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Standardized \u201cSt.\u201d to \u201cSaint,\u201d corrected \u201cthou has\u201d to \u201cthou hast,\u201d and made the threefold repetition instruction clearer for speaking.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou hast merited by thy virtues.  Saint Rocco, pray for us. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 6"
           },
           {
@@ -137,8 +145,8 @@
             ],
             "key": "day-7",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou has merited by thy virtues.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Standardized \u201cSt.\u201d to \u201cSaint,\u201d corrected \u201cthou has\u201d to \u201cthou hast,\u201d and made the threefold repetition instruction clearer for speaking.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou hast merited by thy virtues.  Saint Rocco, pray for us. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 7"
           },
           {
@@ -147,8 +155,8 @@
             ],
             "key": "day-8",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou has merited by thy virtues.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Standardized \u201cSt.\u201d to \u201cSaint,\u201d corrected \u201cthou has\u201d to \u201cthou hast,\u201d and made the threefold repetition instruction clearer for speaking.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou hast merited by thy virtues.  Saint Rocco, pray for us. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 8"
           },
           {
@@ -157,8 +165,8 @@
             ],
             "key": "day-9",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou has merited by thy virtues.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nSaint Rocco, pray for us.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Standardized \u201cSt.\u201d to \u201cSaint,\u201d corrected \u201cthou has\u201d to \u201cthou hast,\u201d and made the threefold repetition instruction clearer for speaking.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Great Saint Rocco, deliver us, we beseech thee, from contagious diseases. Through thy intercession, preserve our bodies from illness, and our souls from the contagion of sin. Obtain for us salubrious air, but, above all, purity of heart. Assist us to make good use of health, to bear suffering with patience, and, after thy example, to live in the practice of penance and charity, that we may one day enjoy the happiness which thou hast merited by thy virtues.  Saint Rocco, pray for us. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 9"
           }
         ],
@@ -169,7 +177,38 @@
       "audio": {
         "enabled": true,
         "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
         "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
         "speed": 1.0,
         "voice": "ash"
       },

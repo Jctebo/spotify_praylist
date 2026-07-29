@@ -1,0 +1,444 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_katharine_drexel",
+    "feast": {
+      "day": 3,
+      "mode": "fixed",
+      "month": 3,
+      "name": "St. Katharine Drexel"
+    },
+    "id": "st_katharine_drexel",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "racial justice",
+        "philanthropists",
+        "Native Americans"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Katharine Drexel was an American heiress who became a Catholic religious sister and founded the Sisters of the Blessed Sacrament to serve Black and Native American communities."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Katharine Drexel Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the dash before the saint attribution and normalized \u201cSt\u201d to \u201cSaint\u201d for clearer text-to-speech.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "The Eucharist is a never-ending sacrifice. It is the Sacrament of love, the supreme love, the act of love. Help me each moment today and always to communicate myself to You by doing Your will. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized punctuation for smoother text-to-speech and replaced the dash attribution with a spoken attribution while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "I looked up in wonder at God\u2019s wonderful ways and thought how little we imagine what may be the result of listening and acting on a desire He puts into the heart. Nourish before Him great desires. May our desire be to bring Him hearts, for all are His by right, having been purchased by every drop of His blood. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted the saint quote attribution and minor punctuation for smoother text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Peacefully do at each moment what at that moment ought to be done. If we do what each moment requires, we will eventually complete God\u2019s plan, whatever it is. We can trust God to take care of the master plan when we take care of the details. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized the quote punctuation and attribution for smoother text-to-speech while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Kindness is the natural fruit of goodness of heart. He, Jesus, loved every human being as the image of God, and so all that came within range of His benevolence were treated kindly for God\u2019s sake and their own. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the dash before the saint attribution and normalized \u201cSt\u201d to \u201cSaint\u201d for consistent text-to-speech.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Often in my desire to work for others I find my hands tied, something hinders my charitable designs, some hostile influence renders me powerless. My prayers seem to avail nothing, my kind acts are rejected, I seem to do the wrong thing when I am trying to do my best. In such cases I must not grieve. I am only treading in my Master\u2019s steps. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed parenthetical attribution, adjusted punctuation and capitalization for smoother text-to-speech, and normalized the saint invocation while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Christ may be leading me out to a cross. If so, I can have no hesitation about following Him. I must follow Him closely, so that I shall be near Him, my good Shepherd, who will help me to carry it, for He still bears His Cross in each one of His children. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation for text-to-speech by removing the dash before the attribution, spelling out \u201cSaint,\u201d and replacing the exclamation point with a period.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Teach me, O my dear Mother, the lesson of sacrifice. Help me, Mother, to take from the hands of Jesus, in the spirit of humble love, devotion to my daily crosses. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the dash and quotation attribution punctuation for smoother text-to-speech, and normalized \u201cSt\u201d to \u201cSaint\u201d in the spoken invocation.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Out of our common todays and yesterdays we are building for eternity. No thought, no work of ours ever dies. We shall meet them all again, and in the world to come shall find our gathered harvest. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Made minor text-to-speech edits: adjusted capitalization and hyphenation, added quotation punctuation, and standardized \u201cSt\u201d to \u201cSaint\u201d without changing the canonical prayers or structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever-loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of your Church, that we may be one in you. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with you and the Holy Spirit, one God, for ever and ever. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "\u201cThe active life, to be productive, must have contemplation. When it, contemplation, gets to a certain height, it overflows to active life and gets help and strength from the heart of God. This is the way the saints produced so much fruit, and we\u2019re all called to be saints.\u201d Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Katharine Drexel Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the dash before the saint attribution and normalized \u201cSt\u201d to \u201cSaint\u201d for clearer text-to-speech.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen.  The Eucharist is a never-ending sacrifice. It is the Sacrament of love, the supreme love, the act of love. Help me each moment today and always to communicate myself to You by doing Your will. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Standardized punctuation for smoother text-to-speech and replaced the dash attribution with a spoken attribution while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen.  I looked up in wonder at God\u2019s wonderful ways and thought how little we imagine what may be the result of listening and acting on a desire He puts into the heart. Nourish before Him great desires. May our desire be to bring Him hearts, for all are His by right, having been purchased by every drop of His blood. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted the saint quote attribution and minor punctuation for smoother text-to-speech while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen.  Peacefully do at each moment what at that moment ought to be done. If we do what each moment requires, we will eventually complete God\u2019s plan, whatever it is. We can trust God to take care of the master plan when we take care of the details. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized the quote punctuation and attribution for smoother text-to-speech while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen.  Kindness is the natural fruit of goodness of heart. He, Jesus, loved every human being as the image of God, and so all that came within range of His benevolence were treated kindly for God\u2019s sake and their own. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the dash before the saint attribution and normalized \u201cSt\u201d to \u201cSaint\u201d for consistent text-to-speech.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen.  Often in my desire to work for others I find my hands tied, something hinders my charitable designs, some hostile influence renders me powerless. My prayers seem to avail nothing, my kind acts are rejected, I seem to do the wrong thing when I am trying to do my best. In such cases I must not grieve. I am only treading in my Master\u2019s steps. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed parenthetical attribution, adjusted punctuation and capitalization for smoother text-to-speech, and normalized the saint invocation while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen.  Christ may be leading me out to a cross. If so, I can have no hesitation about following Him. I must follow Him closely, so that I shall be near Him, my good Shepherd, who will help me to carry it, for He still bears His Cross in each one of His children. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation for text-to-speech by removing the dash before the attribution, spelling out \u201cSaint,\u201d and replacing the exclamation point with a period.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen.  Teach me, O my dear Mother, the lesson of sacrifice. Help me, Mother, to take from the hands of Jesus, in the spirit of humble love, devotion to my daily crosses. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the dash and quotation attribution punctuation for smoother text-to-speech, and normalized \u201cSt\u201d to \u201cSaint\u201d in the spoken invocation.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of Your Church, that we may be one in You. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with You and the Holy Spirit, one God, for ever and ever. Amen.  Out of our common todays and yesterdays we are building for eternity. No thought, no work of ours ever dies. We shall meet them all again, and in the world to come shall find our gathered harvest. Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Made minor text-to-speech edits: adjusted capitalization and hyphenation, added quotation punctuation, and standardized \u201cSt\u201d to \u201cSaint\u201d without changing the canonical prayers or structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever-loving God, you called Saint Katharine Drexel to teach the message of the Gospel and to bring the life of the Eucharist to the Black and Native American peoples. Her prayers and example enable us to work for justice among the poor and oppressed. Draw us all into the Eucharistic community of your Church, that we may be one in you. Grant this through our Lord Jesus Christ, your Son, who lives and reigns with you and the Holy Spirit, one God, for ever and ever. Amen.  \u201cThe active life, to be productive, must have contemplation. When it, contemplation, gets to a certain height, it overflows to active life and gets help and strength from the heart of God. This is the way the saints produced so much fruit, and we\u2019re all called to be saints.\u201d Saint Katharine Drexel. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Katharine Drexel, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_katharine_drexel"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_katharine_drexel",
+      "name": "St. Katharine Drexel"
+    },
+    "type": "novena_feast_rule"
+  }
+}

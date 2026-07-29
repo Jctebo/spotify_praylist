@@ -1,0 +1,444 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_thomas_aquinas",
+    "feast": {
+      "day": 28,
+      "mode": "fixed",
+      "month": 1,
+      "name": "St. Thomas Aquinas"
+    },
+    "id": "st_thomas_aquinas",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "students",
+        "universities",
+        "theologians"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Thomas Aquinas was a Dominican priest and theologian whose writings shaped Catholic doctrine and the study of philosophy and theology."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Thomas Aquinas Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "Normalized capitalization of divine pronouns and expanded \u201cSt.\u201d to \u201cSaint\u201d for clearer text-to-speech.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge He bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As Saint Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "God Himself is the rule and mode of virtue. Our faith is measured by divine truth, our hope by the greatness of His power and faithful affection, our charity by His goodness. His truth, power, and goodness outreach any measure of reason. We can certainly never believe, trust, or love God more than, or even as much as, we should. Extravagance is impossible. Here is no virtuous moderation, no measurable mean; the more extreme our activity, the better we are. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of Your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born, an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations, and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks and minor punctuation for clearer text-to-speech pacing while keeping wording faithful.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. St. Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge he bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As St. Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Even though the natural light of the human mind is inadequate to make known what is revealed by faith, nevertheless what is divinely taught to us by faith cannot be contrary to what we are endowed with by nature. One or the other would have to be false, and since we have both of them from God, he would be the cause of our error, which is impossible. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born, an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations, and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "Made minor TTS-friendly normalization by expanding \u201cSt.\u201d to \u201cSaint,\u201d adding pacing paragraph breaks, and adjusting punctuation without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge he bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As Saint Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "God loves his creatures, and he loves each one the more, the more it shares his own goodness, which is the first and primary object of his love. Therefore he wants the desires of his rational creatures to be fulfilled, because they share most perfectly, of all creatures, the goodness of God. And his will is an accomplisher of things, because he is the cause of things by his will. So it belongs to the divine goodness to fulfill the desires of rational creatures which are put to him in prayer. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born: an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations, and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "Adjusted capitalization of divine pronouns and added paragraph breaks for clearer text-to-speech pacing while keeping wording faithful.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge He bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As Saint Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Many cry to the Lord that they may win riches, that they may avoid losses; they cry that their family may be established; they ask for temporal happiness, for worldly dignities; and, lastly, they cry for bodily health, which is the patrimony of the poor. For these and suchlike things many cry to the Lord; hardly one cries for the Lord Himself. How easy it is for a man to desire all manner of things from the Lord, and yet not desire the Lord Himself. As though the gift could be sweeter than the Giver. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of Your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born: an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations, and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks and added a few commas for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. St. Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge he bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As St. Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "The world tempts us either by attaching us to it in prosperity, or by filling us with fear of adversity. But faith overcomes this in that we believe in a life to come better than this one, and hence we despise the riches of this world, and we are not terrified in the face of adversity. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born, an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations, and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "Split long paragraphs for clearer pacing and changed \u201cSt.\u201d to \u201cSaint\u201d for smoother text-to-speech.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. St. Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge he bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As Saint Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Virgin full of goodness, Mother of mercy, I entrust to you my body and my soul, my thoughts and my actions, my life and my death. My Queen, come to my aid and deliver me from the snares of the devil. Obtain for me the grace of loving my Lord Jesus Christ, your Son, with a true and perfect love, and after him, Mary, of loving you with all my heart and above all things. Amen. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born, an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "Split several long paragraphs for clearer text-to-speech pacing and standardized \u201cSt.\u201d to \u201cSaint,\u201d while preserving wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge He bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As Saint Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Fear is such a powerful emotion for humans that when we allow it to take us over, it drives compassion right out of our hearts. We must love them both, those whose opinions we share and those whose opinions we reject, for both have labored in the search for truth, and both have helped us in finding it. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of Your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born, an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "No normalization needed; text kept nearly unchanged for clear text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. St. Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge he bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As St. Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "To one who has faith, no explanation is necessary. To one without faith, no explanation is possible. We can\u2019t have full knowledge all at once. We must start by believing; then afterwards we may be led on to master the evidence for ourselves. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born, an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "Made minor punctuation adjustments for smoother text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. St. Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge he bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As St. Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Suppose a person entering a house were to feel heat on the porch, and going further, were to feel the heat increasing, the more they penetrated within. Doubtless, such a person would believe there was a fire in the house, even though they did not see the fire that must be causing all this heat. A similar thing will happen to anyone who considers this world in detail: one will observe that all things are arranged according to their degrees of beauty and excellence, and that the nearer they are to God, the more beautiful and better they are. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born, an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations, and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Thomas Aquinas Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Normalized capitalization of divine pronouns and expanded \u201cSt.\u201d to \u201cSaint\u201d for clearer text-to-speech.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge He bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As Saint Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena.  God Himself is the rule and mode of virtue. Our faith is measured by divine truth, our hope by the greatness of His power and faithful affection, our charity by His goodness. His truth, power, and goodness outreach any measure of reason. We can certainly never believe, trust, or love God more than, or even as much as, we should. Extravagance is impossible. Here is no virtuous moderation, no measurable mean; the more extreme our activity, the better we are. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of Your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born, an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations, and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks and minor punctuation for clearer text-to-speech pacing while keeping wording faithful.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. St. Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge he bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As St. Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena.  Even though the natural light of the human mind is inadequate to make known what is revealed by faith, nevertheless what is divinely taught to us by faith cannot be contrary to what we are endowed with by nature. One or the other would have to be false, and since we have both of them from God, he would be the cause of our error, which is impossible. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born, an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations, and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Made minor TTS-friendly normalization by expanding \u201cSt.\u201d to \u201cSaint,\u201d adding pacing paragraph breaks, and adjusting punctuation without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge he bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As Saint Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena.  God loves his creatures, and he loves each one the more, the more it shares his own goodness, which is the first and primary object of his love. Therefore he wants the desires of his rational creatures to be fulfilled, because they share most perfectly, of all creatures, the goodness of God. And his will is an accomplisher of things, because he is the cause of things by his will. So it belongs to the divine goodness to fulfill the desires of rational creatures which are put to him in prayer. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born: an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations, and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Adjusted capitalization of divine pronouns and added paragraph breaks for clearer text-to-speech pacing while keeping wording faithful.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge He bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As Saint Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena.  Many cry to the Lord that they may win riches, that they may avoid losses; they cry that their family may be established; they ask for temporal happiness, for worldly dignities; and, lastly, they cry for bodily health, which is the patrimony of the poor. For these and suchlike things many cry to the Lord; hardly one cries for the Lord Himself. How easy it is for a man to desire all manner of things from the Lord, and yet not desire the Lord Himself. As though the gift could be sweeter than the Giver. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of Your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born: an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations, and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks and added a few commas for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. St. Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge he bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As St. Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena.  The world tempts us either by attaching us to it in prosperity, or by filling us with fear of adversity. But faith overcomes this in that we believe in a life to come better than this one, and hence we despise the riches of this world, and we are not terrified in the face of adversity. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born, an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations, and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Split long paragraphs for clearer pacing and changed \u201cSt.\u201d to \u201cSaint\u201d for smoother text-to-speech.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. St. Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge he bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As Saint Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena.  Virgin full of goodness, Mother of mercy, I entrust to you my body and my soul, my thoughts and my actions, my life and my death. My Queen, come to my aid and deliver me from the snares of the devil. Obtain for me the grace of loving my Lord Jesus Christ, your Son, with a true and perfect love, and after him, Mary, of loving you with all my heart and above all things. Amen. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born, an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Split several long paragraphs for clearer text-to-speech pacing and standardized \u201cSt.\u201d to \u201cSaint,\u201d while preserving wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge He bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As Saint Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena.  Fear is such a powerful emotion for humans that when we allow it to take us over, it drives compassion right out of our hearts. We must love them both, those whose opinions we share and those whose opinions we reject, for both have labored in the search for truth, and both have helped us in finding it. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of Your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born, an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "No normalization needed; text kept nearly unchanged for clear text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. St. Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge he bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As St. Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena.  To one who has faith, no explanation is necessary. To one without faith, no explanation is possible. We can\u2019t have full knowledge all at once. We must start by believing; then afterwards we may be led on to master the evidence for ourselves. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born, an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Made minor punctuation adjustments for smoother text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. St. Thomas Aquinas, patron of students and Catholic schools, I thank God for the gifts of light and knowledge he bestowed on you, which you used to build up the Church in love. I thank God, too, for the wealth and richness of theological teaching you left in your writings. Not only were you a great teacher, you lived a life of virtue, and you made holiness the desire of your heart. If I cannot imitate you in the brilliance of your academic pursuits, I can follow you in the humility and charity which marked your life. As St. Paul said, charity is the greatest gift, and it is open to all. Pray for me that I might grow in holiness and charity. Pray also for Catholic schools, and for all students. In particular, please obtain the favor I ask during this novena.  Suppose a person entering a house were to feel heat on the porch, and going further, were to feel the heat increasing, the more they penetrated within. Doubtless, such a person would believe there was a fire in the house, even though they did not see the fire that must be causing all this heat. A similar thing will happen to anyone who considers this world in detail: one will observe that all things are arranged according to their degrees of beauty and excellence, and that the nearer they are to God, the more beautiful and better they are. Creator of all things, true source of light and wisdom, origin of all being, graciously let a ray of your light penetrate the darkness of my understanding. Take from me the double darkness in which I have been born, an obscurity of sin and ignorance. Give me a keen understanding, a retentive memory, and the ability to grasp things correctly and fundamentally. Grant me the talent of being exact in my explanations, and the ability to express myself with thoroughness and charm. Point out the beginning, direct the progress, and help in the completion. I ask this through Jesus Christ our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_thomas_aquinas"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_thomas_aquinas",
+      "name": "St. Thomas Aquinas"
+    },
+    "type": "novena_feast_rule"
+  }
+}

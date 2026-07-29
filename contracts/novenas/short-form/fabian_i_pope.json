@@ -1,0 +1,78 @@
+{
+  "contract": {
+    "feast": {
+      "mode": "romcal_id",
+      "name": "Saint Fabian, Pope and Martyr",
+      "romcal_id": "fabian_i_pope"
+    },
+    "id": "fabian_i_pope",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "Popes",
+        "Catholic Church administrators"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "Saint Fabian was Pope of Rome and a martyr, remembered for guiding the Church and dying for the faith during persecution."
+    },
+    "novena": {
+      "ai_config": {
+        "intro_prompt": "Welcome the listener to the named day of this standard short-form novena. Briefly identify the calendar saint or sacred celebration and, for a saint, name a well-known patronage only when you are confident. Then connect this novena to the selected daily calendar focus in one prayerful sentence.",
+        "theme_prompt": "Create a 9-day saint-life outline for {saint_name}. Return nine distinct daily focus lines, each rooted in a different stage or witness of the saint's life, so the arc moves from call and formation through prayer, trial, charity, fidelity, hidden sacrifice, hope, and final perseverance."
+      },
+      "content_mode": "hybrid",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template_id": "standard-9-day"
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Short-Form Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "fabian_i_pope",
+      "name": "Saint Fabian, Pope and Martyr"
+    },
+    "type": "novena_feast_rule"
+  }
+}

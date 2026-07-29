@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_agnes",
+    "feast": {
+      "day": 21,
+      "mode": "fixed",
+      "month": 1,
+      "name": "St. Agnes"
+    },
+    "id": "st_agnes",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "chastity",
+        "young girls",
+        "rape survivors"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Agnes was a young Roman Christian martyr honored for her steadfast faith and purity, celebrated on her feast day."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Agnes Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Split the long prayer into shorter paragraphs and added light commas for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Agnes, by the living faith which animated thee from thy tender years, and rendered thee so pleasing to God that thou did merit a martyr\u2019s crown: obtain for us the grace to keep our holy faith pure within us, and to profess ourselves Christians in both word and work. May our open confession of Jesus before men cause Him to bear a favorable witness to us before His eternal Father. O invincible Martyr, St. Agnes, by thy confidence in God\u2019s help, when being condemned by the Roman prefect to see the lily of thy purity stained and trampled in the mud, thou did not despair, still trusting firmly in God. We beseech thee, by thine intercession, to obtain for us from Almighty God the forgiveness of our sins, and sure confidence that He will bestow upon us life everlasting, and the means necessary to merit it. O courageous maiden, St. Agnes most pure, by the burning love with which thy heart was on fire, and which preserved thee from harm in the midst of the flames of passion, and of the stake with which the enemies of Christ sought to destroy thee. Obtain for us from Almighty God that every unclean flame may be extinguished in us, and only the fire of Divine Love may burn within us. So that after spending a blameless life in practice of this virtue, we may be worthy to have a share in the glory thou did merit by the purity of thy heart and thy glorious martyrdom."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. St. Agnes, virgin and martyr, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Agnes Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Split the long prayer into shorter paragraphs and added light commas for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Agnes, by the living faith which animated thee from thy tender years, and rendered thee so pleasing to God that thou did merit a martyr\u2019s crown: obtain for us the grace to keep our holy faith pure within us, and to profess ourselves Christians in both word and work. May our open confession of Jesus before men cause Him to bear a favorable witness to us before His eternal Father. O invincible Martyr, St. Agnes, by thy confidence in God\u2019s help, when being condemned by the Roman prefect to see the lily of thy purity stained and trampled in the mud, thou did not despair, still trusting firmly in God. We beseech thee, by thine intercession, to obtain for us from Almighty God the forgiveness of our sins, and sure confidence that He will bestow upon us life everlasting, and the means necessary to merit it. O courageous maiden, St. Agnes most pure, by the burning love with which thy heart was on fire, and which preserved thee from harm in the midst of the flames of passion, and of the stake with which the enemies of Christ sought to destroy thee. Obtain for us from Almighty God that every unclean flame may be extinguished in us, and only the fire of Divine Love may burn within us. So that after spending a blameless life in practice of this virtue, we may be worthy to have a share in the glory thou did merit by the purity of thy heart and thy glorious martyrdom.  Amen. St. Agnes, virgin and martyr, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Split the long prayer into shorter paragraphs and added light commas for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Agnes, by the living faith which animated thee from thy tender years, and rendered thee so pleasing to God that thou did merit a martyr\u2019s crown: obtain for us the grace to keep our holy faith pure within us, and to profess ourselves Christians in both word and work. May our open confession of Jesus before men cause Him to bear a favorable witness to us before His eternal Father. O invincible Martyr, St. Agnes, by thy confidence in God\u2019s help, when being condemned by the Roman prefect to see the lily of thy purity stained and trampled in the mud, thou did not despair, still trusting firmly in God. We beseech thee, by thine intercession, to obtain for us from Almighty God the forgiveness of our sins, and sure confidence that He will bestow upon us life everlasting, and the means necessary to merit it. O courageous maiden, St. Agnes most pure, by the burning love with which thy heart was on fire, and which preserved thee from harm in the midst of the flames of passion, and of the stake with which the enemies of Christ sought to destroy thee. Obtain for us from Almighty God that every unclean flame may be extinguished in us, and only the fire of Divine Love may burn within us. So that after spending a blameless life in practice of this virtue, we may be worthy to have a share in the glory thou did merit by the purity of thy heart and thy glorious martyrdom.  Amen. St. Agnes, virgin and martyr, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Split the long prayer into shorter paragraphs and added light commas for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Agnes, by the living faith which animated thee from thy tender years, and rendered thee so pleasing to God that thou did merit a martyr\u2019s crown: obtain for us the grace to keep our holy faith pure within us, and to profess ourselves Christians in both word and work. May our open confession of Jesus before men cause Him to bear a favorable witness to us before His eternal Father. O invincible Martyr, St. Agnes, by thy confidence in God\u2019s help, when being condemned by the Roman prefect to see the lily of thy purity stained and trampled in the mud, thou did not despair, still trusting firmly in God. We beseech thee, by thine intercession, to obtain for us from Almighty God the forgiveness of our sins, and sure confidence that He will bestow upon us life everlasting, and the means necessary to merit it. O courageous maiden, St. Agnes most pure, by the burning love with which thy heart was on fire, and which preserved thee from harm in the midst of the flames of passion, and of the stake with which the enemies of Christ sought to destroy thee. Obtain for us from Almighty God that every unclean flame may be extinguished in us, and only the fire of Divine Love may burn within us. So that after spending a blameless life in practice of this virtue, we may be worthy to have a share in the glory thou did merit by the purity of thy heart and thy glorious martyrdom.  Amen. St. Agnes, virgin and martyr, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Split the long prayer into shorter paragraphs and added light commas for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Agnes, by the living faith which animated thee from thy tender years, and rendered thee so pleasing to God that thou did merit a martyr\u2019s crown: obtain for us the grace to keep our holy faith pure within us, and to profess ourselves Christians in both word and work. May our open confession of Jesus before men cause Him to bear a favorable witness to us before His eternal Father. O invincible Martyr, St. Agnes, by thy confidence in God\u2019s help, when being condemned by the Roman prefect to see the lily of thy purity stained and trampled in the mud, thou did not despair, still trusting firmly in God. We beseech thee, by thine intercession, to obtain for us from Almighty God the forgiveness of our sins, and sure confidence that He will bestow upon us life everlasting, and the means necessary to merit it. O courageous maiden, St. Agnes most pure, by the burning love with which thy heart was on fire, and which preserved thee from harm in the midst of the flames of passion, and of the stake with which the enemies of Christ sought to destroy thee. Obtain for us from Almighty God that every unclean flame may be extinguished in us, and only the fire of Divine Love may burn within us. So that after spending a blameless life in practice of this virtue, we may be worthy to have a share in the glory thou did merit by the purity of thy heart and thy glorious martyrdom.  Amen. St. Agnes, virgin and martyr, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Split the long prayer into shorter paragraphs and added light commas for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Agnes, by the living faith which animated thee from thy tender years, and rendered thee so pleasing to God that thou did merit a martyr\u2019s crown: obtain for us the grace to keep our holy faith pure within us, and to profess ourselves Christians in both word and work. May our open confession of Jesus before men cause Him to bear a favorable witness to us before His eternal Father. O invincible Martyr, St. Agnes, by thy confidence in God\u2019s help, when being condemned by the Roman prefect to see the lily of thy purity stained and trampled in the mud, thou did not despair, still trusting firmly in God. We beseech thee, by thine intercession, to obtain for us from Almighty God the forgiveness of our sins, and sure confidence that He will bestow upon us life everlasting, and the means necessary to merit it. O courageous maiden, St. Agnes most pure, by the burning love with which thy heart was on fire, and which preserved thee from harm in the midst of the flames of passion, and of the stake with which the enemies of Christ sought to destroy thee. Obtain for us from Almighty God that every unclean flame may be extinguished in us, and only the fire of Divine Love may burn within us. So that after spending a blameless life in practice of this virtue, we may be worthy to have a share in the glory thou did merit by the purity of thy heart and thy glorious martyrdom.  Amen. St. Agnes, virgin and martyr, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Split the long prayer into shorter paragraphs and added light commas for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Agnes, by the living faith which animated thee from thy tender years, and rendered thee so pleasing to God that thou did merit a martyr\u2019s crown: obtain for us the grace to keep our holy faith pure within us, and to profess ourselves Christians in both word and work. May our open confession of Jesus before men cause Him to bear a favorable witness to us before His eternal Father. O invincible Martyr, St. Agnes, by thy confidence in God\u2019s help, when being condemned by the Roman prefect to see the lily of thy purity stained and trampled in the mud, thou did not despair, still trusting firmly in God. We beseech thee, by thine intercession, to obtain for us from Almighty God the forgiveness of our sins, and sure confidence that He will bestow upon us life everlasting, and the means necessary to merit it. O courageous maiden, St. Agnes most pure, by the burning love with which thy heart was on fire, and which preserved thee from harm in the midst of the flames of passion, and of the stake with which the enemies of Christ sought to destroy thee. Obtain for us from Almighty God that every unclean flame may be extinguished in us, and only the fire of Divine Love may burn within us. So that after spending a blameless life in practice of this virtue, we may be worthy to have a share in the glory thou did merit by the purity of thy heart and thy glorious martyrdom.  Amen. St. Agnes, virgin and martyr, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Split the long prayer into shorter paragraphs and added light commas for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Agnes, by the living faith which animated thee from thy tender years, and rendered thee so pleasing to God that thou did merit a martyr\u2019s crown: obtain for us the grace to keep our holy faith pure within us, and to profess ourselves Christians in both word and work. May our open confession of Jesus before men cause Him to bear a favorable witness to us before His eternal Father. O invincible Martyr, St. Agnes, by thy confidence in God\u2019s help, when being condemned by the Roman prefect to see the lily of thy purity stained and trampled in the mud, thou did not despair, still trusting firmly in God. We beseech thee, by thine intercession, to obtain for us from Almighty God the forgiveness of our sins, and sure confidence that He will bestow upon us life everlasting, and the means necessary to merit it. O courageous maiden, St. Agnes most pure, by the burning love with which thy heart was on fire, and which preserved thee from harm in the midst of the flames of passion, and of the stake with which the enemies of Christ sought to destroy thee. Obtain for us from Almighty God that every unclean flame may be extinguished in us, and only the fire of Divine Love may burn within us. So that after spending a blameless life in practice of this virtue, we may be worthy to have a share in the glory thou did merit by the purity of thy heart and thy glorious martyrdom.  Amen. St. Agnes, virgin and martyr, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Split the long prayer into shorter paragraphs and added light commas for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Agnes, by the living faith which animated thee from thy tender years, and rendered thee so pleasing to God that thou did merit a martyr\u2019s crown: obtain for us the grace to keep our holy faith pure within us, and to profess ourselves Christians in both word and work. May our open confession of Jesus before men cause Him to bear a favorable witness to us before His eternal Father. O invincible Martyr, St. Agnes, by thy confidence in God\u2019s help, when being condemned by the Roman prefect to see the lily of thy purity stained and trampled in the mud, thou did not despair, still trusting firmly in God. We beseech thee, by thine intercession, to obtain for us from Almighty God the forgiveness of our sins, and sure confidence that He will bestow upon us life everlasting, and the means necessary to merit it. O courageous maiden, St. Agnes most pure, by the burning love with which thy heart was on fire, and which preserved thee from harm in the midst of the flames of passion, and of the stake with which the enemies of Christ sought to destroy thee. Obtain for us from Almighty God that every unclean flame may be extinguished in us, and only the fire of Divine Love may burn within us. So that after spending a blameless life in practice of this virtue, we may be worthy to have a share in the glory thou did merit by the purity of thy heart and thy glorious martyrdom.  Amen. St. Agnes, virgin and martyr, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Split the long prayer into shorter paragraphs and added light commas for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O glorious St. Agnes, by the living faith which animated thee from thy tender years, and rendered thee so pleasing to God that thou did merit a martyr\u2019s crown: obtain for us the grace to keep our holy faith pure within us, and to profess ourselves Christians in both word and work. May our open confession of Jesus before men cause Him to bear a favorable witness to us before His eternal Father. O invincible Martyr, St. Agnes, by thy confidence in God\u2019s help, when being condemned by the Roman prefect to see the lily of thy purity stained and trampled in the mud, thou did not despair, still trusting firmly in God. We beseech thee, by thine intercession, to obtain for us from Almighty God the forgiveness of our sins, and sure confidence that He will bestow upon us life everlasting, and the means necessary to merit it. O courageous maiden, St. Agnes most pure, by the burning love with which thy heart was on fire, and which preserved thee from harm in the midst of the flames of passion, and of the stake with which the enemies of Christ sought to destroy thee. Obtain for us from Almighty God that every unclean flame may be extinguished in us, and only the fire of Divine Love may burn within us. So that after spending a blameless life in practice of this virtue, we may be worthy to have a share in the glory thou did merit by the purity of thy heart and thy glorious martyrdom.  Amen. St. Agnes, virgin and martyr, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_agnes"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_agnes",
+      "name": "St. Agnes"
+    },
+    "type": "novena_feast_rule"
+  }
+}

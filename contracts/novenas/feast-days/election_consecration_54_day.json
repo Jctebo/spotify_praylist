@@ -1,0 +1,224 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "election_consecration_54_day",
+    "feast": {
+      "day": 5,
+      "mode": "fixed",
+      "month": 11,
+      "name": "Election Consecration 54 Day"
+    },
+    "id": "election_consecration_54_day",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A 54-day novena of consecutive rosaries offered for guidance and integrity in elections, ending with a consecration prayer for the nation and its leaders."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Consecration of the Election to the Blessed Virgin Mary Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and corrected \u201cwilst\u201d to \u201cwilt.\u201d; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Mary Immaculate, living tabernacle of the Divinity, where the eternal Wisdom lies hidden to be adored and served by angels and men, Queen of heaven and of earth, beneath whose sway are subject all things that are lower than God, Patroness of the United States of America, sorrowful and mindful of our own sinfulness and the sins of our nation, we come to Thee, our refuge and hope. Knowing that our country cannot be saved by our own works, and mindful of how much our nation has departed from the ways of Thy Son, we humbly ask that Thou wouldst turn Thine eyes upon our country to bring about its conversion. We consecrate to Thee the integrity of the upcoming election and its outcome, so that what is spiritually and morally best for the citizens of our country may be accomplished, and that all of those who are elected would govern according to the spiritual and moral principles which will bring our nation into conformity with the teachings of Thy Son."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Give grace to the citizens of this land so that they will choose leaders according to the Sacred Heart of Thy Son, that His glory may be made manifest, lest we be given the leaders we deserve. Trusting in the providential care of God the Father and Thy maternal care, we have perfect confidence that Thou wilt take care of us and will not leave us forsaken. O Mary Immaculate, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Consecration of the Election to the Blessed Virgin Mary Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and corrected \u201cwilst\u201d to \u201cwilt.\u201d; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Mary Immaculate, living tabernacle of the Divinity, where the eternal Wisdom lies hidden to be adored and served by angels and men, Queen of heaven and of earth, beneath whose sway are subject all things that are lower than God, Patroness of the United States of America, sorrowful and mindful of our own sinfulness and the sins of our nation, we come to Thee, our refuge and hope. Knowing that our country cannot be saved by our own works, and mindful of how much our nation has departed from the ways of Thy Son, we humbly ask that Thou wouldst turn Thine eyes upon our country to bring about its conversion. We consecrate to Thee the integrity of the upcoming election and its outcome, so that what is spiritually and morally best for the citizens of our country may be accomplished, and that all of those who are elected would govern according to the spiritual and moral principles which will bring our nation into conformity with the teachings of Thy Son.  Give grace to the citizens of this land so that they will choose leaders according to the Sacred Heart of Thy Son, that His glory may be made manifest, lest we be given the leaders we deserve. Trusting in the providential care of God the Father and Thy maternal care, we have perfect confidence that Thou wilt take care of us and will not leave us forsaken. O Mary Immaculate, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and corrected \u201cwilst\u201d to \u201cwilt.\u201d; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Mary Immaculate, living tabernacle of the Divinity, where the eternal Wisdom lies hidden to be adored and served by angels and men, Queen of heaven and of earth, beneath whose sway are subject all things that are lower than God, Patroness of the United States of America, sorrowful and mindful of our own sinfulness and the sins of our nation, we come to Thee, our refuge and hope. Knowing that our country cannot be saved by our own works, and mindful of how much our nation has departed from the ways of Thy Son, we humbly ask that Thou wouldst turn Thine eyes upon our country to bring about its conversion. We consecrate to Thee the integrity of the upcoming election and its outcome, so that what is spiritually and morally best for the citizens of our country may be accomplished, and that all of those who are elected would govern according to the spiritual and moral principles which will bring our nation into conformity with the teachings of Thy Son.  Give grace to the citizens of this land so that they will choose leaders according to the Sacred Heart of Thy Son, that His glory may be made manifest, lest we be given the leaders we deserve. Trusting in the providential care of God the Father and Thy maternal care, we have perfect confidence that Thou wilt take care of us and will not leave us forsaken. O Mary Immaculate, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and corrected \u201cwilst\u201d to \u201cwilt.\u201d; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Mary Immaculate, living tabernacle of the Divinity, where the eternal Wisdom lies hidden to be adored and served by angels and men, Queen of heaven and of earth, beneath whose sway are subject all things that are lower than God, Patroness of the United States of America, sorrowful and mindful of our own sinfulness and the sins of our nation, we come to Thee, our refuge and hope. Knowing that our country cannot be saved by our own works, and mindful of how much our nation has departed from the ways of Thy Son, we humbly ask that Thou wouldst turn Thine eyes upon our country to bring about its conversion. We consecrate to Thee the integrity of the upcoming election and its outcome, so that what is spiritually and morally best for the citizens of our country may be accomplished, and that all of those who are elected would govern according to the spiritual and moral principles which will bring our nation into conformity with the teachings of Thy Son.  Give grace to the citizens of this land so that they will choose leaders according to the Sacred Heart of Thy Son, that His glory may be made manifest, lest we be given the leaders we deserve. Trusting in the providential care of God the Father and Thy maternal care, we have perfect confidence that Thou wilt take care of us and will not leave us forsaken. O Mary Immaculate, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and corrected \u201cwilst\u201d to \u201cwilt.\u201d; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Mary Immaculate, living tabernacle of the Divinity, where the eternal Wisdom lies hidden to be adored and served by angels and men, Queen of heaven and of earth, beneath whose sway are subject all things that are lower than God, Patroness of the United States of America, sorrowful and mindful of our own sinfulness and the sins of our nation, we come to Thee, our refuge and hope. Knowing that our country cannot be saved by our own works, and mindful of how much our nation has departed from the ways of Thy Son, we humbly ask that Thou wouldst turn Thine eyes upon our country to bring about its conversion. We consecrate to Thee the integrity of the upcoming election and its outcome, so that what is spiritually and morally best for the citizens of our country may be accomplished, and that all of those who are elected would govern according to the spiritual and moral principles which will bring our nation into conformity with the teachings of Thy Son.  Give grace to the citizens of this land so that they will choose leaders according to the Sacred Heart of Thy Son, that His glory may be made manifest, lest we be given the leaders we deserve. Trusting in the providential care of God the Father and Thy maternal care, we have perfect confidence that Thou wilt take care of us and will not leave us forsaken. O Mary Immaculate, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and corrected \u201cwilst\u201d to \u201cwilt.\u201d; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Mary Immaculate, living tabernacle of the Divinity, where the eternal Wisdom lies hidden to be adored and served by angels and men, Queen of heaven and of earth, beneath whose sway are subject all things that are lower than God, Patroness of the United States of America, sorrowful and mindful of our own sinfulness and the sins of our nation, we come to Thee, our refuge and hope. Knowing that our country cannot be saved by our own works, and mindful of how much our nation has departed from the ways of Thy Son, we humbly ask that Thou wouldst turn Thine eyes upon our country to bring about its conversion. We consecrate to Thee the integrity of the upcoming election and its outcome, so that what is spiritually and morally best for the citizens of our country may be accomplished, and that all of those who are elected would govern according to the spiritual and moral principles which will bring our nation into conformity with the teachings of Thy Son.  Give grace to the citizens of this land so that they will choose leaders according to the Sacred Heart of Thy Son, that His glory may be made manifest, lest we be given the leaders we deserve. Trusting in the providential care of God the Father and Thy maternal care, we have perfect confidence that Thou wilt take care of us and will not leave us forsaken. O Mary Immaculate, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and corrected \u201cwilst\u201d to \u201cwilt.\u201d; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Mary Immaculate, living tabernacle of the Divinity, where the eternal Wisdom lies hidden to be adored and served by angels and men, Queen of heaven and of earth, beneath whose sway are subject all things that are lower than God, Patroness of the United States of America, sorrowful and mindful of our own sinfulness and the sins of our nation, we come to Thee, our refuge and hope. Knowing that our country cannot be saved by our own works, and mindful of how much our nation has departed from the ways of Thy Son, we humbly ask that Thou wouldst turn Thine eyes upon our country to bring about its conversion. We consecrate to Thee the integrity of the upcoming election and its outcome, so that what is spiritually and morally best for the citizens of our country may be accomplished, and that all of those who are elected would govern according to the spiritual and moral principles which will bring our nation into conformity with the teachings of Thy Son.  Give grace to the citizens of this land so that they will choose leaders according to the Sacred Heart of Thy Son, that His glory may be made manifest, lest we be given the leaders we deserve. Trusting in the providential care of God the Father and Thy maternal care, we have perfect confidence that Thou wilt take care of us and will not leave us forsaken. O Mary Immaculate, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and corrected \u201cwilst\u201d to \u201cwilt.\u201d; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Mary Immaculate, living tabernacle of the Divinity, where the eternal Wisdom lies hidden to be adored and served by angels and men, Queen of heaven and of earth, beneath whose sway are subject all things that are lower than God, Patroness of the United States of America, sorrowful and mindful of our own sinfulness and the sins of our nation, we come to Thee, our refuge and hope. Knowing that our country cannot be saved by our own works, and mindful of how much our nation has departed from the ways of Thy Son, we humbly ask that Thou wouldst turn Thine eyes upon our country to bring about its conversion. We consecrate to Thee the integrity of the upcoming election and its outcome, so that what is spiritually and morally best for the citizens of our country may be accomplished, and that all of those who are elected would govern according to the spiritual and moral principles which will bring our nation into conformity with the teachings of Thy Son.  Give grace to the citizens of this land so that they will choose leaders according to the Sacred Heart of Thy Son, that His glory may be made manifest, lest we be given the leaders we deserve. Trusting in the providential care of God the Father and Thy maternal care, we have perfect confidence that Thou wilt take care of us and will not leave us forsaken. O Mary Immaculate, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and corrected \u201cwilst\u201d to \u201cwilt.\u201d; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Mary Immaculate, living tabernacle of the Divinity, where the eternal Wisdom lies hidden to be adored and served by angels and men, Queen of heaven and of earth, beneath whose sway are subject all things that are lower than God, Patroness of the United States of America, sorrowful and mindful of our own sinfulness and the sins of our nation, we come to Thee, our refuge and hope. Knowing that our country cannot be saved by our own works, and mindful of how much our nation has departed from the ways of Thy Son, we humbly ask that Thou wouldst turn Thine eyes upon our country to bring about its conversion. We consecrate to Thee the integrity of the upcoming election and its outcome, so that what is spiritually and morally best for the citizens of our country may be accomplished, and that all of those who are elected would govern according to the spiritual and moral principles which will bring our nation into conformity with the teachings of Thy Son.  Give grace to the citizens of this land so that they will choose leaders according to the Sacred Heart of Thy Son, that His glory may be made manifest, lest we be given the leaders we deserve. Trusting in the providential care of God the Father and Thy maternal care, we have perfect confidence that Thou wilt take care of us and will not leave us forsaken. O Mary Immaculate, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and corrected \u201cwilst\u201d to \u201cwilt.\u201d; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Mary Immaculate, living tabernacle of the Divinity, where the eternal Wisdom lies hidden to be adored and served by angels and men, Queen of heaven and of earth, beneath whose sway are subject all things that are lower than God, Patroness of the United States of America, sorrowful and mindful of our own sinfulness and the sins of our nation, we come to Thee, our refuge and hope. Knowing that our country cannot be saved by our own works, and mindful of how much our nation has departed from the ways of Thy Son, we humbly ask that Thou wouldst turn Thine eyes upon our country to bring about its conversion. We consecrate to Thee the integrity of the upcoming election and its outcome, so that what is spiritually and morally best for the citizens of our country may be accomplished, and that all of those who are elected would govern according to the spiritual and moral principles which will bring our nation into conformity with the teachings of Thy Son.  Give grace to the citizens of this land so that they will choose leaders according to the Sacred Heart of Thy Son, that His glory may be made manifest, lest we be given the leaders we deserve. Trusting in the providential care of God the Father and Thy maternal care, we have perfect confidence that Thou wilt take care of us and will not leave us forsaken. O Mary Immaculate, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-election_consecration_54_day"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "election_consecration_54_day",
+      "name": "Election Consecration 54 Day"
+    },
+    "type": "novena_feast_rule"
+  }
+}

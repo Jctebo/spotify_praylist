@@ -1,0 +1,224 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "all_saints",
+    "feast": {
+      "day": 1,
+      "mode": "fixed",
+      "month": 11,
+      "name": "All Saints"
+    },
+    "id": "all_saints",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "All Saints honors all the saints in heaven, known and unknown, celebrating their witness and inviting the faithful to seek holiness."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full All Saints Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and paragraph breaks adjusted for clearer text-to-speech pacing; canonical prayers and the personal-intention marker preserved verbatim.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. My heavenly brothers and sisters, from those most renowned to those of greatest obscurity, I come before you now in all humility, and commend myself, and all who are dear to me, to your intercession. Pray for us always, that we may awake each day with a burning desire for the Lord whose Face you behold; that we will maintain an intimate personal relationship with Jesus, our Savior and Head; and that we will not hesitate to proclaim God\u2019s greatness to others, and love them as the Lord loves us. As you offer your continual praise before the throne of God, I raise my heart to you now, to implore your powerful intercession for these intentions:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "I am confident that your prayers on our behalf will be graciously heard by our loving and merciful Lord. By his grace, may we someday join you in the glory of the Father\u2019s house. O Blessed Saints of Paradise, the glorious Citizens of Heaven, as I render most humble thanks to God for all the good He has done you, so I ask you to remember me in your prayers, and obtain for me the entire remission of my sins, the amendment of my life, and imitation of your good spirit and holy graces, that I may be perfectly reconciled to my Savior, and always please Him. But especially I recommend to you the hour of my death, that by your holy intercession my soul may depart this world in the grace of God, and immediately come to Life Everlasting. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. All you holy men and women, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full All Saints Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and paragraph breaks adjusted for clearer text-to-speech pacing; canonical prayers and the personal-intention marker preserved verbatim.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. My heavenly brothers and sisters, from those most renowned to those of greatest obscurity, I come before you now in all humility, and commend myself, and all who are dear to me, to your intercession. Pray for us always, that we may awake each day with a burning desire for the Lord whose Face you behold; that we will maintain an intimate personal relationship with Jesus, our Savior and Head; and that we will not hesitate to proclaim God\u2019s greatness to others, and love them as the Lord loves us. As you offer your continual praise before the throne of God, I raise my heart to you now, to implore your powerful intercession for these intentions:  I am confident that your prayers on our behalf will be graciously heard by our loving and merciful Lord. By his grace, may we someday join you in the glory of the Father\u2019s house. O Blessed Saints of Paradise, the glorious Citizens of Heaven, as I render most humble thanks to God for all the good He has done you, so I ask you to remember me in your prayers, and obtain for me the entire remission of my sins, the amendment of my life, and imitation of your good spirit and holy graces, that I may be perfectly reconciled to my Savior, and always please Him. But especially I recommend to you the hour of my death, that by your holy intercession my soul may depart this world in the grace of God, and immediately come to Life Everlasting. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. All you holy men and women, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and paragraph breaks adjusted for clearer text-to-speech pacing; canonical prayers and the personal-intention marker preserved verbatim.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. My heavenly brothers and sisters, from those most renowned to those of greatest obscurity, I come before you now in all humility, and commend myself, and all who are dear to me, to your intercession. Pray for us always, that we may awake each day with a burning desire for the Lord whose Face you behold; that we will maintain an intimate personal relationship with Jesus, our Savior and Head; and that we will not hesitate to proclaim God\u2019s greatness to others, and love them as the Lord loves us. As you offer your continual praise before the throne of God, I raise my heart to you now, to implore your powerful intercession for these intentions:  I am confident that your prayers on our behalf will be graciously heard by our loving and merciful Lord. By his grace, may we someday join you in the glory of the Father\u2019s house. O Blessed Saints of Paradise, the glorious Citizens of Heaven, as I render most humble thanks to God for all the good He has done you, so I ask you to remember me in your prayers, and obtain for me the entire remission of my sins, the amendment of my life, and imitation of your good spirit and holy graces, that I may be perfectly reconciled to my Savior, and always please Him. But especially I recommend to you the hour of my death, that by your holy intercession my soul may depart this world in the grace of God, and immediately come to Life Everlasting. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. All you holy men and women, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and paragraph breaks adjusted for clearer text-to-speech pacing; canonical prayers and the personal-intention marker preserved verbatim.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. My heavenly brothers and sisters, from those most renowned to those of greatest obscurity, I come before you now in all humility, and commend myself, and all who are dear to me, to your intercession. Pray for us always, that we may awake each day with a burning desire for the Lord whose Face you behold; that we will maintain an intimate personal relationship with Jesus, our Savior and Head; and that we will not hesitate to proclaim God\u2019s greatness to others, and love them as the Lord loves us. As you offer your continual praise before the throne of God, I raise my heart to you now, to implore your powerful intercession for these intentions:  I am confident that your prayers on our behalf will be graciously heard by our loving and merciful Lord. By his grace, may we someday join you in the glory of the Father\u2019s house. O Blessed Saints of Paradise, the glorious Citizens of Heaven, as I render most humble thanks to God for all the good He has done you, so I ask you to remember me in your prayers, and obtain for me the entire remission of my sins, the amendment of my life, and imitation of your good spirit and holy graces, that I may be perfectly reconciled to my Savior, and always please Him. But especially I recommend to you the hour of my death, that by your holy intercession my soul may depart this world in the grace of God, and immediately come to Life Everlasting. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. All you holy men and women, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and paragraph breaks adjusted for clearer text-to-speech pacing; canonical prayers and the personal-intention marker preserved verbatim.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. My heavenly brothers and sisters, from those most renowned to those of greatest obscurity, I come before you now in all humility, and commend myself, and all who are dear to me, to your intercession. Pray for us always, that we may awake each day with a burning desire for the Lord whose Face you behold; that we will maintain an intimate personal relationship with Jesus, our Savior and Head; and that we will not hesitate to proclaim God\u2019s greatness to others, and love them as the Lord loves us. As you offer your continual praise before the throne of God, I raise my heart to you now, to implore your powerful intercession for these intentions:  I am confident that your prayers on our behalf will be graciously heard by our loving and merciful Lord. By his grace, may we someday join you in the glory of the Father\u2019s house. O Blessed Saints of Paradise, the glorious Citizens of Heaven, as I render most humble thanks to God for all the good He has done you, so I ask you to remember me in your prayers, and obtain for me the entire remission of my sins, the amendment of my life, and imitation of your good spirit and holy graces, that I may be perfectly reconciled to my Savior, and always please Him. But especially I recommend to you the hour of my death, that by your holy intercession my soul may depart this world in the grace of God, and immediately come to Life Everlasting. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. All you holy men and women, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and paragraph breaks adjusted for clearer text-to-speech pacing; canonical prayers and the personal-intention marker preserved verbatim.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. My heavenly brothers and sisters, from those most renowned to those of greatest obscurity, I come before you now in all humility, and commend myself, and all who are dear to me, to your intercession. Pray for us always, that we may awake each day with a burning desire for the Lord whose Face you behold; that we will maintain an intimate personal relationship with Jesus, our Savior and Head; and that we will not hesitate to proclaim God\u2019s greatness to others, and love them as the Lord loves us. As you offer your continual praise before the throne of God, I raise my heart to you now, to implore your powerful intercession for these intentions:  I am confident that your prayers on our behalf will be graciously heard by our loving and merciful Lord. By his grace, may we someday join you in the glory of the Father\u2019s house. O Blessed Saints of Paradise, the glorious Citizens of Heaven, as I render most humble thanks to God for all the good He has done you, so I ask you to remember me in your prayers, and obtain for me the entire remission of my sins, the amendment of my life, and imitation of your good spirit and holy graces, that I may be perfectly reconciled to my Savior, and always please Him. But especially I recommend to you the hour of my death, that by your holy intercession my soul may depart this world in the grace of God, and immediately come to Life Everlasting. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. All you holy men and women, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and paragraph breaks adjusted for clearer text-to-speech pacing; canonical prayers and the personal-intention marker preserved verbatim.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. My heavenly brothers and sisters, from those most renowned to those of greatest obscurity, I come before you now in all humility, and commend myself, and all who are dear to me, to your intercession. Pray for us always, that we may awake each day with a burning desire for the Lord whose Face you behold; that we will maintain an intimate personal relationship with Jesus, our Savior and Head; and that we will not hesitate to proclaim God\u2019s greatness to others, and love them as the Lord loves us. As you offer your continual praise before the throne of God, I raise my heart to you now, to implore your powerful intercession for these intentions:  I am confident that your prayers on our behalf will be graciously heard by our loving and merciful Lord. By his grace, may we someday join you in the glory of the Father\u2019s house. O Blessed Saints of Paradise, the glorious Citizens of Heaven, as I render most humble thanks to God for all the good He has done you, so I ask you to remember me in your prayers, and obtain for me the entire remission of my sins, the amendment of my life, and imitation of your good spirit and holy graces, that I may be perfectly reconciled to my Savior, and always please Him. But especially I recommend to you the hour of my death, that by your holy intercession my soul may depart this world in the grace of God, and immediately come to Life Everlasting. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. All you holy men and women, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and paragraph breaks adjusted for clearer text-to-speech pacing; canonical prayers and the personal-intention marker preserved verbatim.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. My heavenly brothers and sisters, from those most renowned to those of greatest obscurity, I come before you now in all humility, and commend myself, and all who are dear to me, to your intercession. Pray for us always, that we may awake each day with a burning desire for the Lord whose Face you behold; that we will maintain an intimate personal relationship with Jesus, our Savior and Head; and that we will not hesitate to proclaim God\u2019s greatness to others, and love them as the Lord loves us. As you offer your continual praise before the throne of God, I raise my heart to you now, to implore your powerful intercession for these intentions:  I am confident that your prayers on our behalf will be graciously heard by our loving and merciful Lord. By his grace, may we someday join you in the glory of the Father\u2019s house. O Blessed Saints of Paradise, the glorious Citizens of Heaven, as I render most humble thanks to God for all the good He has done you, so I ask you to remember me in your prayers, and obtain for me the entire remission of my sins, the amendment of my life, and imitation of your good spirit and holy graces, that I may be perfectly reconciled to my Savior, and always please Him. But especially I recommend to you the hour of my death, that by your holy intercession my soul may depart this world in the grace of God, and immediately come to Life Everlasting. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. All you holy men and women, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and paragraph breaks adjusted for clearer text-to-speech pacing; canonical prayers and the personal-intention marker preserved verbatim.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. My heavenly brothers and sisters, from those most renowned to those of greatest obscurity, I come before you now in all humility, and commend myself, and all who are dear to me, to your intercession. Pray for us always, that we may awake each day with a burning desire for the Lord whose Face you behold; that we will maintain an intimate personal relationship with Jesus, our Savior and Head; and that we will not hesitate to proclaim God\u2019s greatness to others, and love them as the Lord loves us. As you offer your continual praise before the throne of God, I raise my heart to you now, to implore your powerful intercession for these intentions:  I am confident that your prayers on our behalf will be graciously heard by our loving and merciful Lord. By his grace, may we someday join you in the glory of the Father\u2019s house. O Blessed Saints of Paradise, the glorious Citizens of Heaven, as I render most humble thanks to God for all the good He has done you, so I ask you to remember me in your prayers, and obtain for me the entire remission of my sins, the amendment of my life, and imitation of your good spirit and holy graces, that I may be perfectly reconciled to my Savior, and always please Him. But especially I recommend to you the hour of my death, that by your holy intercession my soul may depart this world in the grace of God, and immediately come to Life Everlasting. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. All you holy men and women, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Light punctuation and paragraph breaks adjusted for clearer text-to-speech pacing; canonical prayers and the personal-intention marker preserved verbatim.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. My heavenly brothers and sisters, from those most renowned to those of greatest obscurity, I come before you now in all humility, and commend myself, and all who are dear to me, to your intercession. Pray for us always, that we may awake each day with a burning desire for the Lord whose Face you behold; that we will maintain an intimate personal relationship with Jesus, our Savior and Head; and that we will not hesitate to proclaim God\u2019s greatness to others, and love them as the Lord loves us. As you offer your continual praise before the throne of God, I raise my heart to you now, to implore your powerful intercession for these intentions:  I am confident that your prayers on our behalf will be graciously heard by our loving and merciful Lord. By his grace, may we someday join you in the glory of the Father\u2019s house. O Blessed Saints of Paradise, the glorious Citizens of Heaven, as I render most humble thanks to God for all the good He has done you, so I ask you to remember me in your prayers, and obtain for me the entire remission of my sins, the amendment of my life, and imitation of your good spirit and holy graces, that I may be perfectly reconciled to my Savior, and always please Him. But especially I recommend to you the hour of my death, that by your holy intercession my soul may depart this world in the grace of God, and immediately come to Life Everlasting. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. All you holy men and women, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-all_saints"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "all_saints",
+      "name": "All Saints"
+    },
+    "type": "novena_feast_rule"
+  }
+}

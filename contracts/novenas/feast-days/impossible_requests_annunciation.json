@@ -1,0 +1,250 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "impossible_requests_annunciation",
+    "feast": {
+      "day": 25,
+      "mode": "fixed",
+      "month": 12,
+      "name": "Impossible Requests Annunciation"
+    },
+    "id": "impossible_requests_annunciation",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A novena honoring the Annunciation, when the angel Gabriel announced to Mary that she would conceive Jesus by the Holy Spirit."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Annunciation Impossible Requests 9 Month Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing while preserving wording, order, and the intention pause marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your first request at this point in the novena."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your second request at this point in the novena."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your third request at this point in the novena."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Remember, O most Gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of Virgins, my mother. To thee do I come. Before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Blessed and praised be the Most Holy Sacrament of the Altar, in Heaven, on earth, and everywhere. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Annunciation Impossible Requests 9 Month Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing while preserving wording, order, and the intention pause marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your first request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your second request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your third request at this point in the novena.  Remember, O most Gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of Virgins, my mother. To thee do I come. Before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Blessed and praised be the Most Holy Sacrament of the Altar, in Heaven, on earth, and everywhere. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing while preserving wording, order, and the intention pause marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your first request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your second request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your third request at this point in the novena.  Remember, O most Gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of Virgins, my mother. To thee do I come. Before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Blessed and praised be the Most Holy Sacrament of the Altar, in Heaven, on earth, and everywhere. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing while preserving wording, order, and the intention pause marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your first request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your second request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your third request at this point in the novena.  Remember, O most Gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of Virgins, my mother. To thee do I come. Before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Blessed and praised be the Most Holy Sacrament of the Altar, in Heaven, on earth, and everywhere. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing while preserving wording, order, and the intention pause marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your first request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your second request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your third request at this point in the novena.  Remember, O most Gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of Virgins, my mother. To thee do I come. Before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Blessed and praised be the Most Holy Sacrament of the Altar, in Heaven, on earth, and everywhere. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing while preserving wording, order, and the intention pause marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your first request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your second request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your third request at this point in the novena.  Remember, O most Gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of Virgins, my mother. To thee do I come. Before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Blessed and praised be the Most Holy Sacrament of the Altar, in Heaven, on earth, and everywhere. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing while preserving wording, order, and the intention pause marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your first request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your second request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your third request at this point in the novena.  Remember, O most Gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of Virgins, my mother. To thee do I come. Before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Blessed and praised be the Most Holy Sacrament of the Altar, in Heaven, on earth, and everywhere. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing while preserving wording, order, and the intention pause marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your first request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your second request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your third request at this point in the novena.  Remember, O most Gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of Virgins, my mother. To thee do I come. Before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Blessed and praised be the Most Holy Sacrament of the Altar, in Heaven, on earth, and everywhere. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing while preserving wording, order, and the intention pause marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your first request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your second request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your third request at this point in the novena.  Remember, O most Gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of Virgins, my mother. To thee do I come. Before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Blessed and praised be the Most Holy Sacrament of the Altar, in Heaven, on earth, and everywhere. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks for clearer text-to-speech pacing while preserving wording, order, and the intention pause marker.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your first request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your second request at this point in the novena.  Hail, Holy Queen, Mother of Mercy, our life, our sweetness, and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears. Turn then, most gracious advocate, thine eyes of mercy toward us. And after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, most holy Mother of God. R. That we may be made worthy of the promises of Christ. Amen. Virgin of the Incarnation, a thousand times we greet thee. A thousand times we praise thee for thy joy when God was incarnated in thee. Because thou art so powerful a Virgin and Mother of God, grant what we ask of thee for the love of God. Pray for your third request at this point in the novena.  Remember, O most Gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of Virgins, my mother. To thee do I come. Before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Blessed and praised be the Most Holy Sacrament of the Altar, in Heaven, on earth, and everywhere. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-impossible_requests_annunciation"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "impossible_requests_annunciation",
+      "name": "Impossible Requests Annunciation"
+    },
+    "type": "novena_feast_rule"
+  }
+}
