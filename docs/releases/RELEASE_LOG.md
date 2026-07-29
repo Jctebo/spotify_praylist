@@ -1,5 +1,12 @@
 # Release Log
 
+## [0.3.12.6] - 2026-07-29
+
+### Changed
+- Relaxed novena-intro validation so natural paraphrases of supplied optional metadata no longer force deterministic fallbacks, while retaining prayer identity, day, and existing safety checks.
+- Reworked deterministic devotional-intro fallbacks for Morning Prayer, Auxilium Christianorum, Angelus, Regina Caeli, and novenas to compose complete spoken sentences with normalized punctuation and natural patronage lists.
+- Advanced the devotional-intro policy to refresh cached sidecars with the revised fallback prose.
+
 ## [0.3.12.5] - 2026-07-29
 
 ### Changed
