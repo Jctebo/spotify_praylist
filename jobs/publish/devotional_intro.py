@@ -16,7 +16,7 @@ OPENAI_API_KEY_FILE = "OPENAI_API_KEY_FILE"
 OAI_API_BASE_URL = "OAI_API_BASE_URL"
 OAI_MODEL = "OAI_MODEL"
 
-DEVOTIONAL_INTRO_POLICY_VERSION = "devotional-intro-v8"
+DEVOTIONAL_INTRO_POLICY_VERSION = "devotional-intro-v10"
 SOURCE_OPENAI = "openai"
 SOURCE_FALLBACK_DETERMINISTIC = "fallback-deterministic"
 
@@ -87,9 +87,9 @@ NOVENA_PROFILE = DevotionalIntroProfile(
     key="novena",
     purpose=(
         "Welcome the listener into the current day of this specific novena, centering the saint "
-        "and the novena's own daily focus before the prayer begins."
+        "or devotion before the prayer begins."
     ),
-    sentence_guidance="Write the introduction in 3-4 short sentences.",
+    sentence_guidance="Write the introduction in 4-6 short sentences.",
     min_chars=40,
 )
 
@@ -142,6 +142,13 @@ def _spoken_list(value: Any) -> str:
     if len(items) == 2:
         return f"{items[0]} and {items[1]}"
     return f"{', '.join(items[:-1])}, and {items[-1]}"
+
+
+def _spoken_sentences(value: Any) -> Tuple[str, ...]:
+    text = _normalize_whitespace(value)
+    if not text:
+        return ()
+    return tuple(sentence for sentence in re.split(r"(?<!St\.)(?<=[.!?])\s+", text) if sentence)
 
 
 def _normalize_for_match(value: Any) -> str:
@@ -217,9 +224,15 @@ def build_devotional_intro_prompt(
             "gospel_text",
         )
     )
-    rows = "\n".join(f"{label}: {value}" for label, value in _context_rows(context))
+    context_rows = _context_rows(context)
+    if profile.key == "novena":
+        allowed_labels = {"Prayer", "Saint", "Identity description", "Patronage", "Standard short-form guidance", "Novena day"}
+        context_rows = tuple((label, value) for label, value in context_rows if label in allowed_labels)
+    rows = "\n".join(f"{label}: {value}" for label, value in context_rows)
     correction_block = f"\nCorrection required after validation: {correction}" if correction else ""
-    if gospel_supplied:
+    if profile.key == "novena":
+        gospel_rule = ""
+    elif gospel_supplied:
         gospel_rule = (
             "You may use the supplied Gospel context, but do not introduce another Scripture citation."
             if profile.key == "novena"
@@ -230,17 +243,13 @@ def build_devotional_intro_prompt(
     novena_rules = ""
     if profile.key == "novena":
         novena_day = _context_value(context, "day", "active_day")
-        novena_focus = _context_value(context, "daily_focus", "theme", "novena_theme")
         short_form_guidance = _context_value(context, "short_form_intro_prompt")
         novena_rules = f"""
 For this novena, make the opening feel like a natural invitation to pray, not a summary of the day's liturgy.
-Lead with the specific novena: explicitly name Day {novena_day} and the named saint or devotion.
-After the Day announcement, include the supplied identity description verbatim or faithfully paraphrased; include supplied patronage when present.
-Conclude with exactly one sentence that connects this novena to the supplied Calendar bridge. Do not invent another calendar focus.
+Write exactly 4 to 6 sentences in this order: begin with 2 to 4 sentences about the named saint or devotion, then one sentence that explicitly names Day {novena_day} of this novena, then a final invitation into prayer beginning with "Let us".
+Use the supplied identity description faithfully, with patronage when present. Do not mention any daily theme, Gospel, Scripture, calendar bridge, feast, liturgical season, or novena focus.
 {short_form_guidance}
-Let the novena focus ({novena_focus}) shape the prayerful transition when supplied.
-Honor the Church's liturgical hierarchy in the supplied context: major solemnity or feast first, then the Gospel, then a memorial, then the liturgical season.
-Let the highest available material give shape to the opening, but adapt it naturally to this saint and novena; do not explain the hierarchy or summarize the day's liturgy. When none is available, give only a brief introduction to this saint and today's novena.
+Let the saint's life and witness give shape to the opening; do not summarize the day's liturgy.
 """.strip()
     return f"""
 Write a concise Catholic devotional introduction for the profile "{profile.key}".
@@ -249,7 +258,7 @@ Purpose: {profile.purpose}
 {profile.sentence_guidance}
 Use natural, varied, prayerful spoken language. Do not force a stock opening phrase.
 Clearly identify the prayer as "{prayer_title}".
-Ground the prose in the supplied daily and prayer-specific context.
+Ground the prose in the supplied {"prayer-specific" if profile.key == "novena" else "daily and prayer-specific"} context.
 {gospel_rule}
 {novena_rules}
 Do not invent quotations, saints, feasts, seasons, Scripture citations, doctrine, or current events. When Standard short-form guidance is supplied, use only modest, well-known saint/event identity details and omit patronage if uncertain.
@@ -415,6 +424,31 @@ def validate_devotional_intro(
         day = _context_value(context, "day", "active_day")
         if day and not _contains_any(rendered, (f"Day {day}",)):
             raise RuntimeError(f"Novena intro must identify Day {day}.")
+        forbidden_context = tuple(
+            value
+            for value in (
+                _context_value(context, "daily_focus", "theme", "novena_theme"),
+                _context_value(context, "daily_theme_title", "sharedThemeTitle"),
+                _context_value(context, "daily_gospel_bridge", "sharedGospelBridge"),
+                _context_value(context, "calendar_bridge"),
+                _context_value(context, "feast_name"),
+            )
+            if _normalize_for_match(value) not in {
+                _normalize_for_match(prayer_title),
+                _normalize_for_match(_context_value(context, "saint_name")),
+            }
+        )
+        if forbidden_context and _contains_any(rendered, forbidden_context):
+            raise RuntimeError("Novena intro must not use daily liturgical context.")
+        if "gospel" in lowered or re.search(r"\bscripture\b|\breadings?\b", lowered):
+            raise RuntimeError("Novena intro must not mention Gospel or Scripture.")
+        sentences = _spoken_sentences(rendered)
+        if not 4 <= len(sentences) <= 6:
+            raise RuntimeError("Novena intro must contain 4 to 6 spoken sentences.")
+        if day and sum(_contains_any(sentence, (f"Day {day}",)) for sentence in sentences) != 1:
+            raise RuntimeError(f"Novena intro must use Day {day} in exactly one sentence.")
+        if not sentences[-1].lower().startswith("let us "):
+            raise RuntimeError('Novena intro must end with a prayer invitation beginning "Let us".')
 
     gospel_citation = _context_value(context, "daily_gospel_citation", "gospel_citation")
     gospel_supplied = bool(
@@ -472,26 +506,18 @@ def _fallback_text(profile: DevotionalIntroProfile, context: Mapping[str, Any]) 
         )
     day = _context_value(context, "day", "active_day")
     saint_name = _context_value(context, "saint_name") or prayer_title
-    focus = _context_value(context, "daily_focus", "theme", "novena_theme")
     summary = _context_value(context, "intro_summary")
     patronage = _context_value(context, "intro_patronage")
-    bridge = _context_value(context, "calendar_bridge")
-    focus_is_identity = _normalize_for_match(focus) in {
-        _normalize_for_match(saint_name),
-        _normalize_for_match(prayer_title),
-    }
-    opening = f"Welcome to Day {day} of the Novena to {saint_name}." if day else f"Welcome to the Novena to {saint_name}."
-    sentences = [opening]
+    sentences = []
     identity_sentence = summary or f"We remember {saint_name} as we turn our hearts to God."
     sentences.append(_complete_sentence(identity_sentence))
     if patronage:
         sentences.append(f"We ask {saint_name}'s intercession for {_spoken_list(patronage)}.")
-    if bridge:
-        sentences.append(_complete_sentence(bridge))
-    elif focus and not focus_is_identity:
-        sentences.append(f"May the grace of {focus} guide our prayer today.")
     else:
-        sentences.append("Let us place our needs before the Lord.")
+        sentences.append(f"May {saint_name}'s witness strengthen us in faith.")
+    novena_sentence = f"On Day {day} of the Novena to {saint_name}" if day else f"In the Novena to {saint_name}"
+    sentences.append(f"{novena_sentence}, we bring our needs before the Lord.")
+    sentences.append("Let us begin this novena in prayer.")
     return _normalize_whitespace(" ".join(sentences))
 
 
