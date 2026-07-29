@@ -176,6 +176,43 @@ class TestPublishDevotionalIntro(unittest.TestCase):
         self.assertIn("faithful work", result.text)
         self.assertNotIn("Trust", result.text)
 
+    def test_all_profile_fallbacks_use_complete_spoken_sentences(self):
+        cases = (
+            (
+                MORNING_PRAYER_PROFILE,
+                {
+                    "prayer_title": "Morning Prayer",
+                    "daily_theme_title": "Trust.",
+                    "celebration_clause": "Saint Bridget.",
+                    "daily_gospel_bridge": "In today's Gospel, Christ teaches us to remain in him.",
+                },
+            ),
+            (
+                AUXILIUM_CHRISTIANORUM_PROFILE,
+                {"prayer_title": "Auxilium Christianorum prayers", "daily_theme_title": "Trust."},
+            ),
+            ("angelus", {"prayer_title": "Angelus", "daily_theme_title": "Trust."}),
+            ("regina-caeli", {"prayer_title": "Regina Caeli", "daily_theme_title": "Trust."}),
+        )
+
+        for profile, context in cases:
+            with self.subTest(profile=profile):
+                result = build_devotional_intro(profile, context, generate_text_fn=lambda *_args: "Too short.")
+                self.assertEqual(result.source, SOURCE_FALLBACK_DETERMINISTIC)
+                self.assertNotIn("..", result.text)
+                self.assertNotIn("Trust. into", result.text)
+                self.assertNotIn("Trust. draws", result.text)
+                self.assertNotIn("Trust. joins", result.text)
+
+        morning_result = build_devotional_intro(
+            MORNING_PRAYER_PROFILE,
+            cases[0][1],
+            generate_text_fn=lambda *_args: "Too short.",
+        )
+        self.assertIn("Today the Church celebrates Saint Bridget.", morning_result.text)
+        self.assertIn("In today's Gospel, Christ teaches us to remain in him.", morning_result.text)
+        self.assertNotIn("him. invites", morning_result.text)
+
     def test_novena_prompt_and_validation_prioritize_the_specific_prayer(self):
         context = {
             "prayer_title": "Novena to Saint Joseph",
@@ -200,7 +237,7 @@ class TestPublishDevotionalIntro(unittest.TestCase):
         self.assertIn("adapt it naturally to this saint and novena", prompt)
         self.assertEqual(validate_devotional_intro(text, NOVENA_PROFILE, context), text)
 
-    def test_novena_validation_requires_day_and_focus_but_not_daily_theme(self):
+    def test_novena_validation_requires_day_but_accepts_natural_context(self):
         context = {
             "prayer_title": "Novena to Saint Joseph",
             "saint_name": "Saint Joseph",
@@ -215,13 +252,30 @@ class TestPublishDevotionalIntro(unittest.TestCase):
                 NOVENA_PROFILE,
                 context,
             )
-        with self.assertRaisesRegex(RuntimeError, "novena focus"):
-            validate_devotional_intro(
-                "On Day 3 of the Novena to Saint Joseph, we bring our needs before God with humble confidence. "
-                "With Saint Joseph, let us begin this day's prayer.",
-                NOVENA_PROFILE,
-                context,
-            )
+        natural_intro = (
+            "On Day 3 of the Novena to Saint Joseph, we bring our needs before God with humble confidence. "
+            "With Saint Joseph, let us begin this day's prayer."
+        )
+        self.assertEqual(validate_devotional_intro(natural_intro, NOVENA_PROFILE, context), natural_intro)
+
+    def test_novena_validation_accepts_paraphrased_identity_description(self):
+        context = {
+            "prayer_title": "Novena to St Mary MacKillop",
+            "saint_name": "St Mary MacKillop",
+            "day": "1",
+            "daily_focus": "hidden holiness and trust",
+            "intro_summary": (
+                "St Mary MacKillop was an Australian religious sister who co-founded the Sisters of St Joseph "
+                "of the Sacred Heart and served the poor through education."
+            ),
+            "intro_patronage": "Australia, Catholic education, teachers",
+        }
+        text = (
+            "On Day 1 of the Novena to St Mary MacKillop, we remember the Australian sister whose work opened "
+            "Catholic education to the poor. May hidden holiness and trust shape the needs we bring before God."
+        )
+
+        self.assertEqual(validate_devotional_intro(text, NOVENA_PROFILE, context), text)
 
     def test_fallback_reason_redacts_credentials_and_urls(self):
         def fail(model, system, prompt, temperature):
@@ -258,11 +312,33 @@ class TestPublishDevotionalIntro(unittest.TestCase):
         )
 
         self.assertEqual(result.source, SOURCE_FALLBACK_DETERMINISTIC)
-        self.assertGreater(len(result.text), 420)
+        self.assertGreater(len(result.text), 250)
         self.assertIn("Day 7", result.text)
         self.assertIn("founded the Congregation of the Blessed Sacrament and promoted devotion to the Eucharist.", result.text)
-        self.assertIn("Eucharistic devotion, priests, religious congregations", result.text)
+        self.assertIn("Eucharistic devotion, priests, and religious congregations", result.text)
         self.assertNotIn("…", result.text)
+
+    def test_novena_fallback_uses_complete_grammatical_sentences(self):
+        result = build_devotional_intro(
+            NOVENA_PROFILE,
+            {
+                "prayer_title": "Novena to St Mary MacKillop",
+                "saint_name": "St Mary MacKillop",
+                "day": "1",
+                "daily_focus": "St Mary MacKillop",
+                "intro_summary": (
+                    "St Mary MacKillop was an Australian religious sister who co-founded the Sisters of St Joseph "
+                    "of the Sacred Heart and served the poor through education."
+                ),
+                "intro_patronage": "Australia, Catholic education, teachers",
+            },
+            generate_text_fn=lambda *_args: "Too short.",
+        )
+
+        self.assertIn("education. We ask St Mary MacKillop's intercession", result.text)
+        self.assertIn("for Australia, Catholic education, and teachers.", result.text)
+        self.assertNotIn(". and seek", result.text.lower())
+        self.assertNotIn("..", result.text)
 
 
 if __name__ == "__main__":
