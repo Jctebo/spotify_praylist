@@ -234,25 +234,26 @@ class TestPublishDevotionalIntro(unittest.TestCase):
         self.assertNotIn("example.invalid", result.fallback_reason)
         self.assertIn("[redacted]", result.fallback_reason)
 
-    def test_novena_fallback_compacts_long_metadata_to_the_profile_limit(self):
+    def test_novena_fallback_preserves_complete_saint_metadata_without_truncation(self):
         result = build_devotional_intro(
             NOVENA_PROFILE,
             {
-                "prayer_title": "Novena to Saint Augustine",
-                "saint_name": "Saint Augustine",
-                "day": "1",
-                "daily_focus": "conversion of heart",
-                "intro_summary": "Saint Augustine was a bishop, theologian, and teacher whose long witness to grace and conversion continues to guide the Church in every generation.",
-                "intro_patronage": "theologians, converts, printers, brewers, and all who seek truth through patient study",
-                "calendar_bridge": "Today the Church remembers a long memorial whose rich history invites every listener to receive grace with perseverance and joy.",
+                "prayer_title": "Novena to St Peter Julian Eymard",
+                "saint_name": "St Peter Julian Eymard",
+                "day": "7",
+                "daily_focus": "St Peter Julian Eymard",
+                "intro_summary": "St Peter Julian Eymard, a French priest, founded the Congregation of the Blessed Sacrament and promoted devotion to the Eucharist.",
+                "intro_patronage": "Eucharistic devotion, priests, religious congregations",
             },
             generate_text_fn=lambda *_args: "Too short.",
         )
 
         self.assertEqual(result.source, SOURCE_FALLBACK_DETERMINISTIC)
-        self.assertLessEqual(len(result.text), NOVENA_PROFILE.max_chars)
-        self.assertIn("Day 1", result.text)
-        self.assertIn("Novena to Saint Augustine", result.text)
+        self.assertGreater(len(result.text), NOVENA_PROFILE.max_chars)
+        self.assertIn("Day 7", result.text)
+        self.assertIn("founded the Congregation of the Blessed Sacrament and promoted devotion to the Eucharist.", result.text)
+        self.assertIn("Eucharistic devotion, priests, religious congregations", result.text)
+        self.assertNotIn("…", result.text)
 
 
 if __name__ == "__main__":
