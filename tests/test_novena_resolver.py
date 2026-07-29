@@ -61,6 +61,18 @@ class TestNovenaResolver(unittest.TestCase):
         self.assertEqual(by_id["our_lady_of_fatima"].active_day, 1)
         self.assertEqual(by_id["our_lady_of_fatima"].feast["feast_date"], "2026-05-13")
 
+    def test_resolve_active_novenas_uses_our_lady_of_the_snows_without_mary_major_duplicate(self):
+        contracts = contracts_mod.load_novena_contracts()
+        active = resolver_mod.resolve_active_novenas(datetime.date(2026, 8, 4), contracts=contracts)
+
+        ids = [runtime.contract_id for runtime in active]
+        snows = [runtime for runtime in active if runtime.contract_id == "our_lady_of_the_snows"]
+
+        self.assertEqual(len(snows), 1)
+        self.assertEqual(snows[0].active_day, 9)
+        self.assertEqual(snows[0].feast["feast_date"], "2026-08-05")
+        self.assertNotIn("dedication_of_the_basilica_of_saint_mary_major", ids)
+
     def test_resolve_active_novenas_ignores_disabled_explicit_feast_overrides(self):
         disabled_feast = contracts_mod.NovenaContract(
             family_id="disabled_catherine_override",
