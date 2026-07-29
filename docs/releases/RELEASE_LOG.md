@@ -1,5 +1,10 @@
 # Release Log
 
+## [0.3.12.3] - 2026-07-29
+
+### Fixed
+- Deterministic novena fallbacks now preserve complete saint summaries, patronage, and calendar context rather than truncating spoken prose to the generated-intro length limit.
+
 ## [0.3.12.2] - 2026-07-29
 
 ### Changed
