@@ -16,7 +16,7 @@ OPENAI_API_KEY_FILE = "OPENAI_API_KEY_FILE"
 OAI_API_BASE_URL = "OAI_API_BASE_URL"
 OAI_MODEL = "OAI_MODEL"
 
-DEVOTIONAL_INTRO_POLICY_VERSION = "devotional-intro-v6"
+DEVOTIONAL_INTRO_POLICY_VERSION = "devotional-intro-v8"
 SOURCE_OPENAI = "openai"
 SOURCE_FALLBACK_DETERMINISTIC = "fallback-deterministic"
 
@@ -122,6 +122,26 @@ def get_devotional_intro_profile(value: Any) -> DevotionalIntroProfile:
 
 def _normalize_whitespace(value: Any) -> str:
     return " ".join(str(value or "").split()).strip()
+
+
+def _complete_sentence(value: Any) -> str:
+    text = _normalize_whitespace(value)
+    if not text:
+        return ""
+    return text if text.endswith((".", "!", "?")) else f"{text}."
+
+
+def _spoken_phrase(value: Any) -> str:
+    return _normalize_whitespace(value).rstrip(".!? ")
+
+
+def _spoken_list(value: Any) -> str:
+    items = [item.strip() for item in _normalize_whitespace(value).split(",") if item.strip()]
+    if len(items) < 2:
+        return items[0] if items else ""
+    if len(items) == 2:
+        return f"{items[0]} and {items[1]}"
+    return f"{', '.join(items[:-1])}, and {items[-1]}"
 
 
 def _normalize_for_match(value: Any) -> str:
@@ -395,18 +415,6 @@ def validate_devotional_intro(
         day = _context_value(context, "day", "active_day")
         if day and not _contains_any(rendered, (f"Day {day}",)):
             raise RuntimeError(f"Novena intro must identify Day {day}.")
-        focus = _context_value(context, "daily_focus", "theme", "novena_theme")
-        if focus and not _contains_any(rendered, (focus,)):
-            raise RuntimeError(f"Novena intro must use the supplied novena focus '{focus}'.")
-        summary = _context_value(context, "intro_summary")
-        if summary and not _contains_any(rendered, (summary,)):
-            raise RuntimeError("Novena intro must use the supplied identity description.")
-        patronage = _context_value(context, "intro_patronage")
-        if patronage and not _contains_any(rendered, tuple(part.strip() for part in patronage.split(",") if part.strip())):
-            raise RuntimeError("Novena intro must use the supplied patronage.")
-        bridge = _context_value(context, "calendar_bridge")
-        if bridge and not _contains_any(rendered, (bridge,)):
-            raise RuntimeError("Novena intro must use the supplied calendar bridge.")
 
     gospel_citation = _context_value(context, "daily_gospel_citation", "gospel_citation")
     gospel_supplied = bool(
@@ -436,49 +444,55 @@ def validate_devotional_intro(
 
 def _fallback_text(profile: DevotionalIntroProfile, context: Mapping[str, Any]) -> str:
     prayer_title = _context_value(context, "prayer_title", "devotion", "saint_name") or "this prayer"
-    theme = _context_value(context, "daily_theme_title", "sharedThemeTitle") or "faithful prayer"
-    celebration = _context_value(context, "celebration_clause", "celebration_names")
+    theme = _spoken_phrase(_context_value(context, "daily_theme_title", "sharedThemeTitle")) or "faithful prayer"
+    celebration = _spoken_phrase(_context_value(context, "celebration_clause", "celebration_names"))
     gospel_bridge = _context_value(context, "daily_gospel_bridge", "sharedGospelBridge")
     if profile.key == "morning-prayer":
-        first = f"As we begin {prayer_title}, the Church gathers our hearts around {theme}"
+        sentences = [f"As we begin {prayer_title}, the Church gathers our hearts around {theme}."]
         if celebration:
-            first += f" on this day of {celebration}"
-        second = (
-            f"{gospel_bridge[:1].upper() + gospel_bridge[1:]} invites us to receive this grace and offer the day to God."
-            if gospel_bridge
-            else "We receive this grace through the Church's prayer and offer the whole day to God."
-        )
-        return _normalize_whitespace(f"{first}. {second}")
+            sentences.append(f"Today the Church celebrates {celebration}.")
+        if gospel_bridge:
+            sentences.append(_complete_sentence(gospel_bridge))
+        sentences.append("We receive this grace through the Church's prayer and offer the whole day to God.")
+        return _normalize_whitespace(" ".join(sentences))
     if profile.key == "auxilium-christianorum":
         return _normalize_whitespace(
-            f"As we enter the {prayer_title}, we carry today's focus of {theme} into prayer, "
+            f"As we enter the {prayer_title}, we carry the grace of {theme} into prayer, "
             "placing ourselves, our families, and the needs of this day under Mary's protection."
         )
     if profile.key == "angelus":
         return _normalize_whitespace(
-            f"As we pray the {prayer_title}, today's focus of {theme} draws us to Mary's faithful yes "
+            f"As we pray the {prayer_title}, the grace of {theme} draws us to Mary's faithful yes "
             "and the mystery of the Word made flesh."
         )
     if profile.key == "regina-caeli":
         return _normalize_whitespace(
-            f"As we pray the {prayer_title}, today's focus of {theme} joins our prayer to Mary's Easter joy "
+            f"As we pray the {prayer_title}, the grace of {theme} joins our prayer to Mary's Easter joy "
             "in the risen Christ."
         )
-    day = _context_value(context, "day", "active_day") or "this day"
+    day = _context_value(context, "day", "active_day")
     saint_name = _context_value(context, "saint_name") or prayer_title
     focus = _context_value(context, "daily_focus", "theme", "novena_theme")
     summary = _context_value(context, "intro_summary")
     patronage = _context_value(context, "intro_patronage")
     bridge = _context_value(context, "calendar_bridge")
-    focus_clause = f" as we bring the grace of {focus} before God" if focus else " as we bring our needs before God"
-    identity_sentence = summary or f"We remember {saint_name} as we turn our hearts to God"
+    focus_is_identity = _normalize_for_match(focus) in {
+        _normalize_for_match(saint_name),
+        _normalize_for_match(prayer_title),
+    }
+    opening = f"Welcome to Day {day} of the Novena to {saint_name}." if day else f"Welcome to the Novena to {saint_name}."
+    sentences = [opening]
+    identity_sentence = summary or f"We remember {saint_name} as we turn our hearts to God."
+    sentences.append(_complete_sentence(identity_sentence))
     if patronage:
-        identity_sentence = f"{identity_sentence} and seek this patron's intercession for {patronage}"
-    bridge_sentence = bridge or f"In this day's focus of {focus or 'faithful prayer'}, we join this novena to the Church's prayer."
-    return _normalize_whitespace(
-        f"Welcome to Day {day} of the Novena to {saint_name}{focus_clause}. "
-        f"{identity_sentence}. {bridge_sentence}"
-    )
+        sentences.append(f"We ask {saint_name}'s intercession for {_spoken_list(patronage)}.")
+    if bridge:
+        sentences.append(_complete_sentence(bridge))
+    elif focus and not focus_is_identity:
+        sentences.append(f"May the grace of {focus} guide our prayer today.")
+    else:
+        sentences.append("Let us place our needs before the Lord.")
+    return _normalize_whitespace(" ".join(sentences))
 
 
 def _fallback_result(
