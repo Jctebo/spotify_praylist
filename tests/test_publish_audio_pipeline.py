@@ -326,8 +326,8 @@ class TestPublishAudioPipeline(unittest.TestCase):
                 "Amen.",
             ],
         )
-        self.assertTrue(all(fragment["tts"]["voice_id"] == "nPczCjzI2devNBz1zQrb" for fragment in response_fragments))
-        self.assertTrue(all(fragment["tts"]["provider"] == "elevenlabs" for fragment in response_fragments))
+        self.assertTrue(all(fragment["tts"]["voice"] == "ash" for fragment in response_fragments))
+        self.assertTrue(all(fragment["tts"]["provider"] == "openai" for fragment in response_fragments))
 
     def test_render_rosary_sidecar_records_reflection_metadata(self):
         contracts = self.contracts_mod.load_publish_contracts()

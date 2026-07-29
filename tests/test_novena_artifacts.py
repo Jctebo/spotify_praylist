@@ -336,9 +336,8 @@ class TestNovenaArtifacts(unittest.TestCase):
             payload = json.loads(Path(result["audio_path"]).with_suffix(".json").read_text(encoding="utf-8"))
 
         self.assertTrue(result["rendered"])
-        self.assertGreaterEqual(len(calls), 2)
-        self.assertEqual(calls[0]["provider"], "elevenlabs")
-        self.assertTrue(any(call.get("provider") == "openai" for call in calls))
+        self.assertGreater(len(calls), 0)
+        self.assertTrue(all(call.get("provider") == "openai" for call in calls))
         self.assertEqual(payload["fragments"][0]["provider"], "openai")
         self.assertEqual(payload["fragments"][0]["tts"]["provider"], "openai")
         self.assertEqual(payload["audio_branding"]["status"], "applied")
