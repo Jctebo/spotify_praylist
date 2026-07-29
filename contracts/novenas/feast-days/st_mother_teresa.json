@@ -9,6 +9,20 @@
       "name": "St Mother Teresa"
     },
     "id": "st_mother_teresa",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "the poor",
+        "charitable works",
+        "missionaries"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Mother Teresa of Calcutta founded the Missionaries of Charity and served the poorest of the poor with a life of prayer and mercy."
+    },
     "novena": {
       "content_mode": "fixed",
       "duration_days": 9,
@@ -27,27 +41,27 @@
             ],
             "key": "days-1",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 1",
+            "notes": "Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Mother’s Devotion to Satisfying the Thirst of Jesus: The words “I Thirst,” that Jesus spoke from the cross, appear next to the crucifix on the wall of every chapel in every convent all over the world of the Missionaries of Charity, the order founded by Mother Teresa to care for the poorest of the poor. Mother spoke and wrote again and again of Jesus’ thirst for souls, for repentance, for belief, for love. Love of God and also of neighbor, especially those neighbors who are poor or sick or abandoned or orphaned…those people who need it the most. “Why does Jesus say I Thirst? What does it mean?…If you remember anything from Mother’s letter remember this – I Thirst is something much deeper than Jesus just saying I love you. Until you know deep inside that Jesus thirsts for you – you can’t begin to know who He wants to be for you. Or who He wants you to be for Him.” Prayer: Father, thank you for the reminder from Mother Teresa that Jesus still thirsts today, for our hearts and souls and for all those who need him so much in this world. Through her intercession may we be drawn closer to His sacred heart and draw others there with us as well.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Mother\u2019s Devotion to Satisfying the Thirst of Jesus: The words \u201cI Thirst,\u201d that Jesus spoke from the cross, appear next to the crucifix on the wall of every chapel in every convent all over the world of the Missionaries of Charity, the order founded by Mother Teresa to care for the poorest of the poor. Mother spoke and wrote again and again of Jesus\u2019 thirst for souls, for repentance, for belief, for love. Love of God, and also of neighbor, especially those neighbors who are poor, or sick, or abandoned, or orphaned; those people who need it the most. \u201cWhy does Jesus say I Thirst? What does it mean? If you remember anything from Mother\u2019s letter, remember this: I Thirst is something much deeper than Jesus just saying I love you. Until you know deep inside that Jesus thirsts for you, you can\u2019t begin to know who He wants to be for you, or who He wants you to be for Him.\u201d Prayer: Father, thank you for the reminder from Mother Teresa that Jesus still thirsts today, for our hearts and souls, and for all those who need him so much in this world. Through her intercession may we be drawn closer to His sacred heart, and draw others there with us as well. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 1"
           },
           {
             "days": [
@@ -55,27 +69,27 @@
             ],
             "key": "days-2",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 2",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while keeping wording and order faithful.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Mother’s Devotion to Mary: Mother Teresa had several visions in 1947 in the months after she experienced her call within a call from Jesus to leave the relative comfort of her position as a teacher and to go directly into the slums of Calcutta to care for the sick and dying, the poorest of the poor. Mary was with Mother Teresa in those visions, encouraging her and supporting her. Mother Teresa knew she needed to totally rely on Mary in order to get closer to Jesus herself and to bring others to Jesus. She would say “Mary, Mother of Jesus, be a mother to me now.” She would also ask Mary to “Lend me your heart” so that she could love Jesus more perfectly through the most perfect human heart who has ever loved him. “Thank God our Lady was there to understand fully the thirst of Jesus for love. She must have straight away said, “I satiate Your thirst with my love and the suffering of my heart.” “ Prayer: Father, thank you for showing us through Mother Teresa how to make devotion to Mary a part of our daily life, both as we seek to deepen our love for Jesus and as we face the trials of everyday life. Through your Spirit, the Spouse of Mary, help us to understand how much Jesus wants us to love Mary and how we can imitate her in following Your Holy Will in trust and joy.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Mother\u2019s Devotion to Mary: Mother Teresa had several visions in 1947, in the months after she experienced her call within a call from Jesus, to leave the relative comfort of her position as a teacher and to go directly into the slums of Calcutta to care for the sick and dying, the poorest of the poor. Mary was with Mother Teresa in those visions, encouraging her and supporting her. Mother Teresa knew she needed to totally rely on Mary in order to get closer to Jesus herself, and to bring others to Jesus. She would say, \u201cMary, Mother of Jesus, be a mother to me now.\u201d She would also ask Mary to \u201cLend me your heart,\u201d so that she could love Jesus more perfectly through the most perfect human heart who has ever loved him. \u201cThank God our Lady was there to understand fully the thirst of Jesus for love. She must have straight away said, \u2018I satiate Your thirst with my love and the suffering of my heart.\u2019\u201d Prayer: Father, thank you for showing us through Mother Teresa how to make devotion to Mary a part of our daily life, both as we seek to deepen our love for Jesus and as we face the trials of everyday life. Through your Spirit, the Spouse of Mary, help us to understand how much Jesus wants us to love Mary and how we can imitate her in following Your Holy Will in trust and joy. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 2"
           },
           {
             "days": [
@@ -83,27 +97,27 @@
             ],
             "key": "days-3",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 3",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving wording and the personal-intention marker.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Mother’s Devotion to the Poorest of the Poor: Mother Teresa was called the slum sister and her Missionary of Charity sisters take a fourth vow: “to devote themselves with abnegation to the care of the poor and needy who…live in conditions unworthy of the human dignity. Those who join this Institute, therefore, are resolved to spend themselves unremittingly in seeking out…even amid squalid surroundings, the poorer, the abandoned, the sick, the infirm, the dying…AND in performing any other similar apostolic works and services, however lowly and mean they may appear.” Mother and her followers wanted to be carriers of Christ’s love into the slums. She was always adamant that the Missionaries of Charity were neither medical personnel nor social workers. Their mission to the poor always had a spiritual component: “this [is] really the full meaning of the poverty of Jesus. He being rich became poor.” Prayer: Father, you charged us to care for the poor and Mother Teresa took you at your word. She spent herself bringing first the poor of Calcutta and then around the world, into our homes and consciences. May we always share her concern for not only the body but the soul and seek to give comfort in both ways to those who are in need.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Mother\u2019s Devotion to the Poorest of the Poor: Mother Teresa was called the slum sister, and her Missionaries of Charity sisters take a fourth vow: \u201cto devote themselves with abnegation to the care of the poor and needy who\u2026live in conditions unworthy of the human dignity. \u201cThose who join this Institute, therefore, are resolved to spend themselves unremittingly in seeking out\u2026even amid squalid surroundings, the poorer, the abandoned, the sick, the infirm, the dying\u2026AND in performing any other similar apostolic works and services, however lowly and mean they may appear.\u201d Mother and her followers wanted to be carriers of Christ\u2019s love into the slums. She was always adamant that the Missionaries of Charity were neither medical personnel nor social workers. Their mission to the poor always had a spiritual component: \u201cthis [is] really the full meaning of the poverty of Jesus. He being rich became poor.\u201d Prayer: Father, you charged us to care for the poor, and Mother Teresa took you at your word. She spent herself bringing first the poor of Calcutta, and then around the world, into our homes and consciences. May we always share her concern for not only the body but the soul, and seek to give comfort in both ways to those who are in need. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 3"
           },
           {
             "days": [
@@ -111,27 +125,27 @@
             ],
             "key": "days-4",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 4",
+            "notes": "Adjusted punctuation, spacing, and a few phrases for smoother text-to-speech while preserving meaning, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Mother’s Devotion to the Sick and Suffering: The Missionaries of Charity saw the face of the Jesus in the face of every person they rendered aid and comfort to. Mother Teresa went even further and asserted that such suffering was in fact “but a kiss of Jesus – a sign that you have come so close to Jesus that he can kiss you. – I think this is the most beautiful definition of suffering.” The power of redemptive suffering (where offering one’s prayers and suffering to God in union with those of Christ) was harnessed by Mother Teresa in an innovative way. “Love demands sacrifice. But if we love until it hurts, God will give us His peace and joy…Suffering in itself is nothing; but suffering shared with Christ’s Passion is a wonderful gift.” She saw that those who were too sick to join in the physical work of the Missionaries of Charity could join forces with the active sisters! “You see, the aim of our Society is to satiate the thirst of Jesus on the Cross for love of souls by working for the salvation and sanctification of the poor in the slums. – Who could do this better than you & the others who suffer like you? Your suffering and prayers will be the chalice in which we that working members will pour in the love of souls we gather round….In reality, you can do much more while on your bed of pain than I running on my feet, but you & I together can do all things in Him who strengthens us.” What an amazing mission for someone perhaps homebound or bed-ridden! To be the spiritual engine behind a Missionary of Charity physically caring for the poor and sick thousands of miles away. In this Spirit-filled inspiration, Mother gave care, comfort and meaning not just to the sick she and her sisters came in contact with, but to those who they would never meet in this world, but certainly in the next! Prayer: Father, you gave Mother Teresa eyes to see the reality of the value of those who suffered when that suffering was united with that of Jesus your Son. Send your Spirit to open our eyes to give care and comfort to those who suffer physical or mental afflictions, and to offer our own sufferings in a spirit of love and reparation for the salvation of the world and for the continued vitality of all the branches of the Missionaries of Charity.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Mother\u2019s Devotion to the Sick and Suffering: The Missionaries of Charity saw the face of Jesus in the face of every person they rendered aid and comfort to. Mother Teresa went even further and asserted that such suffering was in fact, \u201cbut a kiss of Jesus, a sign that you have come so close to Jesus that he can kiss you. I think this is the most beautiful definition of suffering.\u201d The power of redemptive suffering, where offering one\u2019s prayers and suffering to God in union with those of Christ, was harnessed by Mother Teresa in an innovative way. \u201cLove demands sacrifice. But if we love until it hurts, God will give us His peace and joy. Suffering in itself is nothing; but suffering shared with Christ\u2019s Passion is a wonderful gift.\u201d She saw that those who were too sick to join in the physical work of the Missionaries of Charity could join forces with the active sisters. \u201cYou see, the aim of our Society is to satiate the thirst of Jesus on the Cross for love of souls by working for the salvation and sanctification of the poor in the slums. Who could do this better than you and the others who suffer like you? Your suffering and prayers will be the chalice in which we, the working members, will pour in the love of souls we gather round. In reality, you can do much more while on your bed of pain than I, running on my feet, but you and I together can do all things in Him who strengthens us.\u201d What an amazing mission for someone perhaps homebound or bedridden: to be the spiritual engine behind a Missionary of Charity physically caring for the poor and sick thousands of miles away. In this Spirit-filled inspiration, Mother gave care, comfort, and meaning not just to the sick she and her sisters came in contact with, but to those whom they would never meet in this world, but certainly in the next. Prayer: Father, you gave Mother Teresa eyes to see the reality of the value of those who suffered when that suffering was united with that of Jesus your Son. Send your Spirit to open our eyes to give care and comfort to those who suffer physical or mental afflictions, and to offer our own sufferings in a spirit of love and reparation for the salvation of the world and for the continued vitality of all the branches of the Missionaries of Charity. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 4"
           },
           {
             "days": [
@@ -139,27 +153,27 @@
             ],
             "key": "days-5",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 5",
+            "notes": "Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and the control marker.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Mother’s Devotion to Forming Holy Families: Mother noted more than once that there is a different kind of poverty in the more developed and economically advantaged countries of the world. “I was surprised in the West to see so many young boys and girls given into drugs, and I tried to find out why…Because there is no one in the family to receive them Father and mother are so busy they have no time…The child goes back to the street and gets involved in something…These are things that break peace.” Mother saw that families need to be together. She talked fondly of her mother welcoming her father home each night with a smile. She stated that children needed to be taught to pray and families should pray together. She spoke often of the elderly who had food and housing but no one coming to visit and show them love. In fact, when Mother Teresa received the Nobel Peace Prize, she was asked, “What can we do to promote world peace?” She answered “Go home and love your family.” Prayer: Father, you inspired Mother Teresa to work to preserve and improve family life all over the world. May your Spirit help us build strong and faithful families all over the world, where all members know that they are loved and know Jesus. May we never be so focused on the things of this world, as noble and necessary though they may be, that we forget to Go home and love our family.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Mother\u2019s Devotion to Forming Holy Families: Mother noted more than once that there is a different kind of poverty in the more developed and economically advantaged countries of the world. \u201cI was surprised in the West to see so many young boys and girls given into drugs, and I tried to find out why\u2026 Because there is no one in the family to receive them. Father and mother are so busy they have no time\u2026 The child goes back to the street and gets involved in something\u2026 These are things that break peace.\u201d Mother saw that families need to be together. She talked fondly of her mother welcoming her father home each night with a smile. She stated that children needed to be taught to pray, and families should pray together. She spoke often of the elderly who had food and housing but no one coming to visit and show them love. In fact, when Mother Teresa received the Nobel Peace Prize, she was asked, \u201cWhat can we do to promote world peace?\u201d She answered, \u201cGo home and love your family.\u201d Prayer: Father, you inspired Mother Teresa to work to preserve and improve family life all over the world. May your Spirit help us build strong and faithful families all over the world, where all members know that they are loved and know Jesus. May we never be so focused on the things of this world, as noble and necessary though they may be, that we forget to go home and love our family. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 5"
           },
           {
             "days": [
@@ -167,27 +181,27 @@
             ],
             "key": "days-6",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 6",
+            "notes": "Adjusted punctuation and capitalization for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Mother’s Devotion to Children: A passionate defender of all life from conception to natural death, Mother cared deeply for children. Whether they were affected by poverty, orphaned, disabled, or the innocent victims of war or abortion, Mother was heroic in her efforts to care for the world’s children. In 1982 Mother and her sisters went to Beirut, Lebanon and during active bombing rescued 38 disabled children who were abandoned in the city. Her defense of the human rights of the unborn was also uncompromising: “I find the unborn child to be the Poorest of the Poor today – the most unloved – the most unwanted, the throw away of the society.” She was not afraid to advocate for these little ones even in front of elected officials during public speeches (1994 National Prayer Breakfast in Washington DC)! She and her missionaries of Charity cared for thousands of children, preferring to keep families together but facilitating adoptions when necessary, and caring for severely disabled children with tender love and care. Prayer: Father, you have said to us “Even if a mother could forget her child, I will not forget you. I have carved you in the palm of my hand.” Mother knew this and shared it with all, from the poor in India to the mightiest in the United States of America. Help us to remember the unborn, the orphan, children living in war or poverty or with disabilities. We need to do our utmost to not sit idly by as your little ones suffer but let us be moved by the Spirit to show them our love and that of your son Jesus.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Mother\u2019s Devotion to Children: A passionate defender of all life from conception to natural death, Mother cared deeply for children. Whether they were affected by poverty, orphaned, disabled, or the innocent victims of war or abortion, Mother was heroic in her efforts to care for the world\u2019s children. In 1982, Mother and her sisters went to Beirut, Lebanon, and during active bombing rescued 38 disabled children who were abandoned in the city. Her defense of the human rights of the unborn was also uncompromising: \u201cI find the unborn child to be the Poorest of the Poor today \u2013 the most unloved \u2013 the most unwanted, the throw away of the society.\u201d She was not afraid to advocate for these little ones even in front of elected officials during public speeches, at the 1994 National Prayer Breakfast in Washington, D.C. She and her Missionaries of Charity cared for thousands of children, preferring to keep families together but facilitating adoptions when necessary, and caring for severely disabled children with tender love and care. Prayer: Father, you have said to us, \u201cEven if a mother could forget her child, I will not forget you. I have carved you in the palm of my hand.\u201d Mother knew this and shared it with all, from the poor in India to the mightiest in the United States of America. Help us to remember the unborn, the orphan, children living in war or poverty or with disabilities. We need to do our utmost to not sit idly by as your little ones suffer, but let us be moved by the Spirit to show them our love, and that of your Son, Jesus. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 6"
           },
           {
             "days": [
@@ -195,27 +209,27 @@
             ],
             "key": "days-7",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 7",
+            "notes": "Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen."
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Mother’s Devotion to the Virtue of Humility: Mother Teresa won the Nobel Peace Prize in 1979. She received many other awards and honors both before and after that. She traveled around the world speaking to lay groups and Church officials and heads of state alike, even befriending Diana, the Princess of Wales. None of these ever affected her. She remained untouched by pride or any conviction that the awards were for her. She always accepted “for the work we are doing….as for me personally it means nothing. I want only to be a real Missionary of Charity like Our Lady was.” A priest who knew her well affirmed “[Her union with Jesus] gave her the freedom which made her independent of praise and blame. When great honors were poured on her all over the world it did not affect her in the least. She had abandoned everything to God, her whole being.” This was confirmed by her own words to another priest who asked how she handled all the admiration she received from even famous world leaders: “Father, Jesus has given me a very great grace and that is: the deepest conviction of my total nothingness. If He could find a poorer woman through whom to do his work, He would not choose me, but He would choose that woman” or, “Father it goes in here (pointing to her ears) and it comes out there; it goes right through me.” Another reaction to all the admiration of people: “It is a true crucifixion.” Prayer: Father, we need to acknowledge the truth. That you are the source of all things and that all we do is because of your grace. Help us cooperate with your Holy Spirit and become the person you want us to be, caring only if we are faithful to your Will and letting the world say what it may. Mother we ask you to let us remain humble and little, like you and like Mary.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Mother\u2019s Devotion to the Virtue of Humility: Mother Teresa won the Nobel Peace Prize in 1979. She received many other awards and honors both before and after that. She traveled around the world speaking to lay groups and Church officials and heads of state alike, even befriending Diana, the Princess of Wales. None of these ever affected her. She remained untouched by pride, or any conviction that the awards were for her. She always accepted, \u201cfor the work we are doing\u2026. as for me personally it means nothing. I want only to be a real Missionary of Charity like Our Lady was.\u201d A priest who knew her well affirmed, \u201c[Her union with Jesus] gave her the freedom which made her independent of praise and blame. When great honors were poured on her all over the world it did not affect her in the least. She had abandoned everything to God, her whole being.\u201d This was confirmed by her own words to another priest who asked how she handled all the admiration she received from even famous world leaders: \u201cFather, Jesus has given me a very great grace and that is: the deepest conviction of my total nothingness. If He could find a poorer woman through whom to do his work, He would not choose me, but He would choose that woman.\u201d Or, \u201cFather, it goes in here,\u201d pointing to her ears, \u201cand it comes out there. It goes right through me.\u201d Another reaction to all the admiration of people: \u201cIt is a true crucifixion.\u201d Prayer: Father, we need to acknowledge the truth: that you are the source of all things, and that all we do is because of your grace. Help us cooperate with your Holy Spirit and become the person you want us to be, caring only if we are faithful to your Will, and letting the world say what it may. Mother, we ask you to let us remain humble and little, like you and like Mary. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 7"
           },
           {
             "days": [
@@ -223,27 +237,27 @@
             ],
             "key": "days-8",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 8",
+            "notes": "Added line breaks and minor punctuation for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Mother’s Devotion to Faithfulness in the Darkness: Mother Teresa radiated the joy and peace of Christ to everyone she met throughout her entire life. But she experienced decades of spiritual darkness after the founding of the Missionaries of Charity. She mourned the loss of her spiritual connection with Jesus, but grew to realize that this was a share in the darkness of the lives of those she served and loved, those who she referred to as “HER poor.” “The physical situation of my poor left in the streets unwanted, unloved, unclaimed-are the true picture of my own spiritual life, of my love for Jesus, and yet this terrible pain has never made me desire to have it different – What’s more, I want it to be like this for as long as He wants it.” She lived a share of both the agony of her Jesus and her poor. “Make me feel what Thou hast felt. Make me share with Thee Thy pain.” She wrote that she said this day after day during Lent, “maybe only with my lips”. Mother’s love and faithfulness was an act of her Will even when there was no divine consolation to be found. This interior trial was hers alone and she stayed faithful to her God and her mission throughout it. “If I ever become a saint-I will surely be one of ‘darkness.’ I will continually be absent from heaven – to light the light of those in darkness on earth.” Prayer: Father, after Mother Teresa’s death, you allowed the letters that revealed her spiritual trials to be revealed to be a comfort to the suffering and to crown her anew with the admiration of those who thought she had to be in constant consolation in order to live her life of service. Send your Spirit to help us stay faithful when we face trials of faith or charity and do not feel you near. Jesus we know you are near even when we do not feel your presence. We trust you no matter what.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Mother\u2019s Devotion to Faithfulness in the Darkness: Mother Teresa radiated the joy and peace of Christ to everyone she met throughout her entire life. But she experienced decades of spiritual darkness after the founding of the Missionaries of Charity. She mourned the loss of her spiritual connection with Jesus, but grew to realize that this was a share in the darkness of the lives of those she served and loved, those who she referred to as \u201cHER poor.\u201d \u201cThe physical situation of my poor left in the streets unwanted, unloved, unclaimed-are the true picture of my own spiritual life, of my love for Jesus, and yet this terrible pain has never made me desire to have it different \u2013 What\u2019s more, I want it to be like this for as long as He wants it.\u201d She lived a share of both the agony of her Jesus and her poor. \u201cMake me feel what Thou hast felt. Make me share with Thee Thy pain.\u201d She wrote that she said this day after day during Lent, \u201cmaybe only with my lips\u201d. Mother\u2019s love and faithfulness was an act of her Will even when there was no divine consolation to be found. This interior trial was hers alone and she stayed faithful to her God and her mission throughout it. \u201cIf I ever become a saint-I will surely be one of \u2018darkness.\u2019 I will continually be absent from heaven \u2013 to light the light of those in darkness on earth.\u201d Prayer: Father, after Mother Teresa\u2019s death, you allowed the letters that revealed her spiritual trials to be revealed to be a comfort to the suffering and to crown her anew with the admiration of those who thought she had to be in constant consolation in order to live her life of service. Send your Spirit to help us stay faithful when we face trials of faith or charity and do not feel you near. Jesus, we know you are near even when we do not feel your presence. We trust you no matter what. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 8"
           },
           {
             "days": [
@@ -251,27 +265,27 @@
             ],
             "key": "days-9",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 9",
+            "notes": "Adjusted punctuation, capitalization, and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Mother’s Devotion to Radiating the Joy and Love of Christ: Mother Teresa impressed all around her and all she met with her joyful countenance and cheerful disposition. This was both an unconscious result of the presence of Christ within her (even though SHE could not feel Him!) AND her conscious choice “to keep on smiling in spite of everything.” In fact, back in 1957 she made a resolution “to become an apostle of Joy-to console the Sacred Heart of Jesus through joy.” A priest who knew her well for years testified: “I was often amazed that someone who lived so much face to face with suffering people and went through a dark night herself, still could smile and make you feel happy…I believe that I can say that I felt in God’s presence, in the presence of truth and love.” Mother was always quick with a smile and sometimes with a dry humor like during this speech in 1977: “I remember some time ago a very big group of professors…asked, Tell us something that will help us. And I said, Smile at each other. I must have said it in a very serious way, I suppose, and so one of them asked me, Are you married? And I said, Yes, and I sometimes find it very difficult to smile at Jesus because He can be very demanding.” Prayer: Father, it can be hard to always give a smile and a kind word to those we meet, to those we live with, even to those we love! Thank you for giving us the example of Mother Teresa who smiled through such interior struggles and her daily encounter with poverty and sickness. We ask that Mother help us from heaven to become apostles of joy by keeping our inner joy whatever our outward circumstances. Thank you for the gift of your Holy Spirit who helps us to trust in the promises of your Son, Jesus.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Mother\u2019s Devotion to Radiating the Joy and Love of Christ: Mother Teresa impressed all around her, and all she met, with her joyful countenance and cheerful disposition. This was both an unconscious result of the presence of Christ within her, even though she could not feel Him, and her conscious choice \u201cto keep on smiling in spite of everything.\u201d In fact, back in 1957 she made a resolution \u201cto become an apostle of Joy, to console the Sacred Heart of Jesus through joy.\u201d A priest who knew her well for years testified: \u201cI was often amazed that someone who lived so much face to face with suffering people and went through a dark night herself, still could smile and make you feel happy. I believe that I can say that I felt in God\u2019s presence, in the presence of truth and love.\u201d Mother was always quick with a smile, and sometimes with a dry humor, like during this speech in 1977: \u201cI remember some time ago a very big group of professors asked, Tell us something that will help us. And I said, Smile at each other. I must have said it in a very serious way, I suppose, and so one of them asked me, Are you married? And I said, Yes, and I sometimes find it very difficult to smile at Jesus because He can be very demanding.\u201d Prayer: Father, it can be hard to always give a smile and a kind word to those we meet, to those we live with, even to those we love. Thank you for giving us the example of Mother Teresa, who smiled through such interior struggles and her daily encounter with poverty and sickness. We ask that Mother help us from heaven to become apostles of joy by keeping our inner joy whatever our outward circumstances. Thank you for the gift of your Holy Spirit, who helps us to trust in the promises of your Son, Jesus. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 9"
           }
         ],
         "sections": [
@@ -287,8 +301,8 @@
             ],
             "key": "day-1",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen\n\nMother’s Devotion to Satisfying the Thirst of Jesus: The words “I Thirst,” that Jesus spoke from the cross, appear next to the crucifix on the wall of every chapel in every convent all over the world of the Missionaries of Charity, the order founded by Mother Teresa to care for the poorest of the poor. Mother spoke and wrote again and again of Jesus’ thirst for souls, for repentance, for belief, for love. Love of God and also of neighbor, especially those neighbors who are poor or sick or abandoned or orphaned…those people who need it the most. “Why does Jesus say I Thirst? What does it mean?…If you remember anything from Mother’s letter remember this – I Thirst is something much deeper than Jesus just saying I love you. Until you know deep inside that Jesus thirsts for you – you can’t begin to know who He wants to be for you. Or who He wants you to be for Him.” Prayer: Father, thank you for the reminder from Mother Teresa that Jesus still thirsts today, for our hearts and souls and for all those who need him so much in this world. Through her intercession may we be drawn closer to His sacred heart and draw others there with us as well.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen  Mother\u2019s Devotion to Satisfying the Thirst of Jesus: The words \u201cI Thirst,\u201d that Jesus spoke from the cross, appear next to the crucifix on the wall of every chapel in every convent all over the world of the Missionaries of Charity, the order founded by Mother Teresa to care for the poorest of the poor. Mother spoke and wrote again and again of Jesus\u2019 thirst for souls, for repentance, for belief, for love. Love of God, and also of neighbor, especially those neighbors who are poor, or sick, or abandoned, or orphaned; those people who need it the most. \u201cWhy does Jesus say I Thirst? What does it mean? If you remember anything from Mother\u2019s letter, remember this: I Thirst is something much deeper than Jesus just saying I love you. Until you know deep inside that Jesus thirsts for you, you can\u2019t begin to know who He wants to be for you, or who He wants you to be for Him.\u201d Prayer: Father, thank you for the reminder from Mother Teresa that Jesus still thirsts today, for our hearts and souls, and for all those who need him so much in this world. Through her intercession may we be drawn closer to His sacred heart, and draw others there with us as well. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 1"
           },
           {
@@ -297,8 +311,8 @@
             ],
             "key": "day-2",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen\n\nMother’s Devotion to Mary: Mother Teresa had several visions in 1947 in the months after she experienced her call within a call from Jesus to leave the relative comfort of her position as a teacher and to go directly into the slums of Calcutta to care for the sick and dying, the poorest of the poor. Mary was with Mother Teresa in those visions, encouraging her and supporting her. Mother Teresa knew she needed to totally rely on Mary in order to get closer to Jesus herself and to bring others to Jesus. She would say “Mary, Mother of Jesus, be a mother to me now.” She would also ask Mary to “Lend me your heart” so that she could love Jesus more perfectly through the most perfect human heart who has ever loved him. “Thank God our Lady was there to understand fully the thirst of Jesus for love. She must have straight away said, “I satiate Your thirst with my love and the suffering of my heart.” “ Prayer: Father, thank you for showing us through Mother Teresa how to make devotion to Mary a part of our daily life, both as we seek to deepen our love for Jesus and as we face the trials of everyday life. Through your Spirit, the Spouse of Mary, help us to understand how much Jesus wants us to love Mary and how we can imitate her in following Your Holy Will in trust and joy.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while keeping wording and order faithful.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen  Mother\u2019s Devotion to Mary: Mother Teresa had several visions in 1947, in the months after she experienced her call within a call from Jesus, to leave the relative comfort of her position as a teacher and to go directly into the slums of Calcutta to care for the sick and dying, the poorest of the poor. Mary was with Mother Teresa in those visions, encouraging her and supporting her. Mother Teresa knew she needed to totally rely on Mary in order to get closer to Jesus herself, and to bring others to Jesus. She would say, \u201cMary, Mother of Jesus, be a mother to me now.\u201d She would also ask Mary to \u201cLend me your heart,\u201d so that she could love Jesus more perfectly through the most perfect human heart who has ever loved him. \u201cThank God our Lady was there to understand fully the thirst of Jesus for love. She must have straight away said, \u2018I satiate Your thirst with my love and the suffering of my heart.\u2019\u201d Prayer: Father, thank you for showing us through Mother Teresa how to make devotion to Mary a part of our daily life, both as we seek to deepen our love for Jesus and as we face the trials of everyday life. Through your Spirit, the Spouse of Mary, help us to understand how much Jesus wants us to love Mary and how we can imitate her in following Your Holy Will in trust and joy. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 2"
           },
           {
@@ -307,8 +321,8 @@
             ],
             "key": "day-3",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen\n\nMother’s Devotion to the Poorest of the Poor: Mother Teresa was called the slum sister and her Missionary of Charity sisters take a fourth vow: “to devote themselves with abnegation to the care of the poor and needy who…live in conditions unworthy of the human dignity. Those who join this Institute, therefore, are resolved to spend themselves unremittingly in seeking out…even amid squalid surroundings, the poorer, the abandoned, the sick, the infirm, the dying…AND in performing any other similar apostolic works and services, however lowly and mean they may appear.” Mother and her followers wanted to be carriers of Christ’s love into the slums. She was always adamant that the Missionaries of Charity were neither medical personnel nor social workers. Their mission to the poor always had a spiritual component: “this [is] really the full meaning of the poverty of Jesus. He being rich became poor.” Prayer: Father, you charged us to care for the poor and Mother Teresa took you at your word. She spent herself bringing first the poor of Calcutta and then around the world, into our homes and consciences. May we always share her concern for not only the body but the soul and seek to give comfort in both ways to those who are in need.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving wording and the personal-intention marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen  Mother\u2019s Devotion to the Poorest of the Poor: Mother Teresa was called the slum sister, and her Missionaries of Charity sisters take a fourth vow: \u201cto devote themselves with abnegation to the care of the poor and needy who\u2026live in conditions unworthy of the human dignity. \u201cThose who join this Institute, therefore, are resolved to spend themselves unremittingly in seeking out\u2026even amid squalid surroundings, the poorer, the abandoned, the sick, the infirm, the dying\u2026AND in performing any other similar apostolic works and services, however lowly and mean they may appear.\u201d Mother and her followers wanted to be carriers of Christ\u2019s love into the slums. She was always adamant that the Missionaries of Charity were neither medical personnel nor social workers. Their mission to the poor always had a spiritual component: \u201cthis [is] really the full meaning of the poverty of Jesus. He being rich became poor.\u201d Prayer: Father, you charged us to care for the poor, and Mother Teresa took you at your word. She spent herself bringing first the poor of Calcutta, and then around the world, into our homes and consciences. May we always share her concern for not only the body but the soul, and seek to give comfort in both ways to those who are in need. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 3"
           },
           {
@@ -317,8 +331,8 @@
             ],
             "key": "day-4",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen\n\nMother’s Devotion to the Sick and Suffering: The Missionaries of Charity saw the face of the Jesus in the face of every person they rendered aid and comfort to. Mother Teresa went even further and asserted that such suffering was in fact “but a kiss of Jesus – a sign that you have come so close to Jesus that he can kiss you. – I think this is the most beautiful definition of suffering.” The power of redemptive suffering (where offering one’s prayers and suffering to God in union with those of Christ) was harnessed by Mother Teresa in an innovative way. “Love demands sacrifice. But if we love until it hurts, God will give us His peace and joy…Suffering in itself is nothing; but suffering shared with Christ’s Passion is a wonderful gift.” She saw that those who were too sick to join in the physical work of the Missionaries of Charity could join forces with the active sisters! “You see, the aim of our Society is to satiate the thirst of Jesus on the Cross for love of souls by working for the salvation and sanctification of the poor in the slums. – Who could do this better than you & the others who suffer like you? Your suffering and prayers will be the chalice in which we that working members will pour in the love of souls we gather round….In reality, you can do much more while on your bed of pain than I running on my feet, but you & I together can do all things in Him who strengthens us.” What an amazing mission for someone perhaps homebound or bed-ridden! To be the spiritual engine behind a Missionary of Charity physically caring for the poor and sick thousands of miles away. In this Spirit-filled inspiration, Mother gave care, comfort and meaning not just to the sick she and her sisters came in contact with, but to those who they would never meet in this world, but certainly in the next! Prayer: Father, you gave Mother Teresa eyes to see the reality of the value of those who suffered when that suffering was united with that of Jesus your Son. Send your Spirit to open our eyes to give care and comfort to those who suffer physical or mental afflictions, and to offer our own sufferings in a spirit of love and reparation for the salvation of the world and for the continued vitality of all the branches of the Missionaries of Charity.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted punctuation, spacing, and a few phrases for smoother text-to-speech while preserving meaning, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen  Mother\u2019s Devotion to the Sick and Suffering: The Missionaries of Charity saw the face of Jesus in the face of every person they rendered aid and comfort to. Mother Teresa went even further and asserted that such suffering was in fact, \u201cbut a kiss of Jesus, a sign that you have come so close to Jesus that he can kiss you. I think this is the most beautiful definition of suffering.\u201d The power of redemptive suffering, where offering one\u2019s prayers and suffering to God in union with those of Christ, was harnessed by Mother Teresa in an innovative way. \u201cLove demands sacrifice. But if we love until it hurts, God will give us His peace and joy. Suffering in itself is nothing; but suffering shared with Christ\u2019s Passion is a wonderful gift.\u201d She saw that those who were too sick to join in the physical work of the Missionaries of Charity could join forces with the active sisters. \u201cYou see, the aim of our Society is to satiate the thirst of Jesus on the Cross for love of souls by working for the salvation and sanctification of the poor in the slums. Who could do this better than you and the others who suffer like you? Your suffering and prayers will be the chalice in which we, the working members, will pour in the love of souls we gather round. In reality, you can do much more while on your bed of pain than I, running on my feet, but you and I together can do all things in Him who strengthens us.\u201d What an amazing mission for someone perhaps homebound or bedridden: to be the spiritual engine behind a Missionary of Charity physically caring for the poor and sick thousands of miles away. In this Spirit-filled inspiration, Mother gave care, comfort, and meaning not just to the sick she and her sisters came in contact with, but to those whom they would never meet in this world, but certainly in the next. Prayer: Father, you gave Mother Teresa eyes to see the reality of the value of those who suffered when that suffering was united with that of Jesus your Son. Send your Spirit to open our eyes to give care and comfort to those who suffer physical or mental afflictions, and to offer our own sufferings in a spirit of love and reparation for the salvation of the world and for the continued vitality of all the branches of the Missionaries of Charity. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 4"
           },
           {
@@ -327,8 +341,8 @@
             ],
             "key": "day-5",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen\n\nMother’s Devotion to Forming Holy Families: Mother noted more than once that there is a different kind of poverty in the more developed and economically advantaged countries of the world. “I was surprised in the West to see so many young boys and girls given into drugs, and I tried to find out why…Because there is no one in the family to receive them Father and mother are so busy they have no time…The child goes back to the street and gets involved in something…These are things that break peace.” Mother saw that families need to be together. She talked fondly of her mother welcoming her father home each night with a smile. She stated that children needed to be taught to pray and families should pray together. She spoke often of the elderly who had food and housing but no one coming to visit and show them love. In fact, when Mother Teresa received the Nobel Peace Prize, she was asked, “What can we do to promote world peace?” She answered “Go home and love your family.” Prayer: Father, you inspired Mother Teresa to work to preserve and improve family life all over the world. May your Spirit help us build strong and faithful families all over the world, where all members know that they are loved and know Jesus. May we never be so focused on the things of this world, as noble and necessary though they may be, that we forget to Go home and love our family.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and the control marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen  Mother\u2019s Devotion to Forming Holy Families: Mother noted more than once that there is a different kind of poverty in the more developed and economically advantaged countries of the world. \u201cI was surprised in the West to see so many young boys and girls given into drugs, and I tried to find out why\u2026 Because there is no one in the family to receive them. Father and mother are so busy they have no time\u2026 The child goes back to the street and gets involved in something\u2026 These are things that break peace.\u201d Mother saw that families need to be together. She talked fondly of her mother welcoming her father home each night with a smile. She stated that children needed to be taught to pray, and families should pray together. She spoke often of the elderly who had food and housing but no one coming to visit and show them love. In fact, when Mother Teresa received the Nobel Peace Prize, she was asked, \u201cWhat can we do to promote world peace?\u201d She answered, \u201cGo home and love your family.\u201d Prayer: Father, you inspired Mother Teresa to work to preserve and improve family life all over the world. May your Spirit help us build strong and faithful families all over the world, where all members know that they are loved and know Jesus. May we never be so focused on the things of this world, as noble and necessary though they may be, that we forget to go home and love our family. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 5"
           },
           {
@@ -337,8 +351,8 @@
             ],
             "key": "day-6",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen\n\nMother’s Devotion to Children: A passionate defender of all life from conception to natural death, Mother cared deeply for children. Whether they were affected by poverty, orphaned, disabled, or the innocent victims of war or abortion, Mother was heroic in her efforts to care for the world’s children. In 1982 Mother and her sisters went to Beirut, Lebanon and during active bombing rescued 38 disabled children who were abandoned in the city. Her defense of the human rights of the unborn was also uncompromising: “I find the unborn child to be the Poorest of the Poor today – the most unloved – the most unwanted, the throw away of the society.” She was not afraid to advocate for these little ones even in front of elected officials during public speeches (1994 National Prayer Breakfast in Washington DC)! She and her missionaries of Charity cared for thousands of children, preferring to keep families together but facilitating adoptions when necessary, and caring for severely disabled children with tender love and care. Prayer: Father, you have said to us “Even if a mother could forget her child, I will not forget you. I have carved you in the palm of my hand.” Mother knew this and shared it with all, from the poor in India to the mightiest in the United States of America. Help us to remember the unborn, the orphan, children living in war or poverty or with disabilities. We need to do our utmost to not sit idly by as your little ones suffer but let us be moved by the Spirit to show them our love and that of your son Jesus.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted punctuation and capitalization for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen  Mother\u2019s Devotion to Children: A passionate defender of all life from conception to natural death, Mother cared deeply for children. Whether they were affected by poverty, orphaned, disabled, or the innocent victims of war or abortion, Mother was heroic in her efforts to care for the world\u2019s children. In 1982, Mother and her sisters went to Beirut, Lebanon, and during active bombing rescued 38 disabled children who were abandoned in the city. Her defense of the human rights of the unborn was also uncompromising: \u201cI find the unborn child to be the Poorest of the Poor today \u2013 the most unloved \u2013 the most unwanted, the throw away of the society.\u201d She was not afraid to advocate for these little ones even in front of elected officials during public speeches, at the 1994 National Prayer Breakfast in Washington, D.C. She and her Missionaries of Charity cared for thousands of children, preferring to keep families together but facilitating adoptions when necessary, and caring for severely disabled children with tender love and care. Prayer: Father, you have said to us, \u201cEven if a mother could forget her child, I will not forget you. I have carved you in the palm of my hand.\u201d Mother knew this and shared it with all, from the poor in India to the mightiest in the United States of America. Help us to remember the unborn, the orphan, children living in war or poverty or with disabilities. We need to do our utmost to not sit idly by as your little ones suffer, but let us be moved by the Spirit to show them our love, and that of your Son, Jesus. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 6"
           },
           {
@@ -347,8 +361,8 @@
             ],
             "key": "day-7",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen\n\nMother’s Devotion to the Virtue of Humility: Mother Teresa won the Nobel Peace Prize in 1979. She received many other awards and honors both before and after that. She traveled around the world speaking to lay groups and Church officials and heads of state alike, even befriending Diana, the Princess of Wales. None of these ever affected her. She remained untouched by pride or any conviction that the awards were for her. She always accepted “for the work we are doing….as for me personally it means nothing. I want only to be a real Missionary of Charity like Our Lady was.” A priest who knew her well affirmed “[Her union with Jesus] gave her the freedom which made her independent of praise and blame. When great honors were poured on her all over the world it did not affect her in the least. She had abandoned everything to God, her whole being.” This was confirmed by her own words to another priest who asked how she handled all the admiration she received from even famous world leaders: “Father, Jesus has given me a very great grace and that is: the deepest conviction of my total nothingness. If He could find a poorer woman through whom to do his work, He would not choose me, but He would choose that woman” or, “Father it goes in here (pointing to her ears) and it comes out there; it goes right through me.” Another reaction to all the admiration of people: “It is a true crucifixion.” Prayer: Father, we need to acknowledge the truth. That you are the source of all things and that all we do is because of your grace. Help us cooperate with your Holy Spirit and become the person you want us to be, caring only if we are faithful to your Will and letting the world say what it may. Mother we ask you to let us remain humble and little, like you and like Mary.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen.  Mother\u2019s Devotion to the Virtue of Humility: Mother Teresa won the Nobel Peace Prize in 1979. She received many other awards and honors both before and after that. She traveled around the world speaking to lay groups and Church officials and heads of state alike, even befriending Diana, the Princess of Wales. None of these ever affected her. She remained untouched by pride, or any conviction that the awards were for her. She always accepted, \u201cfor the work we are doing\u2026. as for me personally it means nothing. I want only to be a real Missionary of Charity like Our Lady was.\u201d A priest who knew her well affirmed, \u201c[Her union with Jesus] gave her the freedom which made her independent of praise and blame. When great honors were poured on her all over the world it did not affect her in the least. She had abandoned everything to God, her whole being.\u201d This was confirmed by her own words to another priest who asked how she handled all the admiration she received from even famous world leaders: \u201cFather, Jesus has given me a very great grace and that is: the deepest conviction of my total nothingness. If He could find a poorer woman through whom to do his work, He would not choose me, but He would choose that woman.\u201d Or, \u201cFather, it goes in here,\u201d pointing to her ears, \u201cand it comes out there. It goes right through me.\u201d Another reaction to all the admiration of people: \u201cIt is a true crucifixion.\u201d Prayer: Father, we need to acknowledge the truth: that you are the source of all things, and that all we do is because of your grace. Help us cooperate with your Holy Spirit and become the person you want us to be, caring only if we are faithful to your Will, and letting the world say what it may. Mother, we ask you to let us remain humble and little, like you and like Mary. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 7"
           },
           {
@@ -357,8 +371,8 @@
             ],
             "key": "day-8",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen\n\nMother’s Devotion to Faithfulness in the Darkness: Mother Teresa radiated the joy and peace of Christ to everyone she met throughout her entire life. But she experienced decades of spiritual darkness after the founding of the Missionaries of Charity. She mourned the loss of her spiritual connection with Jesus, but grew to realize that this was a share in the darkness of the lives of those she served and loved, those who she referred to as “HER poor.” “The physical situation of my poor left in the streets unwanted, unloved, unclaimed-are the true picture of my own spiritual life, of my love for Jesus, and yet this terrible pain has never made me desire to have it different – What’s more, I want it to be like this for as long as He wants it.” She lived a share of both the agony of her Jesus and her poor. “Make me feel what Thou hast felt. Make me share with Thee Thy pain.” She wrote that she said this day after day during Lent, “maybe only with my lips”. Mother’s love and faithfulness was an act of her Will even when there was no divine consolation to be found. This interior trial was hers alone and she stayed faithful to her God and her mission throughout it. “If I ever become a saint-I will surely be one of ‘darkness.’ I will continually be absent from heaven – to light the light of those in darkness on earth.” Prayer: Father, after Mother Teresa’s death, you allowed the letters that revealed her spiritual trials to be revealed to be a comfort to the suffering and to crown her anew with the admiration of those who thought she had to be in constant consolation in order to live her life of service. Send your Spirit to help us stay faithful when we face trials of faith or charity and do not feel you near. Jesus we know you are near even when we do not feel your presence. We trust you no matter what.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Added line breaks and minor punctuation for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen  Mother\u2019s Devotion to Faithfulness in the Darkness: Mother Teresa radiated the joy and peace of Christ to everyone she met throughout her entire life. But she experienced decades of spiritual darkness after the founding of the Missionaries of Charity. She mourned the loss of her spiritual connection with Jesus, but grew to realize that this was a share in the darkness of the lives of those she served and loved, those who she referred to as \u201cHER poor.\u201d \u201cThe physical situation of my poor left in the streets unwanted, unloved, unclaimed-are the true picture of my own spiritual life, of my love for Jesus, and yet this terrible pain has never made me desire to have it different \u2013 What\u2019s more, I want it to be like this for as long as He wants it.\u201d She lived a share of both the agony of her Jesus and her poor. \u201cMake me feel what Thou hast felt. Make me share with Thee Thy pain.\u201d She wrote that she said this day after day during Lent, \u201cmaybe only with my lips\u201d. Mother\u2019s love and faithfulness was an act of her Will even when there was no divine consolation to be found. This interior trial was hers alone and she stayed faithful to her God and her mission throughout it. \u201cIf I ever become a saint-I will surely be one of \u2018darkness.\u2019 I will continually be absent from heaven \u2013 to light the light of those in darkness on earth.\u201d Prayer: Father, after Mother Teresa\u2019s death, you allowed the letters that revealed her spiritual trials to be revealed to be a comfort to the suffering and to crown her anew with the admiration of those who thought she had to be in constant consolation in order to live her life of service. Send your Spirit to help us stay faithful when we face trials of faith or charity and do not feel you near. Jesus, we know you are near even when we do not feel your presence. We trust you no matter what. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 8"
           },
           {
@@ -367,8 +381,8 @@
             ],
             "key": "day-9",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nMemorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen\n\nMother’s Devotion to Radiating the Joy and Love of Christ: Mother Teresa impressed all around her and all she met with her joyful countenance and cheerful disposition. This was both an unconscious result of the presence of Christ within her (even though SHE could not feel Him!) AND her conscious choice “to keep on smiling in spite of everything.” In fact, back in 1957 she made a resolution “to become an apostle of Joy-to console the Sacred Heart of Jesus through joy.” A priest who knew her well for years testified: “I was often amazed that someone who lived so much face to face with suffering people and went through a dark night herself, still could smile and make you feel happy…I believe that I can say that I felt in God’s presence, in the presence of truth and love.” Mother was always quick with a smile and sometimes with a dry humor like during this speech in 1977: “I remember some time ago a very big group of professors…asked, Tell us something that will help us. And I said, Smile at each other. I must have said it in a very serious way, I suppose, and so one of them asked me, Are you married? And I said, Yes, and I sometimes find it very difficult to smile at Jesus because He can be very demanding.” Prayer: Father, it can be hard to always give a smile and a kind word to those we meet, to those we live with, even to those we love! Thank you for giving us the example of Mother Teresa who smiled through such interior struggles and her daily encounter with poverty and sickness. We ask that Mother help us from heaven to become apostles of joy by keeping our inner joy whatever our outward circumstances. Thank you for the gift of your Holy Spirit who helps us to trust in the promises of your Son, Jesus.\n\nAmen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted punctuation, capitalization, and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Memorare: Remember, O Most Gracious Virgin Mary, that never was it known, that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired by this confidence, I fly unto thee, O Virgin of virgins, my Mother. To thee do I come, before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy hear and answer me. Amen  Mother\u2019s Devotion to Radiating the Joy and Love of Christ: Mother Teresa impressed all around her, and all she met, with her joyful countenance and cheerful disposition. This was both an unconscious result of the presence of Christ within her, even though she could not feel Him, and her conscious choice \u201cto keep on smiling in spite of everything.\u201d In fact, back in 1957 she made a resolution \u201cto become an apostle of Joy, to console the Sacred Heart of Jesus through joy.\u201d A priest who knew her well for years testified: \u201cI was often amazed that someone who lived so much face to face with suffering people and went through a dark night herself, still could smile and make you feel happy. I believe that I can say that I felt in God\u2019s presence, in the presence of truth and love.\u201d Mother was always quick with a smile, and sometimes with a dry humor, like during this speech in 1977: \u201cI remember some time ago a very big group of professors asked, Tell us something that will help us. And I said, Smile at each other. I must have said it in a very serious way, I suppose, and so one of them asked me, Are you married? And I said, Yes, and I sometimes find it very difficult to smile at Jesus because He can be very demanding.\u201d Prayer: Father, it can be hard to always give a smile and a kind word to those we meet, to those we live with, even to those we love. Thank you for giving us the example of Mother Teresa, who smiled through such interior struggles and her daily encounter with poverty and sickness. We ask that Mother help us from heaven to become apostles of joy by keeping our inner joy whatever our outward circumstances. Thank you for the gift of your Holy Spirit, who helps us to trust in the promises of your Son, Jesus. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 9"
           }
         ],
@@ -379,7 +393,38 @@
       "audio": {
         "enabled": true,
         "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
         "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
         "speed": 1.0,
         "voice": "ash"
       },

@@ -1,0 +1,224 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "holy_cross",
+    "feast": {
+      "day": 14,
+      "mode": "fixed",
+      "month": 9,
+      "name": "Holy Cross"
+    },
+    "id": "holy_cross",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A novena honoring the Holy Cross, recalling Christ\u2019s saving sacrifice and praying for faith, repentance, and strength to carry daily crosses."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Holy Cross Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added paragraph breaks for clearer pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Who because of Your burning love for us willed to be crucified and to shed Your Most Precious Blood for the redemption and salvation of our souls, look down upon us and grant the petition we ask for"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "We trust completely in Your Mercy. Cleanse us from sin by Your Grace, sanctify our work, give us and all those who are dear to us our daily bread, lighten the burden of our sufferings, bless our families, and grant to the nations, so sorely afflicted, Your Peace, which is the only true peace, so that by obeying Your Commandments we may come at last to the glory of Heaven. Lord, we exalt Your Holy Cross, upon which You redeemed the world. Grant us a share in Your sufferings, uniting our crosses to Yours, so that we may share in Your Heavenly glory forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Holy Cross Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added paragraph breaks for clearer pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Who because of Your burning love for us willed to be crucified and to shed Your Most Precious Blood for the redemption and salvation of our souls, look down upon us and grant the petition we ask for  We trust completely in Your Mercy. Cleanse us from sin by Your Grace, sanctify our work, give us and all those who are dear to us our daily bread, lighten the burden of our sufferings, bless our families, and grant to the nations, so sorely afflicted, Your Peace, which is the only true peace, so that by obeying Your Commandments we may come at last to the glory of Heaven. Lord, we exalt Your Holy Cross, upon which You redeemed the world. Grant us a share in Your sufferings, uniting our crosses to Yours, so that we may share in Your Heavenly glory forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added paragraph breaks for clearer pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Who because of Your burning love for us willed to be crucified and to shed Your Most Precious Blood for the redemption and salvation of our souls, look down upon us and grant the petition we ask for  We trust completely in Your Mercy. Cleanse us from sin by Your Grace, sanctify our work, give us and all those who are dear to us our daily bread, lighten the burden of our sufferings, bless our families, and grant to the nations, so sorely afflicted, Your Peace, which is the only true peace, so that by obeying Your Commandments we may come at last to the glory of Heaven. Lord, we exalt Your Holy Cross, upon which You redeemed the world. Grant us a share in Your sufferings, uniting our crosses to Yours, so that we may share in Your Heavenly glory forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added paragraph breaks for clearer pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Who because of Your burning love for us willed to be crucified and to shed Your Most Precious Blood for the redemption and salvation of our souls, look down upon us and grant the petition we ask for  We trust completely in Your Mercy. Cleanse us from sin by Your Grace, sanctify our work, give us and all those who are dear to us our daily bread, lighten the burden of our sufferings, bless our families, and grant to the nations, so sorely afflicted, Your Peace, which is the only true peace, so that by obeying Your Commandments we may come at last to the glory of Heaven. Lord, we exalt Your Holy Cross, upon which You redeemed the world. Grant us a share in Your sufferings, uniting our crosses to Yours, so that we may share in Your Heavenly glory forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added paragraph breaks for clearer pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Who because of Your burning love for us willed to be crucified and to shed Your Most Precious Blood for the redemption and salvation of our souls, look down upon us and grant the petition we ask for  We trust completely in Your Mercy. Cleanse us from sin by Your Grace, sanctify our work, give us and all those who are dear to us our daily bread, lighten the burden of our sufferings, bless our families, and grant to the nations, so sorely afflicted, Your Peace, which is the only true peace, so that by obeying Your Commandments we may come at last to the glory of Heaven. Lord, we exalt Your Holy Cross, upon which You redeemed the world. Grant us a share in Your sufferings, uniting our crosses to Yours, so that we may share in Your Heavenly glory forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added paragraph breaks for clearer pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Who because of Your burning love for us willed to be crucified and to shed Your Most Precious Blood for the redemption and salvation of our souls, look down upon us and grant the petition we ask for  We trust completely in Your Mercy. Cleanse us from sin by Your Grace, sanctify our work, give us and all those who are dear to us our daily bread, lighten the burden of our sufferings, bless our families, and grant to the nations, so sorely afflicted, Your Peace, which is the only true peace, so that by obeying Your Commandments we may come at last to the glory of Heaven. Lord, we exalt Your Holy Cross, upon which You redeemed the world. Grant us a share in Your sufferings, uniting our crosses to Yours, so that we may share in Your Heavenly glory forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added paragraph breaks for clearer pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Who because of Your burning love for us willed to be crucified and to shed Your Most Precious Blood for the redemption and salvation of our souls, look down upon us and grant the petition we ask for  We trust completely in Your Mercy. Cleanse us from sin by Your Grace, sanctify our work, give us and all those who are dear to us our daily bread, lighten the burden of our sufferings, bless our families, and grant to the nations, so sorely afflicted, Your Peace, which is the only true peace, so that by obeying Your Commandments we may come at last to the glory of Heaven. Lord, we exalt Your Holy Cross, upon which You redeemed the world. Grant us a share in Your sufferings, uniting our crosses to Yours, so that we may share in Your Heavenly glory forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added paragraph breaks for clearer pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Who because of Your burning love for us willed to be crucified and to shed Your Most Precious Blood for the redemption and salvation of our souls, look down upon us and grant the petition we ask for  We trust completely in Your Mercy. Cleanse us from sin by Your Grace, sanctify our work, give us and all those who are dear to us our daily bread, lighten the burden of our sufferings, bless our families, and grant to the nations, so sorely afflicted, Your Peace, which is the only true peace, so that by obeying Your Commandments we may come at last to the glory of Heaven. Lord, we exalt Your Holy Cross, upon which You redeemed the world. Grant us a share in Your sufferings, uniting our crosses to Yours, so that we may share in Your Heavenly glory forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added paragraph breaks for clearer pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Who because of Your burning love for us willed to be crucified and to shed Your Most Precious Blood for the redemption and salvation of our souls, look down upon us and grant the petition we ask for  We trust completely in Your Mercy. Cleanse us from sin by Your Grace, sanctify our work, give us and all those who are dear to us our daily bread, lighten the burden of our sufferings, bless our families, and grant to the nations, so sorely afflicted, Your Peace, which is the only true peace, so that by obeying Your Commandments we may come at last to the glory of Heaven. Lord, we exalt Your Holy Cross, upon which You redeemed the world. Grant us a share in Your sufferings, uniting our crosses to Yours, so that we may share in Your Heavenly glory forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added paragraph breaks for clearer pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Jesus, Who because of Your burning love for us willed to be crucified and to shed Your Most Precious Blood for the redemption and salvation of our souls, look down upon us and grant the petition we ask for  We trust completely in Your Mercy. Cleanse us from sin by Your Grace, sanctify our work, give us and all those who are dear to us our daily bread, lighten the burden of our sufferings, bless our families, and grant to the nations, so sorely afflicted, Your Peace, which is the only true peace, so that by obeying Your Commandments we may come at last to the glory of Heaven. Lord, we exalt Your Holy Cross, upon which You redeemed the world. Grant us a share in Your sufferings, uniting our crosses to Yours, so that we may share in Your Heavenly glory forever. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-holy_cross"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "holy_cross",
+      "name": "Holy Cross"
+    },
+    "type": "novena_feast_rule"
+  }
+}

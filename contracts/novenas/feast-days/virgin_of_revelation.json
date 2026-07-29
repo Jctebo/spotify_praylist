@@ -1,0 +1,440 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "virgin_of_revelation",
+    "feast": {
+      "day": 12,
+      "mode": "fixed",
+      "month": 4,
+      "name": "Virgin of Revelation"
+    },
+    "id": "virgin_of_revelation",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A novena honoring the Virgin of Revelation, recalling reported Marian apparitions at Tre Fontane in Rome and seeking Mary\u2019s intercession and conversion."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Mary, the Virgin of Revelation Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and normalized a few phrases for spoken clarity without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: Like every good Mother, the Virgin of Revelation always gives her children advice to help them on their journey through life: pray the Rosary. Repeatedly, Mary proposes the same prayer to all who seek her help. However, she also gives us the consolation that she is always there to help us in our trials. The thought of Our Lady\u2019s presence makes us feel less alone, our burdens lighter, and increases our courage to face life\u2019s difficulties, knowing that her maternal company is always by our side. At the start of our nine days in her company, let us entrust all that we hold in our hearts to her maternal care, asking for her help and intercession. Teaching of the Church: Against the background of the words Ave Maria, the principal events of the life of Jesus Christ pass before the eyes of the soul. They take shape in the complete series of the joyful, sorrowful, and glorious mysteries, and they put us in living communion with Jesus through, we might say, the heart of his Mother. At the same time our heart can embrace, in the decades of the Rosary, all the events that make up the lives of individuals, families, nations, the Church, and all mankind. Our personal concerns and those of our neighbour, especially those who are closest to us, who are dearest to us. Thus, the simple prayer of the Rosary marks the rhythm of human life. Rosarium Virginis Mariae, number 2. Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you, turn your merciful and kind glance towards us. Oh Mary, you are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from your Son Jesus, salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, peace among nations, in order that we can love and serve you better in this life, and one day deserve to see and thank you eternally in Heaven."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "Normalized punctuation and phrasing for clearer text-to-speech delivery, expanded abbreviations, and added brief pacing breaks without changing meaning or order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: Our Lady is often invoked in the Church using the great titles of Advocate, Helper, Benefactress, or Mediatrix, as referenced in the Catechism of the Catholic Church, number 696. However, at Tre Fontane, she gives us the image of children seeking protection under her green mantle. Just as small children often hide in the folds of their mother\u2019s clothes when they feel insecure, Our Lady invites us to do the same with her: to hide under her mantle of protection, knowing she will protect us in all our difficulties. A mantle can protect a person from raging storms. It can be a shelter, a place to hide, or a refuge in difficulties. Our Lady is all of these things to her children who seek her merciful help. Today, let us place all our loved ones, our family and friends, under Our Lady\u2019s mantle of protection, asking her to extend her maternal protection over them. Teaching of the Church: Insistent prayer to the Mother of God is based on confidence that her maternal intercession can obtain all things from the heart of her Son. She is \u201call-powerful by grace, to use the bold expression, which needs to be properly understood\u2026 This is a conviction which, beginning with the Gospel, has grown ever more firm in the experience of the Christian people. The supreme poet Dante expresses it marvelously in the lines sung by Saint Bernard: Lady, thou art so great and so powerful, that whoever desires grace yet does not turn to thee, would have his desire fly without wings.\u201d Supplication to the Virgin of Revelation, to obtain any grace: Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you, to turn your merciful and kind glance towards us. Oh Mary, you are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from your Son Jesus salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, and peace among nations, in order that we can love and serve you better in this life, and one day deserve to see and thank you eternally in Heaven."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed a stray fragment, adjusted punctuation and line breaks for clearer text-to-speech, and normalized citations and endings for spoken delivery while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: We are always somehow predisposed to yield to the requests of those we love. Likewise, Jesus, during his time on earth, was also moved to respond to His Mother\u2019s intercessions. Now in heaven, the Lord prefers nothing more than granting favours to those who implore His Mother\u2019s help. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. The hinge, as it were, which joins its two parts, is the name of Jesus. When we repeat the name of Jesus, the only name given to us by which we may hope for salvation, as in Acts 4:12, in close association with the name of his Blessed Mother, almost as if it were done at her suggestion, we set out on a path of assimilation meant to help us enter more deeply into the life of Christ. From Mary\u2019s uniquely privileged relationship with Christ, which makes her the Mother of God, Theot\u00f3kos, derives the forcefulness of the appeal we make to her in the second half of the prayer, as we entrust to her maternal intercession our lives and the hour of our death. R V M, number 33. Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you; turn your merciful and kind glance towards us. Oh Mary! You are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from Your Son Jesus, salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of His enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, peace among nations, in order that we can love and serve You better in this life and one day deserve to see and thank you eternally in Heaven."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and capitalization for clearer text-to-speech, added pacing paragraph breaks, and normalized scripture and citation phrasing while preserving meaning and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: The Virgin of Revelation\u2019s invitation to call her Mother is an expression of the close bond that she feels for each of us. It is an invitation to have a close relationship with our Blessed Mother. It is always possible to depend on a mother\u2019s love and, should we go astray, our mother\u2019s calls will indicate the right path to follow. Our Lady wants to indicate the way to follow her Son, which means the way to become truly configured to Him by living the Christian life. This maternity extends in a special way towards priests because, once in Our Lady\u2019s care, they will find the way to become purer, holier, more faithful, and more united to Christ and His Bride, the Church. Let us pray for all priests, that they have the courage to be pure, holy, and faithful to the teachings of the Catholic Church, and to transmit that faith to members of the Church. Teaching of the Church: Since Mary is completely imbued with the Word of God, she is able to become the Mother of the Word Incarnate. Finally, Mary is a woman who loves. How could it be otherwise? As a believer who in faith thinks with God\u2019s thoughts and wills with God\u2019s will, she cannot fail to be a woman who loves. We sense this in her quiet gestures, as recounted by the infancy narratives in the Gospel. We see it in the delicacy with which she recognizes the need of the spouses at Cana and makes it known to Jesus. We see it in the humility with which she recedes into the background during Jesus\u2019 public life, knowing that the Son must establish a new family and that the Mother\u2019s hour will come only with the Cross, which will be Jesus\u2019 true hour, as in John chapter 2, verse 4, and John chapter 13, verse 1. When the disciples flee, Mary will remain beneath the Cross, as in John chapter 19, verses 25 through 27. Later, at the hour of Pentecost, it will be they who gather around her as they wait for the Holy Spirit, as in Acts chapter 1, verse 14. Deus Caritas Est, number 41. Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you, turn your merciful and kind glance towards us. Oh Mary, you are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from your Son Jesus, salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, peace among nations, in order that we can love and serve you better in this life and one day deserve to see and thank you eternally in Heaven."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraphing for clearer text-to-speech pacing, and normalized a few references for spoken clarity while preserving meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: The Sacred Heart of Jesus burns with love for men. At Tre Fontane, Our Lady told Bruno that this devotion had saved him. The Virgin wanted to underline the reality that Our Lord works in the details of everyone\u2019s life to bring about their salvation, even if it is won despite our own initial resistance. The other aspect of the grace that Bruno received is that it took time to mature. We do not often receive the grace we ask for immediately, or even on our terms. The Lord knows the real needs of our lives, which is a deeper encounter with Him. First, we must grow in trust and patience before the Lord will answer our needs. The Lord grants us the graces just at the right time. Often, it is only when we look back that we see that the Lord\u2019s timing was perfect. Today, let us ask Our Lady for the grace of greater devotion to the Sacred Heart, and the courage to entrust all our lives to Him. Teaching of the Church: We do not hesitate to declare that devotion to the Sacred Heart of Jesus is the most effective school of the love of God; the love of God, We say, which must be the foundation on which to build the kingdom of God in the hearts of individuals, families, and nations. Pius the Twelfth, Haurietis Aquas, number 124. Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you; turn your merciful and kind glance towards us. Oh Mary! You are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from Your Son Jesus, salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, and peace among nations, in order that we can love and serve You better in this life, and one day deserve to see and thank you eternally in Heaven."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "Light normalization for text-to-speech: minor punctuation, spelling, and capitalization adjustments; added brief pauses and clarified the citation for spoken delivery.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: With this invitation, the Virgin urges us to imitate her: to not keep the Word for ourselves, but to go out and pass it on to others. Our Lady, having just conceived the Word in her womb, went \u201cwith haste\u201d to visit Saint Elizabeth, to share the good news of salvation with her. This is what the Virgin asks us all, each in his own way, to do. In a world that is parched for the Word of God, Our Lady appeared holding the Word, to demonstrate that we too must be bearers of this same Word. Teaching of the Church: Here we see how completely at home Mary is with the Word of God. With ease, she moves in and out of it. She speaks and thinks with the Word of God; the Word of God becomes her word, and her word issues from the Word of God. Here we see how her thoughts are attuned to the thoughts of God, how her will is one with the will of God. Deus Caritas Est, number 41. Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you, to turn your merciful and kind glance towards us. Oh Mary, you are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from your Son Jesus, salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, peace among nations, in order that we can love and serve you better in this life, and one day deserve to see and thank you eternally in Heaven."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: The Virgin of Revelation calls us all to conversion. She promises great prodigies for hardened sinners, or those who are unable to accept the truths of the Catholic faith. However, conversion goes right to the heart of the Christian. It is a lifetime\u2019s journey, and so Our Lady\u2019s call for conversion applies to all Christians. We must all continually renounce the hardness of our hearts, to become more Christ-like. The Virgin is the model of the Christian, and so by looking at her we can learn how to love her Son ever more perfectly. In our prayer today, let us place all those we know who are in need of conversion under the maternal care of the Virgin of Revelation. Teaching of the Church: Mary\u2019s company, this demanding ideal of being conformed to him, is pursued through an association which could be described in terms of friendship. We are thereby enabled to enter naturally into Christ\u2019s life and, as it were, to share his deepest feelings. In this regard, Blessed Bartolo Longo has written: \u201cJust as two friends, frequently in each other\u2019s company, tend to develop similar habits, so too, by holding familiar converse with Jesus and the Blessed Virgin, by meditating on the mysteries of the Rosary and by living the same life in Holy Communion, we can become, to the extent of our lowliness, similar to them and can learn from these supreme models a life of humility, poverty, hiddenness, patience and perfection.\u201d (RVM 15) Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you, to turn your merciful and kind glance towards us. Oh Mary, you are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from your Son Jesus, salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, and peace among nations, in order that we can love and serve you better in this life, and one day deserve to see and thank you eternally in Heaven."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation, capitalization, and line breaks for clearer text-to-speech pacing while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: There is a joy in following the Lord. If we are with Christ, then nothing can overcome us, and we know that He will turn all things to our favour, as in Romans 8:28. Therefore, whether we are experiencing joys or sorrows, we can still rejoice. The Virgin of Revelation tells us the real secret of Christian joy: a relationship with Christ in prayer. When we breathe freely the air of an intimate friendship with Christ, we are able to share our difficulties and challenges with Him, and so nothing can be insurmountable. This must be a cause for our joy. The real secret of Christian joy is precisely in this: the Lord\u2019s intimate presence in our lives. That is why His mother encourages us always to pray. Teaching of the Church: Prayer is the life of the new heart. It ought to animate us at every moment. But we tend to forget Him who is our life and our all. This is why the Fathers of the spiritual life, in the Deuteronomic and prophetic traditions, insist that prayer is a remembrance of God, often awakened by the memory of the heart: \u201cWe must remember God more often than we draw breath.\u201d CCC 2697. Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you, to turn your merciful and kind glance towards us. Oh Mary, you are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from your Son Jesus salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, and peace among nations, in order that we can love and serve you better in this life, and one day deserve to see and thank you eternally in Heaven."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation, capitalization, and line breaks for clearer text-to-speech pacing while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: There is an extraordinary relevance, or we could say, modernity, to the title by which the Mother of the Lord is venerated and remembered here at Tre Fontane: the Virgin of Revelation. One of the five fundamental dogmatic constitutions of the Second Vatican Council, Dei Verbum, was entirely dedicated to Divine Revelation, who is the person of Jesus Christ. The fact that the Most Holy Mary is venerated with this title places in our hearts the mystery of God, who speaks to men as a friend, so that we too may respond with our yes, just like our Blessed Mother. The Teaching of the Church: The Virgin Mary, who at the message of the angel received the Word of God in her heart and in her body and gave Life to the world, is acknowledged and honoured as being truly the Mother of God and Mother of the Redeemer. Redeemed by reason of the merits of her Son and united to Him by a close and indissoluble tie, she is endowed with the high office and dignity of being the Mother of the Son of God, by which account she is also the beloved daughter of the Father and the temple of the Holy Spirit. Lumen Gentium 53. Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you, to turn your merciful and kind glance towards us. Oh Mary, you are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from your Son Jesus salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, and peace among nations, in order that we can love and serve you better in this life, and one day deserve to see and thank you eternally in Heaven."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Mary, the Virgin of Revelation Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and normalized a few phrases for spoken clarity without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: Like every good Mother, the Virgin of Revelation always gives her children advice to help them on their journey through life: pray the Rosary. Repeatedly, Mary proposes the same prayer to all who seek her help. However, she also gives us the consolation that she is always there to help us in our trials. The thought of Our Lady\u2019s presence makes us feel less alone, our burdens lighter, and increases our courage to face life\u2019s difficulties, knowing that her maternal company is always by our side. At the start of our nine days in her company, let us entrust all that we hold in our hearts to her maternal care, asking for her help and intercession. Teaching of the Church: Against the background of the words Ave Maria, the principal events of the life of Jesus Christ pass before the eyes of the soul. They take shape in the complete series of the joyful, sorrowful, and glorious mysteries, and they put us in living communion with Jesus through, we might say, the heart of his Mother. At the same time our heart can embrace, in the decades of the Rosary, all the events that make up the lives of individuals, families, nations, the Church, and all mankind. Our personal concerns and those of our neighbour, especially those who are closest to us, who are dearest to us. Thus, the simple prayer of the Rosary marks the rhythm of human life. Rosarium Virginis Mariae, number 2. Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you, turn your merciful and kind glance towards us. Oh Mary, you are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from your Son Jesus, salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, peace among nations, in order that we can love and serve you better in this life, and one day deserve to see and thank you eternally in Heaven.  Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Normalized punctuation and phrasing for clearer text-to-speech delivery, expanded abbreviations, and added brief pacing breaks without changing meaning or order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: Our Lady is often invoked in the Church using the great titles of Advocate, Helper, Benefactress, or Mediatrix, as referenced in the Catechism of the Catholic Church, number 696. However, at Tre Fontane, she gives us the image of children seeking protection under her green mantle. Just as small children often hide in the folds of their mother\u2019s clothes when they feel insecure, Our Lady invites us to do the same with her: to hide under her mantle of protection, knowing she will protect us in all our difficulties. A mantle can protect a person from raging storms. It can be a shelter, a place to hide, or a refuge in difficulties. Our Lady is all of these things to her children who seek her merciful help. Today, let us place all our loved ones, our family and friends, under Our Lady\u2019s mantle of protection, asking her to extend her maternal protection over them. Teaching of the Church: Insistent prayer to the Mother of God is based on confidence that her maternal intercession can obtain all things from the heart of her Son. She is \u201call-powerful by grace, to use the bold expression, which needs to be properly understood\u2026 This is a conviction which, beginning with the Gospel, has grown ever more firm in the experience of the Christian people. The supreme poet Dante expresses it marvelously in the lines sung by Saint Bernard: Lady, thou art so great and so powerful, that whoever desires grace yet does not turn to thee, would have his desire fly without wings.\u201d Supplication to the Virgin of Revelation, to obtain any grace: Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you, to turn your merciful and kind glance towards us. Oh Mary, you are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from your Son Jesus salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, and peace among nations, in order that we can love and serve you better in this life, and one day deserve to see and thank you eternally in Heaven.  Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed a stray fragment, adjusted punctuation and line breaks for clearer text-to-speech, and normalized citations and endings for spoken delivery while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: We are always somehow predisposed to yield to the requests of those we love. Likewise, Jesus, during his time on earth, was also moved to respond to His Mother\u2019s intercessions. Now in heaven, the Lord prefers nothing more than granting favours to those who implore His Mother\u2019s help. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. The hinge, as it were, which joins its two parts, is the name of Jesus. When we repeat the name of Jesus, the only name given to us by which we may hope for salvation, as in Acts 4:12, in close association with the name of his Blessed Mother, almost as if it were done at her suggestion, we set out on a path of assimilation meant to help us enter more deeply into the life of Christ. From Mary\u2019s uniquely privileged relationship with Christ, which makes her the Mother of God, Theot\u00f3kos, derives the forcefulness of the appeal we make to her in the second half of the prayer, as we entrust to her maternal intercession our lives and the hour of our death. R V M, number 33. Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you; turn your merciful and kind glance towards us. Oh Mary! You are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from Your Son Jesus, salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of His enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, peace among nations, in order that we can love and serve You better in this life and one day deserve to see and thank you eternally in Heaven.  Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and capitalization for clearer text-to-speech, added pacing paragraph breaks, and normalized scripture and citation phrasing while preserving meaning and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: The Virgin of Revelation\u2019s invitation to call her Mother is an expression of the close bond that she feels for each of us. It is an invitation to have a close relationship with our Blessed Mother. It is always possible to depend on a mother\u2019s love and, should we go astray, our mother\u2019s calls will indicate the right path to follow. Our Lady wants to indicate the way to follow her Son, which means the way to become truly configured to Him by living the Christian life. This maternity extends in a special way towards priests because, once in Our Lady\u2019s care, they will find the way to become purer, holier, more faithful, and more united to Christ and His Bride, the Church. Let us pray for all priests, that they have the courage to be pure, holy, and faithful to the teachings of the Catholic Church, and to transmit that faith to members of the Church. Teaching of the Church: Since Mary is completely imbued with the Word of God, she is able to become the Mother of the Word Incarnate. Finally, Mary is a woman who loves. How could it be otherwise? As a believer who in faith thinks with God\u2019s thoughts and wills with God\u2019s will, she cannot fail to be a woman who loves. We sense this in her quiet gestures, as recounted by the infancy narratives in the Gospel. We see it in the delicacy with which she recognizes the need of the spouses at Cana and makes it known to Jesus. We see it in the humility with which she recedes into the background during Jesus\u2019 public life, knowing that the Son must establish a new family and that the Mother\u2019s hour will come only with the Cross, which will be Jesus\u2019 true hour, as in John chapter 2, verse 4, and John chapter 13, verse 1. When the disciples flee, Mary will remain beneath the Cross, as in John chapter 19, verses 25 through 27. Later, at the hour of Pentecost, it will be they who gather around her as they wait for the Holy Spirit, as in Acts chapter 1, verse 14. Deus Caritas Est, number 41. Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you, turn your merciful and kind glance towards us. Oh Mary, you are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from your Son Jesus, salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, peace among nations, in order that we can love and serve you better in this life and one day deserve to see and thank you eternally in Heaven.  Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraphing for clearer text-to-speech pacing, and normalized a few references for spoken clarity while preserving meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: The Sacred Heart of Jesus burns with love for men. At Tre Fontane, Our Lady told Bruno that this devotion had saved him. The Virgin wanted to underline the reality that Our Lord works in the details of everyone\u2019s life to bring about their salvation, even if it is won despite our own initial resistance. The other aspect of the grace that Bruno received is that it took time to mature. We do not often receive the grace we ask for immediately, or even on our terms. The Lord knows the real needs of our lives, which is a deeper encounter with Him. First, we must grow in trust and patience before the Lord will answer our needs. The Lord grants us the graces just at the right time. Often, it is only when we look back that we see that the Lord\u2019s timing was perfect. Today, let us ask Our Lady for the grace of greater devotion to the Sacred Heart, and the courage to entrust all our lives to Him. Teaching of the Church: We do not hesitate to declare that devotion to the Sacred Heart of Jesus is the most effective school of the love of God; the love of God, We say, which must be the foundation on which to build the kingdom of God in the hearts of individuals, families, and nations. Pius the Twelfth, Haurietis Aquas, number 124. Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you; turn your merciful and kind glance towards us. Oh Mary! You are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from Your Son Jesus, salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, and peace among nations, in order that we can love and serve You better in this life, and one day deserve to see and thank you eternally in Heaven.  Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Light normalization for text-to-speech: minor punctuation, spelling, and capitalization adjustments; added brief pauses and clarified the citation for spoken delivery.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: With this invitation, the Virgin urges us to imitate her: to not keep the Word for ourselves, but to go out and pass it on to others. Our Lady, having just conceived the Word in her womb, went \u201cwith haste\u201d to visit Saint Elizabeth, to share the good news of salvation with her. This is what the Virgin asks us all, each in his own way, to do. In a world that is parched for the Word of God, Our Lady appeared holding the Word, to demonstrate that we too must be bearers of this same Word. Teaching of the Church: Here we see how completely at home Mary is with the Word of God. With ease, she moves in and out of it. She speaks and thinks with the Word of God; the Word of God becomes her word, and her word issues from the Word of God. Here we see how her thoughts are attuned to the thoughts of God, how her will is one with the will of God. Deus Caritas Est, number 41. Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you, to turn your merciful and kind glance towards us. Oh Mary, you are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from your Son Jesus, salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, peace among nations, in order that we can love and serve you better in this life, and one day deserve to see and thank you eternally in Heaven.  Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: The Virgin of Revelation calls us all to conversion. She promises great prodigies for hardened sinners, or those who are unable to accept the truths of the Catholic faith. However, conversion goes right to the heart of the Christian. It is a lifetime\u2019s journey, and so Our Lady\u2019s call for conversion applies to all Christians. We must all continually renounce the hardness of our hearts, to become more Christ-like. The Virgin is the model of the Christian, and so by looking at her we can learn how to love her Son ever more perfectly. In our prayer today, let us place all those we know who are in need of conversion under the maternal care of the Virgin of Revelation. Teaching of the Church: Mary\u2019s company, this demanding ideal of being conformed to him, is pursued through an association which could be described in terms of friendship. We are thereby enabled to enter naturally into Christ\u2019s life and, as it were, to share his deepest feelings. In this regard, Blessed Bartolo Longo has written: \u201cJust as two friends, frequently in each other\u2019s company, tend to develop similar habits, so too, by holding familiar converse with Jesus and the Blessed Virgin, by meditating on the mysteries of the Rosary and by living the same life in Holy Communion, we can become, to the extent of our lowliness, similar to them and can learn from these supreme models a life of humility, poverty, hiddenness, patience and perfection.\u201d (RVM 15) Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you, to turn your merciful and kind glance towards us. Oh Mary, you are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from your Son Jesus, salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, and peace among nations, in order that we can love and serve you better in this life, and one day deserve to see and thank you eternally in Heaven.  Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation, capitalization, and line breaks for clearer text-to-speech pacing while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: There is a joy in following the Lord. If we are with Christ, then nothing can overcome us, and we know that He will turn all things to our favour, as in Romans 8:28. Therefore, whether we are experiencing joys or sorrows, we can still rejoice. The Virgin of Revelation tells us the real secret of Christian joy: a relationship with Christ in prayer. When we breathe freely the air of an intimate friendship with Christ, we are able to share our difficulties and challenges with Him, and so nothing can be insurmountable. This must be a cause for our joy. The real secret of Christian joy is precisely in this: the Lord\u2019s intimate presence in our lives. That is why His mother encourages us always to pray. Teaching of the Church: Prayer is the life of the new heart. It ought to animate us at every moment. But we tend to forget Him who is our life and our all. This is why the Fathers of the spiritual life, in the Deuteronomic and prophetic traditions, insist that prayer is a remembrance of God, often awakened by the memory of the heart: \u201cWe must remember God more often than we draw breath.\u201d CCC 2697. Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you, to turn your merciful and kind glance towards us. Oh Mary, you are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from your Son Jesus salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, and peace among nations, in order that we can love and serve you better in this life, and one day deserve to see and thank you eternally in Heaven.  Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation, capitalization, and line breaks for clearer text-to-speech pacing while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Meditation: There is an extraordinary relevance, or we could say, modernity, to the title by which the Mother of the Lord is venerated and remembered here at Tre Fontane: the Virgin of Revelation. One of the five fundamental dogmatic constitutions of the Second Vatican Council, Dei Verbum, was entirely dedicated to Divine Revelation, who is the person of Jesus Christ. The fact that the Most Holy Mary is venerated with this title places in our hearts the mystery of God, who speaks to men as a friend, so that we too may respond with our yes, just like our Blessed Mother. The Teaching of the Church: The Virgin Mary, who at the message of the angel received the Word of God in her heart and in her body and gave Life to the world, is acknowledged and honoured as being truly the Mother of God and Mother of the Redeemer. Redeemed by reason of the merits of her Son and united to Him by a close and indissoluble tie, she is endowed with the high office and dignity of being the Mother of the Son of God, by which account she is also the beloved daughter of the Father and the temple of the Holy Spirit. Lumen Gentium 53. Supplication to the Virgin of Revelation, to obtain any grace. Most Holy Virgin of the Revelation, you who are so close to the Divine Trinity, deign, we beg you, to turn your merciful and kind glance towards us. Oh Mary, you are our powerful advocate before God, who even from this valley of tears will obtain graces and miracles for the conversion of sinners. Grant that we obtain from your Son Jesus salvation of the soul, perfect health of body, and the graces which we need. Grant to the Church and its head, the Roman Pontiff, the joy of seeing the conversion of his enemies, the propagation of the Kingdom of God over all the earth, the unity of all believers in Christ, and peace among nations, in order that we can love and serve you better in this life, and one day deserve to see and thank you eternally in Heaven.  Amen. Nihil obstat. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-virgin_of_revelation"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "virgin_of_revelation",
+      "name": "Virgin of Revelation"
+    },
+    "type": "novena_feast_rule"
+  }
+}

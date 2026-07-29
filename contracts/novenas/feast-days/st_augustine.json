@@ -9,6 +9,20 @@
       "name": "St. Augustine"
     },
     "id": "st_augustine",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "theologians",
+        "philosophers",
+        "printers"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Augustine of Hippo was a bishop and theologian whose writings shaped Western Christianity after his conversion and pastoral leadership in North Africa."
+    },
     "novena": {
       "content_mode": "fixed",
       "duration_days": 9,
@@ -18,7 +32,7 @@
           {
             "key": "introduction",
             "kind": "fixed",
-            "text": "You can pray the full Saint Augustine Novena below.",
+            "text": "You can pray the full St. Augustine Novena below.",
             "title": "Introduction"
           },
           {
@@ -35,34 +49,34 @@
             ],
             "key": "days-1-9",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "title": "Days 1-9",
+            "notes": "Adjusted capitalization and punctuation, and added line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nChrist be behind me. Lord, I commit my failures As well as my successes into your hands. And I bring to you for healing the people and the situations and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful as I entrust the past to your mercy, the present to your love, and the future to your providence. Saint Augustine, pray for my intention in this novena"
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Christ be behind me. Lord, I commit my failures, as well as my successes, into your hands. And I bring to you for healing the people, and the situations, and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful, as I entrust the past to your mercy, the present to your love, and the future to your providence. St. Augustine, pray for my intention in this novena"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "God, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nBreathe in me, O Holy Spirit, That my thoughts may all be holy. Act in me, O Holy Spirit, That my work, too, may be holy. Draw my heart, O Holy Spirit, That I love but what is holy. Strengthen me, O Holy Spirit, To defend all that is holy. Guard me, then, O Holy Spirit, That I always may be holy. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "God, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen. Breathe in me, O Holy Spirit, that my thoughts may all be holy. Act in me, O Holy Spirit, that my work, too, may be holy. Draw my heart, O Holy Spirit, that I love but what is holy. Strengthen me, O Holy Spirit, to defend all that is holy. Guard me, then, O Holy Spirit, that I always may be holy. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Days 1-9"
           }
         ],
         "sections": [
           {
             "key": "introduction",
             "kind": "fixed",
-            "text": "You can pray the full Saint Augustine Novena below.",
+            "text": "You can pray the full St. Augustine Novena below.",
             "title": "Introduction"
           },
           {
@@ -71,8 +85,8 @@
             ],
             "key": "day-1",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nChrist be behind me. Lord, I commit my failures As well as my successes into your hands. And I bring to you for healing the people and the situations and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful as I entrust the past to your mercy, the present to your love, and the future to your providence. Saint Augustine, pray for my intention in this novena\n\nGod, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nBreathe in me, O Holy Spirit, That my thoughts may all be holy. Act in me, O Holy Spirit, That my work, too, may be holy. Draw my heart, O Holy Spirit, That I love but what is holy. Strengthen me, O Holy Spirit, To defend all that is holy. Guard me, then, O Holy Spirit, That I always may be holy. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted capitalization and punctuation, and added line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Christ be behind me. Lord, I commit my failures, as well as my successes, into your hands. And I bring to you for healing the people, and the situations, and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful, as I entrust the past to your mercy, the present to your love, and the future to your providence. St. Augustine, pray for my intention in this novena  God, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen. Breathe in me, O Holy Spirit, that my thoughts may all be holy. Act in me, O Holy Spirit, that my work, too, may be holy. Draw my heart, O Holy Spirit, that I love but what is holy. Strengthen me, O Holy Spirit, to defend all that is holy. Guard me, then, O Holy Spirit, that I always may be holy. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 1"
           },
           {
@@ -81,8 +95,8 @@
             ],
             "key": "day-2",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nChrist be behind me. Lord, I commit my failures As well as my successes into your hands. And I bring to you for healing the people and the situations and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful as I entrust the past to your mercy, the present to your love, and the future to your providence. Saint Augustine, pray for my intention in this novena\n\nGod, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nBreathe in me, O Holy Spirit, That my thoughts may all be holy. Act in me, O Holy Spirit, That my work, too, may be holy. Draw my heart, O Holy Spirit, That I love but what is holy. Strengthen me, O Holy Spirit, To defend all that is holy. Guard me, then, O Holy Spirit, That I always may be holy. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted capitalization and punctuation, and added line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Christ be behind me. Lord, I commit my failures, as well as my successes, into your hands. And I bring to you for healing the people, and the situations, and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful, as I entrust the past to your mercy, the present to your love, and the future to your providence. St. Augustine, pray for my intention in this novena  God, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen. Breathe in me, O Holy Spirit, that my thoughts may all be holy. Act in me, O Holy Spirit, that my work, too, may be holy. Draw my heart, O Holy Spirit, that I love but what is holy. Strengthen me, O Holy Spirit, to defend all that is holy. Guard me, then, O Holy Spirit, that I always may be holy. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 2"
           },
           {
@@ -91,8 +105,8 @@
             ],
             "key": "day-3",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nChrist be behind me. Lord, I commit my failures As well as my successes into your hands. And I bring to you for healing the people and the situations and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful as I entrust the past to your mercy, the present to your love, and the future to your providence. Saint Augustine, pray for my intention in this novena\n\nGod, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nBreathe in me, O Holy Spirit, That my thoughts may all be holy. Act in me, O Holy Spirit, That my work, too, may be holy. Draw my heart, O Holy Spirit, That I love but what is holy. Strengthen me, O Holy Spirit, To defend all that is holy. Guard me, then, O Holy Spirit, That I always may be holy. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted capitalization and punctuation, and added line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Christ be behind me. Lord, I commit my failures, as well as my successes, into your hands. And I bring to you for healing the people, and the situations, and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful, as I entrust the past to your mercy, the present to your love, and the future to your providence. St. Augustine, pray for my intention in this novena  God, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen. Breathe in me, O Holy Spirit, that my thoughts may all be holy. Act in me, O Holy Spirit, that my work, too, may be holy. Draw my heart, O Holy Spirit, that I love but what is holy. Strengthen me, O Holy Spirit, to defend all that is holy. Guard me, then, O Holy Spirit, that I always may be holy. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 3"
           },
           {
@@ -101,8 +115,8 @@
             ],
             "key": "day-4",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nChrist be behind me. Lord, I commit my failures As well as my successes into your hands. And I bring to you for healing the people and the situations and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful as I entrust the past to your mercy, the present to your love, and the future to your providence. Saint Augustine, pray for my intention in this novena\n\nGod, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nBreathe in me, O Holy Spirit, That my thoughts may all be holy. Act in me, O Holy Spirit, That my work, too, may be holy. Draw my heart, O Holy Spirit, That I love but what is holy. Strengthen me, O Holy Spirit, To defend all that is holy. Guard me, then, O Holy Spirit, That I always may be holy. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted capitalization and punctuation, and added line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Christ be behind me. Lord, I commit my failures, as well as my successes, into your hands. And I bring to you for healing the people, and the situations, and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful, as I entrust the past to your mercy, the present to your love, and the future to your providence. St. Augustine, pray for my intention in this novena  God, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen. Breathe in me, O Holy Spirit, that my thoughts may all be holy. Act in me, O Holy Spirit, that my work, too, may be holy. Draw my heart, O Holy Spirit, that I love but what is holy. Strengthen me, O Holy Spirit, to defend all that is holy. Guard me, then, O Holy Spirit, that I always may be holy. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 4"
           },
           {
@@ -111,8 +125,8 @@
             ],
             "key": "day-5",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nChrist be behind me. Lord, I commit my failures As well as my successes into your hands. And I bring to you for healing the people and the situations and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful as I entrust the past to your mercy, the present to your love, and the future to your providence. Saint Augustine, pray for my intention in this novena\n\nGod, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nBreathe in me, O Holy Spirit, That my thoughts may all be holy. Act in me, O Holy Spirit, That my work, too, may be holy. Draw my heart, O Holy Spirit, That I love but what is holy. Strengthen me, O Holy Spirit, To defend all that is holy. Guard me, then, O Holy Spirit, That I always may be holy. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted capitalization and punctuation, and added line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Christ be behind me. Lord, I commit my failures, as well as my successes, into your hands. And I bring to you for healing the people, and the situations, and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful, as I entrust the past to your mercy, the present to your love, and the future to your providence. St. Augustine, pray for my intention in this novena  God, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen. Breathe in me, O Holy Spirit, that my thoughts may all be holy. Act in me, O Holy Spirit, that my work, too, may be holy. Draw my heart, O Holy Spirit, that I love but what is holy. Strengthen me, O Holy Spirit, to defend all that is holy. Guard me, then, O Holy Spirit, that I always may be holy. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 5"
           },
           {
@@ -121,8 +135,8 @@
             ],
             "key": "day-6",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nChrist be behind me. Lord, I commit my failures As well as my successes into your hands. And I bring to you for healing the people and the situations and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful as I entrust the past to your mercy, the present to your love, and the future to your providence. Saint Augustine, pray for my intention in this novena\n\nGod, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nBreathe in me, O Holy Spirit, That my thoughts may all be holy. Act in me, O Holy Spirit, That my work, too, may be holy. Draw my heart, O Holy Spirit, That I love but what is holy. Strengthen me, O Holy Spirit, To defend all that is holy. Guard me, then, O Holy Spirit, That I always may be holy. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted capitalization and punctuation, and added line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Christ be behind me. Lord, I commit my failures, as well as my successes, into your hands. And I bring to you for healing the people, and the situations, and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful, as I entrust the past to your mercy, the present to your love, and the future to your providence. St. Augustine, pray for my intention in this novena  God, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen. Breathe in me, O Holy Spirit, that my thoughts may all be holy. Act in me, O Holy Spirit, that my work, too, may be holy. Draw my heart, O Holy Spirit, that I love but what is holy. Strengthen me, O Holy Spirit, to defend all that is holy. Guard me, then, O Holy Spirit, that I always may be holy. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 6"
           },
           {
@@ -131,8 +145,8 @@
             ],
             "key": "day-7",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nChrist be behind me. Lord, I commit my failures As well as my successes into your hands. And I bring to you for healing the people and the situations and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful as I entrust the past to your mercy, the present to your love, and the future to your providence. Saint Augustine, pray for my intention in this novena\n\nGod, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nBreathe in me, O Holy Spirit, That my thoughts may all be holy. Act in me, O Holy Spirit, That my work, too, may be holy. Draw my heart, O Holy Spirit, That I love but what is holy. Strengthen me, O Holy Spirit, To defend all that is holy. Guard me, then, O Holy Spirit, That I always may be holy. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted capitalization and punctuation, and added line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Christ be behind me. Lord, I commit my failures, as well as my successes, into your hands. And I bring to you for healing the people, and the situations, and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful, as I entrust the past to your mercy, the present to your love, and the future to your providence. St. Augustine, pray for my intention in this novena  God, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen. Breathe in me, O Holy Spirit, that my thoughts may all be holy. Act in me, O Holy Spirit, that my work, too, may be holy. Draw my heart, O Holy Spirit, that I love but what is holy. Strengthen me, O Holy Spirit, to defend all that is holy. Guard me, then, O Holy Spirit, that I always may be holy. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 7"
           },
           {
@@ -141,8 +155,8 @@
             ],
             "key": "day-8",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nChrist be behind me. Lord, I commit my failures As well as my successes into your hands. And I bring to you for healing the people and the situations and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful as I entrust the past to your mercy, the present to your love, and the future to your providence. Saint Augustine, pray for my intention in this novena\n\nGod, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nBreathe in me, O Holy Spirit, That my thoughts may all be holy. Act in me, O Holy Spirit, That my work, too, may be holy. Draw my heart, O Holy Spirit, That I love but what is holy. Strengthen me, O Holy Spirit, To defend all that is holy. Guard me, then, O Holy Spirit, That I always may be holy. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted capitalization and punctuation, and added line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Christ be behind me. Lord, I commit my failures, as well as my successes, into your hands. And I bring to you for healing the people, and the situations, and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful, as I entrust the past to your mercy, the present to your love, and the future to your providence. St. Augustine, pray for my intention in this novena  God, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen. Breathe in me, O Holy Spirit, that my thoughts may all be holy. Act in me, O Holy Spirit, that my work, too, may be holy. Draw my heart, O Holy Spirit, that I love but what is holy. Strengthen me, O Holy Spirit, to defend all that is holy. Guard me, then, O Holy Spirit, that I always may be holy. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 8"
           },
           {
@@ -151,8 +165,8 @@
             ],
             "key": "day-9",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nChrist be behind me. Lord, I commit my failures As well as my successes into your hands. And I bring to you for healing the people and the situations and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful as I entrust the past to your mercy, the present to your love, and the future to your providence. Saint Augustine, pray for my intention in this novena\n\nGod, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen.\n\nBreathe in me, O Holy Spirit, That my thoughts may all be holy. Act in me, O Holy Spirit, That my work, too, may be holy. Draw my heart, O Holy Spirit, That I love but what is holy. Strengthen me, O Holy Spirit, To defend all that is holy. Guard me, then, O Holy Spirit, That I always may be holy. Amen\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Adjusted capitalization and punctuation, and added line breaks for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Christ be behind me. Lord, I commit my failures, as well as my successes, into your hands. And I bring to you for healing the people, and the situations, and the wrongs and hurts of the past. Give me the courage, strength, and generosity to let go and move on, leaving the past behind me, and living the present to the full. Lead me always to be hopeful, as I entrust the past to your mercy, the present to your love, and the future to your providence. St. Augustine, pray for my intention in this novena  God, hear my plea and grant me the grace to accept Your will in all things, through Jesus Christ, our Lord, in the unity of the Holy Spirit, one God forever and ever. Amen. Breathe in me, O Holy Spirit, that my thoughts may all be holy. Act in me, O Holy Spirit, that my work, too, may be holy. Draw my heart, O Holy Spirit, that I love but what is holy. Strengthen me, O Holy Spirit, to defend all that is holy. Guard me, then, O Holy Spirit, that I always may be holy. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 9"
           }
         ],
@@ -163,7 +177,38 @@
       "audio": {
         "enabled": true,
         "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
         "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
         "speed": 1.0,
         "voice": "ash"
       },

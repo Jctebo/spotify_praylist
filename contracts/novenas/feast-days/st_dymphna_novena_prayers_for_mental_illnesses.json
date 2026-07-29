@@ -9,6 +9,20 @@
       "name": "St Dymphna Novena - Prayers for Mental Illnesses"
     },
     "id": "st_dymphna_novena_prayers_for_mental_illnesses",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "mental illness",
+        "anxiety",
+        "depression"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A nine-day novena to St Dymphna, asking her intercession for those affected by mental illness and emotional distress."
+    },
     "novena": {
       "content_mode": "fixed",
       "duration_days": 9,
@@ -28,26 +42,26 @@
             "key": "days-1",
             "kind": "fixed",
             "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 1",
             "parts": [
               {
                 "kind": "text",
                 "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nLord, our God, you graciously chose Saint Dymphna as patroness of those afflicted with mental and nervous disorders. She is thus an inspiration and a symbol of charity to the thousands who ask her intercession. Please grant, Lord, through the prayers of this pure youthful martyr, relief and consolation to all suffering such trials, and especially those for whom we pray."
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
                 "text": "Saint Dymphna, Virgin and Martyr, pray for us.\n\nWe beg you, Lord, to hear the prayers of Saint Dymphna on our behalf. Grant all those for whom we pray patience in their sufferings and resignation to Your Divine Will. Please fill them with hope, and grant them the relief and cure they so much desire. We ask this through Christ our Lord who suffered agony in the garden. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 1"
           },
           {
             "days": [
@@ -56,26 +70,26 @@
             "key": "days-2",
             "kind": "fixed",
             "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 2",
             "parts": [
               {
                 "kind": "text",
                 "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nLord, our God, you graciously chose Saint Dymphna as patroness of those afflicted with mental and nervous disorders. She is thus an inspiration and a symbol of charity to the thousands who ask her intercession. Please grant, Lord, through the prayers of this pure youthful martyr, relief and consolation to all suffering such trials, and especially those for whom we pray."
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
                 "text": "Saint Dymphna, patron of nervous and emotional illnesses, pray for us.\n\nWe beg you, Lord, to hear the prayers of Saint Dymphna on our behalf. Grant all those for whom we pray patience in their sufferings and resignation to Your Divine Will. Please fill them with hope, and grant them the relief and cure they so much desire. We ask this through Christ our Lord who suffered agony in the garden. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 2"
           },
           {
             "days": [
@@ -84,26 +98,26 @@
             "key": "days-3",
             "kind": "fixed",
             "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 3",
             "parts": [
               {
                 "kind": "text",
                 "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nLord, our God, you graciously chose Saint Dymphna as patroness of those afflicted with mental and nervous disorders. She is thus an inspiration and a symbol of charity to the thousands who ask her intercession. Please grant, Lord, through the prayers of this pure youthful martyr, relief and consolation to all suffering such trials, and especially those for whom we pray."
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
                 "text": "Saint Dymphna, crowned for the glory in heaven, pray for us.\n\nWe beg you, Lord, to hear the prayers of Saint Dymphna on our behalf. Grant all those for whom we pray patience in their sufferings and resignation to Your Divine Will. Please fill them with hope, and grant them the relief and cure they so much desire. We ask this through Christ our Lord who suffered agony in the garden. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 3"
           },
           {
             "days": [
@@ -112,26 +126,26 @@
             "key": "days-4",
             "kind": "fixed",
             "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 4",
             "parts": [
               {
                 "kind": "text",
                 "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nLord, our God, you graciously chose Saint Dymphna as patroness of those afflicted with mental and nervous disorders. She is thus an inspiration and a symbol of charity to the thousands who ask her intercession. Please grant, Lord, through the prayers of this pure youthful martyr, relief and consolation to all suffering such trials, and especially those for whom we pray."
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
                 "text": "Saint Dymphna, faithful to your covenant with Christ, pray for us.\n\nWe beg you, Lord, to hear the prayers of Saint Dymphna on our behalf. Grant all those for whom we pray patience in their sufferings and resignation to Your Divine Will. Please fill them with hope, and grant them the relief and cure they so much desire. We ask this through Christ our Lord who suffered agony in the garden. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 4"
           },
           {
             "days": [
@@ -140,26 +154,26 @@
             "key": "days-5",
             "kind": "fixed",
             "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 5",
             "parts": [
               {
                 "kind": "text",
                 "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nLord, our God, you graciously chose Saint Dymphna as patroness of those afflicted with mental and nervous disorders. She is thus an inspiration and a symbol of charity to the thousands who ask her intercession. Please grant, Lord, through the prayers of this pure youthful martyr, relief and consolation to all suffering such trials, and especially those for whom we pray."
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
                 "text": "Saint Dymphna, precious in the eyes of the Lord, pray for us.\n\nWe beg you, Lord, to hear the prayers of Saint Dymphna on our behalf. Grant all those for whom we pray patience in their sufferings and resignation to Your Divine Will. Please fill them with hope, and grant them the relief and cure they so much desire. We ask this through Christ our Lord who suffered agony in the garden. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 5"
           },
           {
             "days": [
@@ -168,26 +182,26 @@
             "key": "days-6",
             "kind": "fixed",
             "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 6",
             "parts": [
               {
                 "kind": "text",
                 "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nLord, our God, you graciously chose Saint Dymphna as patroness of those afflicted with mental and nervous disorders. She is thus an inspiration and a symbol of charity to the thousands who ask her intercession. Please grant, Lord, through the prayers of this pure youthful martyr, relief and consolation to all suffering such trials, and especially those for whom we pray."
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
                 "text": "Saint Dymphna, our helper in every need, pray for us.\n\nWe beg you, Lord, to hear the prayers of Saint Dymphna on our behalf. Grant all those for whom we pray patience in their sufferings and resignation to Your Divine Will. Please fill them with hope, and grant them the relief and cure they so much desire. We ask this through Christ our Lord who suffered agony in the garden. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 6"
           },
           {
             "days": [
@@ -196,26 +210,26 @@
             "key": "days-7",
             "kind": "fixed",
             "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 7",
             "parts": [
               {
                 "kind": "text",
                 "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nLord, our God, you graciously chose Saint Dymphna as patroness of those afflicted with mental and nervous disorders. She is thus an inspiration and a symbol of charity to the thousands who ask her intercession. Please grant, Lord, through the prayers of this pure youthful martyr, relief and consolation to all suffering such trials, and especially those for whom we pray."
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Saint Dymphna, our friend at heaven’s court, pray for us.\n\nWe beg you, Lord, to hear the prayers of Saint Dymphna on our behalf. Grant all those for whom we pray patience in their sufferings and resignation to Your Divine Will. Please fill them with hope, and grant them the relief and cure they so much desire. We ask this through Christ our Lord who suffered agony in the garden. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Saint Dymphna, our friend at heaven\u2019s court, pray for us.\n\nWe beg you, Lord, to hear the prayers of Saint Dymphna on our behalf. Grant all those for whom we pray patience in their sufferings and resignation to Your Divine Will. Please fill them with hope, and grant them the relief and cure they so much desire. We ask this through Christ our Lord who suffered agony in the garden. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 7"
           },
           {
             "days": [
@@ -224,26 +238,26 @@
             "key": "days-8",
             "kind": "fixed",
             "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 8",
             "parts": [
               {
                 "kind": "text",
                 "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nLord, our God, you graciously chose Saint Dymphna as patroness of those afflicted with mental and nervous disorders. She is thus an inspiration and a symbol of charity to the thousands who ask her intercession. Please grant, Lord, through the prayers of this pure youthful martyr, relief and consolation to all suffering such trials, and especially those for whom we pray."
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
                 "text": "Saint Dymphna, faithful through great sufferings, pray for us.\n\nWe beg you, Lord, to hear the prayers of Saint Dymphna on our behalf. Grant all those for whom we pray patience in their sufferings and resignation to Your Divine Will. Please fill them with hope, and grant them the relief and cure they so much desire. We ask this through Christ our Lord who suffered agony in the garden. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 8"
           },
           {
             "days": [
@@ -252,26 +266,26 @@
             "key": "days-9",
             "kind": "fixed",
             "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "title": "Day 9",
             "parts": [
               {
                 "kind": "text",
                 "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nLord, our God, you graciously chose Saint Dymphna as patroness of those afflicted with mental and nervous disorders. She is thus an inspiration and a symbol of charity to the thousands who ask her intercession. Please grant, Lord, through the prayers of this pure youthful martyr, relief and consolation to all suffering such trials, and especially those for whom we pray."
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
                 "text": "Saint Dymphna, help of those in mental distress, pray for us.\n\nWe beg you, Lord, to hear the prayers of Saint Dymphna on our behalf. Grant all those for whom we pray patience in their sufferings and resignation to Your Divine Will. Please fill them with hope, and grant them the relief and cure they so much desire. We ask this through Christ our Lord who suffered agony in the garden. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Day 9"
           }
         ],
         "sections": [
@@ -348,7 +362,7 @@
             "key": "day-7",
             "kind": "fixed",
             "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nLord, our God, you graciously chose Saint Dymphna as patroness of those afflicted with mental and nervous disorders. She is thus an inspiration and a symbol of charity to the thousands who ask her intercession. Please grant, Lord, through the prayers of this pure youthful martyr, relief and consolation to all suffering such trials, and especially those for whom we pray.\n\nSaint Dymphna, our friend at heaven’s court, pray for us.\n\nWe beg you, Lord, to hear the prayers of Saint Dymphna on our behalf. Grant all those for whom we pray patience in their sufferings and resignation to Your Divine Will. Please fill them with hope, and grant them the relief and cure they so much desire. We ask this through Christ our Lord who suffered agony in the garden. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nLord, our God, you graciously chose Saint Dymphna as patroness of those afflicted with mental and nervous disorders. She is thus an inspiration and a symbol of charity to the thousands who ask her intercession. Please grant, Lord, through the prayers of this pure youthful martyr, relief and consolation to all suffering such trials, and especially those for whom we pray.\n\nSaint Dymphna, our friend at heaven\u2019s court, pray for us.\n\nWe beg you, Lord, to hear the prayers of Saint Dymphna on our behalf. Grant all those for whom we pray patience in their sufferings and resignation to Your Divine Will. Please fill them with hope, and grant them the relief and cure they so much desire. We ask this through Christ our Lord who suffered agony in the garden. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 7"
           },
           {

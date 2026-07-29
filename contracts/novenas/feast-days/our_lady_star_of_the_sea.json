@@ -1,0 +1,224 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "our_lady_star_of_the_sea",
+    "feast": {
+      "day": 27,
+      "mode": "fixed",
+      "month": 9,
+      "name": "Our Lady Star of the Sea"
+    },
+    "id": "our_lady_star_of_the_sea",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A novena honoring Our Lady, Star of the Sea, a Marian title invoking Mary\u2019s guidance and protection, especially for those who travel or face life\u2019s storms."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady Star of the Sea Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and line breaks for clearer text-to-speech pacing, removed a stray duplicated Amen, and added brief spoken titles without changing the canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ave Maris Stella. Hail, bright star of ocean, God\u2019s own Mother blest, Ever sinless Virgin, Gate of heavenly rest. Taking that sweet Ave which from Gabriel came, Peace confirm within us, changing Eva\u2019s name. Break the captives\u2019 fetters, light on blindness pour, All our ills expelling, every bliss implore. Show thyself a Mother; may the Word Divine, Born for us thy Infant, hear our prayers through thine. Virgin all excelling, mildest of the mild, Freed from guilt, preserve us, pure and undefiled. Keep our life all spotless, make our way secure, Til we find in Jesus, joy forevermore. Through the highest heaven to the Almighty Three, Father, Son, and Spirit, One same. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Prayer of Pope John Paul the Second. Mary, Star of the Sea, light of every ocean, guide seafarers across all dark and stormy seas that they may reach the haven of peace and light prepared in Him who calmed the sea. As we set forth upon the oceans of the world and cross the deserts of our time, show us, O Mary, the fruit of your womb, for without your Son we are lost. Pray that we will never fail on life\u2019s journey, that in heart and mind, word and deed, in days of turmoil and in days of calm, we will always look to Christ and say, Who is this that even wind and sea obey him?"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Our Lady of Peace, pray for us. Bright Star of the Sea, guide us. Our Lady, Star of the Sea, pray for seafarers, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady Star of the Sea, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady Star of the Sea Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and line breaks for clearer text-to-speech pacing, removed a stray duplicated Amen, and added brief spoken titles without changing the canonical prayers.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ave Maris Stella. Hail, bright star of ocean, God\u2019s own Mother blest, Ever sinless Virgin, Gate of heavenly rest. Taking that sweet Ave which from Gabriel came, Peace confirm within us, changing Eva\u2019s name. Break the captives\u2019 fetters, light on blindness pour, All our ills expelling, every bliss implore. Show thyself a Mother; may the Word Divine, Born for us thy Infant, hear our prayers through thine. Virgin all excelling, mildest of the mild, Freed from guilt, preserve us, pure and undefiled. Keep our life all spotless, make our way secure, Til we find in Jesus, joy forevermore. Through the highest heaven to the Almighty Three, Father, Son, and Spirit, One same. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Prayer of Pope John Paul the Second. Mary, Star of the Sea, light of every ocean, guide seafarers across all dark and stormy seas that they may reach the haven of peace and light prepared in Him who calmed the sea. As we set forth upon the oceans of the world and cross the deserts of our time, show us, O Mary, the fruit of your womb, for without your Son we are lost. Pray that we will never fail on life\u2019s journey, that in heart and mind, word and deed, in days of turmoil and in days of calm, we will always look to Christ and say, Who is this that even wind and sea obey him?  Our Lady of Peace, pray for us. Bright Star of the Sea, guide us. Our Lady, Star of the Sea, pray for seafarers, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady Star of the Sea, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and line breaks for clearer text-to-speech pacing, removed a stray duplicated Amen, and added brief spoken titles without changing the canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ave Maris Stella. Hail, bright star of ocean, God\u2019s own Mother blest, Ever sinless Virgin, Gate of heavenly rest. Taking that sweet Ave which from Gabriel came, Peace confirm within us, changing Eva\u2019s name. Break the captives\u2019 fetters, light on blindness pour, All our ills expelling, every bliss implore. Show thyself a Mother; may the Word Divine, Born for us thy Infant, hear our prayers through thine. Virgin all excelling, mildest of the mild, Freed from guilt, preserve us, pure and undefiled. Keep our life all spotless, make our way secure, Til we find in Jesus, joy forevermore. Through the highest heaven to the Almighty Three, Father, Son, and Spirit, One same. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Prayer of Pope John Paul the Second. Mary, Star of the Sea, light of every ocean, guide seafarers across all dark and stormy seas that they may reach the haven of peace and light prepared in Him who calmed the sea. As we set forth upon the oceans of the world and cross the deserts of our time, show us, O Mary, the fruit of your womb, for without your Son we are lost. Pray that we will never fail on life\u2019s journey, that in heart and mind, word and deed, in days of turmoil and in days of calm, we will always look to Christ and say, Who is this that even wind and sea obey him?  Our Lady of Peace, pray for us. Bright Star of the Sea, guide us. Our Lady, Star of the Sea, pray for seafarers, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady Star of the Sea, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and line breaks for clearer text-to-speech pacing, removed a stray duplicated Amen, and added brief spoken titles without changing the canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ave Maris Stella. Hail, bright star of ocean, God\u2019s own Mother blest, Ever sinless Virgin, Gate of heavenly rest. Taking that sweet Ave which from Gabriel came, Peace confirm within us, changing Eva\u2019s name. Break the captives\u2019 fetters, light on blindness pour, All our ills expelling, every bliss implore. Show thyself a Mother; may the Word Divine, Born for us thy Infant, hear our prayers through thine. Virgin all excelling, mildest of the mild, Freed from guilt, preserve us, pure and undefiled. Keep our life all spotless, make our way secure, Til we find in Jesus, joy forevermore. Through the highest heaven to the Almighty Three, Father, Son, and Spirit, One same. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Prayer of Pope John Paul the Second. Mary, Star of the Sea, light of every ocean, guide seafarers across all dark and stormy seas that they may reach the haven of peace and light prepared in Him who calmed the sea. As we set forth upon the oceans of the world and cross the deserts of our time, show us, O Mary, the fruit of your womb, for without your Son we are lost. Pray that we will never fail on life\u2019s journey, that in heart and mind, word and deed, in days of turmoil and in days of calm, we will always look to Christ and say, Who is this that even wind and sea obey him?  Our Lady of Peace, pray for us. Bright Star of the Sea, guide us. Our Lady, Star of the Sea, pray for seafarers, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady Star of the Sea, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and line breaks for clearer text-to-speech pacing, removed a stray duplicated Amen, and added brief spoken titles without changing the canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ave Maris Stella. Hail, bright star of ocean, God\u2019s own Mother blest, Ever sinless Virgin, Gate of heavenly rest. Taking that sweet Ave which from Gabriel came, Peace confirm within us, changing Eva\u2019s name. Break the captives\u2019 fetters, light on blindness pour, All our ills expelling, every bliss implore. Show thyself a Mother; may the Word Divine, Born for us thy Infant, hear our prayers through thine. Virgin all excelling, mildest of the mild, Freed from guilt, preserve us, pure and undefiled. Keep our life all spotless, make our way secure, Til we find in Jesus, joy forevermore. Through the highest heaven to the Almighty Three, Father, Son, and Spirit, One same. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Prayer of Pope John Paul the Second. Mary, Star of the Sea, light of every ocean, guide seafarers across all dark and stormy seas that they may reach the haven of peace and light prepared in Him who calmed the sea. As we set forth upon the oceans of the world and cross the deserts of our time, show us, O Mary, the fruit of your womb, for without your Son we are lost. Pray that we will never fail on life\u2019s journey, that in heart and mind, word and deed, in days of turmoil and in days of calm, we will always look to Christ and say, Who is this that even wind and sea obey him?  Our Lady of Peace, pray for us. Bright Star of the Sea, guide us. Our Lady, Star of the Sea, pray for seafarers, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady Star of the Sea, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and line breaks for clearer text-to-speech pacing, removed a stray duplicated Amen, and added brief spoken titles without changing the canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ave Maris Stella. Hail, bright star of ocean, God\u2019s own Mother blest, Ever sinless Virgin, Gate of heavenly rest. Taking that sweet Ave which from Gabriel came, Peace confirm within us, changing Eva\u2019s name. Break the captives\u2019 fetters, light on blindness pour, All our ills expelling, every bliss implore. Show thyself a Mother; may the Word Divine, Born for us thy Infant, hear our prayers through thine. Virgin all excelling, mildest of the mild, Freed from guilt, preserve us, pure and undefiled. Keep our life all spotless, make our way secure, Til we find in Jesus, joy forevermore. Through the highest heaven to the Almighty Three, Father, Son, and Spirit, One same. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Prayer of Pope John Paul the Second. Mary, Star of the Sea, light of every ocean, guide seafarers across all dark and stormy seas that they may reach the haven of peace and light prepared in Him who calmed the sea. As we set forth upon the oceans of the world and cross the deserts of our time, show us, O Mary, the fruit of your womb, for without your Son we are lost. Pray that we will never fail on life\u2019s journey, that in heart and mind, word and deed, in days of turmoil and in days of calm, we will always look to Christ and say, Who is this that even wind and sea obey him?  Our Lady of Peace, pray for us. Bright Star of the Sea, guide us. Our Lady, Star of the Sea, pray for seafarers, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady Star of the Sea, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and line breaks for clearer text-to-speech pacing, removed a stray duplicated Amen, and added brief spoken titles without changing the canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ave Maris Stella. Hail, bright star of ocean, God\u2019s own Mother blest, Ever sinless Virgin, Gate of heavenly rest. Taking that sweet Ave which from Gabriel came, Peace confirm within us, changing Eva\u2019s name. Break the captives\u2019 fetters, light on blindness pour, All our ills expelling, every bliss implore. Show thyself a Mother; may the Word Divine, Born for us thy Infant, hear our prayers through thine. Virgin all excelling, mildest of the mild, Freed from guilt, preserve us, pure and undefiled. Keep our life all spotless, make our way secure, Til we find in Jesus, joy forevermore. Through the highest heaven to the Almighty Three, Father, Son, and Spirit, One same. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Prayer of Pope John Paul the Second. Mary, Star of the Sea, light of every ocean, guide seafarers across all dark and stormy seas that they may reach the haven of peace and light prepared in Him who calmed the sea. As we set forth upon the oceans of the world and cross the deserts of our time, show us, O Mary, the fruit of your womb, for without your Son we are lost. Pray that we will never fail on life\u2019s journey, that in heart and mind, word and deed, in days of turmoil and in days of calm, we will always look to Christ and say, Who is this that even wind and sea obey him?  Our Lady of Peace, pray for us. Bright Star of the Sea, guide us. Our Lady, Star of the Sea, pray for seafarers, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady Star of the Sea, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and line breaks for clearer text-to-speech pacing, removed a stray duplicated Amen, and added brief spoken titles without changing the canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ave Maris Stella. Hail, bright star of ocean, God\u2019s own Mother blest, Ever sinless Virgin, Gate of heavenly rest. Taking that sweet Ave which from Gabriel came, Peace confirm within us, changing Eva\u2019s name. Break the captives\u2019 fetters, light on blindness pour, All our ills expelling, every bliss implore. Show thyself a Mother; may the Word Divine, Born for us thy Infant, hear our prayers through thine. Virgin all excelling, mildest of the mild, Freed from guilt, preserve us, pure and undefiled. Keep our life all spotless, make our way secure, Til we find in Jesus, joy forevermore. Through the highest heaven to the Almighty Three, Father, Son, and Spirit, One same. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Prayer of Pope John Paul the Second. Mary, Star of the Sea, light of every ocean, guide seafarers across all dark and stormy seas that they may reach the haven of peace and light prepared in Him who calmed the sea. As we set forth upon the oceans of the world and cross the deserts of our time, show us, O Mary, the fruit of your womb, for without your Son we are lost. Pray that we will never fail on life\u2019s journey, that in heart and mind, word and deed, in days of turmoil and in days of calm, we will always look to Christ and say, Who is this that even wind and sea obey him?  Our Lady of Peace, pray for us. Bright Star of the Sea, guide us. Our Lady, Star of the Sea, pray for seafarers, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady Star of the Sea, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and line breaks for clearer text-to-speech pacing, removed a stray duplicated Amen, and added brief spoken titles without changing the canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ave Maris Stella. Hail, bright star of ocean, God\u2019s own Mother blest, Ever sinless Virgin, Gate of heavenly rest. Taking that sweet Ave which from Gabriel came, Peace confirm within us, changing Eva\u2019s name. Break the captives\u2019 fetters, light on blindness pour, All our ills expelling, every bliss implore. Show thyself a Mother; may the Word Divine, Born for us thy Infant, hear our prayers through thine. Virgin all excelling, mildest of the mild, Freed from guilt, preserve us, pure and undefiled. Keep our life all spotless, make our way secure, Til we find in Jesus, joy forevermore. Through the highest heaven to the Almighty Three, Father, Son, and Spirit, One same. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Prayer of Pope John Paul the Second. Mary, Star of the Sea, light of every ocean, guide seafarers across all dark and stormy seas that they may reach the haven of peace and light prepared in Him who calmed the sea. As we set forth upon the oceans of the world and cross the deserts of our time, show us, O Mary, the fruit of your womb, for without your Son we are lost. Pray that we will never fail on life\u2019s journey, that in heart and mind, word and deed, in days of turmoil and in days of calm, we will always look to Christ and say, Who is this that even wind and sea obey him?  Our Lady of Peace, pray for us. Bright Star of the Sea, guide us. Our Lady, Star of the Sea, pray for seafarers, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady Star of the Sea, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and line breaks for clearer text-to-speech pacing, removed a stray duplicated Amen, and added brief spoken titles without changing the canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ave Maris Stella. Hail, bright star of ocean, God\u2019s own Mother blest, Ever sinless Virgin, Gate of heavenly rest. Taking that sweet Ave which from Gabriel came, Peace confirm within us, changing Eva\u2019s name. Break the captives\u2019 fetters, light on blindness pour, All our ills expelling, every bliss implore. Show thyself a Mother; may the Word Divine, Born for us thy Infant, hear our prayers through thine. Virgin all excelling, mildest of the mild, Freed from guilt, preserve us, pure and undefiled. Keep our life all spotless, make our way secure, Til we find in Jesus, joy forevermore. Through the highest heaven to the Almighty Three, Father, Son, and Spirit, One same. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Prayer of Pope John Paul the Second. Mary, Star of the Sea, light of every ocean, guide seafarers across all dark and stormy seas that they may reach the haven of peace and light prepared in Him who calmed the sea. As we set forth upon the oceans of the world and cross the deserts of our time, show us, O Mary, the fruit of your womb, for without your Son we are lost. Pray that we will never fail on life\u2019s journey, that in heart and mind, word and deed, in days of turmoil and in days of calm, we will always look to Christ and say, Who is this that even wind and sea obey him?  Our Lady of Peace, pray for us. Bright Star of the Sea, guide us. Our Lady, Star of the Sea, pray for seafarers, pray for us. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Lady Star of the Sea, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-our_lady_star_of_the_sea"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "our_lady_star_of_the_sea",
+      "name": "Our Lady Star of the Sea"
+    },
+    "type": "novena_feast_rule"
+  }
+}

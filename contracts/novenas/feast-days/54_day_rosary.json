@@ -1,0 +1,358 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "54_day_rosary",
+    "feast": {
+      "day": 13,
+      "mode": "fixed",
+      "month": 5,
+      "name": "54 Day Rosary"
+    },
+    "id": "54_day_rosary",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A 54-day rosary novena of 27 days in petition and 27 days in thanksgiving, traditionally prayed for special intentions."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full The 54 Day Rosary Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              4,
+              7
+            ],
+            "key": "days-1-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused compacted prayer source from an earlier section; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "The Holy Rosary, with special prayers added as below."
+              },
+              {
+                "kind": "text",
+                "text": "Today pray the Joyful Mysteries in petition. Special Introductory Prayer Hail, Queen of the Most Holy Rosary, my Mother Mary, hail! At thy feet I humbly kneel to offer thee a Crown of Roses, snow white buds to remind thee of thy joys, each bud recalling to thee a holy mystery, each 10 bound together with my petition for a particular grace. O Holy Queen, dispenser of God\u2019s graces, and Mother of all who invoke thee, thou canst not look upon my gift and fail to see its binding. As thou receivest my gift, so wilt thou receive my petition; from thy bounty thou wilt give me the favor I so earnestly and trustingly seek. I despair of nothing that I ask of thee. Show thyself my Mother! The Apostles\u2019 Creed I believe in God, the Father Almighty, Creator of heaven and earth; and in Jesus Christ, His only Son, our Lord: Who was conceived by the Holy Spirit, born of the Virgin Mary; suffered under Pontius Pilate, was crucified, died and was buried. He descended into hell; the third day He rose again from the dead; He ascended into heaven, is seated at the right hand of God the Father Almighty; from thence He shall come to judge the living and the dead. I believe in the Holy Spirit, the Holy Catholic Church, the communion of Saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen. The"
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "Fatima Prayer Oh my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to Heaven, especially those in most need of Thy mercy. Special Concluding Prayer for Each Decade The Annunciation Concluding Prayer: I bind these snow-white buds with a petition for the virtue of humility and humbly lay this bouquet at thy feet. The Visitation Concluding Prayer: I bind these snow-white buds with a petition for the virtue of charity and humbly lay this bouquet at thy feet. The Nativity Concluding Prayer: I bind these snow-white buds with a petition for the virtue of detachment from the world and humbly lay this bouquet at thy feet. The Presentation Concluding Prayer: I bind these snow-white buds with a petition for the virtue of purity and humbly lay this bouquet at thy feet. Finding the Child Jesus in the Temple Concluding Prayer: I bind these snow-white buds with a petition for the virtue of obedience to the will of God and humbly lay this bouquet at thy feet. After you\u2019ve prayed all five decades, pray the following Pray the Special Closing Prayer Sweet Mother Mary, I offer thee this Spiritual Communion to bind my bouquets in a wreath to place upon thy brow. O my Mother! Look with favor upon my gift, and in thy love obtain for me my request."
+              },
+              {
+                "kind": "text",
+                "text": "Spiritual Communion Prayer My Jesus, I believe that You are present in the Most Holy Sacrament. I love You above all things, and I desire to receive You into my soul. Since I cannot at this moment receive You sacramentally, come at least spiritually into my heart. I embrace You as if You were already there and unite myself wholly to You. Never permit me to be separated from You. Amen. Hail, Holy Queen Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears! Turn, then, O most gracious Advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, O holy Mother of God. R. That we may be made worthy of the promises of Christ. Pray the Final Prayer Let us Pray. O God, whose only-begotten Son, by His life, death and resurrection, has purchased for us the rewards of eternal life, grant, we beseech Thee, that meditating on these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain, and obtain what they promise, through the same Christ our Lord. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1, 4, 7"
+          },
+          {
+            "days": [
+              2,
+              5,
+              8
+            ],
+            "key": "days-2-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused compacted prayer source from an earlier section; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "The Holy Rosary, with special prayers added as below."
+              },
+              {
+                "kind": "text",
+                "text": "Today pray the Sorrowful Mysteries in petition Special Introductory Prayer Hail, Queen of the Most Holy Rosary, my Mother Mary, hail! At thy feet I humbly kneel to offer thee a Crown of Roses, blood red roses to remind thee of the passion of thy divine Son, with Whom thou didst so fully partake of its bitterness, each rose recalling to thee a holy mystery, each 10 bound together with my petition for a particular grace. O Holy Queen, dispenser of God\u2019s graces, and Mother of all who invoke thee! Thou canst not look upon my gift and fail to see its binding. As thou receivest my gift, so wilt thou receive my petition; from thy bounty thou wilt give me the favor I so earnestly and trustingly seek. I despair of nothing that I ask of thee. Show thyself my Mother! The Apostles\u2019 Creed I believe in God, the Father Almighty, Creator of heaven and earth; and in Jesus Christ, His only Son, our Lord: Who was conceived by the Holy Spirit, born of the Virgin Mary; suffered under Pontius Pilate, was crucified, died and was buried. He descended into hell; the third day He rose again from the dead; He ascended into heaven, is seated at the right hand of God the Father Almighty; from thence He shall come to judge the living and the dead. I believe in the Holy Spirit, the Holy Catholic Church, the communion of Saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen. The"
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "Fatima Prayer Oh my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to Heaven, especially those in most need of Thy mercy. Special Concluding Prayer for Each Decade The Agony in the Garden Concluding Prayer: I bind these blood red roses with a petition for the virtue of resignation to the will of God and humbly lay this bouquet at thy feet. The Scourging at the Pillar Concluding Prayer: I bind these blood red roses with a petition for the virtue of mortification and humbly lay this bouquet at thy feet. The Crowning with Thorns Concluding Prayer: I bind these blood red roses with a petition for the virtue of humility and humbly lay this bouquet at thy feet. The Carrying of the Cross Concluding Prayer: I bind these blood red roses with a petition for the virtue of patience in adversity and humbly lay this bouquet at thy feet. The Crucifixion Concluding Prayer: I bind these blood red roses with a petition for the virtue of love of our enemies and humbly lay this bouquet at thy feet. After you\u2019ve prayed all five decades, pray the following Pray the Special Closing Prayer Sweet Mother Mary, I offer thee this Spiritual Communion to bind my bouquets in a wreath to place upon thy brow. O my Mother! Look with favor upon my gift, and in thy love obtain for me my request."
+              },
+              {
+                "kind": "text",
+                "text": "Spiritual Communion Prayer My Jesus, I believe that You are present in the Most Holy Sacrament. I love You above all things, and I desire to receive You into my soul. Since I cannot at this moment receive You sacramentally, come at least spiritually into my heart. I embrace You as if You were already there and unite myself wholly to You. Never permit me to be separated from You. Amen. Hail, Holy Queen Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears! Turn, then, O most gracious Advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, O holy Mother of God. R. That we may be made worthy of the promises of Christ. Pray the Final Prayer Let us Pray. O God, whose only-begotten Son, by His life, death and resurrection, has purchased for us the rewards of eternal life, grant, we beseech Thee, that meditating on these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain, and obtain what they promise, through the same Christ our Lord. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 2, 5, 8"
+          },
+          {
+            "days": [
+              3,
+              6,
+              9
+            ],
+            "key": "days-3-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused compacted prayer source from an earlier section; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "The Holy Rosary, with special prayers added as below."
+              },
+              {
+                "kind": "text",
+                "text": "Today pray the Glorious Mysteries in petition Special Introductory Prayer Hail, Queen of the Most Holy Rosary, my Mother Mary, hail! At thy feet I humbly kneel to offer thee a Crown of Roses, full-blown white roses, tinged with the red of the passion, to remind thee of thy glories, fruits of the sufferings of thy Son and thee, each rose recalling to thee a holy mystery, each 10 bound together with my petition for a particular grace. O Holy Queen, dispenser of God\u2019s graces, and Mother of all who invoke thee! Thou canst not look upon my gift and fail to see its binding. As thou receivest my gift, so wilt thou receive my petition; from thy bounty thou wilt give me the favor I so earnestly and trustingly seek. I despair of nothing that I ask of thee. Show thyself my Mother! The Apostles\u2019 Creed I believe in God, the Father Almighty, Creator of heaven and earth; and in Jesus Christ, His only Son, our Lord: Who was conceived by the Holy Spirit, born of the Virgin Mary; suffered under Pontius Pilate, was crucified, died and was buried. He descended into hell; the third day He rose again from the dead; He ascended into heaven, is seated at the right hand of God the Father Almighty; from thence He shall come to judge the living and the dead. I believe in the Holy Spirit, the Holy Catholic Church, the communion of Saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen. The"
+              },
+              {
+                "fragment_key": "our_father",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "hail_mary",
+                "kind": "fragment"
+              },
+              {
+                "fragment_key": "glory_be",
+                "kind": "fragment"
+              },
+              {
+                "kind": "text",
+                "text": "Fatima Prayer Oh my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to Heaven, especially those in most need of Thy mercy. Special Concluding Prayer for Each Decade The Resurrection Concluding Prayer: I bind these full-blown roses with a petition for the virtue of faith and humbly lay this bouquet at thy feet. The Ascension Concluding Prayer: I bind these full-blown roses with a petition for the virtue of hope and humbly lay this bouquet at thy feet. The Descent of the Holy Spirit Concluding Prayer: I bind these full-blown roses with a petition for the virtue of charity and humbly lay this bouquet at thy feet. The Assumption of Mary Concluding Prayer: I bind these full-blown roses with a petition for the virtue of union with Christ and humbly lay this bouquet at thy feet. The Coronation of the Blessed Mother Concluding Prayer: I bind these full-blown roses with a petition for the virtue of union with thee and humbly lay this bouquet at thy feet. After you\u2019ve prayed all five decades, pray the following Pray the Special Closing Prayer Sweet Mother Mary, I offer thee this Spiritual Communion to bind my bouquets in a wreath to place upon thy brow. O my Mother! Look with favor upon my gift, and in thy love obtain for me my request."
+              },
+              {
+                "kind": "text",
+                "text": "Spiritual Communion Prayer My Jesus, I believe that You are present in the Most Holy Sacrament. I love You above all things, and I desire to receive You into my soul. Since I cannot at this moment receive You sacramentally, come at least spiritually into my heart. I embrace You as if You were already there and unite myself wholly to You. Never permit me to be separated from You. Amen. Hail, Holy Queen Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears! Turn, then, O most gracious Advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, O holy Mother of God. R. That we may be made worthy of the promises of Christ. Pray the Final Prayer Let us Pray. O God, whose only-begotten Son, by His life, death and resurrection, has purchased for us the rewards of eternal life, grant, we beseech Thee, that meditating on these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain, and obtain what they promise, through the same Christ our Lord. Amen."
+              },
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 3, 6, 9"
+          }
+        ],
+        "fragments": [
+          {
+            "key": "our_father",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Our Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.",
+            "title": "Our Father"
+          },
+          {
+            "key": "hail_mary",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Hail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.",
+            "title": "Hail Mary"
+          },
+          {
+            "key": "glory_be",
+            "kind": "fixed",
+            "notes": "canonical rosary prayer text",
+            "text": "Glory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.",
+            "title": "Glory Be"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full The 54 Day Rosary Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nThe Holy Rosary, with special prayers added as below.\n\nToday pray the Joyful Mysteries in petition. Special Introductory Prayer Hail, Queen of the Most Holy Rosary, my Mother Mary, hail! At thy feet I humbly kneel to offer thee a Crown of Roses, snow white buds to remind thee of thy joys, each bud recalling to thee a holy mystery, each 10 bound together with my petition for a particular grace. O Holy Queen, dispenser of God\u2019s graces, and Mother of all who invoke thee, thou canst not look upon my gift and fail to see its binding. As thou receivest my gift, so wilt thou receive my petition; from thy bounty thou wilt give me the favor I so earnestly and trustingly seek. I despair of nothing that I ask of thee. Show thyself my Mother! The Apostles\u2019 Creed I believe in God, the Father Almighty, Creator of heaven and earth; and in Jesus Christ, His only Son, our Lord: Who was conceived by the Holy Spirit, born of the Virgin Mary; suffered under Pontius Pilate, was crucified, died and was buried. He descended into hell; the third day He rose again from the dead; He ascended into heaven, is seated at the right hand of God the Father Almighty; from thence He shall come to judge the living and the dead. I believe in the Holy Spirit, the Holy Catholic Church, the communion of Saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen. The\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nFatima Prayer Oh my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to Heaven, especially those in most need of Thy mercy. Special Concluding Prayer for Each Decade The Annunciation Concluding Prayer: I bind these snow-white buds with a petition for the virtue of humility and humbly lay this bouquet at thy feet. The Visitation Concluding Prayer: I bind these snow-white buds with a petition for the virtue of charity and humbly lay this bouquet at thy feet. The Nativity Concluding Prayer: I bind these snow-white buds with a petition for the virtue of detachment from the world and humbly lay this bouquet at thy feet. The Presentation Concluding Prayer: I bind these snow-white buds with a petition for the virtue of purity and humbly lay this bouquet at thy feet. Finding the Child Jesus in the Temple Concluding Prayer: I bind these snow-white buds with a petition for the virtue of obedience to the will of God and humbly lay this bouquet at thy feet. After you\u2019ve prayed all five decades, pray the following Pray the Special Closing Prayer Sweet Mother Mary, I offer thee this Spiritual Communion to bind my bouquets in a wreath to place upon thy brow. O my Mother! Look with favor upon my gift, and in thy love obtain for me my request.\n\nSpiritual Communion Prayer My Jesus, I believe that You are present in the Most Holy Sacrament. I love You above all things, and I desire to receive You into my soul. Since I cannot at this moment receive You sacramentally, come at least spiritually into my heart. I embrace You as if You were already there and unite myself wholly to You. Never permit me to be separated from You. Amen. Hail, Holy Queen Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears! Turn, then, O most gracious Advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, O holy Mother of God. R. That we may be made worthy of the promises of Christ. Pray the Final Prayer Let us Pray. O God, whose only-begotten Son, by His life, death and resurrection, has purchased for us the rewards of eternal life, grant, we beseech Thee, that meditating on these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain, and obtain what they promise, through the same Christ our Lord. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nThe Holy Rosary, with special prayers added as below.\n\nToday pray the Sorrowful Mysteries in petition Special Introductory Prayer Hail, Queen of the Most Holy Rosary, my Mother Mary, hail! At thy feet I humbly kneel to offer thee a Crown of Roses, blood red roses to remind thee of the passion of thy divine Son, with Whom thou didst so fully partake of its bitterness, each rose recalling to thee a holy mystery, each 10 bound together with my petition for a particular grace. O Holy Queen, dispenser of God\u2019s graces, and Mother of all who invoke thee! Thou canst not look upon my gift and fail to see its binding. As thou receivest my gift, so wilt thou receive my petition; from thy bounty thou wilt give me the favor I so earnestly and trustingly seek. I despair of nothing that I ask of thee. Show thyself my Mother! The Apostles\u2019 Creed I believe in God, the Father Almighty, Creator of heaven and earth; and in Jesus Christ, His only Son, our Lord: Who was conceived by the Holy Spirit, born of the Virgin Mary; suffered under Pontius Pilate, was crucified, died and was buried. He descended into hell; the third day He rose again from the dead; He ascended into heaven, is seated at the right hand of God the Father Almighty; from thence He shall come to judge the living and the dead. I believe in the Holy Spirit, the Holy Catholic Church, the communion of Saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen. The\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nFatima Prayer Oh my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to Heaven, especially those in most need of Thy mercy. Special Concluding Prayer for Each Decade The Agony in the Garden Concluding Prayer: I bind these blood red roses with a petition for the virtue of resignation to the will of God and humbly lay this bouquet at thy feet. The Scourging at the Pillar Concluding Prayer: I bind these blood red roses with a petition for the virtue of mortification and humbly lay this bouquet at thy feet. The Crowning with Thorns Concluding Prayer: I bind these blood red roses with a petition for the virtue of humility and humbly lay this bouquet at thy feet. The Carrying of the Cross Concluding Prayer: I bind these blood red roses with a petition for the virtue of patience in adversity and humbly lay this bouquet at thy feet. The Crucifixion Concluding Prayer: I bind these blood red roses with a petition for the virtue of love of our enemies and humbly lay this bouquet at thy feet. After you\u2019ve prayed all five decades, pray the following Pray the Special Closing Prayer Sweet Mother Mary, I offer thee this Spiritual Communion to bind my bouquets in a wreath to place upon thy brow. O my Mother! Look with favor upon my gift, and in thy love obtain for me my request.\n\nSpiritual Communion Prayer My Jesus, I believe that You are present in the Most Holy Sacrament. I love You above all things, and I desire to receive You into my soul. Since I cannot at this moment receive You sacramentally, come at least spiritually into my heart. I embrace You as if You were already there and unite myself wholly to You. Never permit me to be separated from You. Amen. Hail, Holy Queen Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears! Turn, then, O most gracious Advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, O holy Mother of God. R. That we may be made worthy of the promises of Christ. Pray the Final Prayer Let us Pray. O God, whose only-begotten Son, by His life, death and resurrection, has purchased for us the rewards of eternal life, grant, we beseech Thee, that meditating on these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain, and obtain what they promise, through the same Christ our Lord. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nThe Holy Rosary, with special prayers added as below.\n\nToday pray the Glorious Mysteries in petition Special Introductory Prayer Hail, Queen of the Most Holy Rosary, my Mother Mary, hail! At thy feet I humbly kneel to offer thee a Crown of Roses, full-blown white roses, tinged with the red of the passion, to remind thee of thy glories, fruits of the sufferings of thy Son and thee, each rose recalling to thee a holy mystery, each 10 bound together with my petition for a particular grace. O Holy Queen, dispenser of God\u2019s graces, and Mother of all who invoke thee! Thou canst not look upon my gift and fail to see its binding. As thou receivest my gift, so wilt thou receive my petition; from thy bounty thou wilt give me the favor I so earnestly and trustingly seek. I despair of nothing that I ask of thee. Show thyself my Mother! The Apostles\u2019 Creed I believe in God, the Father Almighty, Creator of heaven and earth; and in Jesus Christ, His only Son, our Lord: Who was conceived by the Holy Spirit, born of the Virgin Mary; suffered under Pontius Pilate, was crucified, died and was buried. He descended into hell; the third day He rose again from the dead; He ascended into heaven, is seated at the right hand of God the Father Almighty; from thence He shall come to judge the living and the dead. I believe in the Holy Spirit, the Holy Catholic Church, the communion of Saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen. The\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nFatima Prayer Oh my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to Heaven, especially those in most need of Thy mercy. Special Concluding Prayer for Each Decade The Resurrection Concluding Prayer: I bind these full-blown roses with a petition for the virtue of faith and humbly lay this bouquet at thy feet. The Ascension Concluding Prayer: I bind these full-blown roses with a petition for the virtue of hope and humbly lay this bouquet at thy feet. The Descent of the Holy Spirit Concluding Prayer: I bind these full-blown roses with a petition for the virtue of charity and humbly lay this bouquet at thy feet. The Assumption of Mary Concluding Prayer: I bind these full-blown roses with a petition for the virtue of union with Christ and humbly lay this bouquet at thy feet. The Coronation of the Blessed Mother Concluding Prayer: I bind these full-blown roses with a petition for the virtue of union with thee and humbly lay this bouquet at thy feet. After you\u2019ve prayed all five decades, pray the following Pray the Special Closing Prayer Sweet Mother Mary, I offer thee this Spiritual Communion to bind my bouquets in a wreath to place upon thy brow. O my Mother! Look with favor upon my gift, and in thy love obtain for me my request.\n\nSpiritual Communion Prayer My Jesus, I believe that You are present in the Most Holy Sacrament. I love You above all things, and I desire to receive You into my soul. Since I cannot at this moment receive You sacramentally, come at least spiritually into my heart. I embrace You as if You were already there and unite myself wholly to You. Never permit me to be separated from You. Amen. Hail, Holy Queen Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears! Turn, then, O most gracious Advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, O holy Mother of God. R. That we may be made worthy of the promises of Christ. Pray the Final Prayer Let us Pray. O God, whose only-begotten Son, by His life, death and resurrection, has purchased for us the rewards of eternal life, grant, we beseech Thee, that meditating on these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain, and obtain what they promise, through the same Christ our Lord. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nThe Holy Rosary, with special prayers added as below.\n\nToday pray the Joyful Mysteries in petition. Special Introductory Prayer Hail, Queen of the Most Holy Rosary, my Mother Mary, hail! At thy feet I humbly kneel to offer thee a Crown of Roses, snow white buds to remind thee of thy joys, each bud recalling to thee a holy mystery, each 10 bound together with my petition for a particular grace. O Holy Queen, dispenser of God\u2019s graces, and Mother of all who invoke thee, thou canst not look upon my gift and fail to see its binding. As thou receivest my gift, so wilt thou receive my petition; from thy bounty thou wilt give me the favor I so earnestly and trustingly seek. I despair of nothing that I ask of thee. Show thyself my Mother! The Apostles\u2019 Creed I believe in God, the Father Almighty, Creator of heaven and earth; and in Jesus Christ, His only Son, our Lord: Who was conceived by the Holy Spirit, born of the Virgin Mary; suffered under Pontius Pilate, was crucified, died and was buried. He descended into hell; the third day He rose again from the dead; He ascended into heaven, is seated at the right hand of God the Father Almighty; from thence He shall come to judge the living and the dead. I believe in the Holy Spirit, the Holy Catholic Church, the communion of Saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen. The\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nFatima Prayer Oh my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to Heaven, especially those in most need of Thy mercy. Special Concluding Prayer for Each Decade The Annunciation Concluding Prayer: I bind these snow-white buds with a petition for the virtue of humility and humbly lay this bouquet at thy feet. The Visitation Concluding Prayer: I bind these snow-white buds with a petition for the virtue of charity and humbly lay this bouquet at thy feet. The Nativity Concluding Prayer: I bind these snow-white buds with a petition for the virtue of detachment from the world and humbly lay this bouquet at thy feet. The Presentation Concluding Prayer: I bind these snow-white buds with a petition for the virtue of purity and humbly lay this bouquet at thy feet. Finding the Child Jesus in the Temple Concluding Prayer: I bind these snow-white buds with a petition for the virtue of obedience to the will of God and humbly lay this bouquet at thy feet. After you\u2019ve prayed all five decades, pray the following Pray the Special Closing Prayer Sweet Mother Mary, I offer thee this Spiritual Communion to bind my bouquets in a wreath to place upon thy brow. O my Mother! Look with favor upon my gift, and in thy love obtain for me my request.\n\nSpiritual Communion Prayer My Jesus, I believe that You are present in the Most Holy Sacrament. I love You above all things, and I desire to receive You into my soul. Since I cannot at this moment receive You sacramentally, come at least spiritually into my heart. I embrace You as if You were already there and unite myself wholly to You. Never permit me to be separated from You. Amen. Hail, Holy Queen Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears! Turn, then, O most gracious Advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, O holy Mother of God. R. That we may be made worthy of the promises of Christ. Pray the Final Prayer Let us Pray. O God, whose only-begotten Son, by His life, death and resurrection, has purchased for us the rewards of eternal life, grant, we beseech Thee, that meditating on these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain, and obtain what they promise, through the same Christ our Lord. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nThe Holy Rosary, with special prayers added as below.\n\nToday pray the Sorrowful Mysteries in petition Special Introductory Prayer Hail, Queen of the Most Holy Rosary, my Mother Mary, hail! At thy feet I humbly kneel to offer thee a Crown of Roses, blood red roses to remind thee of the passion of thy divine Son, with Whom thou didst so fully partake of its bitterness, each rose recalling to thee a holy mystery, each 10 bound together with my petition for a particular grace. O Holy Queen, dispenser of God\u2019s graces, and Mother of all who invoke thee! Thou canst not look upon my gift and fail to see its binding. As thou receivest my gift, so wilt thou receive my petition; from thy bounty thou wilt give me the favor I so earnestly and trustingly seek. I despair of nothing that I ask of thee. Show thyself my Mother! The Apostles\u2019 Creed I believe in God, the Father Almighty, Creator of heaven and earth; and in Jesus Christ, His only Son, our Lord: Who was conceived by the Holy Spirit, born of the Virgin Mary; suffered under Pontius Pilate, was crucified, died and was buried. He descended into hell; the third day He rose again from the dead; He ascended into heaven, is seated at the right hand of God the Father Almighty; from thence He shall come to judge the living and the dead. I believe in the Holy Spirit, the Holy Catholic Church, the communion of Saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen. The\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nFatima Prayer Oh my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to Heaven, especially those in most need of Thy mercy. Special Concluding Prayer for Each Decade The Agony in the Garden Concluding Prayer: I bind these blood red roses with a petition for the virtue of resignation to the will of God and humbly lay this bouquet at thy feet. The Scourging at the Pillar Concluding Prayer: I bind these blood red roses with a petition for the virtue of mortification and humbly lay this bouquet at thy feet. The Crowning with Thorns Concluding Prayer: I bind these blood red roses with a petition for the virtue of humility and humbly lay this bouquet at thy feet. The Carrying of the Cross Concluding Prayer: I bind these blood red roses with a petition for the virtue of patience in adversity and humbly lay this bouquet at thy feet. The Crucifixion Concluding Prayer: I bind these blood red roses with a petition for the virtue of love of our enemies and humbly lay this bouquet at thy feet. After you\u2019ve prayed all five decades, pray the following Pray the Special Closing Prayer Sweet Mother Mary, I offer thee this Spiritual Communion to bind my bouquets in a wreath to place upon thy brow. O my Mother! Look with favor upon my gift, and in thy love obtain for me my request.\n\nSpiritual Communion Prayer My Jesus, I believe that You are present in the Most Holy Sacrament. I love You above all things, and I desire to receive You into my soul. Since I cannot at this moment receive You sacramentally, come at least spiritually into my heart. I embrace You as if You were already there and unite myself wholly to You. Never permit me to be separated from You. Amen. Hail, Holy Queen Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears! Turn, then, O most gracious Advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, O holy Mother of God. R. That we may be made worthy of the promises of Christ. Pray the Final Prayer Let us Pray. O God, whose only-begotten Son, by His life, death and resurrection, has purchased for us the rewards of eternal life, grant, we beseech Thee, that meditating on these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain, and obtain what they promise, through the same Christ our Lord. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nThe Holy Rosary, with special prayers added as below.\n\nToday pray the Glorious Mysteries in petition Special Introductory Prayer Hail, Queen of the Most Holy Rosary, my Mother Mary, hail! At thy feet I humbly kneel to offer thee a Crown of Roses, full-blown white roses, tinged with the red of the passion, to remind thee of thy glories, fruits of the sufferings of thy Son and thee, each rose recalling to thee a holy mystery, each 10 bound together with my petition for a particular grace. O Holy Queen, dispenser of God\u2019s graces, and Mother of all who invoke thee! Thou canst not look upon my gift and fail to see its binding. As thou receivest my gift, so wilt thou receive my petition; from thy bounty thou wilt give me the favor I so earnestly and trustingly seek. I despair of nothing that I ask of thee. Show thyself my Mother! The Apostles\u2019 Creed I believe in God, the Father Almighty, Creator of heaven and earth; and in Jesus Christ, His only Son, our Lord: Who was conceived by the Holy Spirit, born of the Virgin Mary; suffered under Pontius Pilate, was crucified, died and was buried. He descended into hell; the third day He rose again from the dead; He ascended into heaven, is seated at the right hand of God the Father Almighty; from thence He shall come to judge the living and the dead. I believe in the Holy Spirit, the Holy Catholic Church, the communion of Saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen. The\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nFatima Prayer Oh my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to Heaven, especially those in most need of Thy mercy. Special Concluding Prayer for Each Decade The Resurrection Concluding Prayer: I bind these full-blown roses with a petition for the virtue of faith and humbly lay this bouquet at thy feet. The Ascension Concluding Prayer: I bind these full-blown roses with a petition for the virtue of hope and humbly lay this bouquet at thy feet. The Descent of the Holy Spirit Concluding Prayer: I bind these full-blown roses with a petition for the virtue of charity and humbly lay this bouquet at thy feet. The Assumption of Mary Concluding Prayer: I bind these full-blown roses with a petition for the virtue of union with Christ and humbly lay this bouquet at thy feet. The Coronation of the Blessed Mother Concluding Prayer: I bind these full-blown roses with a petition for the virtue of union with thee and humbly lay this bouquet at thy feet. After you\u2019ve prayed all five decades, pray the following Pray the Special Closing Prayer Sweet Mother Mary, I offer thee this Spiritual Communion to bind my bouquets in a wreath to place upon thy brow. O my Mother! Look with favor upon my gift, and in thy love obtain for me my request.\n\nSpiritual Communion Prayer My Jesus, I believe that You are present in the Most Holy Sacrament. I love You above all things, and I desire to receive You into my soul. Since I cannot at this moment receive You sacramentally, come at least spiritually into my heart. I embrace You as if You were already there and unite myself wholly to You. Never permit me to be separated from You. Amen. Hail, Holy Queen Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears! Turn, then, O most gracious Advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, O holy Mother of God. R. That we may be made worthy of the promises of Christ. Pray the Final Prayer Let us Pray. O God, whose only-begotten Son, by His life, death and resurrection, has purchased for us the rewards of eternal life, grant, we beseech Thee, that meditating on these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain, and obtain what they promise, through the same Christ our Lord. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nThe Holy Rosary, with special prayers added as below.\n\nToday pray the Joyful Mysteries in petition. Special Introductory Prayer Hail, Queen of the Most Holy Rosary, my Mother Mary, hail! At thy feet I humbly kneel to offer thee a Crown of Roses, snow white buds to remind thee of thy joys, each bud recalling to thee a holy mystery, each 10 bound together with my petition for a particular grace. O Holy Queen, dispenser of God\u2019s graces, and Mother of all who invoke thee, thou canst not look upon my gift and fail to see its binding. As thou receivest my gift, so wilt thou receive my petition; from thy bounty thou wilt give me the favor I so earnestly and trustingly seek. I despair of nothing that I ask of thee. Show thyself my Mother! The Apostles\u2019 Creed I believe in God, the Father Almighty, Creator of heaven and earth; and in Jesus Christ, His only Son, our Lord: Who was conceived by the Holy Spirit, born of the Virgin Mary; suffered under Pontius Pilate, was crucified, died and was buried. He descended into hell; the third day He rose again from the dead; He ascended into heaven, is seated at the right hand of God the Father Almighty; from thence He shall come to judge the living and the dead. I believe in the Holy Spirit, the Holy Catholic Church, the communion of Saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen. The\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nFatima Prayer Oh my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to Heaven, especially those in most need of Thy mercy. Special Concluding Prayer for Each Decade The Annunciation Concluding Prayer: I bind these snow-white buds with a petition for the virtue of humility and humbly lay this bouquet at thy feet. The Visitation Concluding Prayer: I bind these snow-white buds with a petition for the virtue of charity and humbly lay this bouquet at thy feet. The Nativity Concluding Prayer: I bind these snow-white buds with a petition for the virtue of detachment from the world and humbly lay this bouquet at thy feet. The Presentation Concluding Prayer: I bind these snow-white buds with a petition for the virtue of purity and humbly lay this bouquet at thy feet. Finding the Child Jesus in the Temple Concluding Prayer: I bind these snow-white buds with a petition for the virtue of obedience to the will of God and humbly lay this bouquet at thy feet. After you\u2019ve prayed all five decades, pray the following Pray the Special Closing Prayer Sweet Mother Mary, I offer thee this Spiritual Communion to bind my bouquets in a wreath to place upon thy brow. O my Mother! Look with favor upon my gift, and in thy love obtain for me my request.\n\nSpiritual Communion Prayer My Jesus, I believe that You are present in the Most Holy Sacrament. I love You above all things, and I desire to receive You into my soul. Since I cannot at this moment receive You sacramentally, come at least spiritually into my heart. I embrace You as if You were already there and unite myself wholly to You. Never permit me to be separated from You. Amen. Hail, Holy Queen Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears! Turn, then, O most gracious Advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, O holy Mother of God. R. That we may be made worthy of the promises of Christ. Pray the Final Prayer Let us Pray. O God, whose only-begotten Son, by His life, death and resurrection, has purchased for us the rewards of eternal life, grant, we beseech Thee, that meditating on these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain, and obtain what they promise, through the same Christ our Lord. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nThe Holy Rosary, with special prayers added as below.\n\nToday pray the Sorrowful Mysteries in petition Special Introductory Prayer Hail, Queen of the Most Holy Rosary, my Mother Mary, hail! At thy feet I humbly kneel to offer thee a Crown of Roses, blood red roses to remind thee of the passion of thy divine Son, with Whom thou didst so fully partake of its bitterness, each rose recalling to thee a holy mystery, each 10 bound together with my petition for a particular grace. O Holy Queen, dispenser of God\u2019s graces, and Mother of all who invoke thee! Thou canst not look upon my gift and fail to see its binding. As thou receivest my gift, so wilt thou receive my petition; from thy bounty thou wilt give me the favor I so earnestly and trustingly seek. I despair of nothing that I ask of thee. Show thyself my Mother! The Apostles\u2019 Creed I believe in God, the Father Almighty, Creator of heaven and earth; and in Jesus Christ, His only Son, our Lord: Who was conceived by the Holy Spirit, born of the Virgin Mary; suffered under Pontius Pilate, was crucified, died and was buried. He descended into hell; the third day He rose again from the dead; He ascended into heaven, is seated at the right hand of God the Father Almighty; from thence He shall come to judge the living and the dead. I believe in the Holy Spirit, the Holy Catholic Church, the communion of Saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen. The\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nFatima Prayer Oh my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to Heaven, especially those in most need of Thy mercy. Special Concluding Prayer for Each Decade The Agony in the Garden Concluding Prayer: I bind these blood red roses with a petition for the virtue of resignation to the will of God and humbly lay this bouquet at thy feet. The Scourging at the Pillar Concluding Prayer: I bind these blood red roses with a petition for the virtue of mortification and humbly lay this bouquet at thy feet. The Crowning with Thorns Concluding Prayer: I bind these blood red roses with a petition for the virtue of humility and humbly lay this bouquet at thy feet. The Carrying of the Cross Concluding Prayer: I bind these blood red roses with a petition for the virtue of patience in adversity and humbly lay this bouquet at thy feet. The Crucifixion Concluding Prayer: I bind these blood red roses with a petition for the virtue of love of our enemies and humbly lay this bouquet at thy feet. After you\u2019ve prayed all five decades, pray the following Pray the Special Closing Prayer Sweet Mother Mary, I offer thee this Spiritual Communion to bind my bouquets in a wreath to place upon thy brow. O my Mother! Look with favor upon my gift, and in thy love obtain for me my request.\n\nSpiritual Communion Prayer My Jesus, I believe that You are present in the Most Holy Sacrament. I love You above all things, and I desire to receive You into my soul. Since I cannot at this moment receive You sacramentally, come at least spiritually into my heart. I embrace You as if You were already there and unite myself wholly to You. Never permit me to be separated from You. Amen. Hail, Holy Queen Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears! Turn, then, O most gracious Advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, O holy Mother of God. R. That we may be made worthy of the promises of Christ. Pray the Final Prayer Let us Pray. O God, whose only-begotten Son, by His life, death and resurrection, has purchased for us the rewards of eternal life, grant, we beseech Thee, that meditating on these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain, and obtain what they promise, through the same Christ our Lord. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nThe Holy Rosary, with special prayers added as below.\n\nToday pray the Glorious Mysteries in petition Special Introductory Prayer Hail, Queen of the Most Holy Rosary, my Mother Mary, hail! At thy feet I humbly kneel to offer thee a Crown of Roses, full-blown white roses, tinged with the red of the passion, to remind thee of thy glories, fruits of the sufferings of thy Son and thee, each rose recalling to thee a holy mystery, each 10 bound together with my petition for a particular grace. O Holy Queen, dispenser of God\u2019s graces, and Mother of all who invoke thee! Thou canst not look upon my gift and fail to see its binding. As thou receivest my gift, so wilt thou receive my petition; from thy bounty thou wilt give me the favor I so earnestly and trustingly seek. I despair of nothing that I ask of thee. Show thyself my Mother! The Apostles\u2019 Creed I believe in God, the Father Almighty, Creator of heaven and earth; and in Jesus Christ, His only Son, our Lord: Who was conceived by the Holy Spirit, born of the Virgin Mary; suffered under Pontius Pilate, was crucified, died and was buried. He descended into hell; the third day He rose again from the dead; He ascended into heaven, is seated at the right hand of God the Father Almighty; from thence He shall come to judge the living and the dead. I believe in the Holy Spirit, the Holy Catholic Church, the communion of Saints, the forgiveness of sins, the resurrection of the body, and life everlasting. Amen. The\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\nFatima Prayer Oh my Jesus, forgive us our sins, save us from the fires of hell, and lead all souls to Heaven, especially those in most need of Thy mercy. Special Concluding Prayer for Each Decade The Resurrection Concluding Prayer: I bind these full-blown roses with a petition for the virtue of faith and humbly lay this bouquet at thy feet. The Ascension Concluding Prayer: I bind these full-blown roses with a petition for the virtue of hope and humbly lay this bouquet at thy feet. The Descent of the Holy Spirit Concluding Prayer: I bind these full-blown roses with a petition for the virtue of charity and humbly lay this bouquet at thy feet. The Assumption of Mary Concluding Prayer: I bind these full-blown roses with a petition for the virtue of union with Christ and humbly lay this bouquet at thy feet. The Coronation of the Blessed Mother Concluding Prayer: I bind these full-blown roses with a petition for the virtue of union with thee and humbly lay this bouquet at thy feet. After you\u2019ve prayed all five decades, pray the following Pray the Special Closing Prayer Sweet Mother Mary, I offer thee this Spiritual Communion to bind my bouquets in a wreath to place upon thy brow. O my Mother! Look with favor upon my gift, and in thy love obtain for me my request.\n\nSpiritual Communion Prayer My Jesus, I believe that You are present in the Most Holy Sacrament. I love You above all things, and I desire to receive You into my soul. Since I cannot at this moment receive You sacramentally, come at least spiritually into my heart. I embrace You as if You were already there and unite myself wholly to You. Never permit me to be separated from You. Amen. Hail, Holy Queen Hail, Holy Queen, Mother of Mercy, our life, our sweetness and our hope! To thee do we cry, poor banished children of Eve. To thee do we send up our sighs, mourning and weeping in this valley of tears! Turn, then, O most gracious Advocate, thine eyes of mercy toward us, and after this, our exile, show unto us the blessed fruit of thy womb, Jesus. O clement, O loving, O sweet Virgin Mary. V. Pray for us, O holy Mother of God. R. That we may be made worthy of the promises of Christ. Pray the Final Prayer Let us Pray. O God, whose only-begotten Son, by His life, death and resurrection, has purchased for us the rewards of eternal life, grant, we beseech Thee, that meditating on these mysteries of the most holy Rosary of the Blessed Virgin Mary, we may imitate what they contain, and obtain what they promise, through the same Christ our Lord. Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-54_day_rosary"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "54_day_rosary",
+      "name": "54 Day Rosary"
+    },
+    "type": "novena_feast_rule"
+  }
+}

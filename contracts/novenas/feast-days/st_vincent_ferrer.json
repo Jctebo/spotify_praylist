@@ -1,0 +1,227 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_vincent_ferrer",
+    "feast": {
+      "day": 5,
+      "mode": "fixed",
+      "month": 4,
+      "name": "St. Vincent Ferrer"
+    },
+    "id": "st_vincent_ferrer",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "builders",
+        "construction workers"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Vincent Ferrer was a Dominican preacher and missionary known for powerful sermons calling people to repentance and renewal of faith."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Vincent Ferrer Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Light punctuation and hyphenation were adjusted for smoother text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Saint Vincent Ferrer, our guardian, because God, our eternal Father, has blessed you with an inexhaustible fountain of grace and blessing, we beg you to hear our prayers and to assist us with your powerful intercession, which is even more effective now that you are in heaven than it was when you were on earth. Full of confidence in your mercy and compassion, we kneel in prayer before you, and commend to your powerful intercession all our needs, those of our families, our friends, relatives, and especially"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Glorious Saint Vincent Ferrer, let not our hope and confidence in your protection be deceived. Intercede for us before the throne of God. Watch over our eternal welfare. If our trials and tribulations in this world multiply, may they serve to give us spiritual joy and happiness. If God will only grant us the grace of ever-increasing patience, to the end that we may save our souls. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Vincent Ferrer Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Light punctuation and hyphenation were adjusted for smoother text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Saint Vincent Ferrer, our guardian, because God, our eternal Father, has blessed you with an inexhaustible fountain of grace and blessing, we beg you to hear our prayers and to assist us with your powerful intercession, which is even more effective now that you are in heaven than it was when you were on earth. Full of confidence in your mercy and compassion, we kneel in prayer before you, and commend to your powerful intercession all our needs, those of our families, our friends, relatives, and especially  Glorious Saint Vincent Ferrer, let not our hope and confidence in your protection be deceived. Intercede for us before the throne of God. Watch over our eternal welfare. If our trials and tribulations in this world multiply, may they serve to give us spiritual joy and happiness. If God will only grant us the grace of ever-increasing patience, to the end that we may save our souls. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Light punctuation and hyphenation were adjusted for smoother text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Saint Vincent Ferrer, our guardian, because God, our eternal Father, has blessed you with an inexhaustible fountain of grace and blessing, we beg you to hear our prayers and to assist us with your powerful intercession, which is even more effective now that you are in heaven than it was when you were on earth. Full of confidence in your mercy and compassion, we kneel in prayer before you, and commend to your powerful intercession all our needs, those of our families, our friends, relatives, and especially  Glorious Saint Vincent Ferrer, let not our hope and confidence in your protection be deceived. Intercede for us before the throne of God. Watch over our eternal welfare. If our trials and tribulations in this world multiply, may they serve to give us spiritual joy and happiness. If God will only grant us the grace of ever-increasing patience, to the end that we may save our souls. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Light punctuation and hyphenation were adjusted for smoother text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Saint Vincent Ferrer, our guardian, because God, our eternal Father, has blessed you with an inexhaustible fountain of grace and blessing, we beg you to hear our prayers and to assist us with your powerful intercession, which is even more effective now that you are in heaven than it was when you were on earth. Full of confidence in your mercy and compassion, we kneel in prayer before you, and commend to your powerful intercession all our needs, those of our families, our friends, relatives, and especially  Glorious Saint Vincent Ferrer, let not our hope and confidence in your protection be deceived. Intercede for us before the throne of God. Watch over our eternal welfare. If our trials and tribulations in this world multiply, may they serve to give us spiritual joy and happiness. If God will only grant us the grace of ever-increasing patience, to the end that we may save our souls. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Light punctuation and hyphenation were adjusted for smoother text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Saint Vincent Ferrer, our guardian, because God, our eternal Father, has blessed you with an inexhaustible fountain of grace and blessing, we beg you to hear our prayers and to assist us with your powerful intercession, which is even more effective now that you are in heaven than it was when you were on earth. Full of confidence in your mercy and compassion, we kneel in prayer before you, and commend to your powerful intercession all our needs, those of our families, our friends, relatives, and especially  Glorious Saint Vincent Ferrer, let not our hope and confidence in your protection be deceived. Intercede for us before the throne of God. Watch over our eternal welfare. If our trials and tribulations in this world multiply, may they serve to give us spiritual joy and happiness. If God will only grant us the grace of ever-increasing patience, to the end that we may save our souls. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Light punctuation and hyphenation were adjusted for smoother text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Saint Vincent Ferrer, our guardian, because God, our eternal Father, has blessed you with an inexhaustible fountain of grace and blessing, we beg you to hear our prayers and to assist us with your powerful intercession, which is even more effective now that you are in heaven than it was when you were on earth. Full of confidence in your mercy and compassion, we kneel in prayer before you, and commend to your powerful intercession all our needs, those of our families, our friends, relatives, and especially  Glorious Saint Vincent Ferrer, let not our hope and confidence in your protection be deceived. Intercede for us before the throne of God. Watch over our eternal welfare. If our trials and tribulations in this world multiply, may they serve to give us spiritual joy and happiness. If God will only grant us the grace of ever-increasing patience, to the end that we may save our souls. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Light punctuation and hyphenation were adjusted for smoother text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Saint Vincent Ferrer, our guardian, because God, our eternal Father, has blessed you with an inexhaustible fountain of grace and blessing, we beg you to hear our prayers and to assist us with your powerful intercession, which is even more effective now that you are in heaven than it was when you were on earth. Full of confidence in your mercy and compassion, we kneel in prayer before you, and commend to your powerful intercession all our needs, those of our families, our friends, relatives, and especially  Glorious Saint Vincent Ferrer, let not our hope and confidence in your protection be deceived. Intercede for us before the throne of God. Watch over our eternal welfare. If our trials and tribulations in this world multiply, may they serve to give us spiritual joy and happiness. If God will only grant us the grace of ever-increasing patience, to the end that we may save our souls. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Light punctuation and hyphenation were adjusted for smoother text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Saint Vincent Ferrer, our guardian, because God, our eternal Father, has blessed you with an inexhaustible fountain of grace and blessing, we beg you to hear our prayers and to assist us with your powerful intercession, which is even more effective now that you are in heaven than it was when you were on earth. Full of confidence in your mercy and compassion, we kneel in prayer before you, and commend to your powerful intercession all our needs, those of our families, our friends, relatives, and especially  Glorious Saint Vincent Ferrer, let not our hope and confidence in your protection be deceived. Intercede for us before the throne of God. Watch over our eternal welfare. If our trials and tribulations in this world multiply, may they serve to give us spiritual joy and happiness. If God will only grant us the grace of ever-increasing patience, to the end that we may save our souls. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Light punctuation and hyphenation were adjusted for smoother text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Saint Vincent Ferrer, our guardian, because God, our eternal Father, has blessed you with an inexhaustible fountain of grace and blessing, we beg you to hear our prayers and to assist us with your powerful intercession, which is even more effective now that you are in heaven than it was when you were on earth. Full of confidence in your mercy and compassion, we kneel in prayer before you, and commend to your powerful intercession all our needs, those of our families, our friends, relatives, and especially  Glorious Saint Vincent Ferrer, let not our hope and confidence in your protection be deceived. Intercede for us before the throne of God. Watch over our eternal welfare. If our trials and tribulations in this world multiply, may they serve to give us spiritual joy and happiness. If God will only grant us the grace of ever-increasing patience, to the end that we may save our souls. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Light punctuation and hyphenation were adjusted for smoother text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Saint Vincent Ferrer, our guardian, because God, our eternal Father, has blessed you with an inexhaustible fountain of grace and blessing, we beg you to hear our prayers and to assist us with your powerful intercession, which is even more effective now that you are in heaven than it was when you were on earth. Full of confidence in your mercy and compassion, we kneel in prayer before you, and commend to your powerful intercession all our needs, those of our families, our friends, relatives, and especially  Glorious Saint Vincent Ferrer, let not our hope and confidence in your protection be deceived. Intercede for us before the throne of God. Watch over our eternal welfare. If our trials and tribulations in this world multiply, may they serve to give us spiritual joy and happiness. If God will only grant us the grace of ever-increasing patience, to the end that we may save our souls. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_vincent_ferrer"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_vincent_ferrer",
+      "name": "St. Vincent Ferrer"
+    },
+    "type": "novena_feast_rule"
+  }
+}

@@ -15,6 +15,7 @@ from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup
 from openai import OpenAI
+from scripts.seed_novena_intro_metadata import _seed_record
 import requests
 
 from jobs.novena_contracts.contracts import DEFAULT_CONTRACT_DIR, DEFAULT_TEMPLATE_DIR, DEFAULT_AUDIO_CONFIG, DEFAULT_RSS_CONFIG
@@ -1136,6 +1137,8 @@ def _feast_text_aliases(feast_text: str) -> List[str]:
     aliases: List[str] = []
     if "pentecost" in cleaned:
         aliases.extend(["Pentecost Sunday", "Pentecost"])
+    if "holy family" in cleaned:
+        aliases.append("holy_family_of_jesus_mary_and_joseph")
     return aliases
 
 
@@ -1209,6 +1212,16 @@ def _validate_and_write_contract(
         raise RuntimeError(f"Contract already exists: {output_path}")
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _attach_intro_metadata(payload: Dict[str, Any], *, api_key: str, base_url: str, model: str) -> None:
+    if not api_key:
+        raise RuntimeError("Traditional novena imports require OPENAI_API_KEY to generate contract intro metadata.")
+    contract = payload.get("contract") or {}
+    if contract.get("intro"):
+        return
+    client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
+    contract["intro"] = _seed_record(client, payload, model)
 
 
 def _derive_output_path(contract_id: str, *, output_dir: Optional[Path] = None) -> Path:
@@ -1437,6 +1450,7 @@ def import_single_url(
         target_path = Path(output_path) if output_path else _derive_output_path(draft.contract_id, output_dir=output_dir)
         draft = dataclasses.replace(draft, output_path=str(target_path))
         if not dry_run:
+            _attach_intro_metadata(draft.payload or {}, api_key=openai_api_key, base_url=openai_base_url, model=openai_model)
             _validate_and_write_contract(payload=draft.payload or {}, output_path=target_path, force=force)
         report.entries.append(draft)
     except Exception as exc:
@@ -1519,6 +1533,7 @@ def import_bulk_catalog(
             target_path = _derive_output_path(draft.contract_id, output_dir=output_dir)
             draft = dataclasses.replace(draft, output_path=str(target_path))
             if not dry_run:
+                _attach_intro_metadata(draft.payload or {}, api_key=openai_api_key, base_url=openai_base_url, model=openai_model)
                 _validate_and_write_contract(payload=draft.payload or {}, output_path=target_path, force=force)
             report.entries.append(draft)
         except Exception as exc:

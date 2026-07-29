@@ -1,5 +1,22 @@
 # Release Log
 
+## [0.3.12.0] - 2026-07-28
+
+### Added
+- Added a checked-in, materialized short-form novena catalog keyed to Romcal celebration IDs, with LLM-seeded saint or event intro metadata and reusable `standard-9-day` content.
+- Added import, materialization, orchestration, metadata-seeding, and catalog-audit scripts for the complete novena suite.
+
+### Changed
+- Novena openings now receive validated saint/event summaries and patronage, and use the canonical daily liturgical context for their calendar bridge.
+- Retired the runtime short-form selector after materialization, while retaining the reusable template as the shared contract source.
+- Added Romcal and relative-to-Romcal scheduling support for movable celebrations and suppressed calendar dates.
+
+### Fixed
+- Restored structured Fatima prayer repetitions, Nativity response voice routing, and normalized saint/intention fixture behavior after catalog imports.
+
+### Removed
+- Removed duplicate short-form novenas where a traditional Fatima or Sacred Heart novena is the canonical contract.
+
 ## [0.3.11.0] - 2026-07-26
 
 ### Changed

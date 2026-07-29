@@ -9,6 +9,20 @@
       "name": "St. Josemaria Escriva"
     },
     "id": "st_josemaria_escriva",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "ordinary work",
+        "daily life",
+        "lay holiness"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Josemar\u00eda Escriv\u00e1, a Spanish priest, founded Opus Dei and taught that ordinary work and daily life can be a path to holiness."
+    },
     "novena": {
       "content_mode": "fixed",
       "duration_days": 9,
@@ -18,7 +32,7 @@
           {
             "key": "introduction",
             "kind": "fixed",
-            "text": "You can pray the full Saint Josemaria Escriva Novena below.",
+            "text": "You can pray the full St. Josemaria Escriva Novena below.",
             "title": "Introduction"
           },
           {
@@ -27,52 +41,24 @@
             ],
             "key": "days-1",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray standalone period line and adjusted paragraph breaks for clearer text-to-speech pacing while keeping all prayers and the intention marker unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request"
               },
               {
-                "kind": "text",
-                "text": "O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "“We have come to call attention once again to the example of Jesus, who spent thirty years in Nazareth, working as a carpenter. In his hands, a professional occupation, similar to that carried out by millions of people all over the world, was turned into a divine task. It became a part of our Redemption, a way to salvation.” (Conversations with Monsignor Josemaría Escrivá, 55) May our Lord God help me see my job as a path to holiness and a service to others, where God my Father awaits me at every moment, asking me, in each situation, to imitate Jesus when he worked as a carpenter in Nazareth."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. \u201cWe have come to call attention once again to the example of Jesus, who spent thirty years in Nazareth, working as a carpenter. In his hands, a professional occupation, similar to that carried out by millions of people all over the world, was turned into a divine task. It became a part of our Redemption, a way to salvation.\u201d (Conversations with Monsignor Josemar\u00eda Escriv\u00e1, 55) May our Lord God help me see my job as a path to holiness and a service to others, where God my Father awaits me at every moment, asking me, in each situation, to imitate Jesus when he worked as a carpenter in Nazareth. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 1"
@@ -83,52 +69,24 @@
             ],
             "key": "days-2",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray standalone period line and adjusted line breaks for clearer text-to-speech pacing without changing the prayer text.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request"
               },
               {
-                "kind": "text",
-                "text": "O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "“The dignity of work is founded on Love. Man’s great privilege is to be able to love, transcending from what is fleeting and ephemeral.” (Christ is Passing By, 48) May our Lord God help me to understand that what gives value to any honest work is the love with which I do it: love for God, in the first place, to whom I can offer up my work; and love for my neighbour, whom I wish to serve and be useful to."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. \u201cThe dignity of work is founded on Love. Man\u2019s great privilege is to be able to love, transcending from what is fleeting and ephemeral.\u201d (Christ is Passing By, 48) May our Lord God help me to understand that what gives value to any honest work is the love with which I do it: love for God, in the first place, to whom I can offer up my work; and love for my neighbour, whom I wish to serve and be useful to. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 2"
@@ -139,52 +97,24 @@
             ],
             "key": "days-3",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the standalone period line and adjusted minor punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and prayer order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request"
               },
               {
-                "kind": "text",
-                "text": "O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "“How short indeed is the time of our passing through this world! For the true Christian these words ring deep down in his heart as a reproach to his lack of generosity, and as a constant invitation to be loyal. Brief indeed is our time for loving, for giving, for making atonement. It would be very wrong, therefore, for us to waste it, or to cast this treasure irresponsibly overboard. We mustn’t squander this period of the world’s history that God has entrusted to each one of us.” (Friends of God, 39) With the help of the Most Blessed Virgin Mary, may I learn to use my time as the treasure it is, and make the effort to improve in the virtue of order, so as to work more punctually, intensely and constantly, without disorder or delays. May I achieve this by following a well-structured plan, which allows for me to spend the appropriate amount of time on each of my duties: spiritual life, family life, professional life and social relations, in a balanced way."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. \u201cHow short indeed is the time of our passing through this world! For the true Christian these words ring deep down in his heart as a reproach to his lack of generosity, and as a constant invitation to be loyal. Brief indeed is our time for loving, for giving, for making atonement. It would be very wrong, therefore, for us to waste it, or to cast this treasure irresponsibly overboard. We mustn\u2019t squander this period of the world\u2019s history that God has entrusted to each one of us.\u201d (Friends of God, 39) With the help of the Most Blessed Virgin Mary, may I learn to use my time as the treasure it is, and make the effort to improve in the virtue of order, so as to work more punctually, intensely, and constantly, without disorder or delays. May I achieve this by following a well-structured plan, which allows for me to spend the appropriate amount of time on each of my duties: spiritual life, family life, professional life, and social relations, in a balanced way. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 3"
@@ -195,52 +125,24 @@
             ],
             "key": "days-4",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray standalone period line and adjusted paragraph breaks for clearer text-to-speech pacing while keeping all prayers and wording unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request"
               },
               {
-                "kind": "text",
-                "text": "O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "“It is no good offering to God something that is less perfect than our poor human limitations permit. The work that we offer must be without blemish and it must be done as carefully as possible, even in its smallest details, for God will not accept shoddy workmanship. ‘Thou shalt not offer anything that is faulty,’ Holy Scripture warns us (Lev 22:20), ‘because it would not be worthy of him.’ For that reason, the work of each one of us, the activities that take up our time and energy, must be an offering worthy of our Creator. It must be operatio Dei, a work of God that is done for God: in short, a task that is complete and faultless.” (Friends of God, 55) May God help me to work well, with the greatest possible perfection. May I never work carelessly, but be convinced that work done badly cannot be sanctified, because it lacks love, and love alone enables any human action to be pleasing to God."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. \u201cIt is no good offering to God something that is less perfect than our poor human limitations permit. The work that we offer must be without blemish and it must be done as carefully as possible, even in its smallest details, for God will not accept shoddy workmanship. \u2018Thou shalt not offer anything that is faulty,\u2019 Holy Scripture warns us (Lev 22:20), \u2018because it would not be worthy of him.\u2019 For that reason, the work of each one of us, the activities that take up our time and energy, must be an offering worthy of our Creator. It must be operatio Dei, a work of God that is done for God: in short, a task that is complete and faultless.\u201d (Friends of God, 55) May God help me to work well, with the greatest possible perfection. May I never work carelessly, but be convinced that work done badly cannot be sanctified, because it lacks love, and love alone enables any human action to be pleasing to God. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 4"
@@ -251,52 +153,24 @@
             ],
             "key": "days-5",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray period line, adjusted minor punctuation and line breaks for clearer text-to-speech pacing, and spoke out \u201cSt.\u201d as \u201cSaint.\u201d; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request"
               },
               {
-                "kind": "text",
-                "text": "O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "“It is time for us Christians to shout from the rooftops that work is a gift from God and that it makes no sense to classify men differently, according to their occupation, as if some jobs were nobler than others. Work, all work, bears witness to the dignity of man, to his dominion over creation.” (Christ is Passing By, 47) If my present job is below my level of competence and my legitimate aspirations, may I not belittle it. Rather, while seeking something more appropriate, may I carry it out in a fully responsible way, giving it the same value as Jesus gave his work at Nazareth."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. \u201cIt is time for us Christians to shout from the rooftops that work is a gift from God and that it makes no sense to classify men differently, according to their occupation, as if some jobs were nobler than others. Work, all work, bears witness to the dignity of man, to his dominion over creation.\u201d Christ is Passing By, 47. If my present job is below my level of competence and my legitimate aspirations, may I not belittle it. Rather, while seeking something more appropriate, may I carry it out in a fully responsible way, giving it the same value as Jesus gave his work at Nazareth. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 5"
@@ -307,52 +181,24 @@
             ],
             "key": "days-6",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray standalone period and adjusted paragraph breaks for clearer text-to-speech pacing without changing the prayer text.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request"
               },
               {
-                "kind": "text",
-                "text": "O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "“I beg you, don’t ever lose the supernatural point of view. Correct your intention as the course of a ship is corrected on the high seas: by looking at the star, by looking at Mary. Then you will always be sure of reaching harbour.” (The Forge, 749) May God open the eyes of my soul to understand that he is always at my side. So as not to lose sight of this marvelous reality, may I make the effort to stay in God’s presence during my work, using as a discreet reminder a small crucifix, or a small picture of Our Lady or of some saint to whom I have devotion, positioned where I can see it often, without attracting unnecessary attention."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. \u201cI beg you, don\u2019t ever lose the supernatural point of view. Correct your intention as the course of a ship is corrected on the high seas: by looking at the star, by looking at Mary. Then you will always be sure of reaching harbour.\u201d (The Forge, 749) May God open the eyes of my soul to understand that he is always at my side. So as not to lose sight of this marvelous reality, may I make the effort to stay in God\u2019s presence during my work, using as a discreet reminder a small crucifix, or a small picture of Our Lady or of some saint to whom I have devotion, positioned where I can see it often, without attracting unnecessary attention. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 6"
@@ -363,52 +209,24 @@
             ],
             "key": "days-7",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray standalone period line and adjusted paragraph breaks for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request"
               },
               {
-                "kind": "text",
-                "text": "O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "“Everything in which we poor human beings intervene — even sanctity — is a tissue of small trifles, which — depending on the purity of our intention — can form a tapestry of splendid heroism or of meanness, of virtues or of sins.” (The Way, 826) May God help me to develop the Christian virtues and to mature spiritually through the work I do. May I seek to be patient and understanding, both towards my managers and towards my colleagues and subordinates. May I be simple and humble, avoiding vanity and exhibitionism. In a word, may I do everything with purity of heart."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. \u201cEverything in which we poor human beings intervene \u2014 even sanctity \u2014 is a tissue of small trifles, which \u2014 depending on the purity of our intention \u2014 can form a tapestry of splendid heroism or of meanness, of virtues or of sins.\u201d (The Way, 826) May God help me to develop the Christian virtues and to mature spiritually through the work I do. May I seek to be patient and understanding, both towards my managers and towards my colleagues and subordinates. May I be simple and humble, avoiding vanity and exhibitionism. In a word, may I do everything with purity of heart. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 7"
@@ -419,52 +237,24 @@
             ],
             "key": "days-8",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray standalone period and adjusted the quote citation for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request"
               },
               {
-                "kind": "text",
-                "text": "O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "“Consider too that, by doing your daily work well and responsibly, not only will you be supporting yourselves financially, you will also be contributing in a very direct way to the development of society, you will be relieving the burdens of others and maintaining countless welfare projects, both local and international, on behalf of less privileged individuals and countries.” (Friends of God, 120) May God infuse in my soul the desire to make of my work, not a self-centered activity geared to my own interests, but a service that is open and useful to many, done in the certainty that this ideal of service to others will give a new, higher and more joyful meaning to my life."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. \u201cConsider too that, by doing your daily work well and responsibly, not only will you be supporting yourselves financially, you will also be contributing in a very direct way to the development of society, you will be relieving the burdens of others and maintaining countless welfare projects, both local and international, on behalf of less privileged individuals and countries.\u201d Friends of God, 120. May God infuse in my soul the desire to make of my work, not a self-centered activity geared to my own interests, but a service that is open and useful to many, done in the certainty that this ideal of service to others will give a new, higher and more joyful meaning to my life. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 8"
@@ -475,85 +265,34 @@
             ],
             "key": "days-9",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt; reused canonical prayer fragment 'our_father'; reused canonical prayer fragment 'hail_mary'; reused canonical prayer fragment 'glory_be'",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray standalone period line and adjusted punctuation and paragraph breaks slightly for clearer text-to-speech pacing while preserving the original wording and prayer order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request"
               },
               {
-                "kind": "text",
-                "text": "O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
-              },
-              {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "Amen."
-              },
-              {
-                "kind": "text",
-                "text": "“Professional work is also apostolate, an opportunity to give ourselves to others, to reveal Christ to them and lead them to God the Father.” (Christ is Passing By, 49) May God help me see in the area of my work, a wide field for the apostolic mission that God entrusts to all the baptized, using the opportunities he offers me to help my colleagues, friends and clients discover the marvels of the Christian faith."
-              },
-              {
-                "fragment_key": "our_father",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "hail_mary",
-                "kind": "fragment"
-              },
-              {
-                "fragment_key": "glory_be",
-                "kind": "fragment"
-              },
-              {
-                "kind": "text",
-                "text": "."
-              },
-              {
-                "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+                "text": "Amen. \u201cProfessional work is also apostolate, an opportunity to give ourselves to others, to reveal Christ to them and lead them to God the Father.\u201d (Christ is Passing By, 49) May God help me see, in the area of my work, a wide field for the apostolic mission that God entrusts to all the baptized, using the opportunities he offers me to help my colleagues, friends, and clients discover the marvels of the Christian faith. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
             ],
             "title": "Day 9"
-          }
-        ],
-        "fragments": [
-          {
-            "key": "our_father",
-            "kind": "fixed",
-            "notes": "canonical rosary prayer text",
-            "text": "Our Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.",
-            "title": "Our Father"
-          },
-          {
-            "key": "hail_mary",
-            "kind": "fixed",
-            "notes": "canonical rosary prayer text",
-            "text": "Hail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.",
-            "title": "Hail Mary"
-          },
-          {
-            "key": "glory_be",
-            "kind": "fixed",
-            "notes": "canonical rosary prayer text",
-            "text": "Glory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.",
-            "title": "Glory Be"
           }
         ],
         "sections": [
           {
             "key": "introduction",
             "kind": "fixed",
-            "text": "You can pray the full Saint Josemaria Escriva Novena below.",
+            "text": "You can pray the full St. Josemaria Escriva Novena below.",
             "title": "Introduction"
           },
           {
@@ -562,8 +301,8 @@
             ],
             "key": "day-1",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request\n\nAmen.\n\n“We have come to call attention once again to the example of Jesus, who spent thirty years in Nazareth, working as a carpenter. In his hands, a professional occupation, similar to that carried out by millions of people all over the world, was turned into a divine task. It became a part of our Redemption, a way to salvation.” (Conversations with Monsignor Josemaría Escrivá, 55) May our Lord God help me see my job as a path to holiness and a service to others, where God my Father awaits me at every moment, asking me, in each situation, to imitate Jesus when he worked as a carpenter in Nazareth.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\n.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray standalone period line and adjusted paragraph breaks for clearer text-to-speech pacing while keeping all prayers and the intention marker unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request  Amen. \u201cWe have come to call attention once again to the example of Jesus, who spent thirty years in Nazareth, working as a carpenter. In his hands, a professional occupation, similar to that carried out by millions of people all over the world, was turned into a divine task. It became a part of our Redemption, a way to salvation.\u201d (Conversations with Monsignor Josemar\u00eda Escriv\u00e1, 55) May our Lord God help me see my job as a path to holiness and a service to others, where God my Father awaits me at every moment, asking me, in each situation, to imitate Jesus when he worked as a carpenter in Nazareth. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 1"
           },
           {
@@ -572,8 +311,8 @@
             ],
             "key": "day-2",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request\n\nAmen.\n\n“The dignity of work is founded on Love. Man’s great privilege is to be able to love, transcending from what is fleeting and ephemeral.” (Christ is Passing By, 48) May our Lord God help me to understand that what gives value to any honest work is the love with which I do it: love for God, in the first place, to whom I can offer up my work; and love for my neighbour, whom I wish to serve and be useful to.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\n.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray standalone period line and adjusted line breaks for clearer text-to-speech pacing without changing the prayer text.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request  Amen. \u201cThe dignity of work is founded on Love. Man\u2019s great privilege is to be able to love, transcending from what is fleeting and ephemeral.\u201d (Christ is Passing By, 48) May our Lord God help me to understand that what gives value to any honest work is the love with which I do it: love for God, in the first place, to whom I can offer up my work; and love for my neighbour, whom I wish to serve and be useful to. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 2"
           },
           {
@@ -582,8 +321,8 @@
             ],
             "key": "day-3",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request\n\nAmen.\n\n“How short indeed is the time of our passing through this world! For the true Christian these words ring deep down in his heart as a reproach to his lack of generosity, and as a constant invitation to be loyal. Brief indeed is our time for loving, for giving, for making atonement. It would be very wrong, therefore, for us to waste it, or to cast this treasure irresponsibly overboard. We mustn’t squander this period of the world’s history that God has entrusted to each one of us.” (Friends of God, 39) With the help of the Most Blessed Virgin Mary, may I learn to use my time as the treasure it is, and make the effort to improve in the virtue of order, so as to work more punctually, intensely and constantly, without disorder or delays. May I achieve this by following a well-structured plan, which allows for me to spend the appropriate amount of time on each of my duties: spiritual life, family life, professional life and social relations, in a balanced way.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\n.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the standalone period line and adjusted minor punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and prayer order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request  Amen. \u201cHow short indeed is the time of our passing through this world! For the true Christian these words ring deep down in his heart as a reproach to his lack of generosity, and as a constant invitation to be loyal. Brief indeed is our time for loving, for giving, for making atonement. It would be very wrong, therefore, for us to waste it, or to cast this treasure irresponsibly overboard. We mustn\u2019t squander this period of the world\u2019s history that God has entrusted to each one of us.\u201d (Friends of God, 39) With the help of the Most Blessed Virgin Mary, may I learn to use my time as the treasure it is, and make the effort to improve in the virtue of order, so as to work more punctually, intensely, and constantly, without disorder or delays. May I achieve this by following a well-structured plan, which allows for me to spend the appropriate amount of time on each of my duties: spiritual life, family life, professional life, and social relations, in a balanced way. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 3"
           },
           {
@@ -592,8 +331,8 @@
             ],
             "key": "day-4",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request\n\nAmen.\n\n“It is no good offering to God something that is less perfect than our poor human limitations permit. The work that we offer must be without blemish and it must be done as carefully as possible, even in its smallest details, for God will not accept shoddy workmanship. ‘Thou shalt not offer anything that is faulty,’ Holy Scripture warns us (Lev 22:20), ‘because it would not be worthy of him.’ For that reason, the work of each one of us, the activities that take up our time and energy, must be an offering worthy of our Creator. It must be operatio Dei, a work of God that is done for God: in short, a task that is complete and faultless.” (Friends of God, 55) May God help me to work well, with the greatest possible perfection. May I never work carelessly, but be convinced that work done badly cannot be sanctified, because it lacks love, and love alone enables any human action to be pleasing to God.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\n.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray standalone period line and adjusted paragraph breaks for clearer text-to-speech pacing while keeping all prayers and wording unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request  Amen. \u201cIt is no good offering to God something that is less perfect than our poor human limitations permit. The work that we offer must be without blemish and it must be done as carefully as possible, even in its smallest details, for God will not accept shoddy workmanship. \u2018Thou shalt not offer anything that is faulty,\u2019 Holy Scripture warns us (Lev 22:20), \u2018because it would not be worthy of him.\u2019 For that reason, the work of each one of us, the activities that take up our time and energy, must be an offering worthy of our Creator. It must be operatio Dei, a work of God that is done for God: in short, a task that is complete and faultless.\u201d (Friends of God, 55) May God help me to work well, with the greatest possible perfection. May I never work carelessly, but be convinced that work done badly cannot be sanctified, because it lacks love, and love alone enables any human action to be pleasing to God. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 4"
           },
           {
@@ -602,8 +341,8 @@
             ],
             "key": "day-5",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request\n\nAmen.\n\n“It is time for us Christians to shout from the rooftops that work is a gift from God and that it makes no sense to classify men differently, according to their occupation, as if some jobs were nobler than others. Work, all work, bears witness to the dignity of man, to his dominion over creation.” (Christ is Passing By, 47) If my present job is below my level of competence and my legitimate aspirations, may I not belittle it. Rather, while seeking something more appropriate, may I carry it out in a fully responsible way, giving it the same value as Jesus gave his work at Nazareth.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\n.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray period line, adjusted minor punctuation and line breaks for clearer text-to-speech pacing, and spoke out \u201cSt.\u201d as \u201cSaint.\u201d; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request  Amen. \u201cIt is time for us Christians to shout from the rooftops that work is a gift from God and that it makes no sense to classify men differently, according to their occupation, as if some jobs were nobler than others. Work, all work, bears witness to the dignity of man, to his dominion over creation.\u201d Christ is Passing By, 47. If my present job is below my level of competence and my legitimate aspirations, may I not belittle it. Rather, while seeking something more appropriate, may I carry it out in a fully responsible way, giving it the same value as Jesus gave his work at Nazareth. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 5"
           },
           {
@@ -612,8 +351,8 @@
             ],
             "key": "day-6",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request\n\nAmen.\n\n“I beg you, don’t ever lose the supernatural point of view. Correct your intention as the course of a ship is corrected on the high seas: by looking at the star, by looking at Mary. Then you will always be sure of reaching harbour.” (The Forge, 749) May God open the eyes of my soul to understand that he is always at my side. So as not to lose sight of this marvelous reality, may I make the effort to stay in God’s presence during my work, using as a discreet reminder a small crucifix, or a small picture of Our Lady or of some saint to whom I have devotion, positioned where I can see it often, without attracting unnecessary attention.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\n.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray standalone period and adjusted paragraph breaks for clearer text-to-speech pacing without changing the prayer text.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request  Amen. \u201cI beg you, don\u2019t ever lose the supernatural point of view. Correct your intention as the course of a ship is corrected on the high seas: by looking at the star, by looking at Mary. Then you will always be sure of reaching harbour.\u201d (The Forge, 749) May God open the eyes of my soul to understand that he is always at my side. So as not to lose sight of this marvelous reality, may I make the effort to stay in God\u2019s presence during my work, using as a discreet reminder a small crucifix, or a small picture of Our Lady or of some saint to whom I have devotion, positioned where I can see it often, without attracting unnecessary attention. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 6"
           },
           {
@@ -622,8 +361,8 @@
             ],
             "key": "day-7",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request\n\nAmen.\n\n“Everything in which we poor human beings intervene — even sanctity — is a tissue of small trifles, which — depending on the purity of our intention — can form a tapestry of splendid heroism or of meanness, of virtues or of sins.” (The Way, 826) May God help me to develop the Christian virtues and to mature spiritually through the work I do. May I seek to be patient and understanding, both towards my managers and towards my colleagues and subordinates. May I be simple and humble, avoiding vanity and exhibitionism. In a word, may I do everything with purity of heart.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\n.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray standalone period line and adjusted paragraph breaks for clearer text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request  Amen. \u201cEverything in which we poor human beings intervene \u2014 even sanctity \u2014 is a tissue of small trifles, which \u2014 depending on the purity of our intention \u2014 can form a tapestry of splendid heroism or of meanness, of virtues or of sins.\u201d (The Way, 826) May God help me to develop the Christian virtues and to mature spiritually through the work I do. May I seek to be patient and understanding, both towards my managers and towards my colleagues and subordinates. May I be simple and humble, avoiding vanity and exhibitionism. In a word, may I do everything with purity of heart. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 7"
           },
           {
@@ -632,8 +371,8 @@
             ],
             "key": "day-8",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request\n\nAmen.\n\n“Consider too that, by doing your daily work well and responsibly, not only will you be supporting yourselves financially, you will also be contributing in a very direct way to the development of society, you will be relieving the burdens of others and maintaining countless welfare projects, both local and international, on behalf of less privileged individuals and countries.” (Friends of God, 120) May God infuse in my soul the desire to make of my work, not a self-centered activity geared to my own interests, but a service that is open and useful to many, done in the certainty that this ideal of service to others will give a new, higher and more joyful meaning to my life.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\n.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray standalone period and adjusted the quote citation for clearer text-to-speech pacing without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request  Amen. \u201cConsider too that, by doing your daily work well and responsibly, not only will you be supporting yourselves financially, you will also be contributing in a very direct way to the development of society, you will be relieving the burdens of others and maintaining countless welfare projects, both local and international, on behalf of less privileged individuals and countries.\u201d Friends of God, 120. May God infuse in my soul the desire to make of my work, not a self-centered activity geared to my own interests, but a service that is open and useful to many, done in the certainty that this ideal of service to others will give a new, higher and more joyful meaning to my life. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 8"
           },
           {
@@ -642,8 +381,8 @@
             ],
             "key": "day-9",
             "kind": "fixed",
-            "notes": "expanded canonical prayer references into full rosary texts; replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nO God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest Saint Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of Saint Josemaria, please grant me the favor I request\n\nAmen.\n\n“Professional work is also apostolate, an opportunity to give ourselves to others, to reveal Christ to them and lead them to God the Father.” (Christ is Passing By, 49) May God help me see in the area of my work, a wide field for the apostolic mission that God entrusts to all the baptized, using the opportunities he offers me to help my colleagues, friends and clients discover the marvels of the Christian faith.\n\nOur Father, who art in heaven, hallowed be thy name.\nThy kingdom come, thy will be done, on earth as it is in heaven.\nGive us this day our daily bread, and forgive us our trespasses,\nas we forgive those who trespass against us.\nAnd lead us not into temptation, but deliver us from evil. Amen.\n\nHail Mary, full of grace, the Lord is with thee.\nBlessed art thou among women, and blessed is the fruit of thy womb, Jesus.\nHoly Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen.\n\nGlory be to the Father, and to the Son, and to the Holy Spirit.\nAs it was in the beginning, is now, and ever shall be, world without end. Amen.\n\n.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray standalone period line and adjusted punctuation and paragraph breaks slightly for clearer text-to-speech pacing while preserving the original wording and prayer order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O God, through the intercession of the Most Blessed Virgin Mary, you granted countless graces to your priest St. Josemaria, choosing him as a most faithful instrument to found Opus Dei, a way to holiness through daily work and the ordinary duties of a Christian. Grant that I also may learn to turn all the circumstances and events of my life into opportunities to love you and serve the Church, the Pope, and all souls, with joy and simplicity, lighting up the paths of the earth with faith and love. Through the intercession of St. Josemaria, please grant me the favor I request  Amen. \u201cProfessional work is also apostolate, an opportunity to give ourselves to others, to reveal Christ to them and lead them to God the Father.\u201d (Christ is Passing By, 49) May God help me see, in the area of my work, a wide field for the apostolic mission that God entrusts to all the baptized, using the opportunities he offers me to help my colleagues, friends, and clients discover the marvels of the Christian faith. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 9"
           }
         ],
@@ -654,7 +393,38 @@
       "audio": {
         "enabled": true,
         "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
         "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
         "speed": 1.0,
         "voice": "ash"
       },

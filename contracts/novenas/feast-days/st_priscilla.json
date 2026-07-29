@@ -1,0 +1,444 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_priscilla",
+    "feast": {
+      "day": 18,
+      "mode": "fixed",
+      "month": 1,
+      "name": "St Priscilla"
+    },
+    "id": "st_priscilla",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "married couples",
+        "lay ministry",
+        "catechists"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St Priscilla is honored as an early Christian woman mentioned in the New Testament, remembered for her faithful witness and service in the early Church."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Priscilla Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks after headings for improved text-to-speech pacing; prayer wording otherwise unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In Honor of Priscilla\u2019s Welcome of the Persecuted Saint Priscilla, in an age when to shelter a Christian was to court death, you opened the estates of your family on the Via Salaria as a refuge for the faithful. You did not count the cost of your charity, nor weigh the danger against your comfort. Teach us, we pray, to receive Christ in the stranger, the suffering, and the outcast, without calculation and without fear. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Priscilla, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings for pacing and normalized \u201cSt.\u201d to \u201cSaint\u201d for clearer text-to-speech.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In Honor of Priscilla\u2019s Hidden Holiness Saint Priscilla, history has preserved little of your name and less of your deeds, yet the catacombs that bear your name stand as a silent witness more eloquent than any chronicle. You were content to serve without record or renown, laboring for God in the obscurity that the saints call home. Obtain for us the grace to seek no reward but God Himself, and to do good when no eye but His is watching. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Priscilla, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear line breaks after section headings for better text-to-speech pacing; otherwise kept wording unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In Honor of Priscilla as Mother of the Roman Church Saint Priscilla, the ancient Church in Rome sheltered her dead and celebrated her mysteries in the galleries beneath your land, and from those sacred depths arose popes and martyrs who shaped the faith of the world. You were a mother to that infant Church before she had learned to walk. Intercede for the Church in our own day, that she may be preserved in unity, holiness, and apostolic courage. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Priscilla, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear spoken headings on their own lines for pacing; otherwise kept wording unchanged and preserved the personal-intention marker.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In Honor of Priscilla\u2019s Stewardship of Earthly Goods Saint Priscilla, you understood what so many forget: that wealth is not a possession but a trust, and that the goods of this world are given to us for the relief of our neighbor and the glory of God. You consecrated your property to purposes that outlasted your own life by two thousand years. Pray for us, that we may hold our own possessions with open hands, ready to give at the prompting of the Holy Spirit. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Priscilla, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear line breaks after section headings and normalized \u201cSt.\u201d to \u201cSaint\u201d for smoother text-to-speech.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In Honor of the Holy Dead Entrusted to Priscilla\u2019s Care Saint Priscilla, in the catacombs beneath your estate rest the bodies of countless martyrs and faithful souls who await the resurrection. You provided for their burial when the Church was too poor and too hunted to build monuments. Remember before God all the faithful departed, especially those for whom no one prays and those whose graves are forgotten. May they rest in the light of Christ until the great morning of the resurrection. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Priscilla, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks and extra paragraphing in the closing prayer for better text-to-speech pacing while keeping wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In Honor of Priscilla\u2019s Courage Under Persecution Saint Priscilla, you lived under the shadow of Roman persecution, surrounded by an empire that regarded the faith of Christ as a seditious superstition. Yet you did not conceal your faith or purchase safety through silence. In our own age, when the world grows increasingly hostile to the Gospel, strengthen in us that same quiet courage, not the courage of spectacle, but the courage of daily fidelity. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Priscilla, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks for pacing and adjusted one sentence with a colon for easier text-to-speech while preserving meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In Honor of Priscilla\u2019s Patronage of Sacred Art Saint Priscilla, the catacombs that bear your name contain some of the earliest Christian images known to the Church: the Madonna and Child, the breaking of bread, the faces of the first believers rendered in paint upon stone. Sacred beauty was born in the darkness beneath your land. Intercede for all who labor to create art, music, and beauty in the service of God, that their work may illumine the faith and lead souls toward Heaven. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Priscilla, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear spoken section headings on their own lines and preserved all prayer text and paragraph breaks for better text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In Honor of Priscilla as Patron of Hospitality Saint Priscilla, the tradition of the Church calls you among the first to extend the ancient virtue of hospitality to a community that the world wished to destroy. Your home became a house of God before there were churches, your table a place of communion before there were altars of stone. Pray for all who practice hospitality in Christ\u2019s name, for those who run houses of welcome, shelters, and schools; for families whose doors stand open to the lonely and the lost. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Priscilla, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks for pacing, adjusted a few punctuation marks for easier speech, and expanded \u201cSt.\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In Thanksgiving and Final Petition Saint Priscilla, noble servant of the early Church, we come to the close of this novena with confidence in your intercession before God. You gave what you had: land, security, home; and from that gift arose a Church that has never ceased to bear witness to the Resurrection. We ask now, in this final day, that you carry our own petitions before the throne of Almighty God, and obtain for us what is truly for our good and for the good of our souls. And when our own days of earthly pilgrimage are ended, may we be found worthy to rest among that company of saints whose bones were given shelter by your charity. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek: that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Priscilla, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Priscilla Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks after headings for improved text-to-speech pacing; prayer wording otherwise unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen.  In Honor of Priscilla\u2019s Welcome of the Persecuted Saint Priscilla, in an age when to shelter a Christian was to court death, you opened the estates of your family on the Via Salaria as a refuge for the faithful. You did not count the cost of your charity, nor weigh the danger against your comfort. Teach us, we pray, to receive Christ in the stranger, the suffering, and the outcast, without calculation and without fear. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Priscilla, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added brief spoken headings for pacing and normalized \u201cSt.\u201d to \u201cSaint\u201d for clearer text-to-speech.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen.  In Honor of Priscilla\u2019s Hidden Holiness Saint Priscilla, history has preserved little of your name and less of your deeds, yet the catacombs that bear your name stand as a silent witness more eloquent than any chronicle. You were content to serve without record or renown, laboring for God in the obscurity that the saints call home. Obtain for us the grace to seek no reward but God Himself, and to do good when no eye but His is watching. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Priscilla, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear line breaks after section headings for better text-to-speech pacing; otherwise kept wording unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen.  In Honor of Priscilla as Mother of the Roman Church Saint Priscilla, the ancient Church in Rome sheltered her dead and celebrated her mysteries in the galleries beneath your land, and from those sacred depths arose popes and martyrs who shaped the faith of the world. You were a mother to that infant Church before she had learned to walk. Intercede for the Church in our own day, that she may be preserved in unity, holiness, and apostolic courage. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Priscilla, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear spoken headings on their own lines for pacing; otherwise kept wording unchanged and preserved the personal-intention marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen.  In Honor of Priscilla\u2019s Stewardship of Earthly Goods Saint Priscilla, you understood what so many forget: that wealth is not a possession but a trust, and that the goods of this world are given to us for the relief of our neighbor and the glory of God. You consecrated your property to purposes that outlasted your own life by two thousand years. Pray for us, that we may hold our own possessions with open hands, ready to give at the prompting of the Holy Spirit. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Priscilla, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear line breaks after section headings and normalized \u201cSt.\u201d to \u201cSaint\u201d for smoother text-to-speech.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen.  In Honor of the Holy Dead Entrusted to Priscilla\u2019s Care Saint Priscilla, in the catacombs beneath your estate rest the bodies of countless martyrs and faithful souls who await the resurrection. You provided for their burial when the Church was too poor and too hunted to build monuments. Remember before God all the faithful departed, especially those for whom no one prays and those whose graves are forgotten. May they rest in the light of Christ until the great morning of the resurrection. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Priscilla, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks and extra paragraphing in the closing prayer for better text-to-speech pacing while keeping wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen.  In Honor of Priscilla\u2019s Courage Under Persecution Saint Priscilla, you lived under the shadow of Roman persecution, surrounded by an empire that regarded the faith of Christ as a seditious superstition. Yet you did not conceal your faith or purchase safety through silence. In our own age, when the world grows increasingly hostile to the Gospel, strengthen in us that same quiet courage, not the courage of spectacle, but the courage of daily fidelity. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Priscilla, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks for pacing and adjusted one sentence with a colon for easier text-to-speech while preserving meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen.  In Honor of Priscilla\u2019s Patronage of Sacred Art Saint Priscilla, the catacombs that bear your name contain some of the earliest Christian images known to the Church: the Madonna and Child, the breaking of bread, the faces of the first believers rendered in paint upon stone. Sacred beauty was born in the darkness beneath your land. Intercede for all who labor to create art, music, and beauty in the service of God, that their work may illumine the faith and lead souls toward Heaven. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Priscilla, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear spoken section headings on their own lines and preserved all prayer text and paragraph breaks for better text-to-speech pacing.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen.  In Honor of Priscilla as Patron of Hospitality Saint Priscilla, the tradition of the Church calls you among the first to extend the ancient virtue of hospitality to a community that the world wished to destroy. Your home became a house of God before there were churches, your table a place of communion before there were altars of stone. Pray for all who practice hospitality in Christ\u2019s name, for those who run houses of welcome, shelters, and schools; for families whose doors stand open to the lonely and the lost. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek, that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St. Priscilla, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added clear section breaks for pacing, adjusted a few punctuation marks for easier speech, and expanded \u201cSt.\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Opening Prayer O God, who didst raise up in the noble Priscilla a servant of surpassing generosity, who opened her home and her lands to the persecuted members of Thy holy Church, grant that through her intercession we may receive the graces we seek in this novena, and that, following her example of hidden and selfless charity, we may spend ourselves without reserve in the service of Thy Body on earth. Through Christ our Lord. Amen.  In Thanksgiving and Final Petition Saint Priscilla, noble servant of the early Church, we come to the close of this novena with confidence in your intercession before God. You gave what you had: land, security, home; and from that gift arose a Church that has never ceased to bear witness to the Resurrection. We ask now, in this final day, that you carry our own petitions before the throne of Almighty God, and obtain for us what is truly for our good and for the good of our souls. And when our own days of earthly pilgrimage are ended, may we be found worthy to rest among that company of saints whose bones were given shelter by your charity. Closing Prayer of the Novena O glorious Saint Priscilla, matron of Rome and mother of the faithful, thou whose name is inscribed not in the chronicles of emperors but in the galleries of the holy dead, look with tenderness upon us who call upon thee. We are pilgrims as thou wert a pilgrim, and we seek the same city that thou didst seek: that city not built with hands, eternal in the heavens. Obtain for us the grace of a generous heart, a detached hand, and a hidden life well-pleasing to God. Present our needs to the Lord who repays a hundredfold all that is given for love of Him, and bring us at last to that blessed company of saints and martyrs who now fill with their glory the darkness where they once lay sleeping. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Priscilla, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_priscilla"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_priscilla",
+      "name": "St Priscilla"
+    },
+    "type": "novena_feast_rule"
+  }
+}

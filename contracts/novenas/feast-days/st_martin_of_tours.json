@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_martin_of_tours",
+    "feast": {
+      "day": 11,
+      "mode": "fixed",
+      "month": 11,
+      "name": "St. Martin of Tours"
+    },
+    "id": "st_martin_of_tours",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "soldiers",
+        "beggars",
+        "France"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Martin of Tours was a 4th-century bishop known for charity, including sharing his cloak with a beggar, and for guiding the Church in Gaul."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Martin of Tours Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Light punctuation and paragraphing adjustments were made for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Saint Mart\u00edn of Tours, full of the Spirit of the Lord, always having inexhaustible charity for the needy. You, who, full of love and generosity, when you saw the beggar who was freezing from cold, without knowing that in truth he was Christ, did not hesitate to give him half of your cape, and did not give it completely to him since the other half belonged to the Roman army. You, who did not seek recognition but only to favor your neighbor, found glory before the Lord. And when the Savior appeared to you dressed with the half-cape, so as to express appreciation for your gesture, and He told you, \u201cToday you covered me with your mantle,\u201d you decided to no longer serve the army and to dedicate your life to God and to the salvation of souls, being from then on a propagator of the faith and a holy man totally dedicated to whomever was in need. Glorious Saint Martin, you who worked miracles and prodigies, who with joy, amiability, and the most exquisite goodness won over the hearts of all, and did not cease to ever work for their wellbeing: give me your hand and help me to come out of all lack, both physically and spiritually, which today afflicts me and weighs me down. Glorious Saint Martin, my blessed patron, I humbly ask you with great faith that you attain from God, the fount of all mercies, that my ways on this earth, my work and my toils, be cleansed and opened with clarity. In the Name of Omnipotent God, Saint Martin of Tours, remove all that harms me and give me work and prosperity. O blessed relief, give me your saintly protection. Assist me, I beg you, in these difficult times, especially for"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "You, noble Saint Martin, who have miraculous power, take my supplications with haste to Heaven. Ask for my home all that is good. May sorrows, ruins, and miseries leave, and may the Lord deign I merit blessed fortune in my work, and with it, abundance and prosperity, so I may give freely to all in need. Saint Martin, blessed Bishop of Tours, may your virtues and charity accompany me always. I will not cease to pray to you and to thank Almighty God for all the favors granted; and I promise to be charitable and giving with all my brothers and sisters in need. Saint Martin, please intercede for me. Free and protect all my loved ones and me from all that is evil. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Martin of Tours Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Light punctuation and paragraphing adjustments were made for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Saint Mart\u00edn of Tours, full of the Spirit of the Lord, always having inexhaustible charity for the needy. You, who, full of love and generosity, when you saw the beggar who was freezing from cold, without knowing that in truth he was Christ, did not hesitate to give him half of your cape, and did not give it completely to him since the other half belonged to the Roman army. You, who did not seek recognition but only to favor your neighbor, found glory before the Lord. And when the Savior appeared to you dressed with the half-cape, so as to express appreciation for your gesture, and He told you, \u201cToday you covered me with your mantle,\u201d you decided to no longer serve the army and to dedicate your life to God and to the salvation of souls, being from then on a propagator of the faith and a holy man totally dedicated to whomever was in need. Glorious Saint Martin, you who worked miracles and prodigies, who with joy, amiability, and the most exquisite goodness won over the hearts of all, and did not cease to ever work for their wellbeing: give me your hand and help me to come out of all lack, both physically and spiritually, which today afflicts me and weighs me down. Glorious Saint Martin, my blessed patron, I humbly ask you with great faith that you attain from God, the fount of all mercies, that my ways on this earth, my work and my toils, be cleansed and opened with clarity. In the Name of Omnipotent God, Saint Martin of Tours, remove all that harms me and give me work and prosperity. O blessed relief, give me your saintly protection. Assist me, I beg you, in these difficult times, especially for  You, noble Saint Martin, who have miraculous power, take my supplications with haste to Heaven. Ask for my home all that is good. May sorrows, ruins, and miseries leave, and may the Lord deign I merit blessed fortune in my work, and with it, abundance and prosperity, so I may give freely to all in need. Saint Martin, blessed Bishop of Tours, may your virtues and charity accompany me always. I will not cease to pray to you and to thank Almighty God for all the favors granted; and I promise to be charitable and giving with all my brothers and sisters in need. Saint Martin, please intercede for me. Free and protect all my loved ones and me from all that is evil. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Light punctuation and paragraphing adjustments were made for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Saint Mart\u00edn of Tours, full of the Spirit of the Lord, always having inexhaustible charity for the needy. You, who, full of love and generosity, when you saw the beggar who was freezing from cold, without knowing that in truth he was Christ, did not hesitate to give him half of your cape, and did not give it completely to him since the other half belonged to the Roman army. You, who did not seek recognition but only to favor your neighbor, found glory before the Lord. And when the Savior appeared to you dressed with the half-cape, so as to express appreciation for your gesture, and He told you, \u201cToday you covered me with your mantle,\u201d you decided to no longer serve the army and to dedicate your life to God and to the salvation of souls, being from then on a propagator of the faith and a holy man totally dedicated to whomever was in need. Glorious Saint Martin, you who worked miracles and prodigies, who with joy, amiability, and the most exquisite goodness won over the hearts of all, and did not cease to ever work for their wellbeing: give me your hand and help me to come out of all lack, both physically and spiritually, which today afflicts me and weighs me down. Glorious Saint Martin, my blessed patron, I humbly ask you with great faith that you attain from God, the fount of all mercies, that my ways on this earth, my work and my toils, be cleansed and opened with clarity. In the Name of Omnipotent God, Saint Martin of Tours, remove all that harms me and give me work and prosperity. O blessed relief, give me your saintly protection. Assist me, I beg you, in these difficult times, especially for  You, noble Saint Martin, who have miraculous power, take my supplications with haste to Heaven. Ask for my home all that is good. May sorrows, ruins, and miseries leave, and may the Lord deign I merit blessed fortune in my work, and with it, abundance and prosperity, so I may give freely to all in need. Saint Martin, blessed Bishop of Tours, may your virtues and charity accompany me always. I will not cease to pray to you and to thank Almighty God for all the favors granted; and I promise to be charitable and giving with all my brothers and sisters in need. Saint Martin, please intercede for me. Free and protect all my loved ones and me from all that is evil. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Light punctuation and paragraphing adjustments were made for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Saint Mart\u00edn of Tours, full of the Spirit of the Lord, always having inexhaustible charity for the needy. You, who, full of love and generosity, when you saw the beggar who was freezing from cold, without knowing that in truth he was Christ, did not hesitate to give him half of your cape, and did not give it completely to him since the other half belonged to the Roman army. You, who did not seek recognition but only to favor your neighbor, found glory before the Lord. And when the Savior appeared to you dressed with the half-cape, so as to express appreciation for your gesture, and He told you, \u201cToday you covered me with your mantle,\u201d you decided to no longer serve the army and to dedicate your life to God and to the salvation of souls, being from then on a propagator of the faith and a holy man totally dedicated to whomever was in need. Glorious Saint Martin, you who worked miracles and prodigies, who with joy, amiability, and the most exquisite goodness won over the hearts of all, and did not cease to ever work for their wellbeing: give me your hand and help me to come out of all lack, both physically and spiritually, which today afflicts me and weighs me down. Glorious Saint Martin, my blessed patron, I humbly ask you with great faith that you attain from God, the fount of all mercies, that my ways on this earth, my work and my toils, be cleansed and opened with clarity. In the Name of Omnipotent God, Saint Martin of Tours, remove all that harms me and give me work and prosperity. O blessed relief, give me your saintly protection. Assist me, I beg you, in these difficult times, especially for  You, noble Saint Martin, who have miraculous power, take my supplications with haste to Heaven. Ask for my home all that is good. May sorrows, ruins, and miseries leave, and may the Lord deign I merit blessed fortune in my work, and with it, abundance and prosperity, so I may give freely to all in need. Saint Martin, blessed Bishop of Tours, may your virtues and charity accompany me always. I will not cease to pray to you and to thank Almighty God for all the favors granted; and I promise to be charitable and giving with all my brothers and sisters in need. Saint Martin, please intercede for me. Free and protect all my loved ones and me from all that is evil. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Light punctuation and paragraphing adjustments were made for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Saint Mart\u00edn of Tours, full of the Spirit of the Lord, always having inexhaustible charity for the needy. You, who, full of love and generosity, when you saw the beggar who was freezing from cold, without knowing that in truth he was Christ, did not hesitate to give him half of your cape, and did not give it completely to him since the other half belonged to the Roman army. You, who did not seek recognition but only to favor your neighbor, found glory before the Lord. And when the Savior appeared to you dressed with the half-cape, so as to express appreciation for your gesture, and He told you, \u201cToday you covered me with your mantle,\u201d you decided to no longer serve the army and to dedicate your life to God and to the salvation of souls, being from then on a propagator of the faith and a holy man totally dedicated to whomever was in need. Glorious Saint Martin, you who worked miracles and prodigies, who with joy, amiability, and the most exquisite goodness won over the hearts of all, and did not cease to ever work for their wellbeing: give me your hand and help me to come out of all lack, both physically and spiritually, which today afflicts me and weighs me down. Glorious Saint Martin, my blessed patron, I humbly ask you with great faith that you attain from God, the fount of all mercies, that my ways on this earth, my work and my toils, be cleansed and opened with clarity. In the Name of Omnipotent God, Saint Martin of Tours, remove all that harms me and give me work and prosperity. O blessed relief, give me your saintly protection. Assist me, I beg you, in these difficult times, especially for  You, noble Saint Martin, who have miraculous power, take my supplications with haste to Heaven. Ask for my home all that is good. May sorrows, ruins, and miseries leave, and may the Lord deign I merit blessed fortune in my work, and with it, abundance and prosperity, so I may give freely to all in need. Saint Martin, blessed Bishop of Tours, may your virtues and charity accompany me always. I will not cease to pray to you and to thank Almighty God for all the favors granted; and I promise to be charitable and giving with all my brothers and sisters in need. Saint Martin, please intercede for me. Free and protect all my loved ones and me from all that is evil. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Light punctuation and paragraphing adjustments were made for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Saint Mart\u00edn of Tours, full of the Spirit of the Lord, always having inexhaustible charity for the needy. You, who, full of love and generosity, when you saw the beggar who was freezing from cold, without knowing that in truth he was Christ, did not hesitate to give him half of your cape, and did not give it completely to him since the other half belonged to the Roman army. You, who did not seek recognition but only to favor your neighbor, found glory before the Lord. And when the Savior appeared to you dressed with the half-cape, so as to express appreciation for your gesture, and He told you, \u201cToday you covered me with your mantle,\u201d you decided to no longer serve the army and to dedicate your life to God and to the salvation of souls, being from then on a propagator of the faith and a holy man totally dedicated to whomever was in need. Glorious Saint Martin, you who worked miracles and prodigies, who with joy, amiability, and the most exquisite goodness won over the hearts of all, and did not cease to ever work for their wellbeing: give me your hand and help me to come out of all lack, both physically and spiritually, which today afflicts me and weighs me down. Glorious Saint Martin, my blessed patron, I humbly ask you with great faith that you attain from God, the fount of all mercies, that my ways on this earth, my work and my toils, be cleansed and opened with clarity. In the Name of Omnipotent God, Saint Martin of Tours, remove all that harms me and give me work and prosperity. O blessed relief, give me your saintly protection. Assist me, I beg you, in these difficult times, especially for  You, noble Saint Martin, who have miraculous power, take my supplications with haste to Heaven. Ask for my home all that is good. May sorrows, ruins, and miseries leave, and may the Lord deign I merit blessed fortune in my work, and with it, abundance and prosperity, so I may give freely to all in need. Saint Martin, blessed Bishop of Tours, may your virtues and charity accompany me always. I will not cease to pray to you and to thank Almighty God for all the favors granted; and I promise to be charitable and giving with all my brothers and sisters in need. Saint Martin, please intercede for me. Free and protect all my loved ones and me from all that is evil. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Light punctuation and paragraphing adjustments were made for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Saint Mart\u00edn of Tours, full of the Spirit of the Lord, always having inexhaustible charity for the needy. You, who, full of love and generosity, when you saw the beggar who was freezing from cold, without knowing that in truth he was Christ, did not hesitate to give him half of your cape, and did not give it completely to him since the other half belonged to the Roman army. You, who did not seek recognition but only to favor your neighbor, found glory before the Lord. And when the Savior appeared to you dressed with the half-cape, so as to express appreciation for your gesture, and He told you, \u201cToday you covered me with your mantle,\u201d you decided to no longer serve the army and to dedicate your life to God and to the salvation of souls, being from then on a propagator of the faith and a holy man totally dedicated to whomever was in need. Glorious Saint Martin, you who worked miracles and prodigies, who with joy, amiability, and the most exquisite goodness won over the hearts of all, and did not cease to ever work for their wellbeing: give me your hand and help me to come out of all lack, both physically and spiritually, which today afflicts me and weighs me down. Glorious Saint Martin, my blessed patron, I humbly ask you with great faith that you attain from God, the fount of all mercies, that my ways on this earth, my work and my toils, be cleansed and opened with clarity. In the Name of Omnipotent God, Saint Martin of Tours, remove all that harms me and give me work and prosperity. O blessed relief, give me your saintly protection. Assist me, I beg you, in these difficult times, especially for  You, noble Saint Martin, who have miraculous power, take my supplications with haste to Heaven. Ask for my home all that is good. May sorrows, ruins, and miseries leave, and may the Lord deign I merit blessed fortune in my work, and with it, abundance and prosperity, so I may give freely to all in need. Saint Martin, blessed Bishop of Tours, may your virtues and charity accompany me always. I will not cease to pray to you and to thank Almighty God for all the favors granted; and I promise to be charitable and giving with all my brothers and sisters in need. Saint Martin, please intercede for me. Free and protect all my loved ones and me from all that is evil. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Light punctuation and paragraphing adjustments were made for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Saint Mart\u00edn of Tours, full of the Spirit of the Lord, always having inexhaustible charity for the needy. You, who, full of love and generosity, when you saw the beggar who was freezing from cold, without knowing that in truth he was Christ, did not hesitate to give him half of your cape, and did not give it completely to him since the other half belonged to the Roman army. You, who did not seek recognition but only to favor your neighbor, found glory before the Lord. And when the Savior appeared to you dressed with the half-cape, so as to express appreciation for your gesture, and He told you, \u201cToday you covered me with your mantle,\u201d you decided to no longer serve the army and to dedicate your life to God and to the salvation of souls, being from then on a propagator of the faith and a holy man totally dedicated to whomever was in need. Glorious Saint Martin, you who worked miracles and prodigies, who with joy, amiability, and the most exquisite goodness won over the hearts of all, and did not cease to ever work for their wellbeing: give me your hand and help me to come out of all lack, both physically and spiritually, which today afflicts me and weighs me down. Glorious Saint Martin, my blessed patron, I humbly ask you with great faith that you attain from God, the fount of all mercies, that my ways on this earth, my work and my toils, be cleansed and opened with clarity. In the Name of Omnipotent God, Saint Martin of Tours, remove all that harms me and give me work and prosperity. O blessed relief, give me your saintly protection. Assist me, I beg you, in these difficult times, especially for  You, noble Saint Martin, who have miraculous power, take my supplications with haste to Heaven. Ask for my home all that is good. May sorrows, ruins, and miseries leave, and may the Lord deign I merit blessed fortune in my work, and with it, abundance and prosperity, so I may give freely to all in need. Saint Martin, blessed Bishop of Tours, may your virtues and charity accompany me always. I will not cease to pray to you and to thank Almighty God for all the favors granted; and I promise to be charitable and giving with all my brothers and sisters in need. Saint Martin, please intercede for me. Free and protect all my loved ones and me from all that is evil. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Light punctuation and paragraphing adjustments were made for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Saint Mart\u00edn of Tours, full of the Spirit of the Lord, always having inexhaustible charity for the needy. You, who, full of love and generosity, when you saw the beggar who was freezing from cold, without knowing that in truth he was Christ, did not hesitate to give him half of your cape, and did not give it completely to him since the other half belonged to the Roman army. You, who did not seek recognition but only to favor your neighbor, found glory before the Lord. And when the Savior appeared to you dressed with the half-cape, so as to express appreciation for your gesture, and He told you, \u201cToday you covered me with your mantle,\u201d you decided to no longer serve the army and to dedicate your life to God and to the salvation of souls, being from then on a propagator of the faith and a holy man totally dedicated to whomever was in need. Glorious Saint Martin, you who worked miracles and prodigies, who with joy, amiability, and the most exquisite goodness won over the hearts of all, and did not cease to ever work for their wellbeing: give me your hand and help me to come out of all lack, both physically and spiritually, which today afflicts me and weighs me down. Glorious Saint Martin, my blessed patron, I humbly ask you with great faith that you attain from God, the fount of all mercies, that my ways on this earth, my work and my toils, be cleansed and opened with clarity. In the Name of Omnipotent God, Saint Martin of Tours, remove all that harms me and give me work and prosperity. O blessed relief, give me your saintly protection. Assist me, I beg you, in these difficult times, especially for  You, noble Saint Martin, who have miraculous power, take my supplications with haste to Heaven. Ask for my home all that is good. May sorrows, ruins, and miseries leave, and may the Lord deign I merit blessed fortune in my work, and with it, abundance and prosperity, so I may give freely to all in need. Saint Martin, blessed Bishop of Tours, may your virtues and charity accompany me always. I will not cease to pray to you and to thank Almighty God for all the favors granted; and I promise to be charitable and giving with all my brothers and sisters in need. Saint Martin, please intercede for me. Free and protect all my loved ones and me from all that is evil. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Light punctuation and paragraphing adjustments were made for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Blessed Saint Mart\u00edn of Tours, full of the Spirit of the Lord, always having inexhaustible charity for the needy. You, who, full of love and generosity, when you saw the beggar who was freezing from cold, without knowing that in truth he was Christ, did not hesitate to give him half of your cape, and did not give it completely to him since the other half belonged to the Roman army. You, who did not seek recognition but only to favor your neighbor, found glory before the Lord. And when the Savior appeared to you dressed with the half-cape, so as to express appreciation for your gesture, and He told you, \u201cToday you covered me with your mantle,\u201d you decided to no longer serve the army and to dedicate your life to God and to the salvation of souls, being from then on a propagator of the faith and a holy man totally dedicated to whomever was in need. Glorious Saint Martin, you who worked miracles and prodigies, who with joy, amiability, and the most exquisite goodness won over the hearts of all, and did not cease to ever work for their wellbeing: give me your hand and help me to come out of all lack, both physically and spiritually, which today afflicts me and weighs me down. Glorious Saint Martin, my blessed patron, I humbly ask you with great faith that you attain from God, the fount of all mercies, that my ways on this earth, my work and my toils, be cleansed and opened with clarity. In the Name of Omnipotent God, Saint Martin of Tours, remove all that harms me and give me work and prosperity. O blessed relief, give me your saintly protection. Assist me, I beg you, in these difficult times, especially for  You, noble Saint Martin, who have miraculous power, take my supplications with haste to Heaven. Ask for my home all that is good. May sorrows, ruins, and miseries leave, and may the Lord deign I merit blessed fortune in my work, and with it, abundance and prosperity, so I may give freely to all in need. Saint Martin, blessed Bishop of Tours, may your virtues and charity accompany me always. I will not cease to pray to you and to thank Almighty God for all the favors granted; and I promise to be charitable and giving with all my brothers and sisters in need. Saint Martin, please intercede for me. Free and protect all my loved ones and me from all that is evil. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_martin_of_tours"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_martin_of_tours",
+      "name": "St. Martin of Tours"
+    },
+    "type": "novena_feast_rule"
+  }
+}

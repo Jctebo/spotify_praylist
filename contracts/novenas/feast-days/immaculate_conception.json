@@ -1,0 +1,224 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "immaculate_conception",
+    "feast": {
+      "day": 8,
+      "mode": "fixed",
+      "month": 12,
+      "name": "Immaculate Conception"
+    },
+    "id": "immaculate_conception",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A nine-day prayer leading up to the Feast of the Immaculate Conception, honoring Mary\u2019s conception without original sin and asking her intercession."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Immaculate Conception Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed a duplicated, malformed Hail Mary fragment and normalized capitalization and punctuation for read-aloud clarity.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Immaculate Virgin Mary, you were pleasing in the sight of God from the first moment of your conception in the womb of your mother, St. Anne. You were chosen to be the Mother of Jesus Christ, the Son of God. I believe the teaching of holy Mother the Church, that in the first instant of your conception, by the singular grace and privilege of Almighty God, in virtue of the merits of Jesus Christ, Savior of the human race and beloved Son, you were preserved from all stain of original sin. I thank God for this wonderful privilege and grace he bestowed upon you as I honor your Immaculate Conception. Look graciously upon me as I implore this special favor:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Virgin Immaculate, Mother of God and my Mother, from your throne in heaven turn your eyes of pity upon me. Filled with confidence in your goodness and power, I beg you to help me in this journey of life which is so full of dangers for my soul. I entrust myself entirely to you, that I may never be the slave of the devil through sin, but may always live a humble and pure life. I consecrate myself to you forever, for my only desire is to love your divine Son Jesus. Mary, since none of your devout servants has perished, may I too be saved. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Immaculate Conception Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed a duplicated, malformed Hail Mary fragment and normalized capitalization and punctuation for read-aloud clarity.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Immaculate Virgin Mary, you were pleasing in the sight of God from the first moment of your conception in the womb of your mother, St. Anne. You were chosen to be the Mother of Jesus Christ, the Son of God. I believe the teaching of holy Mother the Church, that in the first instant of your conception, by the singular grace and privilege of Almighty God, in virtue of the merits of Jesus Christ, Savior of the human race and beloved Son, you were preserved from all stain of original sin. I thank God for this wonderful privilege and grace he bestowed upon you as I honor your Immaculate Conception. Look graciously upon me as I implore this special favor:  Virgin Immaculate, Mother of God and my Mother, from your throne in heaven turn your eyes of pity upon me. Filled with confidence in your goodness and power, I beg you to help me in this journey of life which is so full of dangers for my soul. I entrust myself entirely to you, that I may never be the slave of the devil through sin, but may always live a humble and pure life. I consecrate myself to you forever, for my only desire is to love your divine Son Jesus. Mary, since none of your devout servants has perished, may I too be saved. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed a duplicated, malformed Hail Mary fragment and normalized capitalization and punctuation for read-aloud clarity.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Immaculate Virgin Mary, you were pleasing in the sight of God from the first moment of your conception in the womb of your mother, St. Anne. You were chosen to be the Mother of Jesus Christ, the Son of God. I believe the teaching of holy Mother the Church, that in the first instant of your conception, by the singular grace and privilege of Almighty God, in virtue of the merits of Jesus Christ, Savior of the human race and beloved Son, you were preserved from all stain of original sin. I thank God for this wonderful privilege and grace he bestowed upon you as I honor your Immaculate Conception. Look graciously upon me as I implore this special favor:  Virgin Immaculate, Mother of God and my Mother, from your throne in heaven turn your eyes of pity upon me. Filled with confidence in your goodness and power, I beg you to help me in this journey of life which is so full of dangers for my soul. I entrust myself entirely to you, that I may never be the slave of the devil through sin, but may always live a humble and pure life. I consecrate myself to you forever, for my only desire is to love your divine Son Jesus. Mary, since none of your devout servants has perished, may I too be saved. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed a duplicated, malformed Hail Mary fragment and normalized capitalization and punctuation for read-aloud clarity.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Immaculate Virgin Mary, you were pleasing in the sight of God from the first moment of your conception in the womb of your mother, St. Anne. You were chosen to be the Mother of Jesus Christ, the Son of God. I believe the teaching of holy Mother the Church, that in the first instant of your conception, by the singular grace and privilege of Almighty God, in virtue of the merits of Jesus Christ, Savior of the human race and beloved Son, you were preserved from all stain of original sin. I thank God for this wonderful privilege and grace he bestowed upon you as I honor your Immaculate Conception. Look graciously upon me as I implore this special favor:  Virgin Immaculate, Mother of God and my Mother, from your throne in heaven turn your eyes of pity upon me. Filled with confidence in your goodness and power, I beg you to help me in this journey of life which is so full of dangers for my soul. I entrust myself entirely to you, that I may never be the slave of the devil through sin, but may always live a humble and pure life. I consecrate myself to you forever, for my only desire is to love your divine Son Jesus. Mary, since none of your devout servants has perished, may I too be saved. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed a duplicated, malformed Hail Mary fragment and normalized capitalization and punctuation for read-aloud clarity.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Immaculate Virgin Mary, you were pleasing in the sight of God from the first moment of your conception in the womb of your mother, St. Anne. You were chosen to be the Mother of Jesus Christ, the Son of God. I believe the teaching of holy Mother the Church, that in the first instant of your conception, by the singular grace and privilege of Almighty God, in virtue of the merits of Jesus Christ, Savior of the human race and beloved Son, you were preserved from all stain of original sin. I thank God for this wonderful privilege and grace he bestowed upon you as I honor your Immaculate Conception. Look graciously upon me as I implore this special favor:  Virgin Immaculate, Mother of God and my Mother, from your throne in heaven turn your eyes of pity upon me. Filled with confidence in your goodness and power, I beg you to help me in this journey of life which is so full of dangers for my soul. I entrust myself entirely to you, that I may never be the slave of the devil through sin, but may always live a humble and pure life. I consecrate myself to you forever, for my only desire is to love your divine Son Jesus. Mary, since none of your devout servants has perished, may I too be saved. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed a duplicated, malformed Hail Mary fragment and normalized capitalization and punctuation for read-aloud clarity.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Immaculate Virgin Mary, you were pleasing in the sight of God from the first moment of your conception in the womb of your mother, St. Anne. You were chosen to be the Mother of Jesus Christ, the Son of God. I believe the teaching of holy Mother the Church, that in the first instant of your conception, by the singular grace and privilege of Almighty God, in virtue of the merits of Jesus Christ, Savior of the human race and beloved Son, you were preserved from all stain of original sin. I thank God for this wonderful privilege and grace he bestowed upon you as I honor your Immaculate Conception. Look graciously upon me as I implore this special favor:  Virgin Immaculate, Mother of God and my Mother, from your throne in heaven turn your eyes of pity upon me. Filled with confidence in your goodness and power, I beg you to help me in this journey of life which is so full of dangers for my soul. I entrust myself entirely to you, that I may never be the slave of the devil through sin, but may always live a humble and pure life. I consecrate myself to you forever, for my only desire is to love your divine Son Jesus. Mary, since none of your devout servants has perished, may I too be saved. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed a duplicated, malformed Hail Mary fragment and normalized capitalization and punctuation for read-aloud clarity.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Immaculate Virgin Mary, you were pleasing in the sight of God from the first moment of your conception in the womb of your mother, St. Anne. You were chosen to be the Mother of Jesus Christ, the Son of God. I believe the teaching of holy Mother the Church, that in the first instant of your conception, by the singular grace and privilege of Almighty God, in virtue of the merits of Jesus Christ, Savior of the human race and beloved Son, you were preserved from all stain of original sin. I thank God for this wonderful privilege and grace he bestowed upon you as I honor your Immaculate Conception. Look graciously upon me as I implore this special favor:  Virgin Immaculate, Mother of God and my Mother, from your throne in heaven turn your eyes of pity upon me. Filled with confidence in your goodness and power, I beg you to help me in this journey of life which is so full of dangers for my soul. I entrust myself entirely to you, that I may never be the slave of the devil through sin, but may always live a humble and pure life. I consecrate myself to you forever, for my only desire is to love your divine Son Jesus. Mary, since none of your devout servants has perished, may I too be saved. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed a duplicated, malformed Hail Mary fragment and normalized capitalization and punctuation for read-aloud clarity.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Immaculate Virgin Mary, you were pleasing in the sight of God from the first moment of your conception in the womb of your mother, St. Anne. You were chosen to be the Mother of Jesus Christ, the Son of God. I believe the teaching of holy Mother the Church, that in the first instant of your conception, by the singular grace and privilege of Almighty God, in virtue of the merits of Jesus Christ, Savior of the human race and beloved Son, you were preserved from all stain of original sin. I thank God for this wonderful privilege and grace he bestowed upon you as I honor your Immaculate Conception. Look graciously upon me as I implore this special favor:  Virgin Immaculate, Mother of God and my Mother, from your throne in heaven turn your eyes of pity upon me. Filled with confidence in your goodness and power, I beg you to help me in this journey of life which is so full of dangers for my soul. I entrust myself entirely to you, that I may never be the slave of the devil through sin, but may always live a humble and pure life. I consecrate myself to you forever, for my only desire is to love your divine Son Jesus. Mary, since none of your devout servants has perished, may I too be saved. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed a duplicated, malformed Hail Mary fragment and normalized capitalization and punctuation for read-aloud clarity.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Immaculate Virgin Mary, you were pleasing in the sight of God from the first moment of your conception in the womb of your mother, St. Anne. You were chosen to be the Mother of Jesus Christ, the Son of God. I believe the teaching of holy Mother the Church, that in the first instant of your conception, by the singular grace and privilege of Almighty God, in virtue of the merits of Jesus Christ, Savior of the human race and beloved Son, you were preserved from all stain of original sin. I thank God for this wonderful privilege and grace he bestowed upon you as I honor your Immaculate Conception. Look graciously upon me as I implore this special favor:  Virgin Immaculate, Mother of God and my Mother, from your throne in heaven turn your eyes of pity upon me. Filled with confidence in your goodness and power, I beg you to help me in this journey of life which is so full of dangers for my soul. I entrust myself entirely to you, that I may never be the slave of the devil through sin, but may always live a humble and pure life. I consecrate myself to you forever, for my only desire is to love your divine Son Jesus. Mary, since none of your devout servants has perished, may I too be saved. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed a duplicated, malformed Hail Mary fragment and normalized capitalization and punctuation for read-aloud clarity.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Immaculate Virgin Mary, you were pleasing in the sight of God from the first moment of your conception in the womb of your mother, St. Anne. You were chosen to be the Mother of Jesus Christ, the Son of God. I believe the teaching of holy Mother the Church, that in the first instant of your conception, by the singular grace and privilege of Almighty God, in virtue of the merits of Jesus Christ, Savior of the human race and beloved Son, you were preserved from all stain of original sin. I thank God for this wonderful privilege and grace he bestowed upon you as I honor your Immaculate Conception. Look graciously upon me as I implore this special favor:  Virgin Immaculate, Mother of God and my Mother, from your throne in heaven turn your eyes of pity upon me. Filled with confidence in your goodness and power, I beg you to help me in this journey of life which is so full of dangers for my soul. I entrust myself entirely to you, that I may never be the slave of the devil through sin, but may always live a humble and pure life. I consecrate myself to you forever, for my only desire is to love your divine Son Jesus. Mary, since none of your devout servants has perished, may I too be saved. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-immaculate_conception"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "immaculate_conception",
+      "name": "Immaculate Conception"
+    },
+    "type": "novena_feast_rule"
+  }
+}

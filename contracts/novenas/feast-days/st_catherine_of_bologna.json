@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_catherine_of_bologna",
+    "feast": {
+      "day": 9,
+      "mode": "fixed",
+      "month": 3,
+      "name": "St Catherine of Bologna"
+    },
+    "id": "st_catherine_of_bologna",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "artists",
+        "painters",
+        "the arts"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St Catherine of Bologna was a 15th-century Italian Poor Clare nun, artist, and mystic, honored for her holiness and spiritual writings."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Catherine of Bologna Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks and added a brief spoken pause with dashes for clearer text-to-speech pacing while keeping all canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St. Catherine of Bologna, who from thy youth didst forsake the pleasures and honors of the world to follow Christ in the poverty and humility of the Poor Clares, and who wast blessed by God with both mystical gifts and artistic talents placed entirely at His service, I come to thee with confidence and devotion. Thou who didst wage courageous spiritual combat against temptation and discouragement, and who didst write so wisely of the weapons of the soul\u2014faith, hope, charity, prayer, and humble perseverance\u2014obtain for me the grace to fight my own spiritual battles with equal courage and trust in God\u2019s mercy. Thou whose hands fashioned beautiful images of the sacred mysteries even as thy heart was lifted to God in contemplation, help me to see in all that is good and beautiful a reflection of the eternal beauty of God, and inspire me to use whatever gifts He has given me wholly for His glory. Intercede for me before the throne of Divine Mercy for the grace I now seek"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "if it be pleasing to God and for the salvation of my soul. Amen. Dear St. Catherine, patron of artists and all who seek to unite their labors with their love of God, pray that I may imitate thy purity of heart, thy perseverance in prayer, and thy joyful surrender to God\u2019s holy will, so that I may one day rejoice with thee in the vision of that eternal Beauty which thou didst seek and serve so faithfully on earth. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Catherine, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Catherine of Bologna Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks and added a brief spoken pause with dashes for clearer text-to-speech pacing while keeping all canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St. Catherine of Bologna, who from thy youth didst forsake the pleasures and honors of the world to follow Christ in the poverty and humility of the Poor Clares, and who wast blessed by God with both mystical gifts and artistic talents placed entirely at His service, I come to thee with confidence and devotion. Thou who didst wage courageous spiritual combat against temptation and discouragement, and who didst write so wisely of the weapons of the soul\u2014faith, hope, charity, prayer, and humble perseverance\u2014obtain for me the grace to fight my own spiritual battles with equal courage and trust in God\u2019s mercy. Thou whose hands fashioned beautiful images of the sacred mysteries even as thy heart was lifted to God in contemplation, help me to see in all that is good and beautiful a reflection of the eternal beauty of God, and inspire me to use whatever gifts He has given me wholly for His glory. Intercede for me before the throne of Divine Mercy for the grace I now seek  if it be pleasing to God and for the salvation of my soul. Amen. Dear St. Catherine, patron of artists and all who seek to unite their labors with their love of God, pray that I may imitate thy purity of heart, thy perseverance in prayer, and thy joyful surrender to God\u2019s holy will, so that I may one day rejoice with thee in the vision of that eternal Beauty which thou didst seek and serve so faithfully on earth. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Catherine, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks and added a brief spoken pause with dashes for clearer text-to-speech pacing while keeping all canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St. Catherine of Bologna, who from thy youth didst forsake the pleasures and honors of the world to follow Christ in the poverty and humility of the Poor Clares, and who wast blessed by God with both mystical gifts and artistic talents placed entirely at His service, I come to thee with confidence and devotion. Thou who didst wage courageous spiritual combat against temptation and discouragement, and who didst write so wisely of the weapons of the soul\u2014faith, hope, charity, prayer, and humble perseverance\u2014obtain for me the grace to fight my own spiritual battles with equal courage and trust in God\u2019s mercy. Thou whose hands fashioned beautiful images of the sacred mysteries even as thy heart was lifted to God in contemplation, help me to see in all that is good and beautiful a reflection of the eternal beauty of God, and inspire me to use whatever gifts He has given me wholly for His glory. Intercede for me before the throne of Divine Mercy for the grace I now seek  if it be pleasing to God and for the salvation of my soul. Amen. Dear St. Catherine, patron of artists and all who seek to unite their labors with their love of God, pray that I may imitate thy purity of heart, thy perseverance in prayer, and thy joyful surrender to God\u2019s holy will, so that I may one day rejoice with thee in the vision of that eternal Beauty which thou didst seek and serve so faithfully on earth. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Catherine, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks and added a brief spoken pause with dashes for clearer text-to-speech pacing while keeping all canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St. Catherine of Bologna, who from thy youth didst forsake the pleasures and honors of the world to follow Christ in the poverty and humility of the Poor Clares, and who wast blessed by God with both mystical gifts and artistic talents placed entirely at His service, I come to thee with confidence and devotion. Thou who didst wage courageous spiritual combat against temptation and discouragement, and who didst write so wisely of the weapons of the soul\u2014faith, hope, charity, prayer, and humble perseverance\u2014obtain for me the grace to fight my own spiritual battles with equal courage and trust in God\u2019s mercy. Thou whose hands fashioned beautiful images of the sacred mysteries even as thy heart was lifted to God in contemplation, help me to see in all that is good and beautiful a reflection of the eternal beauty of God, and inspire me to use whatever gifts He has given me wholly for His glory. Intercede for me before the throne of Divine Mercy for the grace I now seek  if it be pleasing to God and for the salvation of my soul. Amen. Dear St. Catherine, patron of artists and all who seek to unite their labors with their love of God, pray that I may imitate thy purity of heart, thy perseverance in prayer, and thy joyful surrender to God\u2019s holy will, so that I may one day rejoice with thee in the vision of that eternal Beauty which thou didst seek and serve so faithfully on earth. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Catherine, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks and added a brief spoken pause with dashes for clearer text-to-speech pacing while keeping all canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St. Catherine of Bologna, who from thy youth didst forsake the pleasures and honors of the world to follow Christ in the poverty and humility of the Poor Clares, and who wast blessed by God with both mystical gifts and artistic talents placed entirely at His service, I come to thee with confidence and devotion. Thou who didst wage courageous spiritual combat against temptation and discouragement, and who didst write so wisely of the weapons of the soul\u2014faith, hope, charity, prayer, and humble perseverance\u2014obtain for me the grace to fight my own spiritual battles with equal courage and trust in God\u2019s mercy. Thou whose hands fashioned beautiful images of the sacred mysteries even as thy heart was lifted to God in contemplation, help me to see in all that is good and beautiful a reflection of the eternal beauty of God, and inspire me to use whatever gifts He has given me wholly for His glory. Intercede for me before the throne of Divine Mercy for the grace I now seek  if it be pleasing to God and for the salvation of my soul. Amen. Dear St. Catherine, patron of artists and all who seek to unite their labors with their love of God, pray that I may imitate thy purity of heart, thy perseverance in prayer, and thy joyful surrender to God\u2019s holy will, so that I may one day rejoice with thee in the vision of that eternal Beauty which thou didst seek and serve so faithfully on earth. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Catherine, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks and added a brief spoken pause with dashes for clearer text-to-speech pacing while keeping all canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St. Catherine of Bologna, who from thy youth didst forsake the pleasures and honors of the world to follow Christ in the poverty and humility of the Poor Clares, and who wast blessed by God with both mystical gifts and artistic talents placed entirely at His service, I come to thee with confidence and devotion. Thou who didst wage courageous spiritual combat against temptation and discouragement, and who didst write so wisely of the weapons of the soul\u2014faith, hope, charity, prayer, and humble perseverance\u2014obtain for me the grace to fight my own spiritual battles with equal courage and trust in God\u2019s mercy. Thou whose hands fashioned beautiful images of the sacred mysteries even as thy heart was lifted to God in contemplation, help me to see in all that is good and beautiful a reflection of the eternal beauty of God, and inspire me to use whatever gifts He has given me wholly for His glory. Intercede for me before the throne of Divine Mercy for the grace I now seek  if it be pleasing to God and for the salvation of my soul. Amen. Dear St. Catherine, patron of artists and all who seek to unite their labors with their love of God, pray that I may imitate thy purity of heart, thy perseverance in prayer, and thy joyful surrender to God\u2019s holy will, so that I may one day rejoice with thee in the vision of that eternal Beauty which thou didst seek and serve so faithfully on earth. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Catherine, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks and added a brief spoken pause with dashes for clearer text-to-speech pacing while keeping all canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St. Catherine of Bologna, who from thy youth didst forsake the pleasures and honors of the world to follow Christ in the poverty and humility of the Poor Clares, and who wast blessed by God with both mystical gifts and artistic talents placed entirely at His service, I come to thee with confidence and devotion. Thou who didst wage courageous spiritual combat against temptation and discouragement, and who didst write so wisely of the weapons of the soul\u2014faith, hope, charity, prayer, and humble perseverance\u2014obtain for me the grace to fight my own spiritual battles with equal courage and trust in God\u2019s mercy. Thou whose hands fashioned beautiful images of the sacred mysteries even as thy heart was lifted to God in contemplation, help me to see in all that is good and beautiful a reflection of the eternal beauty of God, and inspire me to use whatever gifts He has given me wholly for His glory. Intercede for me before the throne of Divine Mercy for the grace I now seek  if it be pleasing to God and for the salvation of my soul. Amen. Dear St. Catherine, patron of artists and all who seek to unite their labors with their love of God, pray that I may imitate thy purity of heart, thy perseverance in prayer, and thy joyful surrender to God\u2019s holy will, so that I may one day rejoice with thee in the vision of that eternal Beauty which thou didst seek and serve so faithfully on earth. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Catherine, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks and added a brief spoken pause with dashes for clearer text-to-speech pacing while keeping all canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St. Catherine of Bologna, who from thy youth didst forsake the pleasures and honors of the world to follow Christ in the poverty and humility of the Poor Clares, and who wast blessed by God with both mystical gifts and artistic talents placed entirely at His service, I come to thee with confidence and devotion. Thou who didst wage courageous spiritual combat against temptation and discouragement, and who didst write so wisely of the weapons of the soul\u2014faith, hope, charity, prayer, and humble perseverance\u2014obtain for me the grace to fight my own spiritual battles with equal courage and trust in God\u2019s mercy. Thou whose hands fashioned beautiful images of the sacred mysteries even as thy heart was lifted to God in contemplation, help me to see in all that is good and beautiful a reflection of the eternal beauty of God, and inspire me to use whatever gifts He has given me wholly for His glory. Intercede for me before the throne of Divine Mercy for the grace I now seek  if it be pleasing to God and for the salvation of my soul. Amen. Dear St. Catherine, patron of artists and all who seek to unite their labors with their love of God, pray that I may imitate thy purity of heart, thy perseverance in prayer, and thy joyful surrender to God\u2019s holy will, so that I may one day rejoice with thee in the vision of that eternal Beauty which thou didst seek and serve so faithfully on earth. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Catherine, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks and added a brief spoken pause with dashes for clearer text-to-speech pacing while keeping all canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St. Catherine of Bologna, who from thy youth didst forsake the pleasures and honors of the world to follow Christ in the poverty and humility of the Poor Clares, and who wast blessed by God with both mystical gifts and artistic talents placed entirely at His service, I come to thee with confidence and devotion. Thou who didst wage courageous spiritual combat against temptation and discouragement, and who didst write so wisely of the weapons of the soul\u2014faith, hope, charity, prayer, and humble perseverance\u2014obtain for me the grace to fight my own spiritual battles with equal courage and trust in God\u2019s mercy. Thou whose hands fashioned beautiful images of the sacred mysteries even as thy heart was lifted to God in contemplation, help me to see in all that is good and beautiful a reflection of the eternal beauty of God, and inspire me to use whatever gifts He has given me wholly for His glory. Intercede for me before the throne of Divine Mercy for the grace I now seek  if it be pleasing to God and for the salvation of my soul. Amen. Dear St. Catherine, patron of artists and all who seek to unite their labors with their love of God, pray that I may imitate thy purity of heart, thy perseverance in prayer, and thy joyful surrender to God\u2019s holy will, so that I may one day rejoice with thee in the vision of that eternal Beauty which thou didst seek and serve so faithfully on earth. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Catherine, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks and added a brief spoken pause with dashes for clearer text-to-speech pacing while keeping all canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St. Catherine of Bologna, who from thy youth didst forsake the pleasures and honors of the world to follow Christ in the poverty and humility of the Poor Clares, and who wast blessed by God with both mystical gifts and artistic talents placed entirely at His service, I come to thee with confidence and devotion. Thou who didst wage courageous spiritual combat against temptation and discouragement, and who didst write so wisely of the weapons of the soul\u2014faith, hope, charity, prayer, and humble perseverance\u2014obtain for me the grace to fight my own spiritual battles with equal courage and trust in God\u2019s mercy. Thou whose hands fashioned beautiful images of the sacred mysteries even as thy heart was lifted to God in contemplation, help me to see in all that is good and beautiful a reflection of the eternal beauty of God, and inspire me to use whatever gifts He has given me wholly for His glory. Intercede for me before the throne of Divine Mercy for the grace I now seek  if it be pleasing to God and for the salvation of my soul. Amen. Dear St. Catherine, patron of artists and all who seek to unite their labors with their love of God, pray that I may imitate thy purity of heart, thy perseverance in prayer, and thy joyful surrender to God\u2019s holy will, so that I may one day rejoice with thee in the vision of that eternal Beauty which thou didst seek and serve so faithfully on earth. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Catherine, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_catherine_of_bologna"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_catherine_of_bologna",
+      "name": "St Catherine of Bologna"
+    },
+    "type": "novena_feast_rule"
+  }
+}

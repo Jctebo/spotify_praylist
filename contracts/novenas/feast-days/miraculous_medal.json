@@ -1,0 +1,224 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "miraculous_medal",
+    "feast": {
+      "day": 27,
+      "mode": "fixed",
+      "month": 11,
+      "name": "Miraculous Medal"
+    },
+    "id": "miraculous_medal",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A novena honoring Our Lady of the Miraculous Medal, recalling Mary\u2019s 1830 apparitions to St. Catherine Labour\u00e9 and praying for grace and conversion."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Miraculous Medal Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Adjusted line breaks for pacing, formatted versicle and response lines, and replaced parenthetical repetition cues with a brief spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. V. Come, O Holy Ghost, fill the hearts of Thy faithful, and kindle in them the fire of Thy love. R. Send forth Thy Spirit, and they shall be created. V. And Thou shalt renew the face of the earth. V. Let us pray: O God, who didst instruct the hearts of the faithful by the light of the Holy Spirit, grant us in the same Spirit to be truly wise and ever to rejoice in His consolation, through Jesus Christ Our Lord. R. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. Lord Jesus Christ who hast vouchsafed to glorify by numberless miracles the Blessed Virgin Mary Immaculate from the first moment of her Conception, grant that all who devoutly implore her protection on earth may eternally enjoy Thy presence in heaven who, with the Father and Holy Ghost livest and reignest, God, for ever and ever. Amen. O Lord Jesus Christ who for the accomplishment of Thy greatest works hast chosen the weak things of the world that no flesh may glory in Thy sight and who for a better and more widely diffused belief in the Immaculate Conception of Thy Mother hast wished that the Miraculous Medal be manifested to Saint Catherine Laboure grant, we beseech Thee that filled with like humility we may glorify this mystery by word and work. Amen. MEMORARE Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired with this confidence, I fly unto thee, O Virgin of virgins, my Mother! To thee I come; before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy, hear and answer me. Amen. NOVENA PRAYER O Immaculate Virgin Mary Mother of Our Lord Jesus and our Mother penetrated with the most lively confidence in thy all powerful and never failing intercession, manifested so often through the Miraculous Medal, we thy loving and trustful children implore thee to obtain for us the graces and favors we ask during this Novena, if they be beneficial to our immortal souls, and the souls for whom we pray."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Thou knowest, O Mary, how often our souls have been the sanctuaries of thy Son who hates iniquity. Obtain for us then a deep hatred of sin and that purity of heart which will attach us to God alone so that our every thought, word and deed may tend to His greater glory. Obtain for us also a spirit of prayer and self-denial that we may recover by penance what we have lost by sin and at length attain to that blessed abode where thou art the Queen of angels and of men. Amen. Pray the Novena Prayer and Concluding Prayer. AN ACT OF CONSECRATION TO OUR LADY OF THE MIRACULOUS MEDAL Virgin Mother of God, Mary Immaculate, we dedicate and consecrate our selves to thee under the title of Our Lady of the Miraculous Medal. May this Medal be for each one of us a sure sign of thy affection for us and a constant reminder of our duties toward thee. Ever while wearing it, may we be blessed by thy loving protection and preserved in the grace of thy Son. O most powerful Virgin, Mother of our Savior, keep us close to thee every moment of our lives. Obtain for us, thy children, the grace of a happy death; so that, in union with thee, we may enjoy the bliss of heaven forever. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Miraculous Medal Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Adjusted line breaks for pacing, formatted versicle and response lines, and replaced parenthetical repetition cues with a brief spoken instruction.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. V. Come, O Holy Ghost, fill the hearts of Thy faithful, and kindle in them the fire of Thy love. R. Send forth Thy Spirit, and they shall be created. V. And Thou shalt renew the face of the earth. V. Let us pray: O God, who didst instruct the hearts of the faithful by the light of the Holy Spirit, grant us in the same Spirit to be truly wise and ever to rejoice in His consolation, through Jesus Christ Our Lord. R. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. Lord Jesus Christ who hast vouchsafed to glorify by numberless miracles the Blessed Virgin Mary Immaculate from the first moment of her Conception, grant that all who devoutly implore her protection on earth may eternally enjoy Thy presence in heaven who, with the Father and Holy Ghost livest and reignest, God, for ever and ever. Amen. O Lord Jesus Christ who for the accomplishment of Thy greatest works hast chosen the weak things of the world that no flesh may glory in Thy sight and who for a better and more widely diffused belief in the Immaculate Conception of Thy Mother hast wished that the Miraculous Medal be manifested to Saint Catherine Laboure grant, we beseech Thee that filled with like humility we may glorify this mystery by word and work. Amen. MEMORARE Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired with this confidence, I fly unto thee, O Virgin of virgins, my Mother! To thee I come; before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy, hear and answer me. Amen. NOVENA PRAYER O Immaculate Virgin Mary Mother of Our Lord Jesus and our Mother penetrated with the most lively confidence in thy all powerful and never failing intercession, manifested so often through the Miraculous Medal, we thy loving and trustful children implore thee to obtain for us the graces and favors we ask during this Novena, if they be beneficial to our immortal souls, and the souls for whom we pray.  Thou knowest, O Mary, how often our souls have been the sanctuaries of thy Son who hates iniquity. Obtain for us then a deep hatred of sin and that purity of heart which will attach us to God alone so that our every thought, word and deed may tend to His greater glory. Obtain for us also a spirit of prayer and self-denial that we may recover by penance what we have lost by sin and at length attain to that blessed abode where thou art the Queen of angels and of men. Amen. Pray the Novena Prayer and Concluding Prayer. AN ACT OF CONSECRATION TO OUR LADY OF THE MIRACULOUS MEDAL Virgin Mother of God, Mary Immaculate, we dedicate and consecrate our selves to thee under the title of Our Lady of the Miraculous Medal. May this Medal be for each one of us a sure sign of thy affection for us and a constant reminder of our duties toward thee. Ever while wearing it, may we be blessed by thy loving protection and preserved in the grace of thy Son. O most powerful Virgin, Mother of our Savior, keep us close to thee every moment of our lives. Obtain for us, thy children, the grace of a happy death; so that, in union with thee, we may enjoy the bliss of heaven forever. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Adjusted line breaks for pacing, formatted versicle and response lines, and replaced parenthetical repetition cues with a brief spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. V. Come, O Holy Ghost, fill the hearts of Thy faithful, and kindle in them the fire of Thy love. R. Send forth Thy Spirit, and they shall be created. V. And Thou shalt renew the face of the earth. V. Let us pray: O God, who didst instruct the hearts of the faithful by the light of the Holy Spirit, grant us in the same Spirit to be truly wise and ever to rejoice in His consolation, through Jesus Christ Our Lord. R. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. Lord Jesus Christ who hast vouchsafed to glorify by numberless miracles the Blessed Virgin Mary Immaculate from the first moment of her Conception, grant that all who devoutly implore her protection on earth may eternally enjoy Thy presence in heaven who, with the Father and Holy Ghost livest and reignest, God, for ever and ever. Amen. O Lord Jesus Christ who for the accomplishment of Thy greatest works hast chosen the weak things of the world that no flesh may glory in Thy sight and who for a better and more widely diffused belief in the Immaculate Conception of Thy Mother hast wished that the Miraculous Medal be manifested to Saint Catherine Laboure grant, we beseech Thee that filled with like humility we may glorify this mystery by word and work. Amen. MEMORARE Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired with this confidence, I fly unto thee, O Virgin of virgins, my Mother! To thee I come; before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy, hear and answer me. Amen. NOVENA PRAYER O Immaculate Virgin Mary Mother of Our Lord Jesus and our Mother penetrated with the most lively confidence in thy all powerful and never failing intercession, manifested so often through the Miraculous Medal, we thy loving and trustful children implore thee to obtain for us the graces and favors we ask during this Novena, if they be beneficial to our immortal souls, and the souls for whom we pray.  Thou knowest, O Mary, how often our souls have been the sanctuaries of thy Son who hates iniquity. Obtain for us then a deep hatred of sin and that purity of heart which will attach us to God alone so that our every thought, word and deed may tend to His greater glory. Obtain for us also a spirit of prayer and self-denial that we may recover by penance what we have lost by sin and at length attain to that blessed abode where thou art the Queen of angels and of men. Amen. Pray the Novena Prayer and Concluding Prayer. AN ACT OF CONSECRATION TO OUR LADY OF THE MIRACULOUS MEDAL Virgin Mother of God, Mary Immaculate, we dedicate and consecrate our selves to thee under the title of Our Lady of the Miraculous Medal. May this Medal be for each one of us a sure sign of thy affection for us and a constant reminder of our duties toward thee. Ever while wearing it, may we be blessed by thy loving protection and preserved in the grace of thy Son. O most powerful Virgin, Mother of our Savior, keep us close to thee every moment of our lives. Obtain for us, thy children, the grace of a happy death; so that, in union with thee, we may enjoy the bliss of heaven forever. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Adjusted line breaks for pacing, formatted versicle and response lines, and replaced parenthetical repetition cues with a brief spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. V. Come, O Holy Ghost, fill the hearts of Thy faithful, and kindle in them the fire of Thy love. R. Send forth Thy Spirit, and they shall be created. V. And Thou shalt renew the face of the earth. V. Let us pray: O God, who didst instruct the hearts of the faithful by the light of the Holy Spirit, grant us in the same Spirit to be truly wise and ever to rejoice in His consolation, through Jesus Christ Our Lord. R. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. Lord Jesus Christ who hast vouchsafed to glorify by numberless miracles the Blessed Virgin Mary Immaculate from the first moment of her Conception, grant that all who devoutly implore her protection on earth may eternally enjoy Thy presence in heaven who, with the Father and Holy Ghost livest and reignest, God, for ever and ever. Amen. O Lord Jesus Christ who for the accomplishment of Thy greatest works hast chosen the weak things of the world that no flesh may glory in Thy sight and who for a better and more widely diffused belief in the Immaculate Conception of Thy Mother hast wished that the Miraculous Medal be manifested to Saint Catherine Laboure grant, we beseech Thee that filled with like humility we may glorify this mystery by word and work. Amen. MEMORARE Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired with this confidence, I fly unto thee, O Virgin of virgins, my Mother! To thee I come; before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy, hear and answer me. Amen. NOVENA PRAYER O Immaculate Virgin Mary Mother of Our Lord Jesus and our Mother penetrated with the most lively confidence in thy all powerful and never failing intercession, manifested so often through the Miraculous Medal, we thy loving and trustful children implore thee to obtain for us the graces and favors we ask during this Novena, if they be beneficial to our immortal souls, and the souls for whom we pray.  Thou knowest, O Mary, how often our souls have been the sanctuaries of thy Son who hates iniquity. Obtain for us then a deep hatred of sin and that purity of heart which will attach us to God alone so that our every thought, word and deed may tend to His greater glory. Obtain for us also a spirit of prayer and self-denial that we may recover by penance what we have lost by sin and at length attain to that blessed abode where thou art the Queen of angels and of men. Amen. Pray the Novena Prayer and Concluding Prayer. AN ACT OF CONSECRATION TO OUR LADY OF THE MIRACULOUS MEDAL Virgin Mother of God, Mary Immaculate, we dedicate and consecrate our selves to thee under the title of Our Lady of the Miraculous Medal. May this Medal be for each one of us a sure sign of thy affection for us and a constant reminder of our duties toward thee. Ever while wearing it, may we be blessed by thy loving protection and preserved in the grace of thy Son. O most powerful Virgin, Mother of our Savior, keep us close to thee every moment of our lives. Obtain for us, thy children, the grace of a happy death; so that, in union with thee, we may enjoy the bliss of heaven forever. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Adjusted line breaks for pacing, formatted versicle and response lines, and replaced parenthetical repetition cues with a brief spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. V. Come, O Holy Ghost, fill the hearts of Thy faithful, and kindle in them the fire of Thy love. R. Send forth Thy Spirit, and they shall be created. V. And Thou shalt renew the face of the earth. V. Let us pray: O God, who didst instruct the hearts of the faithful by the light of the Holy Spirit, grant us in the same Spirit to be truly wise and ever to rejoice in His consolation, through Jesus Christ Our Lord. R. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. Lord Jesus Christ who hast vouchsafed to glorify by numberless miracles the Blessed Virgin Mary Immaculate from the first moment of her Conception, grant that all who devoutly implore her protection on earth may eternally enjoy Thy presence in heaven who, with the Father and Holy Ghost livest and reignest, God, for ever and ever. Amen. O Lord Jesus Christ who for the accomplishment of Thy greatest works hast chosen the weak things of the world that no flesh may glory in Thy sight and who for a better and more widely diffused belief in the Immaculate Conception of Thy Mother hast wished that the Miraculous Medal be manifested to Saint Catherine Laboure grant, we beseech Thee that filled with like humility we may glorify this mystery by word and work. Amen. MEMORARE Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired with this confidence, I fly unto thee, O Virgin of virgins, my Mother! To thee I come; before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy, hear and answer me. Amen. NOVENA PRAYER O Immaculate Virgin Mary Mother of Our Lord Jesus and our Mother penetrated with the most lively confidence in thy all powerful and never failing intercession, manifested so often through the Miraculous Medal, we thy loving and trustful children implore thee to obtain for us the graces and favors we ask during this Novena, if they be beneficial to our immortal souls, and the souls for whom we pray.  Thou knowest, O Mary, how often our souls have been the sanctuaries of thy Son who hates iniquity. Obtain for us then a deep hatred of sin and that purity of heart which will attach us to God alone so that our every thought, word and deed may tend to His greater glory. Obtain for us also a spirit of prayer and self-denial that we may recover by penance what we have lost by sin and at length attain to that blessed abode where thou art the Queen of angels and of men. Amen. Pray the Novena Prayer and Concluding Prayer. AN ACT OF CONSECRATION TO OUR LADY OF THE MIRACULOUS MEDAL Virgin Mother of God, Mary Immaculate, we dedicate and consecrate our selves to thee under the title of Our Lady of the Miraculous Medal. May this Medal be for each one of us a sure sign of thy affection for us and a constant reminder of our duties toward thee. Ever while wearing it, may we be blessed by thy loving protection and preserved in the grace of thy Son. O most powerful Virgin, Mother of our Savior, keep us close to thee every moment of our lives. Obtain for us, thy children, the grace of a happy death; so that, in union with thee, we may enjoy the bliss of heaven forever. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Adjusted line breaks for pacing, formatted versicle and response lines, and replaced parenthetical repetition cues with a brief spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. V. Come, O Holy Ghost, fill the hearts of Thy faithful, and kindle in them the fire of Thy love. R. Send forth Thy Spirit, and they shall be created. V. And Thou shalt renew the face of the earth. V. Let us pray: O God, who didst instruct the hearts of the faithful by the light of the Holy Spirit, grant us in the same Spirit to be truly wise and ever to rejoice in His consolation, through Jesus Christ Our Lord. R. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. Lord Jesus Christ who hast vouchsafed to glorify by numberless miracles the Blessed Virgin Mary Immaculate from the first moment of her Conception, grant that all who devoutly implore her protection on earth may eternally enjoy Thy presence in heaven who, with the Father and Holy Ghost livest and reignest, God, for ever and ever. Amen. O Lord Jesus Christ who for the accomplishment of Thy greatest works hast chosen the weak things of the world that no flesh may glory in Thy sight and who for a better and more widely diffused belief in the Immaculate Conception of Thy Mother hast wished that the Miraculous Medal be manifested to Saint Catherine Laboure grant, we beseech Thee that filled with like humility we may glorify this mystery by word and work. Amen. MEMORARE Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired with this confidence, I fly unto thee, O Virgin of virgins, my Mother! To thee I come; before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy, hear and answer me. Amen. NOVENA PRAYER O Immaculate Virgin Mary Mother of Our Lord Jesus and our Mother penetrated with the most lively confidence in thy all powerful and never failing intercession, manifested so often through the Miraculous Medal, we thy loving and trustful children implore thee to obtain for us the graces and favors we ask during this Novena, if they be beneficial to our immortal souls, and the souls for whom we pray.  Thou knowest, O Mary, how often our souls have been the sanctuaries of thy Son who hates iniquity. Obtain for us then a deep hatred of sin and that purity of heart which will attach us to God alone so that our every thought, word and deed may tend to His greater glory. Obtain for us also a spirit of prayer and self-denial that we may recover by penance what we have lost by sin and at length attain to that blessed abode where thou art the Queen of angels and of men. Amen. Pray the Novena Prayer and Concluding Prayer. AN ACT OF CONSECRATION TO OUR LADY OF THE MIRACULOUS MEDAL Virgin Mother of God, Mary Immaculate, we dedicate and consecrate our selves to thee under the title of Our Lady of the Miraculous Medal. May this Medal be for each one of us a sure sign of thy affection for us and a constant reminder of our duties toward thee. Ever while wearing it, may we be blessed by thy loving protection and preserved in the grace of thy Son. O most powerful Virgin, Mother of our Savior, keep us close to thee every moment of our lives. Obtain for us, thy children, the grace of a happy death; so that, in union with thee, we may enjoy the bliss of heaven forever. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Adjusted line breaks for pacing, formatted versicle and response lines, and replaced parenthetical repetition cues with a brief spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. V. Come, O Holy Ghost, fill the hearts of Thy faithful, and kindle in them the fire of Thy love. R. Send forth Thy Spirit, and they shall be created. V. And Thou shalt renew the face of the earth. V. Let us pray: O God, who didst instruct the hearts of the faithful by the light of the Holy Spirit, grant us in the same Spirit to be truly wise and ever to rejoice in His consolation, through Jesus Christ Our Lord. R. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. Lord Jesus Christ who hast vouchsafed to glorify by numberless miracles the Blessed Virgin Mary Immaculate from the first moment of her Conception, grant that all who devoutly implore her protection on earth may eternally enjoy Thy presence in heaven who, with the Father and Holy Ghost livest and reignest, God, for ever and ever. Amen. O Lord Jesus Christ who for the accomplishment of Thy greatest works hast chosen the weak things of the world that no flesh may glory in Thy sight and who for a better and more widely diffused belief in the Immaculate Conception of Thy Mother hast wished that the Miraculous Medal be manifested to Saint Catherine Laboure grant, we beseech Thee that filled with like humility we may glorify this mystery by word and work. Amen. MEMORARE Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired with this confidence, I fly unto thee, O Virgin of virgins, my Mother! To thee I come; before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy, hear and answer me. Amen. NOVENA PRAYER O Immaculate Virgin Mary Mother of Our Lord Jesus and our Mother penetrated with the most lively confidence in thy all powerful and never failing intercession, manifested so often through the Miraculous Medal, we thy loving and trustful children implore thee to obtain for us the graces and favors we ask during this Novena, if they be beneficial to our immortal souls, and the souls for whom we pray.  Thou knowest, O Mary, how often our souls have been the sanctuaries of thy Son who hates iniquity. Obtain for us then a deep hatred of sin and that purity of heart which will attach us to God alone so that our every thought, word and deed may tend to His greater glory. Obtain for us also a spirit of prayer and self-denial that we may recover by penance what we have lost by sin and at length attain to that blessed abode where thou art the Queen of angels and of men. Amen. Pray the Novena Prayer and Concluding Prayer. AN ACT OF CONSECRATION TO OUR LADY OF THE MIRACULOUS MEDAL Virgin Mother of God, Mary Immaculate, we dedicate and consecrate our selves to thee under the title of Our Lady of the Miraculous Medal. May this Medal be for each one of us a sure sign of thy affection for us and a constant reminder of our duties toward thee. Ever while wearing it, may we be blessed by thy loving protection and preserved in the grace of thy Son. O most powerful Virgin, Mother of our Savior, keep us close to thee every moment of our lives. Obtain for us, thy children, the grace of a happy death; so that, in union with thee, we may enjoy the bliss of heaven forever. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Adjusted line breaks for pacing, formatted versicle and response lines, and replaced parenthetical repetition cues with a brief spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. V. Come, O Holy Ghost, fill the hearts of Thy faithful, and kindle in them the fire of Thy love. R. Send forth Thy Spirit, and they shall be created. V. And Thou shalt renew the face of the earth. V. Let us pray: O God, who didst instruct the hearts of the faithful by the light of the Holy Spirit, grant us in the same Spirit to be truly wise and ever to rejoice in His consolation, through Jesus Christ Our Lord. R. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. Lord Jesus Christ who hast vouchsafed to glorify by numberless miracles the Blessed Virgin Mary Immaculate from the first moment of her Conception, grant that all who devoutly implore her protection on earth may eternally enjoy Thy presence in heaven who, with the Father and Holy Ghost livest and reignest, God, for ever and ever. Amen. O Lord Jesus Christ who for the accomplishment of Thy greatest works hast chosen the weak things of the world that no flesh may glory in Thy sight and who for a better and more widely diffused belief in the Immaculate Conception of Thy Mother hast wished that the Miraculous Medal be manifested to Saint Catherine Laboure grant, we beseech Thee that filled with like humility we may glorify this mystery by word and work. Amen. MEMORARE Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired with this confidence, I fly unto thee, O Virgin of virgins, my Mother! To thee I come; before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy, hear and answer me. Amen. NOVENA PRAYER O Immaculate Virgin Mary Mother of Our Lord Jesus and our Mother penetrated with the most lively confidence in thy all powerful and never failing intercession, manifested so often through the Miraculous Medal, we thy loving and trustful children implore thee to obtain for us the graces and favors we ask during this Novena, if they be beneficial to our immortal souls, and the souls for whom we pray.  Thou knowest, O Mary, how often our souls have been the sanctuaries of thy Son who hates iniquity. Obtain for us then a deep hatred of sin and that purity of heart which will attach us to God alone so that our every thought, word and deed may tend to His greater glory. Obtain for us also a spirit of prayer and self-denial that we may recover by penance what we have lost by sin and at length attain to that blessed abode where thou art the Queen of angels and of men. Amen. Pray the Novena Prayer and Concluding Prayer. AN ACT OF CONSECRATION TO OUR LADY OF THE MIRACULOUS MEDAL Virgin Mother of God, Mary Immaculate, we dedicate and consecrate our selves to thee under the title of Our Lady of the Miraculous Medal. May this Medal be for each one of us a sure sign of thy affection for us and a constant reminder of our duties toward thee. Ever while wearing it, may we be blessed by thy loving protection and preserved in the grace of thy Son. O most powerful Virgin, Mother of our Savior, keep us close to thee every moment of our lives. Obtain for us, thy children, the grace of a happy death; so that, in union with thee, we may enjoy the bliss of heaven forever. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Adjusted line breaks for pacing, formatted versicle and response lines, and replaced parenthetical repetition cues with a brief spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. V. Come, O Holy Ghost, fill the hearts of Thy faithful, and kindle in them the fire of Thy love. R. Send forth Thy Spirit, and they shall be created. V. And Thou shalt renew the face of the earth. V. Let us pray: O God, who didst instruct the hearts of the faithful by the light of the Holy Spirit, grant us in the same Spirit to be truly wise and ever to rejoice in His consolation, through Jesus Christ Our Lord. R. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. Lord Jesus Christ who hast vouchsafed to glorify by numberless miracles the Blessed Virgin Mary Immaculate from the first moment of her Conception, grant that all who devoutly implore her protection on earth may eternally enjoy Thy presence in heaven who, with the Father and Holy Ghost livest and reignest, God, for ever and ever. Amen. O Lord Jesus Christ who for the accomplishment of Thy greatest works hast chosen the weak things of the world that no flesh may glory in Thy sight and who for a better and more widely diffused belief in the Immaculate Conception of Thy Mother hast wished that the Miraculous Medal be manifested to Saint Catherine Laboure grant, we beseech Thee that filled with like humility we may glorify this mystery by word and work. Amen. MEMORARE Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired with this confidence, I fly unto thee, O Virgin of virgins, my Mother! To thee I come; before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy, hear and answer me. Amen. NOVENA PRAYER O Immaculate Virgin Mary Mother of Our Lord Jesus and our Mother penetrated with the most lively confidence in thy all powerful and never failing intercession, manifested so often through the Miraculous Medal, we thy loving and trustful children implore thee to obtain for us the graces and favors we ask during this Novena, if they be beneficial to our immortal souls, and the souls for whom we pray.  Thou knowest, O Mary, how often our souls have been the sanctuaries of thy Son who hates iniquity. Obtain for us then a deep hatred of sin and that purity of heart which will attach us to God alone so that our every thought, word and deed may tend to His greater glory. Obtain for us also a spirit of prayer and self-denial that we may recover by penance what we have lost by sin and at length attain to that blessed abode where thou art the Queen of angels and of men. Amen. Pray the Novena Prayer and Concluding Prayer. AN ACT OF CONSECRATION TO OUR LADY OF THE MIRACULOUS MEDAL Virgin Mother of God, Mary Immaculate, we dedicate and consecrate our selves to thee under the title of Our Lady of the Miraculous Medal. May this Medal be for each one of us a sure sign of thy affection for us and a constant reminder of our duties toward thee. Ever while wearing it, may we be blessed by thy loving protection and preserved in the grace of thy Son. O most powerful Virgin, Mother of our Savior, keep us close to thee every moment of our lives. Obtain for us, thy children, the grace of a happy death; so that, in union with thee, we may enjoy the bliss of heaven forever. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Adjusted line breaks for pacing, formatted versicle and response lines, and replaced parenthetical repetition cues with a brief spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. V. Come, O Holy Ghost, fill the hearts of Thy faithful, and kindle in them the fire of Thy love. R. Send forth Thy Spirit, and they shall be created. V. And Thou shalt renew the face of the earth. V. Let us pray: O God, who didst instruct the hearts of the faithful by the light of the Holy Spirit, grant us in the same Spirit to be truly wise and ever to rejoice in His consolation, through Jesus Christ Our Lord. R. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. Lord Jesus Christ who hast vouchsafed to glorify by numberless miracles the Blessed Virgin Mary Immaculate from the first moment of her Conception, grant that all who devoutly implore her protection on earth may eternally enjoy Thy presence in heaven who, with the Father and Holy Ghost livest and reignest, God, for ever and ever. Amen. O Lord Jesus Christ who for the accomplishment of Thy greatest works hast chosen the weak things of the world that no flesh may glory in Thy sight and who for a better and more widely diffused belief in the Immaculate Conception of Thy Mother hast wished that the Miraculous Medal be manifested to Saint Catherine Laboure grant, we beseech Thee that filled with like humility we may glorify this mystery by word and work. Amen. MEMORARE Remember, O most gracious Virgin Mary, that never was it known that anyone who fled to thy protection, implored thy help, or sought thy intercession, was left unaided. Inspired with this confidence, I fly unto thee, O Virgin of virgins, my Mother! To thee I come; before thee I stand, sinful and sorrowful. O Mother of the Word Incarnate, despise not my petitions, but in thy mercy, hear and answer me. Amen. NOVENA PRAYER O Immaculate Virgin Mary Mother of Our Lord Jesus and our Mother penetrated with the most lively confidence in thy all powerful and never failing intercession, manifested so often through the Miraculous Medal, we thy loving and trustful children implore thee to obtain for us the graces and favors we ask during this Novena, if they be beneficial to our immortal souls, and the souls for whom we pray.  Thou knowest, O Mary, how often our souls have been the sanctuaries of thy Son who hates iniquity. Obtain for us then a deep hatred of sin and that purity of heart which will attach us to God alone so that our every thought, word and deed may tend to His greater glory. Obtain for us also a spirit of prayer and self-denial that we may recover by penance what we have lost by sin and at length attain to that blessed abode where thou art the Queen of angels and of men. Amen. Pray the Novena Prayer and Concluding Prayer. AN ACT OF CONSECRATION TO OUR LADY OF THE MIRACULOUS MEDAL Virgin Mother of God, Mary Immaculate, we dedicate and consecrate our selves to thee under the title of Our Lady of the Miraculous Medal. May this Medal be for each one of us a sure sign of thy affection for us and a constant reminder of our duties toward thee. Ever while wearing it, may we be blessed by thy loving protection and preserved in the grace of thy Son. O most powerful Virgin, Mother of our Savior, keep us close to thee every moment of our lives. Obtain for us, thy children, the grace of a happy death; so that, in union with thee, we may enjoy the bliss of heaven forever. Amen. V. O Mary, conceived without sin, R. Pray for us who have recourse to thee. Repeat three times. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-miraculous_medal"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "miraculous_medal",
+      "name": "Miraculous Medal"
+    },
+    "type": "novena_feast_rule"
+  }
+}

@@ -1,0 +1,440 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "guardian_angel",
+    "feast": {
+      "day": 2,
+      "mode": "fixed",
+      "month": 10,
+      "name": "Guardian Angel"
+    },
+    "id": "guardian_angel",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A novena honoring the Guardian Angels, asking God for their protection, guidance, and help in living faithfully each day."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Guardian Angel Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks slightly for clearer text-to-speech pacing while preserving wording, order, and the personal-intention marker.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks. I earnestly beseech thee, O most amiable protector, to continue thy charitable care, and thy defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations, and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Protect me in all the temptations and trials of this life, but more especially at the hour of my death. Do not leave me until thou hast conducted me into the presence of God, in the mansions of everlasting happiness. Amen. O most powerful angel, thou who art my guardian, I beseech thee, by the sovereign hatred thou hast for sin, because it offends God, Whom you love with a pure and perfect love: obtain for me a sincere and lasting sorrow for my sins, and an implacable hatred against all sin, of what kind soever, so that I may never more offend my God, till the last moment of my life. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, to whom God\u2019s love commits me here: ever this day be at my side, to light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving wording and all canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks, and I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. Most mighty spirit, my angel-guardian, I pray thee, by that supreme felicity thou dost enjoy in seeing God without a veil, even whilst watching over me, obtain for me grace to walk without ceasing in the presence of God, so that I may live as a perfect Christian till my last breath. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, to whom God\u2019s love commits me here, ever this day be at my side, to light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraphing and minor punctuation/capitalization for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors. I return thee profound thanks, and I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. Most perfect executor of the Will of God, my faithful guardian, I pray thee, by the vigilant and loving eagerness with which thou fulfillest the duty of my guardianship which God has confided to thee, obtain for me the grace of being always anxious to know and accomplish perfectly, to the last moment of my life, everything that God asks of me. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, to whom God\u2019s love commits me here, ever this day be at my side, to light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and a few archaic word-order commas for smoother text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks, and I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. My most zealous protector and dear angel guardian, I pray thee, by the charge which God hath given thee to guard me in all my ways, as a mother carries in her arms her beloved child: avert from me all occasions of sin, and preserve me from all perils which could make me offend God. And for that, repress the temptations of the infernal enemy and my own passions, so that, having conquered the enemies of my salvation, I may walk with ease, by the grace of God, in the way of His commandments, till I die. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, to whom God\u2019s love commits me here: ever this day be at my side, to light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraphing slightly for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks, and I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. Most faithful guide, my angel-guardian, I pray thee, by the mission which God has confided to thee to lead me on the road to heaven: obtain, for me, grace to follow faithfully and constantly the light which thou hast shown me, of the evil which I must avoid, and of the good which I must do; and do not cease to excite me to the practice of all virtue, till the last moment of my life. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, to whom God\u2019s love commits me here, ever this day be at my side, to light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and all canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks, and I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. Dearest friend, my good angel, I pray thee, by the great love thou hast for me, thou who lovest God so ardently, and who seest how much He loved me and still loves me: obtain for me the consolation of always praying, and praying well, in my troubles, so that I may obtain His mercy, till the last moment of my existence. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, to whom God\u2019s love commits me here, ever this day be at my side, to light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks, and I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. Most powerful intercessor, my faithful guardian, I pray thee, by the zeal which God hath given thee for the eternal salvation of my soul, obtain for me the grace of having also an ardent and prudent zeal for the salvation of my neighbour, so that I may merit eternal salvation. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, to whom God\u2019s love commits me here, ever this day be at my side, to light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and a few phrases for smoother text-to-speech while preserving meaning, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks, and I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. O most pure spirit, dear angel-guardian, I pray thee, by the burning love thou hast for the Immaculate Virgin-Mother of God, the Queen of Angels, to obtain for me great purity of soul and body, that at my death I may be found worthy to associate with thee in Paradise. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, To whom God\u2019s love commits me here, Ever this day be at my side, To light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and canonical prayers.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks. I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. O sweetest angel, my faithful and loving guardian, how can I thank thee sufficiently for the ardent love and faithful vigilance with which thou hast ever watched, and will watch over me, till thou hast led me safely into the sweet presence of God? Ah! pray for me, that I may thank thee by my obedience to thy holy inspirations, so that loving thee daily more and more, I may merit to be with thee for all eternity. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, To whom God\u2019s love commits me here, Ever this day be at my side, To light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Guardian Angel Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and line breaks slightly for clearer text-to-speech pacing while preserving wording, order, and the personal-intention marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks. I earnestly beseech thee, O most amiable protector, to continue thy charitable care, and thy defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations, and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena  Protect me in all the temptations and trials of this life, but more especially at the hour of my death. Do not leave me until thou hast conducted me into the presence of God, in the mansions of everlasting happiness. Amen. O most powerful angel, thou who art my guardian, I beseech thee, by the sovereign hatred thou hast for sin, because it offends God, Whom you love with a pure and perfect love: obtain for me a sincere and lasting sorrow for my sins, and an implacable hatred against all sin, of what kind soever, so that I may never more offend my God, till the last moment of my life. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, to whom God\u2019s love commits me here: ever this day be at my side, to light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving wording and all canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks, and I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena  Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. Most mighty spirit, my angel-guardian, I pray thee, by that supreme felicity thou dost enjoy in seeing God without a veil, even whilst watching over me, obtain for me grace to walk without ceasing in the presence of God, so that I may live as a perfect Christian till my last breath. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, to whom God\u2019s love commits me here, ever this day be at my side, to light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraphing and minor punctuation/capitalization for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors. I return thee profound thanks, and I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena  Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. Most perfect executor of the Will of God, my faithful guardian, I pray thee, by the vigilant and loving eagerness with which thou fulfillest the duty of my guardianship which God has confided to thee, obtain for me the grace of being always anxious to know and accomplish perfectly, to the last moment of my life, everything that God asks of me. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, to whom God\u2019s love commits me here, ever this day be at my side, to light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and a few archaic word-order commas for smoother text-to-speech while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks, and I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena  Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. My most zealous protector and dear angel guardian, I pray thee, by the charge which God hath given thee to guard me in all my ways, as a mother carries in her arms her beloved child: avert from me all occasions of sin, and preserve me from all perils which could make me offend God. And for that, repress the temptations of the infernal enemy and my own passions, so that, having conquered the enemies of my salvation, I may walk with ease, by the grace of God, in the way of His commandments, till I die. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, to whom God\u2019s love commits me here: ever this day be at my side, to light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraphing slightly for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks, and I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena  Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. Most faithful guide, my angel-guardian, I pray thee, by the mission which God has confided to thee to lead me on the road to heaven: obtain, for me, grace to follow faithfully and constantly the light which thou hast shown me, of the evil which I must avoid, and of the good which I must do; and do not cease to excite me to the practice of all virtue, till the last moment of my life. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, to whom God\u2019s love commits me here, ever this day be at my side, to light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and all canonical prayers.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks, and I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena  Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. Dearest friend, my good angel, I pray thee, by the great love thou hast for me, thou who lovest God so ardently, and who seest how much He loved me and still loves me: obtain for me the consolation of always praying, and praying well, in my troubles, so that I may obtain His mercy, till the last moment of my existence. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, to whom God\u2019s love commits me here, ever this day be at my side, to light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks, and I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena  Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. Most powerful intercessor, my faithful guardian, I pray thee, by the zeal which God hath given thee for the eternal salvation of my soul, obtain for me the grace of having also an ardent and prudent zeal for the salvation of my neighbour, so that I may merit eternal salvation. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, to whom God\u2019s love commits me here, ever this day be at my side, to light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and a few phrases for smoother text-to-speech while preserving meaning, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks, and I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena  Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. O most pure spirit, dear angel-guardian, I pray thee, by the burning love thou hast for the Immaculate Virgin-Mother of God, the Queen of Angels, to obtain for me great purity of soul and body, that at my death I may be found worthy to associate with thee in Paradise. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, To whom God\u2019s love commits me here, Ever this day be at my side, To light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and canonical prayers.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy angel, whom God, by the effect of His goodness and His tender regard for my welfare, has charged with the care of my conduct, and who assists me in all my wants and comforts me in all my afflictions, who supports me when I am discouraged and continually obtains for me new favors: I return thee profound thanks. I earnestly beseech thee, O most amiable protector, to continue thy charitable care and defense of me against the malignant attacks of all my enemies. I pray especially that you keep me away from all occasions of sin. Obtain for me the grace of listening attentively to thy holy inspirations and of faithfully putting them into practice. In particular, I implore thee to obtain for me the favor which I ask for by this novena  Protect me in all the temptations and trials of this life, but more especially at the hour of my death, and do not leave me until thou hast conducted me into the presence of God in the mansions of everlasting happiness. Amen. O sweetest angel, my faithful and loving guardian, how can I thank thee sufficiently for the ardent love and faithful vigilance with which thou hast ever watched, and will watch over me, till thou hast led me safely into the sweet presence of God? Ah! pray for me, that I may thank thee by my obedience to thy holy inspirations, so that loving thee daily more and more, I may merit to be with thee for all eternity. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Angel of God, my guardian dear, To whom God\u2019s love commits me here, Ever this day be at my side, To light and guard, rule and guide. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-guardian_angel"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "guardian_angel",
+      "name": "Guardian Angel"
+    },
+    "type": "novena_feast_rule"
+  }
+}

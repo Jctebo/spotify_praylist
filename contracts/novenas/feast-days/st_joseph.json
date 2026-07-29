@@ -1,0 +1,444 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_joseph",
+    "feast": {
+      "day": 19,
+      "mode": "fixed",
+      "month": 3,
+      "name": "St. Joseph"
+    },
+    "id": "st_joseph",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "workers",
+        "fathers",
+        "the universal Church"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Joseph, spouse of the Virgin Mary and foster father of Jesus, is honored as a model of faithful, humble service and protector of the Holy Family."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Joseph Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks and added a comma for clearer text-to-speech pacing while keeping wording and meaning the same.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of having been chosen by God to be the foster-father of His Divine Son. As a token of your own gratitude to God for this your greatest privilege, obtain for me the grace of a very devoted love for Jesus Christ, my God and my Savior. Help me to serve Him with some of the self-sacrificing love and devotion which you had while on this earth with Him. Grant that through your intercession with Jesus, your foster-Son, I may reach the degree of holiness God has destined for me, and save my soul. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks and added a few commas for clearer text-to-speech pacing while preserving the original wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of being the virginal husband of Mary. As a token of your own gratitude to God, obtain for me the grace to love Jesus with all my heart, as you did, and love Mary with some of the tenderness and loyalty with which you loved her. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks and added a few commas for clearer text-to-speech pacing while keeping wording faithful.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for having made you the man specially chosen by Him. As a token of your own gratitude to God, obtain for me the grace to imitate your virtues so that I too may be pleasing to the Heart of God. Help me to give myself entirely to His service and to the accomplishment of His Holy Will, that one day I may reach heaven and be eternally united to God as you are. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks and added a few commas for clearer text-to-speech pacing without changing wording.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of being God\u2019s faithful servant. As a token of your own gratitude to God, obtain for me the grace to be a faithful servant of God as you were. Help me to share, as you did, the perfect obedience of Jesus, who came not to do His Will, but the Will of His Father; to trust in the Providence of God, knowing that if I do His Will, He will provide for all my needs of soul and body; to be calm in my trials and to leave it to our Lord to free me from them when it pleases Him to do so. And help me to imitate your generosity, for there can be no greater reward here on earth than the joy and honor of being a faithful servant of God. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks slightly for clearer text-to-speech pacing, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of being the Patron of the Church. As a token of your own gratitude to God, obtain for me the grace to live always as a worthy member of this Church, so that through it I may save my soul. Bless the priests, the religious, and the laity of the Catholic Church, that they may ever grow in God\u2019s love and faithfulness in His service. Protect the Church from the evils of our day and from the persecution of her enemies. Through your powerful intercession, may the Church successfully accomplish its mission in this world: the glory of God and the salvation of souls. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and added paragraph breaks for clearer pacing and text-to-speech delivery while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of living in the Holy Family and being its head. As a token of your own gratitude to God, obtain God\u2019s blessing upon my own family. Make our home the kingdom of Jesus and Mary, a kingdom of peace, of joy, and love. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks and added a few commas for clearer text-to-speech pacing without changing wording.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of being able to work side by side with Jesus in the carpenter shop of Nazareth. As a token of your own gratitude to God, obtain for me the grace to respect the dignity of labor and ever to be content with the position in life, however lowly, in which it may please Divine Providence to place me. Teach me to work for God and with God in the spirit of humility and prayer, as you did, so that I may offer my toil in union with the sacrifice of Jesus in the Mass as a reparation for my sins, and gain rich merit for heaven. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and the personal-intention marker.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of being able to suffer for Jesus and Mary. As a token of your own gratitude to God, obtain for me the grace to bear my suffering patiently for love of Jesus and Mary. Grant that I may unite the sufferings, works, and disappointments of life with the sacrifice of Jesus in the Mass, and share, like you, in Mary\u2019s spirit of sacrifice. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping wording unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of being able to die in the arms of Jesus and Mary. As a token of your own gratitude to God, obtain for me the grace of a happy death. Help me to spend each day in preparation for death. May I, too, accept death in the spirit of resignation to God\u2019s Holy Will, and die, as you did, in the arms of Jesus, strengthened by Holy Viaticum, and in the arms of Mary, with her rosary in my hand and her name on my lips! Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Joseph Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks and added a comma for clearer text-to-speech pacing while keeping wording and meaning the same.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of having been chosen by God to be the foster-father of His Divine Son. As a token of your own gratitude to God for this your greatest privilege, obtain for me the grace of a very devoted love for Jesus Christ, my God and my Savior. Help me to serve Him with some of the self-sacrificing love and devotion which you had while on this earth with Him. Grant that through your intercession with Jesus, your foster-Son, I may reach the degree of holiness God has destined for me, and save my soul. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks and added a few commas for clearer text-to-speech pacing while preserving the original wording and the intention marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of being the virginal husband of Mary. As a token of your own gratitude to God, obtain for me the grace to love Jesus with all my heart, as you did, and love Mary with some of the tenderness and loyalty with which you loved her. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks and added a few commas for clearer text-to-speech pacing while keeping wording faithful.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for having made you the man specially chosen by Him. As a token of your own gratitude to God, obtain for me the grace to imitate your virtues so that I too may be pleasing to the Heart of God. Help me to give myself entirely to His service and to the accomplishment of His Holy Will, that one day I may reach heaven and be eternally united to God as you are. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks and added a few commas for clearer text-to-speech pacing without changing wording.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of being God\u2019s faithful servant. As a token of your own gratitude to God, obtain for me the grace to be a faithful servant of God as you were. Help me to share, as you did, the perfect obedience of Jesus, who came not to do His Will, but the Will of His Father; to trust in the Providence of God, knowing that if I do His Will, He will provide for all my needs of soul and body; to be calm in my trials and to leave it to our Lord to free me from them when it pleases Him to do so. And help me to imitate your generosity, for there can be no greater reward here on earth than the joy and honor of being a faithful servant of God. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks slightly for clearer text-to-speech pacing, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of being the Patron of the Church. As a token of your own gratitude to God, obtain for me the grace to live always as a worthy member of this Church, so that through it I may save my soul. Bless the priests, the religious, and the laity of the Catholic Church, that they may ever grow in God\u2019s love and faithfulness in His service. Protect the Church from the evils of our day and from the persecution of her enemies. Through your powerful intercession, may the Church successfully accomplish its mission in this world: the glory of God and the salvation of souls. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and added paragraph breaks for clearer pacing and text-to-speech delivery while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of living in the Holy Family and being its head. As a token of your own gratitude to God, obtain God\u2019s blessing upon my own family. Make our home the kingdom of Jesus and Mary, a kingdom of peace, of joy, and love. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks and added a few commas for clearer text-to-speech pacing without changing wording.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of being able to work side by side with Jesus in the carpenter shop of Nazareth. As a token of your own gratitude to God, obtain for me the grace to respect the dignity of labor and ever to be content with the position in life, however lowly, in which it may please Divine Providence to place me. Teach me to work for God and with God in the spirit of humility and prayer, as you did, so that I may offer my toil in union with the sacrifice of Jesus in the Mass as a reparation for my sins, and gain rich merit for heaven. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing while preserving the original wording and the personal-intention marker.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life, that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of being able to suffer for Jesus and Mary. As a token of your own gratitude to God, obtain for me the grace to bear my suffering patiently for love of Jesus and Mary. Grant that I may unite the sufferings, works, and disappointments of life with the sacrifice of Jesus in the Mass, and share, like you, in Mary\u2019s spirit of sacrifice. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping wording unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Joseph, I, your unworthy child, greet you. You are the faithful protector and intercessor of all who love and venerate you. You know that I have special confidence in you and that, after Jesus and Mary, I place all my hope of salvation in you, for you are especially powerful with God and will never abandon your faithful servants. Therefore I humbly invoke you and commend myself, with all who are dear to me and all that belong to me, to your intercession. I beg of you, by your love for Jesus and Mary, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father, and my model through life that I may merit to die as you did in the arms of Jesus and Mary. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to you to implore your powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that your prayers on my behalf will be graciously heard before the throne of God. Amen. Saint Joseph, I thank God for your privilege of being able to die in the arms of Jesus and Mary. As a token of your own gratitude to God, obtain for me the grace of a happy death. Help me to spend each day in preparation for death. May I, too, accept death in the spirit of resignation to God\u2019s Holy Will, and die, as you did, in the arms of Jesus, strengthened by Holy Viaticum, and in the arms of Mary, with her rosary in my hand and her name on my lips! Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to your protection or asked for your aid without obtaining relief. Confiding, therefore, in your goodness, I come before you and humbly implore you. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_joseph"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_joseph",
+      "name": "St. Joseph"
+    },
+    "type": "novena_feast_rule"
+  }
+}

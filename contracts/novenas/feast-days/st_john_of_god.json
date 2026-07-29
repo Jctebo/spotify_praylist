@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_john_of_god",
+    "feast": {
+      "day": 8,
+      "mode": "fixed",
+      "month": 3,
+      "name": "St John of God"
+    },
+    "id": "st_john_of_god",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "hospitals",
+        "nurses",
+        "the sick"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St John of God, a Spanish saint and founder of the Brothers Hospitallers, is honored for his conversion and lifelong service to the sick and poor."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St John of God Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and replaced the parenthetical repetition cue with a concise spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint John of God, heavenly Patron of the Sick, I come to you in prayer to seek your help in my present sickness. Through the love which Jesus had for you in choosing you for the sublime vocation of serving the sick, and through the tender affection with which the Blessed Virgin Mary placed upon your head a crown of thorns as a symbol of the sufferings you would undergo in the service of the sick to attain to your crown of glory, I beg you to intercede for me to Jesus and Mary, that They may grant me a cure, if this should be according to the Will of God. How patiently you bore the sufferings of your own disease. Teach me to carry with cheerful resignation the cross that God has given me. Let me never complain or lose courage. Help me to understand that suffering is a very important means of sanctifying my soul, of atoning for my many sins, and of reaping a plentiful harvest of merit for Heaven. I trust in your great love for the sick and in the power of your intercession to help them. Help me, good Saint John, and beg the God whose name you bear to touch me as He touched the sick while on earth, that through His almighty power health may return to my body. And as you derived strength in your own sufferings from the crucifix, so may I be able to say what you did to Jesus Crucified: Lord, Thy thorns are my roses, and Thy sufferings my paradise. Good Saint John, lover of those who suffer and special Patron of the Sick, I confidently place before you my earnest petition"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "I beg you to recommend my request to Mary, the Mother of Sorrows and Health of the Sick, that both Mary and you may present it to Jesus, the Divine Physician. Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Repeat three times: Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint John of God, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St John of God Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and replaced the parenthetical repetition cue with a concise spoken instruction.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint John of God, heavenly Patron of the Sick, I come to you in prayer to seek your help in my present sickness. Through the love which Jesus had for you in choosing you for the sublime vocation of serving the sick, and through the tender affection with which the Blessed Virgin Mary placed upon your head a crown of thorns as a symbol of the sufferings you would undergo in the service of the sick to attain to your crown of glory, I beg you to intercede for me to Jesus and Mary, that They may grant me a cure, if this should be according to the Will of God. How patiently you bore the sufferings of your own disease. Teach me to carry with cheerful resignation the cross that God has given me. Let me never complain or lose courage. Help me to understand that suffering is a very important means of sanctifying my soul, of atoning for my many sins, and of reaping a plentiful harvest of merit for Heaven. I trust in your great love for the sick and in the power of your intercession to help them. Help me, good Saint John, and beg the God whose name you bear to touch me as He touched the sick while on earth, that through His almighty power health may return to my body. And as you derived strength in your own sufferings from the crucifix, so may I be able to say what you did to Jesus Crucified: Lord, Thy thorns are my roses, and Thy sufferings my paradise. Good Saint John, lover of those who suffer and special Patron of the Sick, I confidently place before you my earnest petition  I beg you to recommend my request to Mary, the Mother of Sorrows and Health of the Sick, that both Mary and you may present it to Jesus, the Divine Physician. Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Repeat three times: Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint John of God, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and replaced the parenthetical repetition cue with a concise spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint John of God, heavenly Patron of the Sick, I come to you in prayer to seek your help in my present sickness. Through the love which Jesus had for you in choosing you for the sublime vocation of serving the sick, and through the tender affection with which the Blessed Virgin Mary placed upon your head a crown of thorns as a symbol of the sufferings you would undergo in the service of the sick to attain to your crown of glory, I beg you to intercede for me to Jesus and Mary, that They may grant me a cure, if this should be according to the Will of God. How patiently you bore the sufferings of your own disease. Teach me to carry with cheerful resignation the cross that God has given me. Let me never complain or lose courage. Help me to understand that suffering is a very important means of sanctifying my soul, of atoning for my many sins, and of reaping a plentiful harvest of merit for Heaven. I trust in your great love for the sick and in the power of your intercession to help them. Help me, good Saint John, and beg the God whose name you bear to touch me as He touched the sick while on earth, that through His almighty power health may return to my body. And as you derived strength in your own sufferings from the crucifix, so may I be able to say what you did to Jesus Crucified: Lord, Thy thorns are my roses, and Thy sufferings my paradise. Good Saint John, lover of those who suffer and special Patron of the Sick, I confidently place before you my earnest petition  I beg you to recommend my request to Mary, the Mother of Sorrows and Health of the Sick, that both Mary and you may present it to Jesus, the Divine Physician. Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Repeat three times: Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint John of God, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and replaced the parenthetical repetition cue with a concise spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint John of God, heavenly Patron of the Sick, I come to you in prayer to seek your help in my present sickness. Through the love which Jesus had for you in choosing you for the sublime vocation of serving the sick, and through the tender affection with which the Blessed Virgin Mary placed upon your head a crown of thorns as a symbol of the sufferings you would undergo in the service of the sick to attain to your crown of glory, I beg you to intercede for me to Jesus and Mary, that They may grant me a cure, if this should be according to the Will of God. How patiently you bore the sufferings of your own disease. Teach me to carry with cheerful resignation the cross that God has given me. Let me never complain or lose courage. Help me to understand that suffering is a very important means of sanctifying my soul, of atoning for my many sins, and of reaping a plentiful harvest of merit for Heaven. I trust in your great love for the sick and in the power of your intercession to help them. Help me, good Saint John, and beg the God whose name you bear to touch me as He touched the sick while on earth, that through His almighty power health may return to my body. And as you derived strength in your own sufferings from the crucifix, so may I be able to say what you did to Jesus Crucified: Lord, Thy thorns are my roses, and Thy sufferings my paradise. Good Saint John, lover of those who suffer and special Patron of the Sick, I confidently place before you my earnest petition  I beg you to recommend my request to Mary, the Mother of Sorrows and Health of the Sick, that both Mary and you may present it to Jesus, the Divine Physician. Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Repeat three times: Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint John of God, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and replaced the parenthetical repetition cue with a concise spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint John of God, heavenly Patron of the Sick, I come to you in prayer to seek your help in my present sickness. Through the love which Jesus had for you in choosing you for the sublime vocation of serving the sick, and through the tender affection with which the Blessed Virgin Mary placed upon your head a crown of thorns as a symbol of the sufferings you would undergo in the service of the sick to attain to your crown of glory, I beg you to intercede for me to Jesus and Mary, that They may grant me a cure, if this should be according to the Will of God. How patiently you bore the sufferings of your own disease. Teach me to carry with cheerful resignation the cross that God has given me. Let me never complain or lose courage. Help me to understand that suffering is a very important means of sanctifying my soul, of atoning for my many sins, and of reaping a plentiful harvest of merit for Heaven. I trust in your great love for the sick and in the power of your intercession to help them. Help me, good Saint John, and beg the God whose name you bear to touch me as He touched the sick while on earth, that through His almighty power health may return to my body. And as you derived strength in your own sufferings from the crucifix, so may I be able to say what you did to Jesus Crucified: Lord, Thy thorns are my roses, and Thy sufferings my paradise. Good Saint John, lover of those who suffer and special Patron of the Sick, I confidently place before you my earnest petition  I beg you to recommend my request to Mary, the Mother of Sorrows and Health of the Sick, that both Mary and you may present it to Jesus, the Divine Physician. Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Repeat three times: Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint John of God, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and replaced the parenthetical repetition cue with a concise spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint John of God, heavenly Patron of the Sick, I come to you in prayer to seek your help in my present sickness. Through the love which Jesus had for you in choosing you for the sublime vocation of serving the sick, and through the tender affection with which the Blessed Virgin Mary placed upon your head a crown of thorns as a symbol of the sufferings you would undergo in the service of the sick to attain to your crown of glory, I beg you to intercede for me to Jesus and Mary, that They may grant me a cure, if this should be according to the Will of God. How patiently you bore the sufferings of your own disease. Teach me to carry with cheerful resignation the cross that God has given me. Let me never complain or lose courage. Help me to understand that suffering is a very important means of sanctifying my soul, of atoning for my many sins, and of reaping a plentiful harvest of merit for Heaven. I trust in your great love for the sick and in the power of your intercession to help them. Help me, good Saint John, and beg the God whose name you bear to touch me as He touched the sick while on earth, that through His almighty power health may return to my body. And as you derived strength in your own sufferings from the crucifix, so may I be able to say what you did to Jesus Crucified: Lord, Thy thorns are my roses, and Thy sufferings my paradise. Good Saint John, lover of those who suffer and special Patron of the Sick, I confidently place before you my earnest petition  I beg you to recommend my request to Mary, the Mother of Sorrows and Health of the Sick, that both Mary and you may present it to Jesus, the Divine Physician. Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Repeat three times: Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint John of God, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and replaced the parenthetical repetition cue with a concise spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint John of God, heavenly Patron of the Sick, I come to you in prayer to seek your help in my present sickness. Through the love which Jesus had for you in choosing you for the sublime vocation of serving the sick, and through the tender affection with which the Blessed Virgin Mary placed upon your head a crown of thorns as a symbol of the sufferings you would undergo in the service of the sick to attain to your crown of glory, I beg you to intercede for me to Jesus and Mary, that They may grant me a cure, if this should be according to the Will of God. How patiently you bore the sufferings of your own disease. Teach me to carry with cheerful resignation the cross that God has given me. Let me never complain or lose courage. Help me to understand that suffering is a very important means of sanctifying my soul, of atoning for my many sins, and of reaping a plentiful harvest of merit for Heaven. I trust in your great love for the sick and in the power of your intercession to help them. Help me, good Saint John, and beg the God whose name you bear to touch me as He touched the sick while on earth, that through His almighty power health may return to my body. And as you derived strength in your own sufferings from the crucifix, so may I be able to say what you did to Jesus Crucified: Lord, Thy thorns are my roses, and Thy sufferings my paradise. Good Saint John, lover of those who suffer and special Patron of the Sick, I confidently place before you my earnest petition  I beg you to recommend my request to Mary, the Mother of Sorrows and Health of the Sick, that both Mary and you may present it to Jesus, the Divine Physician. Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Repeat three times: Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint John of God, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and replaced the parenthetical repetition cue with a concise spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint John of God, heavenly Patron of the Sick, I come to you in prayer to seek your help in my present sickness. Through the love which Jesus had for you in choosing you for the sublime vocation of serving the sick, and through the tender affection with which the Blessed Virgin Mary placed upon your head a crown of thorns as a symbol of the sufferings you would undergo in the service of the sick to attain to your crown of glory, I beg you to intercede for me to Jesus and Mary, that They may grant me a cure, if this should be according to the Will of God. How patiently you bore the sufferings of your own disease. Teach me to carry with cheerful resignation the cross that God has given me. Let me never complain or lose courage. Help me to understand that suffering is a very important means of sanctifying my soul, of atoning for my many sins, and of reaping a plentiful harvest of merit for Heaven. I trust in your great love for the sick and in the power of your intercession to help them. Help me, good Saint John, and beg the God whose name you bear to touch me as He touched the sick while on earth, that through His almighty power health may return to my body. And as you derived strength in your own sufferings from the crucifix, so may I be able to say what you did to Jesus Crucified: Lord, Thy thorns are my roses, and Thy sufferings my paradise. Good Saint John, lover of those who suffer and special Patron of the Sick, I confidently place before you my earnest petition  I beg you to recommend my request to Mary, the Mother of Sorrows and Health of the Sick, that both Mary and you may present it to Jesus, the Divine Physician. Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Repeat three times: Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint John of God, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and replaced the parenthetical repetition cue with a concise spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint John of God, heavenly Patron of the Sick, I come to you in prayer to seek your help in my present sickness. Through the love which Jesus had for you in choosing you for the sublime vocation of serving the sick, and through the tender affection with which the Blessed Virgin Mary placed upon your head a crown of thorns as a symbol of the sufferings you would undergo in the service of the sick to attain to your crown of glory, I beg you to intercede for me to Jesus and Mary, that They may grant me a cure, if this should be according to the Will of God. How patiently you bore the sufferings of your own disease. Teach me to carry with cheerful resignation the cross that God has given me. Let me never complain or lose courage. Help me to understand that suffering is a very important means of sanctifying my soul, of atoning for my many sins, and of reaping a plentiful harvest of merit for Heaven. I trust in your great love for the sick and in the power of your intercession to help them. Help me, good Saint John, and beg the God whose name you bear to touch me as He touched the sick while on earth, that through His almighty power health may return to my body. And as you derived strength in your own sufferings from the crucifix, so may I be able to say what you did to Jesus Crucified: Lord, Thy thorns are my roses, and Thy sufferings my paradise. Good Saint John, lover of those who suffer and special Patron of the Sick, I confidently place before you my earnest petition  I beg you to recommend my request to Mary, the Mother of Sorrows and Health of the Sick, that both Mary and you may present it to Jesus, the Divine Physician. Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Repeat three times: Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint John of God, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and replaced the parenthetical repetition cue with a concise spoken instruction.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint John of God, heavenly Patron of the Sick, I come to you in prayer to seek your help in my present sickness. Through the love which Jesus had for you in choosing you for the sublime vocation of serving the sick, and through the tender affection with which the Blessed Virgin Mary placed upon your head a crown of thorns as a symbol of the sufferings you would undergo in the service of the sick to attain to your crown of glory, I beg you to intercede for me to Jesus and Mary, that They may grant me a cure, if this should be according to the Will of God. How patiently you bore the sufferings of your own disease. Teach me to carry with cheerful resignation the cross that God has given me. Let me never complain or lose courage. Help me to understand that suffering is a very important means of sanctifying my soul, of atoning for my many sins, and of reaping a plentiful harvest of merit for Heaven. I trust in your great love for the sick and in the power of your intercession to help them. Help me, good Saint John, and beg the God whose name you bear to touch me as He touched the sick while on earth, that through His almighty power health may return to my body. And as you derived strength in your own sufferings from the crucifix, so may I be able to say what you did to Jesus Crucified: Lord, Thy thorns are my roses, and Thy sufferings my paradise. Good Saint John, lover of those who suffer and special Patron of the Sick, I confidently place before you my earnest petition  I beg you to recommend my request to Mary, the Mother of Sorrows and Health of the Sick, that both Mary and you may present it to Jesus, the Divine Physician. Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Repeat three times: Saint John of God, patron of the Sick and beloved of Jesus and Mary, pray to Them for me and obtain my request. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint John of God, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_john_of_god"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_john_of_god",
+      "name": "St John of God"
+    },
+    "type": "novena_feast_rule"
+  }
+}

@@ -501,7 +501,7 @@ class TestNovenaPipeline(unittest.TestCase):
             self.assertTrue(title.endswith(" - June 4, 2026"))
             self.assertEqual(title, "Traditional Novena to St Damien of Molokai Day 2 - June 4, 2026")
 
-    def test_pipeline_publishes_traditional_and_short_form_fatima_titles(self):
+    def test_pipeline_publishes_traditional_fatima_title_without_short_form_contract(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             contracts_root = root / "contracts" / "novenas"
@@ -513,10 +513,6 @@ class TestNovenaPipeline(unittest.TestCase):
             for source, target in (
                 (contracts_mod.DEFAULT_TEMPLATE_DIR / "standard-9-day.json", template_dir / "standard-9-day.json"),
                 (contracts_mod.DEFAULT_FEAST_DIR / "our_lady_of_fatima.json", feast_dir / "our_lady_of_fatima.json"),
-                (
-                    contracts_mod.DEFAULT_FEAST_DIR / "our_lady_of_fatima_short_form.json",
-                    feast_dir / "our_lady_of_fatima_short_form.json",
-                ),
             ):
                 target.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
 
@@ -542,19 +538,14 @@ class TestNovenaPipeline(unittest.TestCase):
             feed_root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             titles = [item.findtext("./title") or "" for item in feed_root.findall("./channel/item")]
 
-            self.assertEqual(result["active"], 2)
-            self.assertEqual(result["rendered"], 10)
-            self.assertEqual(result["audio"], 2)
-            self.assertEqual(len(jobs), 2)
+            self.assertEqual(result["active"], 1)
+            self.assertEqual(result["rendered"], 1)
+            self.assertEqual(result["audio"], 1)
+            self.assertEqual(len(jobs), 1)
             self.assertIn("Traditional Novena to Our Lady of Fatima Day 1 - May 4, 2026", titles)
-            self.assertIn("Short-Form Novena to Our Lady of Fatima Day 1 - May 4, 2026", titles)
             self.assertTrue((docs_root / "audio" / "2026-05-04-our_lady_of_fatima-day-1.mp3").exists())
-            self.assertTrue((docs_root / "audio" / "2026-05-04-our_lady_of_fatima_short_form-day-1.mp3").exists())
             self.assertTrue(
                 any(job["episode_id"] == "2026-05-04-our_lady_of_fatima-day-1" for job in jobs)
-            )
-            self.assertTrue(
-                any(job["episode_id"] == "2026-05-04-our_lady_of_fatima_short_form-day-1" for job in jobs)
             )
 
     def test_pipeline_reset_truncates_existing_feed_items(self):

@@ -1,0 +1,227 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_jude",
+    "feast": {
+      "day": 20,
+      "mode": "fixed",
+      "month": 10,
+      "name": "St. Jude"
+    },
+    "id": "st_jude",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "hopeless cases",
+        "desperate situations"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Jude the Apostle is honored as one of the Twelve and invoked in prayer for help and hope in difficult situations."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Jude Novena - Miraculous Prayer for Hopeless Causes below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, added light punctuation and line breaks for clearer text-to-speech pacing, and standardized \u201cSt.\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most holy Apostle, Saint Jude, faithful servant and friend of Jesus, the Church honors and invokes you universally as the patron of difficult cases, of things almost despaired of. Pray for me, as I feel helpless and alone. Intercede with God for me, that He bring visible and speedy help where help is almost despaired of. Come to my assistance in this great need, that I may receive the consolation and help of heaven in all my necessities, tribulations, and sufferings, particularly:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "and that I may praise God with you and all the saints forever. I promise, O Blessed Saint Jude, to be ever mindful of this great favor granted me by God, and to always honor you as my special and powerful patron, and to gratefully encourage devotion to you. Amen. May the Most Sacred Heart of Jesus be adored and loved in all the tabernacles until the end of time. Amen. May the Most Sacred Heart of Jesus be praised and glorified now and forever. Amen. Saint Jude, pray for me and hear my prayers. Amen. Blessed be the Sacred Heart of Jesus. Blessed be the Immaculate Heart of Mary. Blessed be Saint Jude Thaddeus, in all the world and for all eternity. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Jude Novena - Miraculous Prayer for Hopeless Causes below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, added light punctuation and line breaks for clearer text-to-speech pacing, and standardized \u201cSt.\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most holy Apostle, Saint Jude, faithful servant and friend of Jesus, the Church honors and invokes you universally as the patron of difficult cases, of things almost despaired of. Pray for me, as I feel helpless and alone. Intercede with God for me, that He bring visible and speedy help where help is almost despaired of. Come to my assistance in this great need, that I may receive the consolation and help of heaven in all my necessities, tribulations, and sufferings, particularly:  and that I may praise God with you and all the saints forever. I promise, O Blessed Saint Jude, to be ever mindful of this great favor granted me by God, and to always honor you as my special and powerful patron, and to gratefully encourage devotion to you. Amen. May the Most Sacred Heart of Jesus be adored and loved in all the tabernacles until the end of time. Amen. May the Most Sacred Heart of Jesus be praised and glorified now and forever. Amen. Saint Jude, pray for me and hear my prayers. Amen. Blessed be the Sacred Heart of Jesus. Blessed be the Immaculate Heart of Mary. Blessed be Saint Jude Thaddeus, in all the world and for all eternity. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, added light punctuation and line breaks for clearer text-to-speech pacing, and standardized \u201cSt.\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most holy Apostle, Saint Jude, faithful servant and friend of Jesus, the Church honors and invokes you universally as the patron of difficult cases, of things almost despaired of. Pray for me, as I feel helpless and alone. Intercede with God for me, that He bring visible and speedy help where help is almost despaired of. Come to my assistance in this great need, that I may receive the consolation and help of heaven in all my necessities, tribulations, and sufferings, particularly:  and that I may praise God with you and all the saints forever. I promise, O Blessed Saint Jude, to be ever mindful of this great favor granted me by God, and to always honor you as my special and powerful patron, and to gratefully encourage devotion to you. Amen. May the Most Sacred Heart of Jesus be adored and loved in all the tabernacles until the end of time. Amen. May the Most Sacred Heart of Jesus be praised and glorified now and forever. Amen. Saint Jude, pray for me and hear my prayers. Amen. Blessed be the Sacred Heart of Jesus. Blessed be the Immaculate Heart of Mary. Blessed be Saint Jude Thaddeus, in all the world and for all eternity. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, added light punctuation and line breaks for clearer text-to-speech pacing, and standardized \u201cSt.\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most holy Apostle, Saint Jude, faithful servant and friend of Jesus, the Church honors and invokes you universally as the patron of difficult cases, of things almost despaired of. Pray for me, as I feel helpless and alone. Intercede with God for me, that He bring visible and speedy help where help is almost despaired of. Come to my assistance in this great need, that I may receive the consolation and help of heaven in all my necessities, tribulations, and sufferings, particularly:  and that I may praise God with you and all the saints forever. I promise, O Blessed Saint Jude, to be ever mindful of this great favor granted me by God, and to always honor you as my special and powerful patron, and to gratefully encourage devotion to you. Amen. May the Most Sacred Heart of Jesus be adored and loved in all the tabernacles until the end of time. Amen. May the Most Sacred Heart of Jesus be praised and glorified now and forever. Amen. Saint Jude, pray for me and hear my prayers. Amen. Blessed be the Sacred Heart of Jesus. Blessed be the Immaculate Heart of Mary. Blessed be Saint Jude Thaddeus, in all the world and for all eternity. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, added light punctuation and line breaks for clearer text-to-speech pacing, and standardized \u201cSt.\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most holy Apostle, Saint Jude, faithful servant and friend of Jesus, the Church honors and invokes you universally as the patron of difficult cases, of things almost despaired of. Pray for me, as I feel helpless and alone. Intercede with God for me, that He bring visible and speedy help where help is almost despaired of. Come to my assistance in this great need, that I may receive the consolation and help of heaven in all my necessities, tribulations, and sufferings, particularly:  and that I may praise God with you and all the saints forever. I promise, O Blessed Saint Jude, to be ever mindful of this great favor granted me by God, and to always honor you as my special and powerful patron, and to gratefully encourage devotion to you. Amen. May the Most Sacred Heart of Jesus be adored and loved in all the tabernacles until the end of time. Amen. May the Most Sacred Heart of Jesus be praised and glorified now and forever. Amen. Saint Jude, pray for me and hear my prayers. Amen. Blessed be the Sacred Heart of Jesus. Blessed be the Immaculate Heart of Mary. Blessed be Saint Jude Thaddeus, in all the world and for all eternity. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, added light punctuation and line breaks for clearer text-to-speech pacing, and standardized \u201cSt.\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most holy Apostle, Saint Jude, faithful servant and friend of Jesus, the Church honors and invokes you universally as the patron of difficult cases, of things almost despaired of. Pray for me, as I feel helpless and alone. Intercede with God for me, that He bring visible and speedy help where help is almost despaired of. Come to my assistance in this great need, that I may receive the consolation and help of heaven in all my necessities, tribulations, and sufferings, particularly:  and that I may praise God with you and all the saints forever. I promise, O Blessed Saint Jude, to be ever mindful of this great favor granted me by God, and to always honor you as my special and powerful patron, and to gratefully encourage devotion to you. Amen. May the Most Sacred Heart of Jesus be adored and loved in all the tabernacles until the end of time. Amen. May the Most Sacred Heart of Jesus be praised and glorified now and forever. Amen. Saint Jude, pray for me and hear my prayers. Amen. Blessed be the Sacred Heart of Jesus. Blessed be the Immaculate Heart of Mary. Blessed be Saint Jude Thaddeus, in all the world and for all eternity. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, added light punctuation and line breaks for clearer text-to-speech pacing, and standardized \u201cSt.\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most holy Apostle, Saint Jude, faithful servant and friend of Jesus, the Church honors and invokes you universally as the patron of difficult cases, of things almost despaired of. Pray for me, as I feel helpless and alone. Intercede with God for me, that He bring visible and speedy help where help is almost despaired of. Come to my assistance in this great need, that I may receive the consolation and help of heaven in all my necessities, tribulations, and sufferings, particularly:  and that I may praise God with you and all the saints forever. I promise, O Blessed Saint Jude, to be ever mindful of this great favor granted me by God, and to always honor you as my special and powerful patron, and to gratefully encourage devotion to you. Amen. May the Most Sacred Heart of Jesus be adored and loved in all the tabernacles until the end of time. Amen. May the Most Sacred Heart of Jesus be praised and glorified now and forever. Amen. Saint Jude, pray for me and hear my prayers. Amen. Blessed be the Sacred Heart of Jesus. Blessed be the Immaculate Heart of Mary. Blessed be Saint Jude Thaddeus, in all the world and for all eternity. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, added light punctuation and line breaks for clearer text-to-speech pacing, and standardized \u201cSt.\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most holy Apostle, Saint Jude, faithful servant and friend of Jesus, the Church honors and invokes you universally as the patron of difficult cases, of things almost despaired of. Pray for me, as I feel helpless and alone. Intercede with God for me, that He bring visible and speedy help where help is almost despaired of. Come to my assistance in this great need, that I may receive the consolation and help of heaven in all my necessities, tribulations, and sufferings, particularly:  and that I may praise God with you and all the saints forever. I promise, O Blessed Saint Jude, to be ever mindful of this great favor granted me by God, and to always honor you as my special and powerful patron, and to gratefully encourage devotion to you. Amen. May the Most Sacred Heart of Jesus be adored and loved in all the tabernacles until the end of time. Amen. May the Most Sacred Heart of Jesus be praised and glorified now and forever. Amen. Saint Jude, pray for me and hear my prayers. Amen. Blessed be the Sacred Heart of Jesus. Blessed be the Immaculate Heart of Mary. Blessed be Saint Jude Thaddeus, in all the world and for all eternity. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, added light punctuation and line breaks for clearer text-to-speech pacing, and standardized \u201cSt.\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most holy Apostle, Saint Jude, faithful servant and friend of Jesus, the Church honors and invokes you universally as the patron of difficult cases, of things almost despaired of. Pray for me, as I feel helpless and alone. Intercede with God for me, that He bring visible and speedy help where help is almost despaired of. Come to my assistance in this great need, that I may receive the consolation and help of heaven in all my necessities, tribulations, and sufferings, particularly:  and that I may praise God with you and all the saints forever. I promise, O Blessed Saint Jude, to be ever mindful of this great favor granted me by God, and to always honor you as my special and powerful patron, and to gratefully encourage devotion to you. Amen. May the Most Sacred Heart of Jesus be adored and loved in all the tabernacles until the end of time. Amen. May the Most Sacred Heart of Jesus be praised and glorified now and forever. Amen. Saint Jude, pray for me and hear my prayers. Amen. Blessed be the Sacred Heart of Jesus. Blessed be the Immaculate Heart of Mary. Blessed be Saint Jude Thaddeus, in all the world and for all eternity. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized capitalization, added light punctuation and line breaks for clearer text-to-speech pacing, and standardized \u201cSt.\u201d to \u201cSaint\u201d without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Most holy Apostle, Saint Jude, faithful servant and friend of Jesus, the Church honors and invokes you universally as the patron of difficult cases, of things almost despaired of. Pray for me, as I feel helpless and alone. Intercede with God for me, that He bring visible and speedy help where help is almost despaired of. Come to my assistance in this great need, that I may receive the consolation and help of heaven in all my necessities, tribulations, and sufferings, particularly:  and that I may praise God with you and all the saints forever. I promise, O Blessed Saint Jude, to be ever mindful of this great favor granted me by God, and to always honor you as my special and powerful patron, and to gratefully encourage devotion to you. Amen. May the Most Sacred Heart of Jesus be adored and loved in all the tabernacles until the end of time. Amen. May the Most Sacred Heart of Jesus be praised and glorified now and forever. Amen. Saint Jude, pray for me and hear my prayers. Amen. Blessed be the Sacred Heart of Jesus. Blessed be the Immaculate Heart of Mary. Blessed be Saint Jude Thaddeus, in all the world and for all eternity. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_jude"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_jude",
+      "name": "St. Jude"
+    },
+    "type": "novena_feast_rule"
+  }
+}

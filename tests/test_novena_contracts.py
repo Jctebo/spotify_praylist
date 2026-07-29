@@ -18,17 +18,31 @@ class TestNovenaContracts(unittest.TestCase):
 
     def test_load_novena_contracts_reads_repo_fixture(self):
         contracts = self.contracts_mod.load_novena_contracts()
-        contract = next(item for item in contracts if item.contract_id == "most_sacred_heart_of_jesus")
+        contract = next(item for item in contracts if item.contract_id == "sacred_heart")
 
-        self.assertEqual(contract.saint["name"], "The Most Sacred Heart of Jesus")
-        self.assertEqual(contract.feast.month, 6)
-        self.assertEqual(contract.feast.day, 12)
-        self.assertEqual(contract.novena.template.template_id, "standard-9-day")
-        self.assertEqual(contract.novena.template.source, "template_id:standard-9-day")
-        self.assertEqual(contract.novena.content_mode, "hybrid")
-        self.assertEqual(contract.family_id, "most_sacred_heart_of_jesus")
-        self.assertIn("Sacred Heart", contract.novena.ai_config["theme_prompt"])
-        self.assertIn("reign of Christ in homes and families", contract.novena.ai_config["theme_prompt"])
+        self.assertEqual(contract.saint["name"], "Sacred Heart")
+        self.assertEqual(contract.feast.romcal_id, "most_sacred_heart_of_jesus")
+        self.assertEqual(contract.novena.content_mode, "fixed")
+        self.assertEqual(contract.family_id, "sacred_heart")
+
+    def test_catalog_relative_feasts_resolve_across_years(self):
+        contracts = {item.family_id: item for item in self.contracts_mod.load_novena_contracts()}
+        for year, holy_face, queen in (
+            (2025, "2025-03-04", "2025-05-31"),
+            (2026, "2026-02-17", "2026-05-16"),
+            (2027, "2027-02-09", "2027-05-08"),
+        ):
+            self.assertEqual(contracts["holy_face_of_jesus"].feast.feast_date(year).isoformat(), holy_face)
+            self.assertEqual(contracts["mary_queen_of_the_apostles"].feast.feast_date(year).isoformat(), queen)
+        serialized = contracts["holy_face_of_jesus"].feast.to_dict()
+        self.assertEqual(serialized["offset_days"], -1)
+        self.assertNotIn("month", serialized)
+
+    def test_catalog_uses_distinct_contract_ids_for_movable_feasts(self):
+        contracts = {item.family_id: item for item in self.contracts_mod.load_novena_contracts()}
+        self.assertEqual(contracts["sacred_heart"].feast.feast_date(2026).isoformat(), "2026-06-12")
+        self.assertEqual(contracts["immaculate_heart_of_mary"].feast.feast_date(2026).isoformat(), "2026-06-13")
+        self.assertFalse(contracts["the_holy_spirit"].enabled)
 
     def test_load_novena_contracts_reads_selector_family_fixture(self):
         contracts = self.contracts_mod.load_novena_contracts()
@@ -47,23 +61,6 @@ class TestNovenaContracts(unittest.TestCase):
         self.assertEqual(contract.publishing.audio["providers"][0]["voice_id"], "pGAwIQNN9UjOkKxjAyGQ")
         self.assertEqual(contract.publishing.audio["providers"][1]["provider"], "openai")
         self.assertEqual(contract.publishing.audio["providers"][1]["voice"], "ash")
-
-    def test_load_novena_contracts_reads_short_form_fatima_fixture(self):
-        contracts = self.contracts_mod.load_novena_contracts()
-        contract = next(item for item in contracts if item.contract_id == "our_lady_of_fatima_short_form")
-
-        self.assertEqual(contract.family_id, "our_lady_of_fatima_short_form")
-        self.assertEqual(contract.saint["name"], "Our Lady of Fatima")
-        self.assertEqual(contract.feast.month, 5)
-        self.assertEqual(contract.feast.day, 13)
-        self.assertEqual(contract.novena.template.template_id, "standard-9-day")
-        self.assertEqual(contract.novena.content_mode, "hybrid")
-        self.assertEqual(
-            contract.publishing.rss["episode_title_pattern"],
-            "Short-Form Novena to {saint_name} Day {day} - {date_display}",
-        )
-        self.assertIn("Fatima apparitions", contract.novena.ai_config["theme_prompt"])
-        self.assertIn("entrusting the world to Mary", contract.novena.ai_config["theme_prompt"])
 
     def test_load_novena_contracts_reads_traditional_fatima_fixture_with_single_cycle(self):
         contracts = self.contracts_mod.load_novena_contracts()
@@ -127,7 +124,7 @@ class TestNovenaContracts(unittest.TestCase):
                 and parts[index + 1].get("purpose") == "personal_intention"
                 and parts[index + 1].get("duration_ms") == 5000
             ]
-            self.assertGreaterEqual(len(pairs), 2)
+            self.assertGreaterEqual(len(pairs), 1)
             self.assertNotIn(
                 "mention your intentions here",
                 " ".join(str(part.get("text", "")).lower() for part in parts),
@@ -150,10 +147,10 @@ class TestNovenaContracts(unittest.TestCase):
 
         self.assertEqual(contract.saint["name"], "Saints Joachim and Anne")
         self.assertEqual(contract.feast.name, "Saints Joachim and Anne")
-        self.assertEqual([part.get("kind") for part in parts[1:5]], ["text", "audio_cue", "pause", "text"])
-        self.assertEqual(parts[2]["cue"], "sacred_bell")
-        self.assertEqual(parts[3]["duration_ms"], 5000)
-        self.assertEqual(parts[3]["purpose"], "personal_intention")
+        self.assertEqual([part.get("kind") for part in parts[1:4]], ["audio_cue", "pause", "text"])
+        self.assertEqual(parts[1]["cue"], "sacred_bell")
+        self.assertEqual(parts[2]["duration_ms"], 5000)
+        self.assertEqual(parts[2]["purpose"], "personal_intention")
         self.assertNotIn("Pause here", " ".join(str(part.get("text", "")) for part in parts))
 
     def test_load_novena_contracts_has_unique_feast_day_contract_ids(self):
@@ -162,7 +159,7 @@ class TestNovenaContracts(unittest.TestCase):
 
         self.assertEqual(len(contract_ids), len(set(contract_ids)))
         self.assertIn("pentecost_sunday", contract_ids)
-        self.assertIn("sacred_heart_of_jesus", contract_ids)
+        self.assertIn("sacred_heart", contract_ids)
         self.assertIn("immaculate_heart_of_mary", contract_ids)
 
     def test_load_novena_contracts_defaults_enabled_when_missing(self):

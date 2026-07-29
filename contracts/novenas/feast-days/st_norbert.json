@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_norbert",
+    "feast": {
+      "day": 6,
+      "mode": "fixed",
+      "month": 6,
+      "name": "St Norbert"
+    },
+    "id": "st_norbert",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "peace",
+        "childbirth",
+        "the Premonstratensian Order"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St Norbert, a 12th-century bishop and founder of the Premonstratensian Order, is honored for his reforming zeal and devotion to the Eucharist."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Norbert Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St Norbert, gentlest of saints, your love for Jesus Christ truly present in every tabernacle around the world, and your charity for souls, made you worthy, while on earth, to possess miraculous powers. Miracles waited your word, which you were ever ready to speak for those in trouble or anxiety. Encouraged by this thought, I implore you to obtain for me the favor I seek in this novena."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "The answer to my prayer may require a miracle; even so, you are the saint of miracles. O gentle and loving St Norbert, whose heart was ever full of zeal for souls, whisper my petition into the ears of the Infant Jesus, on Whose birthday you founded the holy Order of Pr\u00e9montr\u00e9, and the gratitude of my heart will always be yours. Amen. O God, Who didst make of Blessed Norbert, Thy Confessor and Bishop, an excellent preacher of the Word, and by his means didst enrich Thy Church with new offspring, grant, we beseech Thee, that through his intercession we may put in practice by Thy grace what he taught us, both in word and work. Awake, O Lord, in Thy Church the Spirit by Whom St Norbert, Thy Confessor and Bishop, was guided, in order that, filled with the same spirit, we may love what he loved and live as he taught us. O Lord, grant to us Thy servants constancy in Thy faith and service, that, rooted in Divine Charity, we may not be conquered by any temptation. Through Christ our Lord. Amen. Praised be the Blessed Sacrament of the Altar and the Immaculate Conception of the Blessed Virgin Mary. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Norbert, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Norbert Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St Norbert, gentlest of saints, your love for Jesus Christ truly present in every tabernacle around the world, and your charity for souls, made you worthy, while on earth, to possess miraculous powers. Miracles waited your word, which you were ever ready to speak for those in trouble or anxiety. Encouraged by this thought, I implore you to obtain for me the favor I seek in this novena.  The answer to my prayer may require a miracle; even so, you are the saint of miracles. O gentle and loving St Norbert, whose heart was ever full of zeal for souls, whisper my petition into the ears of the Infant Jesus, on Whose birthday you founded the holy Order of Pr\u00e9montr\u00e9, and the gratitude of my heart will always be yours. Amen. O God, Who didst make of Blessed Norbert, Thy Confessor and Bishop, an excellent preacher of the Word, and by his means didst enrich Thy Church with new offspring, grant, we beseech Thee, that through his intercession we may put in practice by Thy grace what he taught us, both in word and work. Awake, O Lord, in Thy Church the Spirit by Whom St Norbert, Thy Confessor and Bishop, was guided, in order that, filled with the same spirit, we may love what he loved and live as he taught us. O Lord, grant to us Thy servants constancy in Thy faith and service, that, rooted in Divine Charity, we may not be conquered by any temptation. Through Christ our Lord. Amen. Praised be the Blessed Sacrament of the Altar and the Immaculate Conception of the Blessed Virgin Mary. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Norbert, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St Norbert, gentlest of saints, your love for Jesus Christ truly present in every tabernacle around the world, and your charity for souls, made you worthy, while on earth, to possess miraculous powers. Miracles waited your word, which you were ever ready to speak for those in trouble or anxiety. Encouraged by this thought, I implore you to obtain for me the favor I seek in this novena.  The answer to my prayer may require a miracle; even so, you are the saint of miracles. O gentle and loving St Norbert, whose heart was ever full of zeal for souls, whisper my petition into the ears of the Infant Jesus, on Whose birthday you founded the holy Order of Pr\u00e9montr\u00e9, and the gratitude of my heart will always be yours. Amen. O God, Who didst make of Blessed Norbert, Thy Confessor and Bishop, an excellent preacher of the Word, and by his means didst enrich Thy Church with new offspring, grant, we beseech Thee, that through his intercession we may put in practice by Thy grace what he taught us, both in word and work. Awake, O Lord, in Thy Church the Spirit by Whom St Norbert, Thy Confessor and Bishop, was guided, in order that, filled with the same spirit, we may love what he loved and live as he taught us. O Lord, grant to us Thy servants constancy in Thy faith and service, that, rooted in Divine Charity, we may not be conquered by any temptation. Through Christ our Lord. Amen. Praised be the Blessed Sacrament of the Altar and the Immaculate Conception of the Blessed Virgin Mary. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Norbert, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St Norbert, gentlest of saints, your love for Jesus Christ truly present in every tabernacle around the world, and your charity for souls, made you worthy, while on earth, to possess miraculous powers. Miracles waited your word, which you were ever ready to speak for those in trouble or anxiety. Encouraged by this thought, I implore you to obtain for me the favor I seek in this novena.  The answer to my prayer may require a miracle; even so, you are the saint of miracles. O gentle and loving St Norbert, whose heart was ever full of zeal for souls, whisper my petition into the ears of the Infant Jesus, on Whose birthday you founded the holy Order of Pr\u00e9montr\u00e9, and the gratitude of my heart will always be yours. Amen. O God, Who didst make of Blessed Norbert, Thy Confessor and Bishop, an excellent preacher of the Word, and by his means didst enrich Thy Church with new offspring, grant, we beseech Thee, that through his intercession we may put in practice by Thy grace what he taught us, both in word and work. Awake, O Lord, in Thy Church the Spirit by Whom St Norbert, Thy Confessor and Bishop, was guided, in order that, filled with the same spirit, we may love what he loved and live as he taught us. O Lord, grant to us Thy servants constancy in Thy faith and service, that, rooted in Divine Charity, we may not be conquered by any temptation. Through Christ our Lord. Amen. Praised be the Blessed Sacrament of the Altar and the Immaculate Conception of the Blessed Virgin Mary. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Norbert, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St Norbert, gentlest of saints, your love for Jesus Christ truly present in every tabernacle around the world, and your charity for souls, made you worthy, while on earth, to possess miraculous powers. Miracles waited your word, which you were ever ready to speak for those in trouble or anxiety. Encouraged by this thought, I implore you to obtain for me the favor I seek in this novena.  The answer to my prayer may require a miracle; even so, you are the saint of miracles. O gentle and loving St Norbert, whose heart was ever full of zeal for souls, whisper my petition into the ears of the Infant Jesus, on Whose birthday you founded the holy Order of Pr\u00e9montr\u00e9, and the gratitude of my heart will always be yours. Amen. O God, Who didst make of Blessed Norbert, Thy Confessor and Bishop, an excellent preacher of the Word, and by his means didst enrich Thy Church with new offspring, grant, we beseech Thee, that through his intercession we may put in practice by Thy grace what he taught us, both in word and work. Awake, O Lord, in Thy Church the Spirit by Whom St Norbert, Thy Confessor and Bishop, was guided, in order that, filled with the same spirit, we may love what he loved and live as he taught us. O Lord, grant to us Thy servants constancy in Thy faith and service, that, rooted in Divine Charity, we may not be conquered by any temptation. Through Christ our Lord. Amen. Praised be the Blessed Sacrament of the Altar and the Immaculate Conception of the Blessed Virgin Mary. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Norbert, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St Norbert, gentlest of saints, your love for Jesus Christ truly present in every tabernacle around the world, and your charity for souls, made you worthy, while on earth, to possess miraculous powers. Miracles waited your word, which you were ever ready to speak for those in trouble or anxiety. Encouraged by this thought, I implore you to obtain for me the favor I seek in this novena.  The answer to my prayer may require a miracle; even so, you are the saint of miracles. O gentle and loving St Norbert, whose heart was ever full of zeal for souls, whisper my petition into the ears of the Infant Jesus, on Whose birthday you founded the holy Order of Pr\u00e9montr\u00e9, and the gratitude of my heart will always be yours. Amen. O God, Who didst make of Blessed Norbert, Thy Confessor and Bishop, an excellent preacher of the Word, and by his means didst enrich Thy Church with new offspring, grant, we beseech Thee, that through his intercession we may put in practice by Thy grace what he taught us, both in word and work. Awake, O Lord, in Thy Church the Spirit by Whom St Norbert, Thy Confessor and Bishop, was guided, in order that, filled with the same spirit, we may love what he loved and live as he taught us. O Lord, grant to us Thy servants constancy in Thy faith and service, that, rooted in Divine Charity, we may not be conquered by any temptation. Through Christ our Lord. Amen. Praised be the Blessed Sacrament of the Altar and the Immaculate Conception of the Blessed Virgin Mary. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Norbert, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St Norbert, gentlest of saints, your love for Jesus Christ truly present in every tabernacle around the world, and your charity for souls, made you worthy, while on earth, to possess miraculous powers. Miracles waited your word, which you were ever ready to speak for those in trouble or anxiety. Encouraged by this thought, I implore you to obtain for me the favor I seek in this novena.  The answer to my prayer may require a miracle; even so, you are the saint of miracles. O gentle and loving St Norbert, whose heart was ever full of zeal for souls, whisper my petition into the ears of the Infant Jesus, on Whose birthday you founded the holy Order of Pr\u00e9montr\u00e9, and the gratitude of my heart will always be yours. Amen. O God, Who didst make of Blessed Norbert, Thy Confessor and Bishop, an excellent preacher of the Word, and by his means didst enrich Thy Church with new offspring, grant, we beseech Thee, that through his intercession we may put in practice by Thy grace what he taught us, both in word and work. Awake, O Lord, in Thy Church the Spirit by Whom St Norbert, Thy Confessor and Bishop, was guided, in order that, filled with the same spirit, we may love what he loved and live as he taught us. O Lord, grant to us Thy servants constancy in Thy faith and service, that, rooted in Divine Charity, we may not be conquered by any temptation. Through Christ our Lord. Amen. Praised be the Blessed Sacrament of the Altar and the Immaculate Conception of the Blessed Virgin Mary. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Norbert, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St Norbert, gentlest of saints, your love for Jesus Christ truly present in every tabernacle around the world, and your charity for souls, made you worthy, while on earth, to possess miraculous powers. Miracles waited your word, which you were ever ready to speak for those in trouble or anxiety. Encouraged by this thought, I implore you to obtain for me the favor I seek in this novena.  The answer to my prayer may require a miracle; even so, you are the saint of miracles. O gentle and loving St Norbert, whose heart was ever full of zeal for souls, whisper my petition into the ears of the Infant Jesus, on Whose birthday you founded the holy Order of Pr\u00e9montr\u00e9, and the gratitude of my heart will always be yours. Amen. O God, Who didst make of Blessed Norbert, Thy Confessor and Bishop, an excellent preacher of the Word, and by his means didst enrich Thy Church with new offspring, grant, we beseech Thee, that through his intercession we may put in practice by Thy grace what he taught us, both in word and work. Awake, O Lord, in Thy Church the Spirit by Whom St Norbert, Thy Confessor and Bishop, was guided, in order that, filled with the same spirit, we may love what he loved and live as he taught us. O Lord, grant to us Thy servants constancy in Thy faith and service, that, rooted in Divine Charity, we may not be conquered by any temptation. Through Christ our Lord. Amen. Praised be the Blessed Sacrament of the Altar and the Immaculate Conception of the Blessed Virgin Mary. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Norbert, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St Norbert, gentlest of saints, your love for Jesus Christ truly present in every tabernacle around the world, and your charity for souls, made you worthy, while on earth, to possess miraculous powers. Miracles waited your word, which you were ever ready to speak for those in trouble or anxiety. Encouraged by this thought, I implore you to obtain for me the favor I seek in this novena.  The answer to my prayer may require a miracle; even so, you are the saint of miracles. O gentle and loving St Norbert, whose heart was ever full of zeal for souls, whisper my petition into the ears of the Infant Jesus, on Whose birthday you founded the holy Order of Pr\u00e9montr\u00e9, and the gratitude of my heart will always be yours. Amen. O God, Who didst make of Blessed Norbert, Thy Confessor and Bishop, an excellent preacher of the Word, and by his means didst enrich Thy Church with new offspring, grant, we beseech Thee, that through his intercession we may put in practice by Thy grace what he taught us, both in word and work. Awake, O Lord, in Thy Church the Spirit by Whom St Norbert, Thy Confessor and Bishop, was guided, in order that, filled with the same spirit, we may love what he loved and live as he taught us. O Lord, grant to us Thy servants constancy in Thy faith and service, that, rooted in Divine Charity, we may not be conquered by any temptation. Through Christ our Lord. Amen. Praised be the Blessed Sacrament of the Altar and the Immaculate Conception of the Blessed Virgin Mary. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Norbert, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Added light punctuation and paragraph breaks for clearer text-to-speech pacing, without changing the prayers.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy St Norbert, gentlest of saints, your love for Jesus Christ truly present in every tabernacle around the world, and your charity for souls, made you worthy, while on earth, to possess miraculous powers. Miracles waited your word, which you were ever ready to speak for those in trouble or anxiety. Encouraged by this thought, I implore you to obtain for me the favor I seek in this novena.  The answer to my prayer may require a miracle; even so, you are the saint of miracles. O gentle and loving St Norbert, whose heart was ever full of zeal for souls, whisper my petition into the ears of the Infant Jesus, on Whose birthday you founded the holy Order of Pr\u00e9montr\u00e9, and the gratitude of my heart will always be yours. Amen. O God, Who didst make of Blessed Norbert, Thy Confessor and Bishop, an excellent preacher of the Word, and by his means didst enrich Thy Church with new offspring, grant, we beseech Thee, that through his intercession we may put in practice by Thy grace what he taught us, both in word and work. Awake, O Lord, in Thy Church the Spirit by Whom St Norbert, Thy Confessor and Bishop, was guided, in order that, filled with the same spirit, we may love what he loved and live as he taught us. O Lord, grant to us Thy servants constancy in Thy faith and service, that, rooted in Divine Charity, we may not be conquered by any temptation. Through Christ our Lord. Amen. Praised be the Blessed Sacrament of the Altar and the Immaculate Conception of the Blessed Virgin Mary. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St Norbert, pray for us. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_norbert"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_norbert",
+      "name": "St Norbert"
+    },
+    "type": "novena_feast_rule"
+  }
+}

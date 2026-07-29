@@ -9,6 +9,20 @@
       "name": "St. Mary Magdalene"
     },
     "id": "st_mary_magdalene",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "penitents",
+        "converts",
+        "women"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Mary Magdalene, a disciple of Jesus and witness of his Resurrection, is honored for her faithful devotion and proclamation of the risen Christ."
+    },
     "novena": {
       "content_mode": "fixed",
       "duration_days": 9,
@@ -18,7 +32,7 @@
           {
             "key": "introduction",
             "kind": "fixed",
-            "text": "You can pray the full Saint Mary Magdalene Novena below.",
+            "text": "You can pray the full St. Mary Magdalene Novena below.",
             "title": "Introduction"
           },
           {
@@ -35,54 +49,34 @@
             ],
             "key": "days-1-9",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "title": "Days 1-9",
+            "notes": "Normalized punctuation, capitalization, and line breaks for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
             "parts": [
               {
                 "kind": "text",
-                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ’s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena"
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became His devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena"
               },
               {
-                "kind": "audio_cue",
-                "cue": "sacred_bell"
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
               },
               {
+                "duration_ms": 5000,
                 "kind": "pause",
-                "purpose": "personal_intention",
-                "duration_ms": 5000
+                "purpose": "personal_intention"
               },
               {
                 "kind": "text",
-                "text": "and that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. Saint Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us"
-              },
-              {
-                "kind": "text",
-                "text": "Saint Mary Magdalene, earnestly intercede for us with thy Divine Master,",
-                "audio_role": "versicle"
-              },
-              {
-                "kind": "text",
-                "text": "That we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever.",
-                "audio_role": "response"
-              },
-              {
-                "kind": "text",
-                "text": "Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end.",
-                "audio_role": "response"
-              },
-              {
-                "kind": "text",
-                "text": "Amen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
-                "audio_role": "response"
+                "text": "and that I may share in your joy in Heaven one day. Amen. Litany of Saint Mary Magdalene Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Holy Mary, Mother of God, pray for us. Saint Mary Magdalene, pray for us. Mirror of penance, pray for us. Disciple of Our Lord, pray for us. Wounded with the love of Christ, pray for us. Most dear to the Heart of Jesus, pray for us. Constant woman, pray for us. Last at the Cross of Jesus, first at His tomb, pray for us. Thou who wast the first to see Jesus risen, pray for us. Whose forehead was sanctified by the touch of thy risen Master, pray for us. Apostle of apostles, pray for us. V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master. R. That we may share thy happiness in Heaven. Let us pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
               }
-            ]
+            ],
+            "title": "Days 1-9"
           }
         ],
         "sections": [
           {
             "key": "introduction",
             "kind": "fixed",
-            "text": "You can pray the full Saint Mary Magdalene Novena below.",
+            "text": "You can pray the full St. Mary Magdalene Novena below.",
             "title": "Introduction"
           },
           {
@@ -91,8 +85,8 @@
             ],
             "key": "day-1",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ’s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena\n\nand that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. Saint Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us\n\nSaint Mary Magdalene, earnestly intercede for us with thy Divine Master,\n\nThat we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever.\n\nAmen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Normalized punctuation, capitalization, and line breaks for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became His devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena  and that I may share in your joy in Heaven one day. Amen. Litany of Saint Mary Magdalene Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Holy Mary, Mother of God, pray for us. Saint Mary Magdalene, pray for us. Mirror of penance, pray for us. Disciple of Our Lord, pray for us. Wounded with the love of Christ, pray for us. Most dear to the Heart of Jesus, pray for us. Constant woman, pray for us. Last at the Cross of Jesus, first at His tomb, pray for us. Thou who wast the first to see Jesus risen, pray for us. Whose forehead was sanctified by the touch of thy risen Master, pray for us. Apostle of apostles, pray for us. V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master. R. That we may share thy happiness in Heaven. Let us pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 1"
           },
           {
@@ -101,8 +95,8 @@
             ],
             "key": "day-2",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ’s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena\n\nand that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. Saint Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us\n\nSaint Mary Magdalene, earnestly intercede for us with thy Divine Master,\n\nThat we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever.\n\nAmen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Normalized punctuation, capitalization, and line breaks for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became His devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena  and that I may share in your joy in Heaven one day. Amen. Litany of Saint Mary Magdalene Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Holy Mary, Mother of God, pray for us. Saint Mary Magdalene, pray for us. Mirror of penance, pray for us. Disciple of Our Lord, pray for us. Wounded with the love of Christ, pray for us. Most dear to the Heart of Jesus, pray for us. Constant woman, pray for us. Last at the Cross of Jesus, first at His tomb, pray for us. Thou who wast the first to see Jesus risen, pray for us. Whose forehead was sanctified by the touch of thy risen Master, pray for us. Apostle of apostles, pray for us. V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master. R. That we may share thy happiness in Heaven. Let us pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 2"
           },
           {
@@ -111,8 +105,8 @@
             ],
             "key": "day-3",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ’s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena\n\nand that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. Saint Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us\n\nSaint Mary Magdalene, earnestly intercede for us with thy Divine Master,\n\nThat we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever.\n\nAmen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Normalized punctuation, capitalization, and line breaks for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became His devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena  and that I may share in your joy in Heaven one day. Amen. Litany of Saint Mary Magdalene Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Holy Mary, Mother of God, pray for us. Saint Mary Magdalene, pray for us. Mirror of penance, pray for us. Disciple of Our Lord, pray for us. Wounded with the love of Christ, pray for us. Most dear to the Heart of Jesus, pray for us. Constant woman, pray for us. Last at the Cross of Jesus, first at His tomb, pray for us. Thou who wast the first to see Jesus risen, pray for us. Whose forehead was sanctified by the touch of thy risen Master, pray for us. Apostle of apostles, pray for us. V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master. R. That we may share thy happiness in Heaven. Let us pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 3"
           },
           {
@@ -121,8 +115,8 @@
             ],
             "key": "day-4",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ’s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena\n\nand that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. Saint Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us\n\nSaint Mary Magdalene, earnestly intercede for us with thy Divine Master,\n\nThat we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever.\n\nAmen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Normalized punctuation, capitalization, and line breaks for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became His devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena  and that I may share in your joy in Heaven one day. Amen. Litany of Saint Mary Magdalene Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Holy Mary, Mother of God, pray for us. Saint Mary Magdalene, pray for us. Mirror of penance, pray for us. Disciple of Our Lord, pray for us. Wounded with the love of Christ, pray for us. Most dear to the Heart of Jesus, pray for us. Constant woman, pray for us. Last at the Cross of Jesus, first at His tomb, pray for us. Thou who wast the first to see Jesus risen, pray for us. Whose forehead was sanctified by the touch of thy risen Master, pray for us. Apostle of apostles, pray for us. V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master. R. That we may share thy happiness in Heaven. Let us pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 4"
           },
           {
@@ -131,8 +125,8 @@
             ],
             "key": "day-5",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ’s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena\n\nand that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. Saint Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us\n\nSaint Mary Magdalene, earnestly intercede for us with thy Divine Master,\n\nThat we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever.\n\nAmen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Normalized punctuation, capitalization, and line breaks for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became His devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena  and that I may share in your joy in Heaven one day. Amen. Litany of Saint Mary Magdalene Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Holy Mary, Mother of God, pray for us. Saint Mary Magdalene, pray for us. Mirror of penance, pray for us. Disciple of Our Lord, pray for us. Wounded with the love of Christ, pray for us. Most dear to the Heart of Jesus, pray for us. Constant woman, pray for us. Last at the Cross of Jesus, first at His tomb, pray for us. Thou who wast the first to see Jesus risen, pray for us. Whose forehead was sanctified by the touch of thy risen Master, pray for us. Apostle of apostles, pray for us. V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master. R. That we may share thy happiness in Heaven. Let us pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 5"
           },
           {
@@ -141,8 +135,8 @@
             ],
             "key": "day-6",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ’s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena\n\nand that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. Saint Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us\n\nSaint Mary Magdalene, earnestly intercede for us with thy Divine Master,\n\nThat we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever.\n\nAmen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Normalized punctuation, capitalization, and line breaks for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became His devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena  and that I may share in your joy in Heaven one day. Amen. Litany of Saint Mary Magdalene Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Holy Mary, Mother of God, pray for us. Saint Mary Magdalene, pray for us. Mirror of penance, pray for us. Disciple of Our Lord, pray for us. Wounded with the love of Christ, pray for us. Most dear to the Heart of Jesus, pray for us. Constant woman, pray for us. Last at the Cross of Jesus, first at His tomb, pray for us. Thou who wast the first to see Jesus risen, pray for us. Whose forehead was sanctified by the touch of thy risen Master, pray for us. Apostle of apostles, pray for us. V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master. R. That we may share thy happiness in Heaven. Let us pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 6"
           },
           {
@@ -151,8 +145,8 @@
             ],
             "key": "day-7",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ’s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena\n\nand that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. Saint Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us\n\nSaint Mary Magdalene, earnestly intercede for us with thy Divine Master,\n\nThat we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever.\n\nAmen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Normalized punctuation, capitalization, and line breaks for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became His devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena  and that I may share in your joy in Heaven one day. Amen. Litany of Saint Mary Magdalene Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Holy Mary, Mother of God, pray for us. Saint Mary Magdalene, pray for us. Mirror of penance, pray for us. Disciple of Our Lord, pray for us. Wounded with the love of Christ, pray for us. Most dear to the Heart of Jesus, pray for us. Constant woman, pray for us. Last at the Cross of Jesus, first at His tomb, pray for us. Thou who wast the first to see Jesus risen, pray for us. Whose forehead was sanctified by the touch of thy risen Master, pray for us. Apostle of apostles, pray for us. V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master. R. That we may share thy happiness in Heaven. Let us pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 7"
           },
           {
@@ -161,8 +155,8 @@
             ],
             "key": "day-8",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ’s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena\n\nand that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. Saint Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us\n\nSaint Mary Magdalene, earnestly intercede for us with thy Divine Master,\n\nThat we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever.\n\nAmen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Normalized punctuation, capitalization, and line breaks for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became His devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena  and that I may share in your joy in Heaven one day. Amen. Litany of Saint Mary Magdalene Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Holy Mary, Mother of God, pray for us. Saint Mary Magdalene, pray for us. Mirror of penance, pray for us. Disciple of Our Lord, pray for us. Wounded with the love of Christ, pray for us. Most dear to the Heart of Jesus, pray for us. Constant woman, pray for us. Last at the Cross of Jesus, first at His tomb, pray for us. Thou who wast the first to see Jesus risen, pray for us. Whose forehead was sanctified by the touch of thy risen Master, pray for us. Apostle of apostles, pray for us. V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master. R. That we may share thy happiness in Heaven. Let us pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 8"
           },
           {
@@ -171,8 +165,8 @@
             ],
             "key": "day-9",
             "kind": "fixed",
-            "notes": "replaced \"mention request here\" with a spoken pause prompt; reused compacted prayer source from an earlier section",
-            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.\n\nSt Mary Magdalene, though you had committed many sins, you answered Christ’s merciful invitation to you and became his devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena\n\nand that I may share in your joy in Heaven one day. Amen.\n\nLitany of St Mary Magdalene Lord, have mercy on us, Christ, have mercy on us. Lord, have mercy on us. Christ, hear us, Christ, graciously hear us. Holy Mary, Mother of God, Pray for us. Saint Mary Magdalene, Pray for us. Mirror of penance, pray for us Disciple of Our Lord, pray for us Wounded with the love of Christ, pray for us Most dear to the Heart of Jesus, pray for us Constant woman, pray for us Last at the Cross of Jesus, first at His tomb, pray for us Thou who wast the first to see Jesus risen, pray for us Whose forehead was sanctified by the touch of thy risen Master, pray for us Apostle of apostles, pray for us\n\nSaint Mary Magdalene, earnestly intercede for us with thy Divine Master,\n\nThat we may share thy happiness in Heaven. Let Us Pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever.\n\nAmen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end.\n\nAmen.\n\nIn the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "notes": "Normalized punctuation, capitalization, and line breaks for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Mary Magdalene, though you had committed many sins, you answered Christ\u2019s merciful invitation to you and became His devoted and beloved disciple. Thank you for showing me the incredible mercy of Jesus and the grandeur of His love. Please pray for me for my intention in this novena  and that I may share in your joy in Heaven one day. Amen. Litany of Saint Mary Magdalene Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. Holy Mary, Mother of God, pray for us. Saint Mary Magdalene, pray for us. Mirror of penance, pray for us. Disciple of Our Lord, pray for us. Wounded with the love of Christ, pray for us. Most dear to the Heart of Jesus, pray for us. Constant woman, pray for us. Last at the Cross of Jesus, first at His tomb, pray for us. Thou who wast the first to see Jesus risen, pray for us. Whose forehead was sanctified by the touch of thy risen Master, pray for us. Apostle of apostles, pray for us. V. Saint Mary Magdalene, earnestly intercede for us with thy Divine Master. R. That we may share thy happiness in Heaven. Let us pray. May the glorious merits of blessed Mary Magdalene, we beseech Thee, O Lord, make our offerings acceptable to Thee, for Thine only-begotten Son vouchsafed graciously to accept the humble service she rendered. We ask this through Him Who liveth and reigneth with Thee and the Holy Ghost, God forever and ever. R. Amen. May the prayers of blessed Mary Magdalene help us, O Lord, Who livest and reignest with the Father and the Holy Ghost, Unity in Trinity, world without end. R. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
             "title": "Day 9"
           }
         ],
@@ -183,23 +177,40 @@
       "audio": {
         "enabled": true,
         "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
         "model": "gpt-4o-mini-tts",
-        "speed": 1.0,
-        "voice": "ash",
-        "role_overrides": {
-          "response": {
-            "providers": [
-              {
-                "provider": "openai",
-                "api_key_env": "OPENAI_API_KEY",
-                "model": "gpt-4o-mini-tts",
-                "voice": "alloy",
-                "format": "mp3",
-                "speed": 1.0
-              }
-            ]
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
           }
-        }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
       },
       "rss": {
         "enabled": true,

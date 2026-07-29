@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_genevieve",
+    "feast": {
+      "day": 3,
+      "mode": "fixed",
+      "month": 1,
+      "name": "St Genevieve"
+    },
+    "id": "st_genevieve",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "Paris",
+        "shepherds",
+        "against disasters"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St Genevieve was a 5th-century virgin and patron saint of Paris, remembered for her prayerful leadership and care for the city in times of danger."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Genevieve Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Genevieve, you ensured the protection of Paris through penance and prayer. Please intercede before God for us, for our country, and for devoted Christian hearts. You who cured the sick and fed the hungry, obtain the light of God and make us stronger to reject temptation. You who had concern for the poor, protect the sick, the abandoned, and the unemployed. You who resisted the armies and encouraged the besieged, give us direction for truth and justice. You who through the centuries never ceased taking care of your people, help us to keep the teachings of our Lord Jesus Christ. May your example be for us an encouragement to always seek God and serve him through our brothers and sisters."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. Litany to Saint Genevieve. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. St. Genevieve, who since childhood was filled with God\u2019s grace, pray for us. St. Genevieve, consecrated to Christ by St. Germane, pray for us. St. Genevieve, obedient to the Holy Spirit, pray for us. St. Genevieve, zealous defender of the faith, pray for us. St. Genevieve, heroically devoted to the Church, pray for us. St. Genevieve, whose life is an example how we should live for God, pray for us. St. Genevieve, intercessor of the clergy, pray for us. St. Genevieve, who suffered for your vocation, pray for us. St. Genevieve, who knew about hostility and abandonment, pray for us. St. Genevieve, who spent hours in prayer, pray for us. St. Genevieve, whose fasts and prayers saved the city, pray for us. St. Genevieve, who had a demanding friendship with the king, pray for us. St. Genevieve, whose wisdom enlightened the pagans, pray for us. St. Genevieve, whose prudence guided the leaders, pray for us. St. Genevieve, with purity you overcame slander, pray for us. St. Genevieve, whose strength stood up against the evil doers, pray for us. St. Genevieve, who miraculously nourished the hungry, pray for us. St. Genevieve, who reconciled sinners with God, pray for us. St. Genevieve, who brought back to the Church the lost ones, pray for us. St. Genevieve, who read the conscience through the gift of the Holy Spirit, pray for us. St. Genevieve, who cured the sick, pray for us. St. Genevieve, who controlled the floods, pray for us. St. Genevieve, who restored peace between enemies, pray for us. St. Genevieve, who softened the fate of the prisoners, pray for us. St. Genevieve, who drove out demons, pray for us. St. Genevieve, protector of your devoted people, pray for us. Give us, Lord, the spirit of intelligence and love of which you filled your daughter, Genevieve, so that, attentive to your service and seeking to do your will, we can please you by our faith and our deeds. We ask this through our Lord Jesus Christ, your Son, who lives and reigns with you and the Holy Sprit, one God, for ever and ever. Amen. Let us open our hearts in thanks to God for the favors showered upon us. Saint Paul teaches us to give thanks to God the Father always through Christ, in whom he has given us everything. For when we became God\u2019s children in Christ, God gave us the riches of his grace, rescuing us from the powers of darkness and bringing us into the kingdom of his beloved Son. Whenever we acknowledge God\u2019s gifts, we prepare ourselves to take part more fully in the Eucharist, which is the sum of all blessings and the crown and source of all thanksgiving. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Genevieve Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Genevieve, you ensured the protection of Paris through penance and prayer. Please intercede before God for us, for our country, and for devoted Christian hearts. You who cured the sick and fed the hungry, obtain the light of God and make us stronger to reject temptation. You who had concern for the poor, protect the sick, the abandoned, and the unemployed. You who resisted the armies and encouraged the besieged, give us direction for truth and justice. You who through the centuries never ceased taking care of your people, help us to keep the teachings of our Lord Jesus Christ. May your example be for us an encouragement to always seek God and serve him through our brothers and sisters.  Amen. Litany to Saint Genevieve. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. St. Genevieve, who since childhood was filled with God\u2019s grace, pray for us. St. Genevieve, consecrated to Christ by St. Germane, pray for us. St. Genevieve, obedient to the Holy Spirit, pray for us. St. Genevieve, zealous defender of the faith, pray for us. St. Genevieve, heroically devoted to the Church, pray for us. St. Genevieve, whose life is an example how we should live for God, pray for us. St. Genevieve, intercessor of the clergy, pray for us. St. Genevieve, who suffered for your vocation, pray for us. St. Genevieve, who knew about hostility and abandonment, pray for us. St. Genevieve, who spent hours in prayer, pray for us. St. Genevieve, whose fasts and prayers saved the city, pray for us. St. Genevieve, who had a demanding friendship with the king, pray for us. St. Genevieve, whose wisdom enlightened the pagans, pray for us. St. Genevieve, whose prudence guided the leaders, pray for us. St. Genevieve, with purity you overcame slander, pray for us. St. Genevieve, whose strength stood up against the evil doers, pray for us. St. Genevieve, who miraculously nourished the hungry, pray for us. St. Genevieve, who reconciled sinners with God, pray for us. St. Genevieve, who brought back to the Church the lost ones, pray for us. St. Genevieve, who read the conscience through the gift of the Holy Spirit, pray for us. St. Genevieve, who cured the sick, pray for us. St. Genevieve, who controlled the floods, pray for us. St. Genevieve, who restored peace between enemies, pray for us. St. Genevieve, who softened the fate of the prisoners, pray for us. St. Genevieve, who drove out demons, pray for us. St. Genevieve, protector of your devoted people, pray for us. Give us, Lord, the spirit of intelligence and love of which you filled your daughter, Genevieve, so that, attentive to your service and seeking to do your will, we can please you by our faith and our deeds. We ask this through our Lord Jesus Christ, your Son, who lives and reigns with you and the Holy Sprit, one God, for ever and ever. Amen. Let us open our hearts in thanks to God for the favors showered upon us. Saint Paul teaches us to give thanks to God the Father always through Christ, in whom he has given us everything. For when we became God\u2019s children in Christ, God gave us the riches of his grace, rescuing us from the powers of darkness and bringing us into the kingdom of his beloved Son. Whenever we acknowledge God\u2019s gifts, we prepare ourselves to take part more fully in the Eucharist, which is the sum of all blessings and the crown and source of all thanksgiving. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Genevieve, you ensured the protection of Paris through penance and prayer. Please intercede before God for us, for our country, and for devoted Christian hearts. You who cured the sick and fed the hungry, obtain the light of God and make us stronger to reject temptation. You who had concern for the poor, protect the sick, the abandoned, and the unemployed. You who resisted the armies and encouraged the besieged, give us direction for truth and justice. You who through the centuries never ceased taking care of your people, help us to keep the teachings of our Lord Jesus Christ. May your example be for us an encouragement to always seek God and serve him through our brothers and sisters.  Amen. Litany to Saint Genevieve. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. St. Genevieve, who since childhood was filled with God\u2019s grace, pray for us. St. Genevieve, consecrated to Christ by St. Germane, pray for us. St. Genevieve, obedient to the Holy Spirit, pray for us. St. Genevieve, zealous defender of the faith, pray for us. St. Genevieve, heroically devoted to the Church, pray for us. St. Genevieve, whose life is an example how we should live for God, pray for us. St. Genevieve, intercessor of the clergy, pray for us. St. Genevieve, who suffered for your vocation, pray for us. St. Genevieve, who knew about hostility and abandonment, pray for us. St. Genevieve, who spent hours in prayer, pray for us. St. Genevieve, whose fasts and prayers saved the city, pray for us. St. Genevieve, who had a demanding friendship with the king, pray for us. St. Genevieve, whose wisdom enlightened the pagans, pray for us. St. Genevieve, whose prudence guided the leaders, pray for us. St. Genevieve, with purity you overcame slander, pray for us. St. Genevieve, whose strength stood up against the evil doers, pray for us. St. Genevieve, who miraculously nourished the hungry, pray for us. St. Genevieve, who reconciled sinners with God, pray for us. St. Genevieve, who brought back to the Church the lost ones, pray for us. St. Genevieve, who read the conscience through the gift of the Holy Spirit, pray for us. St. Genevieve, who cured the sick, pray for us. St. Genevieve, who controlled the floods, pray for us. St. Genevieve, who restored peace between enemies, pray for us. St. Genevieve, who softened the fate of the prisoners, pray for us. St. Genevieve, who drove out demons, pray for us. St. Genevieve, protector of your devoted people, pray for us. Give us, Lord, the spirit of intelligence and love of which you filled your daughter, Genevieve, so that, attentive to your service and seeking to do your will, we can please you by our faith and our deeds. We ask this through our Lord Jesus Christ, your Son, who lives and reigns with you and the Holy Sprit, one God, for ever and ever. Amen. Let us open our hearts in thanks to God for the favors showered upon us. Saint Paul teaches us to give thanks to God the Father always through Christ, in whom he has given us everything. For when we became God\u2019s children in Christ, God gave us the riches of his grace, rescuing us from the powers of darkness and bringing us into the kingdom of his beloved Son. Whenever we acknowledge God\u2019s gifts, we prepare ourselves to take part more fully in the Eucharist, which is the sum of all blessings and the crown and source of all thanksgiving. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Genevieve, you ensured the protection of Paris through penance and prayer. Please intercede before God for us, for our country, and for devoted Christian hearts. You who cured the sick and fed the hungry, obtain the light of God and make us stronger to reject temptation. You who had concern for the poor, protect the sick, the abandoned, and the unemployed. You who resisted the armies and encouraged the besieged, give us direction for truth and justice. You who through the centuries never ceased taking care of your people, help us to keep the teachings of our Lord Jesus Christ. May your example be for us an encouragement to always seek God and serve him through our brothers and sisters.  Amen. Litany to Saint Genevieve. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. St. Genevieve, who since childhood was filled with God\u2019s grace, pray for us. St. Genevieve, consecrated to Christ by St. Germane, pray for us. St. Genevieve, obedient to the Holy Spirit, pray for us. St. Genevieve, zealous defender of the faith, pray for us. St. Genevieve, heroically devoted to the Church, pray for us. St. Genevieve, whose life is an example how we should live for God, pray for us. St. Genevieve, intercessor of the clergy, pray for us. St. Genevieve, who suffered for your vocation, pray for us. St. Genevieve, who knew about hostility and abandonment, pray for us. St. Genevieve, who spent hours in prayer, pray for us. St. Genevieve, whose fasts and prayers saved the city, pray for us. St. Genevieve, who had a demanding friendship with the king, pray for us. St. Genevieve, whose wisdom enlightened the pagans, pray for us. St. Genevieve, whose prudence guided the leaders, pray for us. St. Genevieve, with purity you overcame slander, pray for us. St. Genevieve, whose strength stood up against the evil doers, pray for us. St. Genevieve, who miraculously nourished the hungry, pray for us. St. Genevieve, who reconciled sinners with God, pray for us. St. Genevieve, who brought back to the Church the lost ones, pray for us. St. Genevieve, who read the conscience through the gift of the Holy Spirit, pray for us. St. Genevieve, who cured the sick, pray for us. St. Genevieve, who controlled the floods, pray for us. St. Genevieve, who restored peace between enemies, pray for us. St. Genevieve, who softened the fate of the prisoners, pray for us. St. Genevieve, who drove out demons, pray for us. St. Genevieve, protector of your devoted people, pray for us. Give us, Lord, the spirit of intelligence and love of which you filled your daughter, Genevieve, so that, attentive to your service and seeking to do your will, we can please you by our faith and our deeds. We ask this through our Lord Jesus Christ, your Son, who lives and reigns with you and the Holy Sprit, one God, for ever and ever. Amen. Let us open our hearts in thanks to God for the favors showered upon us. Saint Paul teaches us to give thanks to God the Father always through Christ, in whom he has given us everything. For when we became God\u2019s children in Christ, God gave us the riches of his grace, rescuing us from the powers of darkness and bringing us into the kingdom of his beloved Son. Whenever we acknowledge God\u2019s gifts, we prepare ourselves to take part more fully in the Eucharist, which is the sum of all blessings and the crown and source of all thanksgiving. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Genevieve, you ensured the protection of Paris through penance and prayer. Please intercede before God for us, for our country, and for devoted Christian hearts. You who cured the sick and fed the hungry, obtain the light of God and make us stronger to reject temptation. You who had concern for the poor, protect the sick, the abandoned, and the unemployed. You who resisted the armies and encouraged the besieged, give us direction for truth and justice. You who through the centuries never ceased taking care of your people, help us to keep the teachings of our Lord Jesus Christ. May your example be for us an encouragement to always seek God and serve him through our brothers and sisters.  Amen. Litany to Saint Genevieve. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. St. Genevieve, who since childhood was filled with God\u2019s grace, pray for us. St. Genevieve, consecrated to Christ by St. Germane, pray for us. St. Genevieve, obedient to the Holy Spirit, pray for us. St. Genevieve, zealous defender of the faith, pray for us. St. Genevieve, heroically devoted to the Church, pray for us. St. Genevieve, whose life is an example how we should live for God, pray for us. St. Genevieve, intercessor of the clergy, pray for us. St. Genevieve, who suffered for your vocation, pray for us. St. Genevieve, who knew about hostility and abandonment, pray for us. St. Genevieve, who spent hours in prayer, pray for us. St. Genevieve, whose fasts and prayers saved the city, pray for us. St. Genevieve, who had a demanding friendship with the king, pray for us. St. Genevieve, whose wisdom enlightened the pagans, pray for us. St. Genevieve, whose prudence guided the leaders, pray for us. St. Genevieve, with purity you overcame slander, pray for us. St. Genevieve, whose strength stood up against the evil doers, pray for us. St. Genevieve, who miraculously nourished the hungry, pray for us. St. Genevieve, who reconciled sinners with God, pray for us. St. Genevieve, who brought back to the Church the lost ones, pray for us. St. Genevieve, who read the conscience through the gift of the Holy Spirit, pray for us. St. Genevieve, who cured the sick, pray for us. St. Genevieve, who controlled the floods, pray for us. St. Genevieve, who restored peace between enemies, pray for us. St. Genevieve, who softened the fate of the prisoners, pray for us. St. Genevieve, who drove out demons, pray for us. St. Genevieve, protector of your devoted people, pray for us. Give us, Lord, the spirit of intelligence and love of which you filled your daughter, Genevieve, so that, attentive to your service and seeking to do your will, we can please you by our faith and our deeds. We ask this through our Lord Jesus Christ, your Son, who lives and reigns with you and the Holy Sprit, one God, for ever and ever. Amen. Let us open our hearts in thanks to God for the favors showered upon us. Saint Paul teaches us to give thanks to God the Father always through Christ, in whom he has given us everything. For when we became God\u2019s children in Christ, God gave us the riches of his grace, rescuing us from the powers of darkness and bringing us into the kingdom of his beloved Son. Whenever we acknowledge God\u2019s gifts, we prepare ourselves to take part more fully in the Eucharist, which is the sum of all blessings and the crown and source of all thanksgiving. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Genevieve, you ensured the protection of Paris through penance and prayer. Please intercede before God for us, for our country, and for devoted Christian hearts. You who cured the sick and fed the hungry, obtain the light of God and make us stronger to reject temptation. You who had concern for the poor, protect the sick, the abandoned, and the unemployed. You who resisted the armies and encouraged the besieged, give us direction for truth and justice. You who through the centuries never ceased taking care of your people, help us to keep the teachings of our Lord Jesus Christ. May your example be for us an encouragement to always seek God and serve him through our brothers and sisters.  Amen. Litany to Saint Genevieve. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. St. Genevieve, who since childhood was filled with God\u2019s grace, pray for us. St. Genevieve, consecrated to Christ by St. Germane, pray for us. St. Genevieve, obedient to the Holy Spirit, pray for us. St. Genevieve, zealous defender of the faith, pray for us. St. Genevieve, heroically devoted to the Church, pray for us. St. Genevieve, whose life is an example how we should live for God, pray for us. St. Genevieve, intercessor of the clergy, pray for us. St. Genevieve, who suffered for your vocation, pray for us. St. Genevieve, who knew about hostility and abandonment, pray for us. St. Genevieve, who spent hours in prayer, pray for us. St. Genevieve, whose fasts and prayers saved the city, pray for us. St. Genevieve, who had a demanding friendship with the king, pray for us. St. Genevieve, whose wisdom enlightened the pagans, pray for us. St. Genevieve, whose prudence guided the leaders, pray for us. St. Genevieve, with purity you overcame slander, pray for us. St. Genevieve, whose strength stood up against the evil doers, pray for us. St. Genevieve, who miraculously nourished the hungry, pray for us. St. Genevieve, who reconciled sinners with God, pray for us. St. Genevieve, who brought back to the Church the lost ones, pray for us. St. Genevieve, who read the conscience through the gift of the Holy Spirit, pray for us. St. Genevieve, who cured the sick, pray for us. St. Genevieve, who controlled the floods, pray for us. St. Genevieve, who restored peace between enemies, pray for us. St. Genevieve, who softened the fate of the prisoners, pray for us. St. Genevieve, who drove out demons, pray for us. St. Genevieve, protector of your devoted people, pray for us. Give us, Lord, the spirit of intelligence and love of which you filled your daughter, Genevieve, so that, attentive to your service and seeking to do your will, we can please you by our faith and our deeds. We ask this through our Lord Jesus Christ, your Son, who lives and reigns with you and the Holy Sprit, one God, for ever and ever. Amen. Let us open our hearts in thanks to God for the favors showered upon us. Saint Paul teaches us to give thanks to God the Father always through Christ, in whom he has given us everything. For when we became God\u2019s children in Christ, God gave us the riches of his grace, rescuing us from the powers of darkness and bringing us into the kingdom of his beloved Son. Whenever we acknowledge God\u2019s gifts, we prepare ourselves to take part more fully in the Eucharist, which is the sum of all blessings and the crown and source of all thanksgiving. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Genevieve, you ensured the protection of Paris through penance and prayer. Please intercede before God for us, for our country, and for devoted Christian hearts. You who cured the sick and fed the hungry, obtain the light of God and make us stronger to reject temptation. You who had concern for the poor, protect the sick, the abandoned, and the unemployed. You who resisted the armies and encouraged the besieged, give us direction for truth and justice. You who through the centuries never ceased taking care of your people, help us to keep the teachings of our Lord Jesus Christ. May your example be for us an encouragement to always seek God and serve him through our brothers and sisters.  Amen. Litany to Saint Genevieve. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. St. Genevieve, who since childhood was filled with God\u2019s grace, pray for us. St. Genevieve, consecrated to Christ by St. Germane, pray for us. St. Genevieve, obedient to the Holy Spirit, pray for us. St. Genevieve, zealous defender of the faith, pray for us. St. Genevieve, heroically devoted to the Church, pray for us. St. Genevieve, whose life is an example how we should live for God, pray for us. St. Genevieve, intercessor of the clergy, pray for us. St. Genevieve, who suffered for your vocation, pray for us. St. Genevieve, who knew about hostility and abandonment, pray for us. St. Genevieve, who spent hours in prayer, pray for us. St. Genevieve, whose fasts and prayers saved the city, pray for us. St. Genevieve, who had a demanding friendship with the king, pray for us. St. Genevieve, whose wisdom enlightened the pagans, pray for us. St. Genevieve, whose prudence guided the leaders, pray for us. St. Genevieve, with purity you overcame slander, pray for us. St. Genevieve, whose strength stood up against the evil doers, pray for us. St. Genevieve, who miraculously nourished the hungry, pray for us. St. Genevieve, who reconciled sinners with God, pray for us. St. Genevieve, who brought back to the Church the lost ones, pray for us. St. Genevieve, who read the conscience through the gift of the Holy Spirit, pray for us. St. Genevieve, who cured the sick, pray for us. St. Genevieve, who controlled the floods, pray for us. St. Genevieve, who restored peace between enemies, pray for us. St. Genevieve, who softened the fate of the prisoners, pray for us. St. Genevieve, who drove out demons, pray for us. St. Genevieve, protector of your devoted people, pray for us. Give us, Lord, the spirit of intelligence and love of which you filled your daughter, Genevieve, so that, attentive to your service and seeking to do your will, we can please you by our faith and our deeds. We ask this through our Lord Jesus Christ, your Son, who lives and reigns with you and the Holy Sprit, one God, for ever and ever. Amen. Let us open our hearts in thanks to God for the favors showered upon us. Saint Paul teaches us to give thanks to God the Father always through Christ, in whom he has given us everything. For when we became God\u2019s children in Christ, God gave us the riches of his grace, rescuing us from the powers of darkness and bringing us into the kingdom of his beloved Son. Whenever we acknowledge God\u2019s gifts, we prepare ourselves to take part more fully in the Eucharist, which is the sum of all blessings and the crown and source of all thanksgiving. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Genevieve, you ensured the protection of Paris through penance and prayer. Please intercede before God for us, for our country, and for devoted Christian hearts. You who cured the sick and fed the hungry, obtain the light of God and make us stronger to reject temptation. You who had concern for the poor, protect the sick, the abandoned, and the unemployed. You who resisted the armies and encouraged the besieged, give us direction for truth and justice. You who through the centuries never ceased taking care of your people, help us to keep the teachings of our Lord Jesus Christ. May your example be for us an encouragement to always seek God and serve him through our brothers and sisters.  Amen. Litany to Saint Genevieve. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. St. Genevieve, who since childhood was filled with God\u2019s grace, pray for us. St. Genevieve, consecrated to Christ by St. Germane, pray for us. St. Genevieve, obedient to the Holy Spirit, pray for us. St. Genevieve, zealous defender of the faith, pray for us. St. Genevieve, heroically devoted to the Church, pray for us. St. Genevieve, whose life is an example how we should live for God, pray for us. St. Genevieve, intercessor of the clergy, pray for us. St. Genevieve, who suffered for your vocation, pray for us. St. Genevieve, who knew about hostility and abandonment, pray for us. St. Genevieve, who spent hours in prayer, pray for us. St. Genevieve, whose fasts and prayers saved the city, pray for us. St. Genevieve, who had a demanding friendship with the king, pray for us. St. Genevieve, whose wisdom enlightened the pagans, pray for us. St. Genevieve, whose prudence guided the leaders, pray for us. St. Genevieve, with purity you overcame slander, pray for us. St. Genevieve, whose strength stood up against the evil doers, pray for us. St. Genevieve, who miraculously nourished the hungry, pray for us. St. Genevieve, who reconciled sinners with God, pray for us. St. Genevieve, who brought back to the Church the lost ones, pray for us. St. Genevieve, who read the conscience through the gift of the Holy Spirit, pray for us. St. Genevieve, who cured the sick, pray for us. St. Genevieve, who controlled the floods, pray for us. St. Genevieve, who restored peace between enemies, pray for us. St. Genevieve, who softened the fate of the prisoners, pray for us. St. Genevieve, who drove out demons, pray for us. St. Genevieve, protector of your devoted people, pray for us. Give us, Lord, the spirit of intelligence and love of which you filled your daughter, Genevieve, so that, attentive to your service and seeking to do your will, we can please you by our faith and our deeds. We ask this through our Lord Jesus Christ, your Son, who lives and reigns with you and the Holy Sprit, one God, for ever and ever. Amen. Let us open our hearts in thanks to God for the favors showered upon us. Saint Paul teaches us to give thanks to God the Father always through Christ, in whom he has given us everything. For when we became God\u2019s children in Christ, God gave us the riches of his grace, rescuing us from the powers of darkness and bringing us into the kingdom of his beloved Son. Whenever we acknowledge God\u2019s gifts, we prepare ourselves to take part more fully in the Eucharist, which is the sum of all blessings and the crown and source of all thanksgiving. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Genevieve, you ensured the protection of Paris through penance and prayer. Please intercede before God for us, for our country, and for devoted Christian hearts. You who cured the sick and fed the hungry, obtain the light of God and make us stronger to reject temptation. You who had concern for the poor, protect the sick, the abandoned, and the unemployed. You who resisted the armies and encouraged the besieged, give us direction for truth and justice. You who through the centuries never ceased taking care of your people, help us to keep the teachings of our Lord Jesus Christ. May your example be for us an encouragement to always seek God and serve him through our brothers and sisters.  Amen. Litany to Saint Genevieve. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. St. Genevieve, who since childhood was filled with God\u2019s grace, pray for us. St. Genevieve, consecrated to Christ by St. Germane, pray for us. St. Genevieve, obedient to the Holy Spirit, pray for us. St. Genevieve, zealous defender of the faith, pray for us. St. Genevieve, heroically devoted to the Church, pray for us. St. Genevieve, whose life is an example how we should live for God, pray for us. St. Genevieve, intercessor of the clergy, pray for us. St. Genevieve, who suffered for your vocation, pray for us. St. Genevieve, who knew about hostility and abandonment, pray for us. St. Genevieve, who spent hours in prayer, pray for us. St. Genevieve, whose fasts and prayers saved the city, pray for us. St. Genevieve, who had a demanding friendship with the king, pray for us. St. Genevieve, whose wisdom enlightened the pagans, pray for us. St. Genevieve, whose prudence guided the leaders, pray for us. St. Genevieve, with purity you overcame slander, pray for us. St. Genevieve, whose strength stood up against the evil doers, pray for us. St. Genevieve, who miraculously nourished the hungry, pray for us. St. Genevieve, who reconciled sinners with God, pray for us. St. Genevieve, who brought back to the Church the lost ones, pray for us. St. Genevieve, who read the conscience through the gift of the Holy Spirit, pray for us. St. Genevieve, who cured the sick, pray for us. St. Genevieve, who controlled the floods, pray for us. St. Genevieve, who restored peace between enemies, pray for us. St. Genevieve, who softened the fate of the prisoners, pray for us. St. Genevieve, who drove out demons, pray for us. St. Genevieve, protector of your devoted people, pray for us. Give us, Lord, the spirit of intelligence and love of which you filled your daughter, Genevieve, so that, attentive to your service and seeking to do your will, we can please you by our faith and our deeds. We ask this through our Lord Jesus Christ, your Son, who lives and reigns with you and the Holy Sprit, one God, for ever and ever. Amen. Let us open our hearts in thanks to God for the favors showered upon us. Saint Paul teaches us to give thanks to God the Father always through Christ, in whom he has given us everything. For when we became God\u2019s children in Christ, God gave us the riches of his grace, rescuing us from the powers of darkness and bringing us into the kingdom of his beloved Son. Whenever we acknowledge God\u2019s gifts, we prepare ourselves to take part more fully in the Eucharist, which is the sum of all blessings and the crown and source of all thanksgiving. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Genevieve, you ensured the protection of Paris through penance and prayer. Please intercede before God for us, for our country, and for devoted Christian hearts. You who cured the sick and fed the hungry, obtain the light of God and make us stronger to reject temptation. You who had concern for the poor, protect the sick, the abandoned, and the unemployed. You who resisted the armies and encouraged the besieged, give us direction for truth and justice. You who through the centuries never ceased taking care of your people, help us to keep the teachings of our Lord Jesus Christ. May your example be for us an encouragement to always seek God and serve him through our brothers and sisters.  Amen. Litany to Saint Genevieve. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. St. Genevieve, who since childhood was filled with God\u2019s grace, pray for us. St. Genevieve, consecrated to Christ by St. Germane, pray for us. St. Genevieve, obedient to the Holy Spirit, pray for us. St. Genevieve, zealous defender of the faith, pray for us. St. Genevieve, heroically devoted to the Church, pray for us. St. Genevieve, whose life is an example how we should live for God, pray for us. St. Genevieve, intercessor of the clergy, pray for us. St. Genevieve, who suffered for your vocation, pray for us. St. Genevieve, who knew about hostility and abandonment, pray for us. St. Genevieve, who spent hours in prayer, pray for us. St. Genevieve, whose fasts and prayers saved the city, pray for us. St. Genevieve, who had a demanding friendship with the king, pray for us. St. Genevieve, whose wisdom enlightened the pagans, pray for us. St. Genevieve, whose prudence guided the leaders, pray for us. St. Genevieve, with purity you overcame slander, pray for us. St. Genevieve, whose strength stood up against the evil doers, pray for us. St. Genevieve, who miraculously nourished the hungry, pray for us. St. Genevieve, who reconciled sinners with God, pray for us. St. Genevieve, who brought back to the Church the lost ones, pray for us. St. Genevieve, who read the conscience through the gift of the Holy Spirit, pray for us. St. Genevieve, who cured the sick, pray for us. St. Genevieve, who controlled the floods, pray for us. St. Genevieve, who restored peace between enemies, pray for us. St. Genevieve, who softened the fate of the prisoners, pray for us. St. Genevieve, who drove out demons, pray for us. St. Genevieve, protector of your devoted people, pray for us. Give us, Lord, the spirit of intelligence and love of which you filled your daughter, Genevieve, so that, attentive to your service and seeking to do your will, we can please you by our faith and our deeds. We ask this through our Lord Jesus Christ, your Son, who lives and reigns with you and the Holy Sprit, one God, for ever and ever. Amen. Let us open our hearts in thanks to God for the favors showered upon us. Saint Paul teaches us to give thanks to God the Father always through Christ, in whom he has given us everything. For when we became God\u2019s children in Christ, God gave us the riches of his grace, rescuing us from the powers of darkness and bringing us into the kingdom of his beloved Son. Whenever we acknowledge God\u2019s gifts, we prepare ourselves to take part more fully in the Eucharist, which is the sum of all blessings and the crown and source of all thanksgiving. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_genevieve"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_genevieve",
+      "name": "St Genevieve"
+    },
+    "type": "novena_feast_rule"
+  }
+}

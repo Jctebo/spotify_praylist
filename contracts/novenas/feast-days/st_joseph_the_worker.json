@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_joseph_the_worker",
+    "feast": {
+      "day": 1,
+      "mode": "fixed",
+      "month": 5,
+      "name": "St Joseph the Worker"
+    },
+    "id": "st_joseph_the_worker",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "workers",
+        "carpenters",
+        "families"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St Joseph the Worker honors St Joseph as the model of faithful labor and asks his intercession for workers and families."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Joseph the Worker Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and made the prayer title line more speakable without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph, I thank God for thy privilege of being able to work side-by-side with Jesus in the carpenter shop of Nazareth. As a token of thy own gratitude to God, obtain for me the grace to respect the dignity of labor, and ever to be content with the position in life, however lowly, in which it may please Divine Providence to place me. Teach me to work for God and with God in the spirit of humility and prayer, as thou did, so that I may offer my toil in union with the sacrifice of Jesus in the Holy Mass as a reparation for my sins, and gain rich merit for heaven. Saint Joseph, I, thy unworthy child, greet thee. Thou art the faithful protector and intercessor of all who love and venerate thee. Thou knowest that I have special confidence in thee and that, after Our Lord and Our Lady, I place all my hope of salvation in thee, for thou art especially powerful with God and will never abandon thy faithful servants. Therefore I humbly invoke thee and commend myself, with all who are dear to me and all that belongs to me, to thy intercession. I beg thee, by thy love for Our Lord and Our Lady, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father and my model through life, that I may merit to die as thou didst in the arms of Our Lord and Our Lady. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to thee to implore thy powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Guardian of the Word Incarnate, I feel confident that thy prayers on my behalf will be graciously heard before the throne of God. Amen. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to thy protection or asked for thy aid without obtaining relief. Confiding, therefore, in thy goodness, I come before thee and humbly implore thee. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. Pope Leo the Thirteenth\u2019s Prayer to Saint Joseph, from Quamquam Pluries. To thee, O blessed Joseph, we have recourse in our affliction, and having implored the help of thy thrice holy Spouse, we now, with hearts filled with confidence, earnestly beg thee also to take us under thy protection. By that charity wherewith thou wast united to the Immaculate Virgin Mother of God, and by that fatherly love with which thou didst cherish the Child Jesus, we beseech thee and we humbly pray that thou wilt look down with gracious eye upon that inheritance which Jesus Christ purchased by His blood, and wilt succor us in our need by thy power and strength. Defend, O most watchful guardian of the Holy Family, the chosen off-spring of Jesus Christ. Keep from us, O most loving Father, all blight of error and corruption. Aid us from on high, most valiant defender, in this conflict with the powers of darkness. And even as of old thou didst rescue the Child Jesus from the peril of His life, so now defend God\u2019s Holy Church from the snares of the enemy and from all adversity. Shield us ever under thy patronage, that, following thine example and strengthened by thy help, we may live a holy life, die a happy death, and attain to everlasting bliss in Heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Joseph the Worker Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and made the prayer title line more speakable without changing meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph, I thank God for thy privilege of being able to work side-by-side with Jesus in the carpenter shop of Nazareth. As a token of thy own gratitude to God, obtain for me the grace to respect the dignity of labor, and ever to be content with the position in life, however lowly, in which it may please Divine Providence to place me. Teach me to work for God and with God in the spirit of humility and prayer, as thou did, so that I may offer my toil in union with the sacrifice of Jesus in the Holy Mass as a reparation for my sins, and gain rich merit for heaven. Saint Joseph, I, thy unworthy child, greet thee. Thou art the faithful protector and intercessor of all who love and venerate thee. Thou knowest that I have special confidence in thee and that, after Our Lord and Our Lady, I place all my hope of salvation in thee, for thou art especially powerful with God and will never abandon thy faithful servants. Therefore I humbly invoke thee and commend myself, with all who are dear to me and all that belongs to me, to thy intercession. I beg thee, by thy love for Our Lord and Our Lady, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father and my model through life, that I may merit to die as thou didst in the arms of Our Lord and Our Lady. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to thee to implore thy powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that thy prayers on my behalf will be graciously heard before the throne of God. Amen. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to thy protection or asked for thy aid without obtaining relief. Confiding, therefore, in thy goodness, I come before thee and humbly implore thee. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. Pope Leo the Thirteenth\u2019s Prayer to Saint Joseph, from Quamquam Pluries. To thee, O blessed Joseph, we have recourse in our affliction, and having implored the help of thy thrice holy Spouse, we now, with hearts filled with confidence, earnestly beg thee also to take us under thy protection. By that charity wherewith thou wast united to the Immaculate Virgin Mother of God, and by that fatherly love with which thou didst cherish the Child Jesus, we beseech thee and we humbly pray that thou wilt look down with gracious eye upon that inheritance which Jesus Christ purchased by His blood, and wilt succor us in our need by thy power and strength. Defend, O most watchful guardian of the Holy Family, the chosen off-spring of Jesus Christ. Keep from us, O most loving Father, all blight of error and corruption. Aid us from on high, most valiant defender, in this conflict with the powers of darkness. And even as of old thou didst rescue the Child Jesus from the peril of His life, so now defend God\u2019s Holy Church from the snares of the enemy and from all adversity. Shield us ever under thy patronage, that, following thine example and strengthened by thy help, we may live a holy life, die a happy death, and attain to everlasting bliss in Heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and made the prayer title line more speakable without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph, I thank God for thy privilege of being able to work side-by-side with Jesus in the carpenter shop of Nazareth. As a token of thy own gratitude to God, obtain for me the grace to respect the dignity of labor, and ever to be content with the position in life, however lowly, in which it may please Divine Providence to place me. Teach me to work for God and with God in the spirit of humility and prayer, as thou did, so that I may offer my toil in union with the sacrifice of Jesus in the Holy Mass as a reparation for my sins, and gain rich merit for heaven. Saint Joseph, I, thy unworthy child, greet thee. Thou art the faithful protector and intercessor of all who love and venerate thee. Thou knowest that I have special confidence in thee and that, after Our Lord and Our Lady, I place all my hope of salvation in thee, for thou art especially powerful with God and will never abandon thy faithful servants. Therefore I humbly invoke thee and commend myself, with all who are dear to me and all that belongs to me, to thy intercession. I beg thee, by thy love for Our Lord and Our Lady, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father and my model through life, that I may merit to die as thou didst in the arms of Our Lord and Our Lady. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to thee to implore thy powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that thy prayers on my behalf will be graciously heard before the throne of God. Amen. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to thy protection or asked for thy aid without obtaining relief. Confiding, therefore, in thy goodness, I come before thee and humbly implore thee. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. Pope Leo the Thirteenth\u2019s Prayer to Saint Joseph, from Quamquam Pluries. To thee, O blessed Joseph, we have recourse in our affliction, and having implored the help of thy thrice holy Spouse, we now, with hearts filled with confidence, earnestly beg thee also to take us under thy protection. By that charity wherewith thou wast united to the Immaculate Virgin Mother of God, and by that fatherly love with which thou didst cherish the Child Jesus, we beseech thee and we humbly pray that thou wilt look down with gracious eye upon that inheritance which Jesus Christ purchased by His blood, and wilt succor us in our need by thy power and strength. Defend, O most watchful guardian of the Holy Family, the chosen off-spring of Jesus Christ. Keep from us, O most loving Father, all blight of error and corruption. Aid us from on high, most valiant defender, in this conflict with the powers of darkness. And even as of old thou didst rescue the Child Jesus from the peril of His life, so now defend God\u2019s Holy Church from the snares of the enemy and from all adversity. Shield us ever under thy patronage, that, following thine example and strengthened by thy help, we may live a holy life, die a happy death, and attain to everlasting bliss in Heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and made the prayer title line more speakable without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph, I thank God for thy privilege of being able to work side-by-side with Jesus in the carpenter shop of Nazareth. As a token of thy own gratitude to God, obtain for me the grace to respect the dignity of labor, and ever to be content with the position in life, however lowly, in which it may please Divine Providence to place me. Teach me to work for God and with God in the spirit of humility and prayer, as thou did, so that I may offer my toil in union with the sacrifice of Jesus in the Holy Mass as a reparation for my sins, and gain rich merit for heaven. Saint Joseph, I, thy unworthy child, greet thee. Thou art the faithful protector and intercessor of all who love and venerate thee. Thou knowest that I have special confidence in thee and that, after Our Lord and Our Lady, I place all my hope of salvation in thee, for thou art especially powerful with God and will never abandon thy faithful servants. Therefore I humbly invoke thee and commend myself, with all who are dear to me and all that belongs to me, to thy intercession. I beg thee, by thy love for Our Lord and Our Lady, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father and my model through life, that I may merit to die as thou didst in the arms of Our Lord and Our Lady. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to thee to implore thy powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that thy prayers on my behalf will be graciously heard before the throne of God. Amen. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to thy protection or asked for thy aid without obtaining relief. Confiding, therefore, in thy goodness, I come before thee and humbly implore thee. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. Pope Leo the Thirteenth\u2019s Prayer to Saint Joseph, from Quamquam Pluries. To thee, O blessed Joseph, we have recourse in our affliction, and having implored the help of thy thrice holy Spouse, we now, with hearts filled with confidence, earnestly beg thee also to take us under thy protection. By that charity wherewith thou wast united to the Immaculate Virgin Mother of God, and by that fatherly love with which thou didst cherish the Child Jesus, we beseech thee and we humbly pray that thou wilt look down with gracious eye upon that inheritance which Jesus Christ purchased by His blood, and wilt succor us in our need by thy power and strength. Defend, O most watchful guardian of the Holy Family, the chosen off-spring of Jesus Christ. Keep from us, O most loving Father, all blight of error and corruption. Aid us from on high, most valiant defender, in this conflict with the powers of darkness. And even as of old thou didst rescue the Child Jesus from the peril of His life, so now defend God\u2019s Holy Church from the snares of the enemy and from all adversity. Shield us ever under thy patronage, that, following thine example and strengthened by thy help, we may live a holy life, die a happy death, and attain to everlasting bliss in Heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and made the prayer title line more speakable without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph, I thank God for thy privilege of being able to work side-by-side with Jesus in the carpenter shop of Nazareth. As a token of thy own gratitude to God, obtain for me the grace to respect the dignity of labor, and ever to be content with the position in life, however lowly, in which it may please Divine Providence to place me. Teach me to work for God and with God in the spirit of humility and prayer, as thou did, so that I may offer my toil in union with the sacrifice of Jesus in the Holy Mass as a reparation for my sins, and gain rich merit for heaven. Saint Joseph, I, thy unworthy child, greet thee. Thou art the faithful protector and intercessor of all who love and venerate thee. Thou knowest that I have special confidence in thee and that, after Our Lord and Our Lady, I place all my hope of salvation in thee, for thou art especially powerful with God and will never abandon thy faithful servants. Therefore I humbly invoke thee and commend myself, with all who are dear to me and all that belongs to me, to thy intercession. I beg thee, by thy love for Our Lord and Our Lady, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father and my model through life, that I may merit to die as thou didst in the arms of Our Lord and Our Lady. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to thee to implore thy powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that thy prayers on my behalf will be graciously heard before the throne of God. Amen. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to thy protection or asked for thy aid without obtaining relief. Confiding, therefore, in thy goodness, I come before thee and humbly implore thee. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. Pope Leo the Thirteenth\u2019s Prayer to Saint Joseph, from Quamquam Pluries. To thee, O blessed Joseph, we have recourse in our affliction, and having implored the help of thy thrice holy Spouse, we now, with hearts filled with confidence, earnestly beg thee also to take us under thy protection. By that charity wherewith thou wast united to the Immaculate Virgin Mother of God, and by that fatherly love with which thou didst cherish the Child Jesus, we beseech thee and we humbly pray that thou wilt look down with gracious eye upon that inheritance which Jesus Christ purchased by His blood, and wilt succor us in our need by thy power and strength. Defend, O most watchful guardian of the Holy Family, the chosen off-spring of Jesus Christ. Keep from us, O most loving Father, all blight of error and corruption. Aid us from on high, most valiant defender, in this conflict with the powers of darkness. And even as of old thou didst rescue the Child Jesus from the peril of His life, so now defend God\u2019s Holy Church from the snares of the enemy and from all adversity. Shield us ever under thy patronage, that, following thine example and strengthened by thy help, we may live a holy life, die a happy death, and attain to everlasting bliss in Heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and made the prayer title line more speakable without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph, I thank God for thy privilege of being able to work side-by-side with Jesus in the carpenter shop of Nazareth. As a token of thy own gratitude to God, obtain for me the grace to respect the dignity of labor, and ever to be content with the position in life, however lowly, in which it may please Divine Providence to place me. Teach me to work for God and with God in the spirit of humility and prayer, as thou did, so that I may offer my toil in union with the sacrifice of Jesus in the Holy Mass as a reparation for my sins, and gain rich merit for heaven. Saint Joseph, I, thy unworthy child, greet thee. Thou art the faithful protector and intercessor of all who love and venerate thee. Thou knowest that I have special confidence in thee and that, after Our Lord and Our Lady, I place all my hope of salvation in thee, for thou art especially powerful with God and will never abandon thy faithful servants. Therefore I humbly invoke thee and commend myself, with all who are dear to me and all that belongs to me, to thy intercession. I beg thee, by thy love for Our Lord and Our Lady, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father and my model through life, that I may merit to die as thou didst in the arms of Our Lord and Our Lady. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to thee to implore thy powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that thy prayers on my behalf will be graciously heard before the throne of God. Amen. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to thy protection or asked for thy aid without obtaining relief. Confiding, therefore, in thy goodness, I come before thee and humbly implore thee. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. Pope Leo the Thirteenth\u2019s Prayer to Saint Joseph, from Quamquam Pluries. To thee, O blessed Joseph, we have recourse in our affliction, and having implored the help of thy thrice holy Spouse, we now, with hearts filled with confidence, earnestly beg thee also to take us under thy protection. By that charity wherewith thou wast united to the Immaculate Virgin Mother of God, and by that fatherly love with which thou didst cherish the Child Jesus, we beseech thee and we humbly pray that thou wilt look down with gracious eye upon that inheritance which Jesus Christ purchased by His blood, and wilt succor us in our need by thy power and strength. Defend, O most watchful guardian of the Holy Family, the chosen off-spring of Jesus Christ. Keep from us, O most loving Father, all blight of error and corruption. Aid us from on high, most valiant defender, in this conflict with the powers of darkness. And even as of old thou didst rescue the Child Jesus from the peril of His life, so now defend God\u2019s Holy Church from the snares of the enemy and from all adversity. Shield us ever under thy patronage, that, following thine example and strengthened by thy help, we may live a holy life, die a happy death, and attain to everlasting bliss in Heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and made the prayer title line more speakable without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph, I thank God for thy privilege of being able to work side-by-side with Jesus in the carpenter shop of Nazareth. As a token of thy own gratitude to God, obtain for me the grace to respect the dignity of labor, and ever to be content with the position in life, however lowly, in which it may please Divine Providence to place me. Teach me to work for God and with God in the spirit of humility and prayer, as thou did, so that I may offer my toil in union with the sacrifice of Jesus in the Holy Mass as a reparation for my sins, and gain rich merit for heaven. Saint Joseph, I, thy unworthy child, greet thee. Thou art the faithful protector and intercessor of all who love and venerate thee. Thou knowest that I have special confidence in thee and that, after Our Lord and Our Lady, I place all my hope of salvation in thee, for thou art especially powerful with God and will never abandon thy faithful servants. Therefore I humbly invoke thee and commend myself, with all who are dear to me and all that belongs to me, to thy intercession. I beg thee, by thy love for Our Lord and Our Lady, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father and my model through life, that I may merit to die as thou didst in the arms of Our Lord and Our Lady. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to thee to implore thy powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that thy prayers on my behalf will be graciously heard before the throne of God. Amen. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to thy protection or asked for thy aid without obtaining relief. Confiding, therefore, in thy goodness, I come before thee and humbly implore thee. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. Pope Leo the Thirteenth\u2019s Prayer to Saint Joseph, from Quamquam Pluries. To thee, O blessed Joseph, we have recourse in our affliction, and having implored the help of thy thrice holy Spouse, we now, with hearts filled with confidence, earnestly beg thee also to take us under thy protection. By that charity wherewith thou wast united to the Immaculate Virgin Mother of God, and by that fatherly love with which thou didst cherish the Child Jesus, we beseech thee and we humbly pray that thou wilt look down with gracious eye upon that inheritance which Jesus Christ purchased by His blood, and wilt succor us in our need by thy power and strength. Defend, O most watchful guardian of the Holy Family, the chosen off-spring of Jesus Christ. Keep from us, O most loving Father, all blight of error and corruption. Aid us from on high, most valiant defender, in this conflict with the powers of darkness. And even as of old thou didst rescue the Child Jesus from the peril of His life, so now defend God\u2019s Holy Church from the snares of the enemy and from all adversity. Shield us ever under thy patronage, that, following thine example and strengthened by thy help, we may live a holy life, die a happy death, and attain to everlasting bliss in Heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and made the prayer title line more speakable without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph, I thank God for thy privilege of being able to work side-by-side with Jesus in the carpenter shop of Nazareth. As a token of thy own gratitude to God, obtain for me the grace to respect the dignity of labor, and ever to be content with the position in life, however lowly, in which it may please Divine Providence to place me. Teach me to work for God and with God in the spirit of humility and prayer, as thou did, so that I may offer my toil in union with the sacrifice of Jesus in the Holy Mass as a reparation for my sins, and gain rich merit for heaven. Saint Joseph, I, thy unworthy child, greet thee. Thou art the faithful protector and intercessor of all who love and venerate thee. Thou knowest that I have special confidence in thee and that, after Our Lord and Our Lady, I place all my hope of salvation in thee, for thou art especially powerful with God and will never abandon thy faithful servants. Therefore I humbly invoke thee and commend myself, with all who are dear to me and all that belongs to me, to thy intercession. I beg thee, by thy love for Our Lord and Our Lady, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father and my model through life, that I may merit to die as thou didst in the arms of Our Lord and Our Lady. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to thee to implore thy powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that thy prayers on my behalf will be graciously heard before the throne of God. Amen. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to thy protection or asked for thy aid without obtaining relief. Confiding, therefore, in thy goodness, I come before thee and humbly implore thee. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. Pope Leo the Thirteenth\u2019s Prayer to Saint Joseph, from Quamquam Pluries. To thee, O blessed Joseph, we have recourse in our affliction, and having implored the help of thy thrice holy Spouse, we now, with hearts filled with confidence, earnestly beg thee also to take us under thy protection. By that charity wherewith thou wast united to the Immaculate Virgin Mother of God, and by that fatherly love with which thou didst cherish the Child Jesus, we beseech thee and we humbly pray that thou wilt look down with gracious eye upon that inheritance which Jesus Christ purchased by His blood, and wilt succor us in our need by thy power and strength. Defend, O most watchful guardian of the Holy Family, the chosen off-spring of Jesus Christ. Keep from us, O most loving Father, all blight of error and corruption. Aid us from on high, most valiant defender, in this conflict with the powers of darkness. And even as of old thou didst rescue the Child Jesus from the peril of His life, so now defend God\u2019s Holy Church from the snares of the enemy and from all adversity. Shield us ever under thy patronage, that, following thine example and strengthened by thy help, we may live a holy life, die a happy death, and attain to everlasting bliss in Heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and made the prayer title line more speakable without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph, I thank God for thy privilege of being able to work side-by-side with Jesus in the carpenter shop of Nazareth. As a token of thy own gratitude to God, obtain for me the grace to respect the dignity of labor, and ever to be content with the position in life, however lowly, in which it may please Divine Providence to place me. Teach me to work for God and with God in the spirit of humility and prayer, as thou did, so that I may offer my toil in union with the sacrifice of Jesus in the Holy Mass as a reparation for my sins, and gain rich merit for heaven. Saint Joseph, I, thy unworthy child, greet thee. Thou art the faithful protector and intercessor of all who love and venerate thee. Thou knowest that I have special confidence in thee and that, after Our Lord and Our Lady, I place all my hope of salvation in thee, for thou art especially powerful with God and will never abandon thy faithful servants. Therefore I humbly invoke thee and commend myself, with all who are dear to me and all that belongs to me, to thy intercession. I beg thee, by thy love for Our Lord and Our Lady, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father and my model through life, that I may merit to die as thou didst in the arms of Our Lord and Our Lady. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to thee to implore thy powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that thy prayers on my behalf will be graciously heard before the throne of God. Amen. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to thy protection or asked for thy aid without obtaining relief. Confiding, therefore, in thy goodness, I come before thee and humbly implore thee. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. Pope Leo the Thirteenth\u2019s Prayer to Saint Joseph, from Quamquam Pluries. To thee, O blessed Joseph, we have recourse in our affliction, and having implored the help of thy thrice holy Spouse, we now, with hearts filled with confidence, earnestly beg thee also to take us under thy protection. By that charity wherewith thou wast united to the Immaculate Virgin Mother of God, and by that fatherly love with which thou didst cherish the Child Jesus, we beseech thee and we humbly pray that thou wilt look down with gracious eye upon that inheritance which Jesus Christ purchased by His blood, and wilt succor us in our need by thy power and strength. Defend, O most watchful guardian of the Holy Family, the chosen off-spring of Jesus Christ. Keep from us, O most loving Father, all blight of error and corruption. Aid us from on high, most valiant defender, in this conflict with the powers of darkness. And even as of old thou didst rescue the Child Jesus from the peril of His life, so now defend God\u2019s Holy Church from the snares of the enemy and from all adversity. Shield us ever under thy patronage, that, following thine example and strengthened by thy help, we may live a holy life, die a happy death, and attain to everlasting bliss in Heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and made the prayer title line more speakable without changing meaning.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Dear Saint Joseph, I thank God for thy privilege of being able to work side-by-side with Jesus in the carpenter shop of Nazareth. As a token of thy own gratitude to God, obtain for me the grace to respect the dignity of labor, and ever to be content with the position in life, however lowly, in which it may please Divine Providence to place me. Teach me to work for God and with God in the spirit of humility and prayer, as thou did, so that I may offer my toil in union with the sacrifice of Jesus in the Holy Mass as a reparation for my sins, and gain rich merit for heaven. Saint Joseph, I, thy unworthy child, greet thee. Thou art the faithful protector and intercessor of all who love and venerate thee. Thou knowest that I have special confidence in thee and that, after Our Lord and Our Lady, I place all my hope of salvation in thee, for thou art especially powerful with God and will never abandon thy faithful servants. Therefore I humbly invoke thee and commend myself, with all who are dear to me and all that belongs to me, to thy intercession. I beg thee, by thy love for Our Lord and Our Lady, not to abandon me during life and to assist me at the hour of my death. Glorious Saint Joseph, spouse of the Immaculate Virgin, obtain for me a pure, humble, charitable mind, and perfect resignation to the divine Will. Be my guide, my father and my model through life, that I may merit to die as thou didst in the arms of Our Lord and Our Lady. Loving Saint Joseph, faithful follower of Jesus Christ, I raise my heart to thee to implore thy powerful intercession in obtaining from the Divine Heart of Jesus all the graces necessary for my spiritual and temporal welfare, particularly the grace of a happy death, and the special grace I now implore:  Guardian of the Word Incarnate, I feel confident that thy prayers on my behalf will be graciously heard before the throne of God. Amen. Remember, most pure spouse of Mary, ever Virgin, my loving protector, Saint Joseph, that no one ever had recourse to thy protection or asked for thy aid without obtaining relief. Confiding, therefore, in thy goodness, I come before thee and humbly implore thee. Despise not my petitions, foster-father of the Redeemer, but graciously receive them. Amen. Pope Leo the Thirteenth\u2019s Prayer to Saint Joseph, from Quamquam Pluries. To thee, O blessed Joseph, we have recourse in our affliction, and having implored the help of thy thrice holy Spouse, we now, with hearts filled with confidence, earnestly beg thee also to take us under thy protection. By that charity wherewith thou wast united to the Immaculate Virgin Mother of God, and by that fatherly love with which thou didst cherish the Child Jesus, we beseech thee and we humbly pray that thou wilt look down with gracious eye upon that inheritance which Jesus Christ purchased by His blood, and wilt succor us in our need by thy power and strength. Defend, O most watchful guardian of the Holy Family, the chosen off-spring of Jesus Christ. Keep from us, O most loving Father, all blight of error and corruption. Aid us from on high, most valiant defender, in this conflict with the powers of darkness. And even as of old thou didst rescue the Child Jesus from the peril of His life, so now defend God\u2019s Holy Church from the snares of the enemy and from all adversity. Shield us ever under thy patronage, that, following thine example and strengthened by thy help, we may live a holy life, die a happy death, and attain to everlasting bliss in Heaven. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_joseph_the_worker"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_joseph_the_worker",
+      "name": "St Joseph the Worker"
+    },
+    "type": "novena_feast_rule"
+  }
+}

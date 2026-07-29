@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "30_day_novena_to_st_joseph",
+    "feast": {
+      "day": 19,
+      "mode": "fixed",
+      "month": 3,
+      "name": "30 Day Novena to St Joseph"
+    },
+    "id": "30_day_novena_to_st_joseph",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "workers",
+        "fathers",
+        "the universal Church"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "A 30-day novena of daily prayer asking St Joseph\u2019s intercession, traditionally prayed in the month leading up to his feast day."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full 30 Day Novena to St Joseph below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Light normalization for text-to-speech pacing: adjusted a few sentence breaks and removed one exclamation for smoother read-aloud while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever blessed and glorious Joseph, kind and loving father, and helpful friend of all in sorrow. You are the good father and protector of orphans, the defender of the defenseless, the patron of those in need and sorrow. Look kindly on my request. My sins have drawn down on me the just displeasure of my God, and so I am surrounded with unhappiness. To you, loving guardian of the Family of Nazareth, do I go for help and protection. Listen, then, I beg you, with fatherly concern, to my earnest prayers, and obtain for me the favors I ask."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "I ask it by the infinite mercy of the eternal Son of God, which moved Him to take our nature and to be born into this world of sorrow. I ask it by the weariness and suffering you endured when you found no shelter at the inn of Bethlehem for the holy Virgin, nor a house where the Son of God could be born. Then, being everywhere refused, you had to allow the Queen of Heaven to give birth to the world\u2019s Redeemer in a cave. I ask it by the loveliness and power of that sacred Name, Jesus, which you conferred on the adorable infant. I ask it by that painful torture you felt at the prophecy of holy Simeon, which declared the Child Jesus and His holy Mother future victims of our sins and of their great love for us. I ask it through your sorrow and pain of soul when the angel declared to you that the life of the Child Jesus was sought by His enemies. From their evil plan you had to flee with Him and His Blessed Mother to Egypt. I ask it by all the suffering, weariness, and labors of that long and dangerous journey. I ask it by all your care to protect the Sacred Child and His Immaculate Mother during your second journey, when you were ordered to return to your own country. I ask it by your peaceful life in Nazareth where you met with so many joys and sorrows. I ask it by your great distress when the adorable Child was lost to you and His Mother for three days. I ask it by your joy at finding Him in the Temple, and by the comfort you found at Nazareth, while living in the company of the Child Jesus. I ask it by the wonderful submission He showed in His obedience to you. I ask it by the perfect love and conformity you showed in accepting the Divine order to depart from this life, and from the company of Jesus and Mary. I ask it by the joy which filled your soul, when the Redeemer of the world, triumphant over death and hell, entered into the possession of His kingdom and led you into it with special honors. I ask it through Mary\u2019s glorious Assumption, and through that endless happiness you have with her in the presence of God. O good father, I beg you, by all your sufferings, sorrows, and joys, to hear me and obtain for me what I ask. Obtain for all those who have asked my prayers everything that is useful to them in the plan of God. Finally, my dear patron and father, be with me and all who are dear to me in our last moments, that we may eternally sing the praises of Jesus, Mary and Joseph. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full 30 Day Novena to St Joseph below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Light normalization for text-to-speech pacing: adjusted a few sentence breaks and removed one exclamation for smoother read-aloud while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever blessed and glorious Joseph, kind and loving father, and helpful friend of all in sorrow. You are the good father and protector of orphans, the defender of the defenseless, the patron of those in need and sorrow. Look kindly on my request. My sins have drawn down on me the just displeasure of my God, and so I am surrounded with unhappiness. To you, loving guardian of the Family of Nazareth, do I go for help and protection. Listen, then, I beg you, with fatherly concern, to my earnest prayers, and obtain for me the favors I ask.  I ask it by the infinite mercy of the eternal Son of God, which moved Him to take our nature and to be born into this world of sorrow. I ask it by the weariness and suffering you endured when you found no shelter at the inn of Bethlehem for the holy Virgin, nor a house where the Son of God could be born. Then, being everywhere refused, you had to allow the Queen of Heaven to give birth to the world\u2019s Redeemer in a cave. I ask it by the loveliness and power of that sacred Name, Jesus, which you conferred on the adorable infant. I ask it by that painful torture you felt at the prophecy of holy Simeon, which declared the Child Jesus and His holy Mother future victims of our sins and of their great love for us. I ask it through your sorrow and pain of soul when the angel declared to you that the life of the Child Jesus was sought by His enemies. From their evil plan you had to flee with Him and His Blessed Mother to Egypt. I ask it by all the suffering, weariness, and labors of that long and dangerous journey. I ask it by all your care to protect the Sacred Child and His Immaculate Mother during your second journey, when you were ordered to return to your own country. I ask it by your peaceful life in Nazareth where you met with so many joys and sorrows. I ask it by your great distress when the adorable Child was lost to you and His Mother for three days. I ask it by your joy at finding Him in the Temple, and by the comfort you found at Nazareth, while living in the company of the Child Jesus. I ask it by the wonderful submission He showed in His obedience to you. I ask it by the perfect love and conformity you showed in accepting the Divine order to depart from this life, and from the company of Jesus and Mary. I ask it by the joy which filled your soul, when the Redeemer of the world, triumphant over death and hell, entered into the possession of His kingdom and led you into it with special honors. I ask it through Mary\u2019s glorious Assumption, and through that endless happiness you have with her in the presence of God. O good father, I beg you, by all your sufferings, sorrows, and joys, to hear me and obtain for me what I ask. Obtain for all those who have asked my prayers everything that is useful to them in the plan of God. Finally, my dear patron and father, be with me and all who are dear to me in our last moments, that we may eternally sing the praises of Jesus, Mary and Joseph. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Light normalization for text-to-speech pacing: adjusted a few sentence breaks and removed one exclamation for smoother read-aloud while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever blessed and glorious Joseph, kind and loving father, and helpful friend of all in sorrow. You are the good father and protector of orphans, the defender of the defenseless, the patron of those in need and sorrow. Look kindly on my request. My sins have drawn down on me the just displeasure of my God, and so I am surrounded with unhappiness. To you, loving guardian of the Family of Nazareth, do I go for help and protection. Listen, then, I beg you, with fatherly concern, to my earnest prayers, and obtain for me the favors I ask.  I ask it by the infinite mercy of the eternal Son of God, which moved Him to take our nature and to be born into this world of sorrow. I ask it by the weariness and suffering you endured when you found no shelter at the inn of Bethlehem for the holy Virgin, nor a house where the Son of God could be born. Then, being everywhere refused, you had to allow the Queen of Heaven to give birth to the world\u2019s Redeemer in a cave. I ask it by the loveliness and power of that sacred Name, Jesus, which you conferred on the adorable infant. I ask it by that painful torture you felt at the prophecy of holy Simeon, which declared the Child Jesus and His holy Mother future victims of our sins and of their great love for us. I ask it through your sorrow and pain of soul when the angel declared to you that the life of the Child Jesus was sought by His enemies. From their evil plan you had to flee with Him and His Blessed Mother to Egypt. I ask it by all the suffering, weariness, and labors of that long and dangerous journey. I ask it by all your care to protect the Sacred Child and His Immaculate Mother during your second journey, when you were ordered to return to your own country. I ask it by your peaceful life in Nazareth where you met with so many joys and sorrows. I ask it by your great distress when the adorable Child was lost to you and His Mother for three days. I ask it by your joy at finding Him in the Temple, and by the comfort you found at Nazareth, while living in the company of the Child Jesus. I ask it by the wonderful submission He showed in His obedience to you. I ask it by the perfect love and conformity you showed in accepting the Divine order to depart from this life, and from the company of Jesus and Mary. I ask it by the joy which filled your soul, when the Redeemer of the world, triumphant over death and hell, entered into the possession of His kingdom and led you into it with special honors. I ask it through Mary\u2019s glorious Assumption, and through that endless happiness you have with her in the presence of God. O good father, I beg you, by all your sufferings, sorrows, and joys, to hear me and obtain for me what I ask. Obtain for all those who have asked my prayers everything that is useful to them in the plan of God. Finally, my dear patron and father, be with me and all who are dear to me in our last moments, that we may eternally sing the praises of Jesus, Mary and Joseph. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Light normalization for text-to-speech pacing: adjusted a few sentence breaks and removed one exclamation for smoother read-aloud while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever blessed and glorious Joseph, kind and loving father, and helpful friend of all in sorrow. You are the good father and protector of orphans, the defender of the defenseless, the patron of those in need and sorrow. Look kindly on my request. My sins have drawn down on me the just displeasure of my God, and so I am surrounded with unhappiness. To you, loving guardian of the Family of Nazareth, do I go for help and protection. Listen, then, I beg you, with fatherly concern, to my earnest prayers, and obtain for me the favors I ask.  I ask it by the infinite mercy of the eternal Son of God, which moved Him to take our nature and to be born into this world of sorrow. I ask it by the weariness and suffering you endured when you found no shelter at the inn of Bethlehem for the holy Virgin, nor a house where the Son of God could be born. Then, being everywhere refused, you had to allow the Queen of Heaven to give birth to the world\u2019s Redeemer in a cave. I ask it by the loveliness and power of that sacred Name, Jesus, which you conferred on the adorable infant. I ask it by that painful torture you felt at the prophecy of holy Simeon, which declared the Child Jesus and His holy Mother future victims of our sins and of their great love for us. I ask it through your sorrow and pain of soul when the angel declared to you that the life of the Child Jesus was sought by His enemies. From their evil plan you had to flee with Him and His Blessed Mother to Egypt. I ask it by all the suffering, weariness, and labors of that long and dangerous journey. I ask it by all your care to protect the Sacred Child and His Immaculate Mother during your second journey, when you were ordered to return to your own country. I ask it by your peaceful life in Nazareth where you met with so many joys and sorrows. I ask it by your great distress when the adorable Child was lost to you and His Mother for three days. I ask it by your joy at finding Him in the Temple, and by the comfort you found at Nazareth, while living in the company of the Child Jesus. I ask it by the wonderful submission He showed in His obedience to you. I ask it by the perfect love and conformity you showed in accepting the Divine order to depart from this life, and from the company of Jesus and Mary. I ask it by the joy which filled your soul, when the Redeemer of the world, triumphant over death and hell, entered into the possession of His kingdom and led you into it with special honors. I ask it through Mary\u2019s glorious Assumption, and through that endless happiness you have with her in the presence of God. O good father, I beg you, by all your sufferings, sorrows, and joys, to hear me and obtain for me what I ask. Obtain for all those who have asked my prayers everything that is useful to them in the plan of God. Finally, my dear patron and father, be with me and all who are dear to me in our last moments, that we may eternally sing the praises of Jesus, Mary and Joseph. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Light normalization for text-to-speech pacing: adjusted a few sentence breaks and removed one exclamation for smoother read-aloud while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever blessed and glorious Joseph, kind and loving father, and helpful friend of all in sorrow. You are the good father and protector of orphans, the defender of the defenseless, the patron of those in need and sorrow. Look kindly on my request. My sins have drawn down on me the just displeasure of my God, and so I am surrounded with unhappiness. To you, loving guardian of the Family of Nazareth, do I go for help and protection. Listen, then, I beg you, with fatherly concern, to my earnest prayers, and obtain for me the favors I ask.  I ask it by the infinite mercy of the eternal Son of God, which moved Him to take our nature and to be born into this world of sorrow. I ask it by the weariness and suffering you endured when you found no shelter at the inn of Bethlehem for the holy Virgin, nor a house where the Son of God could be born. Then, being everywhere refused, you had to allow the Queen of Heaven to give birth to the world\u2019s Redeemer in a cave. I ask it by the loveliness and power of that sacred Name, Jesus, which you conferred on the adorable infant. I ask it by that painful torture you felt at the prophecy of holy Simeon, which declared the Child Jesus and His holy Mother future victims of our sins and of their great love for us. I ask it through your sorrow and pain of soul when the angel declared to you that the life of the Child Jesus was sought by His enemies. From their evil plan you had to flee with Him and His Blessed Mother to Egypt. I ask it by all the suffering, weariness, and labors of that long and dangerous journey. I ask it by all your care to protect the Sacred Child and His Immaculate Mother during your second journey, when you were ordered to return to your own country. I ask it by your peaceful life in Nazareth where you met with so many joys and sorrows. I ask it by your great distress when the adorable Child was lost to you and His Mother for three days. I ask it by your joy at finding Him in the Temple, and by the comfort you found at Nazareth, while living in the company of the Child Jesus. I ask it by the wonderful submission He showed in His obedience to you. I ask it by the perfect love and conformity you showed in accepting the Divine order to depart from this life, and from the company of Jesus and Mary. I ask it by the joy which filled your soul, when the Redeemer of the world, triumphant over death and hell, entered into the possession of His kingdom and led you into it with special honors. I ask it through Mary\u2019s glorious Assumption, and through that endless happiness you have with her in the presence of God. O good father, I beg you, by all your sufferings, sorrows, and joys, to hear me and obtain for me what I ask. Obtain for all those who have asked my prayers everything that is useful to them in the plan of God. Finally, my dear patron and father, be with me and all who are dear to me in our last moments, that we may eternally sing the praises of Jesus, Mary and Joseph. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Light normalization for text-to-speech pacing: adjusted a few sentence breaks and removed one exclamation for smoother read-aloud while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever blessed and glorious Joseph, kind and loving father, and helpful friend of all in sorrow. You are the good father and protector of orphans, the defender of the defenseless, the patron of those in need and sorrow. Look kindly on my request. My sins have drawn down on me the just displeasure of my God, and so I am surrounded with unhappiness. To you, loving guardian of the Family of Nazareth, do I go for help and protection. Listen, then, I beg you, with fatherly concern, to my earnest prayers, and obtain for me the favors I ask.  I ask it by the infinite mercy of the eternal Son of God, which moved Him to take our nature and to be born into this world of sorrow. I ask it by the weariness and suffering you endured when you found no shelter at the inn of Bethlehem for the holy Virgin, nor a house where the Son of God could be born. Then, being everywhere refused, you had to allow the Queen of Heaven to give birth to the world\u2019s Redeemer in a cave. I ask it by the loveliness and power of that sacred Name, Jesus, which you conferred on the adorable infant. I ask it by that painful torture you felt at the prophecy of holy Simeon, which declared the Child Jesus and His holy Mother future victims of our sins and of their great love for us. I ask it through your sorrow and pain of soul when the angel declared to you that the life of the Child Jesus was sought by His enemies. From their evil plan you had to flee with Him and His Blessed Mother to Egypt. I ask it by all the suffering, weariness, and labors of that long and dangerous journey. I ask it by all your care to protect the Sacred Child and His Immaculate Mother during your second journey, when you were ordered to return to your own country. I ask it by your peaceful life in Nazareth where you met with so many joys and sorrows. I ask it by your great distress when the adorable Child was lost to you and His Mother for three days. I ask it by your joy at finding Him in the Temple, and by the comfort you found at Nazareth, while living in the company of the Child Jesus. I ask it by the wonderful submission He showed in His obedience to you. I ask it by the perfect love and conformity you showed in accepting the Divine order to depart from this life, and from the company of Jesus and Mary. I ask it by the joy which filled your soul, when the Redeemer of the world, triumphant over death and hell, entered into the possession of His kingdom and led you into it with special honors. I ask it through Mary\u2019s glorious Assumption, and through that endless happiness you have with her in the presence of God. O good father, I beg you, by all your sufferings, sorrows, and joys, to hear me and obtain for me what I ask. Obtain for all those who have asked my prayers everything that is useful to them in the plan of God. Finally, my dear patron and father, be with me and all who are dear to me in our last moments, that we may eternally sing the praises of Jesus, Mary and Joseph. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Light normalization for text-to-speech pacing: adjusted a few sentence breaks and removed one exclamation for smoother read-aloud while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever blessed and glorious Joseph, kind and loving father, and helpful friend of all in sorrow. You are the good father and protector of orphans, the defender of the defenseless, the patron of those in need and sorrow. Look kindly on my request. My sins have drawn down on me the just displeasure of my God, and so I am surrounded with unhappiness. To you, loving guardian of the Family of Nazareth, do I go for help and protection. Listen, then, I beg you, with fatherly concern, to my earnest prayers, and obtain for me the favors I ask.  I ask it by the infinite mercy of the eternal Son of God, which moved Him to take our nature and to be born into this world of sorrow. I ask it by the weariness and suffering you endured when you found no shelter at the inn of Bethlehem for the holy Virgin, nor a house where the Son of God could be born. Then, being everywhere refused, you had to allow the Queen of Heaven to give birth to the world\u2019s Redeemer in a cave. I ask it by the loveliness and power of that sacred Name, Jesus, which you conferred on the adorable infant. I ask it by that painful torture you felt at the prophecy of holy Simeon, which declared the Child Jesus and His holy Mother future victims of our sins and of their great love for us. I ask it through your sorrow and pain of soul when the angel declared to you that the life of the Child Jesus was sought by His enemies. From their evil plan you had to flee with Him and His Blessed Mother to Egypt. I ask it by all the suffering, weariness, and labors of that long and dangerous journey. I ask it by all your care to protect the Sacred Child and His Immaculate Mother during your second journey, when you were ordered to return to your own country. I ask it by your peaceful life in Nazareth where you met with so many joys and sorrows. I ask it by your great distress when the adorable Child was lost to you and His Mother for three days. I ask it by your joy at finding Him in the Temple, and by the comfort you found at Nazareth, while living in the company of the Child Jesus. I ask it by the wonderful submission He showed in His obedience to you. I ask it by the perfect love and conformity you showed in accepting the Divine order to depart from this life, and from the company of Jesus and Mary. I ask it by the joy which filled your soul, when the Redeemer of the world, triumphant over death and hell, entered into the possession of His kingdom and led you into it with special honors. I ask it through Mary\u2019s glorious Assumption, and through that endless happiness you have with her in the presence of God. O good father, I beg you, by all your sufferings, sorrows, and joys, to hear me and obtain for me what I ask. Obtain for all those who have asked my prayers everything that is useful to them in the plan of God. Finally, my dear patron and father, be with me and all who are dear to me in our last moments, that we may eternally sing the praises of Jesus, Mary and Joseph. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Light normalization for text-to-speech pacing: adjusted a few sentence breaks and removed one exclamation for smoother read-aloud while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever blessed and glorious Joseph, kind and loving father, and helpful friend of all in sorrow. You are the good father and protector of orphans, the defender of the defenseless, the patron of those in need and sorrow. Look kindly on my request. My sins have drawn down on me the just displeasure of my God, and so I am surrounded with unhappiness. To you, loving guardian of the Family of Nazareth, do I go for help and protection. Listen, then, I beg you, with fatherly concern, to my earnest prayers, and obtain for me the favors I ask.  I ask it by the infinite mercy of the eternal Son of God, which moved Him to take our nature and to be born into this world of sorrow. I ask it by the weariness and suffering you endured when you found no shelter at the inn of Bethlehem for the holy Virgin, nor a house where the Son of God could be born. Then, being everywhere refused, you had to allow the Queen of Heaven to give birth to the world\u2019s Redeemer in a cave. I ask it by the loveliness and power of that sacred Name, Jesus, which you conferred on the adorable infant. I ask it by that painful torture you felt at the prophecy of holy Simeon, which declared the Child Jesus and His holy Mother future victims of our sins and of their great love for us. I ask it through your sorrow and pain of soul when the angel declared to you that the life of the Child Jesus was sought by His enemies. From their evil plan you had to flee with Him and His Blessed Mother to Egypt. I ask it by all the suffering, weariness, and labors of that long and dangerous journey. I ask it by all your care to protect the Sacred Child and His Immaculate Mother during your second journey, when you were ordered to return to your own country. I ask it by your peaceful life in Nazareth where you met with so many joys and sorrows. I ask it by your great distress when the adorable Child was lost to you and His Mother for three days. I ask it by your joy at finding Him in the Temple, and by the comfort you found at Nazareth, while living in the company of the Child Jesus. I ask it by the wonderful submission He showed in His obedience to you. I ask it by the perfect love and conformity you showed in accepting the Divine order to depart from this life, and from the company of Jesus and Mary. I ask it by the joy which filled your soul, when the Redeemer of the world, triumphant over death and hell, entered into the possession of His kingdom and led you into it with special honors. I ask it through Mary\u2019s glorious Assumption, and through that endless happiness you have with her in the presence of God. O good father, I beg you, by all your sufferings, sorrows, and joys, to hear me and obtain for me what I ask. Obtain for all those who have asked my prayers everything that is useful to them in the plan of God. Finally, my dear patron and father, be with me and all who are dear to me in our last moments, that we may eternally sing the praises of Jesus, Mary and Joseph. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Light normalization for text-to-speech pacing: adjusted a few sentence breaks and removed one exclamation for smoother read-aloud while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever blessed and glorious Joseph, kind and loving father, and helpful friend of all in sorrow. You are the good father and protector of orphans, the defender of the defenseless, the patron of those in need and sorrow. Look kindly on my request. My sins have drawn down on me the just displeasure of my God, and so I am surrounded with unhappiness. To you, loving guardian of the Family of Nazareth, do I go for help and protection. Listen, then, I beg you, with fatherly concern, to my earnest prayers, and obtain for me the favors I ask.  I ask it by the infinite mercy of the eternal Son of God, which moved Him to take our nature and to be born into this world of sorrow. I ask it by the weariness and suffering you endured when you found no shelter at the inn of Bethlehem for the holy Virgin, nor a house where the Son of God could be born. Then, being everywhere refused, you had to allow the Queen of Heaven to give birth to the world\u2019s Redeemer in a cave. I ask it by the loveliness and power of that sacred Name, Jesus, which you conferred on the adorable infant. I ask it by that painful torture you felt at the prophecy of holy Simeon, which declared the Child Jesus and His holy Mother future victims of our sins and of their great love for us. I ask it through your sorrow and pain of soul when the angel declared to you that the life of the Child Jesus was sought by His enemies. From their evil plan you had to flee with Him and His Blessed Mother to Egypt. I ask it by all the suffering, weariness, and labors of that long and dangerous journey. I ask it by all your care to protect the Sacred Child and His Immaculate Mother during your second journey, when you were ordered to return to your own country. I ask it by your peaceful life in Nazareth where you met with so many joys and sorrows. I ask it by your great distress when the adorable Child was lost to you and His Mother for three days. I ask it by your joy at finding Him in the Temple, and by the comfort you found at Nazareth, while living in the company of the Child Jesus. I ask it by the wonderful submission He showed in His obedience to you. I ask it by the perfect love and conformity you showed in accepting the Divine order to depart from this life, and from the company of Jesus and Mary. I ask it by the joy which filled your soul, when the Redeemer of the world, triumphant over death and hell, entered into the possession of His kingdom and led you into it with special honors. I ask it through Mary\u2019s glorious Assumption, and through that endless happiness you have with her in the presence of God. O good father, I beg you, by all your sufferings, sorrows, and joys, to hear me and obtain for me what I ask. Obtain for all those who have asked my prayers everything that is useful to them in the plan of God. Finally, my dear patron and father, be with me and all who are dear to me in our last moments, that we may eternally sing the praises of Jesus, Mary and Joseph. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Light normalization for text-to-speech pacing: adjusted a few sentence breaks and removed one exclamation for smoother read-aloud while preserving meaning and structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Ever blessed and glorious Joseph, kind and loving father, and helpful friend of all in sorrow. You are the good father and protector of orphans, the defender of the defenseless, the patron of those in need and sorrow. Look kindly on my request. My sins have drawn down on me the just displeasure of my God, and so I am surrounded with unhappiness. To you, loving guardian of the Family of Nazareth, do I go for help and protection. Listen, then, I beg you, with fatherly concern, to my earnest prayers, and obtain for me the favors I ask.  I ask it by the infinite mercy of the eternal Son of God, which moved Him to take our nature and to be born into this world of sorrow. I ask it by the weariness and suffering you endured when you found no shelter at the inn of Bethlehem for the holy Virgin, nor a house where the Son of God could be born. Then, being everywhere refused, you had to allow the Queen of Heaven to give birth to the world\u2019s Redeemer in a cave. I ask it by the loveliness and power of that sacred Name, Jesus, which you conferred on the adorable infant. I ask it by that painful torture you felt at the prophecy of holy Simeon, which declared the Child Jesus and His holy Mother future victims of our sins and of their great love for us. I ask it through your sorrow and pain of soul when the angel declared to you that the life of the Child Jesus was sought by His enemies. From their evil plan you had to flee with Him and His Blessed Mother to Egypt. I ask it by all the suffering, weariness, and labors of that long and dangerous journey. I ask it by all your care to protect the Sacred Child and His Immaculate Mother during your second journey, when you were ordered to return to your own country. I ask it by your peaceful life in Nazareth where you met with so many joys and sorrows. I ask it by your great distress when the adorable Child was lost to you and His Mother for three days. I ask it by your joy at finding Him in the Temple, and by the comfort you found at Nazareth, while living in the company of the Child Jesus. I ask it by the wonderful submission He showed in His obedience to you. I ask it by the perfect love and conformity you showed in accepting the Divine order to depart from this life, and from the company of Jesus and Mary. I ask it by the joy which filled your soul, when the Redeemer of the world, triumphant over death and hell, entered into the possession of His kingdom and led you into it with special honors. I ask it through Mary\u2019s glorious Assumption, and through that endless happiness you have with her in the presence of God. O good father, I beg you, by all your sufferings, sorrows, and joys, to hear me and obtain for me what I ask. Obtain for all those who have asked my prayers everything that is useful to them in the plan of God. Finally, my dear patron and father, be with me and all who are dear to me in our last moments, that we may eternally sing the praises of Jesus, Mary and Joseph. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-30_day_novena_to_st_joseph"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "30_day_novena_to_st_joseph",
+      "name": "30 Day Novena to St Joseph"
+    },
+    "type": "novena_feast_rule"
+  }
+}

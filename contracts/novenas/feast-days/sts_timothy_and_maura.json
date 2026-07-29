@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "sts_timothy_and_maura",
+    "feast": {
+      "day": 3,
+      "mode": "fixed",
+      "month": 5,
+      "name": "Sts. Timothy and Maura"
+    },
+    "id": "sts_timothy_and_maura",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "married couples",
+        "martyrs",
+        "persecuted Christians"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "Sts. Timothy and Maura were Christian spouses and martyrs honored for their steadfast faith amid persecution."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Sts. Timothy and Maura Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy martyrs Timothy and Maura, newlyweds joined in Christ and made one in His love, you were bound together not only by the vows of marriage but by a shared and burning love for the Lord, for whom you gave up your lives. In the days of your trial you did not weaken one another with fear, but strengthened one another with courage, until you were crucified side by side, each comforting the other as you glorified God. Look down upon us who honor your memory, and present our prayers before the throne of the Most High. You accepted many humiliations and endured crucifixion, and so you deserved to be crowned by God, great and praiseworthy Timothy and Maura, one in Christ. Intercede with the Lord for us, that we may worthily celebrate your most pure memory, that He may grant peace to our land and our people, for He is a mighty stronghold for the faithful. O Saint Timothy, faithful reader of the sacred books, who would not surrender the word of God into unholy hands even at the cost of your life, obtain for us a deep and abiding love for the Holy Scriptures, and the courage to hold fast to the truth of the faith when it is despised or forbidden. O Saint Maura, who in the midst of your own torments prayed for those who tormented you, teach us to forgive those who wrong us, and to love our enemies as Christ commanded. O holy couple, patrons of Christian marriage, watch over all husbands and wives. Grant to the married the grace to encourage one another in holiness, to bear their sufferings together with patience, and to help one another along the narrow road that leads to eternal life. Be near to newlyweds beginning their life together, and to all who prepare for marriage, that their homes may be built upon Christ. And remember, we beseech you, our brothers and sisters throughout the world who even now suffer and die for the name of Jesus. Confident in your powerful intercession, we lay before you the particular favor we now ask through your prayers."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Obtain this for us, we pray, if it be for the greater glory of God and the good of our souls; and above all obtain for us the grace to love Christ as you loved Him, faithful even unto death. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Sts. Timothy and Maura, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Sts. Timothy and Maura Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy martyrs Timothy and Maura, newlyweds joined in Christ and made one in His love, you were bound together not only by the vows of marriage but by a shared and burning love for the Lord, for whom you gave up your lives. In the days of your trial you did not weaken one another with fear, but strengthened one another with courage, until you were crucified side by side, each comforting the other as you glorified God. Look down upon us who honor your memory, and present our prayers before the throne of the Most High. You accepted many humiliations and endured crucifixion, and so you deserved to be crowned by God, great and praiseworthy Timothy and Maura, one in Christ. Intercede with the Lord for us, that we may worthily celebrate your most pure memory, that He may grant peace to our land and our people, for He is a mighty stronghold for the faithful. O Saint Timothy, faithful reader of the sacred books, who would not surrender the word of God into unholy hands even at the cost of your life, obtain for us a deep and abiding love for the Holy Scriptures, and the courage to hold fast to the truth of the faith when it is despised or forbidden. O Saint Maura, who in the midst of your own torments prayed for those who tormented you, teach us to forgive those who wrong us, and to love our enemies as Christ commanded. O holy couple, patrons of Christian marriage, watch over all husbands and wives. Grant to the married the grace to encourage one another in holiness, to bear their sufferings together with patience, and to help one another along the narrow road that leads to eternal life. Be near to newlyweds beginning their life together, and to all who prepare for marriage, that their homes may be built upon Christ. And remember, we beseech you, our brothers and sisters throughout the world who even now suffer and die for the name of Jesus. Confident in your powerful intercession, we lay before you the particular favor we now ask through your prayers.  Obtain this for us, we pray, if it be for the greater glory of God and the good of our souls; and above all obtain for us the grace to love Christ as you loved Him, faithful even unto death. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Sts. Timothy and Maura, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy martyrs Timothy and Maura, newlyweds joined in Christ and made one in His love, you were bound together not only by the vows of marriage but by a shared and burning love for the Lord, for whom you gave up your lives. In the days of your trial you did not weaken one another with fear, but strengthened one another with courage, until you were crucified side by side, each comforting the other as you glorified God. Look down upon us who honor your memory, and present our prayers before the throne of the Most High. You accepted many humiliations and endured crucifixion, and so you deserved to be crowned by God, great and praiseworthy Timothy and Maura, one in Christ. Intercede with the Lord for us, that we may worthily celebrate your most pure memory, that He may grant peace to our land and our people, for He is a mighty stronghold for the faithful. O Saint Timothy, faithful reader of the sacred books, who would not surrender the word of God into unholy hands even at the cost of your life, obtain for us a deep and abiding love for the Holy Scriptures, and the courage to hold fast to the truth of the faith when it is despised or forbidden. O Saint Maura, who in the midst of your own torments prayed for those who tormented you, teach us to forgive those who wrong us, and to love our enemies as Christ commanded. O holy couple, patrons of Christian marriage, watch over all husbands and wives. Grant to the married the grace to encourage one another in holiness, to bear their sufferings together with patience, and to help one another along the narrow road that leads to eternal life. Be near to newlyweds beginning their life together, and to all who prepare for marriage, that their homes may be built upon Christ. And remember, we beseech you, our brothers and sisters throughout the world who even now suffer and die for the name of Jesus. Confident in your powerful intercession, we lay before you the particular favor we now ask through your prayers.  Obtain this for us, we pray, if it be for the greater glory of God and the good of our souls; and above all obtain for us the grace to love Christ as you loved Him, faithful even unto death. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Sts. Timothy and Maura, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy martyrs Timothy and Maura, newlyweds joined in Christ and made one in His love, you were bound together not only by the vows of marriage but by a shared and burning love for the Lord, for whom you gave up your lives. In the days of your trial you did not weaken one another with fear, but strengthened one another with courage, until you were crucified side by side, each comforting the other as you glorified God. Look down upon us who honor your memory, and present our prayers before the throne of the Most High. You accepted many humiliations and endured crucifixion, and so you deserved to be crowned by God, great and praiseworthy Timothy and Maura, one in Christ. Intercede with the Lord for us, that we may worthily celebrate your most pure memory, that He may grant peace to our land and our people, for He is a mighty stronghold for the faithful. O Saint Timothy, faithful reader of the sacred books, who would not surrender the word of God into unholy hands even at the cost of your life, obtain for us a deep and abiding love for the Holy Scriptures, and the courage to hold fast to the truth of the faith when it is despised or forbidden. O Saint Maura, who in the midst of your own torments prayed for those who tormented you, teach us to forgive those who wrong us, and to love our enemies as Christ commanded. O holy couple, patrons of Christian marriage, watch over all husbands and wives. Grant to the married the grace to encourage one another in holiness, to bear their sufferings together with patience, and to help one another along the narrow road that leads to eternal life. Be near to newlyweds beginning their life together, and to all who prepare for marriage, that their homes may be built upon Christ. And remember, we beseech you, our brothers and sisters throughout the world who even now suffer and die for the name of Jesus. Confident in your powerful intercession, we lay before you the particular favor we now ask through your prayers.  Obtain this for us, we pray, if it be for the greater glory of God and the good of our souls; and above all obtain for us the grace to love Christ as you loved Him, faithful even unto death. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Sts. Timothy and Maura, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy martyrs Timothy and Maura, newlyweds joined in Christ and made one in His love, you were bound together not only by the vows of marriage but by a shared and burning love for the Lord, for whom you gave up your lives. In the days of your trial you did not weaken one another with fear, but strengthened one another with courage, until you were crucified side by side, each comforting the other as you glorified God. Look down upon us who honor your memory, and present our prayers before the throne of the Most High. You accepted many humiliations and endured crucifixion, and so you deserved to be crowned by God, great and praiseworthy Timothy and Maura, one in Christ. Intercede with the Lord for us, that we may worthily celebrate your most pure memory, that He may grant peace to our land and our people, for He is a mighty stronghold for the faithful. O Saint Timothy, faithful reader of the sacred books, who would not surrender the word of God into unholy hands even at the cost of your life, obtain for us a deep and abiding love for the Holy Scriptures, and the courage to hold fast to the truth of the faith when it is despised or forbidden. O Saint Maura, who in the midst of your own torments prayed for those who tormented you, teach us to forgive those who wrong us, and to love our enemies as Christ commanded. O holy couple, patrons of Christian marriage, watch over all husbands and wives. Grant to the married the grace to encourage one another in holiness, to bear their sufferings together with patience, and to help one another along the narrow road that leads to eternal life. Be near to newlyweds beginning their life together, and to all who prepare for marriage, that their homes may be built upon Christ. And remember, we beseech you, our brothers and sisters throughout the world who even now suffer and die for the name of Jesus. Confident in your powerful intercession, we lay before you the particular favor we now ask through your prayers.  Obtain this for us, we pray, if it be for the greater glory of God and the good of our souls; and above all obtain for us the grace to love Christ as you loved Him, faithful even unto death. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Sts. Timothy and Maura, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy martyrs Timothy and Maura, newlyweds joined in Christ and made one in His love, you were bound together not only by the vows of marriage but by a shared and burning love for the Lord, for whom you gave up your lives. In the days of your trial you did not weaken one another with fear, but strengthened one another with courage, until you were crucified side by side, each comforting the other as you glorified God. Look down upon us who honor your memory, and present our prayers before the throne of the Most High. You accepted many humiliations and endured crucifixion, and so you deserved to be crowned by God, great and praiseworthy Timothy and Maura, one in Christ. Intercede with the Lord for us, that we may worthily celebrate your most pure memory, that He may grant peace to our land and our people, for He is a mighty stronghold for the faithful. O Saint Timothy, faithful reader of the sacred books, who would not surrender the word of God into unholy hands even at the cost of your life, obtain for us a deep and abiding love for the Holy Scriptures, and the courage to hold fast to the truth of the faith when it is despised or forbidden. O Saint Maura, who in the midst of your own torments prayed for those who tormented you, teach us to forgive those who wrong us, and to love our enemies as Christ commanded. O holy couple, patrons of Christian marriage, watch over all husbands and wives. Grant to the married the grace to encourage one another in holiness, to bear their sufferings together with patience, and to help one another along the narrow road that leads to eternal life. Be near to newlyweds beginning their life together, and to all who prepare for marriage, that their homes may be built upon Christ. And remember, we beseech you, our brothers and sisters throughout the world who even now suffer and die for the name of Jesus. Confident in your powerful intercession, we lay before you the particular favor we now ask through your prayers.  Obtain this for us, we pray, if it be for the greater glory of God and the good of our souls; and above all obtain for us the grace to love Christ as you loved Him, faithful even unto death. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Sts. Timothy and Maura, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy martyrs Timothy and Maura, newlyweds joined in Christ and made one in His love, you were bound together not only by the vows of marriage but by a shared and burning love for the Lord, for whom you gave up your lives. In the days of your trial you did not weaken one another with fear, but strengthened one another with courage, until you were crucified side by side, each comforting the other as you glorified God. Look down upon us who honor your memory, and present our prayers before the throne of the Most High. You accepted many humiliations and endured crucifixion, and so you deserved to be crowned by God, great and praiseworthy Timothy and Maura, one in Christ. Intercede with the Lord for us, that we may worthily celebrate your most pure memory, that He may grant peace to our land and our people, for He is a mighty stronghold for the faithful. O Saint Timothy, faithful reader of the sacred books, who would not surrender the word of God into unholy hands even at the cost of your life, obtain for us a deep and abiding love for the Holy Scriptures, and the courage to hold fast to the truth of the faith when it is despised or forbidden. O Saint Maura, who in the midst of your own torments prayed for those who tormented you, teach us to forgive those who wrong us, and to love our enemies as Christ commanded. O holy couple, patrons of Christian marriage, watch over all husbands and wives. Grant to the married the grace to encourage one another in holiness, to bear their sufferings together with patience, and to help one another along the narrow road that leads to eternal life. Be near to newlyweds beginning their life together, and to all who prepare for marriage, that their homes may be built upon Christ. And remember, we beseech you, our brothers and sisters throughout the world who even now suffer and die for the name of Jesus. Confident in your powerful intercession, we lay before you the particular favor we now ask through your prayers.  Obtain this for us, we pray, if it be for the greater glory of God and the good of our souls; and above all obtain for us the grace to love Christ as you loved Him, faithful even unto death. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Sts. Timothy and Maura, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy martyrs Timothy and Maura, newlyweds joined in Christ and made one in His love, you were bound together not only by the vows of marriage but by a shared and burning love for the Lord, for whom you gave up your lives. In the days of your trial you did not weaken one another with fear, but strengthened one another with courage, until you were crucified side by side, each comforting the other as you glorified God. Look down upon us who honor your memory, and present our prayers before the throne of the Most High. You accepted many humiliations and endured crucifixion, and so you deserved to be crowned by God, great and praiseworthy Timothy and Maura, one in Christ. Intercede with the Lord for us, that we may worthily celebrate your most pure memory, that He may grant peace to our land and our people, for He is a mighty stronghold for the faithful. O Saint Timothy, faithful reader of the sacred books, who would not surrender the word of God into unholy hands even at the cost of your life, obtain for us a deep and abiding love for the Holy Scriptures, and the courage to hold fast to the truth of the faith when it is despised or forbidden. O Saint Maura, who in the midst of your own torments prayed for those who tormented you, teach us to forgive those who wrong us, and to love our enemies as Christ commanded. O holy couple, patrons of Christian marriage, watch over all husbands and wives. Grant to the married the grace to encourage one another in holiness, to bear their sufferings together with patience, and to help one another along the narrow road that leads to eternal life. Be near to newlyweds beginning their life together, and to all who prepare for marriage, that their homes may be built upon Christ. And remember, we beseech you, our brothers and sisters throughout the world who even now suffer and die for the name of Jesus. Confident in your powerful intercession, we lay before you the particular favor we now ask through your prayers.  Obtain this for us, we pray, if it be for the greater glory of God and the good of our souls; and above all obtain for us the grace to love Christ as you loved Him, faithful even unto death. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Sts. Timothy and Maura, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy martyrs Timothy and Maura, newlyweds joined in Christ and made one in His love, you were bound together not only by the vows of marriage but by a shared and burning love for the Lord, for whom you gave up your lives. In the days of your trial you did not weaken one another with fear, but strengthened one another with courage, until you were crucified side by side, each comforting the other as you glorified God. Look down upon us who honor your memory, and present our prayers before the throne of the Most High. You accepted many humiliations and endured crucifixion, and so you deserved to be crowned by God, great and praiseworthy Timothy and Maura, one in Christ. Intercede with the Lord for us, that we may worthily celebrate your most pure memory, that He may grant peace to our land and our people, for He is a mighty stronghold for the faithful. O Saint Timothy, faithful reader of the sacred books, who would not surrender the word of God into unholy hands even at the cost of your life, obtain for us a deep and abiding love for the Holy Scriptures, and the courage to hold fast to the truth of the faith when it is despised or forbidden. O Saint Maura, who in the midst of your own torments prayed for those who tormented you, teach us to forgive those who wrong us, and to love our enemies as Christ commanded. O holy couple, patrons of Christian marriage, watch over all husbands and wives. Grant to the married the grace to encourage one another in holiness, to bear their sufferings together with patience, and to help one another along the narrow road that leads to eternal life. Be near to newlyweds beginning their life together, and to all who prepare for marriage, that their homes may be built upon Christ. And remember, we beseech you, our brothers and sisters throughout the world who even now suffer and die for the name of Jesus. Confident in your powerful intercession, we lay before you the particular favor we now ask through your prayers.  Obtain this for us, we pray, if it be for the greater glory of God and the good of our souls; and above all obtain for us the grace to love Christ as you loved Him, faithful even unto death. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Sts. Timothy and Maura, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted paragraph breaks for clearer pacing while keeping all wording and canonical prayers unchanged.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O holy martyrs Timothy and Maura, newlyweds joined in Christ and made one in His love, you were bound together not only by the vows of marriage but by a shared and burning love for the Lord, for whom you gave up your lives. In the days of your trial you did not weaken one another with fear, but strengthened one another with courage, until you were crucified side by side, each comforting the other as you glorified God. Look down upon us who honor your memory, and present our prayers before the throne of the Most High. You accepted many humiliations and endured crucifixion, and so you deserved to be crowned by God, great and praiseworthy Timothy and Maura, one in Christ. Intercede with the Lord for us, that we may worthily celebrate your most pure memory, that He may grant peace to our land and our people, for He is a mighty stronghold for the faithful. O Saint Timothy, faithful reader of the sacred books, who would not surrender the word of God into unholy hands even at the cost of your life, obtain for us a deep and abiding love for the Holy Scriptures, and the courage to hold fast to the truth of the faith when it is despised or forbidden. O Saint Maura, who in the midst of your own torments prayed for those who tormented you, teach us to forgive those who wrong us, and to love our enemies as Christ commanded. O holy couple, patrons of Christian marriage, watch over all husbands and wives. Grant to the married the grace to encourage one another in holiness, to bear their sufferings together with patience, and to help one another along the narrow road that leads to eternal life. Be near to newlyweds beginning their life together, and to all who prepare for marriage, that their homes may be built upon Christ. And remember, we beseech you, our brothers and sisters throughout the world who even now suffer and die for the name of Jesus. Confident in your powerful intercession, we lay before you the particular favor we now ask through your prayers.  Obtain this for us, we pray, if it be for the greater glory of God and the good of our souls; and above all obtain for us the grace to love Christ as you loved Him, faithful even unto death. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Sts. Timothy and Maura, pray for us! Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-sts_timothy_and_maura"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "sts_timothy_and_maura",
+      "name": "Sts. Timothy and Maura"
+    },
+    "type": "novena_feast_rule"
+  }
+}

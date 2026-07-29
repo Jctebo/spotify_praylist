@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_cecilia",
+    "feast": {
+      "day": 22,
+      "mode": "fixed",
+      "month": 11,
+      "name": "St. Cecilia"
+    },
+    "id": "st_cecilia",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "musicians",
+        "singers",
+        "church music"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Cecilia is a Roman martyr honored as a patron of sacred music, remembered for her steadfast faith and witness to Christ."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Cecilia Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and expanded the \u201cpray for us\u201d repetition by appending it to each invocation.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. Holy Mary, Mother of God, pray for us. Repeat \u201cpray for us\u201d after each line. St. Cecilia, pray for us. St. Cecilia, wise virgin, pray for us. St. Cecilia, whose heart burned with the fire of divine love, pray for us. St. Cecilia, apostle by your zeal and charity, pray for us. St. Cecilia, who converted your spouse and procured for him the crown of martyrdom, pray for us. St. Cecilia, who by your pleadings moved the hearts of pagans, and brought them into the true Church, pray for us. St. Cecilia, who did unceasingly see your guardian angel by your side, pray for us. St. Cecilia, who mingled your voice with the celestial harmonies of the virgins, pray for us. St. Cecilia, who by your melodious accents celebrated the praises of Jesus, pray for us. St. Cecilia, illustrious martyr of Jesus Christ, pray for us. St. Cecilia, who during three days suffered most excruciating torments, pray for us. St. Cecilia, consolation of the afflicted, pray for us. St. Cecilia, protectress of all who invoke you, pray for us. St. Cecilia, patroness of holy canticles, pray for us. St. Cecilia, special patroness and advocate of all singers, musicians, authors, and students, pray for us. We salute you, O Virgin, who gave your blood for the defense and faith of Jesus Christ. Pray the introductory prayer and the concluding prayer. Lamb of God, you take away the sins of the world, spare us, O Lord. Lamb of God, you take away the sins of the world, graciously hear us, O Lord. Lamb of God, you take away the sins of the world, have mercy on us. God glorified St. Cecilia, and He crowned her virtues. Let us pray. O Eternal God, who gave us in the person of St. Cecilia a powerful protectress, grant that after having faithfully passed our days like herself, in innocence and holiness, we may one day attain the land of beatitude, where in concert with her, we may praise you and bless you forevermore in eternity. In particular, we ask her intercession for this intention"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": ". Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Cecilia Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and expanded the \u201cpray for us\u201d repetition by appending it to each invocation.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. Holy Mary, Mother of God, pray for us. Repeat \u201cpray for us\u201d after each line. St. Cecilia, pray for us. St. Cecilia, wise virgin, pray for us. St. Cecilia, whose heart burned with the fire of divine love, pray for us. St. Cecilia, apostle by your zeal and charity, pray for us. St. Cecilia, who converted your spouse and procured for him the crown of martyrdom, pray for us. St. Cecilia, who by your pleadings moved the hearts of pagans, and brought them into the true Church, pray for us. St. Cecilia, who did unceasingly see your guardian angel by your side, pray for us. St. Cecilia, who mingled your voice with the celestial harmonies of the virgins, pray for us. St. Cecilia, who by your melodious accents celebrated the praises of Jesus, pray for us. St. Cecilia, illustrious martyr of Jesus Christ, pray for us. St. Cecilia, who during three days suffered most excruciating torments, pray for us. St. Cecilia, consolation of the afflicted, pray for us. St. Cecilia, protectress of all who invoke you, pray for us. St. Cecilia, patroness of holy canticles, pray for us. St. Cecilia, special patroness and advocate of all singers, musicians, authors, and students, pray for us. We salute you, O Virgin, who gave your blood for the defense and faith of Jesus Christ. Pray the introductory prayer and the concluding prayer. Lamb of God, you take away the sins of the world, spare us, O Lord. Lamb of God, you take away the sins of the world, graciously hear us, O Lord. Lamb of God, you take away the sins of the world, have mercy on us. God glorified St. Cecilia, and He crowned her virtues. Let us pray. O Eternal God, who gave us in the person of St. Cecilia a powerful protectress, grant that after having faithfully passed our days like herself, in innocence and holiness, we may one day attain the land of beatitude, where in concert with her, we may praise you and bless you forevermore in eternity. In particular, we ask her intercession for this intention . Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and expanded the \u201cpray for us\u201d repetition by appending it to each invocation.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. Holy Mary, Mother of God, pray for us. Repeat \u201cpray for us\u201d after each line. St. Cecilia, pray for us. St. Cecilia, wise virgin, pray for us. St. Cecilia, whose heart burned with the fire of divine love, pray for us. St. Cecilia, apostle by your zeal and charity, pray for us. St. Cecilia, who converted your spouse and procured for him the crown of martyrdom, pray for us. St. Cecilia, who by your pleadings moved the hearts of pagans, and brought them into the true Church, pray for us. St. Cecilia, who did unceasingly see your guardian angel by your side, pray for us. St. Cecilia, who mingled your voice with the celestial harmonies of the virgins, pray for us. St. Cecilia, who by your melodious accents celebrated the praises of Jesus, pray for us. St. Cecilia, illustrious martyr of Jesus Christ, pray for us. St. Cecilia, who during three days suffered most excruciating torments, pray for us. St. Cecilia, consolation of the afflicted, pray for us. St. Cecilia, protectress of all who invoke you, pray for us. St. Cecilia, patroness of holy canticles, pray for us. St. Cecilia, special patroness and advocate of all singers, musicians, authors, and students, pray for us. We salute you, O Virgin, who gave your blood for the defense and faith of Jesus Christ. Pray the introductory prayer and the concluding prayer. Lamb of God, you take away the sins of the world, spare us, O Lord. Lamb of God, you take away the sins of the world, graciously hear us, O Lord. Lamb of God, you take away the sins of the world, have mercy on us. God glorified St. Cecilia, and He crowned her virtues. Let us pray. O Eternal God, who gave us in the person of St. Cecilia a powerful protectress, grant that after having faithfully passed our days like herself, in innocence and holiness, we may one day attain the land of beatitude, where in concert with her, we may praise you and bless you forevermore in eternity. In particular, we ask her intercession for this intention . Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and expanded the \u201cpray for us\u201d repetition by appending it to each invocation.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. Holy Mary, Mother of God, pray for us. Repeat \u201cpray for us\u201d after each line. St. Cecilia, pray for us. St. Cecilia, wise virgin, pray for us. St. Cecilia, whose heart burned with the fire of divine love, pray for us. St. Cecilia, apostle by your zeal and charity, pray for us. St. Cecilia, who converted your spouse and procured for him the crown of martyrdom, pray for us. St. Cecilia, who by your pleadings moved the hearts of pagans, and brought them into the true Church, pray for us. St. Cecilia, who did unceasingly see your guardian angel by your side, pray for us. St. Cecilia, who mingled your voice with the celestial harmonies of the virgins, pray for us. St. Cecilia, who by your melodious accents celebrated the praises of Jesus, pray for us. St. Cecilia, illustrious martyr of Jesus Christ, pray for us. St. Cecilia, who during three days suffered most excruciating torments, pray for us. St. Cecilia, consolation of the afflicted, pray for us. St. Cecilia, protectress of all who invoke you, pray for us. St. Cecilia, patroness of holy canticles, pray for us. St. Cecilia, special patroness and advocate of all singers, musicians, authors, and students, pray for us. We salute you, O Virgin, who gave your blood for the defense and faith of Jesus Christ. Pray the introductory prayer and the concluding prayer. Lamb of God, you take away the sins of the world, spare us, O Lord. Lamb of God, you take away the sins of the world, graciously hear us, O Lord. Lamb of God, you take away the sins of the world, have mercy on us. God glorified St. Cecilia, and He crowned her virtues. Let us pray. O Eternal God, who gave us in the person of St. Cecilia a powerful protectress, grant that after having faithfully passed our days like herself, in innocence and holiness, we may one day attain the land of beatitude, where in concert with her, we may praise you and bless you forevermore in eternity. In particular, we ask her intercession for this intention . Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and expanded the \u201cpray for us\u201d repetition by appending it to each invocation.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. Holy Mary, Mother of God, pray for us. Repeat \u201cpray for us\u201d after each line. St. Cecilia, pray for us. St. Cecilia, wise virgin, pray for us. St. Cecilia, whose heart burned with the fire of divine love, pray for us. St. Cecilia, apostle by your zeal and charity, pray for us. St. Cecilia, who converted your spouse and procured for him the crown of martyrdom, pray for us. St. Cecilia, who by your pleadings moved the hearts of pagans, and brought them into the true Church, pray for us. St. Cecilia, who did unceasingly see your guardian angel by your side, pray for us. St. Cecilia, who mingled your voice with the celestial harmonies of the virgins, pray for us. St. Cecilia, who by your melodious accents celebrated the praises of Jesus, pray for us. St. Cecilia, illustrious martyr of Jesus Christ, pray for us. St. Cecilia, who during three days suffered most excruciating torments, pray for us. St. Cecilia, consolation of the afflicted, pray for us. St. Cecilia, protectress of all who invoke you, pray for us. St. Cecilia, patroness of holy canticles, pray for us. St. Cecilia, special patroness and advocate of all singers, musicians, authors, and students, pray for us. We salute you, O Virgin, who gave your blood for the defense and faith of Jesus Christ. Pray the introductory prayer and the concluding prayer. Lamb of God, you take away the sins of the world, spare us, O Lord. Lamb of God, you take away the sins of the world, graciously hear us, O Lord. Lamb of God, you take away the sins of the world, have mercy on us. God glorified St. Cecilia, and He crowned her virtues. Let us pray. O Eternal God, who gave us in the person of St. Cecilia a powerful protectress, grant that after having faithfully passed our days like herself, in innocence and holiness, we may one day attain the land of beatitude, where in concert with her, we may praise you and bless you forevermore in eternity. In particular, we ask her intercession for this intention . Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and expanded the \u201cpray for us\u201d repetition by appending it to each invocation.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. Holy Mary, Mother of God, pray for us. Repeat \u201cpray for us\u201d after each line. St. Cecilia, pray for us. St. Cecilia, wise virgin, pray for us. St. Cecilia, whose heart burned with the fire of divine love, pray for us. St. Cecilia, apostle by your zeal and charity, pray for us. St. Cecilia, who converted your spouse and procured for him the crown of martyrdom, pray for us. St. Cecilia, who by your pleadings moved the hearts of pagans, and brought them into the true Church, pray for us. St. Cecilia, who did unceasingly see your guardian angel by your side, pray for us. St. Cecilia, who mingled your voice with the celestial harmonies of the virgins, pray for us. St. Cecilia, who by your melodious accents celebrated the praises of Jesus, pray for us. St. Cecilia, illustrious martyr of Jesus Christ, pray for us. St. Cecilia, who during three days suffered most excruciating torments, pray for us. St. Cecilia, consolation of the afflicted, pray for us. St. Cecilia, protectress of all who invoke you, pray for us. St. Cecilia, patroness of holy canticles, pray for us. St. Cecilia, special patroness and advocate of all singers, musicians, authors, and students, pray for us. We salute you, O Virgin, who gave your blood for the defense and faith of Jesus Christ. Pray the introductory prayer and the concluding prayer. Lamb of God, you take away the sins of the world, spare us, O Lord. Lamb of God, you take away the sins of the world, graciously hear us, O Lord. Lamb of God, you take away the sins of the world, have mercy on us. God glorified St. Cecilia, and He crowned her virtues. Let us pray. O Eternal God, who gave us in the person of St. Cecilia a powerful protectress, grant that after having faithfully passed our days like herself, in innocence and holiness, we may one day attain the land of beatitude, where in concert with her, we may praise you and bless you forevermore in eternity. In particular, we ask her intercession for this intention . Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and expanded the \u201cpray for us\u201d repetition by appending it to each invocation.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. Holy Mary, Mother of God, pray for us. Repeat \u201cpray for us\u201d after each line. St. Cecilia, pray for us. St. Cecilia, wise virgin, pray for us. St. Cecilia, whose heart burned with the fire of divine love, pray for us. St. Cecilia, apostle by your zeal and charity, pray for us. St. Cecilia, who converted your spouse and procured for him the crown of martyrdom, pray for us. St. Cecilia, who by your pleadings moved the hearts of pagans, and brought them into the true Church, pray for us. St. Cecilia, who did unceasingly see your guardian angel by your side, pray for us. St. Cecilia, who mingled your voice with the celestial harmonies of the virgins, pray for us. St. Cecilia, who by your melodious accents celebrated the praises of Jesus, pray for us. St. Cecilia, illustrious martyr of Jesus Christ, pray for us. St. Cecilia, who during three days suffered most excruciating torments, pray for us. St. Cecilia, consolation of the afflicted, pray for us. St. Cecilia, protectress of all who invoke you, pray for us. St. Cecilia, patroness of holy canticles, pray for us. St. Cecilia, special patroness and advocate of all singers, musicians, authors, and students, pray for us. We salute you, O Virgin, who gave your blood for the defense and faith of Jesus Christ. Pray the introductory prayer and the concluding prayer. Lamb of God, you take away the sins of the world, spare us, O Lord. Lamb of God, you take away the sins of the world, graciously hear us, O Lord. Lamb of God, you take away the sins of the world, have mercy on us. God glorified St. Cecilia, and He crowned her virtues. Let us pray. O Eternal God, who gave us in the person of St. Cecilia a powerful protectress, grant that after having faithfully passed our days like herself, in innocence and holiness, we may one day attain the land of beatitude, where in concert with her, we may praise you and bless you forevermore in eternity. In particular, we ask her intercession for this intention . Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and expanded the \u201cpray for us\u201d repetition by appending it to each invocation.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. Holy Mary, Mother of God, pray for us. Repeat \u201cpray for us\u201d after each line. St. Cecilia, pray for us. St. Cecilia, wise virgin, pray for us. St. Cecilia, whose heart burned with the fire of divine love, pray for us. St. Cecilia, apostle by your zeal and charity, pray for us. St. Cecilia, who converted your spouse and procured for him the crown of martyrdom, pray for us. St. Cecilia, who by your pleadings moved the hearts of pagans, and brought them into the true Church, pray for us. St. Cecilia, who did unceasingly see your guardian angel by your side, pray for us. St. Cecilia, who mingled your voice with the celestial harmonies of the virgins, pray for us. St. Cecilia, who by your melodious accents celebrated the praises of Jesus, pray for us. St. Cecilia, illustrious martyr of Jesus Christ, pray for us. St. Cecilia, who during three days suffered most excruciating torments, pray for us. St. Cecilia, consolation of the afflicted, pray for us. St. Cecilia, protectress of all who invoke you, pray for us. St. Cecilia, patroness of holy canticles, pray for us. St. Cecilia, special patroness and advocate of all singers, musicians, authors, and students, pray for us. We salute you, O Virgin, who gave your blood for the defense and faith of Jesus Christ. Pray the introductory prayer and the concluding prayer. Lamb of God, you take away the sins of the world, spare us, O Lord. Lamb of God, you take away the sins of the world, graciously hear us, O Lord. Lamb of God, you take away the sins of the world, have mercy on us. God glorified St. Cecilia, and He crowned her virtues. Let us pray. O Eternal God, who gave us in the person of St. Cecilia a powerful protectress, grant that after having faithfully passed our days like herself, in innocence and holiness, we may one day attain the land of beatitude, where in concert with her, we may praise you and bless you forevermore in eternity. In particular, we ask her intercession for this intention . Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and expanded the \u201cpray for us\u201d repetition by appending it to each invocation.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. Holy Mary, Mother of God, pray for us. Repeat \u201cpray for us\u201d after each line. St. Cecilia, pray for us. St. Cecilia, wise virgin, pray for us. St. Cecilia, whose heart burned with the fire of divine love, pray for us. St. Cecilia, apostle by your zeal and charity, pray for us. St. Cecilia, who converted your spouse and procured for him the crown of martyrdom, pray for us. St. Cecilia, who by your pleadings moved the hearts of pagans, and brought them into the true Church, pray for us. St. Cecilia, who did unceasingly see your guardian angel by your side, pray for us. St. Cecilia, who mingled your voice with the celestial harmonies of the virgins, pray for us. St. Cecilia, who by your melodious accents celebrated the praises of Jesus, pray for us. St. Cecilia, illustrious martyr of Jesus Christ, pray for us. St. Cecilia, who during three days suffered most excruciating torments, pray for us. St. Cecilia, consolation of the afflicted, pray for us. St. Cecilia, protectress of all who invoke you, pray for us. St. Cecilia, patroness of holy canticles, pray for us. St. Cecilia, special patroness and advocate of all singers, musicians, authors, and students, pray for us. We salute you, O Virgin, who gave your blood for the defense and faith of Jesus Christ. Pray the introductory prayer and the concluding prayer. Lamb of God, you take away the sins of the world, spare us, O Lord. Lamb of God, you take away the sins of the world, graciously hear us, O Lord. Lamb of God, you take away the sins of the world, have mercy on us. God glorified St. Cecilia, and He crowned her virtues. Let us pray. O Eternal God, who gave us in the person of St. Cecilia a powerful protectress, grant that after having faithfully passed our days like herself, in innocence and holiness, we may one day attain the land of beatitude, where in concert with her, we may praise you and bless you forevermore in eternity. In particular, we ask her intercession for this intention . Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and line breaks for clearer text-to-speech pacing, and expanded the \u201cpray for us\u201d repetition by appending it to each invocation.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Lord, have mercy on us. Christ, have mercy on us. Lord, have mercy on us. Christ, hear us. Christ, graciously hear us. God the Father of heaven, have mercy on us. God the Son, Redeemer of the world, have mercy on us. God the Holy Spirit, have mercy on us. Holy Trinity, one God, have mercy on us. Holy Mary, Mother of God, pray for us. Repeat \u201cpray for us\u201d after each line. St. Cecilia, pray for us. St. Cecilia, wise virgin, pray for us. St. Cecilia, whose heart burned with the fire of divine love, pray for us. St. Cecilia, apostle by your zeal and charity, pray for us. St. Cecilia, who converted your spouse and procured for him the crown of martyrdom, pray for us. St. Cecilia, who by your pleadings moved the hearts of pagans, and brought them into the true Church, pray for us. St. Cecilia, who did unceasingly see your guardian angel by your side, pray for us. St. Cecilia, who mingled your voice with the celestial harmonies of the virgins, pray for us. St. Cecilia, who by your melodious accents celebrated the praises of Jesus, pray for us. St. Cecilia, illustrious martyr of Jesus Christ, pray for us. St. Cecilia, who during three days suffered most excruciating torments, pray for us. St. Cecilia, consolation of the afflicted, pray for us. St. Cecilia, protectress of all who invoke you, pray for us. St. Cecilia, patroness of holy canticles, pray for us. St. Cecilia, special patroness and advocate of all singers, musicians, authors, and students, pray for us. We salute you, O Virgin, who gave your blood for the defense and faith of Jesus Christ. Pray the introductory prayer and the concluding prayer. Lamb of God, you take away the sins of the world, spare us, O Lord. Lamb of God, you take away the sins of the world, graciously hear us, O Lord. Lamb of God, you take away the sins of the world, have mercy on us. God glorified St. Cecilia, and He crowned her virtues. Let us pray. O Eternal God, who gave us in the person of St. Cecilia a powerful protectress, grant that after having faithfully passed our days like herself, in innocence and holiness, we may one day attain the land of beatitude, where in concert with her, we may praise you and bless you forevermore in eternity. In particular, we ask her intercession for this intention . Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_cecilia"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_cecilia",
+      "name": "St. Cecilia"
+    },
+    "type": "novena_feast_rule"
+  }
+}

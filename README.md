@@ -67,8 +67,8 @@ Optional variables:
 ### Novena
 - `jobs/novena_contracts/pipeline.py`: contract-first novena publishing that resolves the active novena from today's date, renders theme-aware intro/content fragments, writes a JSON sidecar, and rebuilds RSS
 - `contracts/novenas/templates/*.json`: reusable novena templates, including the shared `standard-9-day` template
-- `contracts/novenas/families/*.json`: selector-based family contracts that auto-populate eligible celebrations from the liturgical calendar
-- `contracts/novenas/feast-days/*.json`: explicit feast-day overrides keyed by Romcal ids
+- `contracts/novenas/families/*.json`: reusable family templates; `standard-9-day` is disabled as a runtime selector after materialized coverage is generated
+- `contracts/novenas/feast-days/*.json` and `contracts/novenas/short-form/*.json`: checked-in traditional and short-form contracts keyed by stable Romcal ids
 - `scripts/new_novena_contract.py`: helper for authoring explicit feast contracts or selector-based family contracts
 - `scripts/new_novena_url_contract.py`: local URL importer for Catholic Novena App pages; `single` imports one novena page and `bulk` walks the catalog page, writing generated drafts plus reports under `artifacts/novena-url-overrides/`
 - `scripts/run_traditional_novena_import_local.py`: local batch runner that defaults to the July and August Traditional Novena catalog slices and writes month-specific bulk reports under `artifacts/novena-url-overrides/traditional-novena-july-august/`
@@ -78,7 +78,7 @@ Optional variables:
 - Before the model runs, the importer expands canonical prayer names like `Our Father`, `Hail Mary`, and `Glory Be` from the repo's Rosary text templates, then compacts identical day blocks into shared blocks tagged with the day numbers they cover so the TTS renderer can reuse one prayer block behind a small day-specific intro
 - Imported traditional novenas publish with a `Traditional Novena to {saint_name} Day {day} - {date_display}` episode title so they stay distinct from the existing auto-generated novena titles while showing the publish date in the RSS title
 - Published novena sidecars carry the same canonical `daily_liturgical_context` contract as daily prayer sidecars, while keeping novena-local focus in explicit `novena_*` fields.
-- Generated, short-form, and traditional novenas receive one brief generated day-and-saint introduction before the existing prayer text. The LLM gives solemnities/feasts, the Gospel, memorials, and liturgical seasons priority in that order; without such material, it gives a concise saint-and-current-novena welcome. The novena body remains saint/day-specific, and sidecars use `devotional-intro-v4` freshness metadata so current targets refresh when the intro policy changes.
+- Generated, short-form, and traditional novenas receive one brief Day N introduction before the existing prayer text. It uses validated saint/event identity metadata and a single canonical calendar bridge; the LLM gives solemnities/feasts, the Gospel, memorials, and liturgical seasons priority in that order. The novena body remains saint/day-specific, and sidecars use `devotional-intro-v5` freshness metadata so current targets refresh when the intro policy changes.
 - For local OpenAI runs, copy `config/local/openai.env.example` to `config/local/openai.env` and fill in `OPENAI_API_KEY`; the importer will read that file automatically, and you can override the path with `OPENAI_API_KEY_FILE`
 - Novena contracts now support a top-level `enabled` flag; `enabled: false` contracts stay loadable for review but are skipped by the novena runtime
 - Run the July/August traditional novena import locally with `python scripts/run_traditional_novena_import_local.py`; pass repeated `--month` values if you need a different batch window.

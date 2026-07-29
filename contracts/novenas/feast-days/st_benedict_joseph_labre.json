@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_benedict_joseph_labre",
+    "feast": {
+      "day": 16,
+      "mode": "fixed",
+      "month": 4,
+      "name": "St Benedict Joseph Labre"
+    },
+    "id": "st_benedict_joseph_labre",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "homeless people",
+        "pilgrims",
+        "beggars"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St Benedict Joseph Labre was a French pilgrim and ascetic who lived as a homeless wanderer devoted to prayer and the sacraments, dying in Rome in 1783."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Benedict Joseph Labre Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and spacing for clearer text-to-speech pacing, and expanded \u201cSt.\u201d to \u201cSaint\u201d while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Benedict Joseph Labre, you gave up honor, money, and home for love of Jesus. Help us to set our hearts on Jesus, and not on the things of this world. You lived in obscurity among the poor in the streets. Enable us to see Jesus in our poor brothers and sisters, and not judge by appearances. Make us realize that in helping them, we are helping Jesus. Show us how to befriend them, and not pass them by. Saint Benedict Joseph Labre, you had a great love for prayer. Obtain for us the grace of persevering prayer, especially adoration of Jesus in the Most Blessed Sacrament. In this novena, I ask especially for"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Saint Benedict Joseph Labre, poor in the eyes of men but rich in the eyes of God, pray for us. Amen. Saint Benedict Joseph, beloved by God, guide us, fellow travelers on this earth, along your pilgrim path to God. Protect us from all temptations of desire and arrogance, so that we may embrace humility in the presence of Our Lord, Jesus Christ, and be welcomed into His eternal kingdom. Compassionate Jesus, who, through the life of Your servant Benedict Joseph, demonstrated Your love for the least of this world, grant us, we pray, the blessings that the Holy Beggar petitions on our behalf, knowing that he seeks only what will lead us to You, through Your example of Holy Poverty on earth and Your Divine Work. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Benedict Joseph Labre, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St Benedict Joseph Labre Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and spacing for clearer text-to-speech pacing, and expanded \u201cSt.\u201d to \u201cSaint\u201d while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Benedict Joseph Labre, you gave up honor, money, and home for love of Jesus. Help us to set our hearts on Jesus, and not on the things of this world. You lived in obscurity among the poor in the streets. Enable us to see Jesus in our poor brothers and sisters, and not judge by appearances. Make us realize that in helping them, we are helping Jesus. Show us how to befriend them, and not pass them by. Saint Benedict Joseph Labre, you had a great love for prayer. Obtain for us the grace of persevering prayer, especially adoration of Jesus in the Most Blessed Sacrament. In this novena, I ask especially for  Saint Benedict Joseph Labre, poor in the eyes of men but rich in the eyes of God, pray for us. Amen. Saint Benedict Joseph, beloved by God, guide us, fellow travelers on this earth, along your pilgrim path to God. Protect us from all temptations of desire and arrogance, so that we may embrace humility in the presence of Our Lord, Jesus Christ, and be welcomed into His eternal kingdom. Compassionate Jesus, who, through the life of Your servant Benedict Joseph, demonstrated Your love for the least of this world, grant us, we pray, the blessings that the Holy Beggar petitions on our behalf, knowing that he seeks only what will lead us to You, through Your example of Holy Poverty on earth and Your Divine Work. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Benedict Joseph Labre, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and spacing for clearer text-to-speech pacing, and expanded \u201cSt.\u201d to \u201cSaint\u201d while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Benedict Joseph Labre, you gave up honor, money, and home for love of Jesus. Help us to set our hearts on Jesus, and not on the things of this world. You lived in obscurity among the poor in the streets. Enable us to see Jesus in our poor brothers and sisters, and not judge by appearances. Make us realize that in helping them, we are helping Jesus. Show us how to befriend them, and not pass them by. Saint Benedict Joseph Labre, you had a great love for prayer. Obtain for us the grace of persevering prayer, especially adoration of Jesus in the Most Blessed Sacrament. In this novena, I ask especially for  Saint Benedict Joseph Labre, poor in the eyes of men but rich in the eyes of God, pray for us. Amen. Saint Benedict Joseph, beloved by God, guide us, fellow travelers on this earth, along your pilgrim path to God. Protect us from all temptations of desire and arrogance, so that we may embrace humility in the presence of Our Lord, Jesus Christ, and be welcomed into His eternal kingdom. Compassionate Jesus, who, through the life of Your servant Benedict Joseph, demonstrated Your love for the least of this world, grant us, we pray, the blessings that the Holy Beggar petitions on our behalf, knowing that he seeks only what will lead us to You, through Your example of Holy Poverty on earth and Your Divine Work. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Benedict Joseph Labre, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and spacing for clearer text-to-speech pacing, and expanded \u201cSt.\u201d to \u201cSaint\u201d while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Benedict Joseph Labre, you gave up honor, money, and home for love of Jesus. Help us to set our hearts on Jesus, and not on the things of this world. You lived in obscurity among the poor in the streets. Enable us to see Jesus in our poor brothers and sisters, and not judge by appearances. Make us realize that in helping them, we are helping Jesus. Show us how to befriend them, and not pass them by. Saint Benedict Joseph Labre, you had a great love for prayer. Obtain for us the grace of persevering prayer, especially adoration of Jesus in the Most Blessed Sacrament. In this novena, I ask especially for  Saint Benedict Joseph Labre, poor in the eyes of men but rich in the eyes of God, pray for us. Amen. Saint Benedict Joseph, beloved by God, guide us, fellow travelers on this earth, along your pilgrim path to God. Protect us from all temptations of desire and arrogance, so that we may embrace humility in the presence of Our Lord, Jesus Christ, and be welcomed into His eternal kingdom. Compassionate Jesus, who, through the life of Your servant Benedict Joseph, demonstrated Your love for the least of this world, grant us, we pray, the blessings that the Holy Beggar petitions on our behalf, knowing that he seeks only what will lead us to You, through Your example of Holy Poverty on earth and Your Divine Work. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Benedict Joseph Labre, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and spacing for clearer text-to-speech pacing, and expanded \u201cSt.\u201d to \u201cSaint\u201d while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Benedict Joseph Labre, you gave up honor, money, and home for love of Jesus. Help us to set our hearts on Jesus, and not on the things of this world. You lived in obscurity among the poor in the streets. Enable us to see Jesus in our poor brothers and sisters, and not judge by appearances. Make us realize that in helping them, we are helping Jesus. Show us how to befriend them, and not pass them by. Saint Benedict Joseph Labre, you had a great love for prayer. Obtain for us the grace of persevering prayer, especially adoration of Jesus in the Most Blessed Sacrament. In this novena, I ask especially for  Saint Benedict Joseph Labre, poor in the eyes of men but rich in the eyes of God, pray for us. Amen. Saint Benedict Joseph, beloved by God, guide us, fellow travelers on this earth, along your pilgrim path to God. Protect us from all temptations of desire and arrogance, so that we may embrace humility in the presence of Our Lord, Jesus Christ, and be welcomed into His eternal kingdom. Compassionate Jesus, who, through the life of Your servant Benedict Joseph, demonstrated Your love for the least of this world, grant us, we pray, the blessings that the Holy Beggar petitions on our behalf, knowing that he seeks only what will lead us to You, through Your example of Holy Poverty on earth and Your Divine Work. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Benedict Joseph Labre, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and spacing for clearer text-to-speech pacing, and expanded \u201cSt.\u201d to \u201cSaint\u201d while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Benedict Joseph Labre, you gave up honor, money, and home for love of Jesus. Help us to set our hearts on Jesus, and not on the things of this world. You lived in obscurity among the poor in the streets. Enable us to see Jesus in our poor brothers and sisters, and not judge by appearances. Make us realize that in helping them, we are helping Jesus. Show us how to befriend them, and not pass them by. Saint Benedict Joseph Labre, you had a great love for prayer. Obtain for us the grace of persevering prayer, especially adoration of Jesus in the Most Blessed Sacrament. In this novena, I ask especially for  Saint Benedict Joseph Labre, poor in the eyes of men but rich in the eyes of God, pray for us. Amen. Saint Benedict Joseph, beloved by God, guide us, fellow travelers on this earth, along your pilgrim path to God. Protect us from all temptations of desire and arrogance, so that we may embrace humility in the presence of Our Lord, Jesus Christ, and be welcomed into His eternal kingdom. Compassionate Jesus, who, through the life of Your servant Benedict Joseph, demonstrated Your love for the least of this world, grant us, we pray, the blessings that the Holy Beggar petitions on our behalf, knowing that he seeks only what will lead us to You, through Your example of Holy Poverty on earth and Your Divine Work. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Benedict Joseph Labre, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and spacing for clearer text-to-speech pacing, and expanded \u201cSt.\u201d to \u201cSaint\u201d while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Benedict Joseph Labre, you gave up honor, money, and home for love of Jesus. Help us to set our hearts on Jesus, and not on the things of this world. You lived in obscurity among the poor in the streets. Enable us to see Jesus in our poor brothers and sisters, and not judge by appearances. Make us realize that in helping them, we are helping Jesus. Show us how to befriend them, and not pass them by. Saint Benedict Joseph Labre, you had a great love for prayer. Obtain for us the grace of persevering prayer, especially adoration of Jesus in the Most Blessed Sacrament. In this novena, I ask especially for  Saint Benedict Joseph Labre, poor in the eyes of men but rich in the eyes of God, pray for us. Amen. Saint Benedict Joseph, beloved by God, guide us, fellow travelers on this earth, along your pilgrim path to God. Protect us from all temptations of desire and arrogance, so that we may embrace humility in the presence of Our Lord, Jesus Christ, and be welcomed into His eternal kingdom. Compassionate Jesus, who, through the life of Your servant Benedict Joseph, demonstrated Your love for the least of this world, grant us, we pray, the blessings that the Holy Beggar petitions on our behalf, knowing that he seeks only what will lead us to You, through Your example of Holy Poverty on earth and Your Divine Work. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Benedict Joseph Labre, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and spacing for clearer text-to-speech pacing, and expanded \u201cSt.\u201d to \u201cSaint\u201d while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Benedict Joseph Labre, you gave up honor, money, and home for love of Jesus. Help us to set our hearts on Jesus, and not on the things of this world. You lived in obscurity among the poor in the streets. Enable us to see Jesus in our poor brothers and sisters, and not judge by appearances. Make us realize that in helping them, we are helping Jesus. Show us how to befriend them, and not pass them by. Saint Benedict Joseph Labre, you had a great love for prayer. Obtain for us the grace of persevering prayer, especially adoration of Jesus in the Most Blessed Sacrament. In this novena, I ask especially for  Saint Benedict Joseph Labre, poor in the eyes of men but rich in the eyes of God, pray for us. Amen. Saint Benedict Joseph, beloved by God, guide us, fellow travelers on this earth, along your pilgrim path to God. Protect us from all temptations of desire and arrogance, so that we may embrace humility in the presence of Our Lord, Jesus Christ, and be welcomed into His eternal kingdom. Compassionate Jesus, who, through the life of Your servant Benedict Joseph, demonstrated Your love for the least of this world, grant us, we pray, the blessings that the Holy Beggar petitions on our behalf, knowing that he seeks only what will lead us to You, through Your example of Holy Poverty on earth and Your Divine Work. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Benedict Joseph Labre, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and spacing for clearer text-to-speech pacing, and expanded \u201cSt.\u201d to \u201cSaint\u201d while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Benedict Joseph Labre, you gave up honor, money, and home for love of Jesus. Help us to set our hearts on Jesus, and not on the things of this world. You lived in obscurity among the poor in the streets. Enable us to see Jesus in our poor brothers and sisters, and not judge by appearances. Make us realize that in helping them, we are helping Jesus. Show us how to befriend them, and not pass them by. Saint Benedict Joseph Labre, you had a great love for prayer. Obtain for us the grace of persevering prayer, especially adoration of Jesus in the Most Blessed Sacrament. In this novena, I ask especially for  Saint Benedict Joseph Labre, poor in the eyes of men but rich in the eyes of God, pray for us. Amen. Saint Benedict Joseph, beloved by God, guide us, fellow travelers on this earth, along your pilgrim path to God. Protect us from all temptations of desire and arrogance, so that we may embrace humility in the presence of Our Lord, Jesus Christ, and be welcomed into His eternal kingdom. Compassionate Jesus, who, through the life of Your servant Benedict Joseph, demonstrated Your love for the least of this world, grant us, we pray, the blessings that the Holy Beggar petitions on our behalf, knowing that he seeks only what will lead us to You, through Your example of Holy Poverty on earth and Your Divine Work. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Benedict Joseph Labre, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized punctuation and spacing for clearer text-to-speech pacing, and expanded \u201cSt.\u201d to \u201cSaint\u201d while preserving meaning and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Saint Benedict Joseph Labre, you gave up honor, money, and home for love of Jesus. Help us to set our hearts on Jesus, and not on the things of this world. You lived in obscurity among the poor in the streets. Enable us to see Jesus in our poor brothers and sisters, and not judge by appearances. Make us realize that in helping them, we are helping Jesus. Show us how to befriend them, and not pass them by. Saint Benedict Joseph Labre, you had a great love for prayer. Obtain for us the grace of persevering prayer, especially adoration of Jesus in the Most Blessed Sacrament. In this novena, I ask especially for  Saint Benedict Joseph Labre, poor in the eyes of men but rich in the eyes of God, pray for us. Amen. Saint Benedict Joseph, beloved by God, guide us, fellow travelers on this earth, along your pilgrim path to God. Protect us from all temptations of desire and arrogance, so that we may embrace humility in the presence of Our Lord, Jesus Christ, and be welcomed into His eternal kingdom. Compassionate Jesus, who, through the life of Your servant Benedict Joseph, demonstrated Your love for the least of this world, grant us, we pray, the blessings that the Holy Beggar petitions on our behalf, knowing that he seeks only what will lead us to You, through Your example of Holy Poverty on earth and Your Divine Work. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Saint Benedict Joseph Labre, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_benedict_joseph_labre"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_benedict_joseph_labre",
+      "name": "St Benedict Joseph Labre"
+    },
+    "type": "novena_feast_rule"
+  }
+}

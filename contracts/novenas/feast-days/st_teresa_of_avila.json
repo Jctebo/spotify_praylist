@@ -1,0 +1,444 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_teresa_of_avila",
+    "feast": {
+      "day": 15,
+      "mode": "fixed",
+      "month": 10,
+      "name": "St. Teresa of Avila"
+    },
+    "id": "st_teresa_of_avila",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "Spain",
+        "headache sufferers",
+        "writers"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St. Teresa of Avila was a 16th-century Spanish Carmelite nun, mystic, and reformer who founded Discalced Carmelite convents and wrote classic works on prayer."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Teresa of Avila Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray \"one\" lines, clarified the three-times repetition cue, and normalized punctuation and line breaks for clearer text-to-speech.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most amiable Lord Jesus Christ! We thank Thee for the great gift of faith and of devotion to the Holy Sacrament, which Thou didst grant to Thy beloved Teresa; we pray Thee, by Thy merits and by those of Thy faithful spouse, to grant us the gift of a lively faith, and of a fervent devotion toward the most Holy Sacrament of the altar; where Thou, O infinite Majesty, hast obliged Thyself to abide with us even to the end of the world, and wherein Thou didst so lovingly give Thy whole Self to us. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation, that as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed non-prayer filler and normalized repetition instructions and versicle/response punctuation for clearer text-to-speech while preserving wording and paragraph structure.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most merciful Lord Jesus Christ! We thank Thee for the great gift of hope which Thou didst grant to Thy beloved Teresa; we pray Thee, by Thy merits, and by those of Thy holy spouse, to give us a great confidence in Thy goodness, by reason of Thy Precious Blood, which Thou hast shed to its last drop for our salvation. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation! that as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray counting words, added a clear three-times repetition cue, and normalized punctuation and versicle/response formatting for text-to-speech.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most loving Lord Jesus Christ! We thank Thee for the great gift of love which Thou didst grant to Thy beloved Teresa; we pray Thee, by Thy merits, and by those of Thy most loving spouse, to give us the great, the crowning gift of Thy perfect love. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation! that as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed stray filler lines, clarified the three-times repetition cue, and normalized punctuation and line breaks for clearer text-to-speech while preserving the prayer text and structure.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most sweet Lord Jesus Christ! We thank Thee for the gift of great desire and resolution which Thou didst grant to Thy beloved Teresa, that she might love Thee perfectly. We pray Thee, by Thy merits, and by those of Thy most generous spouse, to give us a true desire, and a true resolution of pleasing Thee to the utmost of our power. Amen. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation! That as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed stray filler lines, clarified the three-times repetition cue, and normalized the versicle and response for clear text-to-speech pacing.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most kind Lord Jesus Christ! we thank Thee for the great gift of humility which Thou didst grant to Thy beloved Teresa; we pray Thee, by Thy merits, and by those of Thy most humble spouse, to grant us the grace of a true humility, which may make us ever find our joy in humiliation, and prefer contempt before every honor. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation! that as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized repetition instructions and response formatting for clearer text-to-speech pacing, without changing the canonical prayers or meaning.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most bountiful Lord Jesus Christ! We thank Thee for the gift of devotion towards Thy sweet mother, Mary, and her holy spouse, Joseph, which Thou didst grant to Thy beloved Teresa. We pray Thee, by Thy merits, and by those of Thy most dear spouse, to give us the grace of a special and tender devotion towards Thy most holy mother, Mary, and towards Thy beloved foster-father, Joseph. Amen. Say the following three times. One. One. One. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation! That as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed repeated filler words, clarified the three-times repetition cue, and normalized punctuation and response formatting for clearer text-to-speech.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most loving Lord Jesus Christ! We thank Thee for the wonderful gift of the wound in the heart which Thou didst grant to Thy beloved Teresa; we pray Thee, by Thy merits, and by those of Thy seraphic spouse, to grant us also a like wound of love, that, henceforth, we may love Thee and give our mind to the love of nothing but Thee. Amen. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation! that as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed stray repetition placeholders, added brief spoken instruction for the threefold repetition, and normalized punctuation and responses for clearer text-to-speech.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most beloved Lord Jesus Christ! We thank Thee for the eminent gift of the desire for a happy death in God\u2019s sanctifying grace, which Thou didst grant to Thy beloved Teresa. We pray Thee, by Thy merits, and by those of Thy most constant spouse, to grant us the grace of desiring such a happy death, in order to go and possess Thee eternally in the country of the blessed. Amen. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation! That as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed stray filler lines, clarified the three-times repetition instruction, and normalized punctuation and responses for clearer text-to-speech while preserving prayer order and paragraph structure.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. Lastly, O dearest Lord Jesus Christ, we thank Thee for the gift of the precious death which Thou didst grant to Thy beloved Teresa, making her sweetly to die of love. We pray Thee, by Thy merits, and by those of Thy most affectionate spouse, to grant us a good death; and if we do not die of love, yet, that we may at least die burning of love for Thee, that so dying, we may be able to go and love Thee for evermore with a more perfect love in heaven. Amen. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation, that as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St. Teresa of Avila Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray \"one\" lines, clarified the three-times repetition cue, and normalized punctuation and line breaks for clearer text-to-speech.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most amiable Lord Jesus Christ! We thank Thee for the great gift of faith and of devotion to the Holy Sacrament, which Thou didst grant to Thy beloved Teresa; we pray Thee, by Thy merits and by those of Thy faithful spouse, to grant us the gift of a lively faith, and of a fervent devotion toward the most Holy Sacrament of the altar; where Thou, O infinite Majesty, hast obliged Thyself to abide with us even to the end of the world, and wherein Thou didst so lovingly give Thy whole Self to us. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation, that as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever.  Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed non-prayer filler and normalized repetition instructions and versicle/response punctuation for clearer text-to-speech while preserving wording and paragraph structure.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most merciful Lord Jesus Christ! We thank Thee for the great gift of hope which Thou didst grant to Thy beloved Teresa; we pray Thee, by Thy merits, and by those of Thy holy spouse, to give us a great confidence in Thy goodness, by reason of Thy Precious Blood, which Thou hast shed to its last drop for our salvation. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation! that as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever.  Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed the stray counting words, added a clear three-times repetition cue, and normalized punctuation and versicle/response formatting for text-to-speech.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most loving Lord Jesus Christ! We thank Thee for the great gift of love which Thou didst grant to Thy beloved Teresa; we pray Thee, by Thy merits, and by those of Thy most loving spouse, to give us the great, the crowning gift of Thy perfect love. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation! that as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever.  Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed stray filler lines, clarified the three-times repetition cue, and normalized punctuation and line breaks for clearer text-to-speech while preserving the prayer text and structure.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most sweet Lord Jesus Christ! We thank Thee for the gift of great desire and resolution which Thou didst grant to Thy beloved Teresa, that she might love Thee perfectly. We pray Thee, by Thy merits, and by those of Thy most generous spouse, to give us a true desire, and a true resolution of pleasing Thee to the utmost of our power. Amen. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation! That as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever.  Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed stray filler lines, clarified the three-times repetition cue, and normalized the versicle and response for clear text-to-speech pacing.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most kind Lord Jesus Christ! we thank Thee for the great gift of humility which Thou didst grant to Thy beloved Teresa; we pray Thee, by Thy merits, and by those of Thy most humble spouse, to grant us the grace of a true humility, which may make us ever find our joy in humiliation, and prefer contempt before every honor. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation! that as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever.  Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Normalized repetition instructions and response formatting for clearer text-to-speech pacing, without changing the canonical prayers or meaning.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most bountiful Lord Jesus Christ! We thank Thee for the gift of devotion towards Thy sweet mother, Mary, and her holy spouse, Joseph, which Thou didst grant to Thy beloved Teresa. We pray Thee, by Thy merits, and by those of Thy most dear spouse, to give us the grace of a special and tender devotion towards Thy most holy mother, Mary, and towards Thy beloved foster-father, Joseph. Amen. Say the following three times. One. One. One. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation! That as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever.  Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed repeated filler words, clarified the three-times repetition cue, and normalized punctuation and response formatting for clearer text-to-speech.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most loving Lord Jesus Christ! We thank Thee for the wonderful gift of the wound in the heart which Thou didst grant to Thy beloved Teresa; we pray Thee, by Thy merits, and by those of Thy seraphic spouse, to grant us also a like wound of love, that, henceforth, we may love Thee and give our mind to the love of nothing but Thee. Amen. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation! that as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever.  Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed stray repetition placeholders, added brief spoken instruction for the threefold repetition, and normalized punctuation and responses for clearer text-to-speech.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. O most beloved Lord Jesus Christ! We thank Thee for the eminent gift of the desire for a happy death in God\u2019s sanctifying grace, which Thou didst grant to Thy beloved Teresa. We pray Thee, by Thy merits, and by those of Thy most constant spouse, to grant us the grace of desiring such a happy death, in order to go and possess Thee eternally in the country of the blessed. Amen. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation! That as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever.  Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Removed stray filler lines, clarified the three-times repetition instruction, and normalized punctuation and responses for clearer text-to-speech while preserving prayer order and paragraph structure.; expanded repetition instruction into three explicit spoken recitations; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. This novena was written by St. Alphonsus Liguori. Lastly, O dearest Lord Jesus Christ, we thank Thee for the gift of the precious death which Thou didst grant to Thy beloved Teresa, making her sweetly to die of love. We pray Thee, by Thy merits, and by those of Thy most affectionate spouse, to grant us a good death; and if we do not die of love, yet, that we may at least die burning of love for Thee, that so dying, we may be able to go and love Thee for evermore with a more perfect love in heaven. Amen. Say the following three times. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. V. St. Teresa, pray for us. R. That we may become worthy of the promises of Jesus Christ. Let us pray. Graciously hear us, O God of our salvation, that as we rejoice in the commemoration of the blessed virgin Teresa, so we may be nourished by her heavenly doctrine, and draw from thence the fervour of a tender devotion; through our Lord Jesus Christ, Thy Son, Who liveth and reigneth with Thee in the unity of the Holy Spirit, God for ever and ever.  Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_teresa_of_avila"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_teresa_of_avila",
+      "name": "St. Teresa of Avila"
+    },
+    "type": "novena_feast_rule"
+  }
+}

@@ -55,6 +55,7 @@ def _runtime_from_contract(
         family_id=contract.family_id,
         contract_id=contract_id,
         saint=dict(saint),
+        intro=dict(contract.intro),
         feast=feast_payload,
         novena=contract.novena.to_dict(),
         resolved_template=resolved_template,

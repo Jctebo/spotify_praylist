@@ -1,0 +1,440 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "our_lady_of_la_salette",
+    "feast": {
+      "day": 19,
+      "mode": "fixed",
+      "month": 9,
+      "name": "Our Lady of La Salette"
+    },
+    "id": "our_lady_of_la_salette",
+    "intro": {
+      "kind": "event",
+      "patronage": [],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "Our Lady of La Salette commemorates the 1846 Marian apparition at La Salette, France, calling people to conversion, prayer, and fidelity to the Gospel."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of La Salette Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "days-1",
+            "kind": "fixed",
+            "notes": "converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "In casting myself at thy feet, O loving Mother, to ask for these intentions, I cannot help remembering that thou camest on the mountain of La Salette, first of all, to remind me of my Christian duties. Therefore, there is no surer way for me to have my petition granted, than to return to the friendship of Jesus, by a sincere confession, and to endeavor with my whole strength to overcome my besetting sin. O Virgin Reconciler of sinners, obtain for me this most precious of all graces, for, with it all the rest shall be added unto me. The numberless miracles obtained by those who invoke thee under the title of Our Lady of La Salette, fill my heart with hope that my petition shall prove as fortunate as those addressed to thee, by so many other suppliants. Vouchsafe, O Mother, during each day of my novena, to instill into my heart some of the teaching of thy merciful Apparition. Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "days-2",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and replaced \u201ci.e.\u201d with \u201cthat is\u201d while preserving meaning.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "O sorrowful Mother, why those tears shed in the wild solitude, on the rock which thou madest for a while thy earthly throne? My child, happy would I be, if my grief should inspire you with a heart-felt sorrow for your sins, and with a firm resolution to lead a better life! The land of your heart, as the Prophet says, is made desolate, because of your love for the world and its empty pleasures, because of your forgetfulness to meditate upon the most important truths of faith, that is, your last end, together with the dreadful consequences, both here and hereafter, of your thoughtlessness. Retire into solitude and there my Son will speak to your heart, and will breathe into your soul the proper means of securing your salvation. O Mother, the motives that urge me to mingle my tears with thine are innumerable. I will not resist Jesus\u2019 call any longer. Henceforth, with thy powerful aid, my thoughts, words and actions shall correspond to the wishes of the Divine Heart of Jesus. Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "days-3",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraphing for clearer text-to-speech pacing while keeping wording and meaning faithful, and preserved the personal intention marker exactly.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace, and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "What, O Mother, is the meaning of the bright cross which shines upon thy breast? Why this stream of tears trickling down thy heavenly face, and rolling over the golden cross on which they are burnt away as on a fire of Love? My child, was your soul never defiled by a mortal sin? Did you never scoff at my Son, thus crucifying anew your Saviour and your God? Is not the cross, that sacred emblem of salvation, scornfully banished from all the places where it used once to stand in honor? Such iniquities should be washed away by tears of blood. Strive, therefore, to appease my Son\u2019s wrath and to mitigate His vengeance. Stand in fear that the Sacred Blood which once flowed on Calvary should now fall revengefully upon your head, and the heads of those you hold dearest in this world. Dread that you should be deserted by God. Contemplate Jesus on His Cross. Humbly adore Him, and pour forth your most heartfelt thanks at His feet. Remember that, with Him, there is a remedy for every evil. There is no virtue but finds in Him a perfect model. Bear His cross on your breast, but chiefly in your heart. And in return, heaven shall be your reward. Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "days-4",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks slightly for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "The witnesses of thy Apparition, O sweet Mother, vie with each other in telling me of the extreme simplicity of thy dress, and the modesty of thy looks. What a lesson for my pride and vanity, to behold thee clothed with a common gown, a simple neckerchief, a humble apron, and a cap completely covering thy ears and thy hair. Who could but admire thy carefulness in concealing thy angelic face from the eyes of the small boy? No sorrowful Mother, thou couldst not more forcibly reprove pride, luxuriousness and sensuality, the allurements of which make numberless victims, both in this world and in the next. Help me, O Mother, to fly from the world and its distractions; to lead an interior life in order to become like Saint Paul, the good odor of Christ unto God. Help me to understand better that, to keep my heart pure, I must endeavor to be humble, to love mortification and to shun the sinful pleasures of the world. Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "days-5",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and expanded abbreviations for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace, and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "The flood of thy tears at La Salette, O sorrowful Mother, ceased only with thy words, as the little shepherdess said. And it was noticed that thou didst weep more abundantly while speaking of our greatest sins, that is, blasphemy; profanation of the Lord\u2019s day; violation of the laws of fast and abstinence; rebellion against God and His Church; indifference in regard to thy supernatural warnings; and ingratitude for thy gifts and thy love. Let thy tear-bedewed face always be before my eyes, that it may soften my heart and impart to it the grace of a true repentance. And to prove that I am heartily sorry for my sins, I will, from this day, spare no effort to combat the great crimes with which thou didst reproach us in thy Apparition. Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "days-6",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Do you pray well, my child? You should pray morning and evening. You know what my Son says about prayer in His Gospel: We ought always to pray, and not to faint; that is, not to be faint-hearted in prayer. For without me, that is, without my grace, you can do nothing meritorious for heaven. Remember that grace is granted only through prayer. But, says my Son, if you ask the Father anything in My name, He will give it to you. Ask, therefore, with a pure and righteous heart, confidently, submissively, perseveringly, and you shall receive. Prayer is the key of the heavenly treasures. The cry of your misery goes up to God, and mercy descends forthwith. If, then, you wish to be a saint, be a lover of prayer. I myself pray incessantly for you in heaven. O sweet Mother, help me to understand the deep meaning of these few words. I will never forget that prayer is a necessity for the human heart, and the happiness of life. Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "days-7",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and spacing slightly for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Who would imagine, O loving Mother, that man is so wicked and so careless about his own welfare, as to turn into a deadly poison for his soul what God, in His infinite mercy, intended for his salvation, and for his greatest happiness. And yet, this is exactly what we learn from one of thy maternal reproaches: They go to Mass, sayest thou, only to scoff at religion! Alas! how many Catholics are there, who keep entirely away from the church? And if they do go, their evil dispositions make them all the more guilty. How many poor sinners are there, who, instead of going to the sacred fountains of the Sacraments to quench the fire of their unruly passions, scornfully disdain these divine gifts and sacrilegiously profane them! Would to God that, with thy all powerful help, I should never defile my soul with a sacrilege! My confessions shall always be as sincere as I would have them when my last day comes. Henceforth my respectful behavior in assisting at Mass will prove my tender love and my profound esteem for this holy Sacrifice. Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "days-8",
+            "kind": "fixed",
+            "notes": "converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "O loving Mother, how vividly real do the secrets of thy maternal heart appear in thy merciful Apparition! How greatly they increase and strengthen my confidence in thee! O amiable Mother, how mercifully thou bearest the rebukes encountered in thy endeavors to bring back to God the hearts of thy erring children. One may remain deaf to the call of thy love and engaging goodness; but he will yield to thy tears. For the tears of a mother go straight to the heart and melt it. But, as regards those whose hardened hearts despise even thy tears, thou hast awful threats and terrible chastisements in store for them. Yet, even then, how much like those of a mother are thy reproofs and punishments! With one hand thou strikest, while with the other thou upholdest. Even when we go astray, thy watchful and maternal eyes follow us in the minutest details of life, to detect the slightest good sentiments of our hearts, in order to reward them. Who would not strive to inflame every heart with love and respect for thee? Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "days-9",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping wording and order unchanged.; converted \"mention request here\" into a personal-intention pause marker; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "The days of my novena have come to an end, and I have hardly begun to meditate upon the teachings of thy Apparition. How solacing for our wearied hearts to contemplate thee and to pour forth our humble prayers at thy feet! Hours spent with thee are but as instants which pass with a flight as rapid as that of the lightning-flash. But, as thou didst once say to the shepherds enraptured by thy sight: Well, my children, you will make this known to all my people; so now thou addressest me with the same warning: Well, my child, you will make my teachings known to all my people. Love rejoices to express itself by sacrifices and devotedness. Teach, then, all those about you the necessity of serving God. Make known to them the religious observances, and the delight found in the service of God. And, to fulfill this sacred duty, meditate upon the teachings of my Apparition. O my child, let your heart be inflamed like that of your Mother with the fire of holy zeal for God\u2019s glory! Remember that by edifying your fellow-creatures, and procuring their salvation, you secure your own. Yes! heaven is the prize! Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Day 9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Our Lady of La Salette Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments.  In casting myself at thy feet, O loving Mother, to ask for these intentions, I cannot help remembering that thou camest on the mountain of La Salette, first of all, to remind me of my Christian duties. Therefore, there is no surer way for me to have my petition granted, than to return to the friendship of Jesus, by a sincere confession, and to endeavor with my whole strength to overcome my besetting sin. O Virgin Reconciler of sinners, obtain for me this most precious of all graces, for, with it all the rest shall be added unto me. The numberless miracles obtained by those who invoke thee under the title of Our Lady of La Salette, fill my heart with hope that my petition shall prove as fortunate as those addressed to thee, by so many other suppliants. Vouchsafe, O Mother, during each day of my novena, to instill into my heart some of the teaching of thy merciful Apparition. Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks for clearer text-to-speech pacing, and replaced \u201ci.e.\u201d with \u201cthat is\u201d while preserving meaning.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments.  O sorrowful Mother, why those tears shed in the wild solitude, on the rock which thou madest for a while thy earthly throne? My child, happy would I be, if my grief should inspire you with a heart-felt sorrow for your sins, and with a firm resolution to lead a better life! The land of your heart, as the Prophet says, is made desolate, because of your love for the world and its empty pleasures, because of your forgetfulness to meditate upon the most important truths of faith, that is, your last end, together with the dreadful consequences, both here and hereafter, of your thoughtlessness. Retire into solitude and there my Son will speak to your heart, and will breathe into your soul the proper means of securing your salvation. O Mother, the motives that urge me to mingle my tears with thine are innumerable. I will not resist Jesus\u2019 call any longer. Henceforth, with thy powerful aid, my thoughts, words and actions shall correspond to the wishes of the Divine Heart of Jesus. Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraphing for clearer text-to-speech pacing while keeping wording and meaning faithful, and preserved the personal intention marker exactly.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace, and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments.  What, O Mother, is the meaning of the bright cross which shines upon thy breast? Why this stream of tears trickling down thy heavenly face, and rolling over the golden cross on which they are burnt away as on a fire of Love? My child, was your soul never defiled by a mortal sin? Did you never scoff at my Son, thus crucifying anew your Saviour and your God? Is not the cross, that sacred emblem of salvation, scornfully banished from all the places where it used once to stand in honor? Such iniquities should be washed away by tears of blood. Strive, therefore, to appease my Son\u2019s wrath and to mitigate His vengeance. Stand in fear that the Sacred Blood which once flowed on Calvary should now fall revengefully upon your head, and the heads of those you hold dearest in this world. Dread that you should be deserted by God. Contemplate Jesus on His Cross. Humbly adore Him, and pour forth your most heartfelt thanks at His feet. Remember that, with Him, there is a remedy for every evil. There is no virtue but finds in Him a perfect model. Bear His cross on your breast, but chiefly in your heart. And in return, heaven shall be your reward. Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraph breaks slightly for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments.  The witnesses of thy Apparition, O sweet Mother, vie with each other in telling me of the extreme simplicity of thy dress, and the modesty of thy looks. What a lesson for my pride and vanity, to behold thee clothed with a common gown, a simple neckerchief, a humble apron, and a cap completely covering thy ears and thy hair. Who could but admire thy carefulness in concealing thy angelic face from the eyes of the small boy? No sorrowful Mother, thou couldst not more forcibly reprove pride, luxuriousness and sensuality, the allurements of which make numberless victims, both in this world and in the next. Help me, O Mother, to fly from the world and its distractions; to lead an interior life in order to become like Saint Paul, the good odor of Christ unto God. Help me to understand better that, to keep my heart pure, I must endeavor to be humble, to love mortification and to shun the sinful pleasures of the world. Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and expanded abbreviations for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace, and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments.  The flood of thy tears at La Salette, O sorrowful Mother, ceased only with thy words, as the little shepherdess said. And it was noticed that thou didst weep more abundantly while speaking of our greatest sins, that is, blasphemy; profanation of the Lord\u2019s day; violation of the laws of fast and abstinence; rebellion against God and His Church; indifference in regard to thy supernatural warnings; and ingratitude for thy gifts and thy love. Let thy tear-bedewed face always be before my eyes, that it may soften my heart and impart to it the grace of a true repentance. And to prove that I am heartily sorry for my sins, I will, from this day, spare no effort to combat the great crimes with which thou didst reproach us in thy Apparition. Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments.  Do you pray well, my child? You should pray morning and evening. You know what my Son says about prayer in His Gospel: We ought always to pray, and not to faint; that is, not to be faint-hearted in prayer. For without me, that is, without my grace, you can do nothing meritorious for heaven. Remember that grace is granted only through prayer. But, says my Son, if you ask the Father anything in My name, He will give it to you. Ask, therefore, with a pure and righteous heart, confidently, submissively, perseveringly, and you shall receive. Prayer is the key of the heavenly treasures. The cry of your misery goes up to God, and mercy descends forthwith. If, then, you wish to be a saint, be a lover of prayer. I myself pray incessantly for you in heaven. O sweet Mother, help me to understand the deep meaning of these few words. I will never forget that prayer is a necessity for the human heart, and the happiness of life. Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Adjusted punctuation and spacing slightly for clearer text-to-speech pacing while preserving wording and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments.  Who would imagine, O loving Mother, that man is so wicked and so careless about his own welfare, as to turn into a deadly poison for his soul what God, in His infinite mercy, intended for his salvation, and for his greatest happiness. And yet, this is exactly what we learn from one of thy maternal reproaches: They go to Mass, sayest thou, only to scoff at religion! Alas! how many Catholics are there, who keep entirely away from the church? And if they do go, their evil dispositions make them all the more guilty. How many poor sinners are there, who, instead of going to the sacred fountains of the Sacraments to quench the fire of their unruly passions, scornfully disdain these divine gifts and sacrilegiously profane them! Would to God that, with thy all powerful help, I should never defile my soul with a sacrilege! My confessions shall always be as sincere as I would have them when my last day comes. Henceforth my respectful behavior in assisting at Mass will prove my tender love and my profound esteem for this holy Sacrifice. Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments.  O loving Mother, how vividly real do the secrets of thy maternal heart appear in thy merciful Apparition! How greatly they increase and strengthen my confidence in thee! O amiable Mother, how mercifully thou bearest the rebukes encountered in thy endeavors to bring back to God the hearts of thy erring children. One may remain deaf to the call of thy love and engaging goodness; but he will yield to thy tears. For the tears of a mother go straight to the heart and melt it. But, as regards those whose hardened hearts despise even thy tears, thou hast awful threats and terrible chastisements in store for them. Yet, even then, how much like those of a mother are thy reproofs and punishments! With one hand thou strikest, while with the other thou upholdest. Even when we go astray, thy watchful and maternal eyes follow us in the minutest details of life, to detect the slightest good sentiments of our hearts, in order to reward them. Who would not strive to inflame every heart with love and respect for thee? Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Adjusted paragraph breaks for clearer pacing in text-to-speech while keeping wording and order unchanged.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. O Virgin, in whom God did such great things because of Your abasements, obtain for me the grace to become little in my eyes, so that I may participate in Your ineffable secrets. I want to establish my soul in peace and in a detachment that will allow You to always manifest to me the will of God over me. Make my heart, dried up until now by the fire of passions, quench its thirst only at the pure sources of virtue and the sacraments.  The days of my novena have come to an end, and I have hardly begun to meditate upon the teachings of thy Apparition. How solacing for our wearied hearts to contemplate thee and to pour forth our humble prayers at thy feet! Hours spent with thee are but as instants which pass with a flight as rapid as that of the lightning-flash. But, as thou didst once say to the shepherds enraptured by thy sight: Well, my children, you will make this known to all my people; so now thou addressest me with the same warning: Well, my child, you will make my teachings known to all my people. Love rejoices to express itself by sacrifices and devotedness. Teach, then, all those about you the necessity of serving God. Make known to them the religious observances, and the delight found in the service of God. And, to fulfill this sacred duty, meditate upon the teachings of my Apparition. O my child, let your heart be inflamed like that of your Mother with the fire of holy zeal for God\u2019s glory! Remember that by edifying your fellow-creatures, and procuring their salvation, you secure your own. Yes! heaven is the prize! Lord Jesus Christ, who, in Thy infinite mercy, didst send to us on the mountain of La Salette Thy ever glorious Mother in order to remind us of our Christian duties, grant that, moved by her tears and docile to her warnings, we may appease in this life Thy just anger by a sincere repentance, and that we may merit by our good works the grace to enjoy Thee eternally in heaven. Thou who livest and reignest world without end. Amen. Our Lady of La Salette, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-our_lady_of_la_salette"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "our_lady_of_la_salette",
+      "name": "Our Lady of La Salette"
+    },
+    "type": "novena_feast_rule"
+  }
+}

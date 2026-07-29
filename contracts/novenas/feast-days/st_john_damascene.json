@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "st_john_damascene",
+    "feast": {
+      "day": 4,
+      "mode": "fixed",
+      "month": 12,
+      "name": "St John Damascene"
+    },
+    "id": "st_john_damascene",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "theologians",
+        "iconographers",
+        "Eastern Christians"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "St John Damascene was an 8th-century monk and theologian who defended the veneration of icons and wrote influential works of Christian doctrine."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St John of Damascus Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. From The Statement of Faith by St. John Damascene, priest. You have called me, Lord, to minister to your people. O Lord, you led me from my father\u2019s loins and formed me in my mother\u2019s womb. You brought me, a naked babe, into the light of day, for nature\u2019s laws always obey your commands. By the blessing of the Holy Spirit, you prepared my creation and my existence, not because man willed it or flesh desired it, but by your ineffable grace. The birth you prepared for me was such that it surpassed the laws of our nature. You sent me forth into the light by adopting me as your son, and you enrolled me among the children of your holy and spotless Church. You nursed me with the spiritual milk of your divine utterances. You kept me alive with the solid food of the body of Jesus Christ, your only-begotten Son, for our redemption. And he undertook the task willingly and did not shrink from it. Indeed, he applied himself to it as though destined for sacrifice, like an innocent lamb. Although he was God, he became man, and in his human will, became obedient to you, God his Father, unto death, even death on a cross. In this way you have humbled yourself, Christ my God, so that you might carry me, your stray sheep, on your shoulders. You let me graze in green pastures, refreshing me with the waters of orthodox teaching at the hands of your shepherds. You pastured these shepherds, and now they in turn tend your chosen and special flock. Now you have called me, Lord, by the hand of your bishop, to minister to your people. I do not know why you have done so, for you alone know that. Lord, lighten the heavy burden of the sins through which I have seriously transgressed. Purify my mind and heart. Like a shining lamp, lead me along the straight path. When I open my mouth, tell me what I should say. By the fiery tongue of your Spirit, make my own tongue ready. Stay with me always and keep me in your sight. Lead me to pastures, Lord, and graze there with me. Do not let my heart lean either to the right or to the left, but let your good Spirit guide me along the straight path. Whatever I do, let it be in accordance with your will, now until the end. And you, O Church, are a most excellent assembly, the noble summit of perfect purity, whose assistance comes from God. You in whom God lives, receive from us an exposition of the faith that is free from error, to strengthen the Church, just as our Fathers handed it down to us."
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "Grant, we pray, O Lord, that we may be helped by the prayers of Thy priest Saint John Damascene, so that the true Faith, which he excelled in teaching, may always be our light and our strength. Through our Lord Jesus Christ, Thy Son, who lives and reigns with Thee in the unity of the Holy Spirit, God, for ever and ever. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Damascene, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full St John of Damascus Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. From The Statement of Faith by St. John Damascene, priest. You have called me, Lord, to minister to your people. O Lord, you led me from my father\u2019s loins and formed me in my mother\u2019s womb. You brought me, a naked babe, into the light of day, for nature\u2019s laws always obey your commands. By the blessing of the Holy Spirit, you prepared my creation and my existence, not because man willed it or flesh desired it, but by your ineffable grace. The birth you prepared for me was such that it surpassed the laws of our nature. You sent me forth into the light by adopting me as your son, and you enrolled me among the children of your holy and spotless Church. You nursed me with the spiritual milk of your divine utterances. You kept me alive with the solid food of the body of Jesus Christ, your only-begotten Son, for our redemption. And he undertook the task willingly and did not shrink from it. Indeed, he applied himself to it as though destined for sacrifice, like an innocent lamb. Although he was God, he became man, and in his human will, became obedient to you, God his Father, unto death, even death on a cross. In this way you have humbled yourself, Christ my God, so that you might carry me, your stray sheep, on your shoulders. You let me graze in green pastures, refreshing me with the waters of orthodox teaching at the hands of your shepherds. You pastured these shepherds, and now they in turn tend your chosen and special flock. Now you have called me, Lord, by the hand of your bishop, to minister to your people. I do not know why you have done so, for you alone know that. Lord, lighten the heavy burden of the sins through which I have seriously transgressed. Purify my mind and heart. Like a shining lamp, lead me along the straight path. When I open my mouth, tell me what I should say. By the fiery tongue of your Spirit, make my own tongue ready. Stay with me always and keep me in your sight. Lead me to pastures, Lord, and graze there with me. Do not let my heart lean either to the right or to the left, but let your good Spirit guide me along the straight path. Whatever I do, let it be in accordance with your will, now until the end. And you, O Church, are a most excellent assembly, the noble summit of perfect purity, whose assistance comes from God. You in whom God lives, receive from us an exposition of the faith that is free from error, to strengthen the Church, just as our Fathers handed it down to us.  Grant, we pray, O Lord, that we may be helped by the prayers of Thy priest Saint John Damascene, so that the true Faith, which he excelled in teaching, may always be our light and our strength. Through our Lord Jesus Christ, Thy Son, who lives and reigns with Thee in the unity of the Holy Spirit, God, for ever and ever. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Damascene, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. From The Statement of Faith by St. John Damascene, priest. You have called me, Lord, to minister to your people. O Lord, you led me from my father\u2019s loins and formed me in my mother\u2019s womb. You brought me, a naked babe, into the light of day, for nature\u2019s laws always obey your commands. By the blessing of the Holy Spirit, you prepared my creation and my existence, not because man willed it or flesh desired it, but by your ineffable grace. The birth you prepared for me was such that it surpassed the laws of our nature. You sent me forth into the light by adopting me as your son, and you enrolled me among the children of your holy and spotless Church. You nursed me with the spiritual milk of your divine utterances. You kept me alive with the solid food of the body of Jesus Christ, your only-begotten Son, for our redemption. And he undertook the task willingly and did not shrink from it. Indeed, he applied himself to it as though destined for sacrifice, like an innocent lamb. Although he was God, he became man, and in his human will, became obedient to you, God his Father, unto death, even death on a cross. In this way you have humbled yourself, Christ my God, so that you might carry me, your stray sheep, on your shoulders. You let me graze in green pastures, refreshing me with the waters of orthodox teaching at the hands of your shepherds. You pastured these shepherds, and now they in turn tend your chosen and special flock. Now you have called me, Lord, by the hand of your bishop, to minister to your people. I do not know why you have done so, for you alone know that. Lord, lighten the heavy burden of the sins through which I have seriously transgressed. Purify my mind and heart. Like a shining lamp, lead me along the straight path. When I open my mouth, tell me what I should say. By the fiery tongue of your Spirit, make my own tongue ready. Stay with me always and keep me in your sight. Lead me to pastures, Lord, and graze there with me. Do not let my heart lean either to the right or to the left, but let your good Spirit guide me along the straight path. Whatever I do, let it be in accordance with your will, now until the end. And you, O Church, are a most excellent assembly, the noble summit of perfect purity, whose assistance comes from God. You in whom God lives, receive from us an exposition of the faith that is free from error, to strengthen the Church, just as our Fathers handed it down to us.  Grant, we pray, O Lord, that we may be helped by the prayers of Thy priest Saint John Damascene, so that the true Faith, which he excelled in teaching, may always be our light and our strength. Through our Lord Jesus Christ, Thy Son, who lives and reigns with Thee in the unity of the Holy Spirit, God, for ever and ever. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Damascene, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. From The Statement of Faith by St. John Damascene, priest. You have called me, Lord, to minister to your people. O Lord, you led me from my father\u2019s loins and formed me in my mother\u2019s womb. You brought me, a naked babe, into the light of day, for nature\u2019s laws always obey your commands. By the blessing of the Holy Spirit, you prepared my creation and my existence, not because man willed it or flesh desired it, but by your ineffable grace. The birth you prepared for me was such that it surpassed the laws of our nature. You sent me forth into the light by adopting me as your son, and you enrolled me among the children of your holy and spotless Church. You nursed me with the spiritual milk of your divine utterances. You kept me alive with the solid food of the body of Jesus Christ, your only-begotten Son, for our redemption. And he undertook the task willingly and did not shrink from it. Indeed, he applied himself to it as though destined for sacrifice, like an innocent lamb. Although he was God, he became man, and in his human will, became obedient to you, God his Father, unto death, even death on a cross. In this way you have humbled yourself, Christ my God, so that you might carry me, your stray sheep, on your shoulders. You let me graze in green pastures, refreshing me with the waters of orthodox teaching at the hands of your shepherds. You pastured these shepherds, and now they in turn tend your chosen and special flock. Now you have called me, Lord, by the hand of your bishop, to minister to your people. I do not know why you have done so, for you alone know that. Lord, lighten the heavy burden of the sins through which I have seriously transgressed. Purify my mind and heart. Like a shining lamp, lead me along the straight path. When I open my mouth, tell me what I should say. By the fiery tongue of your Spirit, make my own tongue ready. Stay with me always and keep me in your sight. Lead me to pastures, Lord, and graze there with me. Do not let my heart lean either to the right or to the left, but let your good Spirit guide me along the straight path. Whatever I do, let it be in accordance with your will, now until the end. And you, O Church, are a most excellent assembly, the noble summit of perfect purity, whose assistance comes from God. You in whom God lives, receive from us an exposition of the faith that is free from error, to strengthen the Church, just as our Fathers handed it down to us.  Grant, we pray, O Lord, that we may be helped by the prayers of Thy priest Saint John Damascene, so that the true Faith, which he excelled in teaching, may always be our light and our strength. Through our Lord Jesus Christ, Thy Son, who lives and reigns with Thee in the unity of the Holy Spirit, God, for ever and ever. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Damascene, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. From The Statement of Faith by St. John Damascene, priest. You have called me, Lord, to minister to your people. O Lord, you led me from my father\u2019s loins and formed me in my mother\u2019s womb. You brought me, a naked babe, into the light of day, for nature\u2019s laws always obey your commands. By the blessing of the Holy Spirit, you prepared my creation and my existence, not because man willed it or flesh desired it, but by your ineffable grace. The birth you prepared for me was such that it surpassed the laws of our nature. You sent me forth into the light by adopting me as your son, and you enrolled me among the children of your holy and spotless Church. You nursed me with the spiritual milk of your divine utterances. You kept me alive with the solid food of the body of Jesus Christ, your only-begotten Son, for our redemption. And he undertook the task willingly and did not shrink from it. Indeed, he applied himself to it as though destined for sacrifice, like an innocent lamb. Although he was God, he became man, and in his human will, became obedient to you, God his Father, unto death, even death on a cross. In this way you have humbled yourself, Christ my God, so that you might carry me, your stray sheep, on your shoulders. You let me graze in green pastures, refreshing me with the waters of orthodox teaching at the hands of your shepherds. You pastured these shepherds, and now they in turn tend your chosen and special flock. Now you have called me, Lord, by the hand of your bishop, to minister to your people. I do not know why you have done so, for you alone know that. Lord, lighten the heavy burden of the sins through which I have seriously transgressed. Purify my mind and heart. Like a shining lamp, lead me along the straight path. When I open my mouth, tell me what I should say. By the fiery tongue of your Spirit, make my own tongue ready. Stay with me always and keep me in your sight. Lead me to pastures, Lord, and graze there with me. Do not let my heart lean either to the right or to the left, but let your good Spirit guide me along the straight path. Whatever I do, let it be in accordance with your will, now until the end. And you, O Church, are a most excellent assembly, the noble summit of perfect purity, whose assistance comes from God. You in whom God lives, receive from us an exposition of the faith that is free from error, to strengthen the Church, just as our Fathers handed it down to us.  Grant, we pray, O Lord, that we may be helped by the prayers of Thy priest Saint John Damascene, so that the true Faith, which he excelled in teaching, may always be our light and our strength. Through our Lord Jesus Christ, Thy Son, who lives and reigns with Thee in the unity of the Holy Spirit, God, for ever and ever. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Damascene, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. From The Statement of Faith by St. John Damascene, priest. You have called me, Lord, to minister to your people. O Lord, you led me from my father\u2019s loins and formed me in my mother\u2019s womb. You brought me, a naked babe, into the light of day, for nature\u2019s laws always obey your commands. By the blessing of the Holy Spirit, you prepared my creation and my existence, not because man willed it or flesh desired it, but by your ineffable grace. The birth you prepared for me was such that it surpassed the laws of our nature. You sent me forth into the light by adopting me as your son, and you enrolled me among the children of your holy and spotless Church. You nursed me with the spiritual milk of your divine utterances. You kept me alive with the solid food of the body of Jesus Christ, your only-begotten Son, for our redemption. And he undertook the task willingly and did not shrink from it. Indeed, he applied himself to it as though destined for sacrifice, like an innocent lamb. Although he was God, he became man, and in his human will, became obedient to you, God his Father, unto death, even death on a cross. In this way you have humbled yourself, Christ my God, so that you might carry me, your stray sheep, on your shoulders. You let me graze in green pastures, refreshing me with the waters of orthodox teaching at the hands of your shepherds. You pastured these shepherds, and now they in turn tend your chosen and special flock. Now you have called me, Lord, by the hand of your bishop, to minister to your people. I do not know why you have done so, for you alone know that. Lord, lighten the heavy burden of the sins through which I have seriously transgressed. Purify my mind and heart. Like a shining lamp, lead me along the straight path. When I open my mouth, tell me what I should say. By the fiery tongue of your Spirit, make my own tongue ready. Stay with me always and keep me in your sight. Lead me to pastures, Lord, and graze there with me. Do not let my heart lean either to the right or to the left, but let your good Spirit guide me along the straight path. Whatever I do, let it be in accordance with your will, now until the end. And you, O Church, are a most excellent assembly, the noble summit of perfect purity, whose assistance comes from God. You in whom God lives, receive from us an exposition of the faith that is free from error, to strengthen the Church, just as our Fathers handed it down to us.  Grant, we pray, O Lord, that we may be helped by the prayers of Thy priest Saint John Damascene, so that the true Faith, which he excelled in teaching, may always be our light and our strength. Through our Lord Jesus Christ, Thy Son, who lives and reigns with Thee in the unity of the Holy Spirit, God, for ever and ever. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Damascene, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. From The Statement of Faith by St. John Damascene, priest. You have called me, Lord, to minister to your people. O Lord, you led me from my father\u2019s loins and formed me in my mother\u2019s womb. You brought me, a naked babe, into the light of day, for nature\u2019s laws always obey your commands. By the blessing of the Holy Spirit, you prepared my creation and my existence, not because man willed it or flesh desired it, but by your ineffable grace. The birth you prepared for me was such that it surpassed the laws of our nature. You sent me forth into the light by adopting me as your son, and you enrolled me among the children of your holy and spotless Church. You nursed me with the spiritual milk of your divine utterances. You kept me alive with the solid food of the body of Jesus Christ, your only-begotten Son, for our redemption. And he undertook the task willingly and did not shrink from it. Indeed, he applied himself to it as though destined for sacrifice, like an innocent lamb. Although he was God, he became man, and in his human will, became obedient to you, God his Father, unto death, even death on a cross. In this way you have humbled yourself, Christ my God, so that you might carry me, your stray sheep, on your shoulders. You let me graze in green pastures, refreshing me with the waters of orthodox teaching at the hands of your shepherds. You pastured these shepherds, and now they in turn tend your chosen and special flock. Now you have called me, Lord, by the hand of your bishop, to minister to your people. I do not know why you have done so, for you alone know that. Lord, lighten the heavy burden of the sins through which I have seriously transgressed. Purify my mind and heart. Like a shining lamp, lead me along the straight path. When I open my mouth, tell me what I should say. By the fiery tongue of your Spirit, make my own tongue ready. Stay with me always and keep me in your sight. Lead me to pastures, Lord, and graze there with me. Do not let my heart lean either to the right or to the left, but let your good Spirit guide me along the straight path. Whatever I do, let it be in accordance with your will, now until the end. And you, O Church, are a most excellent assembly, the noble summit of perfect purity, whose assistance comes from God. You in whom God lives, receive from us an exposition of the faith that is free from error, to strengthen the Church, just as our Fathers handed it down to us.  Grant, we pray, O Lord, that we may be helped by the prayers of Thy priest Saint John Damascene, so that the true Faith, which he excelled in teaching, may always be our light and our strength. Through our Lord Jesus Christ, Thy Son, who lives and reigns with Thee in the unity of the Holy Spirit, God, for ever and ever. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Damascene, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. From The Statement of Faith by St. John Damascene, priest. You have called me, Lord, to minister to your people. O Lord, you led me from my father\u2019s loins and formed me in my mother\u2019s womb. You brought me, a naked babe, into the light of day, for nature\u2019s laws always obey your commands. By the blessing of the Holy Spirit, you prepared my creation and my existence, not because man willed it or flesh desired it, but by your ineffable grace. The birth you prepared for me was such that it surpassed the laws of our nature. You sent me forth into the light by adopting me as your son, and you enrolled me among the children of your holy and spotless Church. You nursed me with the spiritual milk of your divine utterances. You kept me alive with the solid food of the body of Jesus Christ, your only-begotten Son, for our redemption. And he undertook the task willingly and did not shrink from it. Indeed, he applied himself to it as though destined for sacrifice, like an innocent lamb. Although he was God, he became man, and in his human will, became obedient to you, God his Father, unto death, even death on a cross. In this way you have humbled yourself, Christ my God, so that you might carry me, your stray sheep, on your shoulders. You let me graze in green pastures, refreshing me with the waters of orthodox teaching at the hands of your shepherds. You pastured these shepherds, and now they in turn tend your chosen and special flock. Now you have called me, Lord, by the hand of your bishop, to minister to your people. I do not know why you have done so, for you alone know that. Lord, lighten the heavy burden of the sins through which I have seriously transgressed. Purify my mind and heart. Like a shining lamp, lead me along the straight path. When I open my mouth, tell me what I should say. By the fiery tongue of your Spirit, make my own tongue ready. Stay with me always and keep me in your sight. Lead me to pastures, Lord, and graze there with me. Do not let my heart lean either to the right or to the left, but let your good Spirit guide me along the straight path. Whatever I do, let it be in accordance with your will, now until the end. And you, O Church, are a most excellent assembly, the noble summit of perfect purity, whose assistance comes from God. You in whom God lives, receive from us an exposition of the faith that is free from error, to strengthen the Church, just as our Fathers handed it down to us.  Grant, we pray, O Lord, that we may be helped by the prayers of Thy priest Saint John Damascene, so that the true Faith, which he excelled in teaching, may always be our light and our strength. Through our Lord Jesus Christ, Thy Son, who lives and reigns with Thee in the unity of the Holy Spirit, God, for ever and ever. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Damascene, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. From The Statement of Faith by St. John Damascene, priest. You have called me, Lord, to minister to your people. O Lord, you led me from my father\u2019s loins and formed me in my mother\u2019s womb. You brought me, a naked babe, into the light of day, for nature\u2019s laws always obey your commands. By the blessing of the Holy Spirit, you prepared my creation and my existence, not because man willed it or flesh desired it, but by your ineffable grace. The birth you prepared for me was such that it surpassed the laws of our nature. You sent me forth into the light by adopting me as your son, and you enrolled me among the children of your holy and spotless Church. You nursed me with the spiritual milk of your divine utterances. You kept me alive with the solid food of the body of Jesus Christ, your only-begotten Son, for our redemption. And he undertook the task willingly and did not shrink from it. Indeed, he applied himself to it as though destined for sacrifice, like an innocent lamb. Although he was God, he became man, and in his human will, became obedient to you, God his Father, unto death, even death on a cross. In this way you have humbled yourself, Christ my God, so that you might carry me, your stray sheep, on your shoulders. You let me graze in green pastures, refreshing me with the waters of orthodox teaching at the hands of your shepherds. You pastured these shepherds, and now they in turn tend your chosen and special flock. Now you have called me, Lord, by the hand of your bishop, to minister to your people. I do not know why you have done so, for you alone know that. Lord, lighten the heavy burden of the sins through which I have seriously transgressed. Purify my mind and heart. Like a shining lamp, lead me along the straight path. When I open my mouth, tell me what I should say. By the fiery tongue of your Spirit, make my own tongue ready. Stay with me always and keep me in your sight. Lead me to pastures, Lord, and graze there with me. Do not let my heart lean either to the right or to the left, but let your good Spirit guide me along the straight path. Whatever I do, let it be in accordance with your will, now until the end. And you, O Church, are a most excellent assembly, the noble summit of perfect purity, whose assistance comes from God. You in whom God lives, receive from us an exposition of the faith that is free from error, to strengthen the Church, just as our Fathers handed it down to us.  Grant, we pray, O Lord, that we may be helped by the prayers of Thy priest Saint John Damascene, so that the true Faith, which he excelled in teaching, may always be our light and our strength. Through our Lord Jesus Christ, Thy Son, who lives and reigns with Thee in the unity of the Holy Spirit, God, for ever and ever. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Damascene, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "expanded canonical prayer references into full rosary texts; Adjusted punctuation and paragraphing for clearer text-to-speech pacing while preserving wording and order.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. From The Statement of Faith by St. John Damascene, priest. You have called me, Lord, to minister to your people. O Lord, you led me from my father\u2019s loins and formed me in my mother\u2019s womb. You brought me, a naked babe, into the light of day, for nature\u2019s laws always obey your commands. By the blessing of the Holy Spirit, you prepared my creation and my existence, not because man willed it or flesh desired it, but by your ineffable grace. The birth you prepared for me was such that it surpassed the laws of our nature. You sent me forth into the light by adopting me as your son, and you enrolled me among the children of your holy and spotless Church. You nursed me with the spiritual milk of your divine utterances. You kept me alive with the solid food of the body of Jesus Christ, your only-begotten Son, for our redemption. And he undertook the task willingly and did not shrink from it. Indeed, he applied himself to it as though destined for sacrifice, like an innocent lamb. Although he was God, he became man, and in his human will, became obedient to you, God his Father, unto death, even death on a cross. In this way you have humbled yourself, Christ my God, so that you might carry me, your stray sheep, on your shoulders. You let me graze in green pastures, refreshing me with the waters of orthodox teaching at the hands of your shepherds. You pastured these shepherds, and now they in turn tend your chosen and special flock. Now you have called me, Lord, by the hand of your bishop, to minister to your people. I do not know why you have done so, for you alone know that. Lord, lighten the heavy burden of the sins through which I have seriously transgressed. Purify my mind and heart. Like a shining lamp, lead me along the straight path. When I open my mouth, tell me what I should say. By the fiery tongue of your Spirit, make my own tongue ready. Stay with me always and keep me in your sight. Lead me to pastures, Lord, and graze there with me. Do not let my heart lean either to the right or to the left, but let your good Spirit guide me along the straight path. Whatever I do, let it be in accordance with your will, now until the end. And you, O Church, are a most excellent assembly, the noble summit of perfect purity, whose assistance comes from God. You in whom God lives, receive from us an exposition of the faith that is free from error, to strengthen the Church, just as our Fathers handed it down to us.  Grant, we pray, O Lord, that we may be helped by the prayers of Thy priest Saint John Damascene, so that the true Faith, which he excelled in teaching, may always be our light and our strength. Through our Lord Jesus Christ, Thy Son, who lives and reigns with Thee in the unity of the Holy Spirit, God, for ever and ever. Our Father, who art in heaven, hallowed be thy name. Thy kingdom come, thy will be done, on earth as it is in heaven. Give us this day our daily bread, and forgive us our trespasses, as we forgive those who trespass against us. And lead us not into temptation, but deliver us from evil. Amen. Hail Mary, full of grace, the Lord is with thee. Blessed art thou among women, and blessed is the fruit of thy womb, Jesus. Holy Mary, Mother of God, pray for us sinners, now and at the hour of our death. Amen. Glory be to the Father, and to the Son, and to the Holy Spirit. As it was in the beginning, is now, and ever shall be, world without end. Amen. St John Damascene, pray for us! In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-st_john_damascene"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "st_john_damascene",
+      "name": "St John Damascene"
+    },
+    "type": "novena_feast_rule"
+  }
+}

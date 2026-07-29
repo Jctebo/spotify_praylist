@@ -1,0 +1,228 @@
+{
+  "contract": {
+    "enabled": true,
+    "family_id": "fulton_sheen",
+    "feast": {
+      "day": 9,
+      "mode": "fixed",
+      "month": 12,
+      "name": "Fulton Sheen"
+    },
+    "id": "fulton_sheen",
+    "intro": {
+      "kind": "saint",
+      "patronage": [
+        "evangelists",
+        "preachers",
+        "television broadcasters"
+      ],
+      "seed": {
+        "generated_at": "2026-07-28",
+        "model": "gpt-5.2",
+        "provider": "openai"
+      },
+      "summary": "Fulton J. Sheen was an American Catholic bishop and evangelist known for his preaching and television ministry, beatified in 2019."
+    },
+    "novena": {
+      "content_mode": "fixed",
+      "duration_days": 9,
+      "start_offset_days": -9,
+      "template": {
+        "blocks": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Venerable Fulton Sheen Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9
+            ],
+            "key": "days-1-9",
+            "kind": "fixed",
+            "notes": "Added a clear spoken title line and removed the non-spoken word \u201cIMPRIMATUR,\u201d while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section; converted intention marker into sacred bell and personal-intention pause",
+            "parts": [
+              {
+                "kind": "text",
+                "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for the Canonization of the Venerable Servant of God Fulton J. Sheen. Heavenly Father, source of all holiness, You raise up within the Church in every age men and women who serve with heroic love and dedication. You have blessed Your Church through the life and ministry of Your faithful servant, Archbishop Fulton J. Sheen. He has written and spoken well of Your Divine Son, Jesus Christ, and was a true instrument of the Holy Spirit in touching the hearts of countless people. If it be according to Your Will, for the honor and glory of the Most Holy Trinity and for the salvation of souls, we ask You to move the Church to proclaim him a saint. We ask this prayer through Jesus Christ, our Lord. Amen. Eternal Father, You alone grant us every blessing in Heaven and on earth, through the redemptive mission of Your Divine Son, Jesus Christ, and by the working of the Holy Spirit. If it be according to Your Will, glorify Your servant, Archbishop Fulton J. Sheen, by granting the favor I now request through his prayerful intercession"
+              },
+              {
+                "cue": "sacred_bell",
+                "kind": "audio_cue"
+              },
+              {
+                "duration_ms": 5000,
+                "kind": "pause",
+                "purpose": "personal_intention"
+              },
+              {
+                "kind": "text",
+                "text": "I make this prayer confidently through Jesus Christ, Our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen."
+              }
+            ],
+            "title": "Days 1-9"
+          }
+        ],
+        "sections": [
+          {
+            "key": "introduction",
+            "kind": "fixed",
+            "text": "You can pray the full Venerable Fulton Sheen Novena below.",
+            "title": "Introduction"
+          },
+          {
+            "days": [
+              1
+            ],
+            "key": "day-1",
+            "kind": "fixed",
+            "notes": "Added a clear spoken title line and removed the non-spoken word \u201cIMPRIMATUR,\u201d while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for the Canonization of the Venerable Servant of God Fulton J. Sheen. Heavenly Father, source of all holiness, You raise up within the Church in every age men and women who serve with heroic love and dedication. You have blessed Your Church through the life and ministry of Your faithful servant, Archbishop Fulton J. Sheen. He has written and spoken well of Your Divine Son, Jesus Christ, and was a true instrument of the Holy Spirit in touching the hearts of countless people. If it be according to Your Will, for the honor and glory of the Most Holy Trinity and for the salvation of souls, we ask You to move the Church to proclaim him a saint. We ask this prayer through Jesus Christ, our Lord. Amen. Eternal Father, You alone grant us every blessing in Heaven and on earth, through the redemptive mission of Your Divine Son, Jesus Christ, and by the working of the Holy Spirit. If it be according to Your Will, glorify Your servant, Archbishop Fulton J. Sheen, by granting the favor I now request through his prayerful intercession  I make this prayer confidently through Jesus Christ, Our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 1"
+          },
+          {
+            "days": [
+              2
+            ],
+            "key": "day-2",
+            "kind": "fixed",
+            "notes": "Added a clear spoken title line and removed the non-spoken word \u201cIMPRIMATUR,\u201d while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for the Canonization of the Venerable Servant of God Fulton J. Sheen. Heavenly Father, source of all holiness, You raise up within the Church in every age men and women who serve with heroic love and dedication. You have blessed Your Church through the life and ministry of Your faithful servant, Archbishop Fulton J. Sheen. He has written and spoken well of Your Divine Son, Jesus Christ, and was a true instrument of the Holy Spirit in touching the hearts of countless people. If it be according to Your Will, for the honor and glory of the Most Holy Trinity and for the salvation of souls, we ask You to move the Church to proclaim him a saint. We ask this prayer through Jesus Christ, our Lord. Amen. Eternal Father, You alone grant us every blessing in Heaven and on earth, through the redemptive mission of Your Divine Son, Jesus Christ, and by the working of the Holy Spirit. If it be according to Your Will, glorify Your servant, Archbishop Fulton J. Sheen, by granting the favor I now request through his prayerful intercession  I make this prayer confidently through Jesus Christ, Our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 2"
+          },
+          {
+            "days": [
+              3
+            ],
+            "key": "day-3",
+            "kind": "fixed",
+            "notes": "Added a clear spoken title line and removed the non-spoken word \u201cIMPRIMATUR,\u201d while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for the Canonization of the Venerable Servant of God Fulton J. Sheen. Heavenly Father, source of all holiness, You raise up within the Church in every age men and women who serve with heroic love and dedication. You have blessed Your Church through the life and ministry of Your faithful servant, Archbishop Fulton J. Sheen. He has written and spoken well of Your Divine Son, Jesus Christ, and was a true instrument of the Holy Spirit in touching the hearts of countless people. If it be according to Your Will, for the honor and glory of the Most Holy Trinity and for the salvation of souls, we ask You to move the Church to proclaim him a saint. We ask this prayer through Jesus Christ, our Lord. Amen. Eternal Father, You alone grant us every blessing in Heaven and on earth, through the redemptive mission of Your Divine Son, Jesus Christ, and by the working of the Holy Spirit. If it be according to Your Will, glorify Your servant, Archbishop Fulton J. Sheen, by granting the favor I now request through his prayerful intercession  I make this prayer confidently through Jesus Christ, Our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 3"
+          },
+          {
+            "days": [
+              4
+            ],
+            "key": "day-4",
+            "kind": "fixed",
+            "notes": "Added a clear spoken title line and removed the non-spoken word \u201cIMPRIMATUR,\u201d while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for the Canonization of the Venerable Servant of God Fulton J. Sheen. Heavenly Father, source of all holiness, You raise up within the Church in every age men and women who serve with heroic love and dedication. You have blessed Your Church through the life and ministry of Your faithful servant, Archbishop Fulton J. Sheen. He has written and spoken well of Your Divine Son, Jesus Christ, and was a true instrument of the Holy Spirit in touching the hearts of countless people. If it be according to Your Will, for the honor and glory of the Most Holy Trinity and for the salvation of souls, we ask You to move the Church to proclaim him a saint. We ask this prayer through Jesus Christ, our Lord. Amen. Eternal Father, You alone grant us every blessing in Heaven and on earth, through the redemptive mission of Your Divine Son, Jesus Christ, and by the working of the Holy Spirit. If it be according to Your Will, glorify Your servant, Archbishop Fulton J. Sheen, by granting the favor I now request through his prayerful intercession  I make this prayer confidently through Jesus Christ, Our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 4"
+          },
+          {
+            "days": [
+              5
+            ],
+            "key": "day-5",
+            "kind": "fixed",
+            "notes": "Added a clear spoken title line and removed the non-spoken word \u201cIMPRIMATUR,\u201d while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for the Canonization of the Venerable Servant of God Fulton J. Sheen. Heavenly Father, source of all holiness, You raise up within the Church in every age men and women who serve with heroic love and dedication. You have blessed Your Church through the life and ministry of Your faithful servant, Archbishop Fulton J. Sheen. He has written and spoken well of Your Divine Son, Jesus Christ, and was a true instrument of the Holy Spirit in touching the hearts of countless people. If it be according to Your Will, for the honor and glory of the Most Holy Trinity and for the salvation of souls, we ask You to move the Church to proclaim him a saint. We ask this prayer through Jesus Christ, our Lord. Amen. Eternal Father, You alone grant us every blessing in Heaven and on earth, through the redemptive mission of Your Divine Son, Jesus Christ, and by the working of the Holy Spirit. If it be according to Your Will, glorify Your servant, Archbishop Fulton J. Sheen, by granting the favor I now request through his prayerful intercession  I make this prayer confidently through Jesus Christ, Our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 5"
+          },
+          {
+            "days": [
+              6
+            ],
+            "key": "day-6",
+            "kind": "fixed",
+            "notes": "Added a clear spoken title line and removed the non-spoken word \u201cIMPRIMATUR,\u201d while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for the Canonization of the Venerable Servant of God Fulton J. Sheen. Heavenly Father, source of all holiness, You raise up within the Church in every age men and women who serve with heroic love and dedication. You have blessed Your Church through the life and ministry of Your faithful servant, Archbishop Fulton J. Sheen. He has written and spoken well of Your Divine Son, Jesus Christ, and was a true instrument of the Holy Spirit in touching the hearts of countless people. If it be according to Your Will, for the honor and glory of the Most Holy Trinity and for the salvation of souls, we ask You to move the Church to proclaim him a saint. We ask this prayer through Jesus Christ, our Lord. Amen. Eternal Father, You alone grant us every blessing in Heaven and on earth, through the redemptive mission of Your Divine Son, Jesus Christ, and by the working of the Holy Spirit. If it be according to Your Will, glorify Your servant, Archbishop Fulton J. Sheen, by granting the favor I now request through his prayerful intercession  I make this prayer confidently through Jesus Christ, Our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 6"
+          },
+          {
+            "days": [
+              7
+            ],
+            "key": "day-7",
+            "kind": "fixed",
+            "notes": "Added a clear spoken title line and removed the non-spoken word \u201cIMPRIMATUR,\u201d while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for the Canonization of the Venerable Servant of God Fulton J. Sheen. Heavenly Father, source of all holiness, You raise up within the Church in every age men and women who serve with heroic love and dedication. You have blessed Your Church through the life and ministry of Your faithful servant, Archbishop Fulton J. Sheen. He has written and spoken well of Your Divine Son, Jesus Christ, and was a true instrument of the Holy Spirit in touching the hearts of countless people. If it be according to Your Will, for the honor and glory of the Most Holy Trinity and for the salvation of souls, we ask You to move the Church to proclaim him a saint. We ask this prayer through Jesus Christ, our Lord. Amen. Eternal Father, You alone grant us every blessing in Heaven and on earth, through the redemptive mission of Your Divine Son, Jesus Christ, and by the working of the Holy Spirit. If it be according to Your Will, glorify Your servant, Archbishop Fulton J. Sheen, by granting the favor I now request through his prayerful intercession  I make this prayer confidently through Jesus Christ, Our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 7"
+          },
+          {
+            "days": [
+              8
+            ],
+            "key": "day-8",
+            "kind": "fixed",
+            "notes": "Added a clear spoken title line and removed the non-spoken word \u201cIMPRIMATUR,\u201d while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for the Canonization of the Venerable Servant of God Fulton J. Sheen. Heavenly Father, source of all holiness, You raise up within the Church in every age men and women who serve with heroic love and dedication. You have blessed Your Church through the life and ministry of Your faithful servant, Archbishop Fulton J. Sheen. He has written and spoken well of Your Divine Son, Jesus Christ, and was a true instrument of the Holy Spirit in touching the hearts of countless people. If it be according to Your Will, for the honor and glory of the Most Holy Trinity and for the salvation of souls, we ask You to move the Church to proclaim him a saint. We ask this prayer through Jesus Christ, our Lord. Amen. Eternal Father, You alone grant us every blessing in Heaven and on earth, through the redemptive mission of Your Divine Son, Jesus Christ, and by the working of the Holy Spirit. If it be according to Your Will, glorify Your servant, Archbishop Fulton J. Sheen, by granting the favor I now request through his prayerful intercession  I make this prayer confidently through Jesus Christ, Our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 8"
+          },
+          {
+            "days": [
+              9
+            ],
+            "key": "day-9",
+            "kind": "fixed",
+            "notes": "Added a clear spoken title line and removed the non-spoken word \u201cIMPRIMATUR,\u201d while preserving wording, order, and paragraph structure.; converted \"mention request here\" into a personal-intention pause marker; reused compacted prayer source from an earlier section",
+            "text": "In the Name of the Father, and of the Son, and of the Holy Spirit. Amen. Prayer for the Canonization of the Venerable Servant of God Fulton J. Sheen. Heavenly Father, source of all holiness, You raise up within the Church in every age men and women who serve with heroic love and dedication. You have blessed Your Church through the life and ministry of Your faithful servant, Archbishop Fulton J. Sheen. He has written and spoken well of Your Divine Son, Jesus Christ, and was a true instrument of the Holy Spirit in touching the hearts of countless people. If it be according to Your Will, for the honor and glory of the Most Holy Trinity and for the salvation of souls, we ask You to move the Church to proclaim him a saint. We ask this prayer through Jesus Christ, our Lord. Amen. Eternal Father, You alone grant us every blessing in Heaven and on earth, through the redemptive mission of Your Divine Son, Jesus Christ, and by the working of the Holy Spirit. If it be according to Your Will, glorify Your servant, Archbishop Fulton J. Sheen, by granting the favor I now request through his prayerful intercession  I make this prayer confidently through Jesus Christ, Our Lord. Amen. In the Name of the Father, and of the Son, and of the Holy Spirit. Amen.",
+            "title": "Day 9"
+          }
+        ],
+        "template_id": "url-import-fulton_sheen"
+      }
+    },
+    "publishing": {
+      "audio": {
+        "enabled": true,
+        "format": "mp3",
+        "loudness_normalization": {
+          "enabled": true,
+          "integrated_lufs": -16,
+          "lra": 11,
+          "true_peak_db": -1.5
+        },
+        "model": "gpt-4o-mini-tts",
+        "providers": [
+          {
+            "api_key_env": "ELEVENLABS_API_KEY",
+            "format": "mp3",
+            "model_id": "eleven_multilingual_v2",
+            "provider": "elevenlabs",
+            "speed": 1.0,
+            "voice_id": "pGAwIQNN9UjOkKxjAyGQ",
+            "voice_settings": {
+              "similarity_boost": 0.8,
+              "speed": 1.0,
+              "stability": 0.65,
+              "style": 0,
+              "use_speaker_boost": true
+            }
+          },
+          {
+            "api_key_env": "OPENAI_API_KEY",
+            "format": "mp3",
+            "model": "gpt-4o-mini-tts",
+            "provider": "openai",
+            "speed": 1.0,
+            "voice": "ash"
+          }
+        ],
+        "speed": 1.0,
+        "voice": "ash"
+      },
+      "rss": {
+        "enabled": true,
+        "episode_description_pattern": "Day {day} of the Novena to {saint_name} for {feast_name}.",
+        "episode_title_pattern": "Traditional Novena to {saint_name} Day {day} - {date_display}",
+        "feed_id": "ora-pro-nobis"
+      }
+    },
+    "saint": {
+      "id": "fulton_sheen",
+      "name": "Fulton Sheen"
+    },
+    "type": "novena_feast_rule"
+  }
+}
