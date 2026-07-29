@@ -80,6 +80,15 @@ class TestPublishDevotionalIntro(unittest.TestCase):
                 self.morning_context,
             )
 
+    def test_validation_accepts_an_intro_longer_than_the_former_profile_limit(self):
+        text = (
+            "Morning Prayer gathers us around Trust as Saint Bridget accompanies the Church today. "
+            "In today's Gospel, Christ teaches us to remain in him, and we receive that invitation with gratitude. "
+            "May this prayer shape each conversation, task, and hidden sacrifice we offer to God throughout the day. "
+        ) * 3
+
+        self.assertEqual(validate_devotional_intro(text, MORNING_PRAYER_PROFILE, self.morning_context), text.strip())
+
     def test_validation_rejects_gospel_language_when_context_is_missing(self):
         context = {
             "prayer_title": "Auxilium Christianorum prayers",
@@ -249,7 +258,7 @@ class TestPublishDevotionalIntro(unittest.TestCase):
         )
 
         self.assertEqual(result.source, SOURCE_FALLBACK_DETERMINISTIC)
-        self.assertGreater(len(result.text), NOVENA_PROFILE.max_chars)
+        self.assertGreater(len(result.text), 420)
         self.assertIn("Day 7", result.text)
         self.assertIn("founded the Congregation of the Blessed Sacrament and promoted devotion to the Eucharist.", result.text)
         self.assertIn("Eucharistic devotion, priests, religious congregations", result.text)

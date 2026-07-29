@@ -16,7 +16,7 @@ OPENAI_API_KEY_FILE = "OPENAI_API_KEY_FILE"
 OAI_API_BASE_URL = "OAI_API_BASE_URL"
 OAI_MODEL = "OAI_MODEL"
 
-DEVOTIONAL_INTRO_POLICY_VERSION = "devotional-intro-v5"
+DEVOTIONAL_INTRO_POLICY_VERSION = "devotional-intro-v6"
 SOURCE_OPENAI = "openai"
 SOURCE_FALLBACK_DETERMINISTIC = "fallback-deterministic"
 
@@ -27,7 +27,6 @@ class DevotionalIntroProfile:
     purpose: str
     sentence_guidance: str
     min_chars: int
-    max_chars: int
     require_gospel_when_available: bool = False
 
 
@@ -51,7 +50,6 @@ MORNING_PRAYER_PROFILE = DevotionalIntroProfile(
     ),
     sentence_guidance="Write the introduction in 2-4 sentences.",
     min_chars=80,
-    max_chars=700,
     require_gospel_when_available=True,
 )
 
@@ -63,7 +61,6 @@ AUXILIUM_CHRISTIANORUM_PROFILE = DevotionalIntroProfile(
     ),
     sentence_guidance="Write the introduction in 1-2 sentences.",
     min_chars=40,
-    max_chars=420,
 )
 
 ANGELUS_PROFILE = DevotionalIntroProfile(
@@ -74,7 +71,6 @@ ANGELUS_PROFILE = DevotionalIntroProfile(
     ),
     sentence_guidance="Write the introduction in 1-2 sentences.",
     min_chars=40,
-    max_chars=420,
 )
 
 REGINA_CAELI_PROFILE = DevotionalIntroProfile(
@@ -85,7 +81,6 @@ REGINA_CAELI_PROFILE = DevotionalIntroProfile(
     ),
     sentence_guidance="Write the introduction in 1-2 sentences.",
     min_chars=40,
-    max_chars=420,
 )
 
 NOVENA_PROFILE = DevotionalIntroProfile(
@@ -96,7 +91,6 @@ NOVENA_PROFILE = DevotionalIntroProfile(
     ),
     sentence_guidance="Write the introduction in 3-4 short sentences.",
     min_chars=40,
-    max_chars=420,
 )
 
 DEVOTIONAL_INTRO_PROFILES: Dict[str, DevotionalIntroProfile] = {
@@ -240,7 +234,7 @@ Ground the prose in the supplied daily and prayer-specific context.
 {novena_rules}
 Do not invent quotations, saints, feasts, seasons, Scripture citations, doctrine, or current events. When Standard short-form guidance is supplied, use only modest, well-known saint/event identity details and omit patronage if uncertain.
 Return plain prose only: no heading, markdown, bullets, production notes, or commentary.
-Keep the result between {profile.min_chars} and {profile.max_chars} characters.
+Keep the result at least {profile.min_chars} characters long.
 {correction_block}
 
 Approved context:
@@ -357,8 +351,6 @@ def validate_devotional_intro(
     rendered = _normalize_whitespace(text).replace("â€™", "'")
     if len(rendered) < profile.min_chars:
         raise RuntimeError(f"Intro is shorter than {profile.min_chars} characters.")
-    if len(rendered) > profile.max_chars:
-        raise RuntimeError(f"Intro is longer than {profile.max_chars} characters.")
     if re.search(r"(^|\s)(?:```|#{1,6}\s|\*\*|[*-]\s)", rendered):
         raise RuntimeError("Intro must not contain markdown or bullets.")
     lowered = rendered.lower()

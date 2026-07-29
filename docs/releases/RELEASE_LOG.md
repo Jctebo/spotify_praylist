@@ -1,5 +1,10 @@
 # Release Log
 
+## [0.3.12.5] - 2026-07-29
+
+### Changed
+- Removed character ceilings from generated devotional introductions and advanced the intro policy so cached novena intros regenerate.
+
 ## [0.3.12.4] - 2026-07-29
 
 ### Removed
