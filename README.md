@@ -668,6 +668,9 @@ Purpose:
 - skips already-generated entries by parsing existing filenames
 - generates a high-finish devotional image prompt from saint subject
 - creates an image with OpenAI image generation
+- uses the Responses API for cited research/copy, reference-guided image generation, and fail-closed visual QA
+- includes every enabled novena contract as an image target in addition to calendar and configured-devotion targets
+- generates one approved portrait infographic per subject, then derives the wide delivery image from that same master
 - includes 9-day window metadata in output filename and `.window.txt` companion file
 - writes two layout variants per subject:
   - portrait variant to `Current Devotion`
@@ -706,6 +709,8 @@ Optional variables:
 - `DEVOTIONAL_IMAGE_SIZE_WIDE` (default `1536x1024`, widescreen)
 - `DEVOTIONAL_IMAGE_QUALITY` (default `high`)
 - `DEVOTIONAL_IMAGE_FORMAT` (default `png`)
+- `DEVOTIONAL_INFOGRAPHIC_REFERENCE` (optional; defaults to `config/publish/images/devotional-infographic-master.png`)
+- research/copy and QA records are stored only in `Devotional Metadata Archive`; public manifests expose images only
 
 Local run:
 

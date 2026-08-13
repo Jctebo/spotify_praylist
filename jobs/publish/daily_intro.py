@@ -21,6 +21,7 @@ from jobs.publish.devotional_intro import (
 from jobs.publish.errors import DailyIntroMissingDataError
 
 OAI_MODEL = "OAI_MODEL"
+DEVOTIONAL_OFFLINE_TESTS = "DEVOTIONAL_OFFLINE_TESTS"
 ROMCAL_CALENDAR = "ROMCAL_CALENDAR"
 ROMCAL_LOCALE = "ROMCAL_LOCALE"
 USCCB_READINGS_BASE_URL = "https://bible.usccb.org/bible/readings"
@@ -223,6 +224,20 @@ def fetch_daily_gospel_context(
             f"Romcal returned no usable celebration names for {date_value.isoformat()} "
             f"(calendar={effective_calendar}, locale={effective_locale})."
         )
+
+    if str(os.getenv(DEVOTIONAL_OFFLINE_TESTS, "")).strip().lower() in {"1", "true", "yes", "on"}:
+        if allow_missing_gospel:
+            return DailyIntroContext(
+                date=date_value,
+                calendar=effective_calendar,
+                locale=effective_locale,
+                celebration_names=tuple(celebration_names),
+                celebration_clause=_join_with_and(celebration_names),
+                gospel_citation="",
+                gospel_text="",
+                mass_title="",
+            )
+        raise DailyIntroMissingDataError("Live Gospel lookup is disabled by DEVOTIONAL_OFFLINE_TESTS.")
 
     context_errors: List[BaseException] = []
     mass = _fetch_mass_with_retry(date_value)
