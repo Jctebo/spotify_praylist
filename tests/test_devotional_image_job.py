@@ -85,6 +85,9 @@ class TestDevotionalImageJob(unittest.TestCase):
         result = Image.open(io.BytesIO(self.mod.derive_wide_image(raw.getvalue(), "1536x1024", "png")))
         self.assertEqual(result.size, (1536, 1024))
 
+    def test_image_generation_uses_tool_capable_responses_model_default(self):
+        self.assertEqual(self.mod.DEFAULT_IMAGE_RESPONSE_MODEL, "gpt-5-mini")
+
     def test_dedupe_render_targets_prefers_calendar_saint_joseph_over_monthly_devotion(self):
         calendar_target = self.mod.RenderTarget(
             source=self.mod.SOURCE_CALENDAR,
