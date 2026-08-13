@@ -33,8 +33,9 @@ class TestDevotionalInfographic(unittest.TestCase):
         payload = base64.b64encode(b"png-bytes").decode("ascii")
         self.assertEqual(extract_response_image_bytes(_Response([_Item("message"), _Item("image_generation_call", payload)])), b"png-bytes")
 
-    def test_image_tool_uses_high_reference_fidelity(self):
-        self.assertEqual(response_image_tool(size="1024x1536", quality="high")["input_fidelity"], "high")
+    def test_image_tool_uses_gpt_image_2_compatible_options(self):
+        tool = response_image_tool(size="1024x1536", quality="high")
+        self.assertEqual(tool, {"type": "image_generation", "size": "1024x1536", "quality": "high"})
 
     def test_render_prompt_returns_approved_copy(self):
         copy = InfographicCopy(

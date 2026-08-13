@@ -48,8 +48,8 @@ def extract_response_image_bytes(response: Any) -> bytes:
 
 
 def response_image_tool(*, size: str, quality: str) -> Dict[str, str]:
-    """Return the current Responses API image-generation tool declaration."""
-    return {"type": "image_generation", "size": size, "quality": quality, "input_fidelity": "high"}
+    """Return a GPT Image 2-compatible Responses image-generation tool declaration."""
+    return {"type": "image_generation", "size": size, "quality": quality}
 
 
 def infographic_render_prompt(copy: InfographicCopy, *, subject_context: str) -> str:
