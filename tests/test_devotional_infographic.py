@@ -1,7 +1,12 @@
 import base64
 import unittest
 
-from jobs.novena.devotional_infographic import InfographicCopy, extract_response_image_bytes, response_image_tool
+from jobs.novena.devotional_infographic import (
+    InfographicCopy,
+    extract_response_image_bytes,
+    infographic_render_prompt,
+    response_image_tool,
+)
 
 
 class _Item:
@@ -30,6 +35,20 @@ class TestDevotionalInfographic(unittest.TestCase):
 
     def test_image_tool_uses_high_reference_fidelity(self):
         self.assertEqual(response_image_tool(size="1024x1536", quality="high")["input_fidelity"], "high")
+
+    def test_render_prompt_returns_approved_copy(self):
+        copy = InfographicCopy(
+            title="Saint Example",
+            subtitle="Witness",
+            feast_day="August 12",
+            sections={"Who She Was": ["A faithful witness."]},
+            spiritual_themes=["Faith", "Hope", "Charity"],
+            footer="Pray for us.",
+        )
+        prompt = infographic_render_prompt(copy, subject_context="A religious sister.")
+        self.assertIsInstance(prompt, str)
+        self.assertIn("TITLE: Saint Example", prompt)
+        self.assertIn("Who She Was:\n- A faithful witness.", prompt)
 
     def test_parse_copy_requires_cited_validated_json(self):
         payload = {

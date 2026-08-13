@@ -59,6 +59,14 @@ def infographic_render_prompt(copy: InfographicCopy, *, subject_context: str) ->
         f"{heading}:\n" + "\n".join(f"- {bullet}" for bullet in bullets)
         for heading, bullets in copy.sections.items()
     )
+    return (
+        "Create a polished vertical Catholic devotional infographic using the supplied image as the master style reference. "
+        "Preserve its ivory parchment, deep navy, antique-gold border, centered devotional portrait, organized panels, "
+        "and Spiritual Themes footer. Render only the approved copy below; do not invent facts, quotations, dates, or patronage.\n\n"
+        f"TITLE: {copy.title}\nSUBTITLE: {copy.subtitle}\nFEAST DAY: {copy.feast_day}\n"
+        f"SECTIONS:\n{sections}\nSPIRITUAL THEMES: {' | '.join(copy.spiritual_themes)}\nFOOTER: {copy.footer}\n"
+        f"SUBJECT CONTEXT:\n{subject_context}"
+    )
 
 
 def parse_infographic_copy(text: str) -> InfographicCopy:
@@ -116,12 +124,4 @@ def infographic_qa_prompt(copy: InfographicCopy) -> str:
         "Inspect the supplied Catholic infographic against this approved copy. Return JSON only with boolean approved and issues array. "
         "Reject incorrect title, dates, feast day, factual text, malformed/gibberish text, clipped panels, unreadable footer, or wrong identity.\n"
         + copy.to_private_json()
-    )
-    return (
-        "Create a polished vertical Catholic devotional infographic using the supplied image as the master style reference. "
-        "Preserve its ivory parchment, deep navy, antique-gold border, centered devotional portrait, organized panels, "
-        "and Spiritual Themes footer. Render only the approved copy below; do not invent facts, quotations, dates, or patronage.\n\n"
-        f"TITLE: {copy.title}\nSUBTITLE: {copy.subtitle}\nFEAST DAY: {copy.feast_day}\n"
-        f"SECTIONS:\n{sections}\nSPIRITUAL THEMES: {' | '.join(copy.spiritual_themes)}\nFOOTER: {copy.footer}\n"
-        f"SUBJECT CONTEXT:\n{subject_context}"
     )
