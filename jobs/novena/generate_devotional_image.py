@@ -44,6 +44,16 @@ from jobs.novena.liturgical_helpers import (
     romcal_fetch_day,
     devotional_output_is_eligible,
 )
+from jobs.novena.devotional_infographic import (
+    extract_response_image_bytes,
+    infographic_research_prompt,
+    infographic_render_prompt,
+    infographic_qa_prompt,
+    parse_infographic_copy,
+    parse_qa_result,
+    response_image_tool,
+)
+from jobs.novena_contracts.contracts import load_novena_contracts
 
 DEFAULT_DCIM_RELATIVE = r"OneDrive\Pictures\Samsung Gallery\DCIM"
 DEFAULT_CURRENT_FOLDER = "Current Devotion"
@@ -69,6 +79,7 @@ DEVOTIONAL_IMAGE_SIZE_WIDE = "DEVOTIONAL_IMAGE_SIZE_WIDE"  # default 1536x1024 (
 DEVOTIONAL_IMAGE_QUALITY = "DEVOTIONAL_IMAGE_QUALITY"  # default high
 DEVOTIONAL_IMAGE_FORMAT = "DEVOTIONAL_IMAGE_FORMAT"  # default png
 DEVOTIONAL_REUSE_ARCHIVE_ENABLED = "DEVOTIONAL_REUSE_ARCHIVE_ENABLED"  # default true
+DEVOTIONAL_INFOGRAPHIC_REFERENCE = "DEVOTIONAL_INFOGRAPHIC_REFERENCE"
 
 DEVOTIONAL_NOTION_CONFIG_ENABLED = "DEVOTIONAL_NOTION_CONFIG_ENABLED"  # default true
 NOTION_IMAGE_CONFIG_PARENT_PAGE_ID = "NOTION_IMAGE_CONFIG_PARENT_PAGE_ID"
@@ -97,10 +108,11 @@ NOTION_IMAGE_PIPELINE_DESCRIPTION_PROPERTY = "NOTION_IMAGE_PIPELINE_DESCRIPTION_
 DEFAULT_STYLE_ID = "mod_realism"
 SOURCE_CALENDAR = "cal"
 SOURCE_DEVOTION = "dev"
+SOURCE_NOVENA = "nov"
 SUPPORTED_IMAGE_EXTS = ("png", "jpeg", "webp")
 DEFAULT_MANIFEST_NAME = "images_manifest.json"
 DEFAULT_ROOT_MANIFEST_NAME = "devotional_image_library.json"
-SIDECAR_SUFFIXES = (".prompt.txt", ".window.txt")
+SIDECAR_SUFFIXES = (".prompt.txt", ".window.txt", ".copy.json", ".qa.json")
 
 PROMPT_INSTRUCTION = """IMAGE PROMPT GENERATION - HIGH-FINISH MODERN DEVOTIONAL STYLE
 
@@ -938,7 +950,9 @@ def ensure_notion_image_config(
             source_raw = SOURCE_CALENDAR
         if source_raw in {"devotion", "monthly"}:
             source_raw = SOURCE_DEVOTION
-        if source_raw not in {SOURCE_CALENDAR, SOURCE_DEVOTION}:
+        if source_raw in {"novena", "novenas"}:
+            source_raw = SOURCE_NOVENA
+        if source_raw not in {SOURCE_CALENDAR, SOURCE_DEVOTION, SOURCE_NOVENA}:
             continue
         style_id = normalize_style_id(page_property_text(page, pipeline_style_prop) or DEFAULT_STYLE_ID)
         window_num = page_property_number(page, pipeline_window_prop)
@@ -976,14 +990,22 @@ def default_local_config(default_window_days: int) -> Tuple[Dict[str, StyleConfi
             window_days=default_window_days,
             enabled=True,
             description="Local fallback pipeline.",
-        )
+        ),
+        PipelineConfig(
+            name="Enabled Novena Devotional Images",
+            source=SOURCE_NOVENA,
+            style_id=DEFAULT_STYLE_ID,
+            window_days=default_window_days,
+            enabled=True,
+            description="Local fallback enabled-novena pipeline.",
+        ),
     ]
     return styles, [], pipelines, {"style_db": "", "devotion_db": "", "pipeline_db": ""}
 
 
 def parse_new_file_meta(path: Path) -> Optional[FileMeta]:
     m = re.fullmatch(
-        r"(\d{2}-\d{2})_(\d{2}-\d{2})_(cal|dev)_([a-z0-9][a-z0-9-]*)_([a-z0-9][a-z0-9_-]*)\.(png|jpeg|webp)",
+        r"(\d{2}-\d{2})_(\d{2}-\d{2})_(cal|dev|nov)_([a-z0-9][a-z0-9-]*)_([a-z0-9][a-z0-9_-]*)\.(png|jpeg|webp)",
         path.name.lower(),
     )
     if not m:
@@ -1280,6 +1302,44 @@ def build_image_prompt(
     return text
 
 
+def build_infographic_copy(client: OpenAI, model: str, target: RenderTarget):
+    response = client.responses.create(
+        model=model,
+        input=infographic_research_prompt(target.subject, target.context),
+        tools=[{"type": "web_search"}],
+    )
+    return parse_infographic_copy(extract_output_text(response))
+
+
+def verify_infographic(client: OpenAI, model: str, image_bytes: bytes, copy) -> Dict[str, Any]:
+    image_b64 = base64.b64encode(image_bytes).decode("ascii")
+    response = client.responses.create(
+        model=model,
+        input=[{"role": "user", "content": [
+            {"type": "input_text", "text": infographic_qa_prompt(copy)},
+            {"type": "input_image", "image_url": f"data:image/png;base64,{image_b64}"},
+        ]}],
+    )
+    return parse_qa_result(extract_output_text(response))
+
+
+def repair_infographic(client: OpenAI, model: str, image_bytes: bytes, copy, issues: Sequence[str], size: str, quality: str) -> bytes:
+    image_b64 = base64.b64encode(image_bytes).decode("ascii")
+    instructions = (
+        "Keep the full infographic unchanged except correct these QA issues: " + "; ".join(issues) + "\n"
+        "Use this approved copy as the source of truth:\n" + copy.to_private_json()
+    )
+    response = client.responses.create(
+        model=model,
+        input=[{"role": "user", "content": [
+            {"type": "input_text", "text": instructions},
+            {"type": "input_image", "image_url": f"data:image/png;base64,{image_b64}"},
+        ]}],
+        tools=[response_image_tool(size=size, quality=quality)],
+    )
+    return extract_response_image_bytes(response)
+
+
 def generate_image_bytes(
     client: OpenAI,
     model: str,
@@ -1287,21 +1347,18 @@ def generate_image_bytes(
     size: str,
     quality: str,
     image_format: str,
+    reference_path: Optional[Path] = None,
 ) -> bytes:
-    response = client.images.generate(
+    content: List[Dict[str, str]] = [{"type": "input_text", "text": prompt}]
+    if reference_path and reference_path.exists():
+        image_b64 = base64.b64encode(reference_path.read_bytes()).decode("ascii")
+        content.append({"type": "input_image", "image_url": f"data:image/png;base64,{image_b64}"})
+    response = client.responses.create(
         model=model,
-        prompt=prompt,
-        size=size,
-        quality=quality,
-        output_format=image_format,
+        input=[{"role": "user", "content": content}],
+        tools=[response_image_tool(size=size, quality=quality)],
     )
-    data = getattr(response, "data", None) or []
-    if not data:
-        raise RuntimeError("Image generation returned no data.")
-    b64 = str(getattr(data[0], "b64_json", "") or "").strip()
-    if not b64:
-        raise RuntimeError("Image response missing b64 payload.")
-    return base64.b64decode(b64)
+    return extract_response_image_bytes(response)
 
 
 def _font_candidates() -> List[Path]:
@@ -1545,6 +1602,24 @@ def apply_wide_title_overlay(image_bytes: bytes, title: str, image_format: str) 
     return apply_title_overlay(image_bytes, title, image_format)
 
 
+def derive_wide_image(image_bytes: bytes, size: str, image_format: str) -> bytes:
+    """Create the wide delivery file from the approved portrait master."""
+    try:
+        width_text, height_text = size.lower().split("x", 1)
+        target_width, target_height = int(width_text), int(height_text)
+    except Exception as exc:
+        raise RuntimeError(f"Invalid wide image size '{size}'.") from exc
+    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    scale = max(target_width / image.width, target_height / image.height)
+    resized = image.resize((round(image.width * scale), round(image.height * scale)), Image.Resampling.LANCZOS)
+    left = max(0, (resized.width - target_width) // 2)
+    top = max(0, (resized.height - target_height) // 2)
+    cropped = resized.crop((left, top, left + target_width, top + target_height))
+    output = io.BytesIO()
+    cropped.save(output, format="JPEG" if image_format.lower() in {"jpg", "jpeg"} else image_format.upper())
+    return output.getvalue()
+
+
 def write_image_file(image_bytes: bytes, output_dir: Path, filename: str) -> Path:
     output_dir.mkdir(parents=True, exist_ok=True)
     out_path = output_dir / filename
@@ -1708,6 +1783,44 @@ def build_targets_from_config(
                 seen.add(tid)
                 targets.append(target)
 
+        if pipeline.source == SOURCE_NOVENA:
+            for contract in load_novena_contracts():
+                if not contract.enabled:
+                    continue
+                subject = str(contract.saint.get("name", "")).strip() or str(contract.contract_id).replace("_", " ").title()
+                if not subject:
+                    continue
+                if contract.feast is not None:
+                    try:
+                        feast_day = contract.feast.feast_date(today.year)
+                    except Exception:
+                        feast_day = today
+                else:
+                    feast_day = today
+                start_day = feast_day + datetime.timedelta(days=contract.novena.start_offset_days)
+                end_day = start_day + datetime.timedelta(days=contract.novena.duration_days - 1)
+                context_lines = [
+                    f"Novena contract: {contract.contract_id}",
+                    f"Novena window: {start_day.isoformat()} to {end_day.isoformat()}",
+                    str(contract.intro.get("summary", "")).strip(),
+                ]
+                target = RenderTarget(
+                    source=SOURCE_NOVENA,
+                    subject=subject,
+                    subject_slug=slugify_kebab(subject),
+                    start_date=start_day,
+                    end_date=end_day,
+                    style_id=style.style_id,
+                    style_prompt=style.style_prompt,
+                    pipeline_name=pipeline.name,
+                    context="\n".join(line for line in context_lines if line),
+                    source_date=feast_day.isoformat(),
+                )
+                tid = target_id(target)
+                if tid not in seen:
+                    seen.add(tid)
+                    targets.append(target)
+
     return dedupe_render_targets(
         sorted(targets, key=lambda t: (t.start_date.isoformat(), t.end_date.isoformat(), t.source, t.subject_slug, t.style_id))
     )
@@ -1728,6 +1841,9 @@ def main() -> int:
         image_size_wide = os.getenv(DEVOTIONAL_IMAGE_SIZE_WIDE, "1536x1024").strip() or "1536x1024"
         image_quality = os.getenv(DEVOTIONAL_IMAGE_QUALITY, "high").strip() or "high"
         image_format = os.getenv(DEVOTIONAL_IMAGE_FORMAT, "png").strip().lower() or "png"
+        reference_path = Path(os.getenv(DEVOTIONAL_INFOGRAPHIC_REFERENCE, str(REPO_ROOT / "config" / "publish" / "images" / "devotional-infographic-master.png")))
+        if not reference_path.exists():
+            raise RuntimeError(f"Devotional infographic reference image not found: {reference_path}")
         if image_format not in SUPPORTED_IMAGE_EXTS:
             raise RuntimeError(f"Invalid {DEVOTIONAL_IMAGE_FORMAT}='{image_format}'.")
 
@@ -1760,6 +1876,18 @@ def main() -> int:
                 config_mode = "local_fallback:disabled"
             else:
                 config_mode = "local_fallback"
+
+        if not any(pipeline.source == SOURCE_NOVENA and pipeline.enabled for pipeline in pipelines):
+            pipelines.append(
+                PipelineConfig(
+                    name="Enabled Novena Devotional Images",
+                    source=SOURCE_NOVENA,
+                    style_id=DEFAULT_STYLE_ID,
+                    window_days=default_window_days,
+                    enabled=True,
+                    description="Required enabled-novena coverage.",
+                )
+            )
 
         targets = build_targets_from_config(
             today=today,
@@ -1863,28 +1991,24 @@ def main() -> int:
 
             outputs_written = 0
             if not has_portrait:
-                prompt_text = build_image_prompt(
-                    client=client,
-                    model=prompt_model,
-                    target=target,
-                    today=today,
-                    layout_hint=(
-                        "Phone prayer-card composition in portrait 2:3/9:16 style (not square). "
-                        "Reserve an uncluttered title-safe band in the lower third near the bottom edge, "
-                        "keeping the composition intentionally low rather than high or centered, "
-                        "and absolutely do not paint any lettering, captions, plaques, banners, or readable symbols into the artwork itself. "
-                        "Leave enough margin for a later title overlay to breathe without pushing it up toward the middle."
-                    ),
+                copy = build_infographic_copy(client, prompt_model, target)
+                prompt_text = infographic_render_prompt(copy, subject_context=target.context)
+                image_bytes = generate_image_bytes(
+                    client, image_model, prompt_text, image_size, image_quality, image_format, reference_path=reference_path
                 )
-                image_bytes = generate_image_bytes(client, image_model, prompt_text, image_size, image_quality, image_format)
-                image_bytes = apply_portrait_title_overlay(
-                    image_bytes,
-                    overlay_title_for_subject(target.subject),
-                    image_format,
-                )
+                qa_result = verify_infographic(client, prompt_model, image_bytes, copy)
+                if not qa_result["approved"]:
+                    image_bytes = repair_infographic(
+                        client, image_model, image_bytes, copy, qa_result["issues"], image_size, image_quality
+                    )
+                    qa_result = verify_infographic(client, prompt_model, image_bytes, copy)
+                if not qa_result["approved"]:
+                    raise RuntimeError(f"Infographic QA rejected '{target.subject}': {'; '.join(qa_result['issues']) or 'unspecified issue'}")
                 written_portrait = write_image_file(image_bytes, current_dir, filename)
                 prompt_path = write_archived_sidecar(storage, written_portrait, ".prompt.txt", prompt_text)
                 window_path = write_archived_sidecar(storage, written_portrait, ".window.txt", window_text)
+                write_archived_sidecar(storage, written_portrait, ".copy.json", copy.to_private_json())
+                write_archived_sidecar(storage, written_portrait, ".qa.json", json.dumps(qa_result, indent=2, sort_keys=True))
                 outputs_written += 1
                 total_written += 1
                 by_source[target.source] = by_source.get(target.source, 0) + 1
@@ -1893,32 +2017,10 @@ def main() -> int:
                 print(f"INFO wrote_window={window_path}")
 
             if not has_wide:
-                prompt_text_wide = build_image_prompt(
-                    client=client,
-                    model=prompt_model,
-                    target=target,
-                    today=today,
-                    layout_hint=(
-                        "Widescreen devotional background in native 16:9 composition (not square, not portrait). "
-                        "Frame the scene for full-width landscape use with strong negative space in the lower third near the bottom edge, "
-                        "and absolutely no text, typography, banners, plaques, or readable symbols rendered into the artwork."
-                    ),
-                )
-                image_bytes_wide = generate_image_bytes(
-                    client=client,
-                    model=image_model,
-                    prompt=prompt_text_wide,
-                    size=image_size_wide,
-                    quality=image_quality,
-                    image_format=image_format,
-                )
-                image_bytes_wide = apply_wide_title_overlay(
-                    image_bytes_wide,
-                    overlay_title_for_subject(target.subject),
-                    image_format,
-                )
+                master_image_bytes = image_bytes if not has_portrait else existing_portrait.read_bytes()
+                image_bytes_wide = derive_wide_image(master_image_bytes, image_size_wide, image_format)
                 written_wide = write_image_file(image_bytes_wide, wide_dir, filename)
-                prompt_path_wide = write_archived_sidecar(storage, written_wide, ".prompt.txt", prompt_text_wide)
+                prompt_path_wide = write_archived_sidecar(storage, written_wide, ".prompt.txt", "Derived from approved portrait master.")
                 window_path_wide = write_archived_sidecar(storage, written_wide, ".window.txt", window_text)
                 outputs_written += 1
                 total_written += 1

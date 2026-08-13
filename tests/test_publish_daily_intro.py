@@ -163,6 +163,13 @@ class TestPublishDailyIntro(unittest.TestCase):
         self.assertIn("No Gospel context is supplied.", captured["prompt"])
         self.assertNotIn("Gospel", text)
 
+    def test_offline_mode_never_performs_live_gospel_lookup(self):
+        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
+        self.mod._fetch_mass_with_retry = lambda date_value: self.fail("live mass lookup should not run")
+        with mock.patch.dict(self.mod.os.environ, {"DEVOTIONAL_OFFLINE_TESTS": "true"}, clear=False):
+            context = self.mod.fetch_daily_gospel_context(datetime.date(2026, 4, 27), allow_missing_gospel=True)
+        self.assertEqual(context.gospel_text, "")
+
     def test_build_daily_intro_invalid_output_retries_then_falls_back(self):
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
         self.mod.asyncio.run = lambda coro: self._fake_asyncio_run(coro)

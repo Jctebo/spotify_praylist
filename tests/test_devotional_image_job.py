@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import sys
 import unittest
+from types import SimpleNamespace
 from pathlib import Path
 from unittest.mock import patch
 
@@ -77,6 +78,13 @@ class TestDevotionalImageJob(unittest.TestCase):
         result = Image.open(io.BytesIO(overlaid))
         self.assertEqual(result.size, (1536, 1024))
 
+    def test_derive_wide_image_uses_one_portrait_master(self):
+        image = Image.new("RGB", (1024, 1536), color=(32, 48, 64))
+        raw = io.BytesIO()
+        image.save(raw, format="PNG")
+        result = Image.open(io.BytesIO(self.mod.derive_wide_image(raw.getvalue(), "1536x1024", "png")))
+        self.assertEqual(result.size, (1536, 1024))
+
     def test_dedupe_render_targets_prefers_calendar_saint_joseph_over_monthly_devotion(self):
         calendar_target = self.mod.RenderTarget(
             source=self.mod.SOURCE_CALENDAR,
@@ -145,6 +153,33 @@ class TestDevotionalImageJob(unittest.TestCase):
 
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["celebration_rank"], "solemnity")
+
+    def test_build_targets_includes_enabled_novena_and_omits_disabled_contract(self):
+        style = self.mod.StyleConfig(style_id="mod_realism", style_prompt="style")
+        enabled = SimpleNamespace(
+            enabled=True,
+            contract_id="blessed-example",
+            saint={"name": "Blessed Example"},
+            intro={"summary": "A faithful witness."},
+            feast=None,
+            novena=SimpleNamespace(start_offset_days=0, duration_days=9),
+        )
+        disabled = SimpleNamespace(
+            enabled=False,
+            contract_id="disabled-example",
+            saint={"name": "Disabled Example"},
+            intro={},
+            feast=None,
+            novena=SimpleNamespace(start_offset_days=0, duration_days=9),
+        )
+        pipeline = self.mod.PipelineConfig("novenas", self.mod.SOURCE_NOVENA, "mod_realism", 9, True, "")
+        with patch.object(self.mod, "load_novena_contracts", return_value=[enabled, disabled]):
+            targets = self.mod.build_targets_from_config(
+                today=datetime.date(2026, 8, 12), calendar_name="general_roman", locale="en",
+                default_window_days=9, target_date=None, styles={"mod_realism": style}, devotions=[], pipelines=[pipeline],
+            )
+        self.assertEqual([target.subject for target in targets], ["Blessed Example"])
+        self.assertEqual(targets[0].source, self.mod.SOURCE_NOVENA)
 
     def test_select_title_placement_prefers_lower_center_box_on_uniform_portrait(self):
         image = Image.new("RGBA", (1024, 1536), color=(64, 64, 64, 255))

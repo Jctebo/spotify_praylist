@@ -1,5 +1,15 @@
 # Release Log
 
+## [0.3.12.8] - 2026-08-12
+
+### Added
+- Added a Responses API devotional infographic workflow with cited structured copy, a versioned Catholic series reference image, visual QA, one targeted repair attempt, and private copy/QA audit sidecars.
+- Added enabled-novena contract coverage to the devotional image target pipeline.
+
+### Changed
+- Replaced independent portrait and wide image generations with one approved portrait master and a deterministic wide derivative while retaining existing manifests and publication folders.
+- Updated the local test runner to use `python` when the Windows `py` launcher is unavailable.
+
 ## [0.3.12.7] - 2026-07-29
 
 ### Changed
