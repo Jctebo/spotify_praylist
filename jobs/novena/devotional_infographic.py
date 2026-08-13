@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 from dataclasses import asdict, dataclass, field
 from typing import Any, Dict, Iterable, List
 
@@ -28,10 +29,31 @@ class InfographicCopy:
                 raise RuntimeError("Each infographic section requires a heading and at most three bullets.")
             if any(not str(bullet).strip() for bullet in bullets):
                 raise RuntimeError("Infographic bullets must not be blank.")
+        visible_values = [self.title, self.subtitle, self.feast_day, self.footer, *self.spiritual_themes]
+        visible_values.extend(heading for heading in self.sections)
+        visible_values.extend(bullet for bullets in self.sections.values() for bullet in bullets)
+        if any(re.search(r"https?://|www\.|\[[^\]]+\]|\b(?:sources?|citations?)\b", value, re.IGNORECASE) for value in visible_values):
+            raise RuntimeError("Infographic visible copy must not contain source URLs or Markdown citations.")
 
     def to_private_json(self) -> str:
         self.validate()
         return json.dumps(asdict(self), indent=2, sort_keys=True)
+
+    def to_public_json(self) -> str:
+        """Serialize only text that is allowed to appear in the infographic."""
+        self.validate()
+        return json.dumps(
+            {
+                "title": self.title,
+                "subtitle": self.subtitle,
+                "feast_day": self.feast_day,
+                "sections": self.sections,
+                "spiritual_themes": self.spiritual_themes,
+                "footer": self.footer,
+            },
+            indent=2,
+            sort_keys=True,
+        )
 
 
 def extract_response_image_bytes(response: Any) -> bytes:
@@ -62,7 +84,8 @@ def infographic_render_prompt(copy: InfographicCopy, *, subject_context: str) ->
     return (
         "Create a polished vertical Catholic devotional infographic using the supplied image as the master style reference. "
         "Preserve its ivory parchment, deep navy, antique-gold border, centered devotional portrait, organized panels, "
-        "and Spiritual Themes footer. Render only the approved copy below; do not invent facts, quotations, dates, or patronage.\n\n"
+        "and Spiritual Themes footer. Render only the approved copy below; do not invent facts, quotations, dates, or patronage. "
+        "Never render citations, source names, URLs, Markdown links, footnotes, or bibliography text. Sources are private provenance only.\n\n"
         f"TITLE: {copy.title}\nSUBTITLE: {copy.subtitle}\nFEAST DAY: {copy.feast_day}\n"
         f"SECTIONS:\n{sections}\nSPIRITUAL THEMES: {' | '.join(copy.spiritual_themes)}\nFOOTER: {copy.footer}\n"
         f"SUBJECT CONTEXT:\n{subject_context}"
@@ -108,7 +131,8 @@ def infographic_research_prompt(subject: str, context: str) -> str:
         "Research this Catholic devotional subject using authoritative Catholic sources and return JSON only. "
         "Do not invent missing facts. Keep bullets concise. Required JSON fields: title, subtitle, feast_day, "
         "sections (object with up to five headings and up to three bullets each), spiritual_themes (exactly three), "
-        "footer, sources (array of title/url). Sources are mandatory: every source must use an absolute https URL in its url field.\n"
+        "footer, sources (array of title/url). Sources are mandatory: every source must use an absolute https URL in its url field. "
+        "The sources array is private provenance only: never include source names, URLs, Markdown links, citations, or footnotes in title, subtitle, feast_day, sections, spiritual_themes, or footer.\n"
         f"SUBJECT: {subject}\nCONTEXT: {context}"
     )
 
@@ -129,6 +153,7 @@ def parse_qa_result(text: str) -> Dict[str, Any]:
 def infographic_qa_prompt(copy: InfographicCopy) -> str:
     return (
         "Inspect the supplied Catholic infographic against this approved copy. Return JSON only with boolean approved and issues array. "
-        "Reject incorrect title, dates, feast day, factual text, malformed/gibberish text, clipped panels, unreadable footer, or wrong identity.\n"
-        + copy.to_private_json()
+        "Reject incorrect title, dates, feast day, factual text, malformed/gibberish text, clipped panels, unreadable footer, wrong identity, "
+        "or any visible citations, source names, URLs, Markdown links, footnotes, or bibliography text.\n"
+        + copy.to_public_json()
     )

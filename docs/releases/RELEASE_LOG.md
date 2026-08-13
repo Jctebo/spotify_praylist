@@ -1,5 +1,12 @@
 # Release Log
 
+## [0.3.13.0] - 2026-08-12
+
+### Fixed
+- Kept research citations private, rejecting visible citation syntax and requiring visual QA to reject rendered source labels, URLs, Markdown links, footnotes, and bibliography text.
+- Limited novena image generation to active windows only, preventing historical or future novena backfills from entering the current image folders.
+- Published the approved portrait file unchanged to the legacy wide folder, replacing the cropped wide derivative.
+
 ## [0.3.12.8] - 2026-08-12
 
 ### Added

@@ -78,12 +78,12 @@ class TestDevotionalImageJob(unittest.TestCase):
         result = Image.open(io.BytesIO(overlaid))
         self.assertEqual(result.size, (1536, 1024))
 
-    def test_derive_wide_image_uses_one_portrait_master(self):
+    def test_derive_wide_image_copies_the_approved_portrait_master(self):
         image = Image.new("RGB", (1024, 1536), color=(32, 48, 64))
         raw = io.BytesIO()
         image.save(raw, format="PNG")
-        result = Image.open(io.BytesIO(self.mod.derive_wide_image(raw.getvalue(), "1536x1024", "png")))
-        self.assertEqual(result.size, (1536, 1024))
+        source_bytes = raw.getvalue()
+        self.assertEqual(self.mod.derive_wide_image(source_bytes, "1536x1024", "png"), source_bytes)
 
     def test_image_generation_uses_tool_capable_responses_model_default(self):
         self.assertEqual(self.mod.DEFAULT_IMAGE_RESPONSE_MODEL, "gpt-5-mini")
@@ -183,6 +183,34 @@ class TestDevotionalImageJob(unittest.TestCase):
             )
         self.assertEqual([target.subject for target in targets], ["Blessed Example"])
         self.assertEqual(targets[0].source, self.mod.SOURCE_NOVENA)
+
+    def test_novena_window_rolls_a_past_annual_feast_to_next_year(self):
+        contract = SimpleNamespace(
+            feast=SimpleNamespace(feast_date=lambda year: datetime.date(year, 1, 3)),
+            novena=SimpleNamespace(start_offset_days=-9, duration_days=9),
+        )
+        feast, start, end = self.mod.novena_window_for_contract(contract, datetime.date(2026, 8, 12))
+        self.assertEqual((feast, start, end), (datetime.date(2027, 1, 3), datetime.date(2026, 12, 25), datetime.date(2027, 1, 2)))
+
+    def test_novena_targets_include_only_the_active_window(self):
+        style = self.mod.StyleConfig(style_id="mod_realism", style_prompt="style")
+        active = SimpleNamespace(
+            enabled=True, contract_id="active-example", saint={"name": "Active Example"}, intro={},
+            feast=SimpleNamespace(feast_date=lambda year: datetime.date(year, 8, 15)),
+            novena=SimpleNamespace(start_offset_days=-3, duration_days=3),
+        )
+        future = SimpleNamespace(
+            enabled=True, contract_id="future-example", saint={"name": "Future Example"}, intro={},
+            feast=SimpleNamespace(feast_date=lambda year: datetime.date(year, 9, 1)),
+            novena=SimpleNamespace(start_offset_days=-9, duration_days=9),
+        )
+        pipeline = self.mod.PipelineConfig("novenas", self.mod.SOURCE_NOVENA, "mod_realism", 9, True, "")
+        with patch.object(self.mod, "load_novena_contracts", return_value=[active, future]):
+            targets = self.mod.build_targets_from_config(
+                today=datetime.date(2026, 8, 12), calendar_name="general_roman", locale="en",
+                default_window_days=9, target_date=None, styles={"mod_realism": style}, devotions=[], pipelines=[pipeline],
+            )
+        self.assertEqual([target.subject for target in targets], ["Active Example"])
 
     def test_select_title_placement_prefers_lower_center_box_on_uniform_portrait(self):
         image = Image.new("RGBA", (1024, 1536), color=(64, 64, 64, 255))

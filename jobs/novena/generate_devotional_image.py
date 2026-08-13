@@ -114,7 +114,8 @@ SUPPORTED_IMAGE_EXTS = ("png", "jpeg", "webp")
 DEFAULT_MANIFEST_NAME = "images_manifest.json"
 DEFAULT_ROOT_MANIFEST_NAME = "devotional_image_library.json"
 DEFAULT_IMAGE_RESPONSE_MODEL = "gpt-5-mini"
-SIDECAR_SUFFIXES = (".prompt.txt", ".window.txt", ".copy.json", ".qa.json")
+INFOGRAPHIC_RENDER_VERSION = "2026-08-clean-copy-v2"
+SIDECAR_SUFFIXES = (".prompt.txt", ".window.txt", ".copy.json", ".qa.json", ".render-version.txt")
 
 PROMPT_INSTRUCTION = """IMAGE PROMPT GENERATION - HIGH-FINISH MODERN DEVOTIONAL STYLE
 
@@ -1334,7 +1335,7 @@ def repair_infographic(client: OpenAI, model: str, image_bytes: bytes, copy, iss
     image_b64 = base64.b64encode(image_bytes).decode("ascii")
     instructions = (
         "Keep the full infographic unchanged except correct these QA issues: " + "; ".join(issues) + "\n"
-        "Use this approved copy as the source of truth:\n" + copy.to_private_json()
+        "Use this approved visible copy as the source of truth. Do not add citations or URLs:\n" + copy.to_public_json()
     )
     response = client.responses.create(
         model=model,
@@ -1610,21 +1611,9 @@ def apply_wide_title_overlay(image_bytes: bytes, title: str, image_format: str) 
 
 
 def derive_wide_image(image_bytes: bytes, size: str, image_format: str) -> bytes:
-    """Create the wide delivery file from the approved portrait master."""
-    try:
-        width_text, height_text = size.lower().split("x", 1)
-        target_width, target_height = int(width_text), int(height_text)
-    except Exception as exc:
-        raise RuntimeError(f"Invalid wide image size '{size}'.") from exc
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    scale = max(target_width / image.width, target_height / image.height)
-    resized = image.resize((round(image.width * scale), round(image.height * scale)), Image.Resampling.LANCZOS)
-    left = max(0, (resized.width - target_width) // 2)
-    top = max(0, (resized.height - target_height) // 2)
-    cropped = resized.crop((left, top, left + target_width, top + target_height))
-    output = io.BytesIO()
-    cropped.save(output, format="JPEG" if image_format.lower() in {"jpg", "jpeg"} else image_format.upper())
-    return output.getvalue()
+    """Publish the approved portrait unchanged to the legacy wide pipeline."""
+    del size, image_format
+    return image_bytes
 
 
 def write_image_file(image_bytes: bytes, output_dir: Path, filename: str) -> Path:
@@ -1686,6 +1675,21 @@ def dedupe_render_targets(targets: Sequence[RenderTarget]) -> List[RenderTarget]
         selected,
         key=lambda t: (t.start_date.isoformat(), t.end_date.isoformat(), t.source, t.subject_slug, t.style_id),
     )
+
+
+def novena_window_for_contract(contract, today: datetime.date) -> Tuple[datetime.date, datetime.date, datetime.date]:
+    """Return the current or next annual novena window, never a past one."""
+    if contract.feast is None:
+        feast_day = today
+    else:
+        feast_day = contract.feast.feast_date(today.year)
+    start_day = feast_day + datetime.timedelta(days=contract.novena.start_offset_days)
+    end_day = start_day + datetime.timedelta(days=contract.novena.duration_days - 1)
+    if end_day < today and contract.feast is not None:
+        feast_day = contract.feast.feast_date(today.year + 1)
+        start_day = feast_day + datetime.timedelta(days=contract.novena.start_offset_days)
+        end_day = start_day + datetime.timedelta(days=contract.novena.duration_days - 1)
+    return feast_day, start_day, end_day
 
 
 def build_targets_from_config(
@@ -1797,15 +1801,14 @@ def build_targets_from_config(
                 subject = str(contract.saint.get("name", "")).strip() or str(contract.contract_id).replace("_", " ").title()
                 if not subject:
                     continue
-                if contract.feast is not None:
-                    try:
-                        feast_day = contract.feast.feast_date(today.year)
-                    except Exception:
-                        feast_day = today
-                else:
+                try:
+                    feast_day, start_day, end_day = novena_window_for_contract(contract, today)
+                except Exception:
                     feast_day = today
-                start_day = feast_day + datetime.timedelta(days=contract.novena.start_offset_days)
-                end_day = start_day + datetime.timedelta(days=contract.novena.duration_days - 1)
+                    start_day = today
+                    end_day = today + datetime.timedelta(days=contract.novena.duration_days - 1)
+                if today < start_day or today > end_day:
+                    continue
                 context_lines = [
                     f"Novena contract: {contract.contract_id}",
                     f"Novena window: {start_day.isoformat()} to {end_day.isoformat()}",
@@ -1957,13 +1960,18 @@ def main() -> int:
             has_portrait = existing_portrait is not None
             has_wide = existing_wide is not None
 
-            if has_portrait and has_wide:
+            version_path = sidecar_archive_path(storage, current_dir / f"{target.base_name}.{image_format}", ".render-version.txt")
+            is_current_render = version_path.exists() and version_path.read_text(encoding="utf-8").strip() == INFOGRAPHIC_RENDER_VERSION
+            if has_portrait and has_wide and is_current_render and existing_portrait.read_bytes() == existing_wide.read_bytes():
                 total_skipped_existing += 1
                 print(
                     f"INFO skip_existing source={target.source} subject={target.subject} "
                     f"base={target.base_name} style_id={target.style_id}"
                 )
                 continue
+            if has_portrait and not is_current_render:
+                print(f"INFO refresh_outdated_infographic subject={target.subject} base={target.base_name}")
+                has_portrait = False
 
             if reuse_enabled:
                 restored_portrait, restored_wide = restore_target_from_archive(
@@ -1978,12 +1986,14 @@ def main() -> int:
                     total_restored += int(restored_portrait) + int(restored_wide)
                     has_portrait = has_portrait or restored_portrait
                     has_wide = has_wide or restored_wide
+                    existing_portrait = find_existing_image_by_base(current_dir, target.base_name)
+                    existing_wide = find_existing_image_by_base(wide_dir, target.base_name)
                     print(
                         f"INFO restored_from_archive source={target.source} subject={target.subject} "
                         f"base={target.base_name} restored_portrait={str(restored_portrait).lower()} "
                         f"restored_wide={str(restored_wide).lower()} style_id={target.style_id}"
                     )
-                    if has_portrait and has_wide:
+                    if has_portrait and has_wide and is_current_render and existing_portrait.read_bytes() == existing_wide.read_bytes():
                         continue
 
             filename = f"{target.base_name}.{image_format}"
@@ -2024,10 +2034,13 @@ def main() -> int:
                     print(f"WARN generation_failed subject={target.subject} detail={exc}")
                     continue
                 written_portrait = write_image_file(image_bytes, current_dir, filename)
+                existing_portrait = written_portrait
+                has_portrait = True
                 prompt_path = write_archived_sidecar(storage, written_portrait, ".prompt.txt", prompt_text)
                 window_path = write_archived_sidecar(storage, written_portrait, ".window.txt", window_text)
                 write_archived_sidecar(storage, written_portrait, ".copy.json", copy.to_private_json())
                 write_archived_sidecar(storage, written_portrait, ".qa.json", json.dumps(qa_result, indent=2, sort_keys=True))
+                write_archived_sidecar(storage, written_portrait, ".render-version.txt", INFOGRAPHIC_RENDER_VERSION)
                 outputs_written += 1
                 total_written += 1
                 by_source[target.source] = by_source.get(target.source, 0) + 1
@@ -2035,7 +2048,7 @@ def main() -> int:
                 print(f"INFO wrote_prompt={prompt_path}")
                 print(f"INFO wrote_window={window_path}")
 
-            if not has_wide:
+            if not has_wide or (has_portrait and existing_portrait.read_bytes() != existing_wide.read_bytes()):
                 master_image_bytes = image_bytes if not has_portrait else existing_portrait.read_bytes()
                 image_bytes_wide = derive_wide_image(master_image_bytes, image_size_wide, image_format)
                 written_wide = write_image_file(image_bytes_wide, wide_dir, filename)

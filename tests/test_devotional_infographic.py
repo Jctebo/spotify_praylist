@@ -50,6 +50,21 @@ class TestDevotionalInfographic(unittest.TestCase):
         self.assertIsInstance(prompt, str)
         self.assertIn("TITLE: Saint Example", prompt)
         self.assertIn("Who She Was:\n- A faithful witness.", prompt)
+        self.assertIn("Never render citations", prompt)
+
+    def test_visible_copy_rejects_urls_and_markdown_citations(self):
+        with self.assertRaisesRegex(RuntimeError, "visible copy"):
+            InfographicCopy(
+                title="Saint Example",
+                sections={"Who She Was": ["Born in Example ([source](https://example.test))."]},
+                spiritual_themes=["Faith", "Hope", "Charity"],
+            ).validate()
+        with self.assertRaisesRegex(RuntimeError, "visible copy"):
+            InfographicCopy(
+                title="Saint Example",
+                sections={"Who She Was": ["Born in Example (sources differ on the year)."]},
+                spiritual_themes=["Faith", "Hope", "Charity"],
+            ).validate()
 
     def test_parse_copy_requires_cited_validated_json(self):
         payload = {
@@ -76,6 +91,18 @@ class TestDevotionalInfographic(unittest.TestCase):
         self.assertTrue(parse_qa_result('{"approved": true, "issues": []}')["approved"])
         with self.assertRaises(RuntimeError):
             parse_qa_result('{"issues": []}')
+
+    def test_qa_prompt_keeps_private_sources_out_of_visible_copy(self):
+        from jobs.novena.devotional_infographic import infographic_qa_prompt
+        copy = InfographicCopy(
+            title="Saint Example",
+            spiritual_themes=["Faith", "Hope", "Charity"],
+            sources=[{"title": "Private source", "url": "https://example.test/saint"}],
+        )
+        prompt = infographic_qa_prompt(copy)
+        self.assertIn("visible citations", prompt)
+        self.assertNotIn("https://example.test/saint", prompt)
+        self.assertNotIn("Private source", copy.to_public_json())
 
 
 if __name__ == "__main__":
