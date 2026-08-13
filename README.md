@@ -670,7 +670,7 @@ Purpose:
 - creates an image with OpenAI image generation
 - uses the Responses API for cited research/copy, reference-guided image generation, and fail-closed visual QA
 - includes every enabled novena contract as an image target in addition to calendar and configured-devotion targets
-- generates one approved portrait infographic per subject, then derives the wide delivery image from that same master
+- generates one approved portrait infographic per subject, then publishes the identical approved file to both delivery pipelines
 - includes 9-day window metadata in output filename and `.window.txt` companion file
 - writes two layout variants per subject:
   - portrait variant to `Current Devotion`
@@ -707,7 +707,7 @@ Optional variables:
 - `DEVOTIONAL_IMAGE_MODEL` (default `gpt-5-mini`; the Responses model that invokes the image-generation tool)
 - `DEVOTIONAL_MAX_GENERATIONS_PER_RUN` (default `4`; prevents the all-novena backlog from exceeding a scheduled-run budget)
 - `DEVOTIONAL_IMAGE_SIZE` (default `1024x1536`, phone portrait)
-- `DEVOTIONAL_IMAGE_SIZE_WIDE` (default `1536x1024`, widescreen)
+- `DEVOTIONAL_IMAGE_SIZE_WIDE` (legacy compatibility setting; the wide pipeline receives the unchanged portrait file)
 - `DEVOTIONAL_IMAGE_QUALITY` (default `high`)
 - `DEVOTIONAL_IMAGE_FORMAT` (default `png`)
 - `DEVOTIONAL_INFOGRAPHIC_REFERENCE` (optional; defaults to `config/publish/images/devotional-infographic-master.png`)
