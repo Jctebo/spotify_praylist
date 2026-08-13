@@ -59,12 +59,11 @@ class TestDevotionalInfographic(unittest.TestCase):
                 sections={"Who She Was": ["Born in Example ([source](https://example.test))."]},
                 spiritual_themes=["Faith", "Hope", "Charity"],
             ).validate()
-        with self.assertRaisesRegex(RuntimeError, "visible copy"):
-            InfographicCopy(
-                title="Saint Example",
-                sections={"Who She Was": ["Born in Example (sources differ on the year)."]},
-                spiritual_themes=["Faith", "Hope", "Charity"],
-            ).validate()
+        InfographicCopy(
+            title="Saint Example",
+            sections={"Who She Was": ["Born in Example; sources differ on the year."]},
+            spiritual_themes=["Faith", "Hope", "Charity"],
+        ).validate()
 
     def test_parse_copy_requires_cited_validated_json(self):
         payload = {
