@@ -705,6 +705,7 @@ Optional variables:
 - `DEVOTIONAL_ROOT_MANIFEST_NAME` (default `devotional_image_library.json`)
 - `DEVOTIONAL_PROMPT_MODEL` (default `gpt-5-mini`)
 - `DEVOTIONAL_IMAGE_MODEL` (default `gpt-5-mini`; the Responses model that invokes the image-generation tool)
+- `DEVOTIONAL_MAX_GENERATIONS_PER_RUN` (default `4`; prevents the all-novena backlog from exceeding a scheduled-run budget)
 - `DEVOTIONAL_IMAGE_SIZE` (default `1024x1536`, phone portrait)
 - `DEVOTIONAL_IMAGE_SIZE_WIDE` (default `1536x1024`, widescreen)
 - `DEVOTIONAL_IMAGE_QUALITY` (default `high`)

@@ -88,7 +88,14 @@ def parse_infographic_copy(text: str) -> InfographicCopy:
         sections={str(key): [str(value).strip() for value in values] for key, values in sections.items() if isinstance(values, list)},
         spiritual_themes=[str(item).strip() for item in payload.get("spiritual_themes") or []],
         footer=str(payload.get("footer", "")).strip(),
-        sources=[{"title": str(item.get("title", "")).strip(), "url": str(item.get("url", "")).strip()} for item in sources if isinstance(item, dict)],
+        sources=[
+            {
+                "title": str(item.get("title") or item.get("name") or "").strip(),
+                "url": str(item.get("url") or item.get("href") or item.get("link") or "").strip(),
+            }
+            for item in sources
+            if isinstance(item, dict)
+        ],
     )
     if not copy.sources or any(not item["url"] for item in copy.sources):
         raise RuntimeError("Infographic research response requires cited sources.")
@@ -101,7 +108,7 @@ def infographic_research_prompt(subject: str, context: str) -> str:
         "Research this Catholic devotional subject using authoritative Catholic sources and return JSON only. "
         "Do not invent missing facts. Keep bullets concise. Required JSON fields: title, subtitle, feast_day, "
         "sections (object with up to five headings and up to three bullets each), spiritual_themes (exactly three), "
-        "footer, sources (array of title/url).\n"
+        "footer, sources (array of title/url). Sources are mandatory: every source must use an absolute https URL in its url field.\n"
         f"SUBJECT: {subject}\nCONTEXT: {context}"
     )
 

@@ -74,6 +74,7 @@ DEVOTIONAL_ROOT_MANIFEST_NAME = "DEVOTIONAL_ROOT_MANIFEST_NAME"  # default devot
 
 DEVOTIONAL_PROMPT_MODEL = "DEVOTIONAL_PROMPT_MODEL"  # default gpt-5-mini
 DEVOTIONAL_IMAGE_MODEL = "DEVOTIONAL_IMAGE_MODEL"  # default gpt-5-mini (Responses image-tool caller)
+DEVOTIONAL_MAX_GENERATIONS_PER_RUN = "DEVOTIONAL_MAX_GENERATIONS_PER_RUN"  # default 4 portrait subjects
 DEVOTIONAL_IMAGE_SIZE = "DEVOTIONAL_IMAGE_SIZE"  # default 1024x1536 (phone portrait)
 DEVOTIONAL_IMAGE_SIZE_WIDE = "DEVOTIONAL_IMAGE_SIZE_WIDE"  # default 1536x1024 (widescreen)
 DEVOTIONAL_IMAGE_QUALITY = "DEVOTIONAL_IMAGE_QUALITY"  # default high
@@ -1304,12 +1305,17 @@ def build_image_prompt(
 
 
 def build_infographic_copy(client: OpenAI, model: str, target: RenderTarget):
-    response = client.responses.create(
-        model=model,
-        input=infographic_research_prompt(target.subject, target.context),
-        tools=[{"type": "web_search"}],
-    )
-    return parse_infographic_copy(extract_output_text(response))
+    last_error: Optional[Exception] = None
+    for attempt in range(2):
+        prompt = infographic_research_prompt(target.subject, target.context)
+        if attempt:
+            prompt += "\nThis is a retry: include at least one authoritative source with a non-empty absolute https URL in sources[].url."
+        response = client.responses.create(model=model, input=prompt, tools=[{"type": "web_search"}])
+        try:
+            return parse_infographic_copy(extract_output_text(response))
+        except RuntimeError as exc:
+            last_error = exc
+    raise RuntimeError(f"Infographic research failed after two cited-source attempts: {last_error}")
 
 
 def verify_infographic(client: OpenAI, model: str, image_bytes: bytes, copy) -> Dict[str, Any]:
@@ -1841,6 +1847,7 @@ def main() -> int:
         image_size = os.getenv(DEVOTIONAL_IMAGE_SIZE, "1024x1536").strip() or "1024x1536"
         image_size_wide = os.getenv(DEVOTIONAL_IMAGE_SIZE_WIDE, "1536x1024").strip() or "1536x1024"
         image_quality = os.getenv(DEVOTIONAL_IMAGE_QUALITY, "high").strip() or "high"
+        max_generations_per_run = int_env(DEVOTIONAL_MAX_GENERATIONS_PER_RUN, default=4, min_value=1, max_value=50)
         image_format = os.getenv(DEVOTIONAL_IMAGE_FORMAT, "png").strip().lower() or "png"
         reference_path = Path(os.getenv(DEVOTIONAL_INFOGRAPHIC_REFERENCE, str(REPO_ROOT / "config" / "publish" / "images" / "devotional-infographic-master.png")))
         if not reference_path.exists():
@@ -1937,6 +1944,8 @@ def main() -> int:
         total_written = 0
         total_restored = 0
         total_skipped_existing = 0
+        total_failed = 0
+        generation_subjects_attempted = 0
         by_source: Dict[str, int] = {SOURCE_CALENDAR: 0, SOURCE_DEVOTION: 0}
 
         for target in targets:
@@ -1992,19 +2001,28 @@ def main() -> int:
 
             outputs_written = 0
             if not has_portrait:
-                copy = build_infographic_copy(client, prompt_model, target)
-                prompt_text = infographic_render_prompt(copy, subject_context=target.context)
-                image_bytes = generate_image_bytes(
-                    client, image_model, prompt_text, image_size, image_quality, image_format, reference_path=reference_path
-                )
-                qa_result = verify_infographic(client, prompt_model, image_bytes, copy)
-                if not qa_result["approved"]:
-                    image_bytes = repair_infographic(
-                        client, image_model, image_bytes, copy, qa_result["issues"], image_size, image_quality
+                if generation_subjects_attempted >= max_generations_per_run:
+                    print(f"INFO deferred_generation subject={target.subject} reason=batch_limit")
+                    continue
+                generation_subjects_attempted += 1
+                try:
+                    copy = build_infographic_copy(client, prompt_model, target)
+                    prompt_text = infographic_render_prompt(copy, subject_context=target.context)
+                    image_bytes = generate_image_bytes(
+                        client, image_model, prompt_text, image_size, image_quality, image_format, reference_path=reference_path
                     )
                     qa_result = verify_infographic(client, prompt_model, image_bytes, copy)
-                if not qa_result["approved"]:
-                    raise RuntimeError(f"Infographic QA rejected '{target.subject}': {'; '.join(qa_result['issues']) or 'unspecified issue'}")
+                    if not qa_result["approved"]:
+                        image_bytes = repair_infographic(
+                            client, image_model, image_bytes, copy, qa_result["issues"], image_size, image_quality
+                        )
+                        qa_result = verify_infographic(client, prompt_model, image_bytes, copy)
+                    if not qa_result["approved"]:
+                        raise RuntimeError(f"Infographic QA rejected '{target.subject}': {'; '.join(qa_result['issues']) or 'unspecified issue'}")
+                except Exception as exc:
+                    total_failed += 1
+                    print(f"WARN generation_failed subject={target.subject} detail={exc}")
+                    continue
                 written_portrait = write_image_file(image_bytes, current_dir, filename)
                 prompt_path = write_archived_sidecar(storage, written_portrait, ".prompt.txt", prompt_text)
                 window_path = write_archived_sidecar(storage, written_portrait, ".window.txt", window_text)
@@ -2040,7 +2058,8 @@ def main() -> int:
         print(
             "SUMMARY "
             f"targets={len(targets)} generated_now={total_written} restored_now={total_restored} "
-            f"skipped_existing={total_skipped_existing} moved_to_archive={moved_count} "
+            f"skipped_existing={total_skipped_existing} failed={total_failed} generation_subjects_attempted={generation_subjects_attempted} "
+            f"generation_batch_limit={max_generations_per_run} moved_to_archive={moved_count} "
             f"manifest_images={manifest_images} root_manifest={root_manifest_path.name} "
             f"calendar_generated={by_source.get(SOURCE_CALENDAR, 0)} devotion_generated={by_source.get(SOURCE_DEVOTION, 0)} "
             f"config_mode={config_mode}"

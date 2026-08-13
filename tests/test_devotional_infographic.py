@@ -64,6 +64,13 @@ class TestDevotionalInfographic(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             parse_infographic_copy(__import__("json").dumps(payload))
 
+    def test_parse_copy_accepts_standard_source_url_aliases(self):
+        payload = {
+            "title": "Saint Example", "sections": {}, "spiritual_themes": [], "sources": [{"name": "Official", "href": "https://example.test/saint"}],
+        }
+        from jobs.novena.devotional_infographic import parse_infographic_copy
+        self.assertEqual(parse_infographic_copy(__import__("json").dumps(payload)).sources[0]["url"], "https://example.test/saint")
+
     def test_qa_result_requires_explicit_decision(self):
         from jobs.novena.devotional_infographic import parse_qa_result
         self.assertTrue(parse_qa_result('{"approved": true, "issues": []}')["approved"])
