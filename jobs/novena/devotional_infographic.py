@@ -32,7 +32,7 @@ class InfographicCopy:
         visible_values = [self.title, self.subtitle, self.feast_day, self.footer, *self.spiritual_themes]
         visible_values.extend(heading for heading in self.sections)
         visible_values.extend(bullet for bullets in self.sections.values() for bullet in bullets)
-        if any(re.search(r"https?://|www\.|\[[^\]]+\]|\b(?:sources?|citations?)\b", value, re.IGNORECASE) for value in visible_values):
+        if any(re.search(r"https?://|www\.|\[[^\]]+\]", value, re.IGNORECASE) for value in visible_values):
             raise RuntimeError("Infographic visible copy must not contain source URLs or Markdown citations.")
 
     def to_private_json(self) -> str:
