@@ -73,7 +73,7 @@ DEVOTIONAL_MANIFEST_NAME = "DEVOTIONAL_MANIFEST_NAME"  # default images_manifest
 DEVOTIONAL_ROOT_MANIFEST_NAME = "DEVOTIONAL_ROOT_MANIFEST_NAME"  # default devotional_image_library.json
 
 DEVOTIONAL_PROMPT_MODEL = "DEVOTIONAL_PROMPT_MODEL"  # default gpt-5-mini
-DEVOTIONAL_IMAGE_MODEL = "DEVOTIONAL_IMAGE_MODEL"  # default gpt-image-2
+DEVOTIONAL_IMAGE_MODEL = "DEVOTIONAL_IMAGE_MODEL"  # default gpt-image-1
 DEVOTIONAL_IMAGE_SIZE = "DEVOTIONAL_IMAGE_SIZE"  # default 1024x1536 (phone portrait)
 DEVOTIONAL_IMAGE_SIZE_WIDE = "DEVOTIONAL_IMAGE_SIZE_WIDE"  # default 1536x1024 (widescreen)
 DEVOTIONAL_IMAGE_QUALITY = "DEVOTIONAL_IMAGE_QUALITY"  # default high
@@ -1836,7 +1836,7 @@ def main() -> int:
         default_window_days = int_env(ROMCAL_WINDOW_DAYS, default=9, min_value=1, max_value=30)
 
         prompt_model = os.getenv(DEVOTIONAL_PROMPT_MODEL, "gpt-5-mini").strip() or "gpt-5-mini"
-        image_model = os.getenv(DEVOTIONAL_IMAGE_MODEL, "gpt-image-2").strip() or "gpt-image-2"
+        image_model = os.getenv(DEVOTIONAL_IMAGE_MODEL, "gpt-image-1").strip() or "gpt-image-1"
         image_size = os.getenv(DEVOTIONAL_IMAGE_SIZE, "1024x1536").strip() or "1024x1536"
         image_size_wide = os.getenv(DEVOTIONAL_IMAGE_SIZE_WIDE, "1536x1024").strip() or "1536x1024"
         image_quality = os.getenv(DEVOTIONAL_IMAGE_QUALITY, "high").strip() or "high"
