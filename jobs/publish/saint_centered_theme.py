@@ -22,6 +22,17 @@ RANK_PRIORITY = {
     "": 7,
 }
 
+# These are deliberately curated records, not model-generated quotations.  A
+# witness without an approved quotation is still useful context, but it must
+# never be presented as having said words that we cannot attribute.
+APPROVED_SAINT_QUOTES: Dict[str, Dict[str, str]] = {
+    "john eudes": {
+        "quote": "Give yourselves to Jesus in order to enter the immensity of his great Heart.",
+        "source": "The Admirable Heart of Jesus, III, 2",
+        "source_url": "https://www.catholicculture.org/culture/library/view.cfm?id=9094",
+    },
+}
+
 
 @dataclass(frozen=True)
 class CalendarWindowItem:
@@ -48,6 +59,12 @@ class SaintCenteredThemeBrief:
     primary_anchor: str
     primary_rank: str
     primary_anchor_date: str
+    saint_witness: str
+    saint_witness_date: str
+    saint_witness_rank: str
+    saint_witness_quote: str
+    saint_witness_quote_source: str
+    saint_witness_quote_source_url: str
     supporting_items: tuple[Dict[str, str], ...]
     themes: tuple[str, ...]
     season: str
@@ -121,6 +138,8 @@ def build_saint_centered_theme_brief(
         errors.append("No target-day observance was available; deterministic seasonal fallback selected.")
 
     supporting = _supporting(rows, anchor, target_date)
+    witness = _select_saint_witness(rows, target_date)
+    witness_quote = _quote_for(witness.name if witness else "")
     themes = _themes(anchor, supporting, season)
     excluded = [row.to_dict() for row in rows if row not in [anchor, *supporting]][:12]
     confidence = "high" if anchor.source == "romcal" and anchor.rank not in {"weekday", ""} else "medium"
@@ -135,6 +154,12 @@ def build_saint_centered_theme_brief(
         primary_anchor=anchor.name,
         primary_rank=anchor.rank,
         primary_anchor_date=anchor.date,
+        saint_witness=witness.name if witness else "",
+        saint_witness_date=witness.date if witness else "",
+        saint_witness_rank=witness.rank if witness else "",
+        saint_witness_quote=witness_quote.get("quote", ""),
+        saint_witness_quote_source=witness_quote.get("source", ""),
+        saint_witness_quote_source_url=witness_quote.get("source_url", ""),
         supporting_items=tuple(item.to_dict() for item in supporting),
         themes=tuple(themes),
         season=season,
@@ -231,6 +256,40 @@ def _supporting(rows: Sequence[CalendarWindowItem], anchor: CalendarWindowItem, 
     candidates = [row for row in rows if row != anchor and row.name != anchor.name]
     candidates.sort(key=lambda row: (0 if row.date == target_date.isoformat() else 1, RANK_PRIORITY.get(row.rank, 99), abs((_dt.date.fromisoformat(row.date) - target_date).days), row.name.casefold()))
     return candidates[:3]
+
+
+def _select_saint_witness(rows: Sequence[CalendarWindowItem], target_date: _dt.date) -> Optional[CalendarWindowItem]:
+    candidates = [row for row in rows if _is_saint_observance(row.name)]
+    if not candidates:
+        return None
+    # Prefer a nearby saint with an approved quotation. This keeps the daily
+    # prayer fact-bounded while ensuring the current witness is someone whose
+    # own words can actually be placed in the listener's prayer.
+    return sorted(
+        candidates,
+        key=lambda row: (
+            0 if _quote_for(row.name) else 1,
+            abs((_dt.date.fromisoformat(row.date) - target_date).days),
+            RANK_PRIORITY.get(row.rank, 99),
+            row.name.casefold(),
+        ),
+    )[0]
+
+
+def _is_saint_observance(name: str) -> bool:
+    normalized = _clean(name).lower()
+    return normalized.startswith(("saint ", "st. ", "st ", "blessed ", "bl. "))
+
+
+def _saint_key(name: str) -> str:
+    normalized = re.sub(r"\bsaint\b|\bst\.?\b|\bblessed\b|\bbl\.?\b", " ", _clean(name).lower())
+    normalized = re.sub(r"[^a-z0-9]+", " ", normalized)
+    normalized = re.sub(r"\b(?:priest|martyr|bishop|pope|virgin|apostle|abbot|doctor of the church)\b", " ", normalized)
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
+def _quote_for(name: str) -> Dict[str, str]:
+    return dict(APPROVED_SAINT_QUOTES.get(_saint_key(name), {}))
 
 
 def _season_for(target_rows: Sequence[CalendarWindowItem], rows: Sequence[CalendarWindowItem]) -> str:

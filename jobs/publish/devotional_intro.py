@@ -195,6 +195,9 @@ def _context_rows(context: Mapping[str, Any]) -> Tuple[Tuple[str, str], ...]:
         ("Gospel citation", _context_value(context, "daily_gospel_citation", "gospel_citation")),
         ("Gospel text", _context_value(context, "daily_gospel_text", "gospel_text")),
         ("Saint", _context_value(context, "saint_name")),
+        ("Saint witness", _context_value(context, "saint_witness")),
+        ("Saint witness quotation", _context_value(context, "saint_witness_quote")),
+        ("Saint quotation source", _context_value(context, "saint_witness_quote_source")),
         ("Identity description", _context_value(context, "intro_summary")),
         ("Patronage", _context_value(context, "intro_patronage")),
         ("Standard short-form guidance", _context_value(context, "short_form_intro_prompt")),
@@ -249,7 +252,13 @@ For this novena, make the opening feel like a natural invitation to pray, not a 
 Write exactly 4 to 6 sentences in this order: begin with 2 to 4 sentences about the named saint or devotion, then one sentence that explicitly names Day {novena_day} of this novena, then a final invitation into prayer beginning with "Let us".
 Use the supplied identity description faithfully, with patronage when present. Do not mention any daily theme, Gospel, Scripture, calendar bridge, feast, liturgical season, or novena focus.
 {short_form_guidance}
-Let the saint's life and witness give shape to the opening; do not summarize the day's liturgy.
+        Let the saint's life and witness give shape to the opening; do not summarize the day's liturgy.
+""".strip()
+    saint_rules = """
+The saint witness is a required participant in this prayer, not an abstract theme label.
+Name the supplied saint witness naturally, address God while asking for that saint's intercession, and explicitly use the supplied quotation as the saint's words.
+Quote the supplied wording exactly; attribute it to the named saint and do not invent, paraphrase, or substitute a quotation.
+If no quotation is supplied, do not create one; still name the saint witness and pray with the saint's intercession.
 """.strip()
     return f"""
 Write a concise Catholic devotional introduction for the profile "{profile.key}".
@@ -261,6 +270,7 @@ Clearly identify the prayer as "{prayer_title}".
 Ground the prose in the supplied {"prayer-specific" if profile.key == "novena" else "daily and prayer-specific"} context.
 {gospel_rule}
 {novena_rules}
+{saint_rules}
 Do not invent quotations, saints, feasts, seasons, Scripture citations, doctrine, or current events. When Standard short-form guidance is supplied, use only modest, well-known saint/event identity details and omit patronage if uncertain.
 Return plain prose only: no heading, markdown, bullets, production notes, or commentary.
 Keep the result at least {profile.min_chars} characters long.
@@ -420,6 +430,14 @@ def validate_devotional_intro(
     if profile.key != "novena" and daily_anchors and not _contains_any(rendered, daily_anchors):
         raise RuntimeError("Intro must use at least one supplied daily liturgical anchor.")
 
+    saint_witness = _context_value(context, "saint_witness", "saintWitness")
+    saint_quote = _context_value(context, "saint_witness_quote", "saintWitnessQuote")
+    if profile.key != "novena" and saint_witness:
+        if not _contains_any(rendered, (saint_witness,)):
+            raise RuntimeError("Intro must name the supplied saint witness.")
+        if saint_quote and saint_quote not in rendered:
+            raise RuntimeError("Intro must include the approved saint witness quotation exactly.")
+
     if profile.key == "novena":
         day = _context_value(context, "day", "active_day")
         if day and not _contains_any(rendered, (f"Day {day}",)):
@@ -481,8 +499,15 @@ def _fallback_text(profile: DevotionalIntroProfile, context: Mapping[str, Any]) 
     theme = _spoken_phrase(_context_value(context, "daily_theme_title", "sharedThemeTitle")) or "faithful prayer"
     celebration = _spoken_phrase(_context_value(context, "celebration_clause", "celebration_names"))
     gospel_bridge = _context_value(context, "daily_gospel_bridge", "sharedGospelBridge")
+    saint_witness = _context_value(context, "saint_witness", "saintWitness")
+    saint_quote = _context_value(context, "saint_witness_quote", "saintWitnessQuote")
+    saint_sentence = ""
+    if saint_witness:
+        saint_sentence = f"We pray with {saint_witness}, who teaches us, \"{saint_quote}\"." if saint_quote else f"We pray with {saint_witness} and ask for the saint's intercession."
     if profile.key == "morning-prayer":
         sentences = [f"As we begin {prayer_title}, the Church gathers our hearts around {theme}."]
+        if saint_sentence:
+            sentences.append(saint_sentence)
         if celebration:
             sentences.append(f"Today the Church celebrates {celebration}.")
         if gospel_bridge:
@@ -491,17 +516,17 @@ def _fallback_text(profile: DevotionalIntroProfile, context: Mapping[str, Any]) 
         return _normalize_whitespace(" ".join(sentences))
     if profile.key == "auxilium-christianorum":
         return _normalize_whitespace(
-            f"As we enter the {prayer_title}, we carry the grace of {theme} into prayer, "
+            f"As we enter the {prayer_title}, {saint_sentence} We carry the grace of {theme} into prayer, "
             "placing ourselves, our families, and the needs of this day under Mary's protection."
         )
     if profile.key == "angelus":
         return _normalize_whitespace(
-            f"As we pray the {prayer_title}, the grace of {theme} draws us to Mary's faithful yes "
+            f"As we pray the {prayer_title}, {saint_sentence} The grace of {theme} draws us to Mary's faithful yes "
             "and the mystery of the Word made flesh."
         )
     if profile.key == "regina-caeli":
         return _normalize_whitespace(
-            f"As we pray the {prayer_title}, the grace of {theme} joins our prayer to Mary's Easter joy "
+            f"As we pray the {prayer_title}, {saint_sentence} The grace of {theme} joins our prayer to Mary's Easter joy "
             "in the risen Christ."
         )
     day = _context_value(context, "day", "active_day")

@@ -884,6 +884,12 @@ def _shared_intro_context(
         "daily_gospel_bridge": _compact_text(runtime.get("daily_gospel_bridge")),
         "daily_gospel_citation": _compact_text(runtime.get("daily_gospel_citation")),
         "daily_gospel_theme": _compact_text(runtime.get("daily_gospel_theme")),
+        "saint_witness": _compact_text(runtime.get("saint_witness")),
+        "saint_witness_date": _compact_text(runtime.get("saint_witness_date")),
+        "saint_witness_rank": _compact_text(runtime.get("saint_witness_rank")),
+        "saint_witness_quote": _compact_text(runtime.get("saint_witness_quote")),
+        "saint_witness_quote_source": _compact_text(runtime.get("saint_witness_quote_source")),
+        "saint_witness_quote_source_url": _compact_text(runtime.get("saint_witness_quote_source_url")),
     }
 
 
@@ -1398,6 +1404,12 @@ def _get_or_build_ignatian_reflection_episode(
             sharedThemeReflectionFocus=str(helper_payload.get("sharedThemeReflectionFocus", "")),
             sharedThemeSources=tuple(helper_payload.get("sharedThemeSources") or ()),
             sharedThemeVersion=str(helper_payload.get("sharedThemeVersion", "saint-centered-theme-v1")),
+            saintWitness=str(helper_payload.get("saintWitness", "")),
+            saintWitnessDate=str(helper_payload.get("saintWitnessDate", "")),
+            saintWitnessRank=str(helper_payload.get("saintWitnessRank", "")),
+            saintWitnessQuote=str(helper_payload.get("saintWitnessQuote", "")),
+            saintWitnessQuoteSource=str(helper_payload.get("saintWitnessQuoteSource", "")),
+            saintWitnessQuoteSourceUrl=str(helper_payload.get("saintWitnessQuoteSourceUrl", "")),
         )
     else:
         helper = build_daily_liturgical_context(

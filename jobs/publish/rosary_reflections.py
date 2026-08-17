@@ -85,6 +85,9 @@ class RosaryDayContext:
     shared_gospel_bridge: str = ""
     shared_theme_sources: tuple[dict[str, str], ...] = ()
     shared_theme_version: str = ""
+    saint_witness: str = ""
+    saint_witness_quote: str = ""
+    saint_witness_quote_source: str = ""
 
 
 @dataclass(frozen=True)
@@ -236,6 +239,11 @@ def build_rosary_day_context(
         if isinstance(item, dict)
     )
     shared_version = _normalize_whitespace(shared.get("sharedThemeVersion") or shared.get("daily_theme_version"))
+    saint_witness = _normalize_whitespace(shared.get("saintWitness") or shared.get("saint_witness"))
+    saint_witness_quote = _normalize_whitespace(shared.get("saintWitnessQuote") or shared.get("saint_witness_quote"))
+    saint_witness_quote_source = _normalize_whitespace(
+        shared.get("saintWitnessQuoteSource") or shared.get("saint_witness_quote_source")
+    )
 
     return RosaryDayContext(
         date=date_value,
@@ -262,6 +270,9 @@ def build_rosary_day_context(
         shared_gospel_bridge=shared_gospel_bridge,
         shared_theme_sources=shared_sources,
         shared_theme_version=shared_version,
+        saint_witness=saint_witness,
+        saint_witness_quote=saint_witness_quote,
+        saint_witness_quote_source=saint_witness_quote_source,
     )
 
 
@@ -404,6 +415,10 @@ def validate_rosary_devotional_response(
     )
     _reject_foreign_scripture_citations(f"{introduction} {overall}", context)
     _require_dominant_anchor(f"{introduction} {overall}", context)
+    all_prose = " ".join(
+        [introduction, overall, *(item.intention for item in parsed.decades), *(item.reflection for item in parsed.decades)]
+    )
+    _require_saint_witness(all_prose, context)
 
     categories = [item.human_need_category for item in parsed.decades]
     unknown = sorted(set(categories) - set(APPROVED_HUMAN_NEED_CATEGORIES))
@@ -729,6 +744,10 @@ Gospel text:
 {context.gospel_text or "not supplied"}
 {supporting}
 
+Saint witness: {context.saint_witness or "not supplied"}
+Approved saint quotation: {context.saint_witness_quote or "not supplied"}
+Quotation source: {context.saint_witness_quote_source or "not supplied"}
+
 Mysteries:
 {mystery_lines}
 
@@ -737,6 +756,8 @@ Requirements:
 - introduction: {INTRO_MIN_CHARS}-{INTRO_MAX_CHARS} characters and natural spoken welcome.
 - overall_intention: {OVERALL_INTENTION_MIN_CHARS}-{OVERALL_INTENTION_MAX_CHARS} characters.
 - exactly five numbered decades in order.
+- Name the saint witness in the introduction and at least two decade reflections.
+- Include the approved saint quotation exactly, attributed to the named saint. Never invent or paraphrase a quotation.
 - each decade uses one distinct human_need_category from: {categories}.
 - each intention is {DECADE_INTENTION_MIN_CHARS}-{DECADE_INTENTION_MAX_CHARS} characters.
 - each reflection is {REFLECTION_MIN_CHARS}-{REFLECTION_MAX_CHARS} characters.
@@ -851,13 +872,16 @@ def _deterministic_devotional_set(
 ) -> RosaryDevotionalSet:
     anchor = context.dominant_priority.anchors[0]
     date_display = date_value.strftime("%A, %B %d, %Y").replace(" 0", " ")
+    saint_name = context.saint_witness or anchor
+    saint_quote = f'Saint {saint_name} teaches us, "{context.saint_witness_quote}". ' if context.saint_witness_quote else ""
     introduction = (
-        f"On {date_display}, we bring the {title} into {anchor}. "
+        f"On {date_display}, we pray with Saint {saint_name}, asking the saint to accompany us into the {title}. "
+        f"{saint_quote}"
         f"Each mystery gives us a different way to receive this grace, while the whole Rosary remains centered on one prayerful focus. "
         "With Mary, let us listen for Christ and carry the needs of the Church and the world before him."
     )
     overall = (
-        f"We offer this Rosary for the grace revealed through {anchor}, asking that it renew our faith "
+        f"We offer this Rosary with Saint {saint_name} for the grace revealed through {anchor}, asking that it renew our faith "
         "and guide the intentions we place before the Lord in every decade."
     )
     categories = APPROVED_HUMAN_NEED_CATEGORIES[:5]
@@ -871,11 +895,11 @@ def _deterministic_devotional_set(
     decades: list[_StructuredRosaryDecade] = []
     for mystery, category, application in zip(mysteries, categories, applications):
         intention = (
-            f"Through {anchor}, we pray this decade for {application}, that the fruit of "
+            f"With Saint {saint_name}, and through {anchor}, we pray this decade for {application}, that the fruit of "
             f"{mystery.fruit.lower()} may strengthen them."
         )
         reflection = (
-            f"In {mystery.title}, we contemplate Christ's grace through {anchor}. "
+            f"With Saint {saint_name}, in {mystery.title}, we contemplate Christ's grace through {anchor}. "
             f"The fruit of {mystery.fruit.lower()} shows how this same focus can enter concrete choices, relationships, and burdens. "
             "As the decade unfolds, may this mystery teach us to receive that grace and offer it for the needs entrusted to our prayer."
         )
@@ -925,6 +949,20 @@ def _require_dominant_anchor(text: str, context: RosaryDayContext) -> None:
         raise RuntimeError(
             f"Rosary devotional prose must anchor the dominant priority '{context.dominant_priority.key}'."
         )
+
+
+def _require_saint_witness(text: str, context: RosaryDayContext) -> None:
+    witness = _normalize_for_match(context.saint_witness)
+    if not witness:
+        return
+    normalized = _normalize_for_match(text)
+    if witness not in normalized:
+        raise RuntimeError(f"Rosary devotional prose must pray with Saint {context.saint_witness}.")
+    if normalized.count(witness) < 2:
+        raise RuntimeError("Rosary devotional prose must return to the saint witness beyond a single mention.")
+    quote = str(context.saint_witness_quote or "").strip()
+    if quote and quote not in text:
+        raise RuntimeError("Rosary devotional prose is missing the approved saint quotation.")
 
 
 def _reject_foreign_scripture_citations(text: str, context: RosaryDayContext) -> None:

@@ -1,5 +1,14 @@
 # Release Log
 
+## [0.4.1.0] - 2026-08-17
+
+### Added
+- Added an approved saint-witness quotation record and carried the saint name, date, rank, quotation, and attribution through daily contract sidecars.
+
+### Changed
+- Updated Morning Prayer, Auxilium Christianorum, Marian antiphon, Rosary, and Daily Reflection prompts to pray with the saint witness instead of abstracting the day into a general virtue.
+- Added validation and deterministic fallbacks that require the saint witness and approved quotation whenever one is supplied.
+
 ## [0.4.0.0] - 2026-08-16
 
 ### Added

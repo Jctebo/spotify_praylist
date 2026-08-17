@@ -30,7 +30,7 @@
     },
     "metadata": {
       "title_template": "Daily Rosary - {rosary_mystery_set_title} - {rosary_focus_title} - {date_display}",
-      "description_template": "Daily Rosary for {date_display}. The {rosary_mystery_set_title} include short reflections focused on {rosary_focus_title}.",
+      "description_template": "Daily Rosary for {date_display}, prayed with the selected saint witness and approved saying. The {rosary_mystery_set_title} include short reflections focused on {rosary_focus_title}.",
       "episode_id_template": "daily-rosary-{date_iso}",
       "website": {
         "enabled": true,

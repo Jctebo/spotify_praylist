@@ -8,7 +8,7 @@
     "season": "ordinary",
     "metadata": {
       "title_template": "Marian Antiphon - Angelus - {date_display}",
-      "description_template": "Angelus for {date_display} during {season_label}. The daily intro announces the day, then the prayer begins with the sign of the cross.",
+      "description_template": "Angelus for {date_display} during {season_label}, introduced through prayer with the selected saint witness and approved saying before the sign of the cross.",
       "episode_id_template": "marian-antiphon-angelus-{date_iso}",
       "website": {
         "enabled": true,

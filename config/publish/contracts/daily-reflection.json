@@ -30,7 +30,7 @@
     },
     "metadata": {
       "title_template": "Daily Reflection - {daily_reflection_primary_theme_title} - {date_display}",
-      "description_template": "Daily Ignatian reflection for {date_display}, focused on {daily_reflection_primary_theme}.",
+      "description_template": "Daily Ignatian reflection for {date_display}, praying with {daily_reflection_saint} and the saint's approved saying rather than treating the day as an abstract theme.",
       "episode_id_template": "daily-reflection-{date_iso}",
       "website": {
         "enabled": true,

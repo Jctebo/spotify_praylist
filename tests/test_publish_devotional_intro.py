@@ -127,6 +127,29 @@ class TestPublishDevotionalIntro(unittest.TestCase):
                 self.morning_context,
             )
 
+    def test_daily_intro_requires_the_saint_witness_and_approved_quote(self):
+        context = {
+            **self.morning_context,
+            "saint_witness": "Saint John Eudes, Priest",
+            "saint_witness_quote": "Give yourselves to Jesus in order to enter the immensity of his great Heart.",
+            "saint_witness_quote_source": "The Admirable Heart of Jesus, III, 2",
+        }
+        prompt = build_devotional_intro_prompt(MORNING_PRAYER_PROFILE, context)
+        self.assertIn("saint witness is a required participant", prompt)
+        with self.assertRaisesRegex(RuntimeError, "approved saint witness quotation"):
+            validate_devotional_intro(
+                "Morning Prayer gathers us around Trust as Saint John Eudes, Priest accompanies the Church. "
+                "In today's Gospel, Christ teaches us to remain in him, and we offer the day to God.",
+                MORNING_PRAYER_PROFILE,
+                context,
+            )
+        valid = (
+            "Morning Prayer gathers us around Trust as Saint John Eudes, Priest accompanies the Church. "
+            "Saint John Eudes, Priest teaches us, \"Give yourselves to Jesus in order to enter the immensity of his great Heart.\" "
+            "In today's Gospel, Christ teaches us to remain in him, and we offer the day to God."
+        )
+        self.assertEqual(validate_devotional_intro(valid, MORNING_PRAYER_PROFILE, context), valid)
+
     def test_generation_retries_semantic_failure_then_returns_valid_result(self):
         calls = []
 

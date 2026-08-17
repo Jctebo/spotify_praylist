@@ -73,9 +73,13 @@ def _title_case_theme(value: str) -> str:
 
 
 def _saint_for_context(context: DailyLiturgicalContext) -> str:
-    saint = str(context.saintOfDay or SAINT_FALLBACK).strip()
+    saint = str(getattr(context, "saintWitness", "") or context.saintOfDay or SAINT_FALLBACK).strip()
     saint = re.sub(r"^Saints?\s+", "", saint, flags=re.IGNORECASE).strip()
     return saint or "Ignatius of Loyola"
+
+
+def _saint_quote_for_context(context: DailyLiturgicalContext) -> str:
+    return str(getattr(context, "saintWitnessQuote", "") or "").strip()
 
 
 def _build_prompt(date_value, context: DailyLiturgicalContext, title: str) -> str:
@@ -93,6 +97,7 @@ Rules:
 - Paragraph 1 should introduce the day's liturgical context naturally.
 - When sharedGospelBridge or gospelCitation is present, explicitly ground Paragraph 1 in that Gospel context.
 - Paragraph 2 should draw the day into ordinary life through the shared daily focus, saint, imagery, and emotional tone.
+- Paragraph 2 must name the saint witness and include the supplied quotation exactly, explicitly attributing it to the saint before praying with the saint's intercession.
 - Paragraph 3 should guide a brief examen with gratitude, reviewing the day, consolation/desolation, speaking with Jesus, and hope for tomorrow.
 - Paragraph 4 should include the closing prayer and end exactly with these two final lines:
 Saint {_saint_for_context(context)}, pray for us.
@@ -137,6 +142,7 @@ def _call_openai_reflection(model: str, prompt: str) -> str:
 
 def deterministic_ignatian_reflection(date_value, context: DailyLiturgicalContext, title: str) -> str:
     saint = _saint_for_context(context)
+    quote = _saint_quote_for_context(context)
     focus = context.sharedThemeReflectionFocus or context.reflectionFocus
     theme = context.sharedThemeTitle or context.primaryTheme
     tone = context.emotionalTone
@@ -150,10 +156,11 @@ def deterministic_ignatian_reflection(date_value, context: DailyLiturgicalContex
         gospel_sentence = f"The Gospel theme before us is {context.gospelTheme}."
     else:
         gospel_sentence = "The Church invites us to receive this day through the steady light of the liturgical season."
+    quote_sentence = f'Saint {saint} teaches us, "{quote}"' if quote else f"With Saint {saint}, we ask the Lord to make this prayer concrete in our lives."
     reflection = f"""
 {WELCOME} Today {summary.lower()} {feast_sentence} {gospel_sentence} We enter this prayer in a {tone} spirit and ask for the grace to notice God in ordinary life. What is the Lord already revealing in this day?
 
-This day speaks the language of {theme}. It may have shown itself in a welcome, a delay, a small mercy, or a resistance you did not expect. {focus} Where did {theme} quietly touch your ordinary life today?
+This day speaks through the saint's witness. {quote_sentence} It may have shown itself in a welcome, a delay, a small mercy, or a resistance you did not expect. {focus} Where did the saint's witness quietly touch your ordinary life today?
 
 In the examen, let gratitude come first, then the review, then the places of consolation and desolation. Bring the day honestly before Jesus, and ask what faithful step he is asking of you tonight. Where is hope opening for tomorrow, and what does the Spirit want you to notice before tomorrow arrives?
 
@@ -192,9 +199,15 @@ def _validate_episode(
     if not cleaned.rstrip().endswith(FINAL_PEACE):
         raise RuntimeError("Daily Reflection final peace line is missing.")
     saint = _saint_for_context(context)
+    quote = _saint_quote_for_context(context)
     saint_line = f"Saint {saint}, pray for us."
     if saint_line not in cleaned:
         raise RuntimeError("Daily Reflection saint closing is missing.")
+    saint_mentions = len(re.findall(rf"\b{re.escape(saint)}\b", cleaned, flags=re.IGNORECASE))
+    if saint_mentions < 2:
+        raise RuntimeError("Daily Reflection must materially mention the saint beyond the closing invocation.")
+    if quote and quote not in cleaned:
+        raise RuntimeError("Daily Reflection approved saint quotation is missing.")
     for phrase in ("gratitude", "consolation", "desolation", "Jesus", "hope"):
         if phrase.lower() not in cleaned.lower():
             raise RuntimeError(f"Daily Reflection examen is missing '{phrase}'.")

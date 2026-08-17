@@ -61,6 +61,12 @@ def daily_liturgical_context_to_payload(context: Any) -> Dict[str, Any]:
         "sharedThemeVersion",
         "saint_centered_theme_brief",
         "timezone",
+        "saintWitness",
+        "saintWitnessDate",
+        "saintWitnessRank",
+        "saintWitnessQuote",
+        "saintWitnessQuoteSource",
+        "saintWitnessQuoteSourceUrl",
     )
     return {key: getattr(context, key) for key in keys if hasattr(context, key)}
 
@@ -90,6 +96,12 @@ def daily_theme_runtime_fields(payload: Dict[str, Any]) -> Dict[str, Any]:
         "daily_theme_version": str(payload.get("sharedThemeVersion") or "saint-centered-theme-v1"),
         "saint_centered_theme_brief": payload.get("saint_centered_theme_brief") or {},
         "theme_timezone": str(payload.get("timezone") or "America/Chicago"),
+        "saint_witness": str(payload.get("saintWitness") or "").strip(),
+        "saint_witness_date": str(payload.get("saintWitnessDate") or "").strip(),
+        "saint_witness_rank": str(payload.get("saintWitnessRank") or "").strip(),
+        "saint_witness_quote": str(payload.get("saintWitnessQuote") or "").strip(),
+        "saint_witness_quote_source": str(payload.get("saintWitnessQuoteSource") or "").strip(),
+        "saint_witness_quote_source_url": str(payload.get("saintWitnessQuoteSourceUrl") or "").strip(),
     }
 
 
@@ -142,7 +154,7 @@ def build_canonical_daily_theme_runtime_context(
         "liturgicalWeek": "",
         "feastDay": anchor,
         "liturgicalRank": str(payload.get("primary_rank") or "weekday"),
-        "saintOfDay": anchor if anchor.lower().startswith("saint") else "",
+        "saintOfDay": str(payload.get("saint_witness") or ""),
         "gospelTheme": "",
         "primaryTheme": themes[0],
         "secondaryThemes": themes[1:],
@@ -152,7 +164,7 @@ def build_canonical_daily_theme_runtime_context(
         "suggestedMusicMood": "reverent and spacious",
         "openingTone": "reverent and attentive",
         "closingTone": "peaceful trust",
-        "saintIntercessions": [anchor] if anchor.lower().startswith("saint") else [],
+        "saintIntercessions": [str(payload.get("saint_witness") or "")] if payload.get("saint_witness") else [],
         "shortSummary": str(payload.get("summary") or f"Today's anchor is {anchor}."),
         "source": "saint-centered-calendar-window",
         "fallbackReason": str(payload.get("fallback_reason") or ""),
@@ -169,6 +181,12 @@ def build_canonical_daily_theme_runtime_context(
         "sharedThemeVersion": str(payload.get("version") or "saint-centered-theme-v1"),
         "saint_centered_theme_brief": payload,
         "timezone": timezone or "America/Chicago",
+        "saintWitness": str(payload.get("saint_witness") or ""),
+        "saintWitnessDate": str(payload.get("saint_witness_date") or ""),
+        "saintWitnessRank": str(payload.get("saint_witness_rank") or ""),
+        "saintWitnessQuote": str(payload.get("saint_witness_quote") or ""),
+        "saintWitnessQuoteSource": str(payload.get("saint_witness_quote_source") or ""),
+        "saintWitnessQuoteSourceUrl": str(payload.get("saint_witness_quote_source_url") or ""),
     }
     return daily_theme_runtime_fields(runtime)
 

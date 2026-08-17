@@ -303,7 +303,7 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(contracts_by_id["morning-prayer-elevenlabs"].metadata["title_template"], "Morning Prayer - {date:%B %-d, %Y}")
         self.assertEqual(
             contracts_by_id["morning-prayer-elevenlabs"].metadata["description_template"],
-            "Morning Prayer for {date:%B %-d, %Y}. The daily opening block follows the liturgical day and the day's Gospel.",
+            "Morning Prayer for {date:%B %-d, %Y}. The daily opening prays with the selected saint witness and an approved saying, alongside the liturgical day.",
         )
         self.assertEqual(
             contracts_by_id["morning-prayer-elevenlabs"].entries[0]["audio_config"]["providers"][0]["provider"],
