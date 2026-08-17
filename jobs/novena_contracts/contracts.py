@@ -514,7 +514,7 @@ def _build_context_for_patterns(runtime: NovenaRuntime) -> Dict[str, Any]:
             ),
             "novena_theme_reflection_focus": f"Pray this novena day through {theme_title[:1].lower() + theme_title[1:] if theme_title else 'trust'}.",
             "novena_theme_sources": [{"kind": "novena", "label": runtime.saint.get("name", runtime.contract_id), "theme": theme}],
-            "novena_theme_version": "daily-theme-v1",
+            "novena_theme_version": "saint-centered-theme-v1",
         }
     )
     return context

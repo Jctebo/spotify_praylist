@@ -322,7 +322,7 @@ def _sidecar_has_current_daily_theme(
     daily_liturgical_context = payload.get("daily_liturgical_context")
     if not isinstance(daily_liturgical_context, dict):
         return False
-    if str(daily_liturgical_context.get("sharedThemeVersion", "")).strip() != "daily-theme-v1":
+    if str(daily_liturgical_context.get("sharedThemeVersion", "")).strip() != "saint-centered-theme-v1":
         return False
     if not str(daily_liturgical_context.get("sharedThemeTitle", "")).strip():
         return False
@@ -351,7 +351,7 @@ def _sidecar_has_current_daily_theme(
         return False
     if str(context_intro.get("policy_version", "")).strip() != DEVOTIONAL_INTRO_POLICY_VERSION:
         return False
-    if str(context.get("daily_theme_version", "")).strip() != "daily-theme-v1":
+    if str(context.get("daily_theme_version", "")).strip() != "saint-centered-theme-v1":
         return False
     if not all(
         str(context.get(context_key, "")).strip() == str(daily_liturgical_context.get(payload_key, "")).strip()

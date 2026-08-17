@@ -36,7 +36,7 @@ class TestNovenaPipeline(unittest.TestCase):
                         {"kind": "gospel", "label": "Matthew 5:43-48", "theme": "humility"},
                         {"kind": "season", "label": "Ordinary Time", "theme": "trust"},
                     ],
-                    "sharedThemeVersion": "daily-theme-v1",
+                    "sharedThemeVersion": "saint-centered-theme-v1",
                 },
                 "daily_theme_title": "Humility And Trust",
                 "daily_theme_slug": "humility-and-trust",
@@ -49,7 +49,7 @@ class TestNovenaPipeline(unittest.TestCase):
                     {"kind": "gospel", "label": "Matthew 5:43-48", "theme": "humility"},
                     {"kind": "season", "label": "Ordinary Time", "theme": "trust"},
                 ],
-                "daily_theme_version": "daily-theme-v1",
+                    "daily_theme_version": "saint-centered-theme-v1",
             }
 
     def setUp(self):
@@ -98,7 +98,7 @@ class TestNovenaPipeline(unittest.TestCase):
                 "fallback_reason": "",
             },
             "context": {
-                "daily_theme_version": "daily-theme-v1",
+                "daily_theme_version": "saint-centered-theme-v1",
                 "daily_theme_explanation": expected["daily_theme_explanation"],
                 "daily_theme_transition": expected["daily_theme_transition"],
                 "daily_theme_reflection_focus": expected["daily_theme_reflection_focus"],
@@ -369,11 +369,11 @@ class TestNovenaPipeline(unittest.TestCase):
             payload["daily_liturgical_context"] = {
                 "date": "2026-06-03",
                 "sharedThemeTitle": "Humility And Trust",
-                "sharedThemeVersion": "daily-theme-v1",
+                "sharedThemeVersion": "saint-centered-theme-v1",
             }
             payload["context"] = {
                 "daily_theme_title": "The Most Sacred Heart of Jesus",
-                "daily_theme_version": "daily-theme-v1",
+                "daily_theme_version": "saint-centered-theme-v1",
             }
             sidecar_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
 

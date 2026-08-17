@@ -117,7 +117,7 @@ class TestNovenaEngine(unittest.TestCase):
             "daily_liturgical_context": {
                 "date": "2026-06-16",
                 "sharedThemeTitle": "Humility And Trust",
-                "sharedThemeVersion": "daily-theme-v1",
+                "sharedThemeVersion": "saint-centered-theme-v1",
                 "sharedGospelBridge": "today's Gospel, Matthew 5:43-48, draws us into humility",
                 "gospelCitation": "Matthew 5:43-48",
                 "fallbackReason": "",
@@ -130,7 +130,7 @@ class TestNovenaEngine(unittest.TestCase):
             "daily_theme_reflection_focus": "Today's focus is humility and trust.",
             "daily_gospel_bridge": "today's Gospel, Matthew 5:43-48, draws us into humility",
             "daily_theme_sources": [{"kind": "gospel", "label": "Matthew 5:43-48", "theme": "humility"}],
-            "daily_theme_version": "daily-theme-v1",
+                "daily_theme_version": "saint-centered-theme-v1",
         }
 
         rendered = engine_mod.render_novena(runtime, daily_theme_context=daily_theme_context)
