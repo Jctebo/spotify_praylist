@@ -30,7 +30,7 @@
     },
     "metadata": {
       "title_template": "Morning Prayer - {date:%B %-d, %Y}",
-      "description_template": "Morning Prayer for {date:%B %-d, %Y}. The daily opening block follows the liturgical day and the day's Gospel.",
+      "description_template": "Morning Prayer for {date:%B %-d, %Y}. The daily opening prays with the selected saint witness and an approved saying, alongside the liturgical day.",
       "episode_id_template": "{entry_id}-{date_iso}",
       "website": {
         "enabled": true,

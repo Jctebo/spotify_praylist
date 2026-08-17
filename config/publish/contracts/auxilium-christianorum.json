@@ -7,7 +7,7 @@
     "version": "1",
     "metadata": {
       "title_template": "Auxilium Christianorum - {date_display}",
-      "description_template": "Auxilium Christianorum lay-member daily prayers for {date_display}. The episode announces the liturgical day, then follows the daily prayer sequence from the official lay-member prayer PDF.",
+      "description_template": "Auxilium Christianorum lay-member daily prayers for {date_display}, praying with the selected saint witness and approved saying before the official lay-member prayer sequence.",
       "episode_id_template": "auxilium-christianorum-{date_iso}",
       "source": "Auxilium Christianorum lay-member daily prayer PDF, copyright 2012 Auxilium Christianorum.",
       "website": {

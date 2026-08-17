@@ -354,6 +354,10 @@ def build_daily_intro_result(
         "daily_gospel_bridge": gospel_bridge,
         "daily_gospel_citation": context.gospel_citation,
         "daily_gospel_text": context.gospel_text,
+        "saint_witness": _shared_theme_value(shared_theme, "saintWitness") or _shared_theme_value(shared_theme, "saint_witness"),
+        "saint_witness_date": _shared_theme_value(shared_theme, "saintWitnessDate") or _shared_theme_value(shared_theme, "saint_witness_date"),
+        "saint_witness_quote": _shared_theme_value(shared_theme, "saintWitnessQuote") or _shared_theme_value(shared_theme, "saint_witness_quote"),
+        "saint_witness_quote_source": _shared_theme_value(shared_theme, "saintWitnessQuoteSource") or _shared_theme_value(shared_theme, "saint_witness_quote_source"),
     }
     return build_devotional_intro(
         MORNING_PRAYER_PROFILE,

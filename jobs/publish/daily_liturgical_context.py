@@ -43,6 +43,12 @@ class DailyLiturgicalContext:
     sharedGospelBridge: str = ""
     sharedThemeSources: tuple[Dict[str, str], ...] = ()
     sharedThemeVersion: str = "saint-centered-theme-v1"
+    saintWitness: str = ""
+    saintWitnessDate: str = ""
+    saintWitnessRank: str = ""
+    saintWitnessQuote: str = ""
+    saintWitnessQuoteSource: str = ""
+    saintWitnessQuoteSourceUrl: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         payload = asdict(self)
@@ -79,7 +85,7 @@ def _context_from_brief(brief: Any) -> DailyLiturgicalContext:
     anchor = str(payload.get("primary_anchor") or "Ordinary Time prayer")
     season = str(payload.get("season") or "Ordinary Time")
     title = " and ".join(str(item).capitalize() for item in themes[:2]) or "Trustful Perseverance"
-    saint = anchor if anchor.lower().startswith("saint") else ""
+    saint = str(payload.get("saint_witness") or "").strip()
     rationale = str(payload.get("rationale") or brief.summary)
     return DailyLiturgicalContext(
         date=str(payload.get("target_date") or ""),
@@ -110,4 +116,10 @@ def _context_from_brief(brief: Any) -> DailyLiturgicalContext:
         sharedThemeReflectionFocus=rationale,
         sharedThemeSources=tuple(payload.get("window_items") or ()),
         sharedThemeVersion=str(payload.get("version") or "saint-centered-theme-v1"),
+        saintWitness=str(payload.get("saint_witness") or ""),
+        saintWitnessDate=str(payload.get("saint_witness_date") or ""),
+        saintWitnessRank=str(payload.get("saint_witness_rank") or ""),
+        saintWitnessQuote=str(payload.get("saint_witness_quote") or ""),
+        saintWitnessQuoteSource=str(payload.get("saint_witness_quote_source") or ""),
+        saintWitnessQuoteSourceUrl=str(payload.get("saint_witness_quote_source_url") or ""),
     )

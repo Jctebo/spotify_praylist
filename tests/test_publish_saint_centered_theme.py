@@ -84,6 +84,27 @@ class TestSaintCenteredTheme(unittest.TestCase):
         self.assertEqual(brief.primary_anchor, "Second Sunday of Easter")
         self.assertEqual(brief.primary_anchor_date, "2026-04-12")
 
+    def test_selects_nearby_saint_witness_with_approved_quote(self):
+        target = datetime.date(2026, 8, 17)
+
+        def fetch(calendar, locale, date_value):
+            if date_value == target + datetime.timedelta(days=2):
+                return [{"name": "Saint John Eudes, Priest", "rank_name": "memorial", "season": "ordinary_time"}]
+            if date_value == target:
+                return [{"name": "Monday of the twentieth week of Ordinary Time", "rank_name": "weekday", "season": "ordinary_time"}]
+            return []
+
+        brief = build_saint_centered_theme_brief(
+            target,
+            day_fetcher=fetch,
+            gospel_fetcher=lambda *args, **kwargs: None,
+        )
+
+        self.assertEqual(brief.primary_anchor, "Monday of the twentieth week of Ordinary Time")
+        self.assertEqual(brief.saint_witness, "Saint John Eudes, Priest")
+        self.assertIn("Give yourselves to Jesus", brief.saint_witness_quote)
+        self.assertEqual(brief.saint_witness_quote_source, "The Admirable Heart of Jesus, III, 2")
+
 
 if __name__ == "__main__":
     unittest.main()
