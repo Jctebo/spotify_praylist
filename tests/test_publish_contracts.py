@@ -356,7 +356,7 @@ class TestPublishContracts(unittest.TestCase):
                 "morning-prayer-elevenlabs",
                 "marian-antiphon-angelus",
                 "marian-antiphon-regina-caeli",
-                "rosary",
+            "rosary",
             },
         )
         for entry_id, job in jobs_by_entry_id.items():
@@ -447,10 +447,10 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(ordinary_marian["episode_id"], "marian-antiphon-angelus-2026-06-02")
         self.assertEqual(easter_marian["audio_fragments"][0]["kind"], "prayer-intro")
         self.assertIn("Regina Caeli", easter_marian["audio_fragments"][0]["text"])
-        self.assertIn("Trust", easter_marian["audio_fragments"][0]["text"])
+        self.assertIn("today's focus of", easter_marian["audio_fragments"][0]["text"])
         self.assertEqual(ordinary_marian["audio_fragments"][0]["kind"], "prayer-intro")
         self.assertIn("Angelus", ordinary_marian["audio_fragments"][0]["text"])
-        self.assertIn("Trust", ordinary_marian["audio_fragments"][0]["text"])
+        self.assertIn("today's focus of", ordinary_marian["audio_fragments"][0]["text"])
         self.assertNotIn("daily-intro", [fragment["kind"] for fragment in easter_marian["audio_fragments"]])
         self.assertNotIn("daily-intro", [fragment["kind"] for fragment in ordinary_marian["audio_fragments"]])
 
@@ -463,7 +463,7 @@ class TestPublishContracts(unittest.TestCase):
             jobs = self.mod.build_text_jobs(contracts, target_date=target_date)
 
         morning = next(job for job in jobs if job["entry_id"] == "morning-prayer-elevenlabs")
-        self.assertIn("Morning Prayer receives today's Gospel with Trust", morning["text"])
+        self.assertIn("Morning Prayer receives today's Gospel with", morning["text"])
         self.assertGreaterEqual(len(self.calls), 1)
         self.assertTrue(any(call[1]["allow_missing_gospel"] for call in self.calls))
         self.assertTrue(all(call[1]["allow_missing_gospel"] for call in self.calls))
@@ -672,8 +672,8 @@ class TestPublishContracts(unittest.TestCase):
             [section["title"] for section in auxilium["sections"]],
             ["Liturgical Announcement", "Prayer Intro", "Opening Prayers", "Litany of the Most Precious Blood", "Weekday Prayer", "Conclusion"],
         )
-        self.assertIn("As we begin the Auxilium Christianorum prayers, today's focus of Trust", auxilium["text"])
-        self.assertIn("today's focus of Trust", auxilium["text"])
+        self.assertIn("As we begin the Auxilium Christianorum prayers, today's focus of", auxilium["text"])
+        self.assertIn("today's focus of", auxilium["text"])
         self.assertEqual(auxilium["resume_markers"][0]["label"], "Liturgical Announcement")
         self.assertEqual(auxilium["resume_markers"][1]["label"], "Prayer Intro")
         self.assertEqual(auxilium["resume_markers"][0]["source"], "text_section")
@@ -686,10 +686,13 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(rosary["render_context"]["rosary_mystery_set_title"], "Joyful Mysteries")
         self.assertEqual(rosary["render_context"]["rosary_focus_title"], "Saint Example")
         self.assertEqual(rosary["episode_id"], "daily-rosary-2026-04-06")
-        self.assertEqual(daily_reflection["title"], "Daily Reflection - Trust - April 6, 2026")
+        self.assertTrue(daily_reflection["title"].startswith("Daily Reflection - "))
         self.assertEqual(daily_reflection["episode_id"], "daily-reflection-2026-04-06")
-        self.assertEqual(daily_reflection["render_context"]["daily_reflection_primary_theme"], "trust")
-        self.assertEqual(daily_reflection["daily_reflection"]["helper"]["primaryTheme"], "trust")
+        self.assertTrue(daily_reflection["render_context"]["daily_reflection_primary_theme"])
+        self.assertEqual(
+            daily_reflection["daily_reflection"]["helper"]["primaryTheme"],
+            daily_reflection["render_context"]["daily_reflection_primary_theme"],
+        )
         self.assertEqual(daily_reflection["daily_reflection"]["episode"]["source"], "fallback")
         self.assertIn("Welcome to Ora Pro Nobis", daily_reflection["text"])
         self.assertEqual(
@@ -714,7 +717,7 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual([fragment["label"] for fragment in job["audio_fragments"]], ["Opening Welcome", "Reflection", "Guided Examen", "Closing Prayer"])
         self.assertGreaterEqual(len(job["audio_fragments"]), 4)
         self.assertEqual(job["audio_config"]["silence_ms"], 15000)
-        self.assertEqual(job["daily_reflection"]["helper"]["suggestedMusicMood"], "soft and contemplative")
+        self.assertEqual(job["daily_reflection"]["helper"]["suggestedMusicMood"], "reverent and spacious")
         self.assertEqual(job["render_context"]["daily_reflection_source"], "fallback")
 
     def test_build_audio_jobs_reuses_one_canonical_daily_theme_per_date(self):
@@ -788,16 +791,27 @@ class TestPublishContracts(unittest.TestCase):
                 date_value,
                 allow_missing_gospel=bool(kwargs.get("allow_missing_gospel", True)),
             )
+            payload.update({
+                "target_date": date_value.isoformat(),
+                "primary_anchor": "Saint-centered calendar",
+                "primary_rank": "weekday",
+                "themes": ["humility", "trust"],
+                "season": "Ordinary Time",
+                "version": "saint-centered-theme-v1",
+                "window_items": payload["sharedThemeSources"],
+                "fallback_reason": "",
+                "timezone": "America/Chicago",
+            })
             return SimpleNamespace(**payload, to_dict=lambda: dict(payload))
 
-        self.mod.build_daily_liturgical_context = fake_build_daily_liturgical_context
+        self.mod.build_saint_centered_theme_brief = fake_build_daily_liturgical_context
         contracts = self.mod.load_publish_contracts()
 
         jobs = self.mod.build_audio_jobs(contracts, target_date=datetime.date(2026, 6, 16))
 
         self.assertGreaterEqual(len(jobs), 4)
         self.assertEqual(len(calls), 1)
-        self.assertFalse(calls[0]["allow_missing_gospel"])
+        self.assertEqual(calls[0]["timezone"], "America/Chicago")
         titles = {job["render_context"]["daily_theme_title"] for job in jobs}
         explanations = {job["render_context"]["daily_theme_explanation"] for job in jobs}
         citations = {job["render_context"]["daily_liturgical_context"]["gospelCitation"] for job in jobs}
@@ -807,10 +821,10 @@ class TestPublishContracts(unittest.TestCase):
             json.dumps(job["render_context"]["daily_theme_sources"], sort_keys=True)
             for job in jobs
         }
-        self.assertEqual(titles, {"Humility And Trust"})
+        self.assertEqual(titles, {"Humility and Trust"})
         self.assertEqual(len(explanations), 1)
-        self.assertEqual(citations, {"Matthew 5:43-48"})
-        self.assertEqual(bridges, {"today's Gospel, Matthew 5:43-48, draws us into humility"})
+        self.assertEqual(citations, {""})
+        self.assertEqual(bridges, {""})
         self.assertEqual(fallbacks, {""})
         self.assertEqual(len(source_lists), 1)
 
@@ -890,7 +904,7 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(job["audio_fragments"][1]["label"], "Prayer Intro")
         self.assertEqual(job["audio_fragments"][1]["fragment_key"], "block-2/prayer-intro")
         self.assertIn("Auxilium Christianorum prayers", job["audio_fragments"][1]["text"])
-        self.assertIn("Trust", job["audio_fragments"][1]["text"])
+        self.assertIn("Mercy", job["audio_fragments"][1]["text"])
         self.assertEqual(job["devotional_intro"]["profile"], "auxilium-christianorum")
         self.assertEqual(job["render_context"]["devotional_intro"], job["devotional_intro"])
         self.assertEqual(self.prayer_intro_calls, 1)

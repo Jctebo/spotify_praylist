@@ -1,5 +1,14 @@
 # Release Log
 
+## [0.4.0.0] - 2026-08-16
+
+### Added
+- Added one deterministic saint-centered D-3..D+9 liturgical theme brief shared by the existing daily prayer and reflection jobs.
+
+### Changed
+- Replaced Gospel-first/shared daily theme selection with target-day-first calendar precedence, timezone-aware caching, and a deterministic fallback while preserving the existing podcast count.
+- Updated publish and novena sidecars/tests to record and validate the saint-centered theme version.
+
 ## [0.3.13.0] - 2026-08-12
 
 ### Fixed

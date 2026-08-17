@@ -4,7 +4,7 @@ import datetime as _dt
 import re
 from typing import Any, Callable, Dict, Tuple
 
-from jobs.publish.daily_liturgical_context import build_daily_liturgical_context
+from jobs.publish.saint_centered_theme import build_saint_centered_theme_brief
 
 
 def _normalize_key(value: Any) -> str:
@@ -59,6 +59,8 @@ def daily_liturgical_context_to_payload(context: Any) -> Dict[str, Any]:
         "sharedGospelBridge",
         "sharedThemeSources",
         "sharedThemeVersion",
+        "saint_centered_theme_brief",
+        "timezone",
     )
     return {key: getattr(context, key) for key in keys if hasattr(context, key)}
 
@@ -85,14 +87,17 @@ def daily_theme_runtime_fields(payload: Dict[str, Any]) -> Dict[str, Any]:
         "daily_gospel_citation": str(payload.get("gospelCitation") or "").strip(),
         "daily_gospel_theme": str(payload.get("gospelTheme") or "").strip(),
         "daily_theme_sources": sources,
-        "daily_theme_version": str(payload.get("sharedThemeVersion") or "daily-theme-v1"),
+        "daily_theme_version": str(payload.get("sharedThemeVersion") or "saint-centered-theme-v1"),
+        "saint_centered_theme_brief": payload.get("saint_centered_theme_brief") or {},
+        "theme_timezone": str(payload.get("timezone") or "America/Chicago"),
     }
 
 
-def daily_theme_cache_key(target_date: _dt.date, config: Dict[str, Any]) -> Tuple[str, str, str]:
+def daily_theme_cache_key(target_date: _dt.date, config: Dict[str, Any]) -> Tuple[str, str, str, str]:
     calendar = str(config.get("calendar") or "general_roman").strip() or "general_roman"
     locale = str(config.get("locale") or "en").strip() or "en"
-    return (target_date.isoformat(), calendar, locale)
+    timezone = str(config.get("timezone") or "America/Chicago").strip() or "America/Chicago"
+    return (target_date.isoformat(), calendar, locale, timezone)
 
 
 def copy_daily_theme_runtime_fields(fields: Dict[str, Any]) -> Dict[str, Any]:
@@ -117,38 +122,71 @@ def build_canonical_daily_theme_runtime_context(
     *,
     calendar: str,
     locale: str,
-    context_builder: Callable[..., Any] = build_daily_liturgical_context,
+    timezone: str = "America/Chicago",
+    context_builder: Callable[..., Any] = build_saint_centered_theme_brief,
 ) -> Dict[str, Any]:
-    try:
-        context = context_builder(
-            target_date,
-            calendar=calendar or None,
-            locale=locale or None,
-            allow_missing_gospel=False,
-        )
-    except Exception:
-        context = context_builder(
-            target_date,
-            calendar=calendar or None,
-            locale=locale or None,
-            allow_missing_gospel=True,
-        )
-    return daily_theme_runtime_fields(daily_liturgical_context_to_payload(context))
+    brief = context_builder(
+        target_date,
+        calendar=calendar or None,
+        locale=locale or None,
+        timezone=timezone or "America/Chicago",
+    )
+    payload = brief.to_dict() if hasattr(brief, "to_dict") else dict(brief)
+    anchor = str(payload.get("primary_anchor") or "Ordinary Time prayer").strip()
+    themes = list(payload.get("themes") or ["trustful perseverance"])
+    season = str(payload.get("season") or "Ordinary Time").strip()
+    title = " and ".join(str(item).capitalize() for item in themes[:2])
+    runtime = {
+        "date": target_date.isoformat(),
+        "liturgicalSeason": season,
+        "liturgicalWeek": "",
+        "feastDay": anchor,
+        "liturgicalRank": str(payload.get("primary_rank") or "weekday"),
+        "saintOfDay": anchor if anchor.lower().startswith("saint") else "",
+        "gospelTheme": "",
+        "primaryTheme": themes[0],
+        "secondaryThemes": themes[1:],
+        "emotionalTone": "reverent and attentive",
+        "reflectionFocus": str(payload.get("rationale") or payload.get("summary") or "Pray the approved theme through the day."),
+        "suggestedImagery": [],
+        "suggestedMusicMood": "reverent and spacious",
+        "openingTone": "reverent and attentive",
+        "closingTone": "peaceful trust",
+        "saintIntercessions": [anchor] if anchor.lower().startswith("saint") else [],
+        "shortSummary": str(payload.get("summary") or f"Today's anchor is {anchor}."),
+        "source": "saint-centered-calendar-window",
+        "fallbackReason": str(payload.get("fallback_reason") or ""),
+        "gospelCitation": "",
+        "calendar": calendar or "general_roman",
+        "locale": locale or "en",
+        "sharedThemeTitle": title or "Trustful Perseverance",
+        "sharedThemeSlug": "-".join(themes[:2]).lower().replace(" ", "-"),
+        "sharedThemeExplanation": str(payload.get("rationale") or ""),
+        "sharedThemeTransition": f"Carrying today's approved focus of {title.lower() or 'trustful perseverance'}, we place this day before the Lord.",
+        "sharedThemeReflectionFocus": str(payload.get("rationale") or "Pray the approved theme through the day."),
+        "sharedGospelBridge": "",
+        "sharedThemeSources": list(payload.get("window_items") or []),
+        "sharedThemeVersion": str(payload.get("version") or "saint-centered-theme-v1"),
+        "saint_centered_theme_brief": payload,
+        "timezone": timezone or "America/Chicago",
+    }
+    return daily_theme_runtime_fields(runtime)
 
 
 class DailyThemeRuntimeCache:
-    def __init__(self, *, context_builder: Callable[..., Any] = build_daily_liturgical_context) -> None:
-        self._values: Dict[Tuple[str, str, str], Dict[str, Any]] = {}
+    def __init__(self, *, context_builder: Callable[..., Any] = build_saint_centered_theme_brief) -> None:
+        self._values: Dict[Tuple[str, str, str, str], Dict[str, Any]] = {}
         self._context_builder = context_builder
 
     def get(self, target_date: _dt.date, config: Dict[str, Any]) -> Dict[str, Any]:
         key = daily_theme_cache_key(target_date, config)
         if key not in self._values:
-            _date_iso, calendar, locale = key
+            _date_iso, calendar, locale, timezone = key
             self._values[key] = build_canonical_daily_theme_runtime_context(
                 target_date,
                 calendar=calendar,
                 locale=locale,
+                timezone=timezone,
                 context_builder=self._context_builder,
             )
         return copy_daily_theme_runtime_fields(self._values[key])

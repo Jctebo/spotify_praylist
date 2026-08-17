@@ -20,7 +20,7 @@ from .contracts import NovenaRuntime, TemplateFragment, TemplateSection
 OPENAI_API_KEY = "OPENAI_API_KEY"
 OAI_API_BASE_URL = "OAI_API_BASE_URL"
 OAI_MODEL = "OAI_MODEL"
-NOVENA_DAILY_THEME_VERSION = "daily-theme-v1"
+NOVENA_DAILY_THEME_VERSION = "saint-centered-theme-v1"
 
 
 def _normalize_whitespace(text: str) -> str:

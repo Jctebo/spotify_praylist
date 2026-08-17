@@ -16,6 +16,7 @@ from jobs.publish.devotional_intro import (
     get_devotional_intro_profile,
     normalize_intro_profile,
 )
+from jobs.publish.saint_centered_theme import build_saint_centered_theme_brief
 from jobs.publish.daily_liturgical_context import build_daily_liturgical_context
 from jobs.publish.daily_theme_runtime import (
     DailyThemeRuntimeCache as _PublishDailyThemeRuntimeCache,
@@ -1036,17 +1037,18 @@ def _daily_theme_config(contract: PublishContract, entry: Dict[str, Any]) -> Dic
     for key in ("daily_theme", "daily_reflection", "rosary_reflections", "daily_intro", "liturgical_announcement", "prayer_intro"):
         value = metadata.get(key)
         if isinstance(value, dict):
-            for option in ("calendar", "locale", "allow_missing_gospel"):
+            for option in ("calendar", "locale", "timezone", "allow_missing_gospel"):
                 if option in value and option not in config:
                     config[option] = value.get(option)
     for block in entry.get("blocks") or []:
         if not isinstance(block, dict):
             continue
-        for option in ("calendar", "locale", "allow_missing_gospel"):
+        for option in ("calendar", "locale", "timezone", "allow_missing_gospel"):
             if option in block and option not in config:
                 config[option] = block.get(option)
     config.setdefault("calendar", metadata.get("calendar") or "general_roman")
     config.setdefault("locale", metadata.get("locale") or "en")
+    config.setdefault("timezone", contract.timezone or "America/Chicago")
     config["allow_missing_gospel"] = _normalize_bool(config.get("allow_missing_gospel", True))
     return config
 
@@ -1057,13 +1059,9 @@ def _build_daily_theme_runtime_context(
     target_date: _dt.date,
 ) -> Dict[str, Any]:
     config = _daily_theme_config(contract, entry)
-    context = build_daily_liturgical_context(
-        target_date,
-        calendar=str(config.get("calendar") or "").strip() or None,
-        locale=str(config.get("locale") or "").strip() or None,
-        allow_missing_gospel=_normalize_bool(config.get("allow_missing_gospel", True)),
-    )
-    return _daily_theme_runtime_fields(_daily_liturgical_context_to_payload(context))
+    return _PublishDailyThemeRuntimeCache(
+        context_builder=build_saint_centered_theme_brief
+    ).get(target_date, config)
 
 
 def _find_first_block_by_kind(blocks: Sequence[Any], kind_name: str) -> Optional[Dict[str, Any]]:
@@ -1399,7 +1397,7 @@ def _get_or_build_ignatian_reflection_episode(
             sharedThemeTransition=str(helper_payload.get("sharedThemeTransition", "")),
             sharedThemeReflectionFocus=str(helper_payload.get("sharedThemeReflectionFocus", "")),
             sharedThemeSources=tuple(helper_payload.get("sharedThemeSources") or ()),
-            sharedThemeVersion=str(helper_payload.get("sharedThemeVersion", "daily-theme-v1")),
+            sharedThemeVersion=str(helper_payload.get("sharedThemeVersion", "saint-centered-theme-v1")),
         )
     else:
         helper = build_daily_liturgical_context(
@@ -2380,7 +2378,7 @@ def _render_entry_metadata(
 
 def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Optional[_dt.date] = None) -> List[Dict[str, Any]]:
     jobs: List[Dict[str, Any]] = []
-    daily_theme_cache = _PublishDailyThemeRuntimeCache(context_builder=build_daily_liturgical_context)
+    daily_theme_cache = _PublishDailyThemeRuntimeCache(context_builder=build_saint_centered_theme_brief)
     for contract in contracts:
         effective_date = target_date or _local_date_for_timezone(contract.timezone)
         if not _contract_matches_target_date(contract, effective_date):
@@ -2465,7 +2463,7 @@ def resolve_text_jobs(contracts: Sequence[PublishContract], *, target_date: Opti
 
 def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optional[_dt.date] = None) -> List[Dict[str, Any]]:
     jobs: List[Dict[str, Any]] = []
-    daily_theme_cache = _PublishDailyThemeRuntimeCache(context_builder=build_daily_liturgical_context)
+    daily_theme_cache = _PublishDailyThemeRuntimeCache(context_builder=build_saint_centered_theme_brief)
     for contract in contracts:
         effective_date = target_date or _local_date_for_timezone(contract.timezone)
         if not _contract_matches_target_date(contract, effective_date):

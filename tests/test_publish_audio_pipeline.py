@@ -225,7 +225,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertEqual(len(reflection_job["audio_fragments"]), 4)
         self.assertEqual([fragment["label"] for fragment in reflection_job["audio_fragments"]], ["Opening Welcome", "Reflection", "Guided Examen", "Closing Prayer"])
         self.assertEqual(reflection_job["audio_config"]["silence_ms"], 15000)
-        self.assertEqual(reflection_job["daily_reflection"]["helper"]["primaryTheme"], "trust")
+        self.assertTrue(reflection_job["daily_reflection"]["helper"]["primaryTheme"])
         self.assertEqual(auxilium_job["resume_markers"][0]["source"], "audio_fragment")
 
     def test_render_audio_job_skips_when_hash_matches(self):
