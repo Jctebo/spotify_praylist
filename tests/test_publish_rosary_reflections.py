@@ -156,6 +156,141 @@ class TestPublishRosaryReflections(unittest.TestCase):
         self.assertIn("Write the introduction in 2-4 sentences.", prompt)
         self.assertIn("Do not force a sentence count", prompt)
 
+    def test_prompt_allows_optional_quotes_and_event_observance_information(self):
+        context = self._context(
+            [{"name": "The Annunciation of the Lord", "rank_name": "solemnity", "season": "lent"}]
+        )
+        observance = self.mod.RosaryObservanceContext(
+            subject="The Annunciation of the Lord",
+            summary="The angel announces the Incarnation to Mary.",
+            relevant_details=["Mary receives God's will with faith."],
+        )
+
+        prompt = self.mod._build_devotional_prompt(self.date, context, observance)
+
+        self.assertIn("A quotation is optional.", prompt)
+        self.assertIn("whether it describes a person, event, Marian celebration, feast, or another liturgical subject", prompt)
+        self.assertIn("The angel announces the Incarnation to Mary.", prompt)
+        self.assertNotIn("named theme or taxonomy", prompt.split("Requirements:", 1)[0])
+
+    def test_observance_context_rejects_prompt_commentary_and_requires_quote_source(self):
+        context = self._context(
+            [{"name": "Saint John Eudes, Priest", "rank_name": "memorial", "season": "ordinary_time"}]
+        )
+        with mock.patch.object(
+            self.mod,
+            "_call_openai_observance_context",
+            return_value=json.dumps(
+                {
+                    "subject": "Saint John Eudes, Priest",
+                    "summary": "A concise account of his witness.",
+                    "relevant_details": ["He served the Church with pastoral zeal."],
+                    "quotation": "",
+                    "quotation_source": "",
+                }
+            ),
+        ):
+            result = self.mod._resolve_observance_context("test-model", self.date, context)
+
+        self.assertEqual(result.subject, "Saint John Eudes, Priest")
+        self.assertEqual(result.quotation, "")
+
+        with mock.patch.object(
+            self.mod,
+            "_call_openai_observance_context",
+            return_value=json.dumps(
+                {
+                    "subject": "The Annunciation",
+                    "summary": "Return JSON in relevant_details.",
+                    "relevant_details": [],
+                }
+            ),
+        ), self.assertRaisesRegex(RuntimeError, "prompt commentary"):
+            self.mod._resolve_observance_context("test-model", self.date, context)
+
+    def test_observance_context_discards_unapproved_quotation(self):
+        context = self._context(
+            [{"name": "Saint John Eudes, Priest", "rank_name": "memorial", "season": "ordinary_time"}],
+            shared={
+                "saintWitness": "Saint John Eudes, Priest",
+                "saintWitnessQuote": "Approved wording.",
+                "saintWitnessQuoteSource": "Approved source",
+            },
+        )
+        with mock.patch.object(
+            self.mod,
+            "_call_openai_observance_context",
+            return_value=json.dumps(
+                {
+                    "subject": "Saint John Eudes, Priest",
+                    "summary": "A concise account of his witness.",
+                    "relevant_details": [],
+                    "quotation": "Invented wording.",
+                    "quotation_source": "Invented source",
+                }
+            ),
+        ):
+            result = self.mod._resolve_observance_context("test-model", self.date, context)
+
+        self.assertEqual(result.quotation, "")
+        self.assertEqual(result.quotation_source, "")
+
+    def test_display_witness_name_does_not_duplicate_honorific(self):
+        self.assertEqual(
+            self.mod._display_witness_name("Saint John Eudes, Priest"),
+            "Saint John Eudes, Priest",
+        )
+        self.assertEqual(self.mod._display_witness_name("St. John Eudes"), "Saint John Eudes")
+
+    def test_deterministic_fallback_is_natural_for_saint_context(self):
+        context = self._context(
+            [{"name": "Saint John Eudes, Priest", "rank_name": "memorial", "season": "ordinary_time"}],
+            shared={"saintWitness": "Saint John Eudes, Priest"},
+        )
+        observance = self.mod.RosaryObservanceContext(
+            subject="Saint John Eudes, Priest",
+            summary="His preaching and pastoral service called people toward the Heart of Christ.",
+            relevant_details=["He served the Church through preaching and priestly formation."],
+        )
+
+        result = self.mod._deterministic_devotional_set(
+            self.date,
+            "Joyful Mysteries",
+            context.mysteries,
+            context,
+            observance_context=observance,
+            fallback_reason="test",
+        )
+
+        prose = " ".join(
+            [result.introduction, result.overall_intention]
+            + [part for decade in result.decades for part in (decade.intention, decade.reflection)]
+        )
+        self.assertNotIn("Saint Saint", prose)
+        self.assertIn("Saint John Eudes, Priest", prose)
+        self.assertTrue(all(text.rstrip().endswith((".", "?", "!")) for text in prose.split("  ") if text))
+        self.assertTrue(all(decade.reflection for decade in result.decades))
+
+    def test_event_fallback_does_not_require_a_saint_witness(self):
+        context = self._context(
+            [{"name": "The Annunciation of the Lord", "rank_name": "solemnity", "season": "lent"}]
+        )
+        result = self.mod._deterministic_devotional_set(
+            self.date,
+            "Joyful Mysteries",
+            context.mysteries,
+            context,
+            observance_context=self.mod.RosaryObservanceContext(
+                subject="The Annunciation of the Lord",
+                summary="The angel announces the Incarnation to Mary.",
+            ),
+            fallback_reason="test",
+        )
+
+        self.assertNotIn("Saint Saint", result.introduction)
+        self.assertIn("Annunciation", result.introduction)
+        self.assertEqual(len(result.decades), 5)
+
     def test_semantic_validation_allows_flexible_sentence_shapes(self):
         context = self._context(
             [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}]
