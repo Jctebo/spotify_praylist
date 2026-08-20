@@ -1,5 +1,15 @@
 # Release Log
 
+## [0.4.2.4] - 2026-08-20
+
+### Changed
+- Reworked Daily Rosary prompting around the deterministic local date, weekday mystery schedule, selected observance timing, and a coherent five-mystery meditation structure.
+- Added deterministic observance date/rank metadata to the shared Rosary context and preserved accurate “today” versus upcoming wording in fallback output.
+
+### Fixed
+- Prevented the prompt from looking backward or asking the model to choose a different observance.
+- Preserved natural priority-label validation while adding the new date-forward prompt contract.
+
 ## [0.4.2.3] - 2026-08-20
 
 ### Fixed
