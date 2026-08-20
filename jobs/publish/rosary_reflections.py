@@ -126,6 +126,14 @@ class RosaryReflectionResult:
     fallback_reason: str = ""
 
 
+class RosaryObservanceContext(BaseModel):
+    subject: str = ""
+    summary: str = ""
+    relevant_details: list[str] = []
+    quotation: str = ""
+    quotation_source: str = ""
+
+
 class _StructuredRosaryDecade(BaseModel):
     number: int
     human_need_category: str
@@ -301,8 +309,16 @@ def build_rosary_devotional_set(
     )
     context = _ensure_priority_context(context)
     model = str(prompt_model or os.getenv(OAI_MODEL, "") or "gpt-4.1-mini").strip() or "gpt-4.1-mini"
-    prompt = _build_devotional_prompt(date_value, context)
     failures: list[str] = []
+    observance_context = RosaryObservanceContext()
+
+    try:
+        observance_context = _resolve_observance_context(model, date_value, context)
+    except Exception as exc:
+        failures.append(f"observance_context: {exc}")
+        print(f"WARN rosary_devotional observance_context_unavailable detail={exc}", file=sys.stderr)
+
+    prompt = _build_devotional_prompt(date_value, context, observance_context)
 
     try:
         raw = _call_openai_structured(model, prompt, temperature=temperature)
@@ -335,6 +351,7 @@ def build_rosary_devotional_set(
         title,
         mysteries,
         context,
+        observance_context=observance_context,
         fallback_reason="; ".join(failures),
     )
 
@@ -705,7 +722,11 @@ def _season_mode(season_label: str) -> str:
     return "nonordinary" if season_label else "unknown"
 
 
-def _build_devotional_prompt(date_value, context: RosaryDayContext) -> str:
+def _build_devotional_prompt(
+    date_value,
+    context: RosaryDayContext,
+    observance_context: Optional[RosaryObservanceContext] = None,
+) -> str:
     priority_lines = "\n".join(
         f"{index}. key={priority.key}; source={priority.source}; title={priority.title}; context={priority.prompt_context}"
         for index, priority in enumerate(context.priorities, start=1)
@@ -723,6 +744,8 @@ def _build_devotional_prompt(date_value, context: RosaryDayContext) -> str:
         )
         if line
     )
+    observance = observance_context or RosaryObservanceContext()
+    details = "\n".join(f"- {item}" for item in observance.relevant_details if item)
     return f"""
 Create one coherent Catholic Rosary devotional package for {date_value.isoformat()}.
 
@@ -748,6 +771,14 @@ Saint witness: {context.saint_witness or "not supplied"}
 Approved saint quotation: {context.saint_witness_quote or "not supplied"}
 Quotation source: {context.saint_witness_quote_source or "not supplied"}
 
+LLM observance information:
+Subject: {observance.subject or context.dominant_priority.title or "not supplied"}
+Summary: {observance.summary or "not supplied"}
+Relevant details:
+{details or "- not supplied"}
+Optional contextual quotation: {observance.quotation or "not supplied"}
+Optional quotation source: {observance.quotation_source or "not supplied"}
+
 Mysteries:
 {mystery_lines}
 
@@ -756,13 +787,100 @@ Requirements:
 - introduction: {INTRO_MIN_CHARS}-{INTRO_MAX_CHARS} characters and natural spoken welcome.
 - overall_intention: {OVERALL_INTENTION_MIN_CHARS}-{OVERALL_INTENTION_MAX_CHARS} characters.
 - exactly five numbered decades in order.
-- Name the saint witness in the introduction and at least two decade reflections.
-- Include the approved saint quotation exactly, attributed to the named saint. Never invent or paraphrase a quotation.
+- If a saint witness is supplied, name it naturally in the introduction and at least two decade reflections. Do not add a saint prefix when the supplied name already includes one.
+- A quotation is optional. If you use a supplied quotation, reproduce it exactly and attribute it; never invent, paraphrase, or imply an unsupplied quotation.
+- Use the LLM observance information as relevant background for the primary observance, whether it describes a person, event, Marian celebration, feast, or another liturgical subject. Do not turn it into a named theme or taxonomy.
+- Connect the observance information naturally to each mystery and its human need without repeating the same sentence pattern.
 - each decade uses one distinct human_need_category from: {categories}.
 - each intention is {DECADE_INTENTION_MIN_CHARS}-{DECADE_INTENTION_MAX_CHARS} characters.
 - each reflection is {REFLECTION_MIN_CHARS}-{REFLECTION_MAX_CHARS} characters.
 - every decade pair applies the same dominant priority through that decade's mystery or fruit.
+    """.strip()
+
+
+def _build_observance_context_prompt(date_value, context: RosaryDayContext) -> str:
+    return f"""
+Gather concise background for the primary Catholic observance used in a daily Rosary for {date_value.isoformat()}.
+
+Primary observance: {context.dominant_priority.title}
+Observance context: {context.dominant_priority.prompt_context}
+Celebration information: {context.celebration_clause or "not supplied"}
+Season: {context.season_label or "not supplied"}
+Saint witness, if supplied: {context.saint_witness or "not supplied"}
+Existing approved quotation, if supplied: {context.saint_witness_quote or "not supplied"}
+Gospel citation: {context.gospel_citation or "not supplied"}
+Gospel text: {context.gospel_text or "not supplied"}
+
+Return one JSON object with subject, summary, relevant_details, quotation, and quotation_source.
+Use the primary observance as the subject. It may be a saint, group, Marian title, feast, event, or another liturgical observance.
+Provide at most four short relevant details that can support prayerful Rosary prose. Prefer details that connect naturally to Christ, Mary, the observance, or the supplied Gospel.
+Use only information you can state confidently. Leave a detail out rather than inventing it.
+Quotation is optional. Only return a quotation when it is supplied above or you can identify a reliable wording and attribution; otherwise return empty quotation fields.
+Do not create themes, categories, sermon headings, citations, Markdown, or commentary.
 """.strip()
+
+
+def _call_openai_observance_context(model: str, prompt: str) -> Any:
+    api_key, base_url, resolved_model = _resolve_openai_settings(model=model)
+    if not api_key:
+        raise RuntimeError("Missing OpenAI API key for Rosary observance context.")
+    client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
+    response = client.responses.create(
+        model=resolved_model or model,
+        input=[
+            {
+                "role": "system",
+                "content": [{
+                    "type": "input_text",
+                    "text": "Return one concise JSON observance context object only.",
+                }],
+            },
+            {"role": "user", "content": [{"type": "input_text", "text": prompt}]},
+        ],
+    )
+    text = str(getattr(response, "output_text", "") or "").strip()
+    if not text:
+        refusal = _response_refusal(response)
+        if refusal:
+            raise RuntimeError(f"Rosary observance context was refused: {refusal}")
+        raise RuntimeError("Rosary observance context returned empty text.")
+    return text
+
+
+def _resolve_observance_context(model: str, date_value, context: RosaryDayContext) -> RosaryObservanceContext:
+    raw = _call_openai_observance_context(model, _build_observance_context_prompt(date_value, context))
+    payload = json.loads(raw) if isinstance(raw, str) else raw
+    parsed = RosaryObservanceContext.model_validate(payload)
+    parsed.subject = _validated_context_text("subject", parsed.subject, 160)
+    parsed.summary = _validated_context_text("summary", parsed.summary, 500)
+    parsed.relevant_details = [
+        _validated_context_text("relevant detail", item, 240)
+        for item in parsed.relevant_details[:4]
+        if _normalize_whitespace(item)
+    ]
+    parsed.quotation = _validated_context_text("quotation", parsed.quotation, 400)
+    parsed.quotation_source = _validated_context_text("quotation source", parsed.quotation_source, 240)
+    approved_quote = _normalize_whitespace(context.saint_witness_quote)
+    approved_source = _normalize_whitespace(context.saint_witness_quote_source)
+    if parsed.quotation and _normalize_for_match(parsed.quotation) != _normalize_for_match(approved_quote):
+        parsed.quotation = ""
+        parsed.quotation_source = ""
+    elif parsed.quotation and not parsed.quotation_source:
+        parsed.quotation = ""
+    elif parsed.quotation and approved_source:
+        parsed.quotation_source = approved_source
+    return parsed
+
+
+def _validated_context_text(label: str, value: Any, maximum: int) -> str:
+    text = _normalize_whitespace(value)
+    if len(text) > maximum:
+        raise RuntimeError(f"Rosary observance {label} is too long.")
+    if re.search(r"(^|\s)(?:```|#{1,6}\s|\*\*|[*-]\s)", text):
+        raise RuntimeError(f"Rosary observance {label} contains formatting.")
+    if any(token in text.lower() for token in ("return json", "relevant_details", "quotation_source")):
+        raise RuntimeError(f"Rosary observance {label} contains prompt commentary.")
+    return text
 
 
 def _call_openai_structured(model: str, prompt: str, *, temperature: float) -> Any:
@@ -868,21 +986,41 @@ def _deterministic_devotional_set(
     mysteries: Sequence[RosaryMystery],
     context: RosaryDayContext,
     *,
+    observance_context: Optional[RosaryObservanceContext] = None,
     fallback_reason: str,
 ) -> RosaryDevotionalSet:
     anchor = context.dominant_priority.anchors[0]
     date_display = date_value.strftime("%A, %B %d, %Y").replace(" 0", " ")
-    saint_name = context.saint_witness or anchor
-    saint_quote = f'Saint {saint_name} teaches us, "{context.saint_witness_quote}". ' if context.saint_witness_quote else ""
-    introduction = (
-        f"On {date_display}, we pray with Saint {saint_name}, asking the saint to accompany us into the {title}. "
-        f"{saint_quote}"
-        f"Each mystery gives us a different way to receive this grace, while the whole Rosary remains centered on one prayerful focus. "
-        "With Mary, let us listen for Christ and carry the needs of the Church and the world before him."
+    saint_name = _display_witness_name(context.saint_witness)
+    subject = _display_witness_name(
+        (observance_context.subject if observance_context else "") or context.dominant_priority.title or anchor
     )
+    summary = _normalize_whitespace(observance_context.summary if observance_context else "")
+    details = [
+        _normalize_whitespace(item)
+        for item in (observance_context.relevant_details if observance_context else ())
+        if _normalize_whitespace(item)
+    ]
+    quote = _normalize_whitespace(
+        (observance_context.quotation if observance_context else "") or context.saint_witness_quote
+    )
+    quote_source = _normalize_whitespace(
+        (observance_context.quotation_source if observance_context else "") or context.saint_witness_quote_source
+    )
+    if saint_name:
+        opening = f"On {date_display}, with {saint_name}, we begin the {title}."
+    else:
+        opening = f"On {date_display}, we begin the {title} by reflecting on {subject}."
+    introduction = (
+        f"{opening} {summary or f'The Church places this observance before us as we draw near to Christ with Mary.'} "
+        f"Let us carry its light into the mysteries and the needs entrusted to our prayer."
+    )
+    if quote and saint_name and quote_source:
+        introduction += f' {saint_name} reminds us, "{quote}".'
+    subject_application = f"the witness of {subject}" if saint_name else f"the grace revealed in {subject}"
     overall = (
-        f"We offer this Rosary with Saint {saint_name} for the grace revealed through {anchor}, asking that it renew our faith "
-        "and guide the intentions we place before the Lord in every decade."
+        f"We offer this Rosary in the light of {anchor}, asking the Lord to let {subject_application} "
+        "strengthen our faith and guide the intentions we place before him in every decade."
     )
     categories = APPROVED_HUMAN_NEED_CATEGORIES[:5]
     applications = (
@@ -894,14 +1032,15 @@ def _deterministic_devotional_set(
     )
     decades: list[_StructuredRosaryDecade] = []
     for mystery, category, application in zip(mysteries, categories, applications):
+        detail = details[(mystery.number - 1) % len(details)] if details else summary
         intention = (
-            f"With Saint {saint_name}, and through {anchor}, we pray this decade for {application}, that the fruit of "
-            f"{mystery.fruit.lower()} may strengthen them."
+            f"Through {anchor}, we pray this decade for {application}, asking that the fruit of "
+            f"{mystery.fruit.lower()} may strengthen them in the light of {subject}."
         )
         reflection = (
-            f"With Saint {saint_name}, in {mystery.title}, we contemplate Christ's grace through {anchor}. "
-            f"The fruit of {mystery.fruit.lower()} shows how this same focus can enter concrete choices, relationships, and burdens. "
-            "As the decade unfolds, may this mystery teach us to receive that grace and offer it for the needs entrusted to our prayer."
+            f"In {mystery.title}, we contemplate Christ's grace through {anchor}. "
+            f"{detail + ' ' if detail else ''}The fruit of {mystery.fruit.lower()} shows how this observance can enter concrete choices, relationships, and burdens. "
+            "As the decade unfolds, may this mystery teach us to receive grace and offer it for the needs entrusted to our prayer."
         )
         decades.append(
             _StructuredRosaryDecade(
@@ -957,12 +1096,16 @@ def _require_saint_witness(text: str, context: RosaryDayContext) -> None:
         return
     normalized = _normalize_for_match(text)
     if witness not in normalized:
-        raise RuntimeError(f"Rosary devotional prose must pray with Saint {context.saint_witness}.")
+        raise RuntimeError(f"Rosary devotional prose must pray with {context.saint_witness}.")
     if normalized.count(witness) < 2:
         raise RuntimeError("Rosary devotional prose must return to the saint witness beyond a single mention.")
-    quote = str(context.saint_witness_quote or "").strip()
-    if quote and quote not in text:
-        raise RuntimeError("Rosary devotional prose is missing the approved saint quotation.")
+
+
+def _display_witness_name(value: Any) -> str:
+    text = _normalize_whitespace(value)
+    if not text:
+        return ""
+    return re.sub(r"^(?:saint|st\.?)(?:\s+|$)", "Saint ", text, count=1, flags=re.IGNORECASE)
 
 
 def _reject_foreign_scripture_citations(text: str, context: RosaryDayContext) -> None:
