@@ -486,7 +486,6 @@ def validate_rosary_devotional_response(
         )
         pair = f"{intention} {reflection}"
         _reject_foreign_scripture_citations(pair, context)
-        _require_dominant_anchor(pair, context)
         if not _contains_any(pair, (mystery.title, mystery.fruit)):
             raise RuntimeError(f"Rosary decade {item.number} must mention its mystery title or fruit.")
         normalized_decades.append(

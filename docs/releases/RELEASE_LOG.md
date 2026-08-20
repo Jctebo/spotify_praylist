@@ -1,5 +1,17 @@
 # Release Log
 
+## [0.4.2.3] - 2026-08-20
+
+### Fixed
+- Stopped requiring every Rosary decade to repeat the literal priority anchor after the introduction and overall intention establish the observance context.
+- Kept mystery/fruit relevance and Scripture validation for each decade.
+
+## [0.4.2.2] - 2026-08-20
+
+### Fixed
+- Relaxed Rosary priority validation to accept natural labels such as memorial, feast, gospel, season, and Ordinary Time alongside configured observance anchors.
+- Added regression coverage and stabilized fallback tests against live observance-context calls.
+
 ## [0.4.2.1] - 2026-08-20
 
 ### Fixed
