@@ -1,5 +1,16 @@
 # Release Log
 
+## [0.4.2.0] - 2026-08-19
+
+### Added
+- Added a best-effort LLM observance-context pass for Daily Rosary generation, supporting saints, groups, Marian observances, feast days, and event-based celebrations without introducing a theme taxonomy.
+- Added bounded context validation and regression coverage for optional quotations, event observances, saint-name normalization, and deterministic fallback prose.
+
+### Changed
+- Updated Rosary prompts to use concise observance information across the five mysteries and human-needs intentions while allowing natural sentence structure.
+- Made approved quotations optional and limited quotation use to existing approved wording.
+- Rewrote deterministic Rosary fallback prose to avoid duplicated honorifics such as `Saint Saint John Eudes` and to remain grammatical when no saint witness is present.
+
 ## [0.4.1.0] - 2026-08-17
 
 ### Added
