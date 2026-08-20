@@ -96,6 +96,8 @@ def daily_theme_runtime_fields(payload: Dict[str, Any]) -> Dict[str, Any]:
         "daily_theme_version": str(payload.get("sharedThemeVersion") or "saint-centered-theme-v1"),
         "saint_centered_theme_brief": payload.get("saint_centered_theme_brief") or {},
         "theme_timezone": str(payload.get("timezone") or "America/Chicago"),
+        "primary_anchor_date": str(payload.get("primaryAnchorDate") or "").strip(),
+        "primary_anchor_rank": str(payload.get("primaryAnchorRank") or "").strip(),
         "saint_witness": str(payload.get("saintWitness") or "").strip(),
         "saint_witness_date": str(payload.get("saintWitnessDate") or "").strip(),
         "saint_witness_rank": str(payload.get("saintWitnessRank") or "").strip(),
