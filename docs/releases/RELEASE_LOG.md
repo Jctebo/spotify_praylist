@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.4.2.1] - 2026-08-20
+
+### Fixed
+- Relaxed Daily Rosary witness validation so natural core-name mentions are accepted without requiring the full honorific string or repeated appearances.
+- Added regression coverage for permissive saint-witness matching and single natural mentions.
+
 ## [0.4.2.0] - 2026-08-19
 
 ### Added
