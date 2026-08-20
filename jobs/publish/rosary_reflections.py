@@ -768,7 +768,7 @@ def _build_devotional_prompt(
     weekday = date_value.strftime("%A")
     mystery_set = ROSARY_MYSTERIES_BY_WEEKDAY.get(weekday, context.mystery_set_title.replace(" Mysteries", ""))
     target_date = date_value.isoformat()
-    selected_date = context.observance_date or target_date
+    selected_date = getattr(context, "observance_date", "") or target_date
     selected_title = context.dominant_priority.title or context.focus_title or "the liturgical day"
     selected_timing = (
         f"Today the Church celebrates {selected_title}."
@@ -1035,7 +1035,7 @@ def _deterministic_devotional_set(
     quote_source = _normalize_whitespace(
         (observance_context.quotation_source if observance_context else "") or context.saint_witness_quote_source
     )
-    selected_date = context.observance_date or date_value.isoformat()
+    selected_date = getattr(context, "observance_date", "") or date_value.isoformat()
     selected_date_display = _display_iso_date(selected_date) or date_display
     if selected_date == date_value.isoformat():
         timing = f"Today the Church celebrates {subject}."
