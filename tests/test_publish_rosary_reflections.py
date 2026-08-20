@@ -123,6 +123,20 @@ class TestPublishRosaryReflections(unittest.TestCase):
         self.assertEqual(context.saint_witness_date, "2026-06-05")
         self.assertEqual(context.saint_witness_rank, "memorial")
 
+    def test_prompt_omits_retrospective_saint_witness(self):
+        context = self._context(
+            [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}],
+            shared={
+                "saintWitness": "Saint Backward",
+                "saintWitnessDate": "2026-06-04",
+            },
+        )
+
+        prompt = self.mod._build_devotional_prompt(self.date, context)
+
+        self.assertIn("Saint witness: not supplied", prompt)
+        self.assertNotIn("Saint Backward", prompt)
+
     def test_nonordinary_season_outranks_gospel_and_memorial(self):
         context = self._context(
             [{"name": "An Advent Memorial", "rank_name": "memorial", "season": "advent"}]
@@ -173,8 +187,16 @@ class TestPublishRosaryReflections(unittest.TestCase):
         self.assertIn("local calendar date 2026-06-05", prompt)
         self.assertIn("Traditional mysteries for Friday: Sorrowful", prompt)
         self.assertIn("Do not look backward, search for another date, or choose a different observance", prompt)
+        self.assertIn("The mystery set and the five mystery rows below are also deterministic inputs", prompt)
+        self.assertIn("do not determine or replace the weekday mystery set yourself", prompt)
         self.assertIn("narrate the biblical event vividly and reverently", prompt)
         self.assertIn("end with a short prayer or petition", prompt)
+        self.assertIn("look ahead through the next 9 calendar days", prompt)
+        self.assertIn("Solemnity above Feast, Obligatory Memorial, and Optional Memorial", prompt)
+        self.assertIn("Choose a meaningful spiritual connection", prompt)
+        self.assertIn("do not optimize for a rigid template", prompt)
+        self.assertNotIn("five distinct human_need_category", prompt)
+        self.assertNotIn("characters", prompt)
 
     def test_prompt_distinguishes_upcoming_observance_from_today(self):
         context = self._context(
@@ -372,7 +394,7 @@ class TestPublishRosaryReflections(unittest.TestCase):
 
         self.assertEqual(len(parsed.decades), 5)
 
-    def test_semantic_validation_rejects_priority_category_and_mystery_failures(self):
+    def test_semantic_validation_allows_natural_variation_but_rejects_safety_failures(self):
         context = self._context(
             [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}]
         )
@@ -383,20 +405,19 @@ class TestPublishRosaryReflections(unittest.TestCase):
 
         repeated_category = self._valid_payload(context)
         repeated_category["decades"][1]["human_need_category"] = repeated_category["decades"][0]["human_need_category"]
-        with self.assertRaisesRegex(RuntimeError, "five distinct"):
-            self.mod.validate_rosary_devotional_response(repeated_category, context)
+        parsed = self.mod.validate_rosary_devotional_response(repeated_category, context)
+        self.assertEqual(len(parsed.decades), 5)
 
-        missing_mystery = self._valid_payload(context)
-        missing_mystery["decades"][0]["intention"] = (
-            "In today's Gospel, we pray for families who need patience and renewed trust in God's providence."
-        )
-        missing_mystery["decades"][0]["reflection"] = (
-            "Today's Gospel directs our attention toward Christ and calls us to listen with faith. "
-            "This shared focus can guide concrete choices, relationships, and burdens without becoming abstract. "
-            "May the Lord teach us to receive grace faithfully and carry it toward the people named in our prayer."
-        )
-        with self.assertRaisesRegex(RuntimeError, "mystery title or fruit"):
-            self.mod.validate_rosary_devotional_response(missing_mystery, context)
+        natural_variation = self._valid_payload(context)
+        natural_variation["decades"][0]["intention"] = "We bring this decade before the Lord in quiet trust."
+        natural_variation["decades"][0]["reflection"] = "Mary's faithful openness invites us to receive grace and answer it in the ordinary choices of today."
+        parsed = self.mod.validate_rosary_devotional_response(natural_variation, context)
+        self.assertEqual(parsed.decades[0].reflection, natural_variation["decades"][0]["reflection"])
+
+        empty_prose = self._valid_payload(context)
+        empty_prose["decades"][0]["reflection"] = ""
+        with self.assertRaisesRegex(RuntimeError, "too short"):
+            self.mod.validate_rosary_devotional_response(empty_prose, context)
 
         foreign_citation = self._valid_payload(context)
         foreign_citation["decades"][0]["reflection"] += " John 3:16 confirms this prayer."

@@ -30,14 +30,11 @@ APPROVED_HUMAN_NEED_CATEGORIES = (
     "leaders",
     "personal_needs",
 )
-INTRO_MIN_CHARS = 120
-INTRO_MAX_CHARS = 700
-OVERALL_INTENTION_MIN_CHARS = 60
-OVERALL_INTENTION_MAX_CHARS = 400
-DECADE_INTENTION_MIN_CHARS = 40
-DECADE_INTENTION_MAX_CHARS = 280
-REFLECTION_MIN_CHARS = 120
-REFLECTION_MAX_CHARS = 650
+INTRO_MAX_CHARS = 900
+OVERALL_INTENTION_MAX_CHARS = 600
+DECADE_INTENTION_MAX_CHARS = 600
+REFLECTION_MAX_CHARS = 1200
+PROSE_MIN_CHARS = 1
 SOURCE_GENERATED_STRUCTURED = "generated_structured"
 SOURCE_GENERATED_JSON = "generated_json"
 SOURCE_FALLBACK_DETERMINISTIC = "fallback_deterministic"
@@ -51,6 +48,16 @@ ROSARY_MYSTERIES_BY_WEEKDAY = {
     "Saturday": "Joyful",
     "Sunday": "Glorious",
 }
+OBSERVANCE_SELECTION_GUIDANCE = """
+Choosing the liturgical observance:
+- First check today. If today has a significant saint's memorial, feast, solemnity, or other appropriate liturgical observance, use that observance.
+- Prefer the observance actually celebrated in the General Roman Calendar over an obscure optional saint from a saint-of-the-day list.
+- If today has no suitable observance, look ahead through the next 9 calendar days.
+- When looking ahead, generally rank Solemnity above Feast, Obligatory Memorial, and Optional Memorial.
+- Liturgical rank normally takes precedence over proximity; for equal rank, prefer the sooner date.
+- Choose a meaningful spiritual connection to the mysteries rather than forcing a weak association.
+- Verify dates and liturgical ranks against reliable Catholic sources when necessary.
+""".strip()
 
 
 @dataclass(frozen=True)
@@ -150,7 +157,7 @@ class RosaryObservanceContext(BaseModel):
 
 class _StructuredRosaryDecade(BaseModel):
     number: int
-    human_need_category: str
+    human_need_category: str = "personal_needs"
     intention: str
     reflection: str
 
@@ -449,45 +456,31 @@ def validate_rosary_devotional_response(
     if [item.number for item in parsed.decades] != [1, 2, 3, 4, 5]:
         raise RuntimeError("Rosary devotional response must number decades 1 through 5 in order.")
 
-    introduction = _validated_prose("introduction", parsed.introduction, INTRO_MIN_CHARS, INTRO_MAX_CHARS)
+    introduction = _validated_prose("introduction", parsed.introduction, PROSE_MIN_CHARS, INTRO_MAX_CHARS)
     overall = _validated_prose(
         "overall intention",
         parsed.overall_intention,
-        OVERALL_INTENTION_MIN_CHARS,
+        PROSE_MIN_CHARS,
         OVERALL_INTENTION_MAX_CHARS,
     )
     _reject_foreign_scripture_citations(f"{introduction} {overall}", context)
     _require_dominant_anchor(f"{introduction} {overall}", context)
-    all_prose = " ".join(
-        [introduction, overall, *(item.intention for item in parsed.decades), *(item.reflection for item in parsed.decades)]
-    )
-    _require_saint_witness(all_prose, context)
-
-    categories = [item.human_need_category for item in parsed.decades]
-    unknown = sorted(set(categories) - set(APPROVED_HUMAN_NEED_CATEGORIES))
-    if unknown:
-        raise RuntimeError(f"Rosary devotional response used unsupported human-need categories: {', '.join(unknown)}.")
-    if len(set(categories)) != 5:
-        raise RuntimeError("Rosary devotional response must use five distinct human-need categories.")
-
     normalized_decades: list[_StructuredRosaryDecade] = []
     for mystery, item in zip(context.mysteries, parsed.decades):
         intention = _validated_prose(
             f"decade {item.number} intention",
             item.intention,
-            DECADE_INTENTION_MIN_CHARS,
+            PROSE_MIN_CHARS,
             DECADE_INTENTION_MAX_CHARS,
         )
         reflection = _validated_prose(
             f"decade {item.number} reflection",
             item.reflection,
-            REFLECTION_MIN_CHARS,
+            PROSE_MIN_CHARS,
             REFLECTION_MAX_CHARS,
         )
         pair = f"{intention} {reflection}"
         _reject_foreign_scripture_citations(pair, context)
-        if not _contains_any(pair, (mystery.title, mystery.fruit)):
-            raise RuntimeError(f"Rosary decade {item.number} must mention its mystery title or fruit.")
         normalized_decades.append(
             _StructuredRosaryDecade(
                 number=item.number,
@@ -754,6 +747,25 @@ def _season_mode(season_label: str) -> str:
     return "nonordinary" if season_label else "unknown"
 
 
+def _forward_witness_details(date_value, context: RosaryDayContext) -> tuple[str, str, str]:
+    """Expose legacy saint-witness metadata only when it is not retrospective."""
+    witness = str(getattr(context, "saint_witness", "") or "").strip()
+    witness_date = str(getattr(context, "saint_witness_date", "") or "").strip()
+    if witness and witness_date:
+        try:
+            if _dt.date.fromisoformat(witness_date) < date_value:
+                return "", "", ""
+        except ValueError:
+            pass
+    if not witness:
+        return "", "", ""
+    return (
+        witness,
+        str(getattr(context, "saint_witness_quote", "") or "").strip(),
+        str(getattr(context, "saint_witness_quote_source", "") or "").strip(),
+    )
+
+
 def _build_devotional_prompt(
     date_value,
     context: RosaryDayContext,
@@ -762,7 +774,6 @@ def _build_devotional_prompt(
     mystery_lines = "\n".join(
         f"{mystery.number}. {mystery.title} - fruit: {mystery.fruit}" for mystery in context.mysteries
     )
-    categories = ", ".join(APPROVED_HUMAN_NEED_CATEGORIES)
     observance = observance_context or RosaryObservanceContext()
     details = "\n".join(f"- {item}" for item in observance.relevant_details if item)
     weekday = date_value.strftime("%A")
@@ -775,14 +786,18 @@ def _build_devotional_prompt(
         if selected_date == target_date
         else f"As we approach {selected_title} on {selected_date}, use it as the upcoming observance; do not call it today's celebration."
     )
+    saint_witness, saint_quote, saint_quote_source = _forward_witness_details(date_value, context)
     return f"""
 Help the listener pray the Catholic Rosary for the local calendar date {target_date}.
 
 The target date is authoritative and already resolved in the listener's local timezone. Do not look backward, search for another date, or choose a different observance. The deterministic calendar authority selected the observance below; use it exactly as supplied.
+The mystery set and the five mystery rows below are also deterministic inputs. Do not choose a different mystery set, substitute a mystery, reorder the mysteries, or invent a different traditional fruit.
+The following observance-selection policy explains the deterministic authority. Treat it as governing context, not as permission to replace the selected observance:
+{OBSERVANCE_SELECTION_GUIDANCE}
 Weekday: {weekday}
 Traditional mysteries for {weekday}: {mystery_set}
 Selected observance date: {selected_date}
-Selected observance rank: {context.observance_rank or "not supplied"}
+Selected observance rank: {getattr(context, "observance_rank", "") or "not supplied"}
 Timing instruction: {selected_timing}
 Primary liturgical focus: {context.dominant_priority.prompt_context}
 Liturgical day: {context.celebration_clause or "not supplied"}
@@ -790,9 +805,9 @@ Season: {context.season_label or "not supplied"}
 Gospel citation: {context.gospel_citation or "not supplied"}
 Gospel text: {context.gospel_text or "not supplied"}
 
-Saint witness: {context.saint_witness or "not supplied"}
-Approved saint quotation: {context.saint_witness_quote or "not supplied"}
-Quotation source: {context.saint_witness_quote_source or "not supplied"}
+Saint witness: {saint_witness or "not supplied"}
+Approved saint quotation: {saint_quote or "not supplied"}
+Quotation source: {saint_quote_source or "not supplied"}
 
 LLM observance information:
 Subject: {observance.subject or context.dominant_priority.title or "not supplied"}
@@ -807,35 +822,37 @@ Mysteries:
 
 Requirements:
 - dominant_priority_key must be exactly "{context.dominant_priority.key}".
-- Begin with a brief 1-3 paragraph introduction naming today's {mystery_set} Mysteries and the selected observance.
+- Begin with a brief introduction of approximately 1-3 paragraphs naming the {mystery_set} Mysteries prayed today, the saint or observance accompanying them, whether it is today or approaching, and the central spiritual theme.
 - Distinguish today from an upcoming observance precisely. If the selected date is not {target_date}, state that the observance is approaching and include its actual date; never imply it is celebrated today.
-- State one coherent spiritual theme connecting all five mysteries.
-- introduction: {INTRO_MIN_CHARS}-{INTRO_MAX_CHARS} characters and natural spoken welcome.
-- overall_intention: {OVERALL_INTENTION_MIN_CHARS}-{OVERALL_INTENTION_MAX_CHARS} characters.
+- State one coherent spiritual theme connecting the five mysteries, while allowing the prose to develop naturally.
+- Write naturally for immediate prayer. Choose the paragraphing, transitions, sentence length, and emphasis that best serve the meditation; do not optimize for a rigid template.
 - exactly five numbered mysteries in order. The renderer supplies the numbered mystery heading and traditional fruit label.
-- For every mystery's reflection, follow this order in plain spoken prose: narrate the biblical event vividly and reverently; explain the traditional fruit in practical Christian life; apply the mystery and fruit to the selected observance; ask one or two penetrating questions for the listener today; end with a short prayer or petition.
-- Root the biblical narration in supplied Scripture and Catholic teaching. Do not invent citations or unsupported details.
-- If a saint witness is supplied, name it naturally in the introduction and at least two decade reflections. Do not add a saint prefix when the supplied name already includes one.
+- Use only the five supplied mystery rows and their supplied traditional fruits; do not determine or replace the weekday mystery set yourself.
+- For each mystery, use the following elements as a creative brief rather than a rigid field order: narrate the biblical event vividly and reverently; identify and explain the traditional fruit in practical Christian life; apply the mystery and fruit to the selected observance; bring it into ordinary life with one or two penetrating questions; and end with a short prayer or petition. Combine or sequence these elements naturally, and do not force every element when the connection would be artificial.
+- Root biblical narration in supplied Scripture and Catholic teaching. Do not invent citations or unsupported details.
+- If a saint witness is supplied, use the saint's life to illuminate the mystery rather than merely listing biography. Mention the witness naturally where helpful, without formulaic repetition or duplicate saint prefixes.
 - A quotation is optional. If you use a supplied quotation, reproduce it exactly and attribute it; never invent, paraphrase, or imply an unsupplied quotation.
 - Use the supplied observance information as background for the primary observance, whether it describes a person, event, Marian celebration, feast, or another liturgical subject. Explain meaningful connections; do not force a weak association or turn it into a taxonomy.
-- Keep the tone distinctly Catholic, contemplative, reverent, practical, and suitable to read immediately before a decade. Avoid academic biography and excessive length.
-- each decade uses one distinct human_need_category from: {categories}.
-- each intention is {DECADE_INTENTION_MIN_CHARS}-{DECADE_INTENTION_MAX_CHARS} characters.
-- each reflection is {REFLECTION_MIN_CHARS}-{REFLECTION_MAX_CHARS} characters.
-- every decade pair applies the same dominant priority through that decade's mystery or fruit.
+- Keep the tone distinctly Catholic, contemplative rather than academic, spiritually substantial without becoming excessive, practical for family/work/relationships/suffering/responsibilities/conversion, faithful to Scripture and Catholic teaching, and suitable to read immediately before praying a decade.
+- Avoid merely repeating biographical facts, filler, weak associations, rigid sentence patterns, and unnecessary labels. Let the five mysteries form a coherent whole when appropriate.
+- Do not ask the listener questions before producing the meditation; determine the date, weekday, mysteries, and observance from the supplied deterministic context.
     """.strip()
 
 
 def _build_observance_context_prompt(date_value, context: RosaryDayContext) -> str:
+    saint_witness, saint_quote, _saint_quote_source = _forward_witness_details(date_value, context)
     return f"""
 Gather concise background for the primary Catholic observance used in a daily Rosary for {date_value.isoformat()}.
+
+The observance has already been selected by deterministic calendar authority. Apply the following selection policy only as context for understanding why the supplied observance was chosen; do not select a replacement:
+{OBSERVANCE_SELECTION_GUIDANCE}
 
 Primary observance: {context.dominant_priority.title}
 Observance context: {context.dominant_priority.prompt_context}
 Celebration information: {context.celebration_clause or "not supplied"}
 Season: {context.season_label or "not supplied"}
-Saint witness, if supplied: {context.saint_witness or "not supplied"}
-Existing approved quotation, if supplied: {context.saint_witness_quote or "not supplied"}
+Saint witness, if supplied: {saint_witness or "not supplied"}
+Existing approved quotation, if supplied: {saint_quote or "not supplied"}
 Gospel citation: {context.gospel_citation or "not supplied"}
 Gospel text: {context.gospel_text or "not supplied"}
 
@@ -1128,26 +1145,6 @@ def _require_dominant_anchor(text: str, context: RosaryDayContext) -> None:
         raise RuntimeError(
             f"Rosary devotional prose must anchor the dominant priority '{context.dominant_priority.key}'."
         )
-
-
-def _require_saint_witness(text: str, context: RosaryDayContext) -> None:
-    witness_terms = _witness_match_terms(context.saint_witness)
-    if not witness_terms:
-        return
-    normalized = _normalize_for_match(text)
-    if not any(term in normalized for term in witness_terms):
-        raise RuntimeError(f"Rosary devotional prose must pray with {context.saint_witness}.")
-
-
-def _witness_match_terms(value: Any) -> tuple[str, ...]:
-    display = _normalize_whitespace(value)
-    if not display:
-        return ()
-    full = _normalize_for_match(display)
-    core = re.split(r"[,;(]", display, maxsplit=1)[0]
-    core = re.sub(r"^(?:saints?|sts?\.?)(?:\s+|$)", "", core, count=1, flags=re.IGNORECASE)
-    core_normalized = _normalize_for_match(core)
-    return tuple(dict.fromkeys(term for term in (full, core_normalized) if term))
 
 
 def _display_witness_name(value: Any) -> str:
