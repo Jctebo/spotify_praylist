@@ -323,6 +323,20 @@ class TestPublishRosaryReflections(unittest.TestCase):
 
         self.assertIn("This memorial", parsed.introduction)
 
+    def test_decades_do_not_require_repeated_priority_anchor(self):
+        context = self._context(
+            [{"name": "Memorial of Saint Bernard", "rank_name": "memorial", "season": "ordinary_time"}],
+            shared={},
+        )
+        payload = self._valid_payload(context)
+        for decade in payload["decades"]:
+            decade["intention"] = decade["intention"].replace(context.dominant_priority.anchors[0], "the observance")
+            decade["reflection"] = decade["reflection"].replace(context.dominant_priority.anchors[0], "the observance")
+
+        parsed = self.mod.validate_rosary_devotional_response(payload, context)
+
+        self.assertEqual(len(parsed.decades), 5)
+
     def test_semantic_validation_rejects_priority_category_and_mystery_failures(self):
         context = self._context(
             [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}]
