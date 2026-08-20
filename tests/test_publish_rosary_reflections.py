@@ -299,6 +299,18 @@ class TestPublishRosaryReflections(unittest.TestCase):
         self.assertEqual(len(parsed.decades), 5)
         self.assertFalse(parsed.introduction.startswith("For today's rosary"))
 
+    def test_saint_witness_validation_accepts_core_name_and_one_natural_mention(self):
+        context = self._context(
+            [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}],
+            shared={"saintWitness": "Saint John Eudes, Priest"},
+        )
+        payload = self._valid_payload(context)
+        payload["introduction"] += " We also pray with Saint John Eudes."
+
+        parsed = self.mod.validate_rosary_devotional_response(payload, context)
+
+        self.assertIn("Saint John Eudes", parsed.introduction)
+
     def test_semantic_validation_rejects_priority_category_and_mystery_failures(self):
         context = self._context(
             [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}]

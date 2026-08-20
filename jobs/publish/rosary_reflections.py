@@ -1091,14 +1091,23 @@ def _require_dominant_anchor(text: str, context: RosaryDayContext) -> None:
 
 
 def _require_saint_witness(text: str, context: RosaryDayContext) -> None:
-    witness = _normalize_for_match(context.saint_witness)
-    if not witness:
+    witness_terms = _witness_match_terms(context.saint_witness)
+    if not witness_terms:
         return
     normalized = _normalize_for_match(text)
-    if witness not in normalized:
+    if not any(term in normalized for term in witness_terms):
         raise RuntimeError(f"Rosary devotional prose must pray with {context.saint_witness}.")
-    if normalized.count(witness) < 2:
-        raise RuntimeError("Rosary devotional prose must return to the saint witness beyond a single mention.")
+
+
+def _witness_match_terms(value: Any) -> tuple[str, ...]:
+    display = _normalize_whitespace(value)
+    if not display:
+        return ()
+    full = _normalize_for_match(display)
+    core = re.split(r"[,;(]", display, maxsplit=1)[0]
+    core = re.sub(r"^(?:saints?|sts?\.?)(?:\s+|$)", "", core, count=1, flags=re.IGNORECASE)
+    core_normalized = _normalize_for_match(core)
+    return tuple(dict.fromkeys(term for term in (full, core_normalized) if term))
 
 
 def _display_witness_name(value: Any) -> str:
