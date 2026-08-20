@@ -1,5 +1,15 @@
 # Release Log
 
+## [0.4.2.5] - 2026-08-20
+
+### Changed
+- Reworked the Daily Rosary prompt into a flexible contemplative writing brief based on the requested biblical narration, traditional fruit, observance connection, practical reflection, and petition.
+- Preserved deterministic local date, General Roman Calendar observance, today-versus-upcoming timing, weekday mystery set, mystery rows, traditional fruits, and five-mystery order as authoritative inputs.
+
+### Fixed
+- Removed rigid prose minimums, five-category taxonomy, repeated-anchor requirements, and fixed saint-witness placement from Rosary validation.
+- Prevented retrospective saint-witness metadata from being sent to the Rosary prompt.
+
 ## [0.4.2.4] - 2026-08-20
 
 ### Changed
