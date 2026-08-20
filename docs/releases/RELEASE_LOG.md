@@ -1,5 +1,25 @@
 # Release Log
 
+## [0.4.2.5] - 2026-08-20
+
+### Changed
+- Reworked the Daily Rosary prompt into a flexible contemplative writing brief based on the requested biblical narration, traditional fruit, observance connection, practical reflection, and petition.
+- Preserved deterministic local date, General Roman Calendar observance, today-versus-upcoming timing, weekday mystery set, mystery rows, traditional fruits, and five-mystery order as authoritative inputs.
+
+### Fixed
+- Removed rigid prose minimums, five-category taxonomy, repeated-anchor requirements, and fixed saint-witness placement from Rosary validation.
+- Prevented retrospective saint-witness metadata from being sent to the Rosary prompt.
+
+## [0.4.2.4] - 2026-08-20
+
+### Changed
+- Reworked Daily Rosary prompting around the deterministic local date, weekday mystery schedule, selected observance timing, and a coherent five-mystery meditation structure.
+- Added deterministic observance date/rank metadata to the shared Rosary context and preserved accurate “today” versus upcoming wording in fallback output.
+
+### Fixed
+- Prevented the prompt from looking backward or asking the model to choose a different observance.
+- Preserved natural priority-label validation while adding the new date-forward prompt contract.
+
 ## [0.4.2.3] - 2026-08-20
 
 ### Fixed
