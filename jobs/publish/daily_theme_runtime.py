@@ -67,6 +67,10 @@ def daily_liturgical_context_to_payload(context: Any) -> Dict[str, Any]:
         "saintWitnessQuote",
         "saintWitnessQuoteSource",
         "saintWitnessQuoteSourceUrl",
+        "primaryAnchorDate",
+        "primaryAnchorRank",
+        "primaryAnchorTiming",
+        "selectionSource",
     )
     return {key: getattr(context, key) for key in keys if hasattr(context, key)}
 
@@ -93,7 +97,7 @@ def daily_theme_runtime_fields(payload: Dict[str, Any]) -> Dict[str, Any]:
         "daily_gospel_citation": str(payload.get("gospelCitation") or "").strip(),
         "daily_gospel_theme": str(payload.get("gospelTheme") or "").strip(),
         "daily_theme_sources": sources,
-        "daily_theme_version": str(payload.get("sharedThemeVersion") or "saint-centered-theme-v1"),
+        "daily_theme_version": str(payload.get("sharedThemeVersion") or "shared-liturgical-theme-v2"),
         "saint_centered_theme_brief": payload.get("saint_centered_theme_brief") or {},
         "theme_timezone": str(payload.get("timezone") or "America/Chicago"),
         "primary_anchor_date": str(payload.get("primaryAnchorDate") or "").strip(),
@@ -104,6 +108,8 @@ def daily_theme_runtime_fields(payload: Dict[str, Any]) -> Dict[str, Any]:
         "saint_witness_quote": str(payload.get("saintWitnessQuote") or "").strip(),
         "saint_witness_quote_source": str(payload.get("saintWitnessQuoteSource") or "").strip(),
         "saint_witness_quote_source_url": str(payload.get("saintWitnessQuoteSourceUrl") or "").strip(),
+        "primary_anchor_timing": str(payload.get("primaryAnchorTiming") or "").strip(),
+        "selection_source": str(payload.get("selectionSource") or "").strip(),
     }
 
 
@@ -158,6 +164,8 @@ def build_canonical_daily_theme_runtime_context(
         "liturgicalRank": str(payload.get("primary_rank") or "weekday"),
         "primaryAnchorDate": str(payload.get("primary_anchor_date") or target_date.isoformat()),
         "primaryAnchorRank": str(payload.get("primary_rank") or "weekday"),
+        "primaryAnchorTiming": str(payload.get("primary_anchor_timing") or ("today" if str(payload.get("primary_anchor_date") or target_date.isoformat()) == target_date.isoformat() else "upcoming")),
+        "selectionSource": str(payload.get("selection_source") or ""),
         "saintOfDay": str(payload.get("saint_witness") or ""),
         "gospelTheme": "",
         "primaryTheme": themes[0],
@@ -182,7 +190,7 @@ def build_canonical_daily_theme_runtime_context(
         "sharedThemeReflectionFocus": str(payload.get("rationale") or "Pray the approved theme through the day."),
         "sharedGospelBridge": "",
         "sharedThemeSources": list(payload.get("window_items") or []),
-        "sharedThemeVersion": str(payload.get("version") or "saint-centered-theme-v1"),
+        "sharedThemeVersion": str(payload.get("version") or "shared-liturgical-theme-v2"),
         "saint_centered_theme_brief": payload,
         "timezone": timezone or "America/Chicago",
         "saintWitness": str(payload.get("saint_witness") or ""),

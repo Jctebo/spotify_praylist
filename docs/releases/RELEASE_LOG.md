@@ -1,5 +1,16 @@
 # Release Log
 
+## [0.4.2.6] - 2026-08-20
+
+### Changed
+- Added one deterministic, forward-only Catholic liturgical-calendar selection for Morning Prayer, Marian Antiphon, Auxilium Christianorum, and Daily Reflection.
+- Updated the four prayer prompts to allow natural 1–3 paragraph introductions, prayer-specific themes, optional approved quotations, and distinct wording while preserving shared observance timing.
+- Relaxed Daily Reflection and devotional-introduction validation so faithful prose is not rejected for failing legacy sentence shapes or mandatory saint-witness/quotation rules.
+
+### Fixed
+- Prevented daily prayer selection from looking backward or selecting an independent nearby saint witness.
+- Preserved precise today-versus-upcoming language and actual dates for selected future observances, including deterministic fallback output.
+
 ## [0.4.2.5] - 2026-08-20
 
 ### Changed

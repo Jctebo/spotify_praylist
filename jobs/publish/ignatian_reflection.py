@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime as _dt
 import os
 import re
 import sys
@@ -73,9 +74,11 @@ def _title_case_theme(value: str) -> str:
 
 
 def _saint_for_context(context: DailyLiturgicalContext) -> str:
-    saint = str(getattr(context, "saintWitness", "") or context.saintOfDay or SAINT_FALLBACK).strip()
+    saint = str(getattr(context, "saintWitness", "") or context.saintOfDay or "").strip()
+    if not saint:
+        return ""
     saint = re.sub(r"^Saints?\s+", "", saint, flags=re.IGNORECASE).strip()
-    return saint or "Ignatius of Loyola"
+    return saint
 
 
 def _saint_quote_for_context(context: DailyLiturgicalContext) -> str:
@@ -85,29 +88,32 @@ def _saint_quote_for_context(context: DailyLiturgicalContext) -> str:
 def _build_prompt(date_value, context: DailyLiturgicalContext, title: str) -> str:
     payload = context.to_dict()
     return f"""
-Write a Catholic Ignatian-style daily reflection prayer for audio narration.
+Write a Catholic daily reflection prayer for audio narration, using the selected liturgical observance as a spiritual lens for ordinary Christian life.
 
 Rules:
 - Return plain text only, no markdown bullets.
 - Write exactly four short paragraphs separated by blank lines.
 - Do not use any section headings.
 - Paragraph 1 must begin exactly with: {WELCOME}
-- Paragraphs 1, 2, and 3 must each end with a question so the audio can pause after them.
-- The reflection should be shorter and more spacious than before, with several contemplative pauses.
-- Paragraph 1 should introduce the day's liturgical context naturally.
-- When sharedGospelBridge or gospelCitation is present, explicitly ground Paragraph 1 in that Gospel context.
-- Paragraph 2 should draw the day into ordinary life through the shared daily focus, saint, imagery, and emotional tone.
-- Paragraph 2 must name the saint witness and include the supplied quotation exactly, explicitly attributing it to the saint before praying with the saint's intercession.
-- Paragraph 3 should guide a brief examen with gratitude, reviewing the day, consolation/desolation, speaking with Jesus, and hope for tomorrow.
-- Paragraph 4 should include the closing prayer and end exactly with these two final lines:
-Saint {_saint_for_context(context)}, pray for us.
+- Keep the reflection concise, spacious, contemplative, and natural aloud. Use questions, examen language, and pauses where they serve the prayer, without forcing identical sentence patterns.
+- Paragraph 1 should introduce the selected observance naturally and distinguish whether it is celebrated today or approaching. If it is upcoming, include its actual date and never call it today's celebration.
+- When sharedGospelBridge or gospelCitation is present, use the supplied Gospel context when it genuinely supports the reflection, but do not introduce another Scripture citation.
+- Paragraph 2 should identify one central spiritual theme from the observance and draw it into ordinary Christian life through prayer, relationships, work, family, vocation, stewardship, health, rest, charity, conversion, perseverance, trust, or fidelity to ordinary responsibilities.
+- Do not give a long biography. Use the saint or feast as a spiritual guide, not merely a historical subject, and do not force a weak connection.
+- Paragraph 3 should guide prayerful reflection or examen toward interior life, gratitude, conversion, trust in God, and a faithful next step. Let the content determine whether questions or explicit consolation/desolation language are helpful.
+- Paragraph 4 should contain a natural closing prayer and end exactly with:
 {FINAL_PEACE}
+- If a saint witness is supplied, it may be named naturally and may receive a final intercession. A quotation is optional; never invent one or require one merely because legacy context contains it.
 - Do not invent liturgical facts beyond the provided context.
 - Keep the tone contemplative, intimate, and natural aloud.
 
 Date: {date_value.isoformat()}
 Episode title: {title}
 Gospel bridge: {context.sharedGospelBridge or context.gospelCitation}
+Selected observance: {context.feastDay}
+Selected observance date: {getattr(context, 'primaryAnchorDate', '')}
+Selected observance rank: {getattr(context, 'primaryAnchorRank', '') or context.liturgicalRank}
+Selected observance timing: {getattr(context, 'primaryAnchorTiming', '')}
 Shared helper context:
 {payload}
 """.strip()
@@ -147,7 +153,18 @@ def deterministic_ignatian_reflection(date_value, context: DailyLiturgicalContex
     theme = context.sharedThemeTitle or context.primaryTheme
     tone = context.emotionalTone
     summary = context.sharedThemeExplanation or context.shortSummary
-    feast_sentence = f"The Church's calendar gives us {context.feastDay} as a companion today." if context.feastDay else ""
+    anchor_date = str(getattr(context, "primaryAnchorDate", "") or "").strip()
+    try:
+        parsed_anchor_date = _dt.date.fromisoformat(anchor_date)
+        anchor_display = f"{parsed_anchor_date.strftime('%B')} {parsed_anchor_date.day}, {parsed_anchor_date.year}"
+    except (ValueError, TypeError):
+        anchor_display = anchor_date
+    if context.feastDay and getattr(context, "primaryAnchorTiming", "") == "upcoming":
+        feast_sentence = f"As we approach {context.feastDay} on {anchor_display}, the Church gives us this observance as a companion."
+    elif context.feastDay:
+        feast_sentence = f"The Church's calendar gives us {context.feastDay} as a companion today."
+    else:
+        feast_sentence = ""
     if context.sharedGospelBridge:
         gospel_sentence = f"In {context.sharedGospelBridge}, the Lord gives this day its Gospel shape."
     elif context.gospelCitation and context.gospelTheme:
@@ -156,17 +173,18 @@ def deterministic_ignatian_reflection(date_value, context: DailyLiturgicalContex
         gospel_sentence = f"The Gospel theme before us is {context.gospelTheme}."
     else:
         gospel_sentence = "The Church invites us to receive this day through the steady light of the liturgical season."
-    quote_sentence = f'Saint {saint} teaches us, "{quote}"' if quote else f"With Saint {saint}, we ask the Lord to make this prayer concrete in our lives."
+    quote_sentence = f'Saint {saint} teaches us, "{quote}"' if quote else f"With Saint {saint}, we ask the Lord to make this prayer concrete in our lives." if saint else "We ask the Lord to make this observance concrete in our lives."
+    saint_sentence = f"Saint {saint}, pray for us.\n" if saint else ""
+    witness_subject = f"Saint {saint}'s witness" if saint else "the Church's observance"
     reflection = f"""
-{WELCOME} Today {summary.lower()} {feast_sentence} {gospel_sentence} We enter this prayer in a {tone} spirit and ask for the grace to notice God in ordinary life. What is the Lord already revealing in this day?
+{WELCOME} {summary} {feast_sentence} {gospel_sentence} We enter this prayer in a {tone} spirit and ask for the grace to notice God in ordinary life. What is the Lord already revealing in this day?
 
-This day speaks through the saint's witness. {quote_sentence} It may have shown itself in a welcome, a delay, a small mercy, or a resistance you did not expect. {focus} Where did the saint's witness quietly touch your ordinary life today?
+This day speaks through {witness_subject}. {quote_sentence} It may have shown itself in a welcome, a delay, a small mercy, or a resistance you did not expect. {focus} Where did this observance quietly touch your ordinary life today?
 
 In the examen, let gratitude come first, then the review, then the places of consolation and desolation. Bring the day honestly before Jesus, and ask what faithful step he is asking of you tonight. Where is hope opening for tomorrow, and what does the Spirit want you to notice before tomorrow arrives?
 
 Lord Jesus Christ, teach us to find you in the ordinary places of our lives. Give us the grace of {theme}, the honesty to notice your movements in our hearts, and the courage to follow where you gently lead. Amen.
-Saint {saint}, pray for us.
-{FINAL_PEACE}
+{saint_sentence}{FINAL_PEACE}
 """.strip()
     return reflection
 
@@ -199,29 +217,21 @@ def _validate_episode(
     if not cleaned.rstrip().endswith(FINAL_PEACE):
         raise RuntimeError("Daily Reflection final peace line is missing.")
     saint = _saint_for_context(context)
-    quote = _saint_quote_for_context(context)
-    saint_line = f"Saint {saint}, pray for us."
-    if saint_line not in cleaned:
-        raise RuntimeError("Daily Reflection saint closing is missing.")
-    saint_mentions = len(re.findall(rf"\b{re.escape(saint)}\b", cleaned, flags=re.IGNORECASE))
-    if saint_mentions < 2:
-        raise RuntimeError("Daily Reflection must materially mention the saint beyond the closing invocation.")
-    if quote and quote not in cleaned:
-        raise RuntimeError("Daily Reflection approved saint quotation is missing.")
-    for phrase in ("gratitude", "consolation", "desolation", "Jesus", "hope"):
-        if phrase.lower() not in cleaned.lower():
-            raise RuntimeError(f"Daily Reflection examen is missing '{phrase}'.")
+    selected = str(getattr(context, "feastDay", "") or "").strip()
+    if selected and selected.casefold() not in cleaned.casefold():
+        raise RuntimeError("Daily Reflection must identify the selected observance.")
+    if saint:
+        saint_mentions = len(re.findall(rf"\b{re.escape(saint)}\b", cleaned, flags=re.IGNORECASE))
+        if saint_mentions < 1:
+            raise RuntimeError("Daily Reflection must use the supplied saint naturally when present.")
     paragraphs = _spoken_paragraphs(cleaned)
     if len(paragraphs) != 4:
         raise RuntimeError(f"Daily Reflection must contain exactly 4 spoken paragraphs, got {len(paragraphs)}.")
     if not paragraphs[0].startswith(WELCOME):
         raise RuntimeError("Daily Reflection opening paragraph must begin with the welcome.")
-    for index, paragraph in enumerate(paragraphs[:3], start=1):
-        if not paragraph.rstrip().endswith("?"):
-            raise RuntimeError(f"Daily Reflection paragraph {index} must end with a question before the pause.")
     spoken_body = " ".join(paragraphs[:3])
     reflection_word_count = len(re.findall(r"\b[\w']+\b", spoken_body))
-    if not 100 <= reflection_word_count <= 350:
+    if not 80 <= reflection_word_count <= 400:
         raise RuntimeError(f"Daily Reflection spoken body word count out of range: {reflection_word_count}.")
     return IgnatianReflectionEpisode(
         title=title,

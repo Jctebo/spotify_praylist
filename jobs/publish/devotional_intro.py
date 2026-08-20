@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime as _dt
 import os
 import re
 from dataclasses import asdict, dataclass
@@ -16,7 +17,7 @@ OPENAI_API_KEY_FILE = "OPENAI_API_KEY_FILE"
 OAI_API_BASE_URL = "OAI_API_BASE_URL"
 OAI_MODEL = "OAI_MODEL"
 
-DEVOTIONAL_INTRO_POLICY_VERSION = "devotional-intro-v10"
+DEVOTIONAL_INTRO_POLICY_VERSION = "devotional-intro-v11"
 SOURCE_OPENAI = "openai"
 SOURCE_FALLBACK_DETERMINISTIC = "fallback-deterministic"
 
@@ -27,6 +28,7 @@ class DevotionalIntroProfile:
     purpose: str
     sentence_guidance: str
     min_chars: int
+    max_chars: int = 1600
     require_gospel_when_available: bool = False
 
 
@@ -48,9 +50,8 @@ MORNING_PRAYER_PROFILE = DevotionalIntroProfile(
         "Orient the listener to Morning Prayer through the Church's liturgical day, "
         "the shared daily focus, and the Gospel when it is supplied."
     ),
-    sentence_guidance="Write the introduction in 2-4 sentences.",
+    sentence_guidance="Write a brief, natural introduction in approximately 1-3 paragraphs; vary sentence length and transitions naturally.",
     min_chars=80,
-    require_gospel_when_available=True,
 )
 
 AUXILIUM_CHRISTIANORUM_PROFILE = DevotionalIntroProfile(
@@ -59,7 +60,7 @@ AUXILIUM_CHRISTIANORUM_PROFILE = DevotionalIntroProfile(
         "Lead from the liturgical announcement into the Auxilium Christianorum prayers, "
         "placing the listener, families, and the needs of the day under Mary's protection."
     ),
-    sentence_guidance="Write the introduction in 1-2 sentences.",
+    sentence_guidance="Write a brief, natural introduction in approximately 1-3 paragraphs; end with a transition into the prayers.",
     min_chars=40,
 )
 
@@ -69,7 +70,7 @@ ANGELUS_PROFILE = DevotionalIntroProfile(
         "Lead naturally into the Angelus by joining the day's grace to Mary's faithful "
         "reception of the Incarnation without repeating a separate daily announcement."
     ),
-    sentence_guidance="Write the introduction in 1-2 sentences.",
+    sentence_guidance="Write a brief, natural introduction in approximately 1-3 paragraphs; end with a transition into the Angelus.",
     min_chars=40,
 )
 
@@ -79,7 +80,7 @@ REGINA_CAELI_PROFILE = DevotionalIntroProfile(
         "Lead naturally into the Regina Caeli by joining the day's grace to Easter joy "
         "and Mary's rejoicing without repeating a separate daily announcement."
     ),
-    sentence_guidance="Write the introduction in 1-2 sentences.",
+    sentence_guidance="Write a brief, natural introduction in approximately 1-3 paragraphs; end with a transition into the Regina Caeli.",
     min_chars=40,
 )
 
@@ -89,7 +90,7 @@ NOVENA_PROFILE = DevotionalIntroProfile(
         "Welcome the listener into the current day of this specific novena, centering the saint "
         "or devotion before the prayer begins."
     ),
-    sentence_guidance="Write the introduction in 4-6 short sentences.",
+    sentence_guidance="Write a brief introduction in 4-6 short sentences.",
     min_chars=40,
 )
 
@@ -181,6 +182,11 @@ def _context_rows(context: Mapping[str, Any]) -> Tuple[Tuple[str, str], ...]:
         ("Prayer", _context_value(context, "prayer_title", "devotion")),
         ("Devotion", _context_value(context, "devotion")),
         ("Liturgical celebration", _context_value(context, "celebration_clause", "celebration_names")),
+        ("Selected observance", _context_value(context, "selected_observance", "primary_anchor")),
+        ("Selected observance date", _context_value(context, "selected_observance_date", "primary_anchor_date")),
+        ("Selected observance rank", _context_value(context, "selected_observance_rank", "primary_anchor_rank")),
+        ("Selected observance timing", _context_value(context, "selected_observance_timing", "primary_anchor_timing")),
+        ("Selection source", _context_value(context, "selection_source")),
         ("Liturgical season", _context_value(context, "season_label", "liturgical_season")),
         ("Shared daily focus", _context_value(context, "daily_theme_title", "sharedThemeTitle")),
         (
@@ -254,12 +260,35 @@ Use the supplied identity description faithfully, with patronage when present. D
 {short_form_guidance}
         Let the saint's life and witness give shape to the opening; do not summarize the day's liturgy.
 """.strip()
-    saint_rules = """
+    if profile.key == "novena":
+        saint_rules = """
 The saint witness is a required participant in this prayer, not an abstract theme label.
 Name the supplied saint witness naturally, address God while asking for that saint's intercession, and explicitly use the supplied quotation as the saint's words.
 Quote the supplied wording exactly; attribute it to the named saint and do not invent, paraphrase, or substitute a quotation.
 If no quotation is supplied, do not create one; still name the saint witness and pray with the saint's intercession.
 """.strip()
+    else:
+        saint_rules = """
+Use the selected observance as a spiritual guide for this prayer, not merely as a historical subject.
+Explain a meaningful connection and do not force a weak association or repeat the same biographical sentence used by another prayer.
+A supplied saint quotation is optional. Use it only when it genuinely helps, reproduce it accurately, and attribute it; never invent or paraphrase a quotation.
+The shared observance, timing, and calendar facts are authoritative. Do not choose a replacement saint or feast, look backward, or invent a date or rank.
+""".strip()
+    calendar_rules = "" if profile.key == "novena" else """
+The application has already selected one shared Catholic observance for this local date.
+Check today first was already done by the calendar authority; when today had no suitable observance, it selected from the next nine calendar days by rank: Solemnity, Feast, Obligatory Memorial, Optional Memorial, then sooner date for equal rank.
+Use the supplied timing accurately. If it is today, say naturally that today the Church celebrates it. If it is upcoming, say naturally that we approach it and include the supplied actual date. Never describe an upcoming observance as today's celebration.
+Do not repeat the full calendar explanation before every prayer. Establish the timing naturally and let the four prayer introductions share one quiet theme while sounding distinct.
+""".strip()
+    profile_guidance = ""
+    if profile.key == "angelus":
+        profile_guidance = "Connect the observance to Mary's faithful yes, the Incarnation, trust, or another genuine Christian disposition expressed by the Angelus."
+    elif profile.key == "regina-caeli":
+        profile_guidance = "Connect the observance to Mary's Easter joy, hope in the risen Christ, or another genuine Christian disposition expressed by the Regina Caeli."
+    elif profile.key == "morning-prayer":
+        profile_guidance = "Connect the observance to offering the day, vocation, work, family, charity, humility, courage, discipline, surrender to Providence, or attentiveness to grace, and give one simple disposition to carry into the day."
+    elif profile.key == "auxilium-christianorum":
+        profile_guidance = "Connect the observance to Christ's victory, grace, holiness, perseverance, protection of family and vocation, repentance, humility, dependence upon grace, Mary as Help of Christians, or the intercession of the saints without sensationalizing spiritual warfare. Give one simple intention for the prayers."
     return f"""
 Write a concise Catholic devotional introduction for the profile "{profile.key}".
 
@@ -270,10 +299,12 @@ Clearly identify the prayer as "{prayer_title}".
 Ground the prose in the supplied {"prayer-specific" if profile.key == "novena" else "daily and prayer-specific"} context.
 {gospel_rule}
 {novena_rules}
+{calendar_rules}
+{profile_guidance}
 {saint_rules}
 Do not invent quotations, saints, feasts, seasons, Scripture citations, doctrine, or current events. When Standard short-form guidance is supplied, use only modest, well-known saint/event identity details and omit patronage if uncertain.
 Return plain prose only: no heading, markdown, bullets, production notes, or commentary.
-Keep the result at least {profile.min_chars} characters long.
+Keep the result between {profile.min_chars} and {profile.max_chars} characters, concise enough to function as an introduction to prayer.
 {correction_block}
 
 Approved context:
@@ -382,6 +413,23 @@ def _reject_foreign_scripture_citations(text: str, allowed_citation: str) -> Non
             raise RuntimeError(f"Intro introduced an unsupported Scripture citation: {citation}.")
 
 
+def _observance_timing_sentence(context: Mapping[str, Any]) -> str:
+    name = _context_value(context, "selected_observance", "primary_anchor", "celebration_clause", "celebration_names")
+    if not name:
+        return ""
+    name = name.rstrip(".!? ")
+    target_date = _context_value(context, "date", "date_iso")
+    observance_date = _context_value(context, "selected_observance_date", "primary_anchor_date")
+    if observance_date and target_date and observance_date != target_date:
+        try:
+            parsed = _dt.date.fromisoformat(observance_date)
+            display = f"{parsed.strftime('%B')} {parsed.day}, {parsed.year}"
+        except ValueError:
+            display = observance_date
+        return f"As we approach {name} on {display},"
+    return f"Today the Church celebrates {name}."
+
+
 def validate_devotional_intro(
     text: Any,
     profile: DevotionalIntroProfile,
@@ -390,6 +438,8 @@ def validate_devotional_intro(
     rendered = _normalize_whitespace(text).replace("â€™", "'")
     if len(rendered) < profile.min_chars:
         raise RuntimeError(f"Intro is shorter than {profile.min_chars} characters.")
+    if len(rendered) > profile.max_chars:
+        raise RuntimeError(f"Intro is longer than {profile.max_chars} characters.")
     if re.search(r"(^|\s)(?:```|#{1,6}\s|\*\*|[*-]\s)", rendered):
         raise RuntimeError("Intro must not contain markdown or bullets.")
     lowered = rendered.lower()
@@ -416,23 +466,13 @@ def validate_devotional_intro(
     if identity_candidates and not _contains_any(rendered, identity_candidates):
         raise RuntimeError(f"Intro must identify the prayer '{prayer_title}'.")
 
-    daily_anchors = tuple(
-        value
-        for value in (
-            _context_value(context, "daily_theme_title", "sharedThemeTitle"),
-            _context_value(context, "celebration_clause", "celebration_names"),
-            _context_value(context, "season_label", "liturgical_season"),
-            _context_value(context, "daily_gospel_bridge", "sharedGospelBridge"),
-            _context_value(context, "daily_gospel_citation", "gospel_citation"),
-        )
-        if value
-    )
-    if profile.key != "novena" and daily_anchors and not _contains_any(rendered, daily_anchors):
-        raise RuntimeError("Intro must use at least one supplied daily liturgical anchor.")
+    selected_observance = _context_value(context, "selected_observance", "primary_anchor")
+    if profile.key != "novena" and selected_observance and not _contains_any(rendered, (selected_observance,)):
+        raise RuntimeError("Intro must identify the selected observance.")
 
     saint_witness = _context_value(context, "saint_witness", "saintWitness")
     saint_quote = _context_value(context, "saint_witness_quote", "saintWitnessQuote")
-    if profile.key != "novena" and saint_witness:
+    if profile.key == "novena" and saint_witness:
         if not _contains_any(rendered, (saint_witness,)):
             raise RuntimeError("Intro must name the supplied saint witness.")
         if saint_quote and saint_quote not in rendered:
@@ -497,7 +537,7 @@ def validate_devotional_intro(
 def _fallback_text(profile: DevotionalIntroProfile, context: Mapping[str, Any]) -> str:
     prayer_title = _context_value(context, "prayer_title", "devotion", "saint_name") or "this prayer"
     theme = _spoken_phrase(_context_value(context, "daily_theme_title", "sharedThemeTitle")) or "faithful prayer"
-    celebration = _spoken_phrase(_context_value(context, "celebration_clause", "celebration_names"))
+    timing_sentence = _observance_timing_sentence(context)
     gospel_bridge = _context_value(context, "daily_gospel_bridge", "sharedGospelBridge")
     saint_witness = _context_value(context, "saint_witness", "saintWitness")
     saint_quote = _context_value(context, "saint_witness_quote", "saintWitnessQuote")
@@ -508,25 +548,25 @@ def _fallback_text(profile: DevotionalIntroProfile, context: Mapping[str, Any]) 
         sentences = [f"As we begin {prayer_title}, the Church gathers our hearts around {theme}."]
         if saint_sentence:
             sentences.append(saint_sentence)
-        if celebration:
-            sentences.append(f"Today the Church celebrates {celebration}.")
+        if timing_sentence:
+            sentences.append(timing_sentence)
         if gospel_bridge:
             sentences.append(_complete_sentence(gospel_bridge))
         sentences.append("We receive this grace through the Church's prayer and offer the whole day to God.")
         return _normalize_whitespace(" ".join(sentences))
     if profile.key == "auxilium-christianorum":
         return _normalize_whitespace(
-            f"As we enter the {prayer_title}, {saint_sentence} We carry the grace of {theme} into prayer, "
+            f"As we enter the {prayer_title}, {timing_sentence} {saint_sentence} We carry the grace of {theme} into prayer, "
             "placing ourselves, our families, and the needs of this day under Mary's protection."
         )
     if profile.key == "angelus":
         return _normalize_whitespace(
-            f"As we pray the {prayer_title}, {saint_sentence} The grace of {theme} draws us to Mary's faithful yes "
+            f"As we pray the {prayer_title}, {timing_sentence} {saint_sentence} The grace of {theme} draws us to Mary's faithful yes "
             "and the mystery of the Word made flesh."
         )
     if profile.key == "regina-caeli":
         return _normalize_whitespace(
-            f"As we pray the {prayer_title}, {saint_sentence} The grace of {theme} joins our prayer to Mary's Easter joy "
+            f"As we pray the {prayer_title}, {timing_sentence} {saint_sentence} The grace of {theme} joins our prayer to Mary's Easter joy "
             "in the risen Christ."
         )
     day = _context_value(context, "day", "active_day")

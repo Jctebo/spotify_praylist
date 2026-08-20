@@ -37,7 +37,7 @@ class TestIgnatianReflection(unittest.TestCase):
             sharedGospelBridge="today's Gospel, Mark 5:36, draws us into trust",
         )
 
-    def test_missing_openai_uses_structured_fallback_with_ignatius(self):
+    def test_missing_openai_uses_structured_fallback_without_inventing_a_saint(self):
         with mock.patch.object(self.mod, "_resolve_openai_settings", return_value=("", "https://api.openai.com/v1", "gpt-4.1-mini")):
             episode = self.mod.build_ignatian_reflection_episode(
                 datetime.date(2026, 6, 9),
@@ -45,7 +45,7 @@ class TestIgnatianReflection(unittest.TestCase):
             )
 
         self.assertEqual(episode.source, "fallback")
-        self.assertEqual(episode.saint_name, "Ignatius of Loyola")
+        self.assertEqual(episode.saint_name, "")
         self.assertIn("Welcome to Ora Pro Nobis, where we pray with the Saints.", episode.text)
         self.assertIn("today's Gospel, Mark 5:36, draws us into trust", episode.text)
         self.assertNotIn("Episode Title", episode.text)
@@ -55,7 +55,7 @@ class TestIgnatianReflection(unittest.TestCase):
         self.assertIn("?", episode.segments[0])
         self.assertTrue(episode.segments[0].startswith("Welcome to Ora Pro Nobis, where we pray with the Saints."))
         self.assertTrue(episode.text.endswith("And may the peace of Christ remain with you."))
-        self.assertIn("Saint Ignatius of Loyola, pray for us.", episode.text)
+        self.assertNotIn("pray for us.", episode.text)
         self.assertGreaterEqual(episode.word_count, 100)
         self.assertLessEqual(episode.word_count, 350)
 

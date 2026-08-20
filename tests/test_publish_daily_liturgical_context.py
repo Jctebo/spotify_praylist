@@ -27,7 +27,7 @@ class TestDailyLiturgicalContext(unittest.TestCase):
         self.assertEqual(payload["feastDay"], "The Most Sacred Heart of Jesus")
         self.assertEqual(payload["liturgicalRank"], "solemnity")
         self.assertEqual(payload["source"], "saint-centered-calendar-window")
-        self.assertEqual(payload["sharedThemeVersion"], "saint-centered-theme-v1")
+        self.assertEqual(payload["sharedThemeVersion"], "shared-liturgical-theme-v2")
         self.assertIn("mercy", payload["primaryTheme"])
         self.assertNotEqual(payload["gospelTheme"], "mission")
         self.assertTrue(payload["sharedThemeSources"])
@@ -39,13 +39,13 @@ class TestDailyLiturgicalContext(unittest.TestCase):
         context = self.mod.build_daily_liturgical_context(self.date)
 
         self.assertEqual(context.primaryTheme, "trustful perseverance")
-        self.assertEqual(context.sharedThemeVersion, "saint-centered-theme-v1")
+        self.assertEqual(context.sharedThemeVersion, "shared-liturgical-theme-v2")
         self.assertIn("No target-day observance", context.fallbackReason)
 
-    def test_target_day_remains_anchor_when_future_day_is_higher_ranked(self):
+    def test_future_higher_ranked_observance_is_selected_when_today_is_only_weekday(self):
         def fetch(calendar, locale, date_value):
             if date_value == self.date:
-                return [{"name": "Saint Example", "rank_name": "memorial", "season": "ordinary_time"}]
+                return [{"name": "Friday of Ordinary Time", "rank_name": "weekday", "season": "ordinary_time"}]
             if date_value == self.date + datetime.timedelta(days=1):
                 return [{"name": "Future Solemnity", "rank_name": "solemnity", "season": "ordinary_time"}]
             return []
@@ -55,8 +55,9 @@ class TestDailyLiturgicalContext(unittest.TestCase):
 
         context = self.mod.build_daily_liturgical_context(self.date)
 
-        self.assertEqual(context.feastDay, "Saint Example")
-        self.assertEqual(context.liturgicalRank, "memorial")
+        self.assertEqual(context.feastDay, "Future Solemnity")
+        self.assertEqual(context.liturgicalRank, "solemnity")
+        self.assertEqual(context.primaryAnchorTiming, "upcoming")
         self.assertEqual(len(context.sharedThemeSources), 2)
 
 
