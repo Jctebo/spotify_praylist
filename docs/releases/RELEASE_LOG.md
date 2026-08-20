@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.4.2.2] - 2026-08-20
+
+### Fixed
+- Relaxed Rosary priority validation to accept natural labels such as memorial, feast, gospel, season, and Ordinary Time alongside configured observance anchors.
+- Added regression coverage and stabilized fallback tests against live observance-context calls.
+
 ## [0.4.2.1] - 2026-08-20
 
 ### Fixed

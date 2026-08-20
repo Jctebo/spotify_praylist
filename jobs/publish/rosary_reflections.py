@@ -1084,7 +1084,16 @@ def _validated_prose(label: str, value: Any, minimum: int, maximum: int) -> str:
 
 
 def _require_dominant_anchor(text: str, context: RosaryDayContext) -> None:
-    if not _contains_any(text, context.dominant_priority.anchors):
+    aliases = {
+        "major-celebration": ("feast", "solemnity", "celebration"),
+        "gospel": ("gospel",),
+        "memorial": ("memorial",),
+        "season": ("season",),
+        "ordinary-time": ("ordinary time",),
+        "mystery-fruits": ("mystery", "fruit"),
+    }
+    anchors = tuple(context.dominant_priority.anchors) + aliases.get(context.dominant_priority.key, ())
+    if not _contains_any(text, anchors):
         raise RuntimeError(
             f"Rosary devotional prose must anchor the dominant priority '{context.dominant_priority.key}'."
         )
