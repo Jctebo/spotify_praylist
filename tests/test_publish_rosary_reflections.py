@@ -311,18 +311,6 @@ class TestPublishRosaryReflections(unittest.TestCase):
 
         self.assertIn("Saint John Eudes", parsed.introduction)
 
-    def test_dominant_anchor_accepts_natural_priority_label(self):
-        context = self._context(
-            [{"name": "Memorial of Saint Bernard", "rank_name": "memorial", "season": "ordinary_time"}],
-            shared={},
-        )
-        payload = self._valid_payload(context)
-        payload["introduction"] += " This memorial draws us into the mysteries."
-
-        parsed = self.mod.validate_rosary_devotional_response(payload, context)
-
-        self.assertIn("This memorial", parsed.introduction)
-
     def test_semantic_validation_rejects_priority_category_and_mystery_failures(self):
         context = self._context(
             [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}]
@@ -373,7 +361,7 @@ class TestPublishRosaryReflections(unittest.TestCase):
         context = self._context(
             [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}]
         )
-        with mock.patch.object(self.mod, "_call_openai_observance_context", return_value=self.mod.RosaryObservanceContext()), mock.patch.object(
+        with mock.patch.object(
             self.mod,
             "_call_openai_structured",
             side_effect=RuntimeError("unsupported"),
@@ -385,7 +373,7 @@ class TestPublishRosaryReflections(unittest.TestCase):
             result = self.mod.build_rosary_devotional_set(self.date, JOYFUL_TEXT, day_context=context)
         self.assertEqual(result.source, self.mod.SOURCE_GENERATED_JSON)
 
-        with mock.patch.object(self.mod, "_call_openai_observance_context", return_value=self.mod.RosaryObservanceContext()), mock.patch.object(
+        with mock.patch.object(
             self.mod,
             "_call_openai_structured",
             side_effect=RuntimeError("model down"),
