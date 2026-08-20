@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.4.2.3] - 2026-08-20
+
+### Fixed
+- Stopped requiring every Rosary decade to repeat the literal priority anchor after the introduction and overall intention establish the observance context.
+- Kept mystery/fruit relevance and Scripture validation for each decade.
+
 ## [0.4.2.2] - 2026-08-20
 
 ### Fixed
