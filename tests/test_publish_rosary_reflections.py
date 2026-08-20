@@ -106,6 +106,23 @@ class TestPublishRosaryReflections(unittest.TestCase):
         )
         self.assertEqual(context.dominant_priority.key, "memorial")
 
+    def test_context_preserves_deterministic_observance_timing(self):
+        context = self._context(
+            [{"name": "Saint Boniface", "rank_name": "memorial", "season": "ordinary_time"}],
+            shared={
+                "primaryAnchorDate": "2026-06-08",
+                "primaryAnchorRank": "feast",
+                "saintWitness": "Saint Boniface",
+                "saintWitnessDate": "2026-06-05",
+                "saintWitnessRank": "memorial",
+            },
+        )
+
+        self.assertEqual(context.observance_date, "2026-06-08")
+        self.assertEqual(context.observance_rank, "feast")
+        self.assertEqual(context.saint_witness_date, "2026-06-05")
+        self.assertEqual(context.saint_witness_rank, "memorial")
+
     def test_nonordinary_season_outranks_gospel_and_memorial(self):
         context = self._context(
             [{"name": "An Advent Memorial", "rank_name": "memorial", "season": "advent"}]
@@ -146,15 +163,33 @@ class TestPublishRosaryReflections(unittest.TestCase):
         self.assertEqual(context.focus_title, "Today's Gospel, Mark 12:35-37")
         self.assertEqual(context.shared_theme_title, "A Different Display Theme")
 
-    def test_prompt_guides_two_to_four_intro_sentences_without_validator_enforcement(self):
+    def test_prompt_is_date_forward_and_names_weekday_mystery_schedule(self):
         context = self._context(
             [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}]
         )
 
         prompt = self.mod._build_devotional_prompt(self.date, context)
 
-        self.assertIn("Write the introduction in 2-4 sentences.", prompt)
-        self.assertIn("Do not force a sentence count", prompt)
+        self.assertIn("local calendar date 2026-06-05", prompt)
+        self.assertIn("Traditional mysteries for Friday: Sorrowful", prompt)
+        self.assertIn("Do not look backward, search for another date, or choose a different observance", prompt)
+        self.assertIn("narrate the biblical event vividly and reverently", prompt)
+        self.assertIn("end with a short prayer or petition", prompt)
+
+    def test_prompt_distinguishes_upcoming_observance_from_today(self):
+        context = self._context(
+            [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}],
+            shared={
+                "primaryAnchorDate": "2026-06-08",
+                "primaryAnchorRank": "feast",
+            },
+        )
+
+        prompt = self.mod._build_devotional_prompt(self.date, context)
+
+        self.assertIn("Selected observance date: 2026-06-08", prompt)
+        self.assertIn("As we approach", prompt)
+        self.assertIn("do not call it today's celebration", prompt)
 
     def test_prompt_allows_optional_quotes_and_event_observance_information(self):
         context = self._context(

@@ -154,6 +154,8 @@ def build_canonical_daily_theme_runtime_context(
         "liturgicalWeek": "",
         "feastDay": anchor,
         "liturgicalRank": str(payload.get("primary_rank") or "weekday"),
+        "primaryAnchorDate": str(payload.get("primary_anchor_date") or target_date.isoformat()),
+        "primaryAnchorRank": str(payload.get("primary_rank") or "weekday"),
         "saintOfDay": str(payload.get("saint_witness") or ""),
         "gospelTheme": "",
         "primaryTheme": themes[0],
