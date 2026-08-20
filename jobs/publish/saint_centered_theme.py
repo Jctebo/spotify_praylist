@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 from jobs.novena.liturgical_helpers import celebration_name, infer_celebration_rank, romcal_fetch_day
 
 
-THEME_VERSION = "saint-centered-theme-v1"
+THEME_VERSION = "shared-liturgical-theme-v2"
 DEFAULT_CALENDAR = "general_roman"
 DEFAULT_LOCALE = "en"
 RANK_PRIORITY = {
@@ -59,6 +59,8 @@ class SaintCenteredThemeBrief:
     primary_anchor: str
     primary_rank: str
     primary_anchor_date: str
+    primary_anchor_timing: str
+    selection_source: str
     saint_witness: str
     saint_witness_date: str
     saint_witness_rank: str
@@ -104,12 +106,12 @@ def build_saint_centered_theme_brief(
 ) -> SaintCenteredThemeBrief:
     effective_calendar = str(calendar or DEFAULT_CALENDAR).strip() or DEFAULT_CALENDAR
     effective_locale = str(locale or DEFAULT_LOCALE).strip() or DEFAULT_LOCALE
-    start = target_date - _dt.timedelta(days=3)
+    start = target_date
     end = target_date + _dt.timedelta(days=9)
     rows: List[CalendarWindowItem] = []
     errors: List[str] = []
     gospel_fetcher = gospel_fetcher or _default_gospel_fetcher
-    for offset in range(13):
+    for offset in range(10):
         day = start + _dt.timedelta(days=offset)
         try:
             raw_rows = day_fetcher(effective_calendar, effective_locale, day)
@@ -125,7 +127,7 @@ def build_saint_centered_theme_brief(
 
     rows = _deduplicate(rows)
     target_rows = [row for row in rows if row.date == target_date.isoformat()]
-    anchor = _select_anchor(target_rows, target_date)
+    anchor = _select_anchor(rows, target_date)
     season = _season_for(target_rows, rows)
     if anchor is None:
         anchor = CalendarWindowItem(
@@ -138,7 +140,7 @@ def build_saint_centered_theme_brief(
         errors.append("No target-day observance was available; deterministic seasonal fallback selected.")
 
     supporting = _supporting(rows, anchor, target_date)
-    witness = _select_saint_witness(rows, target_date)
+    witness = anchor if _is_saint_observance(anchor.name) else None
     witness_quote = _quote_for(witness.name if witness else "")
     themes = _themes(anchor, supporting, season)
     excluded = [row.to_dict() for row in rows if row not in [anchor, *supporting]][:12]
@@ -154,6 +156,8 @@ def build_saint_centered_theme_brief(
         primary_anchor=anchor.name,
         primary_rank=anchor.rank,
         primary_anchor_date=anchor.date,
+        primary_anchor_timing="today" if anchor.date == target_date.isoformat() else "upcoming",
+        selection_source="today" if anchor.date == target_date.isoformat() else "forward-window",
         saint_witness=witness.name if witness else "",
         saint_witness_date=witness.date if witness else "",
         saint_witness_rank=witness.rank if witness else "",
@@ -244,36 +248,50 @@ def _deduplicate(rows: Iterable[CalendarWindowItem]) -> List[CalendarWindowItem]
 
 
 def _select_anchor(rows: Sequence[CalendarWindowItem], target_date: _dt.date) -> Optional[CalendarWindowItem]:
-    if not rows:
-        return None
     target = target_date.isoformat()
     target_rows = [row for row in rows if row.date == target]
-    candidates = target_rows or list(rows)
-    return sorted(candidates, key=lambda row: (RANK_PRIORITY.get(row.rank, 99), 0 if row.source == "romcal" else 1, row.name.casefold()))[0]
+    today_candidates = [row for row in target_rows if _is_suitable_observance(row)]
+    if today_candidates:
+        return _ranked_candidates(today_candidates, target_date)[0]
+
+    future_candidates = [
+        row
+        for row in rows
+        if target_date < _dt.date.fromisoformat(row.date) <= target_date + _dt.timedelta(days=9)
+        and _is_suitable_observance(row)
+    ]
+    if future_candidates:
+        return _ranked_candidates(future_candidates, target_date)[0]
+
+    return _ranked_candidates(target_rows, target_date)[0] if target_rows else None
+
+
+def _ranked_candidates(rows: Sequence[CalendarWindowItem], target_date: _dt.date) -> List[CalendarWindowItem]:
+    return sorted(
+        rows,
+        key=lambda row: (
+            RANK_PRIORITY.get(row.rank, 99),
+            (_dt.date.fromisoformat(row.date) - target_date).days,
+            0 if row.source == "romcal" else 1,
+            row.name.casefold(),
+        ),
+    )
+
+
+def _is_suitable_observance(row: CalendarWindowItem) -> bool:
+    return row.rank in {"sunday", "solemnity", "feast", "memorial", "optional_memorial", "easter_octave"} or _is_saint_observance(row.name)
 
 
 def _supporting(rows: Sequence[CalendarWindowItem], anchor: CalendarWindowItem, target_date: _dt.date) -> List[CalendarWindowItem]:
-    candidates = [row for row in rows if row != anchor and row.name != anchor.name]
-    candidates.sort(key=lambda row: (0 if row.date == target_date.isoformat() else 1, RANK_PRIORITY.get(row.rank, 99), abs((_dt.date.fromisoformat(row.date) - target_date).days), row.name.casefold()))
+    candidates = [
+        row
+        for row in rows
+        if row != anchor
+        and row.name != anchor.name
+        and _dt.date.fromisoformat(row.date) >= target_date
+    ]
+    candidates.sort(key=lambda row: (RANK_PRIORITY.get(row.rank, 99), (_dt.date.fromisoformat(row.date) - target_date).days, row.name.casefold()))
     return candidates[:3]
-
-
-def _select_saint_witness(rows: Sequence[CalendarWindowItem], target_date: _dt.date) -> Optional[CalendarWindowItem]:
-    candidates = [row for row in rows if _is_saint_observance(row.name)]
-    if not candidates:
-        return None
-    # Prefer a nearby saint with an approved quotation. This keeps the daily
-    # prayer fact-bounded while ensuring the current witness is someone whose
-    # own words can actually be placed in the listener's prayer.
-    return sorted(
-        candidates,
-        key=lambda row: (
-            0 if _quote_for(row.name) else 1,
-            abs((_dt.date.fromisoformat(row.date) - target_date).days),
-            RANK_PRIORITY.get(row.rank, 99),
-            row.name.casefold(),
-        ),
-    )[0]
 
 
 def _is_saint_observance(name: str) -> bool:

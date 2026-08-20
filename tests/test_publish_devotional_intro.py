@@ -28,7 +28,7 @@ class TestPublishDevotionalIntro(unittest.TestCase):
             "daily_gospel_text": "Remain in me, as I remain in you.",
         }
 
-    def test_prompt_contains_profile_sentence_guidance_without_exact_count_validation(self):
+    def test_prompt_contains_profile_guidance_without_rigid_sentence_validation(self):
         morning = build_devotional_intro_prompt(MORNING_PRAYER_PROFILE, self.morning_context)
         auxilium = build_devotional_intro_prompt(
             AUXILIUM_CHRISTIANORUM_PROFILE,
@@ -39,8 +39,8 @@ class TestPublishDevotionalIntro(unittest.TestCase):
             },
         )
 
-        self.assertIn("Write the introduction in 2-4 sentences.", morning)
-        self.assertIn("Write the introduction in 1-2 sentences.", auxilium)
+        self.assertIn("approximately 1-3 paragraphs", morning)
+        self.assertIn("approximately 1-3 paragraphs", auxilium)
         self.assertIn("Do not force a stock opening phrase.", morning)
 
     def test_validation_accepts_flexible_sentence_shapes(self):
@@ -62,7 +62,7 @@ class TestPublishDevotionalIntro(unittest.TestCase):
             four_sentences,
         )
 
-    def test_validation_rejects_bounds_and_missing_prayer_or_daily_anchor(self):
+    def test_validation_rejects_bounds_and_missing_prayer_but_allows_free_liturgical_wording(self):
         with self.assertRaisesRegex(RuntimeError, "shorter"):
             validate_devotional_intro("Morning Prayer and Trust.", MORNING_PRAYER_PROFILE, self.morning_context)
         with self.assertRaisesRegex(RuntimeError, "identify the prayer"):
@@ -72,13 +72,11 @@ class TestPublishDevotionalIntro(unittest.TestCase):
                 MORNING_PRAYER_PROFILE,
                 self.morning_context,
             )
-        with self.assertRaisesRegex(RuntimeError, "daily liturgical anchor"):
-            validate_devotional_intro(
-                "Morning Prayer opens our hearts to God and places every concern before him. "
-                "The Gospel helps us listen with faith and begin this day in hope.",
-                MORNING_PRAYER_PROFILE,
-                self.morning_context,
-            )
+        text = (
+            "Morning Prayer opens our hearts to God and places every concern before him. "
+            "The Gospel helps us listen with faith and begin this day in hope."
+        )
+        self.assertEqual(validate_devotional_intro(text, MORNING_PRAYER_PROFILE, self.morning_context), text)
 
     def test_validation_accepts_an_intro_longer_than_the_former_profile_limit(self):
         text = (
@@ -127,7 +125,7 @@ class TestPublishDevotionalIntro(unittest.TestCase):
                 self.morning_context,
             )
 
-    def test_daily_intro_requires_the_saint_witness_and_approved_quote(self):
+    def test_daily_intro_treats_saint_witness_and_quote_as_optional(self):
         context = {
             **self.morning_context,
             "saint_witness": "Saint John Eudes, Priest",
@@ -135,20 +133,31 @@ class TestPublishDevotionalIntro(unittest.TestCase):
             "saint_witness_quote_source": "The Admirable Heart of Jesus, III, 2",
         }
         prompt = build_devotional_intro_prompt(MORNING_PRAYER_PROFILE, context)
-        self.assertIn("saint witness is a required participant", prompt)
-        with self.assertRaisesRegex(RuntimeError, "approved saint witness quotation"):
-            validate_devotional_intro(
-                "Morning Prayer gathers us around Trust as Saint John Eudes, Priest accompanies the Church. "
-                "In today's Gospel, Christ teaches us to remain in him, and we offer the day to God.",
-                MORNING_PRAYER_PROFILE,
-                context,
-            )
+        self.assertIn("A supplied saint quotation is optional", prompt)
+        optional = (
+            "Morning Prayer gathers us around Trust as Saint John Eudes, Priest accompanies the Church. "
+            "In today's Gospel, Christ teaches us to remain in him, and we offer the day to God."
+        )
+        self.assertEqual(validate_devotional_intro(optional, MORNING_PRAYER_PROFILE, context), optional)
         valid = (
             "Morning Prayer gathers us around Trust as Saint John Eudes, Priest accompanies the Church. "
             "Saint John Eudes, Priest teaches us, \"Give yourselves to Jesus in order to enter the immensity of his great Heart.\" "
             "In today's Gospel, Christ teaches us to remain in him, and we offer the day to God."
         )
         self.assertEqual(validate_devotional_intro(valid, MORNING_PRAYER_PROFILE, context), valid)
+
+    def test_validation_requires_selected_observance_but_allows_natural_timing(self):
+        context = {
+            **self.morning_context,
+            "selected_observance": "Feast of Saint Example",
+            "selected_observance_date": "2026-07-25",
+            "date": "2026-07-23",
+        }
+        text = (
+            "Morning Prayer begins as we approach the Feast of Saint Example on July 25, 2026. "
+            "Its witness invites us to offer this day to God with quiet fidelity."
+        )
+        self.assertEqual(validate_devotional_intro(text, MORNING_PRAYER_PROFILE, context), text)
 
     def test_generation_retries_semantic_failure_then_returns_valid_result(self):
         calls = []

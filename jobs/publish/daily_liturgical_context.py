@@ -8,7 +8,7 @@ from jobs.publish.daily_intro import fetch_daily_gospel_context
 from jobs.publish.saint_centered_theme import build_saint_centered_theme_brief
 
 SAINT_FALLBACK = "Saint Ignatius of Loyola"
-SHARED_THEME_VERSION = "saint-centered-theme-v1"
+SHARED_THEME_VERSION = "shared-liturgical-theme-v2"
 
 
 @dataclass(frozen=True)
@@ -42,13 +42,17 @@ class DailyLiturgicalContext:
     sharedThemeReflectionFocus: str = ""
     sharedGospelBridge: str = ""
     sharedThemeSources: tuple[Dict[str, str], ...] = ()
-    sharedThemeVersion: str = "saint-centered-theme-v1"
+    sharedThemeVersion: str = "shared-liturgical-theme-v2"
     saintWitness: str = ""
     saintWitnessDate: str = ""
     saintWitnessRank: str = ""
     saintWitnessQuote: str = ""
     saintWitnessQuoteSource: str = ""
     saintWitnessQuoteSourceUrl: str = ""
+    primaryAnchorDate: str = ""
+    primaryAnchorRank: str = ""
+    primaryAnchorTiming: str = ""
+    selectionSource: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         payload = asdict(self)
@@ -115,11 +119,15 @@ def _context_from_brief(brief: Any) -> DailyLiturgicalContext:
         sharedThemeTransition=f"Carrying today's approved focus of {title.lower()}, we place this day before the Lord.",
         sharedThemeReflectionFocus=rationale,
         sharedThemeSources=tuple(payload.get("window_items") or ()),
-        sharedThemeVersion=str(payload.get("version") or "saint-centered-theme-v1"),
+        sharedThemeVersion=str(payload.get("version") or SHARED_THEME_VERSION),
         saintWitness=str(payload.get("saint_witness") or ""),
         saintWitnessDate=str(payload.get("saint_witness_date") or ""),
         saintWitnessRank=str(payload.get("saint_witness_rank") or ""),
         saintWitnessQuote=str(payload.get("saint_witness_quote") or ""),
         saintWitnessQuoteSource=str(payload.get("saint_witness_quote_source") or ""),
         saintWitnessQuoteSourceUrl=str(payload.get("saint_witness_quote_source_url") or ""),
+        primaryAnchorDate=str(payload.get("primary_anchor_date") or ""),
+        primaryAnchorRank=str(payload.get("primary_rank") or ""),
+        primaryAnchorTiming=str(payload.get("primary_anchor_timing") or ""),
+        selectionSource=str(payload.get("selection_source") or ""),
     )

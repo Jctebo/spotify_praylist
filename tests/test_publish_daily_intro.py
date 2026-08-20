@@ -134,7 +134,7 @@ class TestPublishDailyIntro(unittest.TestCase):
         self.assertEqual(result.source, "openai")
         self.assertEqual(result.profile, "morning-prayer")
         self.assertEqual(text, result.text)
-        self.assertIn("Write the introduction in 2-4 sentences.", captured["prompt"])
+        self.assertIn("approximately 1-3 paragraphs", captured["prompt"])
         self.assertNotIn("must begin with", captured["prompt"].lower())
 
     def test_build_daily_intro_omits_gospel_context_when_missing(self):
