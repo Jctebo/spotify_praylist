@@ -1,0 +1,13 @@
+{
+  "version": "offline-lectionary-v1-seed",
+  "calendar": "general_roman",
+  "locale": "en",
+  "entries": {
+    "2026-08-22": {
+      "mass_title": "Memorial of the Queenship of the Blessed Virgin Mary",
+      "lectionary": "424",
+      "gospel": "Matthew 23:1-12",
+      "source_note": "Verified citation seed; expand with reviewed lectionary data."
+    }
+  }
+}
