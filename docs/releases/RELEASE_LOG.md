@@ -1,5 +1,17 @@
 # Release Log
 
+## [0.4.3.0] - 2026-08-22
+
+### Added
+- Added a repository-owned offline Gospel fallback with a separate lectionary citation catalog and Original Douay-Rheims passage cache.
+- Added cache validation tooling and explicit `offline-douay-rheims` source/translation metadata.
+
+### Changed
+- Daily Gospel lookup now tries the local cache after `catholic-mass-readings` and USCCB HTML, while preserving the existing live-source precedence.
+
+### Fixed
+- Daily prayer generation can retain Scripture-grounded Gospel context for reviewed cached dates when external reading providers are unavailable.
+
 ## [0.4.2.6] - 2026-08-20
 
 ### Changed
