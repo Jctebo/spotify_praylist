@@ -19,6 +19,7 @@ from jobs.publish.devotional_intro import (
     resolve_openai_settings,
 )
 from jobs.publish.errors import DailyIntroMissingDataError
+from jobs.publish.offline_lectionary import OfflineLectionaryError, resolve_offline_gospel
 
 OAI_MODEL = "OAI_MODEL"
 DEVOTIONAL_OFFLINE_TESTS = "DEVOTIONAL_OFFLINE_TESTS"
@@ -46,6 +47,8 @@ class DailyIntroContext(NamedTuple):
     gospel_citation: str
     gospel_text: str
     mass_title: str
+    source: str = "live"
+    translation: str = ""
 
 
 def _usccb_daily_readings_url(date_value) -> str:
@@ -256,6 +259,7 @@ def fetch_daily_gospel_context(
                 gospel_citation=citation,
                 gospel_text=gospel_text,
                 mass_title=mass_title,
+                source="catholic-mass-readings",
             )
         except DailyIntroMissingDataError as exc:
             context_errors.append(exc)
@@ -272,8 +276,30 @@ def fetch_daily_gospel_context(
             gospel_citation=citation,
             gospel_text=gospel_text,
             mass_title=mass_title,
+            source="usccb-html",
         )
     except DailyIntroMissingDataError as exc:
+        context_errors.append(exc)
+
+    try:
+        offline = resolve_offline_gospel(
+            date_value,
+            calendar=effective_calendar,
+            locale=effective_locale,
+        )
+        return DailyIntroContext(
+            date=date_value,
+            calendar=effective_calendar,
+            locale=effective_locale,
+            celebration_names=tuple(celebration_names),
+            celebration_clause=_join_with_and(celebration_names),
+            gospel_citation=offline.citation,
+            gospel_text=offline.text,
+            mass_title=offline.mass_title,
+            source=offline.source,
+            translation=offline.translation,
+        )
+    except OfflineLectionaryError as exc:
         context_errors.append(exc)
 
     if allow_missing_gospel:
@@ -293,7 +319,7 @@ def fetch_daily_gospel_context(
         f"(calendar={effective_calendar}, locale={effective_locale})."
     )
     if context_errors:
-        raise DailyIntroMissingDataError(message) from context_errors[-1]
+        raise DailyIntroMissingDataError(message) from context_errors[0]
     raise DailyIntroMissingDataError(message)
 
 
@@ -362,6 +388,8 @@ def build_daily_intro_result(
         "daily_gospel_bridge": gospel_bridge,
         "daily_gospel_citation": context.gospel_citation,
         "daily_gospel_text": context.gospel_text,
+        "daily_gospel_source": context.source,
+        "daily_gospel_translation": context.translation,
         "saint_witness": _shared_theme_value(shared_theme, "saintWitness") or _shared_theme_value(shared_theme, "saint_witness"),
         "saint_witness_date": _shared_theme_value(shared_theme, "saintWitnessDate") or _shared_theme_value(shared_theme, "saint_witness_date"),
         "saint_witness_quote": _shared_theme_value(shared_theme, "saintWitnessQuote") or _shared_theme_value(shared_theme, "saint_witness_quote"),

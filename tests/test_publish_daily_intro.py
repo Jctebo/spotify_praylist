@@ -96,7 +96,7 @@ class TestPublishDailyIntro(unittest.TestCase):
         self.mod._fetch_usccb_html = lambda date_value: "<html><head><title>Broken | USCCB</title></head><body></body></html>"
 
         with self.assertRaises(self.mod.DailyIntroMissingDataError) as ctx:
-            self.mod.fetch_daily_gospel_context(datetime.date(2026, 4, 27))
+            self.mod.fetch_daily_gospel_context(datetime.date(2028, 4, 27))
 
         self.assertIn("no usable Gospel data", str(ctx.exception))
         self.assertIn("Gospel section", str(ctx.exception.__cause__))
@@ -111,6 +111,29 @@ class TestPublishDailyIntro(unittest.TestCase):
         self.assertEqual(context.gospel_citation, "John 14:1-12")
         self.assertIn("Do not let your hearts be troubled", context.gospel_text)
         self.assertEqual(context.mass_title, "Fifth Sunday of Easter")
+
+    def test_fetch_daily_gospel_context_falls_back_to_local_douay_rheims_cache(self):
+        self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
+        self.mod._fetch_mass_with_retry = lambda date_value: None
+        self.mod._fetch_usccb_html = lambda date_value: (_ for _ in ()).throw(
+            self.mod.DailyIntroMissingDataError("USCCB unavailable")
+        )
+        with mock.patch.object(
+            self.mod,
+            "resolve_offline_gospel",
+            return_value=SimpleNamespace(
+                citation="Matthew 23:1-12",
+                text="Then Jesus spake to the multitudes.",
+                mass_title="Memorial of the Queenship of the Blessed Virgin Mary",
+                source="offline-douay-rheims",
+                translation="Original Douay-Rheims",
+            ),
+        ):
+            context = self.mod.fetch_daily_gospel_context(datetime.date(2026, 8, 22))
+
+        self.assertEqual(context.gospel_citation, "Matthew 23:1-12")
+        self.assertEqual(context.source, "offline-douay-rheims")
+        self.assertEqual(context.translation, "Original Douay-Rheims")
 
     def test_build_daily_intro_uses_flexible_prompt_and_compatibility_wrapper(self):
         self.mod.romcal_fetch_day = lambda calendar, locale, date_value: [{"name": "Saint Example"}]
@@ -153,7 +176,7 @@ class TestPublishDailyIntro(unittest.TestCase):
             )
 
         text = self.mod.build_daily_intro_text(
-            datetime.date(2026, 4, 27),
+            datetime.date(2028, 4, 27),
             allow_missing_gospel=True,
             shared_theme={"sharedThemeTitle": "Trust"},
             generate_text_fn=generate,

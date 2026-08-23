@@ -122,10 +122,12 @@ Optional variables:
 - `jobs/publish/liturgical_announcement.py`: deterministic Romcal-backed liturgical/date announcement block used by Auxilium Christianorum without requiring OpenAI or Gospel text
 - `jobs/publish/saint_centered_theme.py`: deterministic D-3..D+9 calendar-window resolver and saint-centered theme brief used by every generated prayer experience
 - `jobs/publish/daily_liturgical_context.py`: compatibility context adapter exposing the approved saint-centered brief to existing generated prayer/reflection builders
+- `jobs/publish/offline_lectionary.py`: repository-owned citation and Douay-Rheims fallback used only after live Gospel sources fail
 - `jobs/publish/ignatian_reflection.py`: generated Daily Reflection text builder with OpenAI generation, required structure validation, deterministic fallback narration, and four-fragment pause timing
 - `jobs/publish/fragments.py`: fragment-level cache and assembly helpers for publish audio
 - `scripts/setup_spotify.ps1`: Spotify credential wizard that also updates `config/spotify/playlists/*.json`
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` with optional single-playlist targeting
+
 - `scripts/setup_notion_playlists.ps1`: legacy Notion playlist-registry helper, no longer on the active Spotify hot path
 - `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; scheduled runs are gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED` and now run three times per day
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
@@ -137,6 +139,24 @@ Optional variables:
 - `jobs/playlist/refresh_playlist.py` uses `JOB_UTC_OFFSET` for all date-based episode selection.
 - Default runtime offset is CST (`-06:00`) when `JOB_UTC_OFFSET` is unset.
 - Spotify playlist definitions carry playlist identity only; timezone does not live in the Spotify config files.
+
+### Offline Lectionary Fallback
+
+Daily Gospel lookup keeps the existing live source order (`catholic-mass-readings`, then USCCB HTML) and finally checks the repository-owned files under `config/publish/offline/`. The offline catalog stores lectionary citations separately from the public-domain Original Douay-Rheims passage cache, and fallback contexts identify themselves as `offline-douay-rheims` rather than claiming USCCB/NAB wording.
+
+The checked-in data contains 730 daily entries for 2026–2027 and 1,552 cached citation passages. The builder can populate another reviewed range from the Catholic Readings API and the Original Douay-Rheims API:
+
+```powershell
+python scripts/build_offline_lectionary_cache.py config/publish/offline/lectionary.json config/publish/offline/douay-rheims.json --populate-years 2026 2027
+```
+
+The generated catalog preserves the modern lectionary citation while resolving known Douay-Rheims numbering differences (including Vulgate psalms). Validate an input pair with:
+
+```powershell
+python scripts/build_offline_lectionary_cache.py config/publish/offline/lectionary.json config/publish/offline/douay-rheims.json
+```
+
+The source cache uses the General Roman Calendar and English only in this release. Missing local dates remain transparent failures and continue to respect `allow_missing_gospel`.
 
 ## Spotify Contract Model
 Queue contract files in `config/spotify/contracts/` own:
