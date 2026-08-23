@@ -89,7 +89,7 @@ def resolve_offline_gospel(
     entry = entries.get(date_key)
     if not isinstance(entry, dict):
         raise OfflineLectionaryError(f"No offline lectionary entry for {date_key}.")
-    citation = canonical_reference(entry.get("gospel"))
+    citation = canonical_reference(entry.get("gospel") or (entry.get("readings") or {}).get("gospel"))
     if not citation:
         raise OfflineLectionaryError(f"Offline lectionary entry has no Gospel citation for {date_key}.")
     text = _clean(passages.get(citation))

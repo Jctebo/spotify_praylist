@@ -96,7 +96,7 @@ class TestPublishDailyIntro(unittest.TestCase):
         self.mod._fetch_usccb_html = lambda date_value: "<html><head><title>Broken | USCCB</title></head><body></body></html>"
 
         with self.assertRaises(self.mod.DailyIntroMissingDataError) as ctx:
-            self.mod.fetch_daily_gospel_context(datetime.date(2026, 4, 27))
+            self.mod.fetch_daily_gospel_context(datetime.date(2028, 4, 27))
 
         self.assertIn("no usable Gospel data", str(ctx.exception))
         self.assertIn("Gospel section", str(ctx.exception.__cause__))
@@ -176,7 +176,7 @@ class TestPublishDailyIntro(unittest.TestCase):
             )
 
         text = self.mod.build_daily_intro_text(
-            datetime.date(2026, 4, 27),
+            datetime.date(2028, 4, 27),
             allow_missing_gospel=True,
             shared_theme={"sharedThemeTitle": "Trust"},
             generate_text_fn=generate,

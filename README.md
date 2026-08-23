@@ -144,7 +144,13 @@ Optional variables:
 
 Daily Gospel lookup keeps the existing live source order (`catholic-mass-readings`, then USCCB HTML) and finally checks the repository-owned files under `config/publish/offline/`. The offline catalog stores lectionary citations separately from the public-domain Original Douay-Rheims passage cache, and fallback contexts identify themselves as `offline-douay-rheims` rather than claiming USCCB/NAB wording.
 
-The checked-in data is a verified seed for the offline contract. Expand it only with reviewed date/citation records and matching Douay-Rheims passages. Validate an input pair with:
+The checked-in data contains 730 daily entries for 2026–2027 and 1,552 cached citation passages. The builder can populate another reviewed range from the Catholic Readings API and the Original Douay-Rheims API:
+
+```powershell
+python scripts/build_offline_lectionary_cache.py config/publish/offline/lectionary.json config/publish/offline/douay-rheims.json --populate-years 2026 2027
+```
+
+The generated catalog preserves the modern lectionary citation while resolving known Douay-Rheims numbering differences (including Vulgate psalms). Validate an input pair with:
 
 ```powershell
 python scripts/build_offline_lectionary_cache.py config/publish/offline/lectionary.json config/publish/offline/douay-rheims.json
