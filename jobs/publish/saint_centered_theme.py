@@ -43,6 +43,8 @@ class CalendarWindowItem:
     source: str = "romcal"
     gospel_citation: str = ""
     gospel_theme: str = ""
+    gospel_source: str = ""
+    gospel_translation: str = ""
 
     def to_dict(self) -> Dict[str, str]:
         return asdict(self)
@@ -76,6 +78,10 @@ class SaintCenteredThemeBrief:
     window_items: tuple[Dict[str, str], ...]
     source: str
     fallback_reason: str = ""
+    gospel_citation: str = ""
+    gospel_theme: str = ""
+    gospel_source: str = ""
+    gospel_translation: str = ""
     version: str = THEME_VERSION
 
     def to_dict(self) -> Dict[str, Any]:
@@ -173,6 +179,10 @@ def build_saint_centered_theme_brief(
         window_items=tuple(item.to_dict() for item in rows),
         source="deterministic-calendar-window",
         fallback_reason="; ".join(errors),
+        gospel_citation=next((row.gospel_citation for row in rows if row.date == target_date.isoformat() and row.gospel_citation), ""),
+        gospel_theme=next((row.gospel_theme for row in rows if row.date == target_date.isoformat() and row.gospel_theme), ""),
+        gospel_source=next((row.gospel_source for row in rows if row.date == target_date.isoformat() and row.gospel_source), ""),
+        gospel_translation=next((row.gospel_translation for row in rows if row.date == target_date.isoformat() and row.gospel_translation), ""),
     )
 
 
@@ -204,6 +214,8 @@ def _normalize_rows(day: _dt.date, raw_rows: Sequence[Any], gospel: Any) -> List
     result: List[CalendarWindowItem] = []
     citation = _clean(getattr(gospel, "gospel_citation", ""))
     gospel_theme = _clean(getattr(gospel, "gospel_theme", ""))
+    gospel_source = _clean(getattr(gospel, "source", ""))
+    gospel_translation = _clean(getattr(gospel, "translation", ""))
     for raw in raw_rows or ():
         if not isinstance(raw, dict):
             continue
@@ -212,9 +224,9 @@ def _normalize_rows(day: _dt.date, raw_rows: Sequence[Any], gospel: Any) -> List
             continue
         rank = _rank(raw, name)
         season = _season(raw)
-        result.append(CalendarWindowItem(day.isoformat(), name, rank, season, "romcal", citation, gospel_theme))
+        result.append(CalendarWindowItem(day.isoformat(), name, rank, season, "romcal", citation, gospel_theme, gospel_source, gospel_translation))
     if not result and gospel is not None and (citation or gospel_theme):
-        result.append(CalendarWindowItem(day.isoformat(), "Weekday Gospel", "weekday", "", "gospel", citation, gospel_theme))
+        result.append(CalendarWindowItem(day.isoformat(), "Weekday Gospel", "weekday", "", "gospel", citation, gospel_theme, gospel_source, gospel_translation))
     return result
 
 

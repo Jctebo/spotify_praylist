@@ -24,6 +24,14 @@ DAILY_LITURGICAL_CONTEXT_FRESHNESS_KEYS = (
     "gospelCitation",
     "fallbackReason",
     "sharedThemeSources",
+    "gospelSource",
+    "gospelTranslation",
+    "saintWitness",
+    "saintWitnessDate",
+    "saintWitnessRank",
+    "saintWitnessQuote",
+    "saintWitnessQuoteSource",
+    "saintWitnessQuoteSourceUrl",
 )
 
 

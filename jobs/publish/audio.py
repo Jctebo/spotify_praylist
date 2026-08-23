@@ -359,6 +359,29 @@ def _json_safe_metadata(value: Any) -> Any:
     return str(value)
 
 
+def _daily_liturgical_context_from_job(job: Dict[str, Any]) -> Dict[str, Any]:
+    render_context = job.get("render_context")
+    if not isinstance(render_context, dict):
+        return {}
+    context = render_context.get("daily_liturgical_context")
+    return _json_safe_metadata(dict(context)) if isinstance(context, dict) else {}
+
+
+def _refresh_cached_sidecar_context(sidecar_path: Path, job: Dict[str, Any]) -> None:
+    context = _daily_liturgical_context_from_job(job)
+    if not context:
+        return
+    try:
+        payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    except Exception:
+        return
+    if payload.get("daily_liturgical_context") == context:
+        return
+    payload["daily_liturgical_context"] = context
+    payload["render_context"] = _json_safe_metadata(dict(job.get("render_context") or {}))
+    sidecar_path.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
+
+
 def _payload_audio_length(
     payload: Dict[str, Any],
     *,
@@ -1018,6 +1041,7 @@ def render_audio_job(
     generated_at = _iso_utc_now()
     rss_guid = compose_rss_guid(episode_id, content_hash)
     if not _env_flag(PUBLISH_AUDIO_FORCE_REBUILD) and _is_current_audio_file(audio_path, sidecar_path, content_hash):
+        _refresh_cached_sidecar_context(sidecar_path, job)
         rendered = dict(job)
         rendered["audio_path"] = str(audio_path)
         rendered["audio_url"] = audio_public_url(episode_id)
@@ -1162,6 +1186,7 @@ def render_audio_job(
                     "fragment_manifest_hash": fragment_manifest_hash,
                     "fragments": fragment_results,
                     "render_context": _json_safe_metadata(dict(job.get("render_context") or {})),
+                    "daily_liturgical_context": _daily_liturgical_context_from_job(job),
                     "rosary_reflections": _json_safe_metadata(dict(job.get("rosary_reflections") or {})),
                     "daily_reflection": _json_safe_metadata(dict(job.get("daily_reflection") or {})),
                     "resume_markers": list(job.get("resume_markers") or []),

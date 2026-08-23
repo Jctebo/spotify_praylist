@@ -65,6 +65,29 @@ class TestSaintCenteredTheme(unittest.TestCase):
         self.assertEqual(len(brief.window_items), 1)
         self.assertEqual(brief.primary_anchor, "Saint Example")
 
+    def test_target_gospel_provenance_is_retained_in_shared_brief(self):
+        gospel = SimpleNamespace(
+            gospel_citation="Matthew 5:43-48",
+            gospel_theme="mercy",
+            source="offline-douay-rheims",
+            translation="Original Douay-Rheims",
+        )
+
+        brief = build_saint_centered_theme_brief(
+            self.target,
+            day_fetcher=lambda calendar, locale, date_value: (
+                [{"name": "Saint Example", "rank_name": "memorial", "season": "ordinary_time"}]
+                if date_value == self.target else []
+            ),
+            gospel_fetcher=lambda *args, **kwargs: gospel,
+        )
+
+        self.assertEqual(brief.gospel_citation, "Matthew 5:43-48")
+        self.assertEqual(brief.gospel_theme, "mercy")
+        self.assertEqual(brief.gospel_source, "offline-douay-rheims")
+        self.assertEqual(brief.gospel_translation, "Original Douay-Rheims")
+        self.assertEqual(brief.window_items[0]["gospel_source"], "offline-douay-rheims")
+
     def test_target_day_easter_octave_does_not_yield_to_future_observance(self):
         target = datetime.date(2026, 4, 12)
 
