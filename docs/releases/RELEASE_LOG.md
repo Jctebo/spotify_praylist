@@ -1,5 +1,13 @@
 # Release Log
 
+## [0.4.3.1] - 2026-08-23
+
+### Changed
+- Publish-audio and novena JSON sidecars now carry synchronized target-day lectionary provenance and saint-centered context, including when unchanged audio is reused from cache.
+
+### Fixed
+- Preserved Gospel citation, source, and translation metadata through the shared saint-centered runtime instead of dropping it before sidecar generation.
+
 ## [0.4.3.0] - 2026-08-22
 
 ### Added
