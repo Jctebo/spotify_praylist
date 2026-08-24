@@ -1286,3 +1286,10 @@
 - Fixed the archive dashboard so the JSON sidecar link points at the published GitHub Pages URL.
 - Kept the MP3 link behavior unchanged.
 - Added regression coverage for the rendered sidecar href.
+
+## [0.4.3.2] - 2026-08-24
+
+### Fixed
+- Blocked prompt, schema, instruction, and model-commentary leakage from Daily Reflection audio by hardening the generated-text validation boundary.
+- Removed raw serialized helper context from the reflection generation prompt.
+- Added regression coverage for fallback behavior when leaked output is returned.

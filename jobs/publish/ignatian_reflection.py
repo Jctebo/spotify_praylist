@@ -18,6 +18,33 @@ SOURCE_GENERATED = "generated"
 SOURCE_FALLBACK = "fallback"
 DEFAULT_REFLECTION_PAUSE_MS = 15000
 
+PROMPT_LEAKAGE_MARKERS = (
+    "return plain text",
+    "do not use any section headings",
+    "paragraph 1 must",
+    "paragraph 2 should",
+    "paragraph 3 should",
+    "paragraph 4 should",
+    "shared helper context",
+    "selected observance:",
+    "selected observance date:",
+    "selected observance rank:",
+    "selected observance timing:",
+    "theme:",
+    "theme explanation:",
+    "reflection focus:",
+    "emotional tone:",
+    "saint witness:",
+    "approved saint quotation",
+    "requirements:",
+    "return json",
+    "output schema",
+    "system message",
+    "user message",
+    "assistant message",
+    "as an ai",
+)
+
 
 @dataclass(frozen=True)
 class IgnatianReflectionEpisode:
@@ -86,7 +113,6 @@ def _saint_quote_for_context(context: DailyLiturgicalContext) -> str:
 
 
 def _build_prompt(date_value, context: DailyLiturgicalContext, title: str) -> str:
-    payload = context.to_dict()
     return f"""
 Write a Catholic daily reflection prayer for audio narration, using the selected liturgical observance as a spiritual lens for ordinary Christian life.
 
@@ -114,8 +140,12 @@ Selected observance: {context.feastDay}
 Selected observance date: {getattr(context, 'primaryAnchorDate', '')}
 Selected observance rank: {getattr(context, 'primaryAnchorRank', '') or context.liturgicalRank}
 Selected observance timing: {getattr(context, 'primaryAnchorTiming', '')}
-Shared helper context:
-{payload}
+Theme: {context.sharedThemeTitle or context.primaryTheme}
+Theme explanation: {context.sharedThemeExplanation or context.shortSummary}
+Reflection focus: {context.sharedThemeReflectionFocus or context.reflectionFocus}
+Emotional tone: {context.emotionalTone}
+Saint witness: {getattr(context, 'saintWitness', '') or context.saintOfDay}
+Approved saint quotation, if any: {getattr(context, 'saintWitnessQuote', '')}
 """.strip()
 
 
@@ -201,6 +231,7 @@ def _validate_episode(
     cleaned = _clean_text(text)
     if not cleaned:
         raise RuntimeError("Daily Reflection text is empty.")
+    _reject_prompt_leakage(cleaned)
     for heading in (
         "Episode Title",
         "Opening Welcome",
@@ -243,6 +274,26 @@ def _validate_episode(
         pause_ms=int(pause_ms or DEFAULT_REFLECTION_PAUSE_MS),
         segments=tuple(paragraphs),
     )
+
+
+def _reject_prompt_leakage(text: str) -> None:
+    lowered = str(text or "").casefold()
+    if re.search(r"(^|\s)(?:```|#{1,6}\s|\*\*|[*-]\s)", text):
+        raise RuntimeError("Daily Reflection contains markdown or list formatting.")
+    for marker in PROMPT_LEAKAGE_MARKERS:
+        if marker in lowered:
+            raise RuntimeError(f"Daily Reflection contains prompt or schema commentary: {marker}")
+    for heading in (
+        "Episode Title",
+        "Opening Welcome",
+        "Liturgical Context Introduction",
+        "Ignatian Reflection",
+        "Guided Examen",
+        "Closing Prayer",
+        "Final Closing",
+    ):
+        if re.search(rf"(?m)^\s*{re.escape(heading)}\s*$", text):
+            raise RuntimeError(f"Daily Reflection should not speak the '{heading}' heading.")
 
 
 def _clean_text(text: Any) -> str:

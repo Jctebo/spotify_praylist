@@ -70,6 +70,41 @@ class TestIgnatianReflection(unittest.TestCase):
         self.assertNotIn("Saint Saint Example", episode.text)
         self.assertEqual(episode.saint_name, "Example")
 
+    def test_prompt_leakage_is_rejected_and_falls_back_before_audio(self):
+        leaked = (
+            "Welcome to Ora Pro Nobis, where we pray with the Saints.\n\n"
+            "Paragraph 2 should identify one central spiritual theme from the observance.\n\n"
+            "In the examen, bring the day honestly before Jesus and receive hope.\n\n"
+            "Lord Jesus Christ, teach us to follow where you gently lead. Amen.\n"
+            "And may the peace of Christ remain with you."
+        )
+        with mock.patch.object(self.mod, "_call_openai_reflection", return_value=leaked):
+            episode = self.mod.build_ignatian_reflection_episode(
+                datetime.date(2026, 6, 9),
+                self._context(),
+            )
+
+        self.assertEqual(episode.source, "fallback")
+        self.assertIn("Today's", episode.text)
+        self.assertNotIn("Paragraph 2 should", episode.text)
+        self.assertNotIn("requirements:", episode.text.casefold())
+        self.assertEqual(len(episode.segments), 4)
+
+    def test_prompt_and_schema_markers_are_rejected(self):
+        with self.assertRaisesRegex(RuntimeError, "prompt or schema commentary"):
+            self.mod._validate_episode(
+                "Daily Reflection - Trust - June 9, 2026",
+                (
+                    "Welcome to Ora Pro Nobis, where we pray with the Saints.\n\n"
+                    "Return JSON with the requested fields.\n\n"
+                    "Bring the day before Jesus with gratitude and hope.\n\n"
+                    "Lord Jesus Christ, teach us to follow where you gently lead. Amen.\n"
+                    "And may the peace of Christ remain with you."
+                ),
+                self._context(),
+                source="generated",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
