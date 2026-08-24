@@ -33,6 +33,8 @@ class DailyLiturgicalContext:
     source: str
     fallbackReason: str = ""
     gospelCitation: str = ""
+    gospelSource: str = ""
+    gospelTranslation: str = ""
     calendar: str = "general_roman"
     locale: str = "en"
     sharedThemeTitle: str = ""
@@ -111,6 +113,9 @@ def _context_from_brief(brief: Any) -> DailyLiturgicalContext:
         shortSummary=str(brief.summary),
         source="saint-centered-calendar-window",
         fallbackReason=str(payload.get("fallback_reason") or ""),
+        gospelCitation=str(payload.get("gospel_citation") or ""),
+        gospelSource=str(payload.get("gospel_source") or ""),
+        gospelTranslation=str(payload.get("gospel_translation") or ""),
         calendar=str(payload.get("calendar") or "general_roman"),
         locale=str(payload.get("locale") or "en"),
         sharedThemeTitle=title,

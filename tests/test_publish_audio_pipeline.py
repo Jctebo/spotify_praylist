@@ -128,6 +128,11 @@ class TestPublishAudioPipeline(unittest.TestCase):
             "source": "gospel",
             "fallbackReason": "",
             "gospelCitation": "John 10:1-10",
+            "gospelSource": "gospel",
+            "gospelTranslation": "",
+            "saintWitness": "Saint Example",
+            "saintWitnessDate": date_value.isoformat(),
+            "saintWitnessRank": "memorial",
             "calendar": "general_roman",
             "locale": "en",
             "sharedThemeTitle": "Trust",
@@ -254,8 +259,23 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.assertEqual(sidecar["audio_branding"]["status"], "applied")
             self.assertEqual(sidecar["audio_branding"]["season"], "easter")
             self.assertIn("Easter Podcast.mp3", sidecar["audio_branding"]["season_asset"])
+            self.assertTrue(sidecar["daily_liturgical_context"]["gospelCitation"])
+            self.assertIn("gospelSource", sidecar["daily_liturgical_context"])
+            self.assertIn("saintWitness", sidecar["daily_liturgical_context"])
+            self.assertTrue(sidecar["daily_liturgical_context"]["feastDay"])
             self.assertGreater(Path(first["audio_path"]).stat().st_size, 0)
             self.assertEqual(first["rss_guid"], second["rss_guid"])
+
+            sidecar["daily_liturgical_context"] = {}
+            sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
+            third = self.audio_mod.render_audio_job(job, renderer=fake_renderer, docs_root=docs_root, cache_root=cache_root)
+            refreshed = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            self.assertFalse(third["rendered"])
+            self.assertEqual(calls["count"], first_calls)
+            self.assertEqual(
+                refreshed["daily_liturgical_context"]["gospelCitation"],
+                sidecar["render_context"]["daily_liturgical_context"]["gospelCitation"],
+            )
 
     def test_render_audio_job_normalizes_final_episode_when_configured(self):
         job = {

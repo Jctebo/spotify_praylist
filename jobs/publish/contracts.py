@@ -1403,6 +1403,8 @@ def _get_or_build_ignatian_reflection_episode(
             source=str(helper_payload.get("source", "")),
             fallbackReason=str(helper_payload.get("fallbackReason", "")),
             gospelCitation=str(helper_payload.get("gospelCitation", "")),
+            gospelSource=str(helper_payload.get("gospelSource", "")),
+            gospelTranslation=str(helper_payload.get("gospelTranslation", "")),
             calendar=str(helper_payload.get("calendar", "general_roman")),
             locale=str(helper_payload.get("locale", "en")),
             sharedThemeTitle=str(helper_payload.get("sharedThemeTitle", "")),

@@ -1,5 +1,13 @@
 # Release Log
 
+## [0.4.3.1] - 2026-08-23
+
+### Changed
+- Publish-audio and novena JSON sidecars now carry synchronized target-day lectionary provenance and saint-centered context, including when unchanged audio is reused from cache.
+
+### Fixed
+- Preserved Gospel citation, source, and translation metadata through the shared saint-centered runtime instead of dropping it before sidecar generation.
+
 ## [0.4.3.0] - 2026-08-22
 
 ### Added
@@ -1278,3 +1286,10 @@
 - Fixed the archive dashboard so the JSON sidecar link points at the published GitHub Pages URL.
 - Kept the MP3 link behavior unchanged.
 - Added regression coverage for the rendered sidecar href.
+
+## [0.4.3.2] - 2026-08-24
+
+### Fixed
+- Blocked prompt, schema, instruction, and model-commentary leakage from Daily Reflection audio by hardening the generated-text validation boundary.
+- Removed raw serialized helper context from the reflection generation prompt.
+- Added regression coverage for fallback behavior when leaked output is returned.
