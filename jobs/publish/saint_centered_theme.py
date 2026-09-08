@@ -113,11 +113,11 @@ def build_saint_centered_theme_brief(
     effective_calendar = str(calendar or DEFAULT_CALENDAR).strip() or DEFAULT_CALENDAR
     effective_locale = str(locale or DEFAULT_LOCALE).strip() or DEFAULT_LOCALE
     start = target_date
-    end = target_date + _dt.timedelta(days=9)
+    end = target_date
     rows: List[CalendarWindowItem] = []
     errors: List[str] = []
     gospel_fetcher = gospel_fetcher or _default_gospel_fetcher
-    for offset in range(10):
+    for offset in range(1):
         day = start + _dt.timedelta(days=offset)
         try:
             raw_rows = day_fetcher(effective_calendar, effective_locale, day)
@@ -162,8 +162,8 @@ def build_saint_centered_theme_brief(
         primary_anchor=anchor.name,
         primary_rank=anchor.rank,
         primary_anchor_date=anchor.date,
-        primary_anchor_timing="today" if anchor.date == target_date.isoformat() else "upcoming",
-        selection_source="today" if anchor.date == target_date.isoformat() else "forward-window",
+        primary_anchor_timing="today",
+        selection_source="today",
         saint_witness=witness.name if witness else "",
         saint_witness_date=witness.date if witness else "",
         saint_witness_rank=witness.rank if witness else "",
@@ -225,7 +225,7 @@ def _normalize_rows(day: _dt.date, raw_rows: Sequence[Any], gospel: Any) -> List
         rank = _rank(raw, name)
         season = _season(raw)
         result.append(CalendarWindowItem(day.isoformat(), name, rank, season, "romcal", citation, gospel_theme, gospel_source, gospel_translation))
-    if not result and gospel is not None and (citation or gospel_theme):
+    if gospel is not None and (citation or gospel_theme) and not any(_is_suitable_observance(row) for row in result):
         result.append(CalendarWindowItem(day.isoformat(), "Weekday Gospel", "weekday", "", "gospel", citation, gospel_theme, gospel_source, gospel_translation))
     return result
 
@@ -265,16 +265,9 @@ def _select_anchor(rows: Sequence[CalendarWindowItem], target_date: _dt.date) ->
     today_candidates = [row for row in target_rows if _is_suitable_observance(row)]
     if today_candidates:
         return _ranked_candidates(today_candidates, target_date)[0]
-
-    future_candidates = [
-        row
-        for row in rows
-        if target_date < _dt.date.fromisoformat(row.date) <= target_date + _dt.timedelta(days=9)
-        and _is_suitable_observance(row)
-    ]
-    if future_candidates:
-        return _ranked_candidates(future_candidates, target_date)[0]
-
+    gospel_candidates = [row for row in target_rows if row.source == "gospel"]
+    if gospel_candidates:
+        return _ranked_candidates(gospel_candidates, target_date)[0]
     return _ranked_candidates(target_rows, target_date)[0] if target_rows else None
 
 

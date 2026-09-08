@@ -1,5 +1,15 @@
 # Release Log
 
+## [0.4.3.3] - 2026-09-08
+
+### Changed
+- Shared prayer introductions now use only target-day liturgical context, with today’s saint/observance preferred and today’s Gospel as the fallback when no suitable saint is present.
+- Future calendar rows are no longer fetched for shared introduction context, preventing future solemnities and feasts from influencing generated introductions.
+
+### Fixed
+- Corrected no-observance-day introductions that previously looked ahead and spoke about an upcoming solemnity as the daily focus.
+- Added regression coverage for target-day selection, Gospel fallback, and all shared publish-intro consumers.
+
 ## [0.4.3.1] - 2026-08-23
 
 ### Changed
