@@ -27,10 +27,10 @@ class TestSaintCenteredTheme(unittest.TestCase):
         )
 
         self.assertEqual(brief.window_start, "2026-08-16")
-        self.assertEqual(brief.window_end, "2026-08-25")
+        self.assertEqual(brief.window_end, "2026-08-16")
         self.assertEqual(brief.primary_anchor, "The Assumption of the Blessed Virgin Mary")
         self.assertEqual(brief.primary_anchor_date, "2026-08-16")
-        self.assertEqual(len(brief.window_items), 3)
+        self.assertEqual(len(brief.window_items), 2)
         self.assertEqual(brief.version, "shared-liturgical-theme-v2")
         self.assertIn("surrender", brief.themes)
 
@@ -107,7 +107,7 @@ class TestSaintCenteredTheme(unittest.TestCase):
         self.assertEqual(brief.primary_anchor, "Second Sunday of Easter")
         self.assertEqual(brief.primary_anchor_date, "2026-04-12")
 
-    def test_selects_forward_observance_when_today_has_only_weekday(self):
+    def test_does_not_select_forward_observance_when_today_has_only_weekday(self):
         target = datetime.date(2026, 8, 17)
 
         def fetch(calendar, locale, date_value):
@@ -123,14 +123,13 @@ class TestSaintCenteredTheme(unittest.TestCase):
             gospel_fetcher=lambda *args, **kwargs: None,
         )
 
-        self.assertEqual(brief.primary_anchor, "Saint John Eudes, Priest")
-        self.assertEqual(brief.primary_anchor_date, "2026-08-19")
-        self.assertEqual(brief.primary_anchor_timing, "upcoming")
-        self.assertEqual(brief.saint_witness, "Saint John Eudes, Priest")
-        self.assertIn("Give yourselves to Jesus", brief.saint_witness_quote)
-        self.assertEqual(brief.saint_witness_quote_source, "The Admirable Heart of Jesus, III, 2")
+        self.assertEqual(brief.primary_anchor, "Monday of the twentieth week of Ordinary Time")
+        self.assertEqual(brief.primary_anchor_date, "2026-08-17")
+        self.assertEqual(brief.primary_anchor_timing, "today")
+        self.assertEqual(brief.saint_witness, "")
+        self.assertNotIn("Saint John Eudes, Priest", brief.primary_anchor)
 
-    def test_forward_window_stops_at_nine_calendar_days(self):
+    def test_future_observances_are_not_fetched_or_retained(self):
         target = datetime.date(2026, 8, 17)
 
         def fetch(calendar, locale, date_value):
@@ -146,9 +145,41 @@ class TestSaintCenteredTheme(unittest.TestCase):
             gospel_fetcher=lambda *args, **kwargs: None,
         )
 
-        self.assertEqual(brief.primary_anchor, "Saint At The Edge")
+        self.assertEqual(brief.primary_anchor, "Tuesday of Ordinary Time")
+        self.assertEqual(brief.primary_anchor_date, "2026-08-17")
+        self.assertEqual(len(brief.window_items), 1)
+        self.assertEqual(brief.window_items[0]["date"], "2026-08-17")
+        self.assertNotIn("Saint At The Edge", {item["name"] for item in brief.window_items})
         self.assertNotIn("Saint Outside Window", {item["name"] for item in brief.window_items})
-        self.assertEqual(brief.window_end, "2026-08-26")
+        self.assertEqual(brief.window_end, "2026-08-17")
+
+    def test_target_gospel_is_used_when_today_has_no_suitable_saint(self):
+        gospel = SimpleNamespace(
+            gospel_citation="Matthew 5:43-48",
+            gospel_theme="mercy",
+            source="offline-douay-rheims",
+            translation="Original Douay-Rheims",
+        )
+
+        def fetch(calendar, locale, date_value):
+            if date_value == self.target:
+                return [{"name": "Monday of Ordinary Time", "rank_name": "weekday", "season": "ordinary_time"}]
+            if date_value == self.target + datetime.timedelta(days=1):
+                return [{"name": "A Future Solemnity", "rank_name": "solemnity", "season": "ordinary_time"}]
+            return []
+
+        brief = build_saint_centered_theme_brief(
+            self.target,
+            day_fetcher=fetch,
+            gospel_fetcher=lambda *args, **kwargs: gospel,
+        )
+
+        self.assertEqual(brief.primary_anchor, "Weekday Gospel")
+        self.assertEqual(brief.primary_anchor_date, self.target.isoformat())
+        self.assertEqual(brief.primary_anchor_timing, "today")
+        self.assertEqual(brief.selection_source, "today")
+        self.assertEqual(brief.gospel_citation, "Matthew 5:43-48")
+        self.assertNotIn("A Future Solemnity", brief.primary_anchor)
 
 
 if __name__ == "__main__":

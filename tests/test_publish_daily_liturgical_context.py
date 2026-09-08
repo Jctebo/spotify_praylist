@@ -42,7 +42,7 @@ class TestDailyLiturgicalContext(unittest.TestCase):
         self.assertEqual(context.sharedThemeVersion, "shared-liturgical-theme-v2")
         self.assertIn("No target-day observance", context.fallbackReason)
 
-    def test_future_higher_ranked_observance_is_selected_when_today_is_only_weekday(self):
+    def test_future_higher_ranked_observance_is_not_selected_when_today_is_only_weekday(self):
         def fetch(calendar, locale, date_value):
             if date_value == self.date:
                 return [{"name": "Friday of Ordinary Time", "rank_name": "weekday", "season": "ordinary_time"}]
@@ -55,10 +55,10 @@ class TestDailyLiturgicalContext(unittest.TestCase):
 
         context = self.mod.build_daily_liturgical_context(self.date)
 
-        self.assertEqual(context.feastDay, "Future Solemnity")
-        self.assertEqual(context.liturgicalRank, "solemnity")
-        self.assertEqual(context.primaryAnchorTiming, "upcoming")
-        self.assertEqual(len(context.sharedThemeSources), 2)
+        self.assertEqual(context.feastDay, "Friday of Ordinary Time")
+        self.assertEqual(context.liturgicalRank, "weekday")
+        self.assertEqual(context.primaryAnchorTiming, "today")
+        self.assertEqual(len(context.sharedThemeSources), 1)
 
 
 if __name__ == "__main__":

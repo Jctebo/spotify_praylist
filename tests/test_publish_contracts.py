@@ -904,7 +904,7 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(job["audio_fragments"][1]["label"], "Prayer Intro")
         self.assertEqual(job["audio_fragments"][1]["fragment_key"], "block-2/prayer-intro")
         self.assertIn("Auxilium Christianorum prayers", job["audio_fragments"][1]["text"])
-        self.assertIn("Mercy", job["audio_fragments"][1]["text"])
+        self.assertIn("Resurrection hope", job["audio_fragments"][1]["text"])
         self.assertEqual(job["devotional_intro"]["profile"], "auxilium-christianorum")
         self.assertEqual(job["render_context"]["devotional_intro"], job["devotional_intro"])
         self.assertEqual(self.prayer_intro_calls, 1)
