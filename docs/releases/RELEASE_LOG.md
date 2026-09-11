@@ -1,5 +1,16 @@
 # Release Log
 
+## [0.4.4.0] - 2026-09-11
+
+### Changed
+- Preserved full Gospel text through the shared liturgical context and runtime cache so devotional introductions can use passage detail instead of citation-only context.
+- Added context-quality metadata distinguishing full-text, citation-only, and missing Gospel input.
+
+### Fixed
+- Reduced shallow Morning Prayer introductions by retrying output that only names a Gospel citation when full Gospel text is available.
+- Recorded Responses API, Chat Completions, generation, validation, retry, and deterministic-fallback provenance in intro metadata.
+- Added concise publish-time intro diagnostics while redacting sensitive failure details and excluding prompts/full Gospel text from logs.
+
 ## [0.4.3.3] - 2026-09-08
 
 ### Changed
