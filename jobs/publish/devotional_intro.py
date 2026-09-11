@@ -39,9 +39,13 @@ class DevotionalIntroResult:
     policy_version: str
     source: str
     fallback_reason: str = ""
+    context_quality: str = ""
+    diagnostics: Tuple[Dict[str, str], ...] = ()
 
-    def metadata(self) -> Dict[str, str]:
-        return asdict(self)
+    def metadata(self) -> Dict[str, Any]:
+        payload = asdict(self)
+        payload["diagnostics"] = [dict(item) for item in self.diagnostics]
+        return payload
 
 
 MORNING_PRAYER_PROFILE = DevotionalIntroProfile(
@@ -174,6 +178,14 @@ def _context_value(context: Mapping[str, Any], *keys: str) -> str:
         if value:
             return value
     return ""
+
+
+def gospel_context_quality(context: Mapping[str, Any]) -> str:
+    if _context_value(context, "daily_gospel_text", "gospel_text"):
+        return "full_text"
+    if _context_value(context, "daily_gospel_bridge", "sharedGospelBridge", "daily_gospel_citation", "gospel_citation"):
+        return "citation_only"
+    return "missing"
 
 
 def _context_rows(context: Mapping[str, Any]) -> Tuple[Tuple[str, str], ...]:
@@ -367,11 +379,25 @@ def resolve_openai_settings(
     return resolved_api_key, resolved_base_url, resolved_model
 
 
+class _ProviderGenerationError(RuntimeError):
+    def __init__(self, message: str, diagnostics: Sequence[Dict[str, str]]) -> None:
+        super().__init__(message)
+        self.diagnostics = tuple(dict(item) for item in diagnostics)
+
+
+class _ProviderGeneratedText(str):
+    def __new__(cls, value: str, diagnostics: Sequence[Dict[str, str]] = ()):
+        result = super().__new__(cls, value)
+        result.diagnostics = tuple(dict(item) for item in diagnostics)
+        return result
+
+
 def _default_generate_text(model: str, system: str, prompt: str, temperature: float) -> str:
     api_key, base_url, resolved_model = resolve_openai_settings(model=model)
     if not api_key:
         raise RuntimeError(f"Missing required environment variable: {OPENAI_API_KEY}")
     client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
+    diagnostics = []
     try:
         response = client.responses.create(
             model=resolved_model,
@@ -383,21 +409,27 @@ def _default_generate_text(model: str, system: str, prompt: str, temperature: fl
         )
         text = _normalize_whitespace(str(getattr(response, "output_text", "") or ""))
         if text:
-            return text
-    except Exception:
-        pass
-    chat = client.chat.completions.create(
-        model=resolved_model,
-        temperature=temperature,
-        messages=[{"role": "system", "content": system}, {"role": "user", "content": prompt}],
-    )
-    choices = getattr(chat, "choices", None) or []
-    if not choices:
-        raise RuntimeError("Devotional intro generation returned no choices.")
-    text = _normalize_whitespace(str(getattr(getattr(choices[0], "message", None), "content", "") or ""))
-    if not text:
-        raise RuntimeError("Devotional intro generation returned empty text.")
-    return text
+            diagnostics.append({"stage": "provider", "provider": "responses", "outcome": "success"})
+            return _ProviderGeneratedText(text, diagnostics)
+    except Exception as exc:
+        diagnostics.append({"stage": "provider", "provider": "responses", "outcome": "error", "reason": _sanitize_fallback_reason(exc)})
+    try:
+        chat = client.chat.completions.create(
+            model=resolved_model,
+            temperature=temperature,
+            messages=[{"role": "system", "content": system}, {"role": "user", "content": prompt}],
+        )
+        choices = getattr(chat, "choices", None) or []
+        if not choices:
+            raise RuntimeError("Devotional intro generation returned no choices.")
+        text = _normalize_whitespace(str(getattr(getattr(choices[0], "message", None), "content", "") or ""))
+        if not text:
+            raise RuntimeError("Devotional intro generation returned empty text.")
+        diagnostics.append({"stage": "provider", "provider": "chat_completions", "outcome": "success"})
+        return _ProviderGeneratedText(text, diagnostics)
+    except Exception as exc:
+        diagnostics.append({"stage": "provider", "provider": "chat_completions", "outcome": "error", "reason": _sanitize_fallback_reason(exc)})
+        raise _ProviderGenerationError(_sanitize_fallback_reason(exc), diagnostics) from exc
 
 
 def _contains_any(text: str, values: Sequence[str]) -> bool:
@@ -520,6 +552,7 @@ def validate_devotional_intro(
             "gospel_text",
         )
     )
+    gospel_quality = gospel_context_quality(context)
     if not gospel_supplied and ("gospel" in lowered or re.search(r"\bscripture\b|\breadings?\b", lowered)):
         raise RuntimeError("Intro must not mention Gospel or Scripture when none was supplied.")
     if profile.require_gospel_when_available and gospel_supplied:
@@ -530,6 +563,14 @@ def validate_devotional_intro(
         )
         if not _contains_any(rendered, gospel_anchors):
             raise RuntimeError("Intro must use the supplied Gospel context.")
+    if context.get("gospel_detail_required") and gospel_quality == "full_text":
+        output_words = set(re.findall(r"[a-z]{5,}", _normalize_for_match(rendered)))
+        detail_markers = {
+            "calls", "teaches", "invites", "shows", "proclaims", "speaks", "reveals",
+            "reminds", "offers", "heals", "forgives", "serves",
+        }
+        if "gospel" not in output_words or not detail_markers.intersection(output_words):
+            raise RuntimeError("Intro must include a meaningful detail from the supplied Gospel text.")
     _reject_foreign_scripture_citations(rendered, gospel_citation)
     return rendered
 
@@ -590,6 +631,7 @@ def _fallback_result(
     profile: DevotionalIntroProfile,
     context: Mapping[str, Any],
     reason: str,
+    diagnostics: Sequence[Dict[str, str]] = (),
 ) -> DevotionalIntroResult:
     text = _normalize_whitespace(_fallback_text(profile, context))
     return DevotionalIntroResult(
@@ -598,6 +640,8 @@ def _fallback_result(
         policy_version=DEVOTIONAL_INTRO_POLICY_VERSION,
         source=SOURCE_FALLBACK_DETERMINISTIC,
         fallback_reason=_sanitize_fallback_reason(reason),
+        context_quality=gospel_context_quality(context),
+        diagnostics=tuple(dict(item) for item in diagnostics),
     )
 
 
@@ -617,6 +661,7 @@ def build_devotional_intro(
         "as plain text, grounded exclusively in the supplied context."
     )
     first_error = ""
+    diagnostics = []
     for attempt in range(2):
         prompt = build_devotional_intro_prompt(
             resolved_profile,
@@ -625,13 +670,24 @@ def build_devotional_intro(
         )
         try:
             raw = generator(model, system, prompt, float(temperature))
+            provider_diagnostics = getattr(raw, "diagnostics", ())
+            if provider_diagnostics:
+                diagnostics.extend(dict(item) for item in provider_diagnostics)
+            diagnostics.append({"stage": "generation", "attempt": str(attempt + 1), "provider": "custom" if generate_text_fn else "openai", "outcome": "success"})
             rendered = validate_devotional_intro(raw, resolved_profile, context)
+            diagnostics.append({"stage": "validation", "attempt": str(attempt + 1), "outcome": "success"})
             return DevotionalIntroResult(
                 text=rendered,
                 profile=resolved_profile.key,
                 policy_version=DEVOTIONAL_INTRO_POLICY_VERSION,
                 source=SOURCE_OPENAI,
+                context_quality=gospel_context_quality(context),
+                diagnostics=tuple(dict(item) for item in diagnostics),
             )
         except Exception as exc:
             first_error = _normalize_whitespace(exc) or exc.__class__.__name__
-    return _fallback_result(resolved_profile, context, first_error or "Generation failed.")
+            provider_diagnostics = getattr(exc, "diagnostics", ())
+            if provider_diagnostics:
+                diagnostics.extend(dict(item) for item in provider_diagnostics)
+            diagnostics.append({"stage": "attempt", "attempt": str(attempt + 1), "outcome": "error", "reason": _sanitize_fallback_reason(first_error)})
+    return _fallback_result(resolved_profile, context, first_error or "Generation failed.", diagnostics)
