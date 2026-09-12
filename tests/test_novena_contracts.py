@@ -107,6 +107,33 @@ class TestNovenaContracts(unittest.TestCase):
         self.assertEqual([provider["provider"] for provider in response_providers], ["openai"])
         self.assertEqual(response_providers[0]["voice"], "alloy")
 
+    def test_novena_spoken_text_omits_printed_call_and_response_labels(self):
+        import re
+
+        marker = re.compile(r"(?i)(?<![a-z])[vr][.:]\s+")
+
+        def spoken_texts(value):
+            if isinstance(value, dict):
+                for key, child in value.items():
+                    if key in {"text", "title"} and isinstance(child, str):
+                        yield child
+                    elif key not in {"notes"}:
+                        yield from spoken_texts(child)
+            elif isinstance(value, list):
+                for child in value:
+                    yield from spoken_texts(child)
+
+        failures = []
+        for contract in self.contracts_mod.load_novena_contracts():
+            template = contract.novena.template
+            for representation in (template.sections, template.blocks):
+                for text in spoken_texts([item.to_dict() for item in representation]):
+                    if marker.search(text):
+                        failures.append(contract.contract_id)
+                        break
+
+        self.assertEqual(failures, [])
+
     def test_st_clare_embedded_intention_directions_use_structured_controls(self):
         contracts = self.contracts_mod.load_novena_contracts()
         contract = next(item for item in contracts if item.contract_id == "st_clare")
