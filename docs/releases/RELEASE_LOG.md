@@ -1,5 +1,14 @@
 # Release Log
 
+## [0.4.5.1] - 2026-09-12
+
+### Changed
+- Added a final Daily Reflection audio-boundary validation before paragraph fragments are expanded for TTS.
+
+### Fixed
+- Rejected additional prompt-field and instruction echoes such as `Rules:`, `Date:`, and `Episode title:` so they fall back to deterministic listener-facing prose.
+- Added regression coverage through reflection validation and publish contract expansion.
+
 ## [0.4.5.0] - 2026-09-11
 
 ### Changed
