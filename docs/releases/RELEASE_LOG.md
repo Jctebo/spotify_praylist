@@ -1,5 +1,13 @@
 # Release Log
 
+## [0.4.4.1] - 2026-09-11
+
+### Changed
+- Kept citation-only Gospel context usable for devotional intros while explicitly constraining unsupported quotations and verse-specific claims.
+
+### Fixed
+- Added regression coverage distinguishing citation-only prompts from full-text Gospel prompts.
+
 ## [0.4.4.0] - 2026-09-11
 
 ### Changed

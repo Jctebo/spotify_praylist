@@ -251,14 +251,18 @@ def build_devotional_intro_prompt(
         context_rows = tuple((label, value) for label, value in context_rows if label in allowed_labels)
     rows = "\n".join(f"{label}: {value}" for label, value in context_rows)
     correction_block = f"\nCorrection required after validation: {correction}" if correction else ""
+    gospel_quality = gospel_context_quality(context)
     if profile.key == "novena":
         gospel_rule = ""
     elif gospel_supplied:
-        gospel_rule = (
-            "You may use the supplied Gospel context, but do not introduce another Scripture citation."
-            if profile.key == "novena"
-            else "Use the supplied Gospel context and do not introduce another Scripture citation."
-        )
+        if gospel_quality == "citation_only":
+            gospel_rule = (
+                "A Gospel citation is supplied, but the passage text is unavailable. You may refer to the citation "
+                "and make a cautious general connection, but do not quote, invent wording, or assert specific "
+                "details that are not established by the citation. Do not imply that you read the full passage."
+            )
+        else:
+            gospel_rule = "Use the supplied Gospel context and do not introduce another Scripture citation."
     else:
         gospel_rule = "No Gospel context is supplied. Do not mention a Gospel, reading, or Scripture citation."
     novena_rules = ""
