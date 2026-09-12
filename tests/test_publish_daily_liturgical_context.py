@@ -31,6 +31,7 @@ class TestDailyLiturgicalContext(unittest.TestCase):
         self.assertIn("mercy", payload["primaryTheme"])
         self.assertNotEqual(payload["gospelTheme"], "mission")
         self.assertTrue(payload["sharedThemeSources"])
+        self.assertIn("Jesus sent the disciples", payload["gospelText"])
 
     def test_missing_calendar_and_gospel_use_one_deterministic_fallback(self):
         self.mod.romcal_fetch_day = lambda *args: []

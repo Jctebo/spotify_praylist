@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import unittest
+from types import SimpleNamespace
+from unittest import mock
 
 from jobs.publish.devotional_intro import (
     AUXILIUM_CHRISTIANORUM_PROFILE,
@@ -11,6 +13,7 @@ from jobs.publish.devotional_intro import (
     SOURCE_OPENAI,
     build_devotional_intro,
     build_devotional_intro_prompt,
+    gospel_context_quality,
     validate_devotional_intro,
 )
 
@@ -406,6 +409,54 @@ class TestPublishDevotionalIntro(unittest.TestCase):
         self.assertNotIn("secret-token", result.fallback_reason)
         self.assertNotIn("example.invalid", result.fallback_reason)
         self.assertIn("[redacted]", result.fallback_reason)
+
+    def test_gospel_context_quality_distinguishes_full_citation_and_missing(self):
+        self.assertEqual(gospel_context_quality({"daily_gospel_text": "Jesus teaches."}), "full_text")
+        self.assertEqual(gospel_context_quality({"daily_gospel_citation": "John 3:16"}), "citation_only")
+        self.assertEqual(gospel_context_quality({}), "missing")
+
+    def test_full_gospel_context_rejects_citation_only_intro_when_required(self):
+        with self.assertRaisesRegex(RuntimeError, "meaningful detail"):
+            validate_devotional_intro(
+                "Morning Prayer gathers us around Trust as Saint Bridget accompanies the Church today. "
+                "Today's Gospel, John 15:1-8, guides our prayer.",
+                MORNING_PRAYER_PROFILE,
+                {**self.morning_context, "gospel_detail_required": True},
+            )
+
+    def test_default_provider_records_responses_failure_before_chat_success(self):
+        response_failure = RuntimeError("responses unavailable")
+        fake_client = SimpleNamespace(
+            responses=SimpleNamespace(create=mock.Mock(side_effect=response_failure)),
+            chat=SimpleNamespace(
+                completions=SimpleNamespace(
+                    create=mock.Mock(
+                        return_value=SimpleNamespace(
+                            choices=[SimpleNamespace(message=SimpleNamespace(content=(
+                                "Saint Joseph teaches us faithful service in ordinary work. "
+                                "His witness strengthens our trust in God. "
+                                "On Day 3 of the Novena to Saint Joseph, we gather before the Lord. "
+                                "Let us begin this novena in prayer."
+                            )))]
+                        )
+                    )
+                )
+            ),
+        )
+        with mock.patch("jobs.publish.devotional_intro.resolve_openai_settings", return_value=("key", "https://example.test/v1", "test-model")), mock.patch(
+            "jobs.publish.devotional_intro.OpenAI", return_value=fake_client
+        ):
+            result = build_devotional_intro(NOVENA_PROFILE, {
+                "prayer_title": "Novena to Saint Joseph",
+                "saint_name": "Saint Joseph",
+                "day": "3",
+            })
+
+        self.assertEqual(result.source, SOURCE_OPENAI)
+        self.assertEqual(result.diagnostics[0]["provider"], "responses")
+        self.assertEqual(result.diagnostics[0]["outcome"], "error")
+        self.assertEqual(result.diagnostics[1]["provider"], "chat_completions")
+        self.assertEqual(result.diagnostics[1]["outcome"], "success")
 
     def test_novena_fallback_preserves_complete_saint_metadata_without_truncation(self):
         result = build_devotional_intro(

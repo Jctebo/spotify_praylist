@@ -45,6 +45,7 @@ class CalendarWindowItem:
     gospel_theme: str = ""
     gospel_source: str = ""
     gospel_translation: str = ""
+    gospel_text: str = ""
 
     def to_dict(self) -> Dict[str, str]:
         return asdict(self)
@@ -82,6 +83,7 @@ class SaintCenteredThemeBrief:
     gospel_theme: str = ""
     gospel_source: str = ""
     gospel_translation: str = ""
+    gospel_text: str = ""
     version: str = THEME_VERSION
 
     def to_dict(self) -> Dict[str, Any]:
@@ -183,6 +185,7 @@ def build_saint_centered_theme_brief(
         gospel_theme=next((row.gospel_theme for row in rows if row.date == target_date.isoformat() and row.gospel_theme), ""),
         gospel_source=next((row.gospel_source for row in rows if row.date == target_date.isoformat() and row.gospel_source), ""),
         gospel_translation=next((row.gospel_translation for row in rows if row.date == target_date.isoformat() and row.gospel_translation), ""),
+        gospel_text=next((row.gospel_text for row in rows if row.date == target_date.isoformat() and row.gospel_text), ""),
     )
 
 
@@ -216,6 +219,7 @@ def _normalize_rows(day: _dt.date, raw_rows: Sequence[Any], gospel: Any) -> List
     gospel_theme = _clean(getattr(gospel, "gospel_theme", ""))
     gospel_source = _clean(getattr(gospel, "source", ""))
     gospel_translation = _clean(getattr(gospel, "translation", ""))
+    gospel_text = _clean(getattr(gospel, "gospel_text", ""))
     for raw in raw_rows or ():
         if not isinstance(raw, dict):
             continue
@@ -224,9 +228,9 @@ def _normalize_rows(day: _dt.date, raw_rows: Sequence[Any], gospel: Any) -> List
             continue
         rank = _rank(raw, name)
         season = _season(raw)
-        result.append(CalendarWindowItem(day.isoformat(), name, rank, season, "romcal", citation, gospel_theme, gospel_source, gospel_translation))
+        result.append(CalendarWindowItem(day.isoformat(), name, rank, season, "romcal", citation, gospel_theme, gospel_source, gospel_translation, gospel_text))
     if gospel is not None and (citation or gospel_theme) and not any(_is_suitable_observance(row) for row in result):
-        result.append(CalendarWindowItem(day.isoformat(), "Weekday Gospel", "weekday", "", "gospel", citation, gospel_theme, gospel_source, gospel_translation))
+        result.append(CalendarWindowItem(day.isoformat(), "Weekday Gospel", "weekday", "", "gospel", citation, gospel_theme, gospel_source, gospel_translation, gospel_text))
     return result
 
 

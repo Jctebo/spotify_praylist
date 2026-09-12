@@ -35,6 +35,7 @@ class DailyLiturgicalContext:
     gospelCitation: str = ""
     gospelSource: str = ""
     gospelTranslation: str = ""
+    gospelText: str = ""
     calendar: str = "general_roman"
     locale: str = "en"
     sharedThemeTitle: str = ""
@@ -116,6 +117,7 @@ def _context_from_brief(brief: Any) -> DailyLiturgicalContext:
         gospelCitation=str(payload.get("gospel_citation") or ""),
         gospelSource=str(payload.get("gospel_source") or ""),
         gospelTranslation=str(payload.get("gospel_translation") or ""),
+        gospelText=str(payload.get("gospel_text") or ""),
         calendar=str(payload.get("calendar") or "general_roman"),
         locale=str(payload.get("locale") or "en"),
         sharedThemeTitle=title,

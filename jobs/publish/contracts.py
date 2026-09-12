@@ -835,6 +835,27 @@ def _cache_devotional_intro_result(
     return result
 
 
+def _log_devotional_intro_result(
+    result: DevotionalIntroResult,
+    *,
+    entry: Dict[str, Any],
+    block: Dict[str, Any],
+    target_date: _dt.date,
+) -> None:
+    diagnostics = ",".join(
+        f"{item.get('stage', 'unknown')}:{item.get('outcome', 'unknown')}"
+        for item in result.diagnostics
+    ) or "none"
+    print(
+        "INFO devotional_intro outcome="
+        f"source:{result.source} profile:{result.profile} date:{target_date.isoformat()} "
+        f"entry:{entry.get('entry_id', '')} block:{_block_display_name(block)} "
+        f"gospel_quality:{result.context_quality or 'unknown'} diagnostics:{diagnostics} "
+        f"fallback_reason:{result.fallback_reason or '-'}",
+        file=sys.stderr,
+    )
+
+
 def _prayer_intro_config(block: Dict[str, Any], contract: PublishContract) -> Dict[str, Any]:
     metadata = dict(contract.metadata or {})
     config = dict(metadata.get("prayer_intro") or {}) if isinstance(metadata.get("prayer_intro"), dict) else {}
@@ -891,6 +912,8 @@ def _shared_intro_context(
         "daily_theme_transition": _compact_text(runtime.get("daily_theme_transition")),
         "daily_gospel_bridge": _compact_text(runtime.get("daily_gospel_bridge")),
         "daily_gospel_citation": _compact_text(runtime.get("daily_gospel_citation")),
+        "daily_gospel_text": _compact_text(runtime.get("daily_gospel_text")),
+        "gospel_detail_required": bool(_compact_text(runtime.get("daily_gospel_text"))),
         "daily_gospel_theme": _compact_text(runtime.get("daily_gospel_theme")),
         "saint_witness": _compact_text(runtime.get("saint_witness")),
         "saint_witness_date": _compact_text(runtime.get("saint_witness_date")),
@@ -930,6 +953,7 @@ def _resolve_prayer_intro_content(
             temperature=config["temperature"],
         ),
     )
+    _log_devotional_intro_result(result, entry=entry, block=block, target_date=target_date)
     return result.text
 
 
@@ -976,6 +1000,7 @@ def _resolve_daily_intro_content(
             shared_theme=(runtime_context or {}).get("daily_liturgical_context"),
         ),
     )
+    _log_devotional_intro_result(result, entry=entry, block=block, target_date=target_date)
     return result.text
 
 
