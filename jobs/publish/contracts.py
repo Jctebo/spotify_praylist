@@ -25,7 +25,11 @@ from jobs.publish.daily_theme_runtime import (
     daily_theme_runtime_fields as _daily_theme_runtime_fields,
 )
 from jobs.publish.formatting import build_publish_context, derive_episode_id, render_publish_template
-from jobs.publish.ignatian_reflection import DEFAULT_REFLECTION_PAUSE_MS, build_ignatian_reflection_episode
+from jobs.publish.ignatian_reflection import (
+    DEFAULT_REFLECTION_PAUSE_MS,
+    build_ignatian_reflection_episode,
+    validate_ignatian_reflection_audio_text,
+)
 from jobs.publish.liturgical_announcement import build_liturgical_announcement_text
 from jobs.publish.rosary_reflections import build_rosary_day_context, build_rosary_devotional_set
 from jobs.publish.fragments import audio_manifest_hash
@@ -2127,7 +2131,8 @@ def _expand_audio_fragments_from_block(
             target_date=effective_date,
             runtime_context=runtime_context,
         )
-        paragraphs = _split_ignatian_reflection_paragraphs(str(getattr(episode, "text", "") or ""))
+        reflection_text = validate_ignatian_reflection_audio_text(getattr(episode, "text", ""))
+        paragraphs = _split_ignatian_reflection_paragraphs(reflection_text)
         if not paragraphs:
             return []
         if len(paragraphs) == 1:

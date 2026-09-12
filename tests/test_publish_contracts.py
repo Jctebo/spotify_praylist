@@ -720,6 +720,22 @@ class TestPublishContracts(unittest.TestCase):
         self.assertEqual(job["daily_reflection"]["helper"]["suggestedMusicMood"], "reverent and spacious")
         self.assertEqual(job["render_context"]["daily_reflection_source"], "fallback")
 
+    def test_daily_reflection_prompt_leakage_is_rejected_before_fragment_expansion(self):
+        leaked = SimpleNamespace(
+            text=(
+                "Welcome to Ora Pro Nobis, where we pray with the Saints.\n\n"
+                "Rules: Return plain text only and do not use headings.\n\n"
+                "Bring the day before Jesus with gratitude and hope.\n\n"
+                "Lord Jesus Christ, teach us to follow where you gently lead. Amen.\n"
+                "And may the peace of Christ remain with you."
+            )
+        )
+        contracts = self.mod.load_publish_contracts()
+        contract = next(contract for contract in contracts if contract.contract_id == "daily-reflection")
+        with mock.patch.object(self.mod, "build_ignatian_reflection_episode", return_value=leaked):
+            with self.assertRaisesRegex(RuntimeError, "prompt or schema commentary"):
+                self.mod.build_audio_jobs([contract], target_date=datetime.date(2026, 4, 6))
+
     def test_build_audio_jobs_reuses_one_canonical_daily_theme_per_date(self):
         calls = []
 

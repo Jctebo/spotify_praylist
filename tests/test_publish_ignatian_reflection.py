@@ -105,6 +105,31 @@ class TestIgnatianReflection(unittest.TestCase):
                 source="generated",
             )
 
+    def test_prompt_field_labels_are_rejected(self):
+        leaked = (
+            "Welcome to Ora Pro Nobis, where we pray with the Saints.\n\n"
+            "Rules: Return plain text only and do not use headings.\n\n"
+            "Bring the day before Jesus with gratitude and hope.\n\n"
+            "Lord Jesus Christ, teach us to follow where you gently lead. Amen.\n"
+            "And may the peace of Christ remain with you."
+        )
+        with self.assertRaisesRegex(RuntimeError, "prompt or schema commentary"):
+            self.mod._validate_episode(
+                "Daily Reflection - Trust - June 9, 2026",
+                leaked,
+                self._context(),
+                source="generated",
+            )
+
+    def test_audio_boundary_validator_accepts_only_listener_facing_four_paragraphs(self):
+        text = (
+            "Welcome to Ora Pro Nobis, where we pray with the Saints.\n\n"
+            "Receive this day with gratitude and trust.\n\n"
+            "Bring the day before Jesus with hope.\n\n"
+            "And may the peace of Christ remain with you."
+        )
+        self.assertEqual(self.mod.validate_ignatian_reflection_audio_text(text), text)
+
 
 if __name__ == "__main__":
     unittest.main()
