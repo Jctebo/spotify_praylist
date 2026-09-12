@@ -1,5 +1,13 @@
 # Release Log
 
+## [0.4.5.0] - 2026-09-11
+
+### Changed
+- Removed printed `V:`/`R:` and `V.`/`R.` call-and-response labels from spoken text in 22 checked-in feast-day novena contracts.
+
+### Fixed
+- Added catalog regression coverage for both legacy novena sections and canonical blocks so editorial labels are not narrated again.
+
 ## [0.4.4.1] - 2026-09-11
 
 ### Changed
