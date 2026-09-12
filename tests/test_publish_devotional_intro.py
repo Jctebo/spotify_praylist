@@ -415,6 +415,26 @@ class TestPublishDevotionalIntro(unittest.TestCase):
         self.assertEqual(gospel_context_quality({"daily_gospel_citation": "John 3:16"}), "citation_only")
         self.assertEqual(gospel_context_quality({}), "missing")
 
+    def test_citation_only_prompt_allows_cautious_reference_without_inventing_details(self):
+        prompt = build_devotional_intro_prompt(
+            MORNING_PRAYER_PROFILE,
+            {
+                "prayer_title": "Morning Prayer",
+                "daily_theme_title": "Trust",
+                "daily_gospel_citation": "John 3:16",
+            },
+        )
+
+        self.assertIn("passage text is unavailable", prompt)
+        self.assertIn("do not quote, invent wording", prompt)
+        self.assertIn("cautious general connection", prompt)
+
+    def test_full_text_prompt_does_not_use_citation_only_warning(self):
+        prompt = build_devotional_intro_prompt(MORNING_PRAYER_PROFILE, self.morning_context)
+
+        self.assertNotIn("passage text is unavailable", prompt)
+        self.assertIn("Use the supplied Gospel context", prompt)
+
     def test_full_gospel_context_rejects_citation_only_intro_when_required(self):
         with self.assertRaisesRegex(RuntimeError, "meaningful detail"):
             validate_devotional_intro(
