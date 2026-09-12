@@ -19,7 +19,15 @@ SOURCE_FALLBACK = "fallback"
 DEFAULT_REFLECTION_PAUSE_MS = 15000
 
 PROMPT_LEAKAGE_MARKERS = (
+    "rules:",
     "return plain text",
+    "plain text only",
+    "no commentary",
+    "do not invent",
+    "keep the tone",
+    "date:",
+    "episode title:",
+    "gospel bridge:",
     "do not use any section headings",
     "paragraph 1 must",
     "paragraph 2 should",
@@ -43,6 +51,12 @@ PROMPT_LEAKAGE_MARKERS = (
     "user message",
     "assistant message",
     "as an ai",
+)
+
+PROMPT_LEAKAGE_LABEL_RE = re.compile(
+    r"(?im)^\s*(?:rules|date|episode title|gospel bridge|selected observance(?: date| rank| timing)?|"
+    r"theme(?: explanation)?|reflection focus|emotional tone|saint witness|approved saint quotation|"
+    r"shared helper context|output schema)\s*:\s*"
 )
 
 
@@ -280,6 +294,8 @@ def _reject_prompt_leakage(text: str) -> None:
     lowered = str(text or "").casefold()
     if re.search(r"(^|\s)(?:```|#{1,6}\s|\*\*|[*-]\s)", text):
         raise RuntimeError("Daily Reflection contains markdown or list formatting.")
+    if PROMPT_LEAKAGE_LABEL_RE.search(text):
+        raise RuntimeError("Daily Reflection contains prompt or schema commentary: labeled prompt field")
     for marker in PROMPT_LEAKAGE_MARKERS:
         if marker in lowered:
             raise RuntimeError(f"Daily Reflection contains prompt or schema commentary: {marker}")
@@ -294,6 +310,22 @@ def _reject_prompt_leakage(text: str) -> None:
     ):
         if re.search(rf"(?m)^\s*{re.escape(heading)}\s*$", text):
             raise RuntimeError(f"Daily Reflection should not speak the '{heading}' heading.")
+
+
+def validate_ignatian_reflection_audio_text(text: Any) -> str:
+    """Fail closed before Daily Reflection text is expanded into TTS fragments."""
+    cleaned = _clean_text(text)
+    if not cleaned:
+        raise RuntimeError("Daily Reflection audio text is empty.")
+    _reject_prompt_leakage(cleaned)
+    paragraphs = _spoken_paragraphs(cleaned)
+    if len(paragraphs) != 4:
+        raise RuntimeError(f"Daily Reflection audio must contain exactly 4 spoken paragraphs, got {len(paragraphs)}.")
+    if not paragraphs[0].startswith(WELCOME):
+        raise RuntimeError("Daily Reflection audio opening welcome is missing.")
+    if not cleaned.endswith(FINAL_PEACE):
+        raise RuntimeError("Daily Reflection audio final peace line is missing.")
+    return cleaned
 
 
 def _clean_text(text: Any) -> str:
