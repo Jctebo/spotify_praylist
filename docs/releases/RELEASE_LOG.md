@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.4.5.2] - 2026-09-16
+
+### Fixed
+- Preserved valid same-day shared Gospel context when the Rosary-specific lookup fails.
+- Rejected stale, mismatched, or citation-only shared Gospel data and added Rosary regression coverage.
+
 ## [0.4.5.1] - 2026-09-12
 
 ### Changed

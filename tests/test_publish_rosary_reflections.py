@@ -123,6 +123,53 @@ class TestPublishRosaryReflections(unittest.TestCase):
         self.assertEqual(context.saint_witness_date, "2026-06-05")
         self.assertEqual(context.saint_witness_rank, "memorial")
 
+    def test_context_recovers_same_day_gospel_from_shared_context_when_direct_fetch_fails(self):
+        shared = {
+            "date": self.date.isoformat(),
+            "calendar": "general_roman",
+            "locale": "en",
+            "gospelCitation": "John 17:11b-19",
+            "gospelText": "Jesus prayed that his disciples would be consecrated in truth.",
+            "gospelSource": "shared-cache",
+        }
+        with mock.patch.object(self.mod, "fetch_daily_gospel_context", side_effect=RuntimeError("provider down")):
+            context = self.mod.build_rosary_day_context(
+                self.date,
+                JOYFUL_TEXT,
+                shared_theme=shared,
+            )
+
+        self.assertEqual(context.gospel_citation, "John 17:11b-19")
+        self.assertIn("consecrated in truth", context.gospel_text)
+        self.assertEqual(context.gospel_source, "shared-cache")
+        self.assertIn("gospel", [priority.key for priority in context.priorities])
+
+    def test_context_rejects_stale_or_mismatched_shared_gospel(self):
+        for shared in (
+            {"date": "2026-06-04", "gospelText": "Stale Gospel"},
+            {"date": self.date.isoformat(), "calendar": "roman_1962", "gospelText": "Other calendar"},
+            {"date": self.date.isoformat(), "locale": "es", "gospelText": "Otro Evangelio"},
+            {"date": self.date.isoformat(), "gospelCitation": "John 17:11b-19"},
+        ):
+            with mock.patch.object(self.mod, "fetch_daily_gospel_context", side_effect=RuntimeError("provider down")):
+                context = self.mod.build_rosary_day_context(self.date, JOYFUL_TEXT, shared_theme=shared)
+            self.assertEqual(context.gospel_text, "")
+
+    def test_direct_gospel_remains_authoritative_over_shared_context(self):
+        shared = {
+            "date": self.date.isoformat(),
+            "calendar": "general_roman",
+            "locale": "en",
+            "gospelCitation": "John 17:11b-19",
+            "gospelText": "Shared Gospel should not replace direct data.",
+        }
+        context = self._context(
+            [{"name": "A Feast", "rank_name": "feast", "season": "ordinary_time"}],
+            shared=shared,
+        )
+        self.assertEqual(context.gospel_citation, "Mark 12:35-37")
+        self.assertEqual(context.gospel_text, "Jesus taught in the temple.")
+
     def test_prompt_omits_retrospective_saint_witness(self):
         context = self._context(
             [{"name": "Ferial Friday", "rank_name": "weekday", "season": "ordinary_time"}],
