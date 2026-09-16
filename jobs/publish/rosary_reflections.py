@@ -109,6 +109,7 @@ class RosaryDayContext:
     saint_witness_rank: str = ""
     saint_witness_quote: str = ""
     saint_witness_quote_source: str = ""
+    gospel_source: str = ""
 
 
 @dataclass(frozen=True)
@@ -238,6 +239,11 @@ def build_rosary_day_context(
         celebration_clause = _join_with_and(_celebration_names(rows))
     gospel_text = str(getattr(daily_context, "gospel_text", "") or "").strip()
     gospel_citation = _normalize_whitespace(getattr(daily_context, "gospel_citation", ""))
+    gospel_source = _normalize_whitespace(getattr(daily_context, "source", ""))
+    if not gospel_text:
+        shared_gospel = _shared_gospel_for_date(shared, date_value, effective_calendar, effective_locale)
+        if shared_gospel is not None:
+            gospel_citation, gospel_text, gospel_source = shared_gospel
 
     available = _available_priorities(
         season_mode=season_mode,
@@ -314,6 +320,7 @@ def build_rosary_day_context(
         saint_witness_rank=saint_witness_rank,
         saint_witness_quote=saint_witness_quote,
         saint_witness_quote_source=saint_witness_quote_source,
+        gospel_source=gospel_source,
     )
 
 
@@ -665,7 +672,32 @@ def _ensure_priority_context(context: Any) -> RosaryDayContext:
         saint_witness_rank=str(getattr(context, "saint_witness_rank", "") or "").strip(),
         saint_witness_quote=str(getattr(context, "saint_witness_quote", "") or "").strip(),
         saint_witness_quote_source=str(getattr(context, "saint_witness_quote_source", "") or "").strip(),
+        gospel_source=str(getattr(context, "gospel_source", "") or "").strip(),
     )
+
+
+def _shared_gospel_for_date(
+    shared: Mapping[str, Any],
+    date_value: Any,
+    calendar: str,
+    locale: str,
+) -> Optional[tuple[str, str, str]]:
+    """Return only same-day, same-locale shared Gospel text as a safe fallback."""
+    if not isinstance(shared, Mapping):
+        return None
+    shared_date = _normalize_whitespace(shared.get("date") or shared.get("targetDate"))
+    if shared_date != date_value.isoformat():
+        return None
+    shared_calendar = _normalize_whitespace(shared.get("calendar")) or "general_roman"
+    shared_locale = _normalize_whitespace(shared.get("locale")) or "en"
+    if shared_calendar != calendar or shared_locale != locale:
+        return None
+    text = _normalize_whitespace(shared.get("gospelText") or shared.get("gospel_text"))
+    if not text:
+        return None
+    citation = _normalize_whitespace(shared.get("gospelCitation") or shared.get("gospel_citation"))
+    source = _normalize_whitespace(shared.get("gospelSource") or shared.get("gospel_source"))
+    return citation, text, source or "shared-daily-liturgical-context"
 
 
 def _ranked_celebration_names(rows: Sequence[Any]) -> tuple[tuple[str, ...], tuple[str, ...]]:
