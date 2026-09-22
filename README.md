@@ -62,7 +62,7 @@ Optional variables:
 - `AUDIO_PUBLIC_BASE_URL` to override the public MP3/sidecar base URL; production uses `https://audio.orapronobis.media`
 - `PUBLISH_PODCAST_FEED_URL` to override the remote `podcast.xml` archive URL when publishing audio
 - Cloudflare R2 publishing uses GitHub Actions secrets `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY`, plus Actions variables `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ENDPOINT`, and `AUDIO_PUBLIC_BASE_URL`
-- `Publish Prayer Audio` now runs at `06:00 UTC`, and `Daily Spotify Playlist Refresh` runs at `05:00 UTC`, `13:00 UTC`, and `21:00 UTC`, on `main`, on pushes to `main`, plus manual dispatches
+- `Publish Prayer Audio` now runs at `06:00 UTC`, and `Daily Spotify Playlist Refresh` runs once daily at `07:00 UTC` (01:00 CST / 02:00 CDT), giving the Central Time playlist refresh a 2:00 AM deadline, plus manual dispatches
 
 ### Novena
 - `jobs/novena_contracts/pipeline.py`: contract-first novena publishing that resolves the active novena from today's date, renders theme-aware intro/content fragments, writes a JSON sidecar, and rebuilds RSS
@@ -129,7 +129,7 @@ Optional variables:
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` with optional single-playlist targeting
 
 - `scripts/setup_notion_playlists.ps1`: legacy Notion playlist-registry helper, no longer on the active Spotify hot path
-- `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; scheduled runs are gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED` and now run three times per day
+- `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; the daily 07:00 UTC run is gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
 - `.github/workflows/publish_audio.yml`: combined publish workflow for Morning Prayer audio and novena publishing, scheduled daily and also available on manual dispatch with `novena_publish_mode=daily` as the default choice; `bootstrap-no-cache` is available for a bootstrap-style publish that rebuilds audio without using the cache
 - `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with OneDrive sync and GitHub Pages export

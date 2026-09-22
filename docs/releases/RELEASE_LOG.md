@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.4.5.3] - 2026-09-22
+
+### Changed
+- Changed the Daily Spotify Playlist Refresh from three scheduled UTC runs to one daily run at 07:00 UTC, which is 01:00 CST or 02:00 CDT.
+- Preserved the schedule enablement gate and manual playlist-dispatch input, with regression coverage for the workflow contract.
+
 ## [0.4.5.2] - 2026-09-16
 
 ### Fixed
