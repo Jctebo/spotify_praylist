@@ -1,5 +1,10 @@
 # Release Log
 
+## [0.4.5.4] - 2026-09-22
+
+### Fixed
+- Removed the stray spoken "One. One. One." from the shared St. Michael's Lent prayer block and all nine daily sections.
+
 ## [0.4.5.3] - 2026-09-22
 
 ### Changed
