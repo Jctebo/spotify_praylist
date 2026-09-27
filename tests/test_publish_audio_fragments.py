@@ -253,7 +253,7 @@ class TestPublishAudioFragments(unittest.TestCase):
         self.assertEqual(kwargs["json"]["model_id"], "eleven_multilingual_v2")
         self.assertEqual(kwargs["json"]["voice_settings"]["stability"], 0.7)
         self.assertEqual(kwargs["json"]["voice_settings"]["speed"], 1.1)
-        self.assertEqual(kwargs["timeout"], 120)
+        self.assertEqual(kwargs["timeout"], (15, 120))
 
     def test_render_audio_job_falls_back_to_next_provider(self):
         mp3_bytes = make_test_mp3_bytes()

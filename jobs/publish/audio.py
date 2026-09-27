@@ -8,11 +8,13 @@ import sys
 import shutil
 import datetime as _dt
 import tempfile
+import time
 from html import escape as _html_escape
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
-from openai import OpenAI
+from openai import OpenAI, APIConnectionError, APIStatusError
+import httpx
 import requests
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -51,6 +53,54 @@ ELEVENLABS_API_BASE_URL = "https://api.elevenlabs.io/v1"
 DEFAULT_PODCAST_FEED_PUBLIC_URL = "https://jctebo.github.io/spotify_praylist/podcast.xml"
 
 logger = logging.getLogger(__name__)
+
+TTS_REQUEST_ATTEMPTS = 3
+TTS_CONNECT_TIMEOUT_SECONDS = 15
+TTS_OPENAI_READ_TIMEOUT_SECONDS = 300
+TTS_RETRY_BACKOFF_SECONDS = 5
+
+
+def _audio_request_error(exc: Exception) -> str:
+    """Keep machine diagnostics, never request/response prose or headers."""
+    causes = []
+    current = exc
+    while current is not None and len(causes) < 5:
+        causes.append(type(current).__name__)
+        current = current.__cause__
+    parts = ["causes=" + "->".join(causes)]
+    response = getattr(exc, "response", None)
+    status = getattr(response, "status_code", None)
+    if isinstance(status, int):
+        parts.append(f"http_status={status}")
+    try:
+        body = response.json() if response is not None else None
+    except (ValueError, TypeError):
+        body = None
+    if isinstance(body, dict):
+        detail = body.get("detail", body.get("error", body))
+        if isinstance(detail, dict):
+            code = detail.get("code") or detail.get("status") or detail.get("type")
+            if isinstance(code, str) and re.fullmatch(r"[a-z][a-z0-9_]{0,63}", code):
+                parts.append(f"code={code}")
+    return " ".join(parts)
+
+
+def _request_audio_with_retry(provider: str, request: Callable[[], bytes]) -> bytes:
+    for attempt in range(1, TTS_REQUEST_ATTEMPTS + 1):
+        try:
+            return request()
+        except (APIConnectionError, APIStatusError, requests.RequestException) as exc:
+            status = getattr(getattr(exc, "response", None), "status_code", None)
+            transient = isinstance(exc, (APIConnectionError, requests.ConnectionError, requests.Timeout))
+            transient = transient or (isinstance(status, int) and (status in {408, 409, 429} or 500 <= status < 600))
+            diagnostic = _audio_request_error(exc)
+            if not transient or attempt == TTS_REQUEST_ATTEMPTS:
+                raise RuntimeError(f"{provider} audio failed after {attempt} attempt(s): {diagnostic}") from None
+            delay = TTS_RETRY_BACKOFF_SECONDS * 2 ** (attempt - 1)
+            logger.warning("Audio request retry provider=%s attempt=%s/%s delay_seconds=%s %s",
+                           provider, attempt, TTS_REQUEST_ATTEMPTS, delay, diagnostic)
+            time.sleep(delay)
+    raise AssertionError("Audio request attempt budget must be positive")
 
 
 
@@ -172,18 +222,25 @@ def openai_tts_renderer(text: str, audio_config: Dict[str, Any]) -> bytes:
     if not api_key:
         raise RuntimeError("Missing required environment variable: OPENAI_API_KEY")
     base_url = os.getenv(OAI_API_BASE_URL, "https://api.openai.com/v1").strip() or "https://api.openai.com/v1"
-    client = OpenAI(api_key=api_key, base_url=base_url.rstrip("/"))
-    response = client.audio.speech.create(
-        model=str(audio_config.get("model", "gpt-4o-mini-tts")).strip() or "gpt-4o-mini-tts",
-        voice=str(audio_config.get("voice", "ash")).strip() or "ash",
-        input=str(text or ""),
-        response_format=str(audio_config.get("format", "mp3")).strip().lower() or "mp3",
-        speed=float(audio_config.get("speed", 1.0)),
-    )
-    raw = bytes(response.content)
-    if not raw:
-        raise RuntimeError("OpenAI audio generation returned empty content.")
-    return raw
+
+    def request() -> bytes:
+        # New transport per attempt; do not multiply retries inside the SDK.
+        with OpenAI(api_key=api_key, base_url=base_url.rstrip("/"), max_retries=0,
+                    timeout=httpx.Timeout(TTS_OPENAI_READ_TIMEOUT_SECONDS,
+                                          connect=TTS_CONNECT_TIMEOUT_SECONDS)) as client:
+            response = client.audio.speech.create(
+                model=str(audio_config.get("model", "gpt-4o-mini-tts")).strip() or "gpt-4o-mini-tts",
+                voice=str(audio_config.get("voice", "ash")).strip() or "ash",
+                input=str(text or ""),
+                response_format=str(audio_config.get("format", "mp3")).strip().lower() or "mp3",
+                speed=float(audio_config.get("speed", 1.0)),
+            )
+            raw = bytes(response.content)
+            if not raw:
+                raise RuntimeError("OpenAI audio generation returned empty content.")
+            return raw
+
+    return _request_audio_with_retry("openai", request)
 
 
 def _provider_name(audio_config: Dict[str, Any]) -> str:
@@ -265,22 +322,29 @@ def elevenlabs_tts_renderer(text: str, audio_config: Dict[str, Any]) -> bytes:
     voice_settings = audio_config.get("voice_settings")
     if isinstance(voice_settings, dict) and voice_settings:
         payload["voice_settings"] = {key: value for key, value in dict(voice_settings).items() if value is not None}
-    response = requests.post(
-        f"{ELEVENLABS_API_BASE_URL}/text-to-speech/{voice_id}",
-        params={"output_format": _elevenlabs_output_format(audio_config.get("format", "mp3"))},
-        headers={
-            "xi-api-key": api_key,
-            "Content-Type": "application/json",
-            "Accept": "audio/mpeg",
-        },
-        json=payload,
-        timeout=120,
-    )
-    response.raise_for_status()
-    raw = bytes(response.content)
-    if not raw:
-        raise RuntimeError("ElevenLabs audio generation returned empty content.")
-    return raw
+
+    def request() -> bytes:
+        response = requests.post(
+            f"{ELEVENLABS_API_BASE_URL}/text-to-speech/{voice_id}",
+            params={"output_format": _elevenlabs_output_format(audio_config.get("format", "mp3"))},
+            headers={
+                "xi-api-key": api_key,
+                "Content-Type": "application/json",
+                "Accept": "audio/mpeg",
+            },
+            json=payload,
+            timeout=(TTS_CONNECT_TIMEOUT_SECONDS, 120),
+        )
+        try:
+            response.raise_for_status()
+            raw = bytes(response.content)
+            if not raw:
+                raise RuntimeError("ElevenLabs audio generation returned empty content.")
+            return raw
+        finally:
+            response.close()
+
+    return _request_audio_with_retry("elevenlabs", request)
 
 
 def _renderer_for_provider(provider_audio_config: Dict[str, Any], renderer):

@@ -1,5 +1,12 @@
 # Release Log
 
+## [0.4.6.0] - 2026-09-27
+
+### Fixed
+- Added bounded retries for transient audio provider failures with explicit connection/read timeouts and a fresh OpenAI client per attempt, without nested SDK retries.
+- Retained network cause types, HTTP status, and validated provider error codes in audio failure diagnostics while omitting request/response prose.
+- Preserved provider fallback and failure on incomplete audio; added recovery, exhaustion, permanent-rejection, and diagnostic regression coverage.
+
 ## [0.4.5.4] - 2026-09-22
 
 ### Fixed
