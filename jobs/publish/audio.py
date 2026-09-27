@@ -13,8 +13,7 @@ from html import escape as _html_escape
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
-from openai import OpenAI, APIConnectionError, APIStatusError
-import httpx
+from openai import OpenAI, APIConnectionError, APIStatusError, Timeout
 import requests
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -226,8 +225,8 @@ def openai_tts_renderer(text: str, audio_config: Dict[str, Any]) -> bytes:
     def request() -> bytes:
         # New transport per attempt; do not multiply retries inside the SDK.
         with OpenAI(api_key=api_key, base_url=base_url.rstrip("/"), max_retries=0,
-                    timeout=httpx.Timeout(TTS_OPENAI_READ_TIMEOUT_SECONDS,
-                                          connect=TTS_CONNECT_TIMEOUT_SECONDS)) as client:
+                    timeout=Timeout(TTS_OPENAI_READ_TIMEOUT_SECONDS,
+                                    connect=TTS_CONNECT_TIMEOUT_SECONDS)) as client:
             response = client.audio.speech.create(
                 model=str(audio_config.get("model", "gpt-4o-mini-tts")).strip() or "gpt-4o-mini-tts",
                 voice=str(audio_config.get("voice", "ash")).strip() or "ash",

@@ -4,9 +4,13 @@ import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-import httpx
 import openai
 import requests
+
+try:
+    import httpx2 as httpx
+except ImportError:
+    import httpx
 
 from tests.test_helpers import load_module, make_test_mp3_bytes, temp_env
 
@@ -19,6 +23,14 @@ class TestAudioProviderRecovery(unittest.TestCase):
         error = openai.APIConnectionError(request=httpx.Request("POST", "https://example.test"))
         error.__cause__ = httpx.ConnectTimeout("SECRET request contents")
         return error
+
+    def test_sdk_timeout_constructs_real_client_without_network(self):
+        with self.audio.OpenAI(
+            api_key="test-key", max_retries=0,
+            timeout=self.audio.Timeout(300, connect=15),
+        ) as client:
+            self.assertEqual(client.timeout.connect, 15)
+            self.assertEqual(client.timeout.read, 300)
 
     def http_error(self, status, body):
         response = requests.Response()
