@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.4.6.1] - 2026-09-27
+
+### Fixed
+- Used OpenAI's exported Timeout type so audio publishing supports both OpenAI 2.x/httpx and 3.x/httpx2 without an undeclared transport dependency.
+- Added a real SDK client-construction regression test and validated against a clean requirements installation.
+
 ## [0.4.6.0] - 2026-09-27
 
 ### Fixed
