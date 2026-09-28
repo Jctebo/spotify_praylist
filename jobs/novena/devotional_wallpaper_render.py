@@ -237,9 +237,9 @@ def overlay_wallpaper_text(
         circular = False
     else:
         # A top vignette gives the larger, safely placed circular label enough contrast.
-        _safe_fade(image, 0, int(image.height * 0.40), opacity=150)
+        _safe_fade(image, 0, int(image.height * 0.35), opacity=150)
         draw = ImageDraw.Draw(image)
-        title_top = int(image.height * 0.16)
+        title_top = int(image.height * 0.12)
         title_size = int(image.width * 0.077)
         title_width = int(image.width * 0.86)
         circular = True
