@@ -60,11 +60,14 @@ MONTHLY_VARIATIONS = {
 @dataclass(frozen=True)
 class AssetKey:
     date: dt.date
+    subject: str
     variant: str
 
     def __post_init__(self) -> None:
         if self.variant not in {"phone", "watch"}:
             raise ValueError(f"Unsupported image variant: {self.variant}")
+        if not self.subject.strip():
+            raise ValueError("Wallpaper subject identity is required")
 
 
 @dataclass(frozen=True)
@@ -124,8 +127,9 @@ def slugify(value: str) -> str:
 
 
 def build_filename(spec: DailyImageSpec, variant: str) -> str:
-    AssetKey(spec.date, variant)
-    return f"{slugify(spec.title)}__{spec.date.isoformat()}.jpg"
+    subject = slugify(spec.title)
+    AssetKey(spec.date, subject, variant)
+    return f"{subject}__{spec.date.isoformat()}.jpg"
 
 
 def monthly_variation(date: dt.date) -> str:
@@ -159,7 +163,10 @@ def build_art_prompt(spec: DailyImageSpec, variant: str, variation: str = "") ->
             "of a Samsung Galaxy Z Fold8 using Niagara Launcher. Place the devotional figure lower-middle/right. "
             "Keep the left 35 percent below the title visually calm and low-detail so Niagara app names and "
             "notifications remain readable; keep the rightmost 8 percent and bottom 10 percent free of essential "
-            "symbols, faces, and text. Leave clean title space at the top. Do not leave half the canvas empty."
+            "symbols, faces, and text. The TOP 32 PERCENT must be completely free of the saint, face, head, halo, "
+            "hair, hands, silhouette, and identity-defining objects; it is a quiet dark background reserved for "
+            "the title and subtitle. Place the entire face below 35 percent of image height. Leave clean title space "
+            "at the top. Do not leave half the canvas empty."
             + extra
         )
     return common + (

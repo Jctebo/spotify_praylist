@@ -85,11 +85,14 @@ def generate_artwork(
     image_model: str,
     quality: str = "high",
     variation: str = "",
+    qa_feedback: str = "",
 ) -> bytes:
     reference_path = _reference_for(variant)
     encoded = base64.b64encode(reference_path.read_bytes()).decode("ascii")
     reference_mime = "image/jpeg"
     prompt = build_art_prompt(spec, variant, variation)
+    if qa_feedback:
+        prompt += "\nCorrect these image-review findings in this new artwork: " + qa_feedback
     response = client.responses.create(
         model=caller_model,
         input=[{
@@ -356,7 +359,9 @@ def vision_qa(client: Any, image_bytes: bytes, spec: DailyImageSpec, variant: st
         "Inspect this finished Catholic devotional wallpaper. Return JSON only: "
         "{\"approved\": boolean, \"issues\": [string]}. Check that the scene depicts the named subject respectfully, "
         "anatomy and iconography are coherent, there is no unwanted lettering/logo/device UI, and composition suits "
-        f"a {variant} wallpaper. Verify the exact spelling of locally overlaid title {spec.title!r} and subtitle "
+        f"a {variant} wallpaper. The title/subtitle region must not overlap any face, head, halo, hair, or identity-defining "
+        f"part of the subject; for phone images the top 32% is text-only background. Explicitly inspect overlap and reject it. "
+        f"Verify the exact spelling of locally overlaid title {spec.title!r} and subtitle "
         f"{spec.image_subtitle!r}. Do not reject stylized lettering unless the text is wrong, unclear, or clipped."
     )
     response = client.responses.create(
@@ -432,26 +437,38 @@ def render_variant(
     variation: str = "",
     rejected_path: Optional[Path] = None,
 ) -> tuple[bytes, dict[str, Any]]:
-    raw = generate_artwork(
-        client, spec, variant, caller_model=caller_model, image_model=image_model, variation=variation,
-    )
-    final = overlay_wallpaper_text(raw, spec, variant)
-    local = validate_local_qa(final, spec, variant, recognize=lambda data: ocr_text(data, tesseract_cmd=tesseract_cmd))
-    if not local.approved:
-        if rejected_path is not None:
-            rejected_path.parent.mkdir(parents=True, exist_ok=True)
-            rejected_path.write_bytes(final)
-        raise RuntimeError("Wallpaper local QA failed: " + "; ".join(local.issues))
-    vision = vision_qa(client, final, spec, variant, model=qa_model)
-    if not vision["approved"]:
-        if rejected_path is not None:
-            rejected_path.parent.mkdir(parents=True, exist_ok=True)
-            rejected_path.write_bytes(final)
-        raise RuntimeError("Wallpaper vision QA failed: " + "; ".join(vision["issues"] or ["unapproved image"]))
-    return final, {
-        "approved": True,
-        "local_qa": asdict(local),
-        "vision_qa": vision,
-        "render_version": RENDER_VERSION,
-        "dimensions": list(_output_size(variant)),
-    }
+    feedback = ""
+    last_final = b""
+    for attempt in range(3):
+        raw = generate_artwork(
+            client, spec, variant, caller_model=caller_model, image_model=image_model,
+            variation=variation, qa_feedback=feedback,
+        )
+        final = overlay_wallpaper_text(raw, spec, variant)
+        last_final = final
+        local = validate_local_qa(final, spec, variant, recognize=lambda data: ocr_text(data, tesseract_cmd=tesseract_cmd))
+        if not local.approved:
+            feedback = "; ".join(local.issues)
+            if attempt < 2:
+                continue
+            issues = feedback
+            break
+        vision = vision_qa(client, final, spec, variant, model=qa_model)
+        if not vision["approved"]:
+            feedback = "; ".join(vision["issues"] or ["unapproved image"])
+            if attempt < 2:
+                continue
+            issues = feedback
+            break
+        return final, {
+            "approved": True,
+            "local_qa": asdict(local),
+            "vision_qa": vision,
+            "render_attempts": attempt + 1,
+            "render_version": RENDER_VERSION,
+            "dimensions": list(_output_size(variant)),
+        }
+    if rejected_path is not None:
+        rejected_path.parent.mkdir(parents=True, exist_ok=True)
+        rejected_path.write_bytes(last_final)
+    raise RuntimeError("Wallpaper QA rejected all three renders: " + issues)

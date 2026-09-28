@@ -31,8 +31,11 @@ PRIVATE_RE = re.compile(r"\(private devotion\)", re.I)
 PREFIX_RE = re.compile(r"^\s*\[(F|M|m)\]\s*")
 DECORATION_RE = re.compile(r"^[\s\U0001f300-\U0001faff\u2600-\u27bf]+")
 CLASS_SUFFIX_RE = re.compile(r"(?:,\s*)?(Solemnity|Feast|Optional Memorial|Memorial)\s*$", re.I)
+MARTYR_SUFFIX_RE = re.compile(r",\s*Martyrs?\s*$", re.I)
 CONTEXT_EVENT_RE = re.compile(r"^(?:\U0001f7e2\s*)?(?:(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b|\d+[\wºª]*\s+(?:Sunday|Weekday)\b)", re.I)
 ORDINAL_PREFIX_RE = re.compile(r"^.*?\bWeek\s+in\s+Ordinary\s+Time\s*(?:—|-|–)\s*", re.I)
+CHURCH_OBSERVANCE_RE = re.compile(r"\bChurch observance:\s*(.*?)(?=\bPrayer focus:|$)", re.I)
+NAMED_RANK_RE = re.compile(r"\b(optional memorial|solemnity|feast|memorial)\b", re.I)
 
 
 @dataclass(frozen=True)
@@ -46,7 +49,7 @@ class CalendarSnapshot:
 
 @dataclass(frozen=True)
 class CalendarResolution:
-    specs: dict[dt.date, DailyImageSpec]
+    specs: dict[dt.date, tuple[DailyImageSpec, ...]]
     covered_through: Optional[dt.date]
     feed_checksum: str
     missing_dates: tuple[dt.date, ...]
@@ -182,6 +185,11 @@ def _classification_from_title(summary: str, fields: dict[str, str]) -> Optional
     return None
 
 
+def _has_named_context_suffix(summary: str) -> bool:
+    parts = re.split(r"\s+[—–]\s+", summary, maxsplit=1)
+    return len(parts) == 2 and _classification_from_title(parts[1], {}) is not None
+
+
 def _title_from_event(summary: str, fields: dict[str, str]) -> str:
     if fields.get("display_title"):
         return fields["display_title"].upper().strip()
@@ -196,6 +204,8 @@ def _title_from_event(summary: str, fields: dict[str, str]) -> str:
     else:
         title = SEQUENCE_AFTER_SUBJECT_RE.sub("", title).strip(" -–—,;[]")
     title = PRIVATE_RE.sub("", title)
+    title = MARTYR_SUFFIX_RE.sub("", title)
+    title = re.sub(r",\s*Martyrs?\b", "", title, flags=re.I)
     title = CLASS_SUFFIX_RE.sub("", title).strip(" -–—,;[]")
     title = re.sub(r"\s*\[[FfMm]\]\s*", " ", title)
     return re.sub(r"\s+", " ", title).strip(" ,;–—-").upper()
@@ -214,7 +224,7 @@ def _event_spec(event: Any, target_date: dt.date) -> Optional[DailyImageSpec]:
         raise RuntimeError("DEVOTIONAL-IMAGE include must be true or false")
     if include in {"false", "no", "0"}:
         return None
-    if _is_context_event(event):
+    if _is_context_event(event) and not _has_named_context_suffix(raw_summary):
         return None
     if PRIVATE_RE.search(raw_summary) and "(private devotion)" not in description.lower():
         description = f"{description} (private devotion)"
@@ -235,7 +245,7 @@ def _event_spec(event: Any, target_date: dt.date) -> Optional[DailyImageSpec]:
     classification = _classification_from_title(raw_summary, fields)
     if classification is None:
         # Liturgical weekday and Sunday context events are not wallpaper subjects.
-        if _is_context_event(event):
+        if _is_context_event(event) and not _has_named_context_suffix(raw_summary):
             return None
         raise RuntimeError(f"Unclassified devotional calendar event on {target_date.isoformat()}")
     title = sequence_subject.upper() if sequence_subject else _title_from_event(raw_summary, fields)
@@ -264,7 +274,53 @@ def _is_context_event(event: Any) -> bool:
     if _is_cancelled(event):
         return False
     summary = _clean_ics_text(event.get("SUMMARY"))
-    return bool(CONTEXT_EVENT_RE.match(summary))
+    return bool(CONTEXT_EVENT_RE.match(summary)) and not _has_named_context_suffix(summary)
+
+
+def _description_specs(event: Any, target_date: dt.date) -> list[DailyImageSpec]:
+    """Read additional subjects only from the feed's explicitly labeled observance field."""
+    description = _clean_ics_text(event.get("DESCRIPTION"))
+    match = CHURCH_OBSERVANCE_RE.search(description)
+    if not match:
+        return []
+    parts = re.split(r";\s*also\s+", match.group(1), flags=re.I)
+    uid, recurrence_id = _event_identity(event)
+    extras: list[DailyImageSpec] = []
+    for index, raw in enumerate(parts[1:], start=1):
+        raw = raw.strip(" .;,-")
+        optional = re.search(r"\(\s*optional\s*\)", raw, re.I)
+        rank = NAMED_RANK_RE.search(raw)
+        private = PRIVATE_RE.search(raw)
+        if not raw or (rank is None and private is None and optional is None):
+            continue
+        classification = (
+            "PRIVATE DEVOTION" if private else
+            "OPTIONAL MEMORIAL" if optional else
+            "OPTIONAL MEMORIAL" if rank.group(1).lower() == "optional memorial" else
+            rank.group(1).upper()
+        )
+        cutoff = min(m.start() for m in (rank, private, optional) if m is not None)
+        title = raw[:cutoff]
+        title = re.sub(r"\([^)]*\)", "", title).strip(" .,:;—–-[]")
+        title = MARTYR_SUFFIX_RE.sub("", title).strip(" .,:;—–-[]")
+        title = re.sub(r"^(?:of|for)\s+", "", title, flags=re.I)
+        title = re.sub(r"^(?:St|Saint)\.\s+", "SAINT ", title, flags=re.I)
+        if not title or _is_context_title(title):
+            continue
+        extras.append(DailyImageSpec(
+            date=target_date,
+            title=re.sub(r"\s+", " ", title).upper(),
+            classification=classification,
+            source_kind="calendar_description",
+            subtitle="",
+            source_uid=f"{uid}#observance-{index}",
+            recurrence_id=recurrence_id,
+        ))
+    return extras
+
+
+def _is_context_title(title: str) -> bool:
+    return bool(CONTEXT_EVENT_RE.match(DECORATION_RE.sub("", title).strip()))
 
 
 def _occurrences(calendar: Calendar, start: dt.date, end: dt.date) -> list[Any]:
@@ -296,7 +352,8 @@ def resolve_calendar(
         if start_date not in target_set or _is_cancelled(event):
             continue
         represented_dates.add(start_date)
-        if _is_context_event(event):
+        summary = _clean_ics_text(event.get("SUMMARY"))
+        if _is_context_event(event) and not _has_named_context_suffix(summary):
             context_dates.add(start_date)
         identity = (*_event_identity(event), start_date)
         if identity in seen:
@@ -305,29 +362,33 @@ def resolve_calendar(
         spec = _event_spec(event, start_date)
         if spec is not None:
             by_date[start_date].append(spec)
+        by_date[start_date].extend(_description_specs(event, start_date))
 
-    resolved: dict[dt.date, DailyImageSpec] = {}
+    resolved: dict[dt.date, tuple[DailyImageSpec, ...]] = {}
     for date, candidates in by_date.items():
         if not candidates and date in context_dates:
-            resolved[date] = DailyImageSpec(
+            resolved[date] = (DailyImageSpec(
                 date=date,
                 title=MONTHLY_DEVOTIONS[date.month],
                 classification="PRIVATE DEVOTION",
                 source_kind="monthly",
                 subtitle="",
                 monthly_fallback=True,
-            )
+            ),)
             continue
         if not candidates:
             continue
-        candidates.sort(key=lambda spec: (spec.priority, CLASSIFICATION_ORDER[spec.classification]))
-        winner = candidates[0]
-        if len(candidates) > 1 and (winner.priority, CLASSIFICATION_ORDER[winner.classification]) == (
-            candidates[1].priority,
-            CLASSIFICATION_ORDER[candidates[1].classification],
-        ):
-            raise RuntimeError(f"Calendar has unresolved devotional subject tie on {date.isoformat()}")
-        resolved[date] = winner
+        deduplicated: dict[str, DailyImageSpec] = {}
+        for candidate in candidates:
+            key = re.sub(r"[^a-z0-9]+", "-", candidate.title.lower()).strip("-")
+            prior = deduplicated.get(key)
+            rank = (candidate.priority, CLASSIFICATION_ORDER[candidate.classification])
+            if prior is None or rank < (prior.priority, CLASSIFICATION_ORDER[prior.classification]):
+                deduplicated[key] = candidate
+        resolved[date] = tuple(sorted(
+            deduplicated.values(),
+            key=lambda spec: (spec.priority, CLASSIFICATION_ORDER[spec.classification], spec.title),
+        ))
     return CalendarResolution(
         specs=resolved,
         covered_through=None,
