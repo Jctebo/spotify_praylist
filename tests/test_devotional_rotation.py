@@ -11,6 +11,9 @@ class MemoryStore:
         self.files = {}
         self.json = {}
 
+    def validate_root(self):
+        pass
+
     def mkdir(self, _path):
         pass
 

@@ -78,9 +78,27 @@ class RcloneStore:
             raise RuntimeError(f"rclone {args[0]} failed (exit {result.returncode}): {detail[:500]}")
         return result
 
+    def validate_root(self) -> None:
+        remote = self.config.remote_path()
+        result = self.run("lsjson", remote, "--dirs-only", check=False)
+        if result.returncode:
+            detail = (result.stderr or "").strip()
+            raise RuntimeError(f"rclone wallpaper root check failed (exit {result.returncode}): {detail[:500]}")
+        try:
+            data = json.loads(result.stdout or "[]")
+        except json.JSONDecodeError as exc:
+            raise RuntimeError("rclone returned an invalid wallpaper root listing") from exc
+        if not isinstance(data, list):
+            raise RuntimeError("rclone wallpaper root listing must be a JSON array")
+
     def list_files(self, folder: str, *, recursive: bool = True) -> list[dict[str, Any]]:
         remote = self.config.remote_path(folder)
-        result = self.run("lsjson", remote, "--files-only", *( ["--recursive"] if recursive else []), "--hash")
+        result = self.run("lsjson", remote, "--files-only", *( ["--recursive"] if recursive else []), "--hash", check=False)
+        if result.returncode:
+            detail = (result.stderr or "").strip()
+            if "directory not found" in detail.casefold():
+                return []
+            raise RuntimeError(f"rclone lsjson failed (exit {result.returncode}): {detail[:500]}")
         try:
             data = json.loads(result.stdout or "[]")
         except json.JSONDecodeError as exc:
@@ -179,6 +197,7 @@ def parse_asset_listing(folder: str, records: Iterable[dict[str, Any]]) -> list[
 
 
 def inventory_assets(store: RcloneStore) -> list[RemoteAsset]:
+    store.validate_root()
     found: list[RemoteAsset] = []
     for folder in ("watch-current", "watch-queue", "phone-current", "phone-queue"):
         records = store.list_files(folder, recursive=True)

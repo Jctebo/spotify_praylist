@@ -1,5 +1,6 @@
 import datetime as dt
 import hashlib
+import subprocess
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -7,6 +8,7 @@ from tempfile import TemporaryDirectory
 from jobs.novena.devotional_image_contract import DailyImageSpec
 from sync.devotional_onedrive import (
     RcloneConfig,
+    RcloneStore,
     RemoteAsset,
     asset_path,
     deliver_missing_asset,
@@ -18,6 +20,9 @@ class MemoryStore:
     def __init__(self):
         self.config = RcloneConfig("onedrive", "Pictures/Samsung Gallery/DCIM")
         self.files = {}
+
+    def validate_root(self):
+        pass
 
     def mkdir(self, _folder):
         pass
@@ -78,6 +83,44 @@ class DevotionalOneDriveTests(unittest.TestCase):
                 os.environ.pop("RCLONE_REMOTE_ROOT", None)
             else:
                 os.environ["RCLONE_REMOTE_ROOT"] = old
+
+    def test_missing_remote_folder_is_an_empty_listing(self):
+        def runner(command, **_kwargs):
+            return subprocess.CompletedProcess(
+                command,
+                3,
+                stdout="",
+                stderr="ERROR : error listing: directory not found",
+            )
+
+        store = RcloneStore(RcloneConfig("onedrive", "Pictures/Samsung Gallery/DCIM"), runner=runner)
+        self.assertEqual(store.list_files("phone-queue"), [])
+
+    def test_missing_wallpaper_root_is_not_treated_as_an_empty_folder(self):
+        def runner(command, **_kwargs):
+            return subprocess.CompletedProcess(
+                command,
+                3,
+                stdout="",
+                stderr="ERROR : error listing: directory not found",
+            )
+
+        store = RcloneStore(RcloneConfig("onedrive", "Pictures/Samsung Gallery/DCIM"), runner=runner)
+        with self.assertRaisesRegex(RuntimeError, "wallpaper root check failed"):
+            store.validate_root()
+
+    def test_non_missing_folder_listing_errors_still_fail(self):
+        def runner(command, **_kwargs):
+            return subprocess.CompletedProcess(
+                command,
+                3,
+                stdout="",
+                stderr="ERROR : unauthorized: token expired",
+            )
+
+        store = RcloneStore(RcloneConfig("onedrive", "Pictures/Samsung Gallery/DCIM"), runner=runner)
+        with self.assertRaisesRegex(RuntimeError, "unauthorized: token expired"):
+            store.list_files("phone-queue")
 
 
 if __name__ == "__main__":
