@@ -164,8 +164,10 @@ def build_art_prompt(spec: DailyImageSpec, variant: str, variation: str = "") ->
         )
     return common + (
         "Compose an independently designed full-bleed square wallpaper for a Samsung Galaxy Watch Classic. "
-        "Place the face above image midpoint and keep the face, halo, gestures, essential symbols, and title-safe "
-        "space inside a centered circular safe area with diameter 90 percent of the square. Corners may be "
-        "decorative and expendable. Do not draw a circular border."
+        "Reserve the upper 38 percent as calm, darker, text-safe background with no face, halo, hands, or essential "
+        "symbols; locally overlaid title and subtitle occupy this area. Place the devotional subject and its face "
+        "below that title area, near the lower-middle of the square. Keep the face, gestures, and every identity-defining "
+        "symbol comfortably inside the centered circular safe area with diameter 90 percent of the square; only "
+        "nonessential decoration may approach the corners or circle edge. Do not draw a circular border."
         + extra
     )

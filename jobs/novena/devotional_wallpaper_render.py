@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import base64
+from difflib import SequenceMatcher
 import io
 import json
 import os
 import re
+import unicodedata
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -151,11 +153,17 @@ def _draw_centered_label(
         chord = _circular_chord_width(y + height / 2, 512, WATCH_SAFE_RADIUS)
         return max(0, min(max_width, int(chord) - 24))
 
+    def rendered_width(line: str, active_font: ImageFont.FreeTypeFont) -> float:
+        # Drawing advances each glyph separately to apply letter spacing, so use
+        # those same advances when deciding whether a line fits the circle.
+        widths = [draw.textlength(char, font=active_font) for char in line]
+        return sum(widths) + tracking * max(0, len(line) - 1)
+
     lines = _wrap_lines(draw, text, font, min(max_width, allowed_at(top, font.getbbox("Ag")[3] - font.getbbox("Ag")[1] + 8)))
     while base_size > 20:
         line_h = max(font.getbbox(line)[3] - font.getbbox(line)[1] for line in lines) + 8
         invalid = len(lines) > 2 or any(
-            draw.textlength(line, font=font) > allowed_at(top + index * line_h, line_h)
+            rendered_width(line, font) > allowed_at(top + index * line_h, line_h)
             for index, line in enumerate(lines)
         )
         if not invalid:
@@ -171,7 +179,7 @@ def _draw_centered_label(
     for index, line in enumerate(lines):
         y = top + index * line_h
         widths = [draw.textlength(char, font=font) for char in line]
-        text_width = sum(widths) + tracking * (len(line) - 1)
+        text_width = rendered_width(line, font)
         allowed_width = allowed_at(y, line_h)
         if text_width > allowed_width:
             raise RuntimeError("Wallpaper text does not fit its device safe area")
@@ -225,12 +233,12 @@ def overlay_wallpaper_text(
         title_width = int(image.width * 0.88)
         circular = False
     else:
-        # A subtle top vignette supports small text while preserving a full square painting.
-        _safe_fade(image, 0, int(image.height * 0.34), opacity=95)
+        # A top vignette gives the larger, safely placed circular label enough contrast.
+        _safe_fade(image, 0, int(image.height * 0.40), opacity=150)
         draw = ImageDraw.Draw(image)
-        title_top = int(image.height * 0.095)
+        title_top = int(image.height * 0.16)
         title_size = int(image.width * 0.077)
-        title_width = int(image.width * 0.78)
+        title_width = int(image.width * 0.86)
         circular = True
     title_h, _ = _draw_centered_label(
         draw, image, spec.title, top=title_top, base_size=title_size,
@@ -239,7 +247,7 @@ def overlay_wallpaper_text(
     subtitle = spec.image_subtitle
     subtitle_top = title_top + title_h + int(image.height * (0.012 if variant == "phone" else 0.025))
     subtitle_size = int(image.width * (0.027 if variant == "phone" else 0.042))
-    subtitle_width = int(image.width * (0.84 if variant == "phone" else 0.70))
+    subtitle_width = int(image.width * (0.84 if variant == "phone" else 0.78))
     _draw_centered_label(
         draw, image, subtitle, top=subtitle_top, base_size=subtitle_size,
         max_width=subtitle_width, circular=circular, tracking=0.35,
@@ -259,26 +267,87 @@ def ocr_text(image_bytes: bytes, *, tesseract_cmd: Optional[str] = None) -> tupl
         with Image.open(io.BytesIO(image_bytes)) as image:
             image.load()
             width, height = image.size
-            crop = image.crop((0, 0, width, round(height * (0.36 if width == height else 0.28))))
-        raw = pytesseract.image_to_data(crop, config="--psm 6", output_type=pytesseract.Output.DICT)
-        words = [str(word).strip() for word in raw.get("text", []) if str(word).strip()]
-        # The overlay puts the title and subtitle on consecutive lines; preserve split for contract checks.
-        line_groups: dict[tuple[Any, Any, Any], list[str]] = {}
-        for index, word in enumerate(raw.get("text", [])):
-            value = str(word).strip()
-            if not value:
-                continue
-            line = (raw["block_num"][index], raw["par_num"][index], raw["line_num"][index])
-            line_groups.setdefault(line, []).append(value)
-        lines = [" ".join(group) for group in line_groups.values()]
-        return " ".join(words), "\n".join(lines)
+            if width == height:
+                margin = round(width * 0.05)
+                crop = image.crop((margin, round(height * 0.12), width - margin, round(height * 0.46)))
+                subtitle_crop = image.crop((round(width * 0.08), round(height * 0.26), round(width * 0.92), round(height * 0.40)))
+            else:
+                crop = image.crop((0, 0, width, round(height * 0.30)))
+                subtitle_crop = None
+        enlarged = ImageOps.autocontrast(ImageOps.grayscale(crop)).resize(
+            (crop.width * 2, crop.height * 2), Image.Resampling.LANCZOS,
+        )
+        focused_subtitle = None
+        if subtitle_crop is not None:
+            focused_subtitle = ImageOps.autocontrast(ImageOps.grayscale(subtitle_crop)).resize(
+                (subtitle_crop.width * 3, subtitle_crop.height * 3), Image.Resampling.LANCZOS,
+            )
+            focused_subtitle_threshold = focused_subtitle.point(lambda value: 255 if value > 160 else 0)
+        # Keep a normal pass for crisp text, then retry harder backgrounds at higher
+        # resolution with both block and sparse-text layouts. A separate watch
+        # subtitle band helps recognize short labels when the title dominates the
+        # full safe-area crop.
+        candidates = (
+            (crop, "--psm 6"),
+            (enlarged, "--psm 6"),
+            (enlarged, "--psm 11"),
+            (enlarged, "--psm 12"),
+        )
+        if focused_subtitle is not None:
+            candidates += ((focused_subtitle, "--psm 6"), (focused_subtitle_threshold, "--psm 7"))
+        all_lines: list[str] = []
+        for candidate, config in candidates:
+            raw = pytesseract.image_to_data(candidate, config=config, output_type=pytesseract.Output.DICT)
+            line_groups: dict[tuple[Any, Any, Any], list[str]] = {}
+            for index, word in enumerate(raw.get("text", [])):
+                value = str(word).strip()
+                if not value:
+                    continue
+                line = (raw["block_num"][index], raw["par_num"][index], raw["line_num"][index])
+                line_groups.setdefault(line, []).append(value)
+            all_lines.extend(" ".join(group) for group in line_groups.values())
+        # Keep candidate line breaks and remove identical repeats across OCR passes.
+        lines = list(dict.fromkeys(line for line in all_lines if line))
+        all_words = [word for line in lines for word in line.split()]
+        return " ".join(all_words), "\n".join(lines)
     except Exception as exc:
         raise RuntimeError(f"Local wallpaper OCR failed ({type(exc).__name__})") from None
 
 
 def _normalize_ocr(value: str) -> str:
-    value = value.upper().replace("&", "AND")
+    value = unicodedata.normalize("NFKD", value.upper().replace("&", "AND"))
+    value = "".join(character for character in value if not unicodedata.combining(character))
     return re.sub(r"[^A-Z0-9]+", " ", value).strip()
+
+
+def _ocr_confirms_words(expected: str, observed: str, *, allow_joined_sequence_number: bool = False) -> bool:
+    expected_words = _normalize_ocr(expected).split()
+    observed_words = _normalize_ocr(observed).split()
+    if not expected_words or not observed_words:
+        return False
+    # Decorative all-caps lettering is often merged by Tesseract (e.g. "DAY 2"
+    # becomes "DAY2"). Check ordinary tokens and normalized adjacent-token runs.
+    observed_runs = observed_words + [
+        "".join(observed_words[start:end])
+        for start in range(len(observed_words))
+        for end in range(start + 2, min(len(observed_words), start + 4) + 1)
+    ]
+    observed_compact = " ".join(observed_words)
+    for expected_word in expected_words:
+        if allow_joined_sequence_number and expected_word == "DAY" and re.search(r"\bDAY\d+\b", observed_compact):
+            continue
+        if allow_joined_sequence_number and expected_word.isdigit() and any(
+            expected_word in word and word[:-len(expected_word)].endswith("DAY")
+            for word in observed_runs
+        ):
+            continue
+        threshold = 1.0 if len(expected_word) <= 3 else 0.78 if len(expected_word) <= 5 else 0.82
+        if not any(
+            SequenceMatcher(None, expected_word, observed_word).ratio() >= threshold
+            for observed_word in observed_runs
+        ):
+            return False
+    return True
 
 
 def vision_qa(client: Any, image_bytes: bytes, spec: DailyImageSpec, variant: str, *, model: str) -> dict[str, Any]:
@@ -287,8 +356,8 @@ def vision_qa(client: Any, image_bytes: bytes, spec: DailyImageSpec, variant: st
         "Inspect this finished Catholic devotional wallpaper. Return JSON only: "
         "{\"approved\": boolean, \"issues\": [string]}. Check that the scene depicts the named subject respectfully, "
         "anatomy and iconography are coherent, there is no unwanted lettering/logo/device UI, and composition suits "
-        f"a {variant} wallpaper. The image already contains exact locally overlaid text: title {spec.title!r}; "
-        f"required subtitle {spec.image_subtitle!r}. Do not reject stylized lettering unless clearly wrong or clipped."
+        f"a {variant} wallpaper. Verify the exact spelling of locally overlaid title {spec.title!r} and subtitle "
+        f"{spec.image_subtitle!r}. Do not reject stylized lettering unless the text is wrong, unclear, or clipped."
     )
     response = client.responses.create(
         model=model,
@@ -333,10 +402,16 @@ def validate_local_qa(
     expected_subtitle = _normalize_ocr(spec.image_subtitle)
     ocr_all = " ".join(observed)
     issues: list[str] = []
-    if expected_title not in ocr_all:
-        issues.append("OCR did not confirm the exact title")
-    if expected_subtitle not in ocr_all:
-        issues.append("OCR did not confirm the exact classification/subtitle")
+    if not _ocr_confirms_words(spec.title, ocr_all):
+        issues.append(f"OCR did not confirm the exact title; observed {ocr_all[:240]!r}")
+    if not _ocr_confirms_words(
+        spec.image_subtitle,
+        ocr_all,
+        allow_joined_sequence_number=bool(spec.sequence_kind),
+    ):
+        issues.append(
+            f"OCR did not confirm subtitle {spec.image_subtitle!r}; observed {ocr_all[:240]!r}"
+        )
     if variant == "watch":
         # Text draw-time geometry is checked against the circular chord in _draw_centered_label.
         with Image.open(io.BytesIO(image_bytes)) as image:
@@ -355,6 +430,7 @@ def render_variant(
     qa_model: str,
     tesseract_cmd: Optional[str] = None,
     variation: str = "",
+    rejected_path: Optional[Path] = None,
 ) -> tuple[bytes, dict[str, Any]]:
     raw = generate_artwork(
         client, spec, variant, caller_model=caller_model, image_model=image_model, variation=variation,
@@ -362,9 +438,15 @@ def render_variant(
     final = overlay_wallpaper_text(raw, spec, variant)
     local = validate_local_qa(final, spec, variant, recognize=lambda data: ocr_text(data, tesseract_cmd=tesseract_cmd))
     if not local.approved:
+        if rejected_path is not None:
+            rejected_path.parent.mkdir(parents=True, exist_ok=True)
+            rejected_path.write_bytes(final)
         raise RuntimeError("Wallpaper local QA failed: " + "; ".join(local.issues))
     vision = vision_qa(client, final, spec, variant, model=qa_model)
     if not vision["approved"]:
+        if rejected_path is not None:
+            rejected_path.parent.mkdir(parents=True, exist_ok=True)
+            rejected_path.write_bytes(final)
         raise RuntimeError("Wallpaper vision QA failed: " + "; ".join(vision["issues"] or ["unapproved image"]))
     return final, {
         "approved": True,

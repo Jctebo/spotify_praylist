@@ -187,6 +187,7 @@ def _run_local_only(args: argparse.Namespace, start_date: dt.date, dates: list[d
                 qa_model=qa_model,
                 tesseract_cmd=args.tesseract_cmd,
                 variation=monthly_variation(spec.date) if spec.monthly_fallback else "",
+                rejected_path=args.artifact_dir / ".rejected" / variant / spec.date.isoformat() / build_filename(spec, variant),
             )
             final_path.parent.mkdir(parents=True, exist_ok=True)
             final_path.write_bytes(image_bytes)
@@ -319,6 +320,7 @@ def run_pipeline(args: argparse.Namespace) -> int:
                             qa_model=os.getenv("DEVOTIONAL_WALLPAPER_QA_MODEL", "gpt-5-mini"),
                             tesseract_cmd=args.tesseract_cmd,
                             variation=monthly_variation(spec.date) if spec.monthly_fallback else "",
+                            rejected_path=args.artifact_dir / ".rejected" / variant / spec.date.isoformat() / build_filename(spec, variant),
                         )
                         break
                     except Exception as exc:
