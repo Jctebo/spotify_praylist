@@ -3,9 +3,9 @@
 ## [0.4.7.0] - 2026-09-27
 
 ### Added
-- Added a separate daily Outlook-calendar devotional wallpaper pipeline for phone and watch, checking today plus the next nine days and filling only missing date/variant images.
-- Added independently composed 1080x1920 phone and 1024x1024 watch images, exact local title/subtitle rendering, and missing-only OneDrive delivery with recoverable current/queue rotation through the existing rclone configuration.
-- Kept the existing infographic generation and public website pipeline unchanged; the new scheduled workflow remains gated off until explicitly enabled.
+- You can now get separate devotional wallpapers for your phone and watch. The daily Outlook-calendar run checks today and the next nine days, creating only missing date/device images.
+- Phone wallpapers are 1080x1920 and watch wallpapers are 1024x1024, with locally rendered devotion labels and recoverable OneDrive current/queue rotation through the existing rclone connection.
+- The wallpaper workflow leaves the existing infographic generation and public website unchanged. Scheduled wallpaper runs stay off until you enable them.
 
 ## [0.4.6.1] - 2026-09-27
 
