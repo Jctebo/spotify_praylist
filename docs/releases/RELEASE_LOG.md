@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.4.9.0] - 2026-09-28
+
+### Fixed
+- Same-day canonical wallpaper replacements now archive and remove obsolete managed `-martyr` / `-martyrs` title aliases only after matching phone and watch assets are complete.
+- Added regression coverage proving incomplete replacement sets preserve the existing current pair and completed replacements preserve all other named observances.
+
 ## [0.4.8.0] - 2026-09-28
 
 ### Fixed
