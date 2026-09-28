@@ -9,7 +9,8 @@ on:
         options: [generate, resolve-only, rotate-only, dry-run-rotation]
         default: generate
   schedule:
-    - cron: "15 6 * * *" # daily 00:15 CST / 01:15 CDT
+    # Schedule is stored in UTC (2026-09-28 through 2026-11-01).
+    - cron: "15 5 * * *" # daily 00:15 CDT; changes to 06:15 UTC after DST ends
 
 permissions:
   contents: read

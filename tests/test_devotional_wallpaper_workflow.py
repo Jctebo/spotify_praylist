@@ -10,6 +10,8 @@ class DevotionalWallpaperWorkflowTests(unittest.TestCase):
         self.assertIn("group: devotional-wallpapers", text)
         self.assertIn("DEVOTIONAL_WALLPAPERS_ENABLED", text)
         self.assertIn("DEVOTIONAL_ICS_URL", text)
+        self.assertIn('cron: "15 5 * * *"', text)
+        self.assertIn("changes to 06:15 UTC after DST ends", text)
         self.assertIn("options: [generate, resolve-only, rotate-only, dry-run-rotation]", text)
         self.assertNotIn("pages: write", text)
         self.assertNotIn("deploy-pages", text)
