@@ -928,6 +928,16 @@ Generate `RCLONE_CONFIG_B64` with wizard:
 .\scripts\setup_rclone_github.ps1
 ```
 
+## Daily Devotional Phone and Watch Wallpapers
+
+This is a separate Outlook-calendar-driven pipeline. It runs daily and checks today plus the next nine dates (10 dates total). For dates represented in the Outlook Devotion calendar, it selects a feast/private devotion or that month’s fallback when only ordinary liturgical context exists; dates absent from the calendar are skipped. No coverage marker is needed. It creates only missing phone/watch variants and never replaces an existing dated image.
+
+Phone artwork targets the closed Samsung Galaxy Z Fold8 cover display with Niagara Launcher in mind (1080x1920). Watch artwork is independently composed at 1024x1024 for a Galaxy Watch Classic, with important details inside a circular safe area. Exact feast/private-devotion or monthly-fallback labels are overlaid locally. October’s monthly devotion is Our Lady of the Rosary.
+
+The separate workflow `.github/workflows/daily_devotional_wallpapers.yml` writes `phone-current`, `watch-current`, `phone-queue/YYYY-MM-DD`, `watch-queue/YYYY-MM-DD`, and private rotation state under `.devotional_wallpapers/`. It does not publish wallpapers to GitHub Pages or change the existing infographic workflow. Its schedule is gated by `DEVOTIONAL_WALLPAPERS_ENABLED=true`; dispatch supports resolve-only, generation, and rotation checks. Local execution uses `scripts/run_devotional_wallpapers_local.ps1` and the existing rclone profile.
+
+Configuration requires the `DEVOTIONAL_ICS_URL` repository secret, existing `OPENAI_API_KEY` and `RCLONE_CONFIG_B64` secrets, and existing `RCLONE_REMOTE_NAME` and `RCLONE_REMOTE_ROOT` variables. Local rendering also requires `requirements-devotional-wallpapers.txt` and the Tesseract executable. OneDrive rotation promotes only a verified same-date phone/watch pair, archives the prior managed pair, and leaves unrecognized files untouched; local device rotation remains separately operator-owned.
+
 ## Local Test Framework
 Run the offline unit test suite (no live Spotify/Notion API calls):
 

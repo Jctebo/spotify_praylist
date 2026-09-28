@@ -1,0 +1,73 @@
+name: Daily Devotional Wallpapers
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Run mode
+        type: choice
+        options: [generate, resolve-only, rotate-only, dry-run-rotation]
+        default: generate
+  schedule:
+    - cron: "15 6 * * *" # daily 00:15 CST / 01:15 CDT
+
+permissions:
+  contents: read
+
+concurrency:
+  group: devotional-wallpapers
+  cancel-in-progress: false
+
+jobs:
+  wallpapers:
+    if: github.event_name == 'workflow_dispatch' || vars.DEVOTIONAL_WALLPAPERS_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      DEVOTIONAL_ICS_URL: ${{ secrets.DEVOTIONAL_ICS_URL }}
+      DEVOTIONAL_WALLPAPER_IMAGE_MODEL: gpt-image-2
+      DEVOTIONAL_WALLPAPER_CALLER_MODEL: gpt-5-mini
+      DEVOTIONAL_WALLPAPER_QA_MODEL: gpt-5-mini
+      RCLONE_REMOTE_NAME: ${{ vars.RCLONE_REMOTE_NAME }}
+      RCLONE_REMOTE_ROOT: ${{ vars.RCLONE_REMOTE_ROOT }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install wallpaper dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rclone tesseract-ocr
+          python -m pip install -r requirements.txt -r requirements-devotional-wallpapers.txt
+      - name: Configure rclone
+        shell: bash
+        env:
+          RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG_B64 }}
+        run: |
+          set -euo pipefail
+          test -n "${RCLONE_CONFIG_B64:-}" || { echo "Missing RCLONE_CONFIG_B64" >&2; exit 1; }
+          mkdir -p "$HOME/.config/rclone"
+          printf "%s" "$RCLONE_CONFIG_B64" | base64 -d > "$HOME/.config/rclone/rclone.conf"
+          chmod 600 "$HOME/.config/rclone/rclone.conf"
+      - name: Run wallpaper pipeline
+        shell: bash
+        env:
+          WALLPAPER_MODE: ${{ inputs.mode || 'generate' }}
+        run: |
+          set -euo pipefail
+          case "$WALLPAPER_MODE" in
+            rotate-only) python jobs/novena/generate_devotional_wallpapers.py --rotate-only ;;
+            dry-run-rotation) python jobs/novena/generate_devotional_wallpapers.py --dry-run-rotation ;;
+            resolve-only) python jobs/novena/generate_devotional_wallpapers.py --resolve-only ;;
+            generate) python jobs/novena/generate_devotional_wallpapers.py ;;
+            *) echo "Unsupported mode" >&2; exit 2 ;;
+          esac
+      - name: Upload private run summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: devotional-wallpapers-${{ github.run_id }}
+          path: artifacts/devotional-wallpapers/
+          if-no-files-found: ignore
+          retention-days: 30

@@ -1,0 +1,420 @@
+"""Daily, missing-only devotional wallpaper generation and OneDrive rotation."""
+
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import hashlib
+import json
+import os
+import re
+import sys
+import tempfile
+from pathlib import Path
+from typing import Any, Optional
+
+from zoneinfo import ZoneInfo
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from jobs.novena.devotional_calendar import CalendarResolution, fetch_calendar, resolve_calendar  # noqa: E402
+from jobs.novena.devotional_image_contract import (  # noqa: E402
+    CHICAGO,
+    WINDOW_DAYS,
+    DailyImageSpec,
+    build_filename,
+    build_window,
+    local_today,
+    monthly_variation,
+)
+from jobs.novena.devotional_wallpaper_render import render_variant  # noqa: E402
+from sync.devotional_onedrive import (  # noqa: E402
+    WALLPAPER_ROOT,
+    RcloneConfig,
+    RcloneStore,
+    assets_for_date,
+    deliver_missing_asset,
+    inventory_assets,
+    rotate_current,
+    sha256,
+)
+
+
+DEFAULT_ARTIFACT_DIR = ROOT / "artifacts" / "devotional-wallpapers"
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--run-date", help="Chicago-local YYYY-MM-DD; this date plus the next nine dates are checked")
+    parser.add_argument("--resolve-only", action="store_true", help="Read calendar and OneDrive inventory without model or write calls")
+    parser.add_argument("--skip-delivery", action="store_true", help="Render missing assets into a local artifact directory only")
+    parser.add_argument("--rotate-only", action="store_true", help="Rotate today's OneDrive folders without fetching the calendar or calling a model")
+    parser.add_argument("--dry-run-rotation", action="store_true", help="Report today's rotation readiness without changing OneDrive")
+    parser.add_argument("--resume-run", help="Resume a run identifier saved in the private OneDrive manifest area")
+    parser.add_argument("--artifact-dir", type=Path, default=DEFAULT_ARTIFACT_DIR)
+    parser.add_argument("--rclone-exe", help="Optional path to the existing rclone executable")
+    parser.add_argument("--tesseract-cmd", help="Optional Tesseract executable path; defaults to PATH")
+    return parser
+
+
+def _write_json_atomic(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", dir=path.parent, suffix=".tmp", delete=False) as output:
+        temporary = Path(output.name)
+        json.dump(payload, output, indent=2, sort_keys=True, ensure_ascii=False)
+        output.write("\n")
+    temporary.replace(path)
+
+
+def _spec_dict(spec: DailyImageSpec) -> dict[str, Any]:
+    return {
+        "date": spec.date.isoformat(),
+        "title": spec.title,
+        "classification": spec.classification,
+        "source_kind": spec.source_kind,
+        "subtitle": spec.subtitle,
+        "priority": spec.priority,
+        "source_uid": spec.source_uid,
+        "recurrence_id": spec.recurrence_id,
+        "sequence_kind": spec.sequence_kind,
+        "sequence_day": spec.sequence_day,
+        "iconography": spec.iconography,
+        "monthly_fallback": spec.monthly_fallback,
+    }
+
+
+def _run_id(start: dt.date, end: dt.date, feed_checksum: str) -> str:
+    raw = f"{start.isoformat()}:{end.isoformat()}:{feed_checksum}"
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:20]
+
+
+def _provider():
+    key = os.getenv("OPENAI_API_KEY", "").strip()
+    if not key:
+        raise RuntimeError("OPENAI_API_KEY is required when an image must be rendered")
+    from openai import OpenAI, Timeout
+
+    return OpenAI(
+        api_key=key,
+        base_url=os.getenv("OAI_API_BASE_URL", "https://api.openai.com/v1").rstrip("/"),
+        timeout=Timeout(300.0, connect=15.0),
+        max_retries=0,
+    )
+
+
+def _transient_provider_error(exc: Exception) -> bool:
+    try:
+        from openai import APIConnectionError, APITimeoutError, RateLimitError, InternalServerError
+        if isinstance(exc, (APIConnectionError, APITimeoutError, RateLimitError, InternalServerError)):
+            return True
+        from openai import APIStatusError
+        return isinstance(exc, APIStatusError) and exc.status_code in {408, 409, 429, 500, 502, 503, 504}
+    except ImportError:
+        return False
+
+
+def _load_remote_state(store: RcloneStore, run_id: str) -> dict[str, Any]:
+    path = f"{WALLPAPER_ROOT}/manifests/runs/{run_id}.json"
+    state = store.read_json(path)
+    if state is None:
+        return {"schema": 1, "run_id": run_id, "assets": {}, "updated_at": ""}
+    if state.get("schema") != 1 or state.get("run_id") != run_id or not isinstance(state.get("assets", {}), dict):
+        raise RuntimeError("Wallpaper resume manifest has an invalid schema or identity")
+    return state
+
+
+def _persist_remote_state(store: RcloneStore, state: dict[str, Any]) -> None:
+    state["updated_at"] = dt.datetime.now(dt.timezone.utc).isoformat()
+    run_id = str(state["run_id"])
+    store.mkdir(f"{WALLPAPER_ROOT}/manifests/runs")
+    store.write_json(f"{WALLPAPER_ROOT}/manifests/runs/{run_id}.json", state)
+
+
+def _key(date: dt.date, variant: str) -> str:
+    return f"{date.isoformat()}:{variant}"
+
+
+def _slot_paths(artifact_dir: Path, spec: DailyImageSpec, variant: str) -> tuple[Path, Path]:
+    relative = Path(variant) / spec.date.isoformat() / build_filename(spec, variant)
+    return artifact_dir / relative, artifact_dir / ".staging" / relative
+
+
+def _resolve_missing_specs(calendar_url: str, missing_dates: list[dt.date]) -> tuple[Optional[CalendarResolution], set[dt.date]]:
+    snapshot = fetch_calendar(calendar_url)
+    resolution = resolve_calendar(snapshot.body, missing_dates)
+    return resolution, set(resolution.specs)
+
+
+def _run_local_only(args: argparse.Namespace, start_date: dt.date, dates: list[dt.date]) -> int:
+    calendar_url = os.getenv("DEVOTIONAL_ICS_URL", "").strip()
+    snapshot = fetch_calendar(calendar_url)
+    resolution = resolve_calendar(snapshot.body, dates)
+    args.artifact_dir.mkdir(parents=True, exist_ok=True)
+    if args.resolve_only:
+        report = {
+            "run_date": start_date.isoformat(),
+            "window": [d.isoformat() for d in dates],
+            "feed_checksum": resolution.feed_checksum,
+            "covered_through": resolution.covered_through.isoformat() if resolution.covered_through else None,
+            "specs": [_spec_dict(spec) for spec in resolution.specs.values()],
+            "missing_dates": [d.isoformat() for d in resolution.missing_dates],
+            "delivery": "disabled",
+        }
+        _write_json_atomic(args.artifact_dir / "resolve-report.json", report)
+        print(json.dumps({"status": "resolved", "dates": len(resolution.specs), "missing_dates": len(resolution.missing_dates)}))
+        return 0
+    client = _provider()
+    image_model = os.getenv("DEVOTIONAL_WALLPAPER_IMAGE_MODEL", "gpt-image-2")
+    caller_model = os.getenv("DEVOTIONAL_WALLPAPER_CALLER_MODEL", "gpt-5-mini")
+    qa_model = os.getenv("DEVOTIONAL_WALLPAPER_QA_MODEL", "gpt-5-mini")
+    rendered = 0
+    client = None
+    for spec in resolution.specs.values():
+        for variant in ("phone", "watch"):
+            final_path, _staged_path = _slot_paths(args.artifact_dir, spec, variant)
+            if final_path.exists():
+                continue
+            if client is None:
+                client = _provider()
+            image_bytes, qa = render_variant(
+                client,
+                spec,
+                variant,
+                caller_model=caller_model,
+                image_model=image_model,
+                qa_model=qa_model,
+                tesseract_cmd=args.tesseract_cmd,
+                variation=monthly_variation(spec.date) if spec.monthly_fallback else "",
+            )
+            final_path.parent.mkdir(parents=True, exist_ok=True)
+            final_path.write_bytes(image_bytes)
+            _write_json_atomic(final_path.with_suffix(".qa.json"), qa)
+            rendered += 1
+    print(json.dumps({"status": "rendered_local", "rendered": rendered, "artifact_dir": str(args.artifact_dir)}))
+    return 0
+
+
+def run_pipeline(args: argparse.Namespace) -> int:
+    actual_today = local_today()
+    start_date = dt.date.fromisoformat(args.run_date) if args.run_date else actual_today
+    dates = build_window(start_date, WINDOW_DAYS)
+    if args.skip_delivery:
+        return _run_local_only(args, start_date, dates)
+
+    if args.resolve_only:
+        inventory = inventory_assets(RcloneStore(RcloneConfig.from_env(executable=args.rclone_exe)))
+        date_variants = {d.isoformat(): assets_for_date(inventory, d.isoformat()) for d in dates}
+        missing_dates = [d for d in dates if any(not date_variants[d.isoformat()][v] for v in ("phone", "watch"))]
+        if not missing_dates:
+            print(json.dumps({"status": "resolved", "window_start": start_date.isoformat(), "window_end": dates[-1].isoformat(), "missing_dates": []}))
+            return 0
+        snapshot = fetch_calendar(os.getenv("DEVOTIONAL_ICS_URL", "").strip())
+        resolution = resolve_calendar(snapshot.body, missing_dates)
+        print(json.dumps({
+            "status": "resolved",
+            "window_start": start_date.isoformat(),
+            "window_end": dates[-1].isoformat(),
+            "missing_slots": sum(not date_variants[d.isoformat()][v] for d in missing_dates for v in ("phone", "watch")),
+            "specs": [_spec_dict(spec) for spec in resolution.specs.values()],
+            "calendar_absent_dates_skipped": [d.isoformat() for d in resolution.missing_dates],
+        }, ensure_ascii=False))
+        return 0
+
+    config = RcloneConfig.from_env(executable=args.rclone_exe)
+    store = RcloneStore(config)
+    if args.dry_run_rotation:
+        inventory = inventory_assets(store)
+        pair = assets_for_date(inventory, actual_today.isoformat())
+        ready = all(len(pair[v]) == 1 for v in ("phone", "watch"))
+        print(json.dumps({"status": "dry_run", "rotation_date": actual_today.isoformat(), "ready": ready,
+                          "missing_variants": [v for v in ("phone", "watch") if len(pair[v]) != 1]}))
+        return 0
+    rotation = rotate_current(store, actual_today.isoformat())
+    if args.rotate_only:
+        print(json.dumps({"status": "rotation_only", **rotation}))
+        return 0
+
+    inventory = inventory_assets(store)
+    date_variants = {d.isoformat(): assets_for_date(inventory, d.isoformat()) for d in dates}
+    if any(len(items[v]) > 1 for items in date_variants.values() for v in ("phone", "watch")):
+        raise RuntimeError("Wallpaper inventory has multiple files for one date/variant slot")
+    missing_dates = [date for date in dates if any(not date_variants[date.isoformat()][v] for v in ("phone", "watch"))]
+    manifest: dict[str, Any] = {
+        "schema": 1,
+        "run_date": actual_today.isoformat(),
+        "window_start": start_date.isoformat(),
+        "window_end": dates[-1].isoformat(),
+        "rotation": rotation,
+        "existing": sum(bool(date_variants[d.isoformat()][v]) for d in dates for v in ("phone", "watch")),
+        "missing_dates": [date.isoformat() for date in missing_dates],
+        "assets": {},
+    }
+    # A complete inventory avoids a calendar request and any paid rendering.
+    if not missing_dates:
+        final_rotation = rotate_current(store, actual_today.isoformat())
+        print(json.dumps({"status": "complete_no_generation_needed", **{k: manifest[k] for k in ("run_date", "window_start", "window_end", "existing")}, "rotation": final_rotation}))
+        return 0
+
+    calendar_url = os.getenv("DEVOTIONAL_ICS_URL", "").strip()
+    snapshot = fetch_calendar(calendar_url)
+    resolution = resolve_calendar(snapshot.body, missing_dates)
+    if args.resume_run:
+        if not re.fullmatch(r"[a-f0-9]{20}", args.resume_run):
+            raise RuntimeError("--resume-run must be a 20-character hexadecimal run id")
+        run_id = args.resume_run
+    else:
+        run_id = _run_id(start_date, dates[-1], resolution.feed_checksum)
+    remote_state = _load_remote_state(store, run_id)
+    if remote_state.get("run_id") != run_id:
+        raise RuntimeError("Wallpaper resume manifest run id does not match its path")
+    if remote_state.get("feed_checksum") and remote_state["feed_checksum"] != resolution.feed_checksum:
+        raise RuntimeError("Calendar feed changed since this run was staged; resume via a new run to preserve accepted art")
+    if remote_state.get("window_start") and remote_state["window_start"] != start_date.isoformat():
+        raise RuntimeError("Wallpaper resume manifest window does not match the requested window")
+    remote_state.update({"feed_checksum": resolution.feed_checksum, "window_start": start_date.isoformat(), "window_end": dates[-1].isoformat()})
+    manifest["run_id"] = run_id
+    manifest["feed_checksum"] = resolution.feed_checksum
+    manifest["covered_through"] = resolution.covered_through.isoformat() if resolution.covered_through else None
+    manifest["missing_dates_without_calendar_events"] = [d.isoformat() for d in resolution.missing_dates]
+    expected_dates = set(resolution.specs)
+    manifest["calendar_absent_dates_skipped"] = [d.isoformat() for d in resolution.missing_dates]
+    manifest["missing_dates"] = [d.isoformat() for d in missing_dates if d in expected_dates]
+    client = None
+    for missing_date in missing_dates:
+        spec = resolution.specs.get(missing_date)
+        if not spec:
+            continue
+        for variant in ("phone", "watch"):
+            slot = _key(missing_date, variant)
+            exists_remote = date_variants[missing_date.isoformat()][variant]
+            if exists_remote:
+                manifest["assets"][slot] = {"state": "existing", "remote": exists_remote[0].path}
+                continue
+            local_path, stage_path = _slot_paths(args.artifact_dir, spec, variant)
+            remote_stage = f"{WALLPAPER_ROOT}/staging/{missing_date.isoformat()}/{variant}/{build_filename(spec, variant)}"
+            staged_record = remote_state.get("assets", {}).get(slot, {})
+            if staged_record.get("state") in {"qa_passed", "staged"}:
+                if staged_record.get("spec") != _spec_dict(spec):
+                    raise RuntimeError(f"Accepted staged wallpaper belongs to a different calendar subject: {slot}")
+                staged_bytes = store.download_bytes(staged_record.get("staging_path", remote_stage))
+                if sha256(staged_bytes) != staged_record.get("sha256"):
+                    raise RuntimeError(f"Accepted staged asset checksum mismatch: {slot}")
+                local_path.parent.mkdir(parents=True, exist_ok=True)
+                local_path.write_bytes(staged_bytes)
+                qa = staged_record.get("qa", {})
+            else:
+                if client is None:
+                    client = _provider()
+                last_error: Optional[Exception] = None
+                for attempt in range(3):
+                    try:
+                        image_bytes, qa = render_variant(
+                            client,
+                            spec,
+                            variant,
+                            caller_model=os.getenv("DEVOTIONAL_WALLPAPER_CALLER_MODEL", "gpt-5-mini"),
+                            image_model=os.getenv("DEVOTIONAL_WALLPAPER_IMAGE_MODEL", "gpt-image-2"),
+                            qa_model=os.getenv("DEVOTIONAL_WALLPAPER_QA_MODEL", "gpt-5-mini"),
+                            tesseract_cmd=args.tesseract_cmd,
+                            variation=monthly_variation(spec.date) if spec.monthly_fallback else "",
+                        )
+                        break
+                    except Exception as exc:
+                        last_error = exc
+                        if attempt == 2 or not _transient_provider_error(exc):
+                            raise
+                        import time
+                        time.sleep(5 * (2 ** attempt))
+                else:
+                    raise RuntimeError(f"Wallpaper render failed: {last_error}")
+                local_path.parent.mkdir(parents=True, exist_ok=True)
+                local_path.write_bytes(image_bytes)
+                stage_path.parent.mkdir(parents=True, exist_ok=True)
+                stage_path.write_bytes(image_bytes)
+                store.mkdir(f"{WALLPAPER_ROOT}/staging/{missing_date.isoformat()}/{variant}")
+                store.upload(stage_path, remote_stage)
+                if sha256(store.download_bytes(remote_stage)) != sha256(image_bytes):
+                    raise RuntimeError(f"Private staged wallpaper checksum mismatch: {slot}")
+                staged_record = {
+                    "state": "staged",
+                    "spec": _spec_dict(spec),
+                    "sha256": sha256(image_bytes),
+                    "staging_path": remote_stage,
+                    "qa": qa,
+                }
+                remote_state.setdefault("assets", {})[slot] = staged_record
+                _persist_remote_state(store, remote_state)
+            target = deliver_missing_asset(store, local_path, spec, variant)
+            record = {
+                "state": "delivered_verified",
+                "spec": _spec_dict(spec),
+                "filename": build_filename(spec, variant),
+                "variant": variant,
+                "remote_path": target,
+                "sha256": sha256(local_path.read_bytes()),
+                "qa": qa,
+            }
+            manifest["assets"][slot] = record
+            remote_state.setdefault("assets", {})[slot] = {**record, "staging_path": remote_stage}
+            _persist_remote_state(store, remote_state)
+
+    # A newly completed today pair gets promoted in this run; future pairs remain queued.
+    final_rotation = rotate_current(store, actual_today.isoformat())
+    manifest["final_rotation"] = final_rotation
+    manifest["finished_at"] = dt.datetime.now(dt.timezone.utc).isoformat()
+    store.mkdir(f"{WALLPAPER_ROOT}/manifests/runs")
+    store.write_json(f"{WALLPAPER_ROOT}/manifests/runs/{run_id}-summary.json", manifest)
+    _write_json_atomic(args.artifact_dir / f"{run_id}-summary.json", manifest)
+    final_inventory = inventory_assets(store)
+    remaining = [
+        f"{date.isoformat()}:{variant}"
+        for date in dates
+        if date in expected_dates
+        for variant in ("phone", "watch")
+        if len(assets_for_date(final_inventory, date.isoformat())[variant]) != 1
+    ]
+    summary = {
+        "status": "complete" if not remaining else "incomplete",
+        "run_id": run_id,
+        "window_start": start_date.isoformat(),
+        "window_end": dates[-1].isoformat(),
+        "rotation_date": actual_today.isoformat(),
+        "rotation": final_rotation,
+        "existing_slots": manifest["existing"],
+        "newly_delivered": sum(1 for item in manifest["assets"].values() if item.get("state") == "delivered_verified"),
+        "missing_assets": remaining,
+        "calendar_unavailable_dates": manifest["missing_dates_without_calendar_events"],
+    }
+    print(json.dumps(summary, ensure_ascii=False))
+    return 0 if not remaining else 2
+
+
+def main() -> int:
+    args = build_parser().parse_args()
+    if args.run_date:
+        try:
+            if dt.date.fromisoformat(args.run_date).isoformat() != args.run_date:
+                raise ValueError("noncanonical date")
+        except ValueError:
+            print("ERROR --run-date must use YYYY-MM-DD", file=sys.stderr)
+            return 2
+    if args.resume_run and not re.fullmatch(r"[a-f0-9]{20}", args.resume_run):
+        print("ERROR --resume-run must be a 20-character hexadecimal run id", file=sys.stderr)
+        return 2
+    if args.rotate_only and (args.resolve_only or args.skip_delivery):
+        print("ERROR --rotate-only cannot be combined with generation modes", file=sys.stderr)
+        return 2
+    if args.dry_run_rotation and (args.resolve_only or args.skip_delivery or args.rotate_only):
+        print("ERROR --dry-run-rotation cannot be combined with other modes", file=sys.stderr)
+        return 2
+    try:
+        return run_pipeline(args)
+    except Exception as exc:
+        print(f"ERROR {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
