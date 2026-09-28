@@ -1,5 +1,10 @@
 # Release Log
 
+## [0.4.9.1] - 2026-09-28
+
+### Changed
+- Raised the watch wallpaper title block and shortened its top fade for future renders.
+
 ## [0.4.9.0] - 2026-09-28
 
 ### Fixed
