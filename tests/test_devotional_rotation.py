@@ -1,6 +1,7 @@
 import datetime as dt
 import hashlib
 import unittest
+from pathlib import Path
 
 from sync.devotional_onedrive import RcloneConfig, RemoteAsset, recover_rotation, rotate_current
 
@@ -140,6 +141,59 @@ class DevotionalRotationTests(unittest.TestCase):
         self.assertTrue(result["rotated"])
         self.assertEqual(len([p for p in store.files if p.startswith("phone-current/")]), 2)
         self.assertEqual(len([p for p in store.files if p.startswith("watch-current/")]), 2)
+
+    def test_same_day_canonical_subject_replaces_and_archives_legacy_suffix(self):
+        store = MemoryStore()
+        date = "2026-09-28"
+        old_phone = b"old wenceslaus phone"
+        old_watch = b"old wenceslaus watch"
+        for variant, payload in (("phone", old_phone), ("watch", old_watch)):
+            store.files[f"{variant}-current/saint-wenceslaus-martyr__{date}.jpg"] = payload
+        store.json[".devotional_wallpapers/manifests/rotation-state.json"] = {
+            "schema": 1,
+            "current_date": date,
+            "managed_current": {
+                "phone": {"path": f"phone-current/saint-wenceslaus-martyr__{date}.jpg", "filenames": [f"saint-wenceslaus-martyr__{date}.jpg"], "sha256": hashlib.sha256(old_phone).hexdigest()},
+                "watch": {"path": f"watch-current/saint-wenceslaus-martyr__{date}.jpg", "filenames": [f"saint-wenceslaus-martyr__{date}.jpg"], "sha256": hashlib.sha256(old_watch).hexdigest()},
+            },
+            "rotation": None,
+        }
+        add_subject_set(store, date, ("saint-wenceslaus", "saint-lawrence-ruiz-and-companions"))
+
+        result = rotate_current(store, date)
+
+        self.assertTrue(result["rotated"])
+        self.assertEqual(store.files[f".devotional_wallpapers/archive/{date}/phone/saint-wenceslaus-martyr__{date}.jpg"], old_phone)
+        self.assertEqual(store.files[f".devotional_wallpapers/archive/{date}/watch/saint-wenceslaus-martyr__{date}.jpg"], old_watch)
+        for variant in ("phone", "watch"):
+            current = {Path(path).name for path in store.files if path.startswith(f"{variant}-current/")}
+            self.assertEqual(current, {f"saint-wenceslaus__{date}.jpg", f"saint-lawrence-ruiz-and-companions__{date}.jpg"})
+        self.assertNotIn(f"phone-queue/{date}/saint-wenceslaus__{date}.jpg", store.files)
+        self.assertNotIn(f"watch-queue/{date}/saint-wenceslaus__{date}.jpg", store.files)
+
+    def test_incomplete_canonical_replacement_keeps_legacy_pair_current(self):
+        store = MemoryStore()
+        date = "2026-09-28"
+        for variant, payload in (("phone", b"old phone"), ("watch", b"old watch")):
+            store.files[f"{variant}-current/saint-wenceslaus-martyr__{date}.jpg"] = payload
+        store.json[".devotional_wallpapers/manifests/rotation-state.json"] = {
+            "schema": 1,
+            "current_date": date,
+            "managed_current": {
+                variant: {"path": f"{variant}-current/saint-wenceslaus-martyr__{date}.jpg", "filenames": [f"saint-wenceslaus-martyr__{date}.jpg"], "sha256": hashlib.sha256(payload).hexdigest()}
+                for variant, payload in (("phone", b"old phone"), ("watch", b"old watch"))
+            },
+            "rotation": None,
+        }
+        store.files[f"phone-queue/{date}/saint-wenceslaus__{date}.jpg"] = b"new phone"
+
+        result = rotate_current(store, date)
+
+        self.assertFalse(result["rotated"])
+        self.assertEqual(store.files[f"phone-current/saint-wenceslaus-martyr__{date}.jpg"], b"old phone")
+        self.assertEqual(store.files[f"watch-current/saint-wenceslaus-martyr__{date}.jpg"], b"old watch")
+        self.assertNotIn(f".devotional_wallpapers/archive/{date}/phone/saint-wenceslaus-martyr__{date}.jpg", store.files)
+        self.assertIn(f"phone-queue/{date}/saint-wenceslaus__{date}.jpg", store.files)
 
     def test_recovery_finishes_verified_journal(self):
         store = MemoryStore()

@@ -257,6 +257,29 @@ def _copy_verify(store: RcloneStore, source: str, target: str, expected_sha: str
         raise RuntimeError(f"OneDrive wallpaper verification failed: {target}")
 
 
+def _canonical_rotation_subject(subject: str) -> str:
+    """Normalize legacy saint-title suffixes for replacement matching only."""
+    for suffix in ("-martyrs", "-martyr"):
+        if subject.endswith(suffix) and len(subject) > len(suffix):
+            return subject[:-len(suffix)]
+    return subject
+
+
+def _prefer_queued_subjects(
+    assets: list[RemoteAsset], queued_subjects: set[str]
+) -> list[RemoteAsset]:
+    """Drop an old current filename alias when its canonical queued subject replaces it."""
+    queued_canonicals = {_canonical_rotation_subject(subject) for subject in queued_subjects}
+    return [
+        asset
+        for asset in assets
+        if not (
+            asset.path.split("/", 1)[0].endswith("-current")
+            and asset.subject not in queued_subjects
+            and _canonical_rotation_subject(asset.subject) in queued_canonicals
+        )
+    ]
+
 def _managed_files(item: dict[str, Any]) -> list[dict[str, str]]:
     files = item.get("files")
     if isinstance(files, list):
@@ -368,8 +391,8 @@ def rotate_current(store: RcloneStore, date: str) -> dict[str, Any]:
     subject_sets: dict[str, set[str]] = {}
     for variant in ("phone", "watch"):
         options = selected_assets[variant]
-        selected[variant] = list(options)
-        subject_sets[variant] = {asset.subject for asset in options}
+        selected[variant] = _prefer_queued_subjects(list(options), queue_subjects[variant])
+        subject_sets[variant] = {asset.subject for asset in selected[variant]}
         for asset in options:
             if not asset.path.startswith(f"{variant}-queue/") and not asset.path.startswith(f"{variant}-current/"):
                 raise RuntimeError("Rotation selected a wallpaper from an unsupported folder")

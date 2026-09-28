@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.4.9.0] - 2026-09-28
+
+### Fixed
+- Same-day corrections now replace an older saint-title filename once both phone and watch images are ready, while keeping the prior images in a verified OneDrive archive.
+- Added regression coverage proving incomplete replacement sets preserve the existing current pair and completed replacements preserve all other named observances.
+
 ## [0.4.8.0] - 2026-09-28
 
 ### Fixed
