@@ -260,15 +260,18 @@ def ocr_text(image_bytes: bytes, *, tesseract_cmd: Optional[str] = None) -> tupl
             image.load()
             width, height = image.size
             crop = image.crop((0, 0, width, round(height * (0.36 if width == height else 0.28))))
-        raw = pytesseract.image_to_data(crop, config="--psm 6", output_type=pytesseract.Output.DATAFRAME)
-        text = " ".join(str(word).strip() for word in raw["text"].dropna() if str(word).strip())
+        raw = pytesseract.image_to_data(crop, config="--psm 6", output_type=pytesseract.Output.DICT)
+        words = [str(word).strip() for word in raw.get("text", []) if str(word).strip()]
         # The overlay puts the title and subtitle on consecutive lines; preserve split for contract checks.
-        line_groups = []
-        for _, group in raw.dropna(subset=["text"]).groupby(["block_num", "par_num", "line_num"]):
-            value = " ".join(str(word).strip() for word in group["text"] if str(word).strip())
-            if value:
-                line_groups.append(value)
-        return text, "\n".join(line_groups)
+        line_groups: dict[tuple[Any, Any, Any], list[str]] = {}
+        for index, word in enumerate(raw.get("text", [])):
+            value = str(word).strip()
+            if not value:
+                continue
+            line = (raw["block_num"][index], raw["par_num"][index], raw["line_num"][index])
+            line_groups.setdefault(line, []).append(value)
+        lines = [" ".join(group) for group in line_groups.values()]
+        return " ".join(words), "\n".join(lines)
     except Exception as exc:
         raise RuntimeError(f"Local wallpaper OCR failed ({type(exc).__name__})") from None
 

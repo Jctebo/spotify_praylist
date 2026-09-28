@@ -1,5 +1,7 @@
 import io
+import sys
 import unittest
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from PIL import Image
@@ -9,6 +11,7 @@ from jobs.novena.devotional_wallpaper_render import (
     WATCH_SAFE_RADIUS,
     _circular_chord_width,
     image_tool,
+    ocr_text,
     overlay_wallpaper_text,
     validate_local_qa,
 )
@@ -44,6 +47,23 @@ class WallpaperRenderTests(unittest.TestCase):
         self.assertFalse(result.approved)
         with self.assertRaises(RuntimeError):
             validate_local_qa(b"not an image", self.spec, "watch", recognize=lambda _image: ("", ""))
+
+    def test_ocr_uses_dictionary_output_and_preserves_title_lines_without_pandas(self):
+        words = ["OUR", "LADY", "OF", "SORROWS", "SEPTEMBER", "DEVOTION", ""]
+        line_numbers = [1, 1, 1, 1, 2, 2, 2]
+        fake_tesseract = SimpleNamespace(
+            Output=SimpleNamespace(DICT="dict"),
+            image_to_data=lambda *_args, **kwargs: {
+                "text": words,
+                "block_num": [1] * len(words),
+                "par_num": [1] * len(words),
+                "line_num": line_numbers,
+            },
+        )
+        with patch.dict(sys.modules, {"pytesseract": fake_tesseract}):
+            text, lines = ocr_text(self.art)
+        self.assertEqual(text, "OUR LADY OF SORROWS SEPTEMBER DEVOTION")
+        self.assertEqual(lines, "OUR LADY OF SORROWS\nSEPTEMBER DEVOTION")
 
 
 if __name__ == "__main__":
