@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "phone": {
+    "device": "Samsung Galaxy Z Fold8 cover display",
+    "launcher": "Niagara Launcher",
+    "dimensions": [1080, 1920],
+    "quiet_left_fraction": 0.35,
+    "quiet_top_fraction": 0.08,
+    "right_edge_clear_fraction": 0.08,
+    "bottom_clear_fraction": 0.10,
+    "validation": "proposed; confirm crop and Niagara overlays on device"
+  },
+  "watch": {
+    "device": "Samsung Galaxy Watch Classic recent model",
+    "dimensions": [1024, 1024],
+    "circular_safe_diameter_fraction": 0.90,
+    "validation": "proposed; watch face clock/complication positions are configurable"
+  }
+}
