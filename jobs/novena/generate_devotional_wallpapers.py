@@ -132,19 +132,14 @@ def _persist_remote_state(store: RcloneStore, state: dict[str, Any]) -> None:
     store.write_json(f"{WALLPAPER_ROOT}/manifests/runs/{run_id}.json", state)
 
 
-def _key(date: dt.date, variant: str) -> str:
-    return f"{date.isoformat()}:{variant}"
+def _key(date: dt.date, spec: DailyImageSpec, variant: str) -> str:
+    from jobs.novena.devotional_image_contract import slugify
+    return f"{date.isoformat()}:{slugify(spec.title)}:{variant}"
 
 
 def _slot_paths(artifact_dir: Path, spec: DailyImageSpec, variant: str) -> tuple[Path, Path]:
     relative = Path(variant) / spec.date.isoformat() / build_filename(spec, variant)
     return artifact_dir / relative, artifact_dir / ".staging" / relative
-
-
-def _resolve_missing_specs(calendar_url: str, missing_dates: list[dt.date]) -> tuple[Optional[CalendarResolution], set[dt.date]]:
-    snapshot = fetch_calendar(calendar_url)
-    resolution = resolve_calendar(snapshot.body, missing_dates)
-    return resolution, set(resolution.specs)
 
 
 def _run_local_only(args: argparse.Namespace, start_date: dt.date, dates: list[dt.date]) -> int:
@@ -158,7 +153,7 @@ def _run_local_only(args: argparse.Namespace, start_date: dt.date, dates: list[d
             "window": [d.isoformat() for d in dates],
             "feed_checksum": resolution.feed_checksum,
             "covered_through": resolution.covered_through.isoformat() if resolution.covered_through else None,
-            "specs": [_spec_dict(spec) for spec in resolution.specs.values()],
+            "specs": [_spec_dict(spec) for specs in resolution.specs.values() for spec in specs],
             "missing_dates": [d.isoformat() for d in resolution.missing_dates],
             "delivery": "disabled",
         }
@@ -171,28 +166,29 @@ def _run_local_only(args: argparse.Namespace, start_date: dt.date, dates: list[d
     qa_model = os.getenv("DEVOTIONAL_WALLPAPER_QA_MODEL", "gpt-5-mini")
     rendered = 0
     client = None
-    for spec in resolution.specs.values():
-        for variant in ("phone", "watch"):
-            final_path, _staged_path = _slot_paths(args.artifact_dir, spec, variant)
-            if final_path.exists():
-                continue
-            if client is None:
-                client = _provider()
-            image_bytes, qa = render_variant(
-                client,
-                spec,
-                variant,
-                caller_model=caller_model,
-                image_model=image_model,
-                qa_model=qa_model,
-                tesseract_cmd=args.tesseract_cmd,
-                variation=monthly_variation(spec.date) if spec.monthly_fallback else "",
-                rejected_path=args.artifact_dir / ".rejected" / variant / spec.date.isoformat() / build_filename(spec, variant),
-            )
-            final_path.parent.mkdir(parents=True, exist_ok=True)
-            final_path.write_bytes(image_bytes)
-            _write_json_atomic(final_path.with_suffix(".qa.json"), qa)
-            rendered += 1
+    for specs in resolution.specs.values():
+        for spec in specs:
+            for variant in ("phone", "watch"):
+                final_path, _staged_path = _slot_paths(args.artifact_dir, spec, variant)
+                if final_path.exists():
+                    continue
+                if client is None:
+                    client = _provider()
+                image_bytes, qa = render_variant(
+                    client,
+                    spec,
+                    variant,
+                    caller_model=caller_model,
+                    image_model=image_model,
+                    qa_model=qa_model,
+                    tesseract_cmd=args.tesseract_cmd,
+                    variation=monthly_variation(spec.date) if spec.monthly_fallback else "",
+                    rejected_path=args.artifact_dir / ".rejected" / variant / spec.date.isoformat() / build_filename(spec, variant),
+                )
+                final_path.parent.mkdir(parents=True, exist_ok=True)
+                final_path.write_bytes(image_bytes)
+                _write_json_atomic(final_path.with_suffix(".qa.json"), qa)
+                rendered += 1
     print(json.dumps({"status": "rendered_local", "rendered": rendered, "artifact_dir": str(args.artifact_dir)}))
     return 0
 
@@ -205,20 +201,24 @@ def run_pipeline(args: argparse.Namespace) -> int:
         return _run_local_only(args, start_date, dates)
 
     if args.resolve_only:
+        snapshot = fetch_calendar(os.getenv("DEVOTIONAL_ICS_URL", "").strip())
+        resolution = resolve_calendar(snapshot.body, dates)
         inventory = inventory_assets(RcloneStore(RcloneConfig.from_env(executable=args.rclone_exe)))
         date_variants = {d.isoformat(): assets_for_date(inventory, d.isoformat()) for d in dates}
-        missing_dates = [d for d in dates if any(not date_variants[d.isoformat()][v] for v in ("phone", "watch"))]
-        if not missing_dates:
-            print(json.dumps({"status": "resolved", "window_start": start_date.isoformat(), "window_end": dates[-1].isoformat(), "missing_dates": []}))
-            return 0
-        snapshot = fetch_calendar(os.getenv("DEVOTIONAL_ICS_URL", "").strip())
-        resolution = resolve_calendar(snapshot.body, missing_dates)
+        missing_slots = []
+        for date, specs in resolution.specs.items():
+            for spec in specs:
+                subject = build_filename(spec, "phone").split("__", 1)[0]
+                for variant in ("phone", "watch"):
+                    if not any(asset.subject == subject for asset in date_variants[date.isoformat()][variant]):
+                        missing_slots.append(_key(date, spec, variant))
         print(json.dumps({
             "status": "resolved",
             "window_start": start_date.isoformat(),
             "window_end": dates[-1].isoformat(),
-            "missing_slots": sum(not date_variants[d.isoformat()][v] for d in missing_dates for v in ("phone", "watch")),
-            "specs": [_spec_dict(spec) for spec in resolution.specs.values()],
+            "missing_slots": len(missing_slots),
+            "missing_asset_keys": missing_slots,
+            "specs": [_spec_dict(spec) for specs in resolution.specs.values() for spec in specs],
             "calendar_absent_dates_skipped": [d.isoformat() for d in resolution.missing_dates],
         }, ensure_ascii=False))
         return 0
@@ -228,39 +228,44 @@ def run_pipeline(args: argparse.Namespace) -> int:
     if args.dry_run_rotation:
         inventory = inventory_assets(store)
         pair = assets_for_date(inventory, actual_today.isoformat())
-        ready = all(len(pair[v]) == 1 for v in ("phone", "watch"))
+        subjects = {v: {a.subject for a in pair[v]} for v in ("phone", "watch")}
+        ready = bool(subjects["phone"]) and subjects["phone"] == subjects["watch"]
         print(json.dumps({"status": "dry_run", "rotation_date": actual_today.isoformat(), "ready": ready,
-                          "missing_variants": [v for v in ("phone", "watch") if len(pair[v]) != 1]}))
+                          "phone_subjects": sorted(subjects["phone"]), "watch_subjects": sorted(subjects["watch"])}))
         return 0
-    rotation = rotate_current(store, actual_today.isoformat())
     if args.rotate_only:
+        rotation = rotate_current(store, actual_today.isoformat())
         print(json.dumps({"status": "rotation_only", **rotation}))
         return 0
 
     inventory = inventory_assets(store)
     date_variants = {d.isoformat(): assets_for_date(inventory, d.isoformat()) for d in dates}
-    if any(len(items[v]) > 1 for items in date_variants.values() for v in ("phone", "watch")):
-        raise RuntimeError("Wallpaper inventory has multiple files for one date/variant slot")
-    missing_dates = [date for date in dates if any(not date_variants[date.isoformat()][v] for v in ("phone", "watch"))]
+    snapshot = fetch_calendar(os.getenv("DEVOTIONAL_ICS_URL", "").strip())
+    resolution = resolve_calendar(snapshot.body, dates)
+    rotation = rotate_current(store, actual_today.isoformat())
+    missing_slots: list[tuple[dt.date, DailyImageSpec, str]] = []
+    for date, specs in resolution.specs.items():
+        for spec in specs:
+            subject = build_filename(spec, "phone").split("__", 1)[0]
+            for variant in ("phone", "watch"):
+                if not any(asset.subject == subject for asset in date_variants[date.isoformat()][variant]):
+                    missing_slots.append((date, spec, variant))
     manifest: dict[str, Any] = {
         "schema": 1,
         "run_date": actual_today.isoformat(),
         "window_start": start_date.isoformat(),
         "window_end": dates[-1].isoformat(),
         "rotation": rotation,
-        "existing": sum(bool(date_variants[d.isoformat()][v]) for d in dates for v in ("phone", "watch")),
-        "missing_dates": [date.isoformat() for date in missing_dates],
+        "existing": sum(len(date_variants[d.isoformat()][v]) for d in dates for v in ("phone", "watch")),
+        "missing_dates": sorted({date.isoformat() for date, _spec, _variant in missing_slots}),
+        "missing_asset_keys": [_key(date, spec, variant) for date, spec, variant in missing_slots],
         "assets": {},
     }
-    # A complete inventory avoids a calendar request and any paid rendering.
-    if not missing_dates:
+    if not missing_slots:
         final_rotation = rotate_current(store, actual_today.isoformat())
         print(json.dumps({"status": "complete_no_generation_needed", **{k: manifest[k] for k in ("run_date", "window_start", "window_end", "existing")}, "rotation": final_rotation}))
         return 0
 
-    calendar_url = os.getenv("DEVOTIONAL_ICS_URL", "").strip()
-    snapshot = fetch_calendar(calendar_url)
-    resolution = resolve_calendar(snapshot.body, missing_dates)
     if args.resume_run:
         if not re.fullmatch(r"[a-f0-9]{20}", args.resume_run):
             raise RuntimeError("--resume-run must be a 20-character hexadecimal run id")
@@ -279,88 +284,80 @@ def run_pipeline(args: argparse.Namespace) -> int:
     manifest["feed_checksum"] = resolution.feed_checksum
     manifest["covered_through"] = resolution.covered_through.isoformat() if resolution.covered_through else None
     manifest["missing_dates_without_calendar_events"] = [d.isoformat() for d in resolution.missing_dates]
-    expected_dates = set(resolution.specs)
+    expected_dates = resolution.specs
     manifest["calendar_absent_dates_skipped"] = [d.isoformat() for d in resolution.missing_dates]
-    manifest["missing_dates"] = [d.isoformat() for d in missing_dates if d in expected_dates]
+    manifest["missing_dates"] = [d.isoformat() for d in sorted({d for d, _spec, _variant in missing_slots})]
     client = None
-    for missing_date in missing_dates:
-        spec = resolution.specs.get(missing_date)
-        if not spec:
-            continue
-        for variant in ("phone", "watch"):
-            slot = _key(missing_date, variant)
-            exists_remote = date_variants[missing_date.isoformat()][variant]
-            if exists_remote:
-                manifest["assets"][slot] = {"state": "existing", "remote": exists_remote[0].path}
-                continue
-            local_path, stage_path = _slot_paths(args.artifact_dir, spec, variant)
-            remote_stage = f"{WALLPAPER_ROOT}/staging/{missing_date.isoformat()}/{variant}/{build_filename(spec, variant)}"
-            staged_record = remote_state.get("assets", {}).get(slot, {})
-            if staged_record.get("state") in {"qa_passed", "staged"}:
-                if staged_record.get("spec") != _spec_dict(spec):
-                    raise RuntimeError(f"Accepted staged wallpaper belongs to a different calendar subject: {slot}")
-                staged_bytes = store.download_bytes(staged_record.get("staging_path", remote_stage))
-                if sha256(staged_bytes) != staged_record.get("sha256"):
-                    raise RuntimeError(f"Accepted staged asset checksum mismatch: {slot}")
-                local_path.parent.mkdir(parents=True, exist_ok=True)
-                local_path.write_bytes(staged_bytes)
-                qa = staged_record.get("qa", {})
+    for missing_date, spec, variant in missing_slots:
+        slot = _key(missing_date, spec, variant)
+        local_path, stage_path = _slot_paths(args.artifact_dir, spec, variant)
+        remote_stage = f"{WALLPAPER_ROOT}/staging/{missing_date.isoformat()}/{variant}/{build_filename(spec, variant)}"
+        staged_record = remote_state.get("assets", {}).get(slot, {})
+        if staged_record.get("state") in {"qa_passed", "staged"}:
+            if staged_record.get("spec") != _spec_dict(spec):
+                raise RuntimeError(f"Accepted staged wallpaper belongs to a different calendar subject: {slot}")
+            staged_bytes = store.download_bytes(staged_record.get("staging_path", remote_stage))
+            if sha256(staged_bytes) != staged_record.get("sha256"):
+                raise RuntimeError(f"Accepted staged asset checksum mismatch: {slot}")
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            local_path.write_bytes(staged_bytes)
+            qa = staged_record.get("qa", {})
+        else:
+            if client is None:
+                client = _provider()
+            last_error: Optional[Exception] = None
+            for attempt in range(3):
+                try:
+                    image_bytes, qa = render_variant(
+                        client,
+                        spec,
+                        variant,
+                        caller_model=os.getenv("DEVOTIONAL_WALLPAPER_CALLER_MODEL", "gpt-5-mini"),
+                        image_model=os.getenv("DEVOTIONAL_WALLPAPER_IMAGE_MODEL", "gpt-image-2"),
+                        qa_model=os.getenv("DEVOTIONAL_WALLPAPER_QA_MODEL", "gpt-5-mini"),
+                        tesseract_cmd=args.tesseract_cmd,
+                        variation=monthly_variation(spec.date) if spec.monthly_fallback else "",
+                        rejected_path=args.artifact_dir / ".rejected" / variant / spec.date.isoformat() / build_filename(spec, variant),
+                    )
+                    break
+                except Exception as exc:
+                    last_error = exc
+                    if attempt == 2 or not _transient_provider_error(exc):
+                        raise
+                    import time
+                    time.sleep(5 * (2 ** attempt))
             else:
-                if client is None:
-                    client = _provider()
-                last_error: Optional[Exception] = None
-                for attempt in range(3):
-                    try:
-                        image_bytes, qa = render_variant(
-                            client,
-                            spec,
-                            variant,
-                            caller_model=os.getenv("DEVOTIONAL_WALLPAPER_CALLER_MODEL", "gpt-5-mini"),
-                            image_model=os.getenv("DEVOTIONAL_WALLPAPER_IMAGE_MODEL", "gpt-image-2"),
-                            qa_model=os.getenv("DEVOTIONAL_WALLPAPER_QA_MODEL", "gpt-5-mini"),
-                            tesseract_cmd=args.tesseract_cmd,
-                            variation=monthly_variation(spec.date) if spec.monthly_fallback else "",
-                            rejected_path=args.artifact_dir / ".rejected" / variant / spec.date.isoformat() / build_filename(spec, variant),
-                        )
-                        break
-                    except Exception as exc:
-                        last_error = exc
-                        if attempt == 2 or not _transient_provider_error(exc):
-                            raise
-                        import time
-                        time.sleep(5 * (2 ** attempt))
-                else:
-                    raise RuntimeError(f"Wallpaper render failed: {last_error}")
-                local_path.parent.mkdir(parents=True, exist_ok=True)
-                local_path.write_bytes(image_bytes)
-                stage_path.parent.mkdir(parents=True, exist_ok=True)
-                stage_path.write_bytes(image_bytes)
-                store.mkdir(f"{WALLPAPER_ROOT}/staging/{missing_date.isoformat()}/{variant}")
-                store.upload(stage_path, remote_stage)
-                if sha256(store.download_bytes(remote_stage)) != sha256(image_bytes):
-                    raise RuntimeError(f"Private staged wallpaper checksum mismatch: {slot}")
-                staged_record = {
-                    "state": "staged",
-                    "spec": _spec_dict(spec),
-                    "sha256": sha256(image_bytes),
-                    "staging_path": remote_stage,
-                    "qa": qa,
-                }
-                remote_state.setdefault("assets", {})[slot] = staged_record
-                _persist_remote_state(store, remote_state)
-            target = deliver_missing_asset(store, local_path, spec, variant)
-            record = {
-                "state": "delivered_verified",
+                raise RuntimeError(f"Wallpaper render failed: {last_error}")
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            local_path.write_bytes(image_bytes)
+            stage_path.parent.mkdir(parents=True, exist_ok=True)
+            stage_path.write_bytes(image_bytes)
+            store.mkdir(f"{WALLPAPER_ROOT}/staging/{missing_date.isoformat()}/{variant}")
+            store.upload(stage_path, remote_stage)
+            if sha256(store.download_bytes(remote_stage)) != sha256(image_bytes):
+                raise RuntimeError(f"Private staged wallpaper checksum mismatch: {slot}")
+            staged_record = {
+                "state": "staged",
                 "spec": _spec_dict(spec),
-                "filename": build_filename(spec, variant),
-                "variant": variant,
-                "remote_path": target,
-                "sha256": sha256(local_path.read_bytes()),
+                "sha256": sha256(image_bytes),
+                "staging_path": remote_stage,
                 "qa": qa,
             }
-            manifest["assets"][slot] = record
-            remote_state.setdefault("assets", {})[slot] = {**record, "staging_path": remote_stage}
+            remote_state.setdefault("assets", {})[slot] = staged_record
             _persist_remote_state(store, remote_state)
+        target = deliver_missing_asset(store, local_path, spec, variant)
+        record = {
+            "state": "delivered_verified",
+            "spec": _spec_dict(spec),
+            "filename": build_filename(spec, variant),
+            "variant": variant,
+            "remote_path": target,
+            "sha256": sha256(local_path.read_bytes()),
+            "qa": qa,
+        }
+        manifest["assets"][slot] = record
+        remote_state.setdefault("assets", {})[slot] = {**record, "staging_path": remote_stage}
+        _persist_remote_state(store, remote_state)
 
     # A newly completed today pair gets promoted in this run; future pairs remain queued.
     final_rotation = rotate_current(store, actual_today.isoformat())
@@ -371,11 +368,11 @@ def run_pipeline(args: argparse.Namespace) -> int:
     _write_json_atomic(args.artifact_dir / f"{run_id}-summary.json", manifest)
     final_inventory = inventory_assets(store)
     remaining = [
-        f"{date.isoformat()}:{variant}"
+        f"{date.isoformat()}:{build_filename(spec, variant).split('__', 1)[0]}:{variant}"
         for date in dates
-        if date in expected_dates
+        for spec in expected_dates.get(date, ())
         for variant in ("phone", "watch")
-        if len(assets_for_date(final_inventory, date.isoformat())[variant]) != 1
+        if not any(a.subject == build_filename(spec, variant).split("__", 1)[0] for a in assets_for_date(final_inventory, date.isoformat())[variant])
     ]
     summary = {
         "status": "complete" if not remaining else "incomplete",

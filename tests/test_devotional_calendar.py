@@ -25,14 +25,14 @@ class DevotionalCalendarTests(unittest.TestCase):
             ("2026-10-08", "Octave of Saint Bridget [Day 2] (private devotion)"),
         ]
         result = resolve_calendar(calendar_bytes(events), [dt.date(2026, 10, 7), dt.date(2026, 10, 8)])
-        self.assertEqual(result.specs[dt.date(2026, 10, 7)].title, "OUR LADY OF THE ROSARY")
-        self.assertEqual(result.specs[dt.date(2026, 10, 8)].classification, "PRIVATE DEVOTION")
-        self.assertEqual(result.specs[dt.date(2026, 10, 8)].sequence_day, 2)
+        self.assertEqual(result.specs[dt.date(2026, 10, 7)][0].title, "OUR LADY OF THE ROSARY")
+        self.assertEqual(result.specs[dt.date(2026, 10, 8)][0].classification, "PRIVATE DEVOTION")
+        self.assertEqual(result.specs[dt.date(2026, 10, 8)][0].sequence_day, 2)
 
     def test_monthly_fallback_only_for_represented_context_date_and_absent_day_is_skipped(self):
         events = [("2026-10-03", "🟢 Saturday in the 26th Week in Ordinary Time")]
         result = resolve_calendar(calendar_bytes(events), [dt.date(2026, 10, 3), dt.date(2026, 10, 4)])
-        fallback = result.specs[dt.date(2026, 10, 3)]
+        fallback = result.specs[dt.date(2026, 10, 3)][0]
         self.assertEqual(fallback.title, "OUR LADY OF THE ROSARY")
         self.assertTrue(fallback.monthly_fallback)
         self.assertNotIn(dt.date(2026, 10, 4), result.specs)
@@ -44,7 +44,7 @@ class DevotionalCalendarTests(unittest.TestCase):
             [dt.date(2026, 10, 3)],
         )
         self.assertEqual(result.covered_through, None)
-        self.assertEqual(result.specs[dt.date(2026, 10, 3)].classification, "FEAST")
+        self.assertEqual(result.specs[dt.date(2026, 10, 3)][0].classification, "FEAST")
 
     def test_outlook_ordinal_week_context_and_sequence_title(self):
         body = calendar_bytes([
@@ -52,15 +52,27 @@ class DevotionalCalendarTests(unittest.TestCase):
             ("2026-10-04", "Triduum of Our Lady of the Rosary [Day 1] (private devotion)"),
         ])
         result = resolve_calendar(body, [dt.date(2026, 10, 3), dt.date(2026, 10, 4)])
-        self.assertEqual(result.specs[dt.date(2026, 10, 3)].title, "THE BLESSED VIRGIN MARY")
-        self.assertEqual(result.specs[dt.date(2026, 10, 3)].classification, "OPTIONAL MEMORIAL")
-        sequence = result.specs[dt.date(2026, 10, 4)]
+        self.assertEqual(result.specs[dt.date(2026, 10, 3)][0].title, "THE BLESSED VIRGIN MARY")
+        self.assertEqual(result.specs[dt.date(2026, 10, 3)][0].classification, "OPTIONAL MEMORIAL")
+        sequence = result.specs[dt.date(2026, 10, 4)][0]
         self.assertEqual(sequence.title, "OUR LADY OF THE ROSARY")
         self.assertEqual((sequence.sequence_kind, sequence.sequence_day), ("TRIDUUM", 1))
 
     def test_unclassified_non_context_event_fails_closed(self):
         with self.assertRaisesRegex(RuntimeError, "Unclassified"):
             resolve_calendar(calendar_bytes([("2026-10-03", "Something unrelated")]), [dt.date(2026, 10, 3)])
+
+    def test_keeps_primary_and_every_named_additional_observance(self):
+        lines = [
+            "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Test//Devotion//EN", "BEGIN:VEVENT",
+            "UID:saints", "DTSTART;VALUE=DATE:20260928", "DTEND;VALUE=DATE:20260929",
+            "SUMMARY:[m] Saint Wenceslaus, Martyr, Optional Memorial",
+            "DESCRIPTION:Church observance: Optional Memorial of St. Wenceslaus, Martyr (red); also St. Lawrence Ruiz and Companions, Martyrs (optional). Prayer focus: courage in witness.",
+            "END:VEVENT", "END:VCALENDAR",
+        ]
+        specs = resolve_calendar(("\r\n".join(lines) + "\r\n").encode(), [dt.date(2026, 9, 28)]).specs[dt.date(2026, 9, 28)]
+        self.assertEqual({spec.title for spec in specs}, {"SAINT WENCESLAUS", "SAINT LAWRENCE RUIZ AND COMPANIONS"})
+        self.assertTrue(all(spec.classification == "OPTIONAL MEMORIAL" for spec in specs))
 
 
 if __name__ == "__main__":

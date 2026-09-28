@@ -1,5 +1,12 @@
 # Release Log
 
+## [0.4.8.0] - 2026-09-28
+
+### Fixed
+- Retained every named saint and devotion on each date, including additional observances in the Outlook description, while skipping only generic weekday, week, and season context.
+- Reconciled the full calendar on every daily run and added subject-keyed phone/watch sets with checksum-verified, journaled OneDrive rotation and same-day additions.
+- Reserved phone title space clear of faces and added vision review with up to three composition retries.
+
 ## [0.4.7.0] - 2026-09-27
 
 ### Added

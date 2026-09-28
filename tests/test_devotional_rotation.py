@@ -53,6 +53,13 @@ def add_pair(store, date, phone=b"phone", watch=b"watch"):
         store.files[f"{variant}-queue/{date}/{name}"] = payload
 
 
+def add_subject_set(store, date, subjects):
+    for subject in subjects:
+        for variant in ("phone", "watch"):
+            name = f"{subject}__{date}.jpg"
+            store.files[f"{variant}-queue/{date}/{name}"] = f"{variant}-{subject}".encode()
+
+
 class DevotionalRotationTests(unittest.TestCase):
     def test_first_rotation_promotes_both_and_replay_is_noop(self):
         store = MemoryStore()
@@ -62,6 +69,25 @@ class DevotionalRotationTests(unittest.TestCase):
         self.assertEqual(set(store.files), {"phone-current/holy-eucharist__2026-10-01.jpg", "watch-current/holy-eucharist__2026-10-01.jpg"})
         replay = rotate_current(store, "2026-10-01")
         self.assertFalse(replay["rotated"])
+
+    def test_first_rotation_ignores_unmanaged_files_in_queue_root(self):
+        store = MemoryStore()
+        add_pair(store, "2026-10-01")
+        store.files["phone-queue/undated-manual.jpg"] = b"manual"
+        self.assertTrue(rotate_current(store, "2026-10-01")["rotated"])
+        self.assertIn("phone-queue/undated-manual.jpg", store.files)
+
+    def test_same_day_replacement_archives_old_bytes_before_promotion(self):
+        store = MemoryStore()
+        add_pair(store, "2026-10-01", b"old phone", b"old watch")
+        rotate_current(store, "2026-10-01")
+        old_state = store.json[".devotional_wallpapers/manifests/rotation-state.json"]
+        for variant in ("phone", "watch"):
+            store.files[f"{variant}-queue/2026-10-01/holy-eucharist__2026-10-01.jpg"] = f"new {variant}".encode()
+        result = rotate_current(store, "2026-10-01")
+        self.assertTrue(result["rotated"])
+        self.assertEqual(store.files[".devotional_wallpapers/archive/2026-10-01/phone/holy-eucharist__2026-10-01.jpg"], b"old phone")
+        self.assertEqual(store.files["phone-current/holy-eucharist__2026-10-01.jpg"], b"new phone")
 
     def test_pair_gap_keeps_current_unchanged(self):
         store = MemoryStore()
@@ -93,6 +119,28 @@ class DevotionalRotationTests(unittest.TestCase):
             rotate_current(store, "2026-10-01")
         self.assertIn("phone-current/handmade__2026-09-01.jpg", store.files)
 
+    def test_multiple_named_observances_rotate_as_a_matched_set(self):
+        store = MemoryStore()
+        add_subject_set(store, "2026-10-01", ("saint-wenceslaus", "saint-lawrence-ruiz"))
+        result = rotate_current(store, "2026-10-01")
+        self.assertTrue(result["rotated"])
+        current = {path for path in store.files if path.startswith(("phone-current/", "watch-current/"))}
+        self.assertEqual(len(current), 4)
+        self.assertTrue(any("saint-wenceslaus" in path for path in current))
+        self.assertTrue(any("saint-lawrence-ruiz" in path for path in current))
+
+    def test_same_day_new_subject_preserves_existing_current_subjects(self):
+        store = MemoryStore()
+        add_pair(store, "2026-10-01")
+        rotate_current(store, "2026-10-01")
+        for variant in ("phone", "watch"):
+            name = f"saint-lawrence-ruiz__2026-10-01.jpg"
+            store.files[f"{variant}-queue/2026-10-01/{name}"] = f"new-{variant}".encode()
+        result = rotate_current(store, "2026-10-01")
+        self.assertTrue(result["rotated"])
+        self.assertEqual(len([p for p in store.files if p.startswith("phone-current/")]), 2)
+        self.assertEqual(len([p for p in store.files if p.startswith("watch-current/")]), 2)
+
     def test_recovery_finishes_verified_journal(self):
         store = MemoryStore()
         date = "2026-10-01"
@@ -101,7 +149,7 @@ class DevotionalRotationTests(unittest.TestCase):
             source = f"{variant}-queue/{date}/{variant}__{date}.jpg"
             target = f"{variant}-current/{variant}__{date}.jpg"
             store.files[source] = payload
-            next_items[variant] = {"path": target, "queue_path": source, "sha256": hashlib.sha256(payload).hexdigest()}
+            next_items[variant] = [{"path": target, "queue_path": source, "sha256": hashlib.sha256(payload).hexdigest()}]
         state_path = ".devotional_wallpapers/manifests/rotation-state.json"
         store.json[state_path] = {"rotation": {"schema": 1, "phase": "promoting", "date": date, "previous_managed": {}, "next": next_items}}
         result = recover_rotation(store)
@@ -116,8 +164,8 @@ class DevotionalRotationTests(unittest.TestCase):
         store.files["watch-queue/2026-10-01/watch__2026-10-01.jpg"] = b"w"
         state_path = ".devotional_wallpapers/manifests/rotation-state.json"
         store.json[state_path] = {"rotation": {"schema": 1, "phase": "promoting", "date": date, "previous_managed": {}, "next": {
-            "phone": {"path": "Current Devotion/infographic.jpg", "queue_path": "phone-queue/2026-10-01/phone__2026-10-01.jpg", "sha256": hashlib.sha256(b"p").hexdigest()},
-            "watch": {"path": "watch-current/watch__2026-10-01.jpg", "queue_path": "watch-queue/2026-10-01/watch__2026-10-01.jpg", "sha256": hashlib.sha256(b"w").hexdigest()},
+            "phone": [{"path": "Current Devotion/infographic.jpg", "queue_path": "phone-queue/2026-10-01/phone__2026-10-01.jpg", "sha256": hashlib.sha256(b"p").hexdigest()}],
+            "watch": [{"path": "watch-current/watch__2026-10-01.jpg", "queue_path": "watch-queue/2026-10-01/watch__2026-10-01.jpg", "sha256": hashlib.sha256(b"w").hexdigest()}],
         }}}
         with self.assertRaisesRegex(RuntimeError, "out-of-scope"):
             recover_rotation(store)

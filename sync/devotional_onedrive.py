@@ -27,6 +27,7 @@ class RemoteAsset:
     date: str
     variant: str
     checksum: Optional[str] = None
+    subject: str = ""
 
 
 @dataclass(frozen=True)
@@ -186,13 +187,16 @@ def parse_asset_listing(folder: str, records: Iterable[dict[str, Any]]) -> list[
         sha = next((str(v) for k, v in hashes.items() if str(k).lower() == "sha256"), None) if isinstance(hashes, dict) else None
         segments = PurePosixPath(relative).parts
         if folder.endswith("-queue"):
-            if len(segments) != 2 or segments[0] != date.isoformat():
+            if len(segments) not in (1, 2) or (len(segments) == 2 and segments[0] != date.isoformat()):
                 raise RuntimeError(f"Dated wallpaper in {folder} has an invalid queue path: {relative}")
         elif len(segments) != 1:
             raise RuntimeError(f"Current wallpaper must be directly in {folder}: {relative}")
         if size <= 0:
             raise RuntimeError(f"Wallpaper inventory contains an empty file: {folder}/{relative}")
-        assets.append(RemoteAsset(path=f"{folder}/{relative}", name=name, size=size, date=date.isoformat(), variant=variant, checksum=sha))
+        subject = name[:match.start()].rstrip("_")
+        if not subject:
+            raise RuntimeError(f"Wallpaper inventory contains an empty subject: {name}")
+        assets.append(RemoteAsset(path=f"{folder}/{relative}", name=name, size=size, date=date.isoformat(), variant=variant, checksum=sha, subject=subject))
     return assets
 
 
@@ -202,12 +206,12 @@ def inventory_assets(store: RcloneStore) -> list[RemoteAsset]:
     for folder in ("watch-current", "watch-queue", "phone-current", "phone-queue"):
         records = store.list_files(folder, recursive=True)
         found.extend(parse_asset_listing(folder, records))
-    slots: dict[tuple[str, str], set[str]] = {}
+    slots: dict[tuple[str, str, str], set[str]] = {}
     for asset in found:
-        slots.setdefault((asset.date, asset.variant), set()).add(asset.name)
+        slots.setdefault((asset.date, asset.variant, asset.subject), set()).add(asset.name)
     duplicates = [key for key, names in slots.items() if len(names) > 1]
     if duplicates:
-        raise RuntimeError("Wallpaper inventory has multiple files for date/variant slots: " + ", ".join(f"{d}:{v}" for d, v in duplicates))
+        raise RuntimeError("Wallpaper inventory has duplicate subject files for date/variant slots: " + ", ".join(f"{d}:{v}:{s}" for d, v, s in duplicates))
     return found
 
 
@@ -253,16 +257,69 @@ def _copy_verify(store: RcloneStore, source: str, target: str, expected_sha: str
         raise RuntimeError(f"OneDrive wallpaper verification failed: {target}")
 
 
-def _archive_current_pair(store: RcloneStore, date: str, managed: dict[str, dict[str, str]]) -> None:
+def _managed_files(item: dict[str, Any]) -> list[dict[str, str]]:
+    files = item.get("files")
+    if isinstance(files, list):
+        return [dict(record) for record in files if isinstance(record, dict)]
+    # Accept manifests written by the original one-file-per-device rotator.
+    filenames = item.get("filenames") or ([Path(item["path"]).name] if item.get("path") else [])
+    return [{"filename": str(name), "sha256": str(item.get("sha256") or "")} for name in filenames]
+
+
+def _archive_current_pair(store: RcloneStore, date: str, managed: dict[str, dict[str, Any]]) -> None:
     for variant in ("phone", "watch"):
         item = managed.get(variant)
         if not item:
             continue
-        source = str(item["path"])
-        expected = str(item["sha256"])
-        target = f"{WALLPAPER_ROOT}/archive/{date}/{variant}/{Path(source).name}"
-        store.mkdir(f"{WALLPAPER_ROOT}/archive/{date}/{variant}")
-        _copy_verify(store, source, target, expected)
+        for record in _managed_files(item):
+            filename = record["filename"]
+            source = f"{variant}-current/{filename}"
+            expected = str(record["sha256"])
+            target = f"{WALLPAPER_ROOT}/archive/{date}/{variant}/{filename}"
+            try:
+                current = store.download_bytes(source)
+            except RuntimeError:
+                current = b""
+            if not current:
+                try:
+                    archived = store.download_bytes(target)
+                except RuntimeError:
+                    raise RuntimeError(f"Managed current wallpaper disappeared before archive verification: {source}") from None
+                if sha256(archived) != expected:
+                    raise RuntimeError(f"Existing wallpaper archive conflicts with managed record: {target}")
+                continue
+            if sha256(current) != expected:
+                raise RuntimeError(f"Managed current wallpaper checksum changed before archive: {source}")
+            try:
+                archived = store.download_bytes(target)
+            except RuntimeError as exc:
+                if not any(text in str(exc).lower() for text in ("object not found", "doesn't exist", "directory not found")):
+                    raise
+            else:
+                if sha256(archived) != expected:
+                    raise RuntimeError(f"Existing wallpaper archive conflicts with current file: {target}")
+                continue
+            store.mkdir(f"{WALLPAPER_ROOT}/archive/{date}/{variant}")
+            _copy_verify(store, source, target, expected)
+
+
+def _promote_verified(store: RcloneStore, record: dict[str, str], previous_item: dict[str, Any]) -> None:
+    remote_path = str(record["path"])
+    queue_path = str(record["queue_path"])
+    expected = str(record["sha256"])
+    try:
+        current = store.download_bytes(remote_path)
+    except RuntimeError:
+        current = b""
+    if current and sha256(current) == expected:
+        return
+    if current:
+        filename = Path(remote_path).name
+        prior = next((entry for entry in _managed_files(previous_item) if entry["filename"] == filename), None)
+        if prior is None or sha256(current) != prior.get("sha256"):
+            raise RuntimeError(f"Refusing to replace unmanaged or changed current wallpaper: {remote_path}")
+        store.remove(remote_path)
+    _copy_verify(store, queue_path, remote_path, expected)
 
 
 def rotate_current(store: RcloneStore, date: str) -> dict[str, Any]:
@@ -289,34 +346,43 @@ def rotate_current(store: RcloneStore, date: str) -> dict[str, Any]:
         except ValueError:
             raise RuntimeError("Wallpaper rotation state has an invalid current date") from None
         _verify_managed_current(store, managed)
-    if current_date == target_date:
-        # A previous invocation may have committed state and died during cleanup.
-        _cleanup_old_current(store, target_date, managed, state)
-        return {"rotated": False, "current_date": target_date, "reason": "already_current", "recovered": recovered}
-
     if current_date and target_date < current_date:
         raise RuntimeError(f"Refusing to roll OneDrive wallpapers backwards from {current_date} to {target_date}")
 
     inventory = inventory_assets(store)
     pair = assets_for_date(inventory, target_date)
-    selected: dict[str, RemoteAsset] = {}
+    current_subjects = {variant: {asset.subject for asset in pair[variant] if asset.path.startswith(f"{variant}-current/")} for variant in ("phone", "watch")}
+    queue_subjects = {variant: {asset.subject for asset in pair[variant] if asset.path.startswith(f"{variant}-queue/")} for variant in ("phone", "watch")}
+    if current_date == target_date:
+        if not queue_subjects["phone"] and not queue_subjects["watch"] and current_subjects["phone"] == current_subjects["watch"]:
+            _cleanup_old_current(store, target_date, managed, state)
+            return {"rotated": False, "current_date": target_date, "reason": "already_current", "recovered": recovered}
+    if current_date is None:
+        queue_assets = {variant: [asset for asset in pair[variant] if asset.path.startswith(f"{variant}-queue/")] for variant in ("phone", "watch")}
+        if not queue_assets["phone"] or {a.subject for a in queue_assets["phone"]} != {a.subject for a in queue_assets["watch"]}:
+            return {"rotated": False, "current_date": None, "reason": "today_subject_sets_incomplete"}
+        selected_assets = queue_assets
+    else:
+        selected_assets = {variant: list(pair[variant]) for variant in ("phone", "watch")}
+    selected: dict[str, list[RemoteAsset]] = {}
+    subject_sets: dict[str, set[str]] = {}
     for variant in ("phone", "watch"):
-        options = pair[variant]
-        if len(options) != 1:
-            return {
-                "rotated": False,
-                "current_date": current_date,
-                "reason": "today_pair_incomplete_or_ambiguous",
-                "missing_variants": [variant for variant in ("phone", "watch") if len(pair[variant]) != 1],
-            }
-        selected[variant] = options[0]
-        if not options[0].path.startswith(f"{variant}-queue/") and not options[0].path.startswith(f"{variant}-current/"):
-            raise RuntimeError("Rotation selected a wallpaper from an unsupported folder")
-        if options[0].size <= 0:
-            raise RuntimeError(f"Rotation refuses an empty {variant} wallpaper")
+        options = selected_assets[variant]
+        selected[variant] = list(options)
+        subject_sets[variant] = {asset.subject for asset in options}
+        for asset in options:
+            if not asset.path.startswith(f"{variant}-queue/") and not asset.path.startswith(f"{variant}-current/"):
+                raise RuntimeError("Rotation selected a wallpaper from an unsupported folder")
+            if asset.size <= 0:
+                raise RuntimeError(f"Rotation refuses an empty {variant} wallpaper")
+    combined_sets = {variant: subject_sets[variant] | queue_subjects[variant] for variant in ("phone", "watch")}
+    if not combined_sets["phone"] or combined_sets["phone"] != combined_sets["watch"]:
+        return {"rotated": False, "current_date": current_date, "reason": "today_subject_sets_incomplete", "phone_subjects": sorted(subject_sets["phone"]), "watch_subjects": sorted(subject_sets["watch"])}
+    if current_date != target_date and current_date is not None and (subject_sets["phone"] != subject_sets["watch"] or queue_subjects["phone"] != queue_subjects["watch"]):
+        return {"rotated": False, "current_date": current_date, "reason": "today_subject_sets_incomplete", "phone_subjects": sorted(subject_sets["phone"]), "watch_subjects": sorted(subject_sets["watch"])}
 
     actual = {variant: _current_listing(store, variant) for variant in ("phone", "watch")}
-    expected_managed_names = {variant: set((managed.get(variant) or {}).get("filenames", [])) for variant in managed}
+    expected_managed_names = {variant: {record["filename"] for record in _managed_files(managed.get(variant) or {})} for variant in ("phone", "watch")}
     for variant in ("phone", "watch"):
         for filename, info in actual[variant].items():
             match = re.search(r"__(\d{4}-\d{2}-\d{2})\.(?:jpe?g|png)$", filename, re.I)
@@ -324,7 +390,7 @@ def rotate_current(store: RcloneStore, date: str) -> dict[str, Any]:
                 if filename not in expected_managed_names.get(variant, set()):
                     raise RuntimeError(f"Unmanaged file in {variant}-current; refusing rotation: {filename}")
             if filename in expected_managed_names.get(variant, set()):
-                recorded = (managed.get(variant) or {}).get("sha256")
+                recorded = next((record["sha256"] for record in _managed_files(managed.get(variant) or {}) if record["filename"] == filename), "")
                 raw = store.download_bytes(f"{variant}-current/{filename}")
                 if recorded and sha256(raw) != recorded:
                     raise RuntimeError(f"Managed current wallpaper checksum changed: {variant}-current/{filename}")
@@ -335,27 +401,34 @@ def rotate_current(store: RcloneStore, date: str) -> dict[str, Any]:
     previous_date = current_date
     _archive_current_pair(store, str(previous_date or target_date), managed)
     next_managed: dict[str, dict[str, Any]] = {}
+    next_by_variant = {v: [] for v in ("phone", "watch")}
     journal = {
         "schema": 1,
         "phase": "promoting",
         "date": target_date,
         "previous_date": previous_date,
         "previous_managed": managed,
-        "next": {},
+        "next": next_by_variant,
     }
     for variant in ("phone", "watch"):
-        asset = selected[variant]
-        source_bytes = store.download_bytes(asset.path)
-        checksum = sha256(source_bytes)
-        current_path = f"{variant}-current/{asset.name}"
-        journal["next"][variant] = {"path": current_path, "queue_path": asset.path, "sha256": checksum}
+        records = []
+        for asset in selected[variant]:
+            if current_date == target_date and asset.path.startswith(f"{variant}-current/") and asset.subject not in queue_subjects[variant]:
+                records.append({"path": asset.path, "queue_path": asset.path, "sha256": sha256(store.download_bytes(asset.path)), "subject": asset.subject, "already_current": True})
+                continue
+            data = store.download_bytes(asset.path)
+            records.append({"path": f"{variant}-current/{asset.name}", "queue_path": asset.path, "sha256": sha256(data), "subject": asset.subject})
+        journal["next"][variant] = records
     state["rotation"] = journal
     store.write_json(state_path, state)
 
     for variant in ("phone", "watch"):
-        record = journal["next"][variant]
-        _copy_verify(store, record["queue_path"], record["path"], record["sha256"])
-        next_managed[variant] = {"filenames": [Path(record["path"]).name], "path": record["path"], "sha256": record["sha256"]}
+        files = []
+        for record in journal["next"][variant]:
+            if not record.get("already_current"):
+                _promote_verified(store, record, managed.get(variant) or {})
+            files.append({"filename": Path(record["path"]).name, "sha256": record["sha256"]})
+        next_managed[variant] = {"files": files, "filenames": [item["filename"] for item in files]}
 
     # Publish committed intent before deleting old current files. A rerun can finish cleanup.
     committed = {
@@ -367,7 +440,9 @@ def rotate_current(store: RcloneStore, date: str) -> dict[str, Any]:
     store.write_json(state_path, committed)
     _cleanup_old_current(store, target_date, next_managed, committed)
     for variant in ("phone", "watch"):
-        store.remove(journal["next"][variant]["queue_path"])
+        for record in journal["next"][variant]:
+            if record["queue_path"].startswith(f"{variant}-queue/{target_date}/"):
+                store.remove(record["queue_path"])
     committed["rotation"] = None
     store.write_json(state_path, committed)
     return {"rotated": True, "current_date": target_date, "previous_date": previous_date, "recovered": recovered}
@@ -391,23 +466,36 @@ def recover_rotation(store: RcloneStore) -> dict[str, Any]:
     _verify_managed_current(store, previous)
     next_managed: dict[str, dict[str, Any]] = {}
     for variant in ("phone", "watch"):
-        record = (journal.get("next") or {}).get(variant)
-        if not isinstance(record, dict):
+        records = (journal.get("next") or {}).get(variant)
+        if isinstance(records, dict):
+            # Recover a single-pair journal written by the original rotator.
+            records = [records]
+        if not isinstance(records, list) or not records:
             raise RuntimeError("Wallpaper rotation journal is incomplete")
-        remote_path = str(record["path"])
-        queue_path = str(record["queue_path"])
-        expected = str(record["sha256"])
-        if not remote_path.startswith(f"{variant}-current/") or not queue_path.startswith(f"{variant}-queue/{date}/"):
-            raise RuntimeError("Wallpaper rotation journal contains an out-of-scope path")
-        if not re.fullmatch(r"[a-f0-9]{64}", expected):
-            raise RuntimeError("Wallpaper rotation journal contains an invalid checksum")
-        try:
-            current_bytes = store.download_bytes(remote_path)
-        except RuntimeError:
-            current_bytes = b""
-        if not current_bytes or sha256(current_bytes) != expected:
-            _copy_verify(store, queue_path, remote_path, expected)
-        next_managed[variant] = {"filenames": [Path(remote_path).name], "path": remote_path, "sha256": expected}
+        files = []
+        for record in records:
+            if not isinstance(record, dict):
+                raise RuntimeError("Wallpaper rotation journal is incomplete")
+            remote_path = str(record["path"])
+            queue_path = str(record["queue_path"])
+            expected = str(record["sha256"])
+            already_current = bool(record.get("already_current"))
+            if not remote_path.startswith(f"{variant}-current/") or (not already_current and not queue_path.startswith(f"{variant}-queue/{date}/")) or (already_current and queue_path != remote_path):
+                raise RuntimeError("Wallpaper rotation journal contains an out-of-scope path")
+            if not re.fullmatch(r"[a-f0-9]{64}", expected):
+                raise RuntimeError("Wallpaper rotation journal contains an invalid checksum")
+            try:
+                source_bytes = store.download_bytes(queue_path)
+            except RuntimeError:
+                source_bytes = b""
+            if record.get("already_current"):
+                source_bytes = store.download_bytes(remote_path)
+            if source_bytes and sha256(source_bytes) != expected:
+                raise RuntimeError(f"Wallpaper rotation source checksum mismatch: {queue_path}")
+            if not record.get("already_current"):
+                _promote_verified(store, record, previous.get(variant) or {})
+            files.append({"filename": Path(remote_path).name, "sha256": expected})
+        next_managed[variant] = {"files": files, "filenames": [item["filename"] for item in files]}
     committed = {
         "schema": 1,
         "current_date": date,
@@ -416,12 +504,16 @@ def recover_rotation(store: RcloneStore) -> dict[str, Any]:
     }
     store.write_json(state_path, committed)
     _cleanup_old_current(store, date, next_managed, committed)
-    for item in (journal.get("next") or {}).values():
-        queue_path = str(item.get("queue_path", ""))
-        try:
-            store.remove(queue_path)
-        except Exception:
-            pass
+    for records in (journal.get("next") or {}).values():
+        if isinstance(records, dict):
+            records = [records]
+        for item in records:
+            queue_path = str(item.get("queue_path", ""))
+            if queue_path != str(item.get("path", "")):
+                try:
+                    store.remove(queue_path)
+                except Exception:
+                    pass
     committed["rotation"] = None
     store.write_json(state_path, committed)
     return {"recovered": True, "current_date": date}
@@ -432,8 +524,8 @@ def _cleanup_old_current(store: RcloneStore, target_date: str, next_managed: dic
     old_managed = rotation.get("previous_managed") or {}
     for variant in ("phone", "watch"):
         old = old_managed.get(variant) or {}
-        old_names = set(old.get("filenames", []))
-        new_names = set((next_managed.get(variant) or {}).get("filenames", []))
+        old_names = {record["filename"] for record in _managed_files(old)}
+        new_names = {record["filename"] for record in _managed_files(next_managed.get(variant) or {})}
         for filename in sorted(old_names - new_names):
             path = f"{variant}-current/{filename}"
             listing = _current_listing(store, variant)
@@ -445,14 +537,13 @@ def _verify_managed_current(store: RcloneStore, managed: dict[str, Any]) -> None
     for variant in ("phone", "watch"):
         item = managed.get(variant) or {}
         filenames = item.get("filenames") or []
-        if item and (len(filenames) != 1 or item.get("path") != f"{variant}-current/{filenames[0]}"):
+        if item and item.get("path") and (len(filenames) != 1 or item.get("path") != f"{variant}-current/{filenames[0]}"):
             raise RuntimeError("Rotation state contains an invalid managed-current path")
-        if len(filenames) > 1:
-            raise RuntimeError("Rotation state lists multiple managed current files for one variant")
-        for filename in filenames:
+        for record in _managed_files(item):
+            filename = record["filename"]
             if Path(filename).name != filename:
                 raise RuntimeError("Rotation state contains an unsafe current filename")
             raw = store.download_bytes(f"{variant}-current/{filename}")
-            expected = item.get("sha256")
+            expected = record["sha256"]
             if not re.fullmatch(r"[a-f0-9]{64}", str(expected or "")) or sha256(raw) != expected:
                 raise RuntimeError(f"Managed current wallpaper checksum mismatch: {variant}-current/{filename}")
