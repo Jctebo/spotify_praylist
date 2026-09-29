@@ -434,7 +434,14 @@ def rotate_current(store: RcloneStore, date: str) -> dict[str, Any]:
                     raise RuntimeError(f"Unmanaged file in {variant}-current; refusing rotation: {filename}")
             if filename in expected_managed_names.get(variant, set()):
                 recorded = next((record["sha256"] for record in _managed_files(managed.get(variant) or {}) if record["filename"] == filename), "")
-                raw = store.download_bytes(f"{variant}-current/{filename}")
+                try:
+                    raw = store.download_bytes(f"{variant}-current/{filename}")
+                except RuntimeError as exc:
+                    if not _is_missing_remote_error(exc):
+                        raise
+                    # A listed managed file can disappear between the initial
+                    # preflight and this listing-based integrity pass.
+                    continue
                 if recorded and sha256(raw) != recorded:
                     raise RuntimeError(f"Managed current wallpaper checksum changed: {variant}-current/{filename}")
         unknown = set(actual[variant]) - expected_managed_names.get(variant, set())
