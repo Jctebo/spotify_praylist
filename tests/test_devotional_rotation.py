@@ -62,6 +62,13 @@ def add_subject_set(store, date, subjects):
 
 
 class DevotionalRotationTests(unittest.TestCase):
+    def _seed_wenceslaus_transition(self):
+        store = MemoryStore()
+        add_subject_set(store, "2026-09-28", ("saint-wenceslaus",))
+        rotate_current(store, "2026-09-28")
+        add_subject_set(store, "2026-09-29", ("saint-wenceslaus",))
+        return store
+
     def test_first_rotation_promotes_both_and_replay_is_noop(self):
         store = MemoryStore()
         add_pair(store, "2026-10-01")
@@ -111,6 +118,85 @@ class DevotionalRotationTests(unittest.TestCase):
         self.assertEqual(store.files[".devotional_wallpapers/archive/2026-10-01/phone/holy-eucharist__2026-10-01.jpg"], b"phone")
         self.assertIn("phone-current/holy-eucharist__2026-10-02.jpg", store.files)
         self.assertNotIn("phone-queue/2026-10-02/holy-eucharist__2026-10-02.jpg", store.files)
+
+    def test_missing_previous_current_uses_checksum_verified_archive(self):
+        store = self._seed_wenceslaus_transition()
+        date = "2026-09-28"
+        filename = f"saint-wenceslaus__{date}.jpg"
+        watch = f"watch-current/{filename}"
+        archive = f".devotional_wallpapers/archive/{date}/watch/{filename}"
+        store.files[archive] = store.files.pop(watch)
+
+        result = rotate_current(store, "2026-09-29")
+
+        self.assertTrue(result["rotated"])
+        self.assertEqual(result["current_date"], "2026-09-29")
+        self.assertEqual(result["missing_previous_files"], [])
+        self.assertIn(archive, store.files)
+        self.assertIn("watch-current/saint-wenceslaus__2026-09-29.jpg", store.files)
+
+    def test_missing_previous_current_and_archive_do_not_block_due_pair(self):
+        store = self._seed_wenceslaus_transition()
+        date = "2026-09-28"
+        filename = f"saint-wenceslaus__{date}.jpg"
+        store.files.pop(f"watch-current/{filename}")
+
+        result = rotate_current(store, "2026-09-29")
+
+        self.assertTrue(result["rotated"])
+        self.assertEqual(result["current_date"], "2026-09-29")
+        self.assertEqual(result["missing_previous_files"], [f"watch-current/{filename}"])
+        self.assertIn(f".devotional_wallpapers/archive/{date}/phone/{filename}", store.files)
+        self.assertNotIn(f".devotional_wallpapers/archive/{date}/watch/{filename}", store.files)
+        self.assertIn("watch-current/saint-wenceslaus__2026-09-29.jpg", store.files)
+
+    def test_missing_previous_watch_waits_for_today_watch_then_promotes_matched_set(self):
+        store = self._seed_wenceslaus_transition()
+        old_filename = "saint-wenceslaus__2026-09-28.jpg"
+        today_filename = "saint-wenceslaus__2026-09-29.jpg"
+        store.files.pop(f"watch-current/{old_filename}")
+        store.files.pop(f"watch-queue/2026-09-29/{today_filename}")
+
+        before_watch_is_ready = rotate_current(store, "2026-09-29")
+
+        self.assertFalse(before_watch_is_ready["rotated"])
+        self.assertEqual(before_watch_is_ready["reason"], "today_subject_sets_incomplete")
+        self.assertEqual(store.json[".devotional_wallpapers/manifests/rotation-state.json"]["current_date"], "2026-09-28")
+        self.assertIn(f"phone-queue/2026-09-29/{today_filename}", store.files)
+
+        store.files[f"watch-queue/2026-09-29/{today_filename}"] = b"watch image created for missing slot"
+        after_watch_is_ready = rotate_current(store, "2026-09-29")
+
+        self.assertTrue(after_watch_is_ready["rotated"])
+        self.assertEqual(after_watch_is_ready["current_date"], "2026-09-29")
+        self.assertIn(f"phone-current/{today_filename}", store.files)
+        self.assertIn(f"watch-current/{today_filename}", store.files)
+
+    def test_missing_previous_current_with_conflicting_archive_still_fails_safely(self):
+        store = self._seed_wenceslaus_transition()
+        date = "2026-09-28"
+        filename = f"saint-wenceslaus__{date}.jpg"
+        store.files.pop(f"watch-current/{filename}")
+        store.files[f".devotional_wallpapers/archive/{date}/watch/{filename}"] = b"wrong bytes"
+        before = dict(store.files)
+
+        with self.assertRaisesRegex(RuntimeError, "archive conflicts with managed record"):
+            rotate_current(store, "2026-09-29")
+
+        self.assertEqual(store.files, before)
+
+    def test_missing_current_fallback_does_not_swallow_storage_errors(self):
+        store = self._seed_wenceslaus_transition()
+        original_download = store.download_bytes
+
+        def download(path):
+            if path == "watch-current/saint-wenceslaus__2026-09-28.jpg":
+                raise RuntimeError("rclone copyto failed: network timeout")
+            return original_download(path)
+
+        store.download_bytes = download
+        with self.assertRaisesRegex(RuntimeError, "network timeout"):
+            rotate_current(store, "2026-09-29")
 
     def test_unknown_current_file_blocks_without_deletion(self):
         store = MemoryStore()
