@@ -150,6 +150,27 @@ class DevotionalRotationTests(unittest.TestCase):
         self.assertNotIn(f".devotional_wallpapers/archive/{date}/watch/{filename}", store.files)
         self.assertIn("watch-current/saint-wenceslaus__2026-09-29.jpg", store.files)
 
+    def test_missing_previous_current_survives_listing_integrity_pass(self):
+        store = self._seed_wenceslaus_transition()
+        missing_path = "watch-current/saint-wenceslaus__2026-09-28.jpg"
+        store.files.pop(missing_path)
+        original_download = store.download_bytes
+        missing_reads = 0
+
+        def download(path):
+            nonlocal missing_reads
+            if path == missing_path:
+                missing_reads += 1
+                raise RuntimeError("rclone copyto failed: directory not found")
+            return original_download(path)
+
+        store.download_bytes = download
+        result = rotate_current(store, "2026-09-29")
+
+        self.assertTrue(result["rotated"])
+        self.assertGreaterEqual(missing_reads, 2)
+        self.assertEqual(result["current_date"], "2026-09-29")
+
     def test_missing_previous_watch_waits_for_today_watch_then_promotes_matched_set(self):
         store = self._seed_wenceslaus_transition()
         old_filename = "saint-wenceslaus__2026-09-28.jpg"
