@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.4.10.0] - 2026-09-29
+
+### Fixed
+- Rotation recovers when a prior phone or watch image is missing from OneDrive, verifying a dated archive copy when available and reporting the asset if both copies are gone.
+- Rotation leaves date-tagged assets queued until the matching phone and watch set is ready, and still stops on checksum conflicts or non-missing storage errors.
+
 ## [0.4.9.1] - 2026-09-28
 
 ### Changed
