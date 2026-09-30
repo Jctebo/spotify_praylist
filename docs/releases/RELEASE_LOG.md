@@ -1,5 +1,10 @@
 # Release Log
 
+## [0.4.11.0] - 2026-09-30
+
+### Changed
+- Future watch queue wallpapers keep a calm upper clock/date zone, preserve the large centered devotional subject, and place exact devotional labels at the bottom.
+
 ## [0.4.10.0] - 2026-09-29
 
 ### Fixed
