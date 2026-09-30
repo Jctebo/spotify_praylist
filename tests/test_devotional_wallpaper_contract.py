@@ -37,7 +37,9 @@ class WallpaperContractTests(unittest.TestCase):
         prompt = build_art_prompt(spec, "watch")
         self.assertIn("upper 35 percent", prompt)
         self.assertIn("Keep the devotional subject large, prominent, and centered", prompt)
-        self.assertIn("overlaid separately at the bottom of the image", prompt)
+        self.assertIn("overlaid separately at the bottom over the artwork", prompt)
+        self.assertIn("with no banner or fade behind them", prompt)
+        self.assertIn("lower 24 percent to nonessential robe, ground, or background detail", prompt)
         self.assertNotIn("Place the devotional subject and its face below", prompt)
         self.assertIn("every identity-defining symbol comfortably inside the centered circular safe area", prompt)
 

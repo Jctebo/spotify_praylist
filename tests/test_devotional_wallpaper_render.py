@@ -11,6 +11,9 @@ from PIL import Image
 from jobs.novena.devotional_image_contract import DailyImageSpec
 from jobs.novena.devotional_wallpaper_render import (
     WATCH_SAFE_RADIUS,
+    WATCH_LABEL_BOTTOM_MARGIN,
+    RENDER_VERSION,
+    WATCH_RENDER_VERSION,
     QAResult,
     _circular_chord_width,
     image_tool,
@@ -40,10 +43,27 @@ class WallpaperRenderTests(unittest.TestCase):
         recognize = lambda _image: ("", "OUR LADY OF THE ROSARY\nFEAST")
         self.assertTrue(validate_local_qa(phone, self.spec, "phone", recognize=recognize).approved)
 
+    def test_render_metadata_versions_watch_layout_without_relabeling_phone(self):
+        with (
+            patch("jobs.novena.devotional_wallpaper_render.generate_artwork", return_value=self.art),
+            patch("jobs.novena.devotional_wallpaper_render.validate_local_qa", return_value=QAResult(True, (), "", "")),
+            patch("jobs.novena.devotional_wallpaper_render.vision_qa", return_value={"approved": True, "issues": []}),
+        ):
+            _phone, phone_info = render_variant(
+                object(), self.spec, "phone", caller_model="caller", image_model="image", qa_model="review",
+            )
+            _watch, watch_info = render_variant(
+                object(), self.spec, "watch", caller_model="caller", image_model="image", qa_model="review",
+            )
+        self.assertEqual(phone_info["render_version"], "wallpaper-v1")
+        self.assertEqual(watch_info["render_version"], "wallpaper-v2")
+
     def test_circle_chord_contract_and_model_tool_sizes(self):
         self.assertLessEqual(_circular_chord_width(512, 512, WATCH_SAFE_RADIUS), 920)
         self.assertEqual(image_tool(variant="phone", model="image-model")["size"], "1152x2048")
         self.assertEqual(image_tool(variant="watch", model="image-model")["size"], "1024x1024")
+        self.assertEqual(RENDER_VERSION, "wallpaper-v1")
+        self.assertEqual(WATCH_RENDER_VERSION, "wallpaper-v2")
 
     def test_watch_labels_are_bottom_aligned_and_leave_upper_clock_space_clear(self):
         watch = overlay_wallpaper_text(self.art, self.spec, "watch")
@@ -59,8 +79,9 @@ class WallpaperRenderTests(unittest.TestCase):
                     if r > 190 and g > 175 and b > 150:
                         text_y.append(y)
             self.assertTrue(text_y)
-            self.assertGreaterEqual(min(text_y), 0.60 * image.height)
+            self.assertGreaterEqual(min(text_y), 0.67 * image.height)
             self.assertLessEqual(max(text_y), 0.97 * image.height)
+            self.assertLess(max(text_y), image.height - 70)
 
     def test_phone_title_stays_at_top(self):
         phone = overlay_wallpaper_text(self.art, self.spec, "phone")
@@ -83,6 +104,12 @@ class WallpaperRenderTests(unittest.TestCase):
         with Image.open(io.BytesIO(watch)) as image:
             self.assertEqual(image.size, (1024, 1024))
             self.assertEqual(image.format, "JPEG")
+            bright_y = [
+                y for y in range(image.height) for x in range(image.width)
+                if (lambda pixel: pixel[0] > 190 and pixel[1] > 175 and pixel[2] > 150)(image.getpixel((x, y)))
+            ]
+            self.assertTrue(bright_y)
+            self.assertLessEqual(max(bright_y), image.height - WATCH_LABEL_BOTTOM_MARGIN + 6)
 
     def test_local_qa_tolerates_minor_ocr_character_errors_but_checks_both_labels(self):
         spec = DailyImageSpec(
