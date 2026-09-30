@@ -6,13 +6,14 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from PIL import Image
+from PIL import Image, ImageChops
 
 from jobs.novena.devotional_image_contract import DailyImageSpec
 from jobs.novena.devotional_wallpaper_render import (
     WATCH_SAFE_RADIUS,
     WATCH_LABEL_BOTTOM_MARGIN,
     RENDER_VERSION,
+    WATCH_TEXT_LAYOUT,
     WATCH_RENDER_VERSION,
     QAResult,
     _circular_chord_width,
@@ -56,14 +57,17 @@ class WallpaperRenderTests(unittest.TestCase):
                 object(), self.spec, "watch", caller_model="caller", image_model="image", qa_model="review",
             )
         self.assertEqual(phone_info["render_version"], "wallpaper-v1")
-        self.assertEqual(watch_info["render_version"], "wallpaper-v2")
+        self.assertEqual(watch_info["render_version"], "wallpaper-v3")
 
     def test_circle_chord_contract_and_model_tool_sizes(self):
         self.assertLessEqual(_circular_chord_width(512, 512, WATCH_SAFE_RADIUS), 920)
         self.assertEqual(image_tool(variant="phone", model="image-model")["size"], "1152x2048")
         self.assertEqual(image_tool(variant="watch", model="image-model")["size"], "1024x1024")
         self.assertEqual(RENDER_VERSION, "wallpaper-v1")
-        self.assertEqual(WATCH_RENDER_VERSION, "wallpaper-v2")
+        self.assertEqual(WATCH_RENDER_VERSION, "wallpaper-v3")
+        self.assertEqual(WATCH_TEXT_LAYOUT.circle_inset, 130)
+        self.assertEqual(WATCH_TEXT_LAYOUT.title_short_ratio, 0.045)
+        self.assertEqual(WATCH_TEXT_LAYOUT.subtitle_size_ratio, 0.035)
 
     def test_watch_labels_are_bottom_aligned_and_leave_upper_clock_space_clear(self):
         watch = overlay_wallpaper_text(self.art, self.spec, "watch")
@@ -82,6 +86,21 @@ class WallpaperRenderTests(unittest.TestCase):
             self.assertGreaterEqual(min(text_y), 0.67 * image.height)
             self.assertLessEqual(max(text_y), 0.97 * image.height)
             self.assertLess(max(text_y), image.height - 70)
+
+    def test_watch_label_pixels_keep_extra_clearance_from_circular_corners(self):
+        watch = overlay_wallpaper_text(self.art, self.spec, "watch")
+        with Image.open(io.BytesIO(watch)) as image:
+            background = Image.new("RGB", image.size, (45, 56, 75))
+            mask = ImageChops.difference(image.convert("RGB"), background).convert("L")
+            mask = mask.point(lambda value: 255 if value >= 24 else 0)
+            for y in range(image.height):
+                row = mask.crop((0, y, image.width, y + 1)).getbbox()
+                if row is None:
+                    continue
+                chord = _circular_chord_width(y, 512, WATCH_SAFE_RADIUS)
+                edge = (image.width - chord) / 2
+                self.assertGreaterEqual(row[0], edge + 28)
+                self.assertLessEqual(row[2] - 1, image.width - edge - 28)
 
     def test_phone_title_stays_at_top(self):
         phone = overlay_wallpaper_text(self.art, self.spec, "phone")
