@@ -235,22 +235,31 @@ def overlay_wallpaper_text(
         title_size = int(image.width * 0.053)
         title_width = int(image.width * 0.88)
         circular = False
+        bottom_overlay = False
     else:
-        # A top vignette gives the larger, safely placed circular label enough contrast.
-        _safe_fade(image, 0, int(image.height * 0.35), opacity=150)
+        # The top stays clear for watch clock/date UI; only the bottom labels get contrast.
+        _safe_fade(image, int(image.height * 0.68), image.height, opacity=125)
         draw = ImageDraw.Draw(image)
-        title_top = int(image.height * 0.12)
+        title_top = int(image.height * 0.76)
         title_size = int(image.width * 0.077)
         title_width = int(image.width * 0.86)
         circular = True
+        bottom_overlay = True
+    subtitle = spec.image_subtitle
+    subtitle_gap = int(image.height * (0.012 if variant == "phone" else 0.018))
+    subtitle_size = int(image.width * (0.027 if variant == "phone" else 0.036))
+    subtitle_width = int(image.width * (0.84 if variant == "phone" else 0.78))
+    if bottom_overlay:
+        # Reserve the maximum two-line block for both labels so long text keeps its bottom margin.
+        bottom_margin = int(image.height * 0.07)
+        title_block_reserve = int(title_size * 2.45)
+        subtitle_block_reserve = int(subtitle_size * 2.45)
+        title_top = image.height - bottom_margin - subtitle_gap - subtitle_block_reserve - title_block_reserve
     title_h, _ = _draw_centered_label(
         draw, image, spec.title, top=title_top, base_size=title_size,
         max_width=title_width, circular=circular, tracking=0.2,
     )
-    subtitle = spec.image_subtitle
-    subtitle_top = title_top + title_h + int(image.height * (0.012 if variant == "phone" else 0.025))
-    subtitle_size = int(image.width * (0.027 if variant == "phone" else 0.042))
-    subtitle_width = int(image.width * (0.84 if variant == "phone" else 0.78))
+    subtitle_top = title_top + title_h + subtitle_gap
     _draw_centered_label(
         draw, image, subtitle, top=subtitle_top, base_size=subtitle_size,
         max_width=subtitle_width, circular=circular, tracking=0.35,
@@ -272,8 +281,8 @@ def ocr_text(image_bytes: bytes, *, tesseract_cmd: Optional[str] = None) -> tupl
             width, height = image.size
             if width == height:
                 margin = round(width * 0.05)
-                crop = image.crop((margin, round(height * 0.12), width - margin, round(height * 0.46)))
-                subtitle_crop = image.crop((round(width * 0.08), round(height * 0.26), round(width * 0.92), round(height * 0.40)))
+                crop = image.crop((margin, round(height * 0.70), width - margin, round(height * 0.97)))
+                subtitle_crop = image.crop((round(width * 0.08), round(height * 0.81), round(width * 0.92), round(height * 0.98)))
             else:
                 crop = image.crop((0, 0, width, round(height * 0.30)))
                 subtitle_crop = None
@@ -360,7 +369,10 @@ def vision_qa(client: Any, image_bytes: bytes, spec: DailyImageSpec, variant: st
         "{\"approved\": boolean, \"issues\": [string]}. Check that the scene depicts the named subject respectfully, "
         "anatomy and iconography are coherent, there is no unwanted lettering/logo/device UI, and composition suits "
         f"a {variant} wallpaper. The title/subtitle region must not overlap any face, head, halo, hair, or identity-defining "
-        f"part of the subject; for phone images the top 32% is text-only background. Explicitly inspect overlap and reject it. "
+        f"part of the subject; for phone images the top 32% is text-only background. For watch images inspect both layout zones: "
+        f"the upper 35% must stay visually calm for clock/date UI, and title/subtitle must appear at the bottom of the image "
+        f"inside the circular safe area. Keep the devotional subject large and centered between these areas. Explicitly inspect "
+        f"the top clock-safe space, bottom label placement, and overlap; reject violations. "
         f"Verify the exact spelling of locally overlaid title {spec.title!r} and subtitle "
         f"{spec.image_subtitle!r}. Do not reject stylized lettering unless the text is wrong, unclear, or clipped."
     )

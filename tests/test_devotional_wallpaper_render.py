@@ -45,6 +45,31 @@ class WallpaperRenderTests(unittest.TestCase):
         self.assertEqual(image_tool(variant="phone", model="image-model")["size"], "1152x2048")
         self.assertEqual(image_tool(variant="watch", model="image-model")["size"], "1024x1024")
 
+    def test_watch_labels_are_bottom_aligned_and_leave_upper_clock_space_clear(self):
+        watch = overlay_wallpaper_text(self.art, self.spec, "watch")
+        with Image.open(io.BytesIO(watch)) as image:
+            self.assertEqual(image.size, (1024, 1024))
+            # The test art is a flat color, so non-background pixels come from the label overlay.
+            pixels = image.convert("RGB")
+            text_y = []
+            for y in range(image.height):
+                for x in range(image.width):
+                    r, g, b = pixels.getpixel((x, y))
+                    # Bright ivory label glyphs stand out from both the flat art and dark fade.
+                    if r > 190 and g > 175 and b > 150:
+                        text_y.append(y)
+            self.assertTrue(text_y)
+            self.assertGreaterEqual(min(text_y), 0.60 * image.height)
+            self.assertLessEqual(max(text_y), 0.97 * image.height)
+
+    def test_phone_title_stays_at_top(self):
+        phone = overlay_wallpaper_text(self.art, self.spec, "phone")
+        with Image.open(io.BytesIO(phone)) as image:
+            self.assertEqual(image.size, (1080, 1920))
+            pixels = image.convert("RGB")
+            # Phone's existing title overlay remains in the top portion.
+            self.assertNotEqual(pixels.getpixel((image.width // 2, int(image.height * 0.06))), (45, 56, 75))
+
     def test_long_monthly_watch_label_fits_using_tracked_glyph_widths(self):
         spec = DailyImageSpec(
             __import__("datetime").date(2026, 9, 27),
@@ -164,8 +189,8 @@ class WallpaperRenderTests(unittest.TestCase):
             text, lines = ocr_text(self.art)
         self.assertEqual(text, "OUR LADY OF SORROWS SEPTEMBER DEVOTION")
         self.assertEqual(lines, "OUR LADY OF SORROWS\nSEPTEMBER DEVOTION")
-        self.assertEqual(observed_sizes[0], (922, 348))
-        self.assertEqual(observed_sizes[-2:], [(2580, 432), (2580, 432)])
+        self.assertEqual(observed_sizes[0], (922, 276))
+        self.assertEqual(observed_sizes[-2:], [(2580, 525), (2580, 525)])
         self.assertEqual(len(observed_sizes), 6)
 
     def test_ocr_focuses_a_separate_watch_subtitle_band(self):
@@ -173,7 +198,7 @@ class WallpaperRenderTests(unittest.TestCase):
 
         def fake_image_to_data(image, *, config, **_kwargs):
             observed_configs.append(config)
-            words = ["MEMORIAL"] if image.size == (2580, 432) else ["OUR", "LADY", "OF", "THE", "ROSARY"]
+            words = ["MEMORIAL"] if image.size == (2580, 525) else ["OUR", "LADY", "OF", "THE", "ROSARY"]
             return {
                 "text": words,
                 "block_num": [1] * len(words),
