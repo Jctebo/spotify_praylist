@@ -6,11 +6,15 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from PIL import Image
+from PIL import Image, ImageChops
 
 from jobs.novena.devotional_image_contract import DailyImageSpec
 from jobs.novena.devotional_wallpaper_render import (
     WATCH_SAFE_RADIUS,
+    WATCH_LABEL_BOTTOM_MARGIN,
+    RENDER_VERSION,
+    WATCH_TEXT_LAYOUT,
+    WATCH_RENDER_VERSION,
     QAResult,
     _circular_chord_width,
     image_tool,
@@ -40,10 +44,71 @@ class WallpaperRenderTests(unittest.TestCase):
         recognize = lambda _image: ("", "OUR LADY OF THE ROSARY\nFEAST")
         self.assertTrue(validate_local_qa(phone, self.spec, "phone", recognize=recognize).approved)
 
+    def test_render_metadata_versions_watch_layout_without_relabeling_phone(self):
+        with (
+            patch("jobs.novena.devotional_wallpaper_render.generate_artwork", return_value=self.art),
+            patch("jobs.novena.devotional_wallpaper_render.validate_local_qa", return_value=QAResult(True, (), "", "")),
+            patch("jobs.novena.devotional_wallpaper_render.vision_qa", return_value={"approved": True, "issues": []}),
+        ):
+            _phone, phone_info = render_variant(
+                object(), self.spec, "phone", caller_model="caller", image_model="image", qa_model="review",
+            )
+            _watch, watch_info = render_variant(
+                object(), self.spec, "watch", caller_model="caller", image_model="image", qa_model="review",
+            )
+        self.assertEqual(phone_info["render_version"], "wallpaper-v1")
+        self.assertEqual(watch_info["render_version"], "wallpaper-v3")
+
     def test_circle_chord_contract_and_model_tool_sizes(self):
         self.assertLessEqual(_circular_chord_width(512, 512, WATCH_SAFE_RADIUS), 920)
         self.assertEqual(image_tool(variant="phone", model="image-model")["size"], "1152x2048")
         self.assertEqual(image_tool(variant="watch", model="image-model")["size"], "1024x1024")
+        self.assertEqual(RENDER_VERSION, "wallpaper-v1")
+        self.assertEqual(WATCH_RENDER_VERSION, "wallpaper-v3")
+        self.assertEqual(WATCH_TEXT_LAYOUT.circle_inset, 130)
+        self.assertEqual(WATCH_TEXT_LAYOUT.title_short_ratio, 0.045)
+        self.assertEqual(WATCH_TEXT_LAYOUT.subtitle_size_ratio, 0.035)
+
+    def test_watch_labels_are_bottom_aligned_and_leave_upper_clock_space_clear(self):
+        watch = overlay_wallpaper_text(self.art, self.spec, "watch")
+        with Image.open(io.BytesIO(watch)) as image:
+            self.assertEqual(image.size, (1024, 1024))
+            # The test art is a flat color, so non-background pixels come from the label overlay.
+            pixels = image.convert("RGB")
+            text_y = []
+            for y in range(image.height):
+                for x in range(image.width):
+                    r, g, b = pixels.getpixel((x, y))
+                    # Bright ivory label glyphs stand out from both the flat art and dark fade.
+                    if r > 190 and g > 175 and b > 150:
+                        text_y.append(y)
+            self.assertTrue(text_y)
+            self.assertGreaterEqual(min(text_y), 0.67 * image.height)
+            self.assertLessEqual(max(text_y), 0.97 * image.height)
+            self.assertLess(max(text_y), image.height - 70)
+
+    def test_watch_label_pixels_keep_extra_clearance_from_circular_corners(self):
+        watch = overlay_wallpaper_text(self.art, self.spec, "watch")
+        with Image.open(io.BytesIO(watch)) as image:
+            background = Image.new("RGB", image.size, (45, 56, 75))
+            mask = ImageChops.difference(image.convert("RGB"), background).convert("L")
+            mask = mask.point(lambda value: 255 if value >= 24 else 0)
+            for y in range(image.height):
+                row = mask.crop((0, y, image.width, y + 1)).getbbox()
+                if row is None:
+                    continue
+                chord = _circular_chord_width(y, 512, WATCH_SAFE_RADIUS)
+                edge = (image.width - chord) / 2
+                self.assertGreaterEqual(row[0], edge + 28)
+                self.assertLessEqual(row[2] - 1, image.width - edge - 28)
+
+    def test_phone_title_stays_at_top(self):
+        phone = overlay_wallpaper_text(self.art, self.spec, "phone")
+        with Image.open(io.BytesIO(phone)) as image:
+            self.assertEqual(image.size, (1080, 1920))
+            pixels = image.convert("RGB")
+            # Phone's existing title overlay remains in the top portion.
+            self.assertNotEqual(pixels.getpixel((image.width // 2, int(image.height * 0.06))), (45, 56, 75))
 
     def test_long_monthly_watch_label_fits_using_tracked_glyph_widths(self):
         spec = DailyImageSpec(
@@ -58,6 +123,12 @@ class WallpaperRenderTests(unittest.TestCase):
         with Image.open(io.BytesIO(watch)) as image:
             self.assertEqual(image.size, (1024, 1024))
             self.assertEqual(image.format, "JPEG")
+            bright_y = [
+                y for y in range(image.height) for x in range(image.width)
+                if (lambda pixel: pixel[0] > 190 and pixel[1] > 175 and pixel[2] > 150)(image.getpixel((x, y)))
+            ]
+            self.assertTrue(bright_y)
+            self.assertLessEqual(max(bright_y), image.height - WATCH_LABEL_BOTTOM_MARGIN + 6)
 
     def test_local_qa_tolerates_minor_ocr_character_errors_but_checks_both_labels(self):
         spec = DailyImageSpec(
@@ -164,8 +235,8 @@ class WallpaperRenderTests(unittest.TestCase):
             text, lines = ocr_text(self.art)
         self.assertEqual(text, "OUR LADY OF SORROWS SEPTEMBER DEVOTION")
         self.assertEqual(lines, "OUR LADY OF SORROWS\nSEPTEMBER DEVOTION")
-        self.assertEqual(observed_sizes[0], (922, 348))
-        self.assertEqual(observed_sizes[-2:], [(2580, 432), (2580, 432)])
+        self.assertEqual(observed_sizes[0], (922, 276))
+        self.assertEqual(observed_sizes[-2:], [(2580, 525), (2580, 525)])
         self.assertEqual(len(observed_sizes), 6)
 
     def test_ocr_focuses_a_separate_watch_subtitle_band(self):
@@ -173,7 +244,7 @@ class WallpaperRenderTests(unittest.TestCase):
 
         def fake_image_to_data(image, *, config, **_kwargs):
             observed_configs.append(config)
-            words = ["MEMORIAL"] if image.size == (2580, 432) else ["OUR", "LADY", "OF", "THE", "ROSARY"]
+            words = ["MEMORIAL"] if image.size == (2580, 525) else ["OUR", "LADY", "OF", "THE", "ROSARY"]
             return {
                 "text": words,
                 "block_num": [1] * len(words),

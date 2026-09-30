@@ -22,9 +22,40 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 FONT_PATH = REPO_ROOT / "config" / "devotional_images" / "fonts" / "EBGaramond-Regular.ttf"
 REFERENCE_DIR = REPO_ROOT / "config" / "devotional_images" / "references"
 RENDER_VERSION = "wallpaper-v1"
+WATCH_RENDER_VERSION = "wallpaper-v3"
 OUTPUT_FORMAT = "JPEG"
 JPEG_QUALITY = 95
 WATCH_SAFE_RADIUS = 460
+WATCH_LABEL_BOTTOM_MARGIN = 100
+WATCH_LABEL_CIRCLE_INSET = 130
+
+
+@dataclass(frozen=True)
+class WatchTextLayout:
+    title_short_ratio: float
+    title_long_ratio: float
+    title_short_length: int
+    title_width_ratio: float
+    subtitle_gap_ratio: float
+    subtitle_size_ratio: float
+    subtitle_width_ratio: float
+    safe_radius: int
+    circle_inset: int
+    bottom_margin: int
+
+
+WATCH_TEXT_LAYOUT = WatchTextLayout(
+    title_short_ratio=0.045,
+    title_long_ratio=0.056,
+    title_short_length=28,
+    title_width_ratio=0.80,
+    subtitle_gap_ratio=0.015,
+    subtitle_size_ratio=0.035,
+    subtitle_width_ratio=0.76,
+    safe_radius=WATCH_SAFE_RADIUS,
+    circle_inset=WATCH_LABEL_CIRCLE_INSET,
+    bottom_margin=WATCH_LABEL_BOTTOM_MARGIN,
+)
 
 
 @dataclass(frozen=True)
@@ -145,6 +176,8 @@ def _draw_centered_label(
     base_size: int,
     max_width: int,
     circular: bool,
+    safe_radius: int = WATCH_SAFE_RADIUS,
+    circle_inset: int = WATCH_LABEL_CIRCLE_INSET,
     fill: tuple[int, int, int, int] = (255, 250, 237, 255),
     tracking: float = 1.0,
 ) -> tuple[int, int]:
@@ -153,8 +186,8 @@ def _draw_centered_label(
     def allowed_at(y: float, height: float) -> int:
         if not circular:
             return max_width
-        chord = _circular_chord_width(y + height / 2, 512, WATCH_SAFE_RADIUS)
-        return max(0, min(max_width, int(chord) - 24))
+        chord = _circular_chord_width(y + height / 2, 512, safe_radius)
+        return max(0, min(max_width, int(chord) - circle_inset))
 
     def rendered_width(line: str, active_font: ImageFont.FreeTypeFont) -> float:
         # Drawing advances each glyph separately to apply letter spacing, so use
@@ -187,7 +220,7 @@ def _draw_centered_label(
         if text_width > allowed_width:
             raise RuntimeError("Wallpaper text does not fit its device safe area")
         x = (image.width - text_width) / 2
-        # A quiet translucent shadow follows the text silhouette without placing a banner over the art.
+        # A quiet shadow and narrow outline follow the glyphs without placing a banner over the art.
         stroke = max(1, round(base_size / 42))
         cursor = x
         for char, advance in zip(line, widths):
@@ -216,6 +249,7 @@ def overlay_wallpaper_text(
     *,
     phone_size: tuple[int, int] = PHONE_SIZE,
     watch_size: tuple[int, int] = WATCH_SIZE,
+    watch_layout: WatchTextLayout = WATCH_TEXT_LAYOUT,
 ) -> bytes:
     final_size = watch_size if variant == "watch" else phone_size if variant == "phone" else None
     if final_size is None:
@@ -235,26 +269,101 @@ def overlay_wallpaper_text(
         title_size = int(image.width * 0.053)
         title_width = int(image.width * 0.88)
         circular = False
+        bottom_overlay = False
     else:
-        # A top vignette gives the larger, safely placed circular label enough contrast.
-        _safe_fade(image, 0, int(image.height * 0.35), opacity=150)
-        draw = ImageDraw.Draw(image)
-        title_top = int(image.height * 0.12)
-        title_size = int(image.width * 0.077)
-        title_width = int(image.width * 0.86)
+        # Keep the art unobstructed: contrast comes from the label glyphs alone.
+        title_top = int(image.height * 0.76)
+        # Short titles stay on one line lower in the circle; long titles get a
+        # larger two-line treatment and move up only as much as their real wraps need.
+        title_size = int(image.width * (
+            watch_layout.title_short_ratio
+            if len(spec.title) <= watch_layout.title_short_length
+            else watch_layout.title_long_ratio
+        ))
+        title_width = int(image.width * watch_layout.title_width_ratio)
         circular = True
-    title_h, _ = _draw_centered_label(
-        draw, image, spec.title, top=title_top, base_size=title_size,
-        max_width=title_width, circular=circular, tracking=0.2,
-    )
+        bottom_overlay = True
     subtitle = spec.image_subtitle
-    subtitle_top = title_top + title_h + int(image.height * (0.012 if variant == "phone" else 0.025))
-    subtitle_size = int(image.width * (0.027 if variant == "phone" else 0.042))
-    subtitle_width = int(image.width * (0.84 if variant == "phone" else 0.78))
-    _draw_centered_label(
-        draw, image, subtitle, top=subtitle_top, base_size=subtitle_size,
-        max_width=subtitle_width, circular=circular, tracking=0.35,
-    )
+    subtitle_gap = int(image.height * (0.012 if variant == "phone" else watch_layout.subtitle_gap_ratio))
+    subtitle_size = int(image.width * (0.027 if variant == "phone" else watch_layout.subtitle_size_ratio))
+    subtitle_width = int(image.width * (0.84 if variant == "phone" else watch_layout.subtitle_width_ratio))
+    if bottom_overlay:
+        # Search upward for the lowest subtitle placement whose real wraps fit
+        # above the bottom margin. Chord width changes with height, so a direct
+        # height correction can oscillate between one and two lines.
+        subtitle_bottom = image.height - watch_layout.bottom_margin
+        subtitle_top = None
+        subtitle_measure_layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
+        subtitle_measure_draw = ImageDraw.Draw(subtitle_measure_layer)
+        min_subtitle_top = max(0, subtitle_bottom - int(image.height * 0.18))
+        for candidate_top in range(subtitle_bottom - 1, min_subtitle_top, -2):
+            try:
+                subtitle_h, _ = _draw_centered_label(
+                    subtitle_measure_draw, subtitle_measure_layer, subtitle,
+                    top=candidate_top, base_size=subtitle_size, max_width=subtitle_width,
+                    circular=True, safe_radius=watch_layout.safe_radius,
+                    circle_inset=watch_layout.circle_inset, tracking=0.35,
+                )
+            except RuntimeError as exc:
+                if str(exc) in {
+                    "Wallpaper title/subtitle cannot fit in two lines",
+                    "Wallpaper text does not fit its device safe area",
+                }:
+                    continue
+                raise
+            if candidate_top + subtitle_h <= subtitle_bottom:
+                subtitle_top = candidate_top
+                break
+        if subtitle_top is None:
+            raise RuntimeError("Wallpaper subtitle does not fit inside the circular bottom safe area")
+        subtitle_layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
+        subtitle_layer_draw = ImageDraw.Draw(subtitle_layer)
+        final_subtitle_h, _ = _draw_centered_label(
+            subtitle_layer_draw, subtitle_layer, subtitle, top=subtitle_top, base_size=subtitle_size,
+            max_width=subtitle_width, circular=True, safe_radius=watch_layout.safe_radius,
+            circle_inset=watch_layout.circle_inset, tracking=0.35,
+        )
+        if subtitle_top + final_subtitle_h > image.height - watch_layout.bottom_margin + 6:
+            raise RuntimeError("Wallpaper subtitle does not keep the required bottom safe margin")
+
+        title_end = subtitle_top - subtitle_gap
+        title_top = None
+        measure_layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
+        measure_draw = ImageDraw.Draw(measure_layer)
+        min_title_top = max(0, title_end - int(image.height * 0.24))
+        for candidate_top in range(title_end - 1, min_title_top, -2):
+            title_h, _ = _draw_centered_label(
+                measure_draw, measure_layer, spec.title, top=candidate_top, base_size=title_size,
+                max_width=title_width, circular=True, safe_radius=watch_layout.safe_radius,
+                circle_inset=watch_layout.circle_inset, tracking=0.2,
+            )
+            if candidate_top + title_h <= title_end:
+                title_top = candidate_top
+                break
+        if title_top is None:
+            raise RuntimeError("Wallpaper title does not fit above its subtitle in the circular safe area")
+
+        title_layer = Image.new("RGBA", image.size, (0, 0, 0, 0))
+        title_layer_draw = ImageDraw.Draw(title_layer)
+        final_title_h, _ = _draw_centered_label(
+            title_layer_draw, title_layer, spec.title, top=title_top, base_size=title_size,
+            max_width=title_width, circular=True, safe_radius=watch_layout.safe_radius,
+            circle_inset=watch_layout.circle_inset, tracking=0.2,
+        )
+        if title_top + final_title_h > subtitle_top - subtitle_gap:
+            raise RuntimeError("Wallpaper title and subtitle overlap")
+        image.alpha_composite(title_layer)
+        image.alpha_composite(subtitle_layer)
+    else:
+        title_h, _ = _draw_centered_label(
+            draw, image, spec.title, top=title_top, base_size=title_size,
+            max_width=title_width, circular=circular, tracking=0.2,
+        )
+        subtitle_top = title_top + title_h + subtitle_gap
+        _draw_centered_label(
+            draw, image, subtitle, top=subtitle_top, base_size=subtitle_size,
+            max_width=subtitle_width, circular=circular, tracking=0.35,
+        )
     flattened = Image.new("RGB", image.size, (0, 0, 0))
     flattened.paste(image, mask=image.getchannel("A"))
     output = io.BytesIO()
@@ -272,8 +381,8 @@ def ocr_text(image_bytes: bytes, *, tesseract_cmd: Optional[str] = None) -> tupl
             width, height = image.size
             if width == height:
                 margin = round(width * 0.05)
-                crop = image.crop((margin, round(height * 0.12), width - margin, round(height * 0.46)))
-                subtitle_crop = image.crop((round(width * 0.08), round(height * 0.26), round(width * 0.92), round(height * 0.40)))
+                crop = image.crop((margin, round(height * 0.70), width - margin, round(height * 0.97)))
+                subtitle_crop = image.crop((round(width * 0.08), round(height * 0.81), round(width * 0.92), round(height * 0.98)))
             else:
                 crop = image.crop((0, 0, width, round(height * 0.30)))
                 subtitle_crop = None
@@ -359,8 +468,11 @@ def vision_qa(client: Any, image_bytes: bytes, spec: DailyImageSpec, variant: st
         "Inspect this finished Catholic devotional wallpaper. Return JSON only: "
         "{\"approved\": boolean, \"issues\": [string]}. Check that the scene depicts the named subject respectfully, "
         "anatomy and iconography are coherent, there is no unwanted lettering/logo/device UI, and composition suits "
-        f"a {variant} wallpaper. The title/subtitle region must not overlap any face, head, halo, hair, or identity-defining "
-        f"part of the subject; for phone images the top 32% is text-only background. Explicitly inspect overlap and reject it. "
+        f"a {variant} wallpaper. The title/subtitle region must not obscure any face, head, halo, hair, hands, gestures, rosary, or identity-defining "
+        f"part of the subject; for phone images the top 32% is text-only background. For watch images inspect both layout zones: "
+        f"the upper 35% must stay visually calm for clock/date UI, and title/subtitle must appear at the bottom of the image "
+        f"directly over the artwork without a broad fade/banner. Keep each caption line at least 60 pixels inside the 460-pixel circular boundary at its baseline so it remains clear of rounded screen corners. Keep the devotional subject large and centered between these areas; watch captions may sit over nonessential robe, ground, or background only. Explicitly inspect "
+        f"the top clock-safe space, bottom label placement, and overlap; reject violations. "
         f"Verify the exact spelling of locally overlaid title {spec.title!r} and subtitle "
         f"{spec.image_subtitle!r}. Do not reject stylized lettering unless the text is wrong, unclear, or clipped."
     )
@@ -465,7 +577,7 @@ def render_variant(
             "local_qa": asdict(local),
             "vision_qa": vision,
             "render_attempts": attempt + 1,
-            "render_version": RENDER_VERSION,
+            "render_version": WATCH_RENDER_VERSION if variant == "watch" else RENDER_VERSION,
             "dimensions": list(_output_size(variant)),
         }
     if rejected_path is not None:

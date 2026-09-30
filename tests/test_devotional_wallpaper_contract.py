@@ -35,8 +35,12 @@ class WallpaperContractTests(unittest.TestCase):
     def test_watch_prompt_reserves_title_area_and_keeps_subject_in_circle(self):
         spec = DailyImageSpec(dt.date(2026, 9, 30), "SAINT JEROME PRIEST AND DOCTOR", "MEMORIAL", "calendar", "")
         prompt = build_art_prompt(spec, "watch")
-        self.assertIn("upper 38 percent", prompt)
-        self.assertIn("Place the devotional subject and its face below that title area", prompt)
+        self.assertIn("upper 35 percent", prompt)
+        self.assertIn("Keep the devotional subject large, prominent, and centered", prompt)
+        self.assertIn("overlaid separately at the bottom over the artwork", prompt)
+        self.assertIn("with no banner or fade behind them", prompt)
+        self.assertIn("lower 24 percent to nonessential robe, ground, or background detail", prompt)
+        self.assertNotIn("Place the devotional subject and its face below", prompt)
         self.assertIn("every identity-defining symbol comfortably inside the centered circular safe area", prompt)
 
 

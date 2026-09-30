@@ -1,5 +1,12 @@
 # Release Log
 
+## [0.4.11.0] - 2026-09-30
+
+### Changed
+- Future watch queue wallpapers keep a calm upper clock/date zone, preserve the large centered devotional subject, and place exact devotional labels at the bottom.
+- Reflowed the ten existing watch-current/watch-queue photos with larger circle-safe captions after preserving byte-identical local backups.
+- Follow-up: increased typical caption sizing and added 60 pixels of side clearance from the watch circle edge, then refreshed the ten current/queued photos from cleaned artwork.
+
 ## [0.4.10.0] - 2026-09-29
 
 ### Fixed
