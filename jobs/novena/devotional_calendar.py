@@ -53,6 +53,22 @@ class CalendarResolution:
     covered_through: Optional[dt.date]
     feed_checksum: str
     missing_dates: tuple[dt.date, ...]
+    unclassified_events: tuple["UnclassifiedCalendarItem", ...] = ()
+
+
+@dataclass(frozen=True)
+class UnclassifiedCalendarItem:
+    date: dt.date
+    summary: str
+
+
+class UnclassifiedCalendarEvent(RuntimeError):
+    """An event whose entry should be skipped by wallpaper generation."""
+
+    def __init__(self, date: dt.date, summary: str):
+        super().__init__(f"Unclassified devotional calendar event on {date.isoformat()}: {summary}")
+        self.date = date
+        self.summary = summary
 
 
 def fetch_calendar(url: str, *, session: Any = requests, now: Optional[dt.datetime] = None) -> CalendarSnapshot:
@@ -247,7 +263,7 @@ def _event_spec(event: Any, target_date: dt.date) -> Optional[DailyImageSpec]:
         # Liturgical weekday and Sunday context events are not wallpaper subjects.
         if _is_context_event(event) and not _has_named_context_suffix(raw_summary):
             return None
-        raise RuntimeError(f"Unclassified devotional calendar event on {target_date.isoformat()}")
+        raise UnclassifiedCalendarEvent(target_date, raw_summary)
     title = sequence_subject.upper() if sequence_subject else _title_from_event(raw_summary, fields)
     if not title:
         raise RuntimeError(f"Calendar event on {target_date.isoformat()} has no usable display title")
@@ -345,6 +361,7 @@ def resolve_calendar(
     by_date: dict[dt.date, list[DailyImageSpec]] = {d: [] for d in targets}
     represented_dates: set[dt.date] = set()
     context_dates: set[dt.date] = set()
+    unclassified_events: list[UnclassifiedCalendarItem] = []
     seen: set[tuple[str, str, dt.date]] = set()
     target_set = set(targets)
     for event in occurrences:
@@ -359,7 +376,11 @@ def resolve_calendar(
         if identity in seen:
             continue
         seen.add(identity)
-        spec = _event_spec(event, start_date)
+        try:
+            spec = _event_spec(event, start_date)
+        except UnclassifiedCalendarEvent as exc:
+            unclassified_events.append(UnclassifiedCalendarItem(exc.date, exc.summary))
+            continue
         if spec is not None:
             by_date[start_date].append(spec)
         by_date[start_date].extend(_description_specs(event, start_date))
@@ -394,4 +415,5 @@ def resolve_calendar(
         covered_through=None,
         feed_checksum=hashlib.sha256(body).hexdigest(),
         missing_dates=tuple(d for d in targets if d not in represented_dates),
+        unclassified_events=tuple(unclassified_events),
     )

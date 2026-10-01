@@ -16,6 +16,9 @@ class DevotionalWallpaperWorkflowTests(unittest.TestCase):
         self.assertNotIn("pages: write", text)
         self.assertNotIn("deploy-pages", text)
         self.assertIn("python jobs/novena/generate_devotional_wallpapers.py", text)
+        self.assertIn("if: always()", text)
+        self.assertIn("path: artifacts/devotional-wallpapers/", text)
+        self.assertIn("retention-days: 30", text)
 
     def test_legacy_pipelines_remain_unchanged_vs_base(self):
         import subprocess
