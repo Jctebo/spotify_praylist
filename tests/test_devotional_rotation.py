@@ -193,18 +193,32 @@ class DevotionalRotationTests(unittest.TestCase):
         self.assertIn(f"phone-current/{today_filename}", store.files)
         self.assertIn(f"watch-current/{today_filename}", store.files)
 
-    def test_missing_previous_current_with_conflicting_archive_still_fails_safely(self):
+    def test_missing_previous_current_with_stale_archive_does_not_block_rotation(self):
         store = self._seed_wenceslaus_transition()
         date = "2026-09-28"
         filename = f"saint-wenceslaus__{date}.jpg"
         store.files.pop(f"watch-current/{filename}")
         store.files[f".devotional_wallpapers/archive/{date}/watch/{filename}"] = b"wrong bytes"
-        before = dict(store.files)
+        result = rotate_current(store, "2026-09-29")
 
-        with self.assertRaisesRegex(RuntimeError, "archive conflicts with managed record"):
-            rotate_current(store, "2026-09-29")
+        self.assertTrue(result["rotated"])
+        self.assertIn("phone-current/saint-wenceslaus__2026-09-29.jpg", store.files)
+        self.assertIn("watch-current/saint-wenceslaus__2026-09-29.jpg", store.files)
 
-        self.assertEqual(store.files, before)
+    def test_changed_managed_current_is_archived_and_new_date_promoted(self):
+        store = self._seed_wenceslaus_transition()
+        old_watch = "watch-current/saint-wenceslaus__2026-09-28.jpg"
+        store.files[old_watch] = b"watch bytes changed outside rotation"
+
+        result = rotate_current(store, "2026-09-29")
+
+        self.assertTrue(result["rotated"])
+        self.assertEqual(
+            store.files[".devotional_wallpapers/archive/2026-09-28/watch/saint-wenceslaus__2026-09-28.jpg"],
+            b"watch bytes changed outside rotation",
+        )
+        self.assertEqual(store.files["watch-current/saint-wenceslaus__2026-09-29.jpg"], b"watch-saint-wenceslaus")
+        self.assertNotIn(old_watch, store.files)
 
     def test_missing_current_fallback_does_not_swallow_storage_errors(self):
         store = self._seed_wenceslaus_transition()

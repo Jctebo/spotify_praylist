@@ -1,5 +1,10 @@
 # Release Log
 
+## [0.4.13.0] - 2026-10-01
+
+### Fixed
+- Allow wallpaper rotation to archive the actual managed current file and promote the queued date even when the old file no longer matches a stale checksum in rotation state.
+
 ## [0.4.12.0] - 2026-10-01
 
 ### Fixed
