@@ -187,7 +187,7 @@ class WallpaperRenderTests(unittest.TestCase):
         result = validate_local_qa(final, spec, "watch", recognize=lambda _image: (recognized, recognized))
         self.assertTrue(result.approved)
 
-    def test_rejected_render_is_saved_locally_for_inspection(self):
+    def test_last_render_is_saved_and_returned_when_qa_rejects_all_attempts(self):
         with tempfile.TemporaryDirectory() as directory:
             rejected = Path(directory) / ".rejected" / "watch.jpg"
             expected = b"rejected final render"
@@ -199,12 +199,16 @@ class WallpaperRenderTests(unittest.TestCase):
                     return_value=QAResult(False, ("bad title",), "", ""),
                 ),
             ):
-                with self.assertRaisesRegex(RuntimeError, "bad title"):
-                    render_variant(
-                        object(), self.spec, "watch", caller_model="caller", image_model="image",
-                        qa_model="review", rejected_path=rejected,
-                    )
+                final, qa = render_variant(
+                    object(), self.spec, "watch", caller_model="caller", image_model="image",
+                    qa_model="review", rejected_path=rejected,
+                )
             self.assertEqual(rejected.read_bytes(), expected)
+            self.assertEqual(final, expected)
+            self.assertFalse(qa["approved"])
+            self.assertTrue(qa["fallback_used"])
+            self.assertEqual(qa["fallback_stage"], "local_qa")
+            self.assertEqual(qa["render_attempts"], 3)
 
     def test_local_qa_rejects_missing_title_and_invalid_image(self):
         final = overlay_wallpaper_text(self.art, self.spec, "watch")

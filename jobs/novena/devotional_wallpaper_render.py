@@ -551,6 +551,9 @@ def render_variant(
 ) -> tuple[bytes, dict[str, Any]]:
     feedback = ""
     last_final = b""
+    last_local: Optional[QAResult] = None
+    last_vision: Optional[dict[str, Any]] = None
+    fallback_stage = "local_qa"
     for attempt in range(3):
         raw = generate_artwork(
             client, spec, variant, caller_model=caller_model, image_model=image_model,
@@ -559,15 +562,19 @@ def render_variant(
         final = overlay_wallpaper_text(raw, spec, variant)
         last_final = final
         local = validate_local_qa(final, spec, variant, recognize=lambda data: ocr_text(data, tesseract_cmd=tesseract_cmd))
+        last_local = local
         if not local.approved:
             feedback = "; ".join(local.issues)
+            fallback_stage = "local_qa"
             if attempt < 2:
                 continue
             issues = feedback
             break
         vision = vision_qa(client, final, spec, variant, model=qa_model)
+        last_vision = vision
         if not vision["approved"]:
             feedback = "; ".join(vision["issues"] or ["unapproved image"])
+            fallback_stage = "vision_qa"
             if attempt < 2:
                 continue
             issues = feedback
@@ -583,4 +590,18 @@ def render_variant(
     if rejected_path is not None:
         rejected_path.parent.mkdir(parents=True, exist_ok=True)
         rejected_path.write_bytes(last_final)
-    raise RuntimeError("Wallpaper QA rejected all three renders: " + issues)
+    if fallback_stage == "local_qa":
+        fallback_issues = list(last_local.issues) if last_local else [issues]
+    else:
+        fallback_issues = list(last_vision.get("issues", [])) if last_vision else [issues]
+    return last_final, {
+        "approved": False,
+        "fallback_used": True,
+        "fallback_stage": fallback_stage,
+        "issues": fallback_issues,
+        "local_qa": asdict(last_local) if last_local else None,
+        "vision_qa": last_vision,
+        "render_attempts": 3,
+        "render_version": WATCH_RENDER_VERSION if variant == "watch" else RENDER_VERSION,
+        "dimensions": list(_output_size(variant)),
+    }
