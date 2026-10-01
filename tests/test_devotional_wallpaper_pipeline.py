@@ -115,7 +115,7 @@ class PipelineOrchestrationTests(unittest.TestCase):
             {"date": date.isoformat(), "summary": "Unrecognized calendar note"},
         ])
 
-    def test_generation_renders_valid_same_day_entry_and_skips_unclassified_entry(self):
+    def test_generation_delivers_last_qa_rejected_render_and_completes_with_warning(self):
         date = self.date
         valid_spec = DailyImageSpec(date, "THE BLESSED VIRGIN MARY", "MEMORIAL", "calendar", "")
         resolution = CalendarResolution(
@@ -147,7 +147,10 @@ class PipelineOrchestrationTests(unittest.TestCase):
              patch.object(pipeline, "fetch_calendar", return_value=SimpleNamespace(body=b"calendar")), \
              patch.object(pipeline, "resolve_calendar", return_value=resolution), \
              patch.object(pipeline, "_provider", return_value=object()), \
-             patch.object(pipeline, "render_variant", return_value=(b"fake-jpeg", {"approved": True})), \
+             patch.object(pipeline, "render_variant", return_value=(b"fake-jpeg", {
+                 "approved": False, "fallback_used": True, "fallback_stage": "local_qa",
+                 "issues": ["OCR did not confirm exact title"],
+             })), \
              patch.object(pipeline, "deliver_missing_asset", side_effect=deliver), \
              patch.object(pipeline, "_persist_remote_state"), \
              patch.object(pipeline, "_load_remote_state", return_value={"schema": 1, "run_id": "a" * 20, "assets": {}}), \
@@ -156,7 +159,9 @@ class PipelineOrchestrationTests(unittest.TestCase):
             self.assertEqual(pipeline.run_pipeline(self.args), 0)
         self.assertEqual(rendered, [("THE BLESSED VIRGIN MARY", "phone"), ("THE BLESSED VIRGIN MARY", "watch")])
         report = json.loads((self.args.artifact_dir / "resolve-report.json").read_text(encoding="utf-8"))
-        self.assertEqual(report["status"], "complete")
+        self.assertEqual(report["status"], "complete_with_warnings")
+        self.assertEqual(report["quality_fallbacks"][0]["qa"]["fallback_used"], True)
+        self.assertEqual(report["quality_fallbacks"][0]["qa"]["issues"], ["OCR did not confirm exact title"])
         self.assertEqual(report["unclassified_events_skipped"][0]["summary"], "Unrecognized calendar note")
 
     def test_main_writes_run_status_artifact_when_pipeline_fails(self):

@@ -1,5 +1,10 @@
 # Release Log
 
+## [0.4.14.0] - 2026-10-01
+
+### Changed
+- Wallpaper rendering now delivers the third candidate after three QA rejections, records the QA warning in run artifacts, and completes the run when no assets remain missing.
+
 ## [0.4.13.0] - 2026-10-01
 
 ### Fixed

@@ -412,14 +412,20 @@ def run_pipeline(args: argparse.Namespace) -> int:
         if not any(a.subject == build_filename(spec, variant).split("__", 1)[0] for a in assets_for_date(final_inventory, date.isoformat())[variant])
     ]
     report = _resolution_report(start_date, dates, resolution)
-    report["status"] = "complete" if not remaining else "incomplete"
+    quality_fallbacks = [
+        {"asset_key": key, "qa": item["qa"]}
+        for key, item in manifest["assets"].items()
+        if item.get("qa", {}).get("fallback_used")
+    ]
+    report["status"] = "incomplete" if remaining else "complete_with_warnings" if quality_fallbacks else "complete"
     report["run_id"] = run_id
     report["rotation"] = final_rotation
     report["remaining_missing_assets"] = remaining
+    report["quality_fallbacks"] = quality_fallbacks
     report["finished_at"] = manifest["finished_at"]
     _write_json_atomic(args.artifact_dir / "resolve-report.json", report)
     summary = {
-        "status": "complete" if not remaining else "incomplete",
+        "status": "incomplete" if remaining else "complete_with_warnings" if quality_fallbacks else "complete",
         "run_id": run_id,
         "window_start": start_date.isoformat(),
         "window_end": dates[-1].isoformat(),
@@ -428,6 +434,7 @@ def run_pipeline(args: argparse.Namespace) -> int:
         "existing_slots": manifest["existing"],
         "newly_delivered": sum(1 for item in manifest["assets"].values() if item.get("state") == "delivered_verified"),
         "missing_assets": remaining,
+        "quality_fallbacks": quality_fallbacks,
         "calendar_unavailable_dates": manifest["missing_dates_without_calendar_events"],
         "calendar_unclassified_events_skipped": manifest["calendar_unclassified_events_skipped"],
     }
