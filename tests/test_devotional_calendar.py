@@ -58,9 +58,43 @@ class DevotionalCalendarTests(unittest.TestCase):
         self.assertEqual(sequence.title, "OUR LADY OF THE ROSARY")
         self.assertEqual((sequence.sequence_kind, sequence.sequence_day), ("TRIDUUM", 1))
 
-    def test_unclassified_non_context_event_fails_closed(self):
-        with self.assertRaisesRegex(RuntimeError, "Unclassified"):
-            resolve_calendar(calendar_bytes([("2026-10-03", "Something unrelated")]), [dt.date(2026, 10, 3)])
+    def test_unclassified_event_is_skipped_without_aborting_window(self):
+        result = resolve_calendar(
+            calendar_bytes([
+                ("2026-10-03", "Something unrelated"),
+                ("2026-10-04", "[F] Saint Example, Feast"),
+            ]),
+            [dt.date(2026, 10, 3), dt.date(2026, 10, 4)],
+        )
+        self.assertNotIn(dt.date(2026, 10, 3), result.specs)
+        self.assertEqual(result.specs[dt.date(2026, 10, 4)][0].title, "SAINT EXAMPLE")
+        self.assertEqual(result.unclassified_events[0].date, dt.date(2026, 10, 3))
+        self.assertEqual(result.unclassified_events[0].summary, "Something unrelated")
+
+    def test_unclassified_entry_does_not_discard_blessed_virgin_mary_entry_same_day(self):
+        date = dt.date(2026, 10, 10)
+        result = resolve_calendar(
+            calendar_bytes([
+                ("2026-10-10", "[m] The Blessed Virgin Mary, Memorial"),
+                ("2026-10-10", "Unrecognized calendar note"),
+            ]),
+            [date],
+        )
+        self.assertEqual([spec.title for spec in result.specs[date]], ["THE BLESSED VIRGIN MARY"])
+        self.assertEqual(len(result.unclassified_events), 1)
+        self.assertEqual(result.unclassified_events[0].summary, "Unrecognized calendar note")
+
+    def test_invalid_explicit_calendar_metadata_still_fails_the_resolution(self):
+        lines = [
+            "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Test//Devotion//EN", "BEGIN:VEVENT",
+            "UID:bad-metadata", "DTSTART;VALUE=DATE:20261003", "DTEND;VALUE=DATE:20261004",
+            "SUMMARY:Saint Example",
+            "DESCRIPTION:[DEVOTIONAL-IMAGE] include: maybe [/DEVOTIONAL-IMAGE]",
+            "END:VEVENT", "END:VCALENDAR",
+        ]
+        body = ("\r\n".join(lines) + "\r\n").encode()
+        with self.assertRaisesRegex(RuntimeError, "include must be true or false"):
+            resolve_calendar(body, [dt.date(2026, 10, 3)])
 
     def test_keeps_primary_and_every_named_additional_observance(self):
         lines = [

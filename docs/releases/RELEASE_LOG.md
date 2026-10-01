@@ -1,5 +1,10 @@
 # Release Log
 
+## [0.4.12.0] - 2026-10-01
+
+### Fixed
+- Wallpaper runs skip only unclassified calendar entries, keep recognized observances on the same date eligible for generation, and upload diagnostics that record skipped entries and run failures.
+
 ## [0.4.11.0] - 2026-09-30
 
 ### Changed

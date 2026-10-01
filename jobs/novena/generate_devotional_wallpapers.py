@@ -85,6 +85,27 @@ def _spec_dict(spec: DailyImageSpec) -> dict[str, Any]:
     }
 
 
+def _resolution_report(start_date: dt.date, dates: list[dt.date], resolution: CalendarResolution) -> dict[str, Any]:
+    return {
+        "schema": 1,
+        "status": "resolved",
+        "run_date": start_date.isoformat(),
+        "window": [date.isoformat() for date in dates],
+        "feed_checksum": resolution.feed_checksum,
+        "covered_through": resolution.covered_through.isoformat() if resolution.covered_through else None,
+        "specs": [_spec_dict(spec) for specs in resolution.specs.values() for spec in specs],
+        "missing_dates": [date.isoformat() for date in resolution.missing_dates],
+        "unclassified_events_skipped": [
+            {"date": event.date.isoformat(), "summary": event.summary}
+            for event in resolution.unclassified_events
+        ],
+    }
+
+
+def _write_resolution_report(args: argparse.Namespace, start_date: dt.date, dates: list[dt.date], resolution: CalendarResolution) -> None:
+    _write_json_atomic(args.artifact_dir / "resolve-report.json", _resolution_report(start_date, dates, resolution))
+
+
 def _run_id(start: dt.date, end: dt.date, feed_checksum: str) -> str:
     raw = f"{start.isoformat()}:{end.isoformat()}:{feed_checksum}"
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:20]
@@ -147,18 +168,13 @@ def _run_local_only(args: argparse.Namespace, start_date: dt.date, dates: list[d
     snapshot = fetch_calendar(calendar_url)
     resolution = resolve_calendar(snapshot.body, dates)
     args.artifact_dir.mkdir(parents=True, exist_ok=True)
+    _write_resolution_report(args, start_date, dates, resolution)
     if args.resolve_only:
-        report = {
-            "run_date": start_date.isoformat(),
-            "window": [d.isoformat() for d in dates],
-            "feed_checksum": resolution.feed_checksum,
-            "covered_through": resolution.covered_through.isoformat() if resolution.covered_through else None,
-            "specs": [_spec_dict(spec) for specs in resolution.specs.values() for spec in specs],
-            "missing_dates": [d.isoformat() for d in resolution.missing_dates],
-            "delivery": "disabled",
-        }
+        report = _resolution_report(start_date, dates, resolution)
+        report["delivery"] = "disabled"
         _write_json_atomic(args.artifact_dir / "resolve-report.json", report)
-        print(json.dumps({"status": "resolved", "dates": len(resolution.specs), "missing_dates": len(resolution.missing_dates)}))
+        print(json.dumps({"status": "resolved", "dates": len(resolution.specs), "missing_dates": len(resolution.missing_dates),
+                          "unclassified_events_skipped": len(resolution.unclassified_events)}))
         return 0
     client = _provider()
     image_model = os.getenv("DEVOTIONAL_WALLPAPER_IMAGE_MODEL", "gpt-image-2")
@@ -203,6 +219,8 @@ def run_pipeline(args: argparse.Namespace) -> int:
     if args.resolve_only:
         snapshot = fetch_calendar(os.getenv("DEVOTIONAL_ICS_URL", "").strip())
         resolution = resolve_calendar(snapshot.body, dates)
+        args.artifact_dir.mkdir(parents=True, exist_ok=True)
+        _write_resolution_report(args, start_date, dates, resolution)
         inventory = inventory_assets(RcloneStore(RcloneConfig.from_env(executable=args.rclone_exe)))
         date_variants = {d.isoformat(): assets_for_date(inventory, d.isoformat()) for d in dates}
         missing_slots = []
@@ -220,6 +238,10 @@ def run_pipeline(args: argparse.Namespace) -> int:
             "missing_asset_keys": missing_slots,
             "specs": [_spec_dict(spec) for specs in resolution.specs.values() for spec in specs],
             "calendar_absent_dates_skipped": [d.isoformat() for d in resolution.missing_dates],
+            "calendar_unclassified_events_skipped": [
+                {"date": event.date.isoformat(), "summary": event.summary}
+                for event in resolution.unclassified_events
+            ],
         }, ensure_ascii=False))
         return 0
 
@@ -242,6 +264,8 @@ def run_pipeline(args: argparse.Namespace) -> int:
     date_variants = {d.isoformat(): assets_for_date(inventory, d.isoformat()) for d in dates}
     snapshot = fetch_calendar(os.getenv("DEVOTIONAL_ICS_URL", "").strip())
     resolution = resolve_calendar(snapshot.body, dates)
+    args.artifact_dir.mkdir(parents=True, exist_ok=True)
+    _write_resolution_report(args, start_date, dates, resolution)
     rotation = rotate_current(store, actual_today.isoformat())
     missing_slots: list[tuple[dt.date, DailyImageSpec, str]] = []
     for date, specs in resolution.specs.items():
@@ -259,10 +283,19 @@ def run_pipeline(args: argparse.Namespace) -> int:
         "existing": sum(len(date_variants[d.isoformat()][v]) for d in dates for v in ("phone", "watch")),
         "missing_dates": sorted({date.isoformat() for date, _spec, _variant in missing_slots}),
         "missing_asset_keys": [_key(date, spec, variant) for date, spec, variant in missing_slots],
+        "calendar_unclassified_events_skipped": [
+            {"date": event.date.isoformat(), "summary": event.summary}
+            for event in resolution.unclassified_events
+        ],
         "assets": {},
     }
     if not missing_slots:
         final_rotation = rotate_current(store, actual_today.isoformat())
+        report = _resolution_report(start_date, dates, resolution)
+        report["status"] = "complete_no_generation_needed"
+        report["rotation"] = final_rotation
+        report["finished_at"] = dt.datetime.now(dt.timezone.utc).isoformat()
+        _write_json_atomic(args.artifact_dir / "resolve-report.json", report)
         print(json.dumps({"status": "complete_no_generation_needed", **{k: manifest[k] for k in ("run_date", "window_start", "window_end", "existing")}, "rotation": final_rotation}))
         return 0
 
@@ -286,6 +319,10 @@ def run_pipeline(args: argparse.Namespace) -> int:
     manifest["missing_dates_without_calendar_events"] = [d.isoformat() for d in resolution.missing_dates]
     expected_dates = resolution.specs
     manifest["calendar_absent_dates_skipped"] = [d.isoformat() for d in resolution.missing_dates]
+    manifest["calendar_unclassified_events_skipped"] = [
+        {"date": event.date.isoformat(), "summary": event.summary}
+        for event in resolution.unclassified_events
+    ]
     manifest["missing_dates"] = [d.isoformat() for d in sorted({d for d, _spec, _variant in missing_slots})]
     client = None
     for missing_date, spec, variant in missing_slots:
@@ -374,6 +411,13 @@ def run_pipeline(args: argparse.Namespace) -> int:
         for variant in ("phone", "watch")
         if not any(a.subject == build_filename(spec, variant).split("__", 1)[0] for a in assets_for_date(final_inventory, date.isoformat())[variant])
     ]
+    report = _resolution_report(start_date, dates, resolution)
+    report["status"] = "complete" if not remaining else "incomplete"
+    report["run_id"] = run_id
+    report["rotation"] = final_rotation
+    report["remaining_missing_assets"] = remaining
+    report["finished_at"] = manifest["finished_at"]
+    _write_json_atomic(args.artifact_dir / "resolve-report.json", report)
     summary = {
         "status": "complete" if not remaining else "incomplete",
         "run_id": run_id,
@@ -385,6 +429,7 @@ def run_pipeline(args: argparse.Namespace) -> int:
         "newly_delivered": sum(1 for item in manifest["assets"].values() if item.get("state") == "delivered_verified"),
         "missing_assets": remaining,
         "calendar_unavailable_dates": manifest["missing_dates_without_calendar_events"],
+        "calendar_unclassified_events_skipped": manifest["calendar_unclassified_events_skipped"],
     }
     print(json.dumps(summary, ensure_ascii=False))
     return 0 if not remaining else 2
@@ -409,8 +454,27 @@ def main() -> int:
         print("ERROR --dry-run-rotation cannot be combined with other modes", file=sys.stderr)
         return 2
     try:
-        return run_pipeline(args)
+        args.artifact_dir.mkdir(parents=True, exist_ok=True)
+        run_status_path = args.artifact_dir / "run-status.json"
+        _write_json_atomic(run_status_path, {
+            "schema": 1,
+            "status": "started",
+            "run_date": args.run_date or local_today().isoformat(),
+            "mode": "rotate-only" if args.rotate_only else "dry-run-rotation" if args.dry_run_rotation else "resolve-only" if args.resolve_only else "local-only" if args.skip_delivery else "generate",
+        })
+        result = run_pipeline(args)
+        status = json.loads(run_status_path.read_text(encoding="utf-8"))
+        status.update({"status": "completed" if result == 0 else "incomplete", "exit_code": result})
+        _write_json_atomic(run_status_path, status)
+        return result
     except Exception as exc:
+        try:
+            run_status_path = args.artifact_dir / "run-status.json"
+            status = json.loads(run_status_path.read_text(encoding="utf-8")) if run_status_path.exists() else {"schema": 1}
+            status.update({"status": "failed", "error_type": type(exc).__name__, "error": str(exc)})
+            _write_json_atomic(run_status_path, status)
+        except Exception as artifact_exc:
+            print(f"ERROR unable to write run diagnostics ({type(artifact_exc).__name__})", file=sys.stderr)
         print(f"ERROR {type(exc).__name__}: {exc}", file=sys.stderr)
         return 1
 
