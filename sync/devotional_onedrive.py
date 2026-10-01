@@ -310,7 +310,6 @@ def _archive_current_pair(store: RcloneStore, date: str, managed: dict[str, dict
         for record in _managed_files(item):
             filename = record["filename"]
             source = f"{variant}-current/{filename}"
-            expected = str(record["sha256"])
             target = f"{WALLPAPER_ROOT}/archive/{date}/{variant}/{filename}"
             try:
                 current = store.download_bytes(source)
@@ -327,22 +326,19 @@ def _archive_current_pair(store: RcloneStore, date: str, managed: dict[str, dict
                     # Both copies are already absent; stale manifest state must not
                     # block promotion of a complete set for the target date.
                     continue
-                if sha256(archived) != expected:
-                    raise RuntimeError(f"Existing wallpaper archive conflicts with managed record: {target}")
                 continue
-            if sha256(current) != expected:
-                raise RuntimeError(f"Managed current wallpaper checksum changed before archive: {source}")
+            current_sha = sha256(current)
             try:
                 archived = store.download_bytes(target)
             except RuntimeError as exc:
                 if not _is_missing_remote_error(exc):
                     raise
             else:
-                if sha256(archived) != expected:
+                if sha256(archived) != current_sha:
                     raise RuntimeError(f"Existing wallpaper archive conflicts with current file: {target}")
                 continue
             store.mkdir(f"{WALLPAPER_ROOT}/archive/{date}/{variant}")
-            _copy_verify(store, source, target, expected)
+            _copy_verify(store, source, target, current_sha)
 
 
 def _promote_verified(store: RcloneStore, record: dict[str, str], previous_item: dict[str, Any]) -> None:
@@ -432,18 +428,6 @@ def rotate_current(store: RcloneStore, date: str) -> dict[str, Any]:
             if not match or match.group(1) != current_date:
                 if filename not in expected_managed_names.get(variant, set()):
                     raise RuntimeError(f"Unmanaged file in {variant}-current; refusing rotation: {filename}")
-            if filename in expected_managed_names.get(variant, set()):
-                recorded = next((record["sha256"] for record in _managed_files(managed.get(variant) or {}) if record["filename"] == filename), "")
-                try:
-                    raw = store.download_bytes(f"{variant}-current/{filename}")
-                except RuntimeError as exc:
-                    if not _is_missing_remote_error(exc):
-                        raise
-                    # A listed managed file can disappear between the initial
-                    # preflight and this listing-based integrity pass.
-                    continue
-                if recorded and sha256(raw) != recorded:
-                    raise RuntimeError(f"Managed current wallpaper checksum changed: {variant}-current/{filename}")
         unknown = set(actual[variant]) - expected_managed_names.get(variant, set())
         if unknown:
             raise RuntimeError(f"Unmanaged files in {variant}-current; refusing rotation: {', '.join(sorted(unknown))}")
@@ -513,7 +497,6 @@ def recover_rotation(store: RcloneStore) -> dict[str, Any]:
     previous = journal.get("previous_managed") or {}
     if not isinstance(previous, dict):
         raise RuntimeError("Wallpaper rotation journal has invalid previous state")
-    _verify_managed_current(store, previous, journal.get("previous_date"))
     next_managed: dict[str, dict[str, Any]] = {}
     for variant in ("phone", "watch"):
         records = (journal.get("next") or {}).get(variant)
@@ -600,12 +583,9 @@ def _verify_managed_current(
             filename = record["filename"]
             if Path(filename).name != filename:
                 raise RuntimeError("Rotation state contains an unsafe current filename")
-            expected = record["sha256"]
-            if not re.fullmatch(r"[a-f0-9]{64}", str(expected or "")):
-                raise RuntimeError(f"Managed current wallpaper checksum mismatch: {variant}-current/{filename}")
             current_path = f"{variant}-current/{filename}"
             try:
-                raw = store.download_bytes(current_path)
+                store.download_bytes(current_path)
             except RuntimeError as exc:
                 if not _is_missing_remote_error(exc):
                     raise
@@ -617,12 +597,7 @@ def _verify_managed_current(
                     except RuntimeError as archive_exc:
                         if not _is_missing_remote_error(archive_exc):
                             raise
-                if archived is not None:
-                    if sha256(archived) != expected:
-                        raise RuntimeError(f"Existing wallpaper archive conflicts with managed record: {archive_path}")
-                else:
+                if archived is None:
                     missing.append(current_path)
                 continue
-            if sha256(raw) != expected:
-                raise RuntimeError(f"Managed current wallpaper checksum mismatch: {current_path}")
     return missing
