@@ -128,38 +128,19 @@ def _saint_quote_for_context(context: DailyLiturgicalContext) -> str:
 
 def _build_prompt(date_value, context: DailyLiturgicalContext, title: str) -> str:
     return f"""
-Write a Catholic daily reflection prayer for audio narration, using the selected liturgical observance as a spiritual lens for ordinary Christian life.
-
-Rules:
-- Return plain text only, no markdown bullets.
-- Write exactly four short paragraphs separated by blank lines.
-- Do not use any section headings.
-- Paragraph 1 must begin exactly with: {WELCOME}
-- Keep the reflection concise, spacious, contemplative, and natural aloud. Use questions, examen language, and pauses where they serve the prayer, without forcing identical sentence patterns.
-- Paragraph 1 should introduce the selected observance naturally and distinguish whether it is celebrated today or approaching. If it is upcoming, include its actual date and never call it today's celebration.
-- When sharedGospelBridge or gospelCitation is present, use the supplied Gospel context when it genuinely supports the reflection, but do not introduce another Scripture citation.
-- Paragraph 2 should identify one central spiritual theme from the observance and draw it into ordinary Christian life through prayer, relationships, work, family, vocation, stewardship, health, rest, charity, conversion, perseverance, trust, or fidelity to ordinary responsibilities.
-- Do not give a long biography. Use the saint or feast as a spiritual guide, not merely a historical subject, and do not force a weak connection.
-- Paragraph 3 should guide prayerful reflection or examen toward interior life, gratitude, conversion, trust in God, and a faithful next step. Let the content determine whether questions or explicit consolation/desolation language are helpful.
-- Paragraph 4 should contain a natural closing prayer and end exactly with:
-{FINAL_PEACE}
-- If a saint witness is supplied, it may be named naturally and may receive a final intercession. A quotation is optional; never invent one or require one merely because legacy context contains it.
-- Do not invent liturgical facts beyond the provided context.
-- Keep the tone contemplative, intimate, and natural aloud.
+Write a Catholic nightly reflection for audio, grounded in the supplied context and attentive to ordinary Christian life. Let the context guide you, but use your own judgment to choose the central insight, voice, and progression that will make this a coherent prayerful reflection. Speak naturally to a listener at the close of the day. Return only the reflection itself in plain text, without instructions, labels, or commentary. Do not force a prescribed paragraph count, sequence, opening, closing, examen formula, or mention of every context detail. Do not invent liturgical facts or quotations.
 
 Date: {date_value.isoformat()}
-Episode title: {title}
-Gospel bridge: {context.sharedGospelBridge or context.gospelCitation}
-Selected observance: {context.feastDay}
-Selected observance date: {getattr(context, 'primaryAnchorDate', '')}
-Selected observance rank: {getattr(context, 'primaryAnchorRank', '') or context.liturgicalRank}
-Selected observance timing: {getattr(context, 'primaryAnchorTiming', '')}
+Episode title (for context only): {title}
+Gospel context: {context.sharedGospelBridge or context.gospelCitation}
+Observance and timing: {context.feastDay}; {getattr(context, 'primaryAnchorTiming', '')}; {getattr(context, 'primaryAnchorDate', '')}
+Liturgical rank: {getattr(context, 'primaryAnchorRank', '') or context.liturgicalRank}
 Theme: {context.sharedThemeTitle or context.primaryTheme}
-Theme explanation: {context.sharedThemeExplanation or context.shortSummary}
-Reflection focus: {context.sharedThemeReflectionFocus or context.reflectionFocus}
-Emotional tone: {context.emotionalTone}
+Context: {context.sharedThemeExplanation or context.shortSummary}
+Possible reflection focus: {context.sharedThemeReflectionFocus or context.reflectionFocus}
+Tone: {context.emotionalTone}
 Saint witness: {getattr(context, 'saintWitness', '') or context.saintOfDay}
-Approved saint quotation, if any: {getattr(context, 'saintWitnessQuote', '')}
+Approved quotation (optional): {getattr(context, 'saintWitnessQuote', '')}
 """.strip()
 
 
@@ -257,27 +238,11 @@ def _validate_episode(
     ):
         if re.search(rf"(?m)^\s*{re.escape(heading)}\s*$", cleaned):
             raise RuntimeError(f"Daily Reflection should not speak the '{heading}' heading.")
-    if WELCOME not in cleaned:
-        raise RuntimeError("Daily Reflection opening welcome is missing.")
-    if not cleaned.rstrip().endswith(FINAL_PEACE):
-        raise RuntimeError("Daily Reflection final peace line is missing.")
     saint = _saint_for_context(context)
-    selected = str(getattr(context, "feastDay", "") or "").strip()
-    if selected and selected.casefold() not in cleaned.casefold():
-        raise RuntimeError("Daily Reflection must identify the selected observance.")
-    if saint:
-        saint_mentions = len(re.findall(rf"\b{re.escape(saint)}\b", cleaned, flags=re.IGNORECASE))
-        if saint_mentions < 1:
-            raise RuntimeError("Daily Reflection must use the supplied saint naturally when present.")
     paragraphs = _spoken_paragraphs(cleaned)
-    if len(paragraphs) != 4:
-        raise RuntimeError(f"Daily Reflection must contain exactly 4 spoken paragraphs, got {len(paragraphs)}.")
-    if not paragraphs[0].startswith(WELCOME):
-        raise RuntimeError("Daily Reflection opening paragraph must begin with the welcome.")
-    spoken_body = " ".join(paragraphs[:3])
-    reflection_word_count = len(re.findall(r"\b[\w']+\b", spoken_body))
-    if not 80 <= reflection_word_count <= 400:
-        raise RuntimeError(f"Daily Reflection spoken body word count out of range: {reflection_word_count}.")
+    reflection_word_count = len(re.findall(r"\b[\w']+\b", cleaned))
+    if not 25 <= reflection_word_count <= 600:
+        raise RuntimeError(f"Daily Reflection spoken word count out of range: {reflection_word_count}.")
     return IgnatianReflectionEpisode(
         title=title,
         text=cleaned,
@@ -318,13 +283,9 @@ def validate_ignatian_reflection_audio_text(text: Any) -> str:
     if not cleaned:
         raise RuntimeError("Daily Reflection audio text is empty.")
     _reject_prompt_leakage(cleaned)
-    paragraphs = _spoken_paragraphs(cleaned)
-    if len(paragraphs) != 4:
-        raise RuntimeError(f"Daily Reflection audio must contain exactly 4 spoken paragraphs, got {len(paragraphs)}.")
-    if not paragraphs[0].startswith(WELCOME):
-        raise RuntimeError("Daily Reflection audio opening welcome is missing.")
-    if not cleaned.endswith(FINAL_PEACE):
-        raise RuntimeError("Daily Reflection audio final peace line is missing.")
+    word_count = len(re.findall(r"\b[\w']+\b", cleaned))
+    if not 25 <= word_count <= 600:
+        raise RuntimeError(f"Daily Reflection audio spoken word count out of range: {word_count}.")
     return cleaned
 
 

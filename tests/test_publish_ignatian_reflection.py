@@ -37,7 +37,7 @@ class TestIgnatianReflection(unittest.TestCase):
             sharedGospelBridge="today's Gospel, Mark 5:36, draws us into trust",
         )
 
-    def test_missing_openai_uses_structured_fallback_without_inventing_a_saint(self):
+    def test_missing_openai_uses_deterministic_fallback(self):
         with mock.patch.object(self.mod, "_resolve_openai_settings", return_value=("", "https://api.openai.com/v1", "gpt-4.1-mini")):
             episode = self.mod.build_ignatian_reflection_episode(
                 datetime.date(2026, 6, 9),
@@ -49,15 +49,15 @@ class TestIgnatianReflection(unittest.TestCase):
         self.assertIn("Welcome to Ora Pro Nobis, where we pray with the Saints.", episode.text)
         self.assertIn("today's Gospel, Mark 5:36, draws us into trust", episode.text)
         self.assertNotIn("Episode Title", episode.text)
-        self.assertEqual(len(episode.segments), 4)
+        self.assertGreaterEqual(len(episode.segments), 1)
         self.assertEqual(episode.pause_ms, 15000)
         self.assertIn("consolation and desolation", episode.text)
         self.assertIn("?", episode.segments[0])
         self.assertTrue(episode.segments[0].startswith("Welcome to Ora Pro Nobis, where we pray with the Saints."))
         self.assertTrue(episode.text.endswith("And may the peace of Christ remain with you."))
         self.assertNotIn("pray for us.", episode.text)
-        self.assertGreaterEqual(episode.word_count, 100)
-        self.assertLessEqual(episode.word_count, 350)
+        self.assertGreaterEqual(episode.word_count, 25)
+        self.assertLessEqual(episode.word_count, 600)
 
     def test_saint_name_is_not_double_prefixed(self):
         with mock.patch.object(self.mod, "_resolve_openai_settings", return_value=("", "https://api.openai.com/v1", "gpt-4.1-mini")):
@@ -69,6 +69,20 @@ class TestIgnatianReflection(unittest.TestCase):
         self.assertIn("Saint Example, pray for us.", episode.text)
         self.assertNotIn("Saint Saint Example", episode.text)
         self.assertEqual(episode.saint_name, "Example")
+
+    def test_prompt_leaves_reflection_structure_to_the_model(self):
+        prompt = self.mod._build_prompt(
+            datetime.date(2026, 6, 9),
+            self._context("Saint Example"),
+            "Daily Reflection - Trust - June 9, 2026",
+        )
+
+        self.assertIn("choose the central insight, voice, and progression", prompt)
+        self.assertIn("Gospel context", prompt)
+        self.assertIn("Saint Example", prompt)
+        self.assertNotIn("Write exactly four", prompt)
+        self.assertNotIn("Paragraph 1 must", prompt)
+        self.assertNotIn("Paragraph 2 should", prompt)
 
     def test_prompt_leakage_is_rejected_and_falls_back_before_audio(self):
         leaked = (
@@ -121,14 +135,34 @@ class TestIgnatianReflection(unittest.TestCase):
                 source="generated",
             )
 
-    def test_audio_boundary_validator_accepts_only_listener_facing_four_paragraphs(self):
+    def test_audio_boundary_validator_accepts_natural_variable_structure(self):
         text = (
-            "Welcome to Ora Pro Nobis, where we pray with the Saints.\n\n"
-            "Receive this day with gratitude and trust.\n\n"
-            "Bring the day before Jesus with hope.\n\n"
-            "And may the peace of Christ remain with you."
+            "As evening settles, receive the day with gratitude. Notice where grace met you, "
+            "and bring what remains unfinished to Jesus. Remember that his mercy is present "
+            "even in the questions you cannot answer tonight."
         )
         self.assertEqual(self.mod.validate_ignatian_reflection_audio_text(text), text)
+
+    def test_model_led_reflection_is_not_rejected_for_omitting_context_labels_or_stock_lines(self):
+        text = (
+            "At the end of this day, let the quiet become a place of trust. What burden can you "
+            "place in God's hands tonight? Rest in the knowledge that you are loved."
+        )
+        episode = self.mod._validate_episode(
+            "Daily Reflection - Trust - June 9, 2026",
+            text,
+            self._context("Saint Example"),
+            source="generated",
+        )
+        self.assertEqual(episode.text, text)
+        self.assertEqual(episode.segments, (text,))
+
+    def test_instruction_leakage_still_rejected_at_audio_boundary(self):
+        with self.assertRaisesRegex(RuntimeError, "prompt or schema commentary"):
+            self.mod.validate_ignatian_reflection_audio_text(
+                "Return plain text only and do not use headings. "
+                "Bring the day before Jesus with gratitude and hope."
+            )
 
 
 if __name__ == "__main__":
