@@ -1,5 +1,10 @@
 # Release Log
 
+## [0.4.15.0] - 2026-10-06
+
+### Changed
+- Nightly reflections now follow a natural progression shaped around the day's liturgical context, with deterministic fallback narration when generation is unavailable.
+
 ## [0.4.14.0] - 2026-10-01
 
 ### Changed

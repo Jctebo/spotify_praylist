@@ -124,7 +124,7 @@ Optional variables:
 - `jobs/publish/saint_centered_theme.py`: deterministic D-3..D+9 calendar-window resolver and saint-centered theme brief used by every generated prayer experience
 - `jobs/publish/daily_liturgical_context.py`: compatibility context adapter exposing the approved saint-centered brief to existing generated prayer/reflection builders
 - `jobs/publish/offline_lectionary.py`: repository-owned citation and Douay-Rheims fallback used only after live Gospel sources fail
-- `jobs/publish/ignatian_reflection.py`: generated Daily Reflection text builder with OpenAI generation, required structure validation, deterministic fallback narration, and four-fragment pause timing
+- `jobs/publish/ignatian_reflection.py`: model-led Daily Reflection generation with listener-facing safety validation, deterministic fallback narration, and paragraph-based pause timing
 - `jobs/publish/fragments.py`: fragment-level cache and assembly helpers for publish audio
 - `scripts/setup_spotify.ps1`: Spotify credential wizard that also updates `config/spotify/playlists/*.json`
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` with optional single-playlist targeting
