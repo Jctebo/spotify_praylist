@@ -3,7 +3,7 @@
 ## [0.4.15.0] - 2026-10-06
 
 ### Changed
-- Nightly Daily Reflection generation now lets the model choose the reflection's structure and progression while retaining liturgical context, prompt-leakage safeguards, and deterministic fallback behavior.
+- Nightly reflections now follow a natural progression shaped around the day's liturgical context, with deterministic fallback narration when generation is unavailable.
 
 ## [0.4.14.0] - 2026-10-01
 
