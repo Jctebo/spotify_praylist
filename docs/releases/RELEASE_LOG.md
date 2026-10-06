@@ -1,5 +1,10 @@
 # Release Log
 
+## [0.4.15.0] - 2026-10-06
+
+### Changed
+- Nightly Daily Reflection generation now lets the model choose the reflection's structure and progression while retaining liturgical context, prompt-leakage safeguards, and deterministic fallback behavior.
+
 ## [0.4.14.0] - 2026-10-01
 
 ### Changed
