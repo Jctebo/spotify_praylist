@@ -3,7 +3,7 @@
 ## [0.4.16.0] - 2026-10-11
 
 ### Fixed
-- Long devotional wallpaper captions now wrap and shrink farther within phone/watch safe areas, preventing valid calendar titles from aborting generation at the previous 20-pixel font floor.
+- You can now generate wallpapers for long devotional titles; captions fit the phone and watch safe areas instead of aborting the run.
 
 ## [0.4.15.0] - 2026-10-06
 
