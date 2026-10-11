@@ -149,12 +149,26 @@ def _wrap_lines(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.FreeTypeFo
     lines: list[str] = []
     current = ""
     for word in words:
-        candidate = f"{current} {word}".strip()
-        if current and draw.textlength(candidate, font=font) > max_width:
-            lines.append(current)
-            current = word
-        else:
-            current = candidate
+        # Do not let one unusually long token bypass safe-width wrapping.
+        pieces: list[str] = []
+        piece = ""
+        for char in word:
+            candidate_piece = piece + char
+            if piece and draw.textlength(candidate_piece, font=font) > max_width:
+                pieces.append(piece)
+                piece = char
+            else:
+                piece = candidate_piece
+        if piece:
+            pieces.append(piece)
+
+        for part in pieces:
+            candidate = f"{current} {part}".strip()
+            if current and draw.textlength(candidate, font=font) > max_width:
+                lines.append(current)
+                current = part
+            else:
+                current = candidate
     if current:
         lines.append(current)
     return lines
@@ -181,8 +195,6 @@ def _draw_centered_label(
     fill: tuple[int, int, int, int] = (255, 250, 237, 255),
     tracking: float = 1.0,
 ) -> tuple[int, int]:
-    font = _font(base_size)
-
     def allowed_at(y: float, height: float) -> int:
         if not circular:
             return max_width
@@ -195,21 +207,23 @@ def _draw_centered_label(
         widths = [draw.textlength(char, font=active_font) for char in line]
         return sum(widths) + tracking * max(0, len(line) - 1)
 
-    lines = _wrap_lines(draw, text, font, min(max_width, allowed_at(top, font.getbbox("Ag")[3] - font.getbbox("Ag")[1] + 8)))
-    while base_size > 20:
+    min_font_size = 14
+    max_lines = 4
+    while True:
+        font = _font(base_size)
+        initial_line_height = font.getbbox("Ag")[3] - font.getbbox("Ag")[1] + 8
+        initial_width = min(max_width, allowed_at(top, initial_line_height))
+        lines = _wrap_lines(draw, text, font, initial_width)
         line_h = max(font.getbbox(line)[3] - font.getbbox(line)[1] for line in lines) + 8
-        invalid = len(lines) > 2 or any(
+        invalid = len(lines) > max_lines or any(
             rendered_width(line, font) > allowed_at(top + index * line_h, line_h)
             for index, line in enumerate(lines)
         )
         if not invalid:
             break
-        base_size -= 2
-        font = _font(base_size)
-        line_h = font.getbbox("Ag")[3] - font.getbbox("Ag")[1] + 8
-        lines = _wrap_lines(draw, text, font, min(max_width, allowed_at(top, line_h)))
-    if len(lines) > 2:
-        raise RuntimeError("Wallpaper title/subtitle cannot fit in two lines")
+        if base_size <= min_font_size:
+            raise RuntimeError("Wallpaper text does not fit its device safe area")
+        base_size = max(min_font_size, base_size - 2)
     line_h = max(font.getbbox(line)[3] - font.getbbox(line)[1] for line in lines) + 8
     overall_h = len(lines) * line_h
     for index, line in enumerate(lines):
