@@ -6,7 +6,7 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
-from PIL import Image, ImageChops
+from PIL import Image, ImageChops, ImageDraw
 
 from jobs.novena.devotional_image_contract import DailyImageSpec
 from jobs.novena.devotional_wallpaper_render import (
@@ -16,7 +16,10 @@ from jobs.novena.devotional_wallpaper_render import (
     WATCH_TEXT_LAYOUT,
     WATCH_RENDER_VERSION,
     QAResult,
+    _draw_centered_label,
     _circular_chord_width,
+    _font,
+    _wrap_lines,
     image_tool,
     ocr_text,
     overlay_wallpaper_text,
@@ -68,6 +71,32 @@ class WallpaperRenderTests(unittest.TestCase):
         self.assertEqual(WATCH_TEXT_LAYOUT.circle_inset, 130)
         self.assertEqual(WATCH_TEXT_LAYOUT.title_short_ratio, 0.045)
         self.assertEqual(WATCH_TEXT_LAYOUT.subtitle_size_ratio, 0.035)
+
+    def test_label_fitter_evaluates_sizes_below_twenty_before_rejecting(self):
+        canvas = Image.new("RGBA", (1024, 1024), (45, 56, 75, 255))
+        draw = ImageDraw.Draw(canvas)
+        height, font_size = _draw_centered_label(
+            draw, canvas, "MARGARET", top=20, base_size=21,
+            max_width=124, circular=False, tracking=6.0,
+        )
+        self.assertGreater(height, 0)
+        self.assertEqual(font_size, 14)
+        parts = _wrap_lines(draw, "MARGARETALACOQUE", _font(21), 80)
+        self.assertEqual("".join(parts), "MARGARETALACOQUE")
+        self.assertTrue(all(draw.textlength(part, font=_font(21)) <= 80 for part in parts))
+
+    def test_long_calendar_title_renders_for_phone_and_watch(self):
+        spec = DailyImageSpec(
+            __import__("datetime").date(2026, 10, 16),
+            "SACRED HEART OF JESUS, THROUGH SAINT MARGARET MARY ALACOQUE",
+            "PRIVATE DEVOTION", "calendar", "",
+        )
+        for variant, expected_size in (("phone", (1080, 1920)), ("watch", (1024, 1024))):
+            with self.subTest(variant=variant):
+                rendered = overlay_wallpaper_text(self.art, spec, variant)
+                with Image.open(io.BytesIO(rendered)) as image:
+                    self.assertEqual(image.size, expected_size)
+                    self.assertEqual(image.format, "JPEG")
 
     def test_watch_labels_are_bottom_aligned_and_leave_upper_clock_space_clear(self):
         watch = overlay_wallpaper_text(self.art, self.spec, "watch")
