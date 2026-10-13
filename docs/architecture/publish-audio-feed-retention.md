@@ -59,7 +59,7 @@ main branch workflow run
 
 ## Deployment And Operational Assumptions
 - GitHub Pages remains the hosting layer, but the published content is sourced from the existing feed file rather than a second storage system.
-- The workflow should serialize publish runs so two runs do not try to rewrite the feed at the same time.
+- The audio and devotional-image workflows share the `podcast-pages-publish` concurrency group, so cache restore, feed rebuild, and Pages deployment run in sequence.
 - The main repository stays clean: contracts, code, and tests live on `main`; generated outputs live in `docs/`.
 
 ## Why This Is Simpler
@@ -79,7 +79,7 @@ It also keeps the mental model easy:
 These tradeoffs are still preferable to a sidecar archive because they are explicit and reviewable.
 
 ## Risks
-- Concurrent publish runs could race to rewrite `podcast.xml` unless the workflow is serialized.
+- A workflow that publishes the shared Pages tree without using the common concurrency group could reintroduce a stale-feed deployment race.
 - A bad publish run could publish a truncated feed if the job does not preserve the existing items first.
 - If the published feed cannot be recovered, the archive still collapses to the current run only.
 

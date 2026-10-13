@@ -9,3 +9,4 @@ pillow
 pypdf
 imageio-ffmpeg
 boto3
+tzdata==2026.2

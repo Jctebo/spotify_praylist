@@ -1,5 +1,11 @@
 # Release Log
 
+## [0.4.17.0] - 2026-10-13
+
+### Fixed
+- Serialize the audio and devotional image publishers so a stale image workflow cache cannot replace the newest podcast feed.
+- Publish daily and novena episodes at midnight America/Chicago so current-date audio is eligible in podcast apps by the start of the local day.
+
 ## [0.4.16.0] - 2026-10-11
 
 ### Fixed

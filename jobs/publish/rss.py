@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 from textwrap import dedent
 from pathlib import Path
 from typing import Any, Dict, List, Sequence
+from zoneinfo import ZoneInfo
 import requests
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -39,6 +40,7 @@ RSS_CHANNEL_SUMMARY = (
     "Pray with the Church and walk with the saints - Ora pro nobis."
 )
 RSS_CHANNEL_EXPLICIT = "no"
+PODCAST_TIMEZONE = ZoneInfo("America/Chicago")
 
 
 ET.register_namespace("itunes", RSS_ITUNES_NAMESPACE)
@@ -85,7 +87,7 @@ def _published_at(job: Dict[str, Any]) -> _dt.datetime:
     if not raw:
         raise RuntimeError(f"RSS job is missing required published_date: {job!r}")
     date_value = _dt.date.fromisoformat(raw)
-    return _dt.datetime.combine(date_value, _dt.time(12, 0, tzinfo=_dt.timezone.utc))
+    return _dt.datetime.combine(date_value, _dt.time.min, tzinfo=PODCAST_TIMEZONE)
 
 
 def _job_from_rss_item(item: ET.Element, *, feed_path: Path) -> Dict[str, Any] | None:
