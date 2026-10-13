@@ -3,7 +3,7 @@
 ## [0.4.17.0] - 2026-10-13
 
 ### Fixed
-- Keep the devotional image workflow generating and syncing images while making the dedicated audio workflow the sole publisher of the website and podcast feed.
+- Retire the legacy devotional image generation workflow; keep the dedicated audio workflow as the sole publisher of the website and podcast feed.
 - Publish daily and novena episodes at midnight America/Chicago so current-date audio is eligible in podcast apps by the start of the local day.
 
 ## [0.4.16.0] - 2026-10-11

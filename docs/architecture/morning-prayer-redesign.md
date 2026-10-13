@@ -130,7 +130,6 @@ Relevant files today:
 - `jobs/novena/generate_devotional_image.py`
 - `scripts/migrate_page_audio_notion_schema.py`
 - `.github/workflows/daily_novena_prayer.yml`
-- `.github/workflows/daily_devotional_image_remote.yml`
 - `config/morning-prayer.json`
 
 Likely future split:

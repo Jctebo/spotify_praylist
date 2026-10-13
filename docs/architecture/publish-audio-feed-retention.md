@@ -59,7 +59,7 @@ main branch workflow run
 
 ## Deployment And Operational Assumptions
 - GitHub Pages remains the hosting layer, but the published content is sourced from the existing feed file rather than a second storage system.
-- `publish_audio.yml` is the sole publisher of the GitHub Pages site and podcast feed. The devotional image workflow only generates images and syncs them to OneDrive; it does not rebuild the feed or deploy Pages.
+- `publish_audio.yml` is the sole publisher of the GitHub Pages site and podcast feed. The legacy devotional image workflow is retired.
 - The main repository stays clean: contracts, code, and tests live on `main`; generated outputs live in `docs/`.
 
 ## Why This Is Simpler
