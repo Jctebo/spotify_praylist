@@ -107,8 +107,8 @@ Optional variables:
 - Ora Pro Nobis generated prayers use `contract.metadata.website` in `config/publish/contracts/*.json`; Spotify-only prayers use top-level `website` metadata in `config/spotify/contracts/*.json`.
 - Published audio JSON sidecars under `docs/audio/` provide latest episode metadata, readable prayer text from ordered fragments, and individual Daily Novena episode listings when present.
 - Enabled website metadata requires `slug`, `title`, `summary`, `group`, `source_label`, and `availability`; external Spotify entries also require `external_url` unless they use a direct `spotify_uri`.
-- `publish_audio.yml` and `daily_devotional_image_remote.yml` both run the site generator before Pages upload so the root directory, prayer pages, and feed stay current while the heavy audio archive remains a local/R2-backed input rather than part of the Pages artifact. Both workflows use the `podcast-pages-publish` concurrency group because each deploys the podcast feed.
-- `publish_audio.yml` restores the current devotional image folders from OneDrive via rclone on `main` before site generation. `daily_devotional_image_remote.yml` generates/syncs devotional images and builds the same public image tree under `pages/devotional/DCIM`; it also restores the published audio archive and rebuilds `podcast.xml`, so it remains part of audio publishing.
+- `publish_audio.yml` is the sole workflow that builds and deploys the site and podcast feed. It restores the current devotional image folders from OneDrive via rclone on `main` before site generation; the heavy audio archive remains a local/R2-backed input rather than part of the Pages artifact.
+- `daily_devotional_image_remote.yml` only generates devotional images and syncs them to OneDrive. It no longer restores audio archives or deploys GitHub Pages; `publish_audio.yml` publishes the updated image tree on its next run.
 
 ## Files
 - `.agents/skills/normalize-prayer-tts/`: preview-only prayer TTS audit skill for expanding supported abbreviations, separating Versicle/Response voices, converting intention directions into bell/pause controls, and flagging ambiguous print artifacts for review; run it with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py <path> --format auto`, or audit every novena contract read-only with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py contracts/novenas --format auto`
@@ -133,7 +133,7 @@ Optional variables:
 - `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; the daily 07:00 UTC run is gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
 - `.github/workflows/publish_audio.yml`: combined publish workflow for Morning Prayer audio and novena publishing, scheduled daily and also available on manual dispatch with `novena_publish_mode=daily` as the default choice; `bootstrap-no-cache` is available for a bootstrap-style publish that rebuilds audio without using the cache
-- `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with OneDrive sync and GitHub Pages export
+- `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with OneDrive sync; GitHub Pages export is handled by `publish_audio.yml`
 - `.github/workflows/liturgical_calendar_yearly_sync.yml`: Jan 1 + manual Liturgical Calendar population
 
 ## Config Timezone
@@ -897,14 +897,14 @@ Workflow:
 
 Purpose:
 - runs the devotional image generator on GitHub Actions
-- restores the published audio archive and rebuilds `podcast.xml` before deploying Pages, so this workflow also publishes the podcast feed
+- syncs generated files to OneDrive via `rclone` without publishing podcast audio or GitHub Pages
 - uploads generated files to OneDrive via `rclone` under:
   - `Pictures/Samsung Gallery/DCIM/Current Devotion`
   - `Pictures/Samsung Gallery/DCIM/Non Current Devotion`
   - `Pictures/Samsung Gallery/DCIM/Current Devotion Wide`
   - `Pictures/Samsung Gallery/DCIM/Non Current Devotion Wide`
   - `Pictures/Samsung Gallery/DCIM/devotional_image_library.json`
-- builds a filtered public export containing only:
+- the dedicated `publish_audio.yml` workflow builds a filtered public export containing only:
   - `devotional/DCIM/Current Devotion`
   - `devotional/DCIM/Current Devotion Wide`
   - `devotional/DCIM/devotional_image_library.json`
@@ -919,7 +919,7 @@ Optional GitHub Variables:
 - `RCLONE_REMOTE_ROOT` (default `Pictures/Samsung Gallery/DCIM`)
 
 GitHub Pages:
-- this workflow deploys the public devotional export with `actions/deploy-pages`
+- the dedicated `.github/workflows/publish_audio.yml` workflow deploys the public devotional export with the site and podcast feed
 - the client sync `source_base_url` should point to:
   - `https://<github-user>.github.io/<repo>/devotional/DCIM`
 
