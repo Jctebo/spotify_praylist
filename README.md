@@ -107,8 +107,8 @@ Optional variables:
 - Ora Pro Nobis generated prayers use `contract.metadata.website` in `config/publish/contracts/*.json`; Spotify-only prayers use top-level `website` metadata in `config/spotify/contracts/*.json`.
 - Published audio JSON sidecars under `docs/audio/` provide latest episode metadata, readable prayer text from ordered fragments, and individual Daily Novena episode listings when present.
 - Enabled website metadata requires `slug`, `title`, `summary`, `group`, `source_label`, and `availability`; external Spotify entries also require `external_url` unless they use a direct `spotify_uri`.
-- `publish_audio.yml` and `daily_devotional_image_remote.yml` both run the site generator before Pages upload so the root directory, prayer pages, and feed stay current while the heavy audio archive remains a local/R2-backed input rather than part of the Pages artifact.
-- `publish_audio.yml` restores the current devotional image folders from OneDrive via rclone on `main` before site generation, while `daily_devotional_image_remote.yml` generates/syncs the devotional images and builds the same public image tree under `pages/devotional/DCIM`.
+- `publish_audio.yml` and `daily_devotional_image_remote.yml` both run the site generator before Pages upload so the root directory, prayer pages, and feed stay current while the heavy audio archive remains a local/R2-backed input rather than part of the Pages artifact. Both workflows use the `podcast-pages-publish` concurrency group because each deploys the podcast feed.
+- `publish_audio.yml` restores the current devotional image folders from OneDrive via rclone on `main` before site generation. `daily_devotional_image_remote.yml` generates/syncs devotional images and builds the same public image tree under `pages/devotional/DCIM`; it also restores the published audio archive and rebuilds `podcast.xml`, so it remains part of audio publishing.
 
 ## Files
 - `.agents/skills/normalize-prayer-tts/`: preview-only prayer TTS audit skill for expanding supported abbreviations, separating Versicle/Response voices, converting intention directions into bell/pause controls, and flagging ambiguous print artifacts for review; run it with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py <path> --format auto`, or audit every novena contract read-only with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py contracts/novenas --format auto`
@@ -897,6 +897,7 @@ Workflow:
 
 Purpose:
 - runs the devotional image generator on GitHub Actions
+- restores the published audio archive and rebuilds `podcast.xml` before deploying Pages, so this workflow also publishes the podcast feed
 - uploads generated files to OneDrive via `rclone` under:
   - `Pictures/Samsung Gallery/DCIM/Current Devotion`
   - `Pictures/Samsung Gallery/DCIM/Non Current Devotion`
