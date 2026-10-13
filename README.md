@@ -107,8 +107,7 @@ Optional variables:
 - Ora Pro Nobis generated prayers use `contract.metadata.website` in `config/publish/contracts/*.json`; Spotify-only prayers use top-level `website` metadata in `config/spotify/contracts/*.json`.
 - Published audio JSON sidecars under `docs/audio/` provide latest episode metadata, readable prayer text from ordered fragments, and individual Daily Novena episode listings when present.
 - Enabled website metadata requires `slug`, `title`, `summary`, `group`, `source_label`, and `availability`; external Spotify entries also require `external_url` unless they use a direct `spotify_uri`.
-- `publish_audio.yml` and `daily_devotional_image_remote.yml` both run the site generator before Pages upload so the root directory, prayer pages, and feed stay current while the heavy audio archive remains a local/R2-backed input rather than part of the Pages artifact.
-- `publish_audio.yml` restores the current devotional image folders from OneDrive via rclone on `main` before site generation, while `daily_devotional_image_remote.yml` generates/syncs the devotional images and builds the same public image tree under `pages/devotional/DCIM`.
+- `publish_audio.yml` remains active and is the sole workflow that builds and deploys the site and podcast feed. Retiring the legacy devotional image workflow does not change podcast or audio publishing. The audio workflow restores the current devotional image folders from OneDrive via rclone on `main` before site generation; the heavy audio archive remains a local/R2-backed input rather than part of the Pages artifact.
 
 ## Files
 - `.agents/skills/normalize-prayer-tts/`: preview-only prayer TTS audit skill for expanding supported abbreviations, separating Versicle/Response voices, converting intention directions into bell/pause controls, and flagging ambiguous print artifacts for review; run it with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py <path> --format auto`, or audit every novena contract read-only with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py contracts/novenas --format auto`
@@ -133,7 +132,6 @@ Optional variables:
 - `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; the daily 07:00 UTC run is gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
 - `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
 - `.github/workflows/publish_audio.yml`: combined publish workflow for Morning Prayer audio and novena publishing, scheduled daily and also available on manual dispatch with `novena_publish_mode=daily` as the default choice; `bootstrap-no-cache` is available for a bootstrap-style publish that rebuilds audio without using the cache
-- `.github/workflows/daily_devotional_image_remote.yml`: daily + manual devotional image generation with OneDrive sync and GitHub Pages export
 - `.github/workflows/liturgical_calendar_yearly_sync.yml`: Jan 1 + manual Liturgical Calendar population
 
 ## Config Timezone
@@ -682,88 +680,7 @@ Optional variables:
 - `LITURGICAL_CALENDAR_DATABASE_NAME` (optional explicit name; defaults to `Liturgical Calendar`)
 - `NOTION_SAINT_DATABASE_ID` and `NOTION_SAINT_DATABASE_NAME` remain supported as legacy aliases
 
-## Daily Devotional Image Generation
-Purpose:
-- selects all unseen eligible celebrations from the same 9-day Romcal window (or one date when `DEVOTIONAL_TARGET_DATE` is set)
-- eligible ranks: `solemnity`, `feast`, `memorial`, `optional_memorial`
-- explicit exclusion: Easter Octave weekdays (`Precedence.weekday_of_easter_octave_*`) are skipped even though the shared Romcal model still maps them to the pseudo-rank `solemnity-easter octave`
-- skips already-generated entries by parsing existing filenames
-- generates a high-finish devotional image prompt from saint subject
-- creates an image with OpenAI image generation
-- uses the Responses API for cited research/copy, reference-guided image generation, and fail-closed visual QA
-- includes every enabled novena contract as an image target in addition to calendar and configured-devotion targets
-- generates one approved portrait infographic per subject, then publishes the identical approved file to both delivery pipelines
-- includes 9-day window metadata in output filename and `.window.txt` companion file
-- writes two layout variants per subject:
-  - portrait variant to `Current Devotion`
-  - widescreen variant to `Current Devotion Wide`
-- keeps only four canonical storage folders:
-  - `OneDrive\Pictures\Samsung Gallery\DCIM\Current Devotion`
-  - `OneDrive\Pictures\Samsung Gallery\DCIM\Non Current Devotion`
-  - `OneDrive\Pictures\Samsung Gallery\DCIM\Current Devotion Wide`
-  - `OneDrive\Pictures\Samsung Gallery\DCIM\Non Current Devotion Wide`
-- automatically moves expired files from `Current` into `Non Current`
-- writes `images_manifest.json` inside each canonical image folder plus a root `devotional_image_library.json`
-- supports non-OneDrive clients by publishing a filtered public manifest tree with only the current portrait + wide folders
-
-Script:
-- `jobs/novena/generate_devotional_image.py`
-
-Required environment variables:
-- `OPENAI_API_KEY`
-
-Optional variables:
-- `OAI_API_BASE_URL` (default `https://api.openai.com/v1`)
-- `ROMCAL_CALENDAR` (default `general_roman`)
-- `ROMCAL_LOCALE` (default `en`)
-- `ROMCAL_WINDOW_DAYS` (default `9`)
-- `DEVOTIONAL_TARGET_DATE` (optional `YYYY-MM-DD` to force saint for a specific date in window)
-- `DEVOTIONAL_ONEDRIVE_DCIM_DIR` (default `%USERPROFILE%\OneDrive\Pictures\Samsung Gallery\DCIM`)
-- `DEVOTIONAL_CURRENT_FOLDER` (default `Current Devotion`)
-- `DEVOTIONAL_ARCHIVE_FOLDER` (default `Non Current Devotion`)
-- `DEVOTIONAL_CURRENT_WIDE_FOLDER` (default `Current Devotion Wide`)
-- `DEVOTIONAL_ARCHIVE_WIDE_FOLDER` (default `Non Current Devotion Wide`)
-- `DEVOTIONAL_MANIFEST_NAME` (default `images_manifest.json`)
-- `DEVOTIONAL_ROOT_MANIFEST_NAME` (default `devotional_image_library.json`)
-- `DEVOTIONAL_PROMPT_MODEL` (default `gpt-5-mini`)
-- `DEVOTIONAL_IMAGE_MODEL` (default `gpt-5-mini`; the Responses model that invokes the image-generation tool)
-- `DEVOTIONAL_MAX_GENERATIONS_PER_RUN` (default `4`; prevents the all-novena backlog from exceeding a scheduled-run budget)
-- `DEVOTIONAL_IMAGE_SIZE` (default `1024x1536`, phone portrait)
-- `DEVOTIONAL_IMAGE_SIZE_WIDE` (legacy compatibility setting; the wide pipeline receives the unchanged portrait file)
-- `DEVOTIONAL_IMAGE_QUALITY` (default `high`)
-- `DEVOTIONAL_IMAGE_FORMAT` (default `png`)
-- `DEVOTIONAL_INFOGRAPHIC_REFERENCE` (optional; defaults to `config/publish/images/devotional-infographic-master.png`)
-- research/copy and QA records are stored only in `Devotional Metadata Archive`; public manifests expose images only
-
-Local run:
-
-```powershell
-.\scripts\run_daily_devotional_image_local.ps1
-```
-
-Local run with rclone upload:
-
-```powershell
-.\scripts\run_daily_devotional_image_rclone_local.ps1
-```
-
-Optional local vars:
-- `RCLONE_REMOTE_NAME` (default `onedrive`)
-- `RCLONE_REMOTE_ROOT` (default `Pictures/Samsung Gallery/DCIM`)
-
-Local run with OneDrive app upload (Graph):
-
-```powershell
-.\scripts\setup_onedrive_local.ps1
-.\scripts\run_daily_devotional_image_onedrive_local.ps1
-```
-
-Local OneDrive upload env (User or Process):
-- `ONEDRIVE_USER_ID` (UPN or GUID target user for OneDrive)
-- `AZURE_TENANT_ID`
-- `AZURE_CLIENT_ID`
-- `AZURE_CLIENT_SECRET` (for service principal login)
-- `DEVOTIONAL_ONEDRIVE_REMOTE_ROOT` (optional legacy novena backfill root)
+## Devotional Image Client Sync
 
 Client sync without OneDrive:
 
@@ -889,43 +806,6 @@ Run local equivalents of each GitHub Action workflow:
 
 # Daily novena prayer generation
 .\scripts\run_daily_novena_prayer_local.ps1
-```
-
-## Remote Devotional Image Job (rclone + OneDrive)
-Workflow:
-- `.github/workflows/daily_devotional_image_remote.yml`
-
-Purpose:
-- runs the devotional image generator on GitHub Actions
-- uploads generated files to OneDrive via `rclone` under:
-  - `Pictures/Samsung Gallery/DCIM/Current Devotion`
-  - `Pictures/Samsung Gallery/DCIM/Non Current Devotion`
-  - `Pictures/Samsung Gallery/DCIM/Current Devotion Wide`
-  - `Pictures/Samsung Gallery/DCIM/Non Current Devotion Wide`
-  - `Pictures/Samsung Gallery/DCIM/devotional_image_library.json`
-- builds a filtered public export containing only:
-  - `devotional/DCIM/Current Devotion`
-  - `devotional/DCIM/Current Devotion Wide`
-  - `devotional/DCIM/devotional_image_library.json`
-- deploys that filtered export to GitHub Pages for non-OneDrive client sync
-
-Required GitHub Secrets:
-- `OPENAI_API_KEY`
-- `RCLONE_CONFIG_B64` (base64-encoded `rclone.conf` containing your OneDrive remote)
-
-Optional GitHub Variables:
-- `RCLONE_REMOTE_NAME` (default `onedrive`)
-- `RCLONE_REMOTE_ROOT` (default `Pictures/Samsung Gallery/DCIM`)
-
-GitHub Pages:
-- this workflow deploys the public devotional export with `actions/deploy-pages`
-- the client sync `source_base_url` should point to:
-  - `https://<github-user>.github.io/<repo>/devotional/DCIM`
-
-Generate `RCLONE_CONFIG_B64` with wizard:
-
-```powershell
-.\scripts\setup_rclone_github.ps1
 ```
 
 ## Daily Devotional Phone and Watch Wallpapers

@@ -21,6 +21,10 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: podcast-pages-publish
+  cancel-in-progress: false
+
 jobs:
   publish-audio:
     runs-on: ubuntu-latest
