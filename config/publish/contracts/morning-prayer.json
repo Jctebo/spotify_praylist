@@ -5,24 +5,6 @@
     "frequency": "daily",
     "timezone": "America/Chicago",
     "version": "1",
-    "notion_target": {
-      "database_name": "Opus Dei",
-      "database_id_env": "NOTION_PUBLISH_DATABASE_ID",
-      "fields": {
-        "entry_id": "Entry ID",
-        "title": "Name",
-        "date": "Date",
-        "status": "Status",
-        "frequency": "Frequency",
-        "contract": "Contract",
-        "text": "Text",
-        "text_hash": "Text Hash",
-        "audio_enabled": "Audio Enabled",
-        "audio_url": "Audio URL",
-        "audio_path": "Audio Path",
-        "content_hash": "Content Hash"
-      }
-    },
     "audio_target": {
       "docs_root": "docs",
       "audio_dir": "docs/audio",

@@ -552,6 +552,21 @@ def _normalize_entry(entry: Any, path: Path) -> Dict[str, Any]:
     normalized["text"] = _optional_text(entry, "text") or normalized["title"]
     normalized["text_config"] = _normalize_text_config(entry)
     normalized["audio_config"] = _normalize_audio_config(entry, path, entry_id)
+    episode_state = entry.get("episode_state")
+    if episode_state is not None:
+        if not isinstance(episode_state, dict):
+            raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' has invalid episode_state; expected an object.")
+        required_state = {"entry_id", "date", "status", "text", "text_hash", "audio_enabled", "audio_url", "audio_path", "content_hash"}
+        missing_state = sorted(required_state - set(episode_state))
+        if missing_state:
+            raise RuntimeError(
+                f"Publish entry '{entry_id}' in '{path}' has incomplete episode_state; missing {', '.join(missing_state)}."
+            )
+        state = dict(episode_state)
+        if not str(state.get("entry_id", "")).strip():
+            raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' has empty episode_state.entry_id.")
+        state["audio_enabled"] = _normalize_bool(state["audio_enabled"])
+        normalized["episode_state"] = state
     blocks = _optional_list(entry, "blocks")
     normalized["blocks"] = [_normalize_block(block, path, entry_id) for block in blocks]
     if not normalized["blocks"] and not normalized["text"]:
