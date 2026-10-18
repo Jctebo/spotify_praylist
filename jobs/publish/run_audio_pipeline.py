@@ -25,6 +25,7 @@ from jobs.publish.audio import (
     write_audio_archive_index,
 )
 from jobs.publish.contracts import DEFAULT_CONTRACT_DIR, load_publish_contracts
+from jobs.publish.local_state import DEFAULT_STATE_PATH, contract_completion_keys, update_publish_state
 from jobs.publish.rss import build_rss_feed, load_podcast_feed_jobs, write_podcast_feed
 
 logger = logging.getLogger(__name__)
@@ -66,8 +67,10 @@ def run_audio_pipeline(
     target_date: Optional[_dt.date] = None,
     target_dates: Optional[Sequence[_dt.date]] = None,
     remote_feed_url: Optional[str] = None,
+    state_path: Optional[Path] = None,
 ) -> Dict[str, Any]:
-    contracts = load_publish_contracts(contract_dir or DEFAULT_CONTRACT_DIR)
+    resolved_contract_dir = Path(contract_dir or DEFAULT_CONTRACT_DIR)
+    contracts = load_publish_contracts(resolved_contract_dir)
     if target_dates is not None:
         dates = list(target_dates)
     elif target_date is not None:
@@ -127,6 +130,19 @@ def run_audio_pipeline(
     feed_xml = build_rss_feed([*rendered_jobs, *archived_jobs], base_url=feed_base_url, cover_art_url=cover_art_url)
     feed_path = write_podcast_feed(feed_xml, feed_path)
     archive_index = write_audio_archive_index(docs_root=docs_root, base_url=feed_base_url, audio_base_url=audio_base_url)
+    if state_path is not None:
+        output_state_path = Path(state_path)
+    elif docs_root is not None:
+        output_state_path = Path(docs_root).parent / ".cache" / "publish_state" / "state.json"
+    elif resolved_contract_dir == DEFAULT_CONTRACT_DIR:
+        output_state_path = DEFAULT_STATE_PATH
+    else:
+        output_state_path = resolved_contract_dir.parent / ".cache" / "publish_state" / "state.json"
+    state_result = update_publish_state(
+        rendered_jobs,
+        path=output_state_path,
+        completion_keys=contract_completion_keys(contracts),
+    )
     logger.info(
         "audio_pipeline write feed_path=%s rendered=%d archived=%d archive_items=%d",
         feed_path,
@@ -144,6 +160,7 @@ def run_audio_pipeline(
         "archive_index_path": archive_index["archive_index_path"],
         "archive_manifest_path": archive_index["archive_manifest_path"],
         "rendered_jobs": rendered_jobs,
+        **state_result,
     }
 
 
@@ -159,7 +176,7 @@ def main() -> int:
             remote_feed_url=podcast_feed_public_url(),
         )
         print(
-            f"audio_pipeline mode={mode or 'daily'} contracts={result['contracts']} jobs={result['jobs']} rendered={result['rendered']} archived={result['archived']} rendered_ids={_episode_id_list(result.get('rendered_jobs') or [])} feed_path={result['feed_path']}"
+            f"audio_pipeline mode={mode or 'daily'} contracts={result['contracts']} jobs={result['jobs']} rendered={result['rendered']} archived={result['archived']} rendered_ids={_episode_id_list(result.get('rendered_jobs') or [])} feed_path={result['feed_path']} state_path={result['state_path']}"
         )
         return 0
     except Exception as exc:

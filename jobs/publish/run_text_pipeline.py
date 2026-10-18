@@ -9,18 +9,28 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from jobs.publish.contracts import DEFAULT_CONTRACT_DIR, build_text_jobs, load_publish_contracts
-from jobs.publish.notion import build_notion_client, upsert_text_jobs_to_notion
+from jobs.publish.local_state import DEFAULT_STATE_PATH, contract_completion_keys, update_publish_state
 
 
 
-def run_text_pipeline(*, contract_dir: Optional[Path] = None, notion_token: Optional[str] = None) -> Dict[str, Any]:
-    contracts = load_publish_contracts(contract_dir or DEFAULT_CONTRACT_DIR)
+def run_text_pipeline(*, contract_dir: Optional[Path] = None, state_path: Optional[Path] = None) -> Dict[str, Any]:
+    resolved_contract_dir = Path(contract_dir or DEFAULT_CONTRACT_DIR)
+    contracts = load_publish_contracts(resolved_contract_dir)
     jobs = build_text_jobs(contracts)
-    client = build_notion_client(notion_token)
-    result = upsert_text_jobs_to_notion(jobs, client=client)
-    result["jobs"] = len(jobs)
-    result["contracts"] = len(contracts)
-    return result
+    output_state_path = Path(state_path) if state_path else (
+        DEFAULT_STATE_PATH if resolved_contract_dir == DEFAULT_CONTRACT_DIR else resolved_contract_dir.parent / ".cache" / "publish_state" / "state.json"
+    )
+    state_result = update_publish_state(
+        jobs,
+        path=output_state_path,
+        completion_keys=contract_completion_keys(contracts),
+    )
+    return {
+        "jobs": len(jobs),
+        "contracts": len(contracts),
+        "updated": len(jobs),
+        **state_result,
+    }
 
 
 
@@ -28,7 +38,7 @@ def main() -> int:
     try:
         result = run_text_pipeline()
         print(
-            f"text_pipeline contracts={result['contracts']} jobs={result['jobs']} created={result['created']} updated={result['updated']}"
+            f"text_pipeline contracts={result['contracts']} jobs={result['jobs']} updated={result['updated']} state_path={result['state_path']}"
         )
         return 0
     except Exception as exc:

@@ -39,21 +39,6 @@ from jobs.novena.liturgical_helpers import celebration_name, is_easter_season_fo
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONTRACT_DIR = ROOT / "config" / "publish" / "contracts"
 DEFAULT_GITHUB_PAGES_BASE_URL = "https://jctebo.github.io/spotify_praylist"
-DEFAULT_NOTION_DATABASE_NAME = "Opus Dei"
-DEFAULT_NOTION_FIELDS = {
-    "entry_id": "Entry ID",
-    "title": "Title",
-    "date": "Date",
-    "status": "Status",
-    "frequency": "Frequency",
-    "contract": "Contract",
-    "text": "Text",
-    "text_hash": "Text Hash",
-    "audio_enabled": "Audio Enabled",
-    "audio_url": "Audio URL",
-    "audio_path": "Audio Path",
-    "content_hash": "Content Hash",
-}
 DEFAULT_AUDIO_SETTINGS = {
     "enabled": False,
     "model": "gpt-4o-mini-tts",
@@ -87,7 +72,6 @@ class PublishContract(NamedTuple):
     timezone: str
     version: str
     season: str
-    notion_target: Dict[str, Any]
     audio_target: Dict[str, Any]
     metadata: Dict[str, Any]
     entries: Tuple[Dict[str, Any], ...]
@@ -575,15 +559,6 @@ def _normalize_entry(entry: Any, path: Path) -> Dict[str, Any]:
 
 
 
-def _normalize_target(payload: Dict[str, Any]) -> Dict[str, Any]:
-    target = _optional_dict(payload, "notion_target", {})
-    target.setdefault("database_name", DEFAULT_NOTION_DATABASE_NAME)
-    target.setdefault("fields", dict(DEFAULT_NOTION_FIELDS))
-    target.setdefault("database_id_env", "NOTION_PUBLISH_DATABASE_ID")
-    return target
-
-
-
 def _normalize_audio_target(payload: Dict[str, Any]) -> Dict[str, Any]:
     audio_target = _optional_dict(payload, "audio_target", {})
     audio_target.setdefault("docs_root", "docs")
@@ -728,7 +703,6 @@ def load_publish_contracts(contract_dir: Optional[Path] = None) -> List[PublishC
                 timezone=_normalize_timezone(contract_root.get("timezone"), contract_path),
                 version=_require_text(contract_root, "version", contract_path, "Publish contract"),
                 season=_normalize_season(contract_root.get("season"), contract_path),
-                notion_target=_normalize_target(contract_root),
                 audio_target=_normalize_audio_target(contract_root),
                 metadata=dict(contract_root.get("metadata") or {}),
                 entries=normalized_entries,
@@ -2507,13 +2481,13 @@ def build_text_jobs(contracts: Sequence[PublishContract], *, target_date: Option
                     "date": str(entry.get("date", "daily")).strip() or "daily",
                     "published_date": rendered_metadata["published_date"],
                     "status": entry["status"],
+                    "episode_state": dict(entry.get("episode_state") or {}),
                     "text": text_body,
                     "text_hash": _text_hash(text_body),
                     "sections": sections,
                     "resume_markers": build_resume_markers(sections=sections),
                     "text_config": text_config,
                     "audio_config": dict(entry.get("audio_config") or {}),
-                    "notion_target": dict(contract.notion_target),
                     "audio_target": dict(contract.audio_target),
                     "metadata": dict(contract.metadata),
                     "render_context": render_context,
@@ -2615,13 +2589,13 @@ def build_audio_jobs(contracts: Sequence[PublishContract], *, target_date: Optio
                 "date": str(entry.get("date", "daily")).strip() or "daily",
                 "published_date": rendered_metadata["published_date"],
                 "status": entry["status"],
+                "episode_state": dict(entry.get("episode_state") or {}),
                 "text": text_body,
                 "text_hash": _text_hash(text_body),
                 "audio_fragments": audio_fragments,
                 "resume_markers": build_resume_markers(fragments=audio_fragments),
                 "content_hash": "",
                 "audio_config": audio_config,
-                "notion_target": dict(contract.notion_target),
                 "audio_target": dict(contract.audio_target),
                 "metadata": dict(contract.metadata),
                 "render_context": render_context,

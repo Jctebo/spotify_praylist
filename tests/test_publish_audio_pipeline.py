@@ -465,7 +465,10 @@ class TestPublishAudioPipeline(unittest.TestCase):
             self.runner_mod.build_audio_jobs = lambda contracts, target_date=None: self.audio_mod.build_audio_jobs(
                 contracts, target_date=target_date or expected_date
             )
-            result = self.runner_mod.run_audio_pipeline(docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root)
+            state_path = Path(tmpdir) / "publish-state.json"
+            result = self.runner_mod.run_audio_pipeline(
+                docs_root=docs_root, renderer=fake_renderer, cache_root=cache_root, state_path=state_path
+            )
             feed_root = ET.fromstring((docs_root / "podcast.xml").read_text(encoding="utf-8"))
             titles = [item.findtext("title") or "" for item in feed_root.findall("./channel/item")]
 
@@ -489,6 +492,9 @@ class TestPublishAudioPipeline(unittest.TestCase):
                 )
             )
             self.assertTrue((docs_root / "images" / "logo_ora_pro_nobis.png").exists())
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertEqual(len(state["episodes"]), result["rendered"])
+            self.assertTrue(all(episode["audio_url"] for episode in state["episodes"].values()))
 
     def test_run_audio_pipeline_uses_local_archive_snapshot(self):
         contracts = self.contracts_mod.load_publish_contracts()
@@ -609,6 +615,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
                     "feed_path": str(docs_root / "podcast.xml"),
                     "cover_art_path": str(docs_root / "images" / "logo_ora_pro_nobis.png"),
                     "rendered_jobs": [],
+                    "state_path": str(docs_root.parent / ".cache" / "publish_state" / "state.json"),
                 }
 
             self.runner_mod.run_audio_pipeline = fake_run_audio_pipeline
@@ -645,6 +652,7 @@ class TestPublishAudioPipeline(unittest.TestCase):
                     "feed_path": str(docs_root / "podcast.xml"),
                     "cover_art_path": str(docs_root / "images" / "logo_ora_pro_nobis.png"),
                     "rendered_jobs": [],
+                    "state_path": str(docs_root.parent / ".cache" / "publish_state" / "state.json"),
                 }
 
             self.runner_mod.run_audio_pipeline = fake_run_audio_pipeline
@@ -715,25 +723,22 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertIn("R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}", workflow_text)
         self.assertIn("python scripts/sync_r2_audio.py", workflow_text)
         self.assertIn("Stage GitHub Pages artifact", workflow_text)
-        self.assertIn("rm -rf pages_artifact/audio", workflow_text)
+        self.assertIn("cp config/site/coming-soon.html pages_artifact/index.html", workflow_text)
+        self.assertIn("cp docs/podcast.xml pages_artifact/podcast.xml", workflow_text)
+        self.assertIn("cp docs/images/logo_ora_pro_nobis.png pages_artifact/images/logo_ora_pro_nobis.png", workflow_text)
+        self.assertNotIn("cp -a docs/. pages_artifact/", workflow_text)
         self.assertIn("path: ${{ github.workspace }}/pages_artifact", workflow_text)
 
-    def test_daily_devotional_image_workflow_rebuilds_podcast_feed_from_archive(self):
-        workflow_text = Path(".github/workflows/daily_devotional_image_remote.yml").read_text(encoding="utf-8")
+    def test_publish_audio_workflow_owns_podcast_feed_and_archive(self):
+        workflow_text = Path(".github/workflows/publish_audio.yml").read_text(encoding="utf-8")
 
-        self.assertIn("AUDIO_PUBLIC_BASE_URL: ${{ vars.AUDIO_PUBLIC_BASE_URL }}", workflow_text)
         self.assertIn("Restore published audio archive", workflow_text)
+        self.assertIn("Publish audio files and RSS feed", workflow_text)
+        self.assertIn("python -m jobs.publish.run_audio_pipeline", workflow_text)
+        self.assertIn("python -m jobs.novena_contracts.pipeline", workflow_text)
+        self.assertIn("Save published audio archive", workflow_text)
         self.assertIn("path: docs/audio", workflow_text)
-        self.assertIn("Rebuilt podcast.xml from", workflow_text)
-        self.assertIn("from jobs.publish.audio import (", workflow_text)
-        self.assertIn("load_published_audio_jobs,", workflow_text)
-        self.assertIn("refusing to publish a blank podcast feed", workflow_text)
-        self.assertIn("podcast_cover_art_public_url", workflow_text)
-        self.assertIn('feed_path = Path(os.environ["GITHUB_WORKSPACE"]) / "pages" / "podcast.xml"', workflow_text)
-        self.assertIn("Refusing to publish missing or empty podcast feed", workflow_text)
-        self.assertIn("Refusing to publish podcast feed with no items", workflow_text)
-        self.assertIn('rm -rf "${GITHUB_WORKSPACE}/pages/audio"', workflow_text)
-        self.assertIn("path: ${{ github.workspace }}/pages", workflow_text)
+        self.assertIn("publish-audio-archive-${{ runner.os }}-v1-", workflow_text)
 
     def test_run_audio_pipeline_can_render_today_and_tomorrow_together(self):
         contracts = self.contracts_mod.load_publish_contracts()
