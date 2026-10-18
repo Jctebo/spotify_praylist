@@ -504,6 +504,9 @@ class TestSpotifyContracts(unittest.TestCase):
                     "angelus-morning",
                 ),
                 "midday": (
+                    "daily-gospel-exegesis",
+                    "midmorning-prayer",
+                    "midday-prayer",
                     "daily-novenas",
                     "angelus-midday",
                     "saint-of-the-day",
