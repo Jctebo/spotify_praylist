@@ -20,13 +20,10 @@ class DevotionalWallpaperWorkflowTests(unittest.TestCase):
         self.assertIn("path: artifacts/devotional-wallpapers/", text)
         self.assertIn("retention-days: 30", text)
 
-    def test_legacy_pipelines_remain_unchanged_vs_base(self):
-        import subprocess
-        result = subprocess.run(
-            ["git", "diff", "--name-only", "90e004f", "--", ".github/workflows/daily_devotional_image_remote.yml", ".github/workflows/publish_audio.yml", "jobs/novena/generate_devotional_image.py", "jobs/publish/site.py", "sync/build_devotional_public_tree.py"],
-            text=True, capture_output=True, check=True,
-        )
-        self.assertEqual(result.stdout.strip(), "")
+    def test_local_runner_uses_preserved_wallpaper_generator(self):
+        runner = Path("scripts/run_devotional_wallpapers_local.ps1")
+        self.assertTrue(runner.exists())
+        self.assertIn("jobs/novena/generate_devotional_wallpapers.py", runner.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

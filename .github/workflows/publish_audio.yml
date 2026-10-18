@@ -30,8 +30,6 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-      NOTION_PUBLISH_DATABASE_ID: ${{ secrets.NOTION_PUBLISH_DATABASE_ID }}
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
       PUBLISH_AUDIO_FORCE_REBUILD: ${{ github.event.inputs.novena_publish_mode == 'bootstrap-no-cache' }}
@@ -73,6 +71,14 @@ jobs:
           restore-keys: |
             publish-audio-archive-${{ runner.os }}-v1-
 
+      - name: Restore local publish state
+        uses: actions/cache/restore@v4
+        with:
+          path: .cache/publish_state
+          key: publish-state-${{ runner.os }}-v1-${{ github.run_id }}
+          restore-keys: |
+            publish-state-${{ runner.os }}-v1-
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -86,54 +92,6 @@ jobs:
 
       - name: Publish novena audio and RSS feed
         run: python -m jobs.novena_contracts.pipeline
-
-      - name: Install rclone
-        if: github.ref == 'refs/heads/main'
-        shell: bash
-        run: |
-          set -euo pipefail
-          sudo apt-get update
-          sudo apt-get install -y rclone
-          rclone version
-
-      - name: Configure rclone
-        if: github.ref == 'refs/heads/main'
-        shell: bash
-        env:
-          RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG_B64 }}
-        run: |
-          set -euo pipefail
-          if [ -z "${RCLONE_CONFIG_B64:-}" ]; then
-            echo "Missing secret RCLONE_CONFIG_B64" >&2
-            exit 1
-          fi
-          mkdir -p "${HOME}/.config/rclone"
-          printf "%s" "${RCLONE_CONFIG_B64}" | base64 -d > "${HOME}/.config/rclone/rclone.conf"
-          chmod 600 "${HOME}/.config/rclone/rclone.conf"
-
-      - name: Restore devotional image public tree
-        if: github.ref == 'refs/heads/main'
-        shell: bash
-        run: |
-          set -euo pipefail
-          REMOTE_NAME="${RCLONE_REMOTE_NAME:-onedrive}"
-          REMOTE_ROOT="${RCLONE_REMOTE_ROOT:-Pictures/Samsung Gallery/DCIM}"
-          LOCAL_ROOT="${GITHUB_WORKSPACE}/onedrive_sync/DCIM"
-
-          mkdir -p \
-            "${LOCAL_ROOT}/Current Devotion" \
-            "${LOCAL_ROOT}/Current Devotion Wide"
-
-          rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Current Devotion/" "${LOCAL_ROOT}/Current Devotion/" --create-empty-src-dirs
-          rclone copy "${REMOTE_NAME}:${REMOTE_ROOT}/Current Devotion Wide/" "${LOCAL_ROOT}/Current Devotion Wide/" --create-empty-src-dirs
-          rclone copyto "${REMOTE_NAME}:${REMOTE_ROOT}/devotional_image_library.json" "${LOCAL_ROOT}/devotional_image_library.json"
-
-          python sync/build_devotional_public_tree.py \
-            --source-root "${LOCAL_ROOT}" \
-            --target-root "${GITHUB_WORKSPACE}/docs/devotional/DCIM"
-
-      - name: Build prayer website
-        run: python -m jobs.publish.site
 
       - name: Sync audio archive to R2
         run: python scripts/sync_r2_audio.py
@@ -154,6 +112,13 @@ jobs:
           path: docs/audio
           key: publish-audio-archive-${{ runner.os }}-v1-${{ github.run_id }}
 
+      - name: Save local publish state
+        if: success()
+        uses: actions/cache/save@v4
+        with:
+          path: .cache/publish_state
+          key: publish-state-${{ runner.os }}-v1-${{ github.run_id }}
+
       - name: Configure GitHub Pages
         if: github.ref == 'refs/heads/main'
         uses: actions/configure-pages@v5
@@ -162,9 +127,10 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           rm -rf pages_artifact
-          mkdir -p pages_artifact
-          cp -a docs/. pages_artifact/
-          rm -rf pages_artifact/audio
+          mkdir -p pages_artifact/images
+          cp config/site/coming-soon.html pages_artifact/index.html
+          cp docs/podcast.xml pages_artifact/podcast.xml
+          cp docs/images/logo_ora_pro_nobis.png pages_artifact/images/logo_ora_pro_nobis.png
 
       - name: Upload GitHub Pages artifact
         if: github.ref == 'refs/heads/main'

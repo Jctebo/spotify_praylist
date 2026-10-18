@@ -4,8 +4,6 @@ from .formatting import build_publish_context, derive_episode_id, render_publish
 from .contracts import (
     DEFAULT_CONTRACT_DIR,
     DEFAULT_GITHUB_PAGES_BASE_URL,
-    DEFAULT_NOTION_DATABASE_NAME,
-    DEFAULT_NOTION_FIELDS,
     PublishContract,
     build_text_jobs,
     expand_audio_fragments,
@@ -16,5 +14,4 @@ from .contracts import (
     resolve_text_jobs,
 )
 from .fragments import audio_manifest_hash, fragment_content_hash
-from .notion import NotionClient, upsert_text_jobs_to_notion
 from .rss import build_rss_feed, write_podcast_feed

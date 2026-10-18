@@ -4,23 +4,16 @@ import datetime
 import os
 import re
 import sys
-import time
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import requests
 from romcal import Romcal, get_bundled_calendar_definitions, get_bundled_resources
 from romcal.types import CalendarDefinition, DayDefinition, Precedence, Season
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
-
-NOTION_VERSION = "2022-06-28"
-NOTION_REQUEST_TIMEOUT_SECONDS = 30
-NOTION_MAX_ATTEMPTS = 5
-NOTION_RETRYABLE_STATUSES = {408, 409, 429, 500, 502, 503, 504}
 
 DEFAULT_UTC_OFFSET = "-06:00"
 ROMCAL_OVERLAY_SUFFIX = "__enhancement_003"
@@ -59,10 +52,6 @@ OPENAI_API_KEY = "OPENAI_API_KEY"
 OAI_API_BASE_URL = "OAI_API_BASE_URL"
 OAI_MODEL = "OAI_MODEL"
 
-NOTION_TOKEN = "NOTION_TOKEN"
-NOTION_DATABASE_ID = "NOTION_DATABASE_ID"
-NOTION_DATABASE_NAME = "NOTION_DATABASE_NAME"
-
 ALLOWED_DEVOTIONAL_RANKS: frozenset[str] = frozenset(
     {
         "optional_memorial",
@@ -73,13 +62,11 @@ ALLOWED_DEVOTIONAL_RANKS: frozenset[str] = frozenset(
 )
 EASTER_OCTAVE_PRECEDENCE_PREFIX = "Precedence.weekday_of_easter_octave_"
 
-
 def require_env(name: str) -> str:
     value = os.getenv(name, "").strip()
     if not value:
         raise RuntimeError(f"Missing required environment variable: {name}")
     return value
-
 
 def int_env(name: str, default: int, min_value: int, max_value: int) -> int:
     raw = os.getenv(name, "").strip()
@@ -91,7 +78,6 @@ def int_env(name: str, default: int, min_value: int, max_value: int) -> int:
         return default
     return max(min_value, min(max_value, value))
 
-
 def bool_env(name: str, default: bool) -> bool:
     raw = os.getenv(name, "").strip().lower()
     if not raw:
@@ -101,7 +87,6 @@ def bool_env(name: str, default: bool) -> bool:
     if raw in {"0", "false", "no", "n", "off"}:
         return False
     return default
-
 
 def parse_utc_offset(offset_text: str) -> datetime.timezone:
     text = (offset_text or "").strip()
@@ -116,125 +101,10 @@ def parse_utc_offset(offset_text: str) -> datetime.timezone:
     delta = datetime.timedelta(hours=hours, minutes=minutes) * sign
     return datetime.timezone(delta)
 
-
 def local_today() -> datetime.date:
     raw_offset = os.getenv(JOB_UTC_OFFSET, "").strip() or DEFAULT_UTC_OFFSET
     now_local = datetime.datetime.now(parse_utc_offset(raw_offset))
     return now_local.date()
-
-
-def notion_headers(token: str) -> Dict[str, str]:
-    return {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json",
-        "Notion-Version": NOTION_VERSION,
-    }
-
-
-def notion_should_retry(exc: requests.exceptions.RequestException) -> bool:
-    if isinstance(exc, (requests.exceptions.Timeout, requests.exceptions.ConnectionError)):
-        return True
-    if isinstance(exc, requests.exceptions.HTTPError):
-        response = exc.response
-        return bool(response is not None and response.status_code in NOTION_RETRYABLE_STATUSES)
-    return False
-
-
-def notion_retry_delay_seconds(exc: requests.exceptions.RequestException, attempt: int) -> float:
-    if isinstance(exc, requests.exceptions.HTTPError) and exc.response is not None:
-        retry_after = str(exc.response.headers.get("Retry-After", "")).strip()
-        if retry_after:
-            try:
-                return max(0.0, float(retry_after))
-            except ValueError:
-                pass
-    return min(30.0, float(2 ** max(attempt - 1, 0)))
-
-
-def notion_call(method: str, url: str, token: str, payload: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    for attempt in range(1, NOTION_MAX_ATTEMPTS + 1):
-        try:
-            response = requests.request(
-                method,
-                url,
-                headers=notion_headers(token),
-                json=payload,
-                timeout=NOTION_REQUEST_TIMEOUT_SECONDS,
-            )
-            response.raise_for_status()
-            data = response.json()
-            if not isinstance(data, dict):
-                raise RuntimeError("Unexpected Notion API response format.")
-            return data
-        except requests.exceptions.RequestException as exc:
-            if attempt >= NOTION_MAX_ATTEMPTS or not notion_should_retry(exc):
-                raise
-            delay = notion_retry_delay_seconds(exc, attempt)
-            print(
-                f"WARN notion_retry attempt={attempt} delay={delay:.1f}s method={method} url={url}",
-                file=sys.stderr,
-            )
-            time.sleep(delay)
-    raise RuntimeError("Notion request retry loop exited unexpectedly.")
-
-
-def notion_get_all_pages(database_id: str, token: str) -> List[Dict[str, Any]]:
-    pages: List[Dict[str, Any]] = []
-    next_cursor: Optional[str] = None
-    while True:
-        body: Dict[str, Any] = {"page_size": 100}
-        if next_cursor:
-            body["start_cursor"] = next_cursor
-        data = notion_call("POST", f"https://api.notion.com/v1/databases/{database_id}/query", token, body)
-        for result in data.get("results") or []:
-            if isinstance(result, dict):
-                pages.append(result)
-        if not data.get("has_more"):
-            break
-        next_cursor = str(data.get("next_cursor", "")).strip() or None
-    return pages
-
-
-def notion_get_database(database_id: str, token: str) -> Dict[str, Any]:
-    return notion_call("GET", f"https://api.notion.com/v1/databases/{database_id}", token)
-
-
-def notion_find_database_id_by_name(token: str, db_name: str) -> Optional[str]:
-    body = {"query": db_name, "filter": {"value": "database", "property": "object"}}
-    data = notion_call("POST", "https://api.notion.com/v1/search", token, body)
-    results = data.get("results") or []
-    for item in results:
-        if not isinstance(item, dict):
-            continue
-        title_parts = item.get("title") or []
-        title = ""
-        if isinstance(title_parts, list) and title_parts:
-            title = str((title_parts[0] or {}).get("plain_text", "")).strip()
-        if title.lower() == db_name.lower():
-            found = str(item.get("id", "")).strip()
-            if found:
-                return found
-    return None
-
-
-def notion_create_page(database_id: str, properties: Dict[str, Any], token: str) -> None:
-    body = {"parent": {"database_id": database_id}, "properties": properties}
-    notion_call("POST", "https://api.notion.com/v1/pages", token, body)
-
-
-def notion_update_page_properties(page_id: str, properties: Dict[str, Any], token: str) -> None:
-    notion_call("PATCH", f"https://api.notion.com/v1/pages/{page_id}", token, {"properties": properties})
-
-
-def page_title(page: Dict[str, Any], title_property: str) -> str:
-    props = page.get("properties") or {}
-    prop = props.get(title_property) or {}
-    vals = prop.get("title") or []
-    if not isinstance(vals, list):
-        return ""
-    parts = [str(v.get("plain_text", "")).strip() for v in vals if isinstance(v, dict)]
-    return " ".join(p for p in parts if p).strip()
-
 
 def normalize_romcal_calendar(calendar: str) -> str:
     value = str(calendar or "").strip().lower()
@@ -244,15 +114,12 @@ def normalize_romcal_calendar(calendar: str) -> str:
     }
     return aliases.get(value, value or "general_roman")
 
-
 @lru_cache(maxsize=1)
 def bundled_calendar_definitions_by_id() -> Dict[str, CalendarDefinition]:
     return {str(calendar.id).strip(): calendar for calendar in get_bundled_calendar_definitions()}
 
-
 def celebration_id(event: Dict[str, Any]) -> str:
     return str(event.get("id", "")).strip().lower()
-
 
 def special_sunday_normalization_rows(calendar: str) -> Dict[str, DayDefinition]:
     base_calendar_id = normalize_romcal_calendar(calendar)
@@ -277,7 +144,6 @@ def special_sunday_normalization_rows(calendar: str) -> Dict[str, DayDefinition]
         )
     return overrides
 
-
 def build_romcal_overlay_calendar(calendar: str) -> CalendarDefinition:
     base_calendar_id = normalize_romcal_calendar(calendar)
     bundled = bundled_calendar_definitions_by_id()
@@ -294,10 +160,8 @@ def build_romcal_overlay_calendar(calendar: str) -> CalendarDefinition:
         deep=True,
     )
 
-
 def infer_precedence(event: Dict[str, Any]) -> str:
     return str(event.get("precedence", "")).strip() or "unknown"
-
 
 def infer_celebration_rank(event: Dict[str, Any]) -> str:
     precedence = infer_precedence(event)
@@ -306,7 +170,6 @@ def infer_celebration_rank(event: Dict[str, Any]) -> str:
     if celebration_id(event) in SPECIAL_SUNDAY_SOLEMNITY_IDS:
         return "solemnity"
     return str(event.get("rank_name", "")).strip() or str(event.get("rank", "")).strip() or "unknown"
-
 
 @lru_cache(maxsize=8)
 def build_romcal(calendar: str, locale: str) -> Romcal:
@@ -319,7 +182,6 @@ def build_romcal(calendar: str, locale: str) -> Romcal:
         calendar_definitions=[*get_bundled_calendar_definitions(), overlay_calendar],
     )
 
-
 @lru_cache(maxsize=16)
 def romcal_year_calendar(calendar: str, locale: str, year: int) -> Dict[str, List[Any]]:
     romcal = build_romcal(calendar, locale)
@@ -327,7 +189,6 @@ def romcal_year_calendar(calendar: str, locale: str, year: int) -> Dict[str, Lis
     if not isinstance(data, dict):
         raise RuntimeError("Romcal returned unexpected calendar format.")
     return data
-
 
 @lru_cache(maxsize=16)
 def romcal_year_mass_calendar(calendar: str, locale: str, year: int) -> Dict[str, List[Any]]:
@@ -337,14 +198,12 @@ def romcal_year_mass_calendar(calendar: str, locale: str, year: int) -> Dict[str
         raise RuntimeError("Romcal returned unexpected mass calendar format.")
     return data
 
-
 def celebration_name(event: Dict[str, Any]) -> str:
     for key in ("name", "title", "localName", "commonName", "fullname", "id"):
         value = str(event.get(key, "")).strip()
         if value:
             return value
     return ""
-
 
 def romcal_fetch_day(calendar: str, locale: str, dt: datetime.date) -> List[Dict[str, Any]]:
     try:
@@ -386,14 +245,12 @@ def romcal_fetch_day(calendar: str, locale: str, dt: datetime.date) -> List[Dict
                 out.append(row)
     return out
 
-
 def _normalize_romcal_season_value(value: Any) -> str:
     raw = getattr(value, "value", value)
     text = str(raw or "").strip().lower()
     if text.startswith("season."):
         text = text.split(".", 1)[1]
     return text.replace(" ", "_").replace("-", "_")
-
 
 def is_easter_season_for_date(calendar: str, locale: str, dt: datetime.date) -> bool:
     rows = romcal_fetch_day(calendar, locale, dt)
@@ -414,10 +271,8 @@ def is_easter_season_for_date(calendar: str, locale: str, dt: datetime.date) -> 
         )
     return season_value == Season.easter_time.value
 
-
 def _romcal_row_text(row: Dict[str, Any], field_name: str) -> str:
     return str(row.get(field_name, "") or "").strip().lower().replace(" ", "_").replace("-", "_")
-
 
 def _is_holy_week_row(row: Dict[str, Any], dt: datetime.date) -> bool:
     celebration_id = _romcal_row_text(row, "id")
@@ -436,7 +291,6 @@ def _is_holy_week_row(row: Dict[str, Any], dt: datetime.date) -> bool:
     if precedence.startswith("precedence."):
         precedence = precedence.split(".", 1)[1]
     return precedence == Precedence.triduum_1.value
-
 
 def resolve_liturgical_music_season(calendar: str, locale: str, dt: datetime.date) -> str:
     rows = romcal_fetch_day(calendar, locale, dt)
@@ -469,7 +323,6 @@ def resolve_liturgical_music_season(calendar: str, locale: str, dt: datetime.dat
         f"Unsupported Romcal music season '{season_value}' for {dt.isoformat()} "
         f"(calendar={normalize_romcal_calendar(calendar)}, locale={locale})"
     )
-
 
 def devotional_output_is_eligible(celebration_rank: str, precedence: str) -> bool:
     rank = str(celebration_rank or "").strip()

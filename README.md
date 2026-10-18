@@ -7,118 +7,34 @@ Python automation for rebuilding Spotify prayer playlists from repo-owned queue 
 - Non-interactive Spotify auth via refresh token
 - Repo-owned queue contracts in `config/spotify/contracts/*.json`
 - Repo-owned playlist identity definitions in `config/spotify/playlists/*.json`
-- Notion `Opus Dei` rows own active playlist membership and order
+- Checked-in playlist definitions own the Spotify playlist ids and ordered active contract membership
 
 Required variables:
 - `SPOTIFY_CLIENT_ID`
 - `SPOTIFY_CLIENT_SECRET`
 - `SPOTIFY_REFRESH_TOKEN`
-- `NOTION_TOKEN`
 
 Optional variables:
-- `SPOTIFY_PLAYLIST_NAME` to target one playlist definition by stable key or display name
-- `SPOTIFY_PLAYLIST_ID` to override the selected playlist definition's playlist id for a one-off validation run
-- `SPOTIFY_USER_ID` for compatibility with older local setups
+- `SPOTIFY_PLAYLIST_NAME` to target one playlist definition by key or display name
+- `SPOTIFY_PLAYLIST_ID` to override the selected playlist id for a one-off validation run
 - `JOB_UTC_OFFSET` to override the runtime timezone
 - `ROMCAL_CALENDAR` and `ROMCAL_LOCALE` to control the liturgical season lookup used by the Marian Antiphon swap
-- `NOTION_DATABASE_ID` or `NOTION_DATABASE_NAME` for the `Opus Dei` membership/order database
-- related Notion variables for optional post-write sync behavior
-
 ## Publish Pipelines
-### Text
-- `jobs/publish/run_text_pipeline.py`: contract-driven Notion text publication for `config/publish/contracts/*.json`
-- `config/publish/contracts/*.json`: shared Morning Prayer, Auxilium Christianorum, Marian Antiphon, Daily Rosary, and Daily Reflection publish contracts with a single entry-based schema
-- `config/publish/templates/...`: reusable prayer text assets and Rosary mystery text assets referenced by the contracts
-- `config/publish/contracts/auxilium-christianorum.json`: Ora Pro Nobis Auxilium Christianorum lay-member daily episode contract built from reusable prayer templates and a weekday-specific prayer map
-- `config/publish/templates/auxilium-christianorum/*.txt`: source-attributed lay-member Auxilium Christianorum prayer templates from the official daily prayer PDF; priest-only prayers are intentionally excluded
-- `jobs/notion/generate_page_audio.py`: archived page-audio runtime retained only for older Morning Prayer workflows
-- `NOTION_PUBLISH_DATABASE_ID` or `NOTION_DATABASE_NAME` for the new publish-text Notion target, which upserts page titles on the `Opus Dei` database and writes the prayer text into the page body
-- For local OpenAI runs, copy `config/local/openai.env.example` to `config/local/openai.env` and fill in `OPENAI_API_KEY`; the publish-text helper will read that file automatically, and you can override the path with `OPENAI_API_KEY_FILE`
-- `Publish Prayer Text` is disabled while the Notion publish target is corrected; the archived workflow definition lives at `.github/disabled_workflows/publish_text.yml`
 
-### Audio
-- `jobs/publish/run_audio_pipeline.py`: contract-driven audio publication that writes date-scoped `docs/audio/<episode_id>.mp3` files and refreshes `docs/podcast.xml`
-- `jobs/publish/fragments.py`: fragment cache and ffmpeg assembly helpers used by the publish audio path
-- publish audio caches leaf fragments under `.cache/publish_audio/` so unchanged spoken blocks can be reused across reruns, and GitHub Actions persists that cache across workflow runs
-- publish audio writes one JSON sidecar per episode under `docs/audio/`, including ordered `resume_markers` for fragment-level resume/bookmark surfaces; reruns now rebuild the feed from the local `docs/audio/` archive snapshot rather than the remote published feed
-- the publish workflow also writes `docs/audio/index.html` and `docs/audio/index.json`; in CI, a checksum-backed delta sync sends only missing or changed audio artifacts to Cloudflare R2, and the GitHub Pages artifact is staged without the heavy `docs/audio/` folder
-- Auxilium Christianorum publishes as its own daily Ora Pro Nobis episode with a deterministic liturgical announcement, the lay-member every-day prayers, the correct weekday prayer, the Litany of the Most Precious Blood, and the daily conclusion
-- Auxilium Christianorum and Marian Antiphon episodes use generated `prayer_intro` bridge blocks so the liturgical day flows naturally into each devotion with a concise, prayer-specific transition.
-- Publish-audio contract jobs resolve one deterministic saint-centered theme brief from the target date, timezone, calendar, and locale, then reuse that brief across the existing Morning Prayer, Daily Rosary, Daily Reflection, Auxilium Christianorum, and Marian Antiphon jobs. Introductions use today’s Gospel or today’s saint/observance; future solemnities are not used as shared intro context. Novena activation windows remain separate scheduling logic.
-- Generated devotional openings use the shared `devotional-intro-v11` policy with prayer-specific profiles, prompt-level sentence guidance, semantic and character safeguards, one corrective retry, deterministic fallbacks, and one cached result per publish job. Morning Prayer targets 2–4 sentences; Auxilium Christianorum and Marian Antiphons target 1–2 sentences without exact-count validation or required stock openings. Intro sidecars record context quality (`full_text`, `citation_only`, or `missing`) plus redacted provider, retry, validation, and fallback diagnostics; when full Gospel text is available, Morning Prayer rejects citation-only prose and retries for an interpretive detail.
-- Auxilium Christianorum response markers are normalized into clean spoken fragments: printed `V.` and `R.` labels are omitted, response boundaries become normal fragment pauses, and short versicle/response fragments can use role-specific TTS voices
-- Publish and structured novena contracts support non-spoken `audio_cue` and `pause` blocks. The built-in `sacred_bell` cue is synthesized and cached without TTS, explicit pauses carry a validated duration and purpose, and both controls are omitted from readable prayer text and resume markers.
-- Repository novenas use a lower, longer-decaying sacred bell before five-second personal-intention pauses. Printed `V.`/`R.` labels are converted into role-aware spoken fragments, printed repetitions are rendered as actual repeated prayer segments, and OpenAI responses use Alloy while Ash remains the primary and versicle voice.
-- Daily Rosary publishes as its own date-scoped Ora Pro Nobis episode with the traditional weekday mysteries and one coherent generated devotional package: a flexible spoken introduction, one overall intention, and five distinct decade intentions paired with mystery reflections. A best-effort LLM observance context supplies concise information about the primary saint, feast, Marian observance, or event without forcing a theme taxonomy. The dominant focus follows a Rosary-specific seasonal hierarchy—during Ordinary Time, solemnity/feast, Gospel, memorial, then Ordinary Time; during other seasons, solemnity/feast, season, Gospel, then memorial—and shapes all five decades. Each decade intention is followed by a short pause before its reflection, while canonical `Our Father`, `Hail Mary`, `Glory Be`, and `Fatima Prayer` fragments remain independently cached. Sidecars record priority order, dominant focus, intention categories/counts, reflection counts, generation source, and atomic fallback reason.
-- Daily Reflection remains the existing date-scoped Ora Pro Nobis episode, now shaped by the approved saint-centered brief. It uses deterministic fallback text when OpenAI is unavailable and records source/validation metadata in its sidecar.
-- Marian Antiphon publish audio contracts are season-gated: the ordinary-season Angelus contract and the Easter-season Regina Caeli contract each render one combined prayer-specific generated opening before the fixed sign-of-cross and antiphon text; both episode titles include `Marian Antiphon` so Spotify lookup can target one durable title marker across seasons
-- Publish-audio episodes use centralized seasonal audio branding from `config/publish/audio_branding.json`, with seasonal MP3 assets stored under `config/publish/audio/`; the current required assets are `Advent Podcast.mp3`, `Christmas Podcast.mp3`, `Ordinary Time Podcast.mp3`, `Lent Podcast.mp3`, `Holy Week Podcast.mp3`, and `Easter Podcast.mp3`
-- Publish-audio and novena episodes normalize the final assembled MP3 to the shared podcast loudness target (`-16 LUFS`, `-1.5 dBTP`, `11 LRA`) after fragment assembly by default; individual contracts can override or disable `loudness_normalization` when a specific episode family needs different mastering.
-- `scripts/run_morning_prayer_elevenlabs_local.py`: step-by-step local smoke helper that loads `config/local/elevenlabs.env`, renders only the Morning Prayer ElevenLabs variant, and writes local feed/archive artifacts under `artifacts/local/elevenlabs/`
-- `OPENAI_API_KEY` for Ash-first publish audio, including Morning Prayer, Auxilium Christianorum, Marian Antiphons, Rosary, Daily Reflection, and novena audio in local runs or GitHub Actions; `ELEVENLABS_API_KEY` remains an optional fallback
-- Audio requests retry connection/timeouts and HTTP 408/409/429/5xx failures up to three attempts per provider, with 5/10-second backoff. OpenAI uses a fresh client per attempt with SDK retries disabled; connections time out after 15 seconds, with read timeouts of 300 seconds for OpenAI and 120 seconds for ElevenLabs. Failure logs include exception/cause types, HTTP status, and machine error codes without request/response prose. Permanent rejections proceed directly to the next provider; complete provider failure still stops publication.
-- `config/publish/images/logo_ora_pro_nobis.png`: podcast cover art copied into the published `docs/images/` tree
-- To replace future seasonal music, overwrite the matching MP3 in `config/publish/audio/` or update the path in `config/publish/audio_branding.json`; missing assets log a warning and publish the spoken episode without music.
-- `PUBLISH_GITHUB_PAGES_BASE_URL` to override the static site and podcast feed base URL when publishing audio
-- `AUDIO_PUBLIC_BASE_URL` to override the public MP3/sidecar base URL; production uses `https://audio.orapronobis.media`
-- `PUBLISH_PODCAST_FEED_URL` to override the remote `podcast.xml` archive URL when publishing audio
-- Cloudflare R2 publishing uses GitHub Actions secrets `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY`, plus Actions variables `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ENDPOINT`, and `AUDIO_PUBLIC_BASE_URL`
-- `Publish Prayer Audio` now runs at `06:00 UTC`, and `Daily Spotify Playlist Refresh` runs once daily at `07:00 UTC` (01:00 CST / 02:00 CDT), giving the Central Time playlist refresh a 2:00 AM deadline, plus manual dispatches
-
-### Novena
-- `jobs/novena_contracts/pipeline.py`: contract-first novena publishing that resolves the active novena from today's date, renders theme-aware intro/content fragments, writes a JSON sidecar, and rebuilds RSS
-- `contracts/novenas/templates/*.json`: reusable novena templates, including the shared `standard-9-day` template
-- `contracts/novenas/families/*.json`: reusable family templates; `standard-9-day` is disabled as a runtime selector after materialized coverage is generated
-- `contracts/novenas/feast-days/*.json` and `contracts/novenas/short-form/*.json`: checked-in traditional and short-form contracts keyed by stable Romcal ids
-- `scripts/new_novena_contract.py`: helper for authoring explicit feast contracts or selector-based family contracts
-- `scripts/new_novena_url_contract.py`: local URL importer for Catholic Novena App pages; `single` imports one novena page and `bulk` walks the catalog page, writing generated drafts plus reports under `artifacts/novena-url-overrides/`
-- `scripts/run_traditional_novena_import_local.py`: local batch runner that defaults to the July and August Traditional Novena catalog slices and writes month-specific bulk reports under `artifacts/novena-url-overrides/traditional-novena-july-august/`
-- The URL importer pulls the live prayer body from the novena page and embeds it into `novena.template`; repeated novena days are compacted into shared blocks, and canonical prayers such as `Our Father`, `Hail Mary`, and `Glory Be` are stored once in a fragment library so the TTS renderer can reuse them across days
-- URL imports reject sources with 364 or more numbered prayer days before writing a contract; manually authored contracts remain subject to their normal validation rules
-- The URL importer can optionally normalize instruction-heavy sections with OpenAI for TTS-friendly output; those rewrites are recorded on each section as `notes`
-- Before the model runs, the importer expands canonical prayer names like `Our Father`, `Hail Mary`, and `Glory Be` from the repo's Rosary text templates, then compacts identical day blocks into shared blocks tagged with the day numbers they cover so the TTS renderer can reuse one prayer block behind a small day-specific intro
-- Imported traditional novenas publish with a `Traditional Novena to {saint_name} Day {day} - {date_display}` episode title so they stay distinct from the existing auto-generated novena titles while showing the publish date in the RSS title
-- Published audio and novena sidecars carry a top-level canonical `daily_liturgical_context` contract with the target-day lectionary citation/provenance and saint-centered observance context; novenas keep their local focus in explicit `novena_*` fields.
-- Generated, short-form, and traditional novenas receive one brief Day N introduction before the existing prayer text. It uses validated saint/event identity metadata and a single canonical calendar bridge; the LLM gives solemnities/feasts, the Gospel, memorials, and liturgical seasons priority in that order. The novena body remains saint/day-specific, and sidecars use `devotional-intro-v5` freshness metadata so current targets refresh when the intro policy changes.
-- For local OpenAI runs, copy `config/local/openai.env.example` to `config/local/openai.env` and fill in `OPENAI_API_KEY`; the importer will read that file automatically, and you can override the path with `OPENAI_API_KEY_FILE`
-- Novena contracts now support a top-level `enabled` flag; `enabled: false` contracts stay loadable for review but are skipped by the novena runtime
-- Run the July/August traditional novena import locally with `python scripts/run_traditional_novena_import_local.py`; pass repeated `--month` values if you need a different batch window.
-- `.github/workflows/publish_audio.yml`: combined publish workflow that runs Morning Prayer audio and novena publishing together, scheduled daily and also available on manual dispatch; manual runs default to `daily`, which publishes tomorrow's slice and preserves the existing feed, `bootstrap` seeds today and tomorrow without truncating the feed, `bootstrap-no-cache` seeds today and tomorrow while forcing a rebuild of the audio outputs, and `reset` seeds today and tomorrow after clearing the existing feed
-- The combined publish workflow currently targets MP3, JSON sidecars, and RSS. Spotify playlist assignment and Notion updates stay out of scope for this release.
-
-### RSS Pages
-- Site root landing page: `https://jctebo.github.io/spotify_praylist/`
-- Website generator: `python -m jobs.publish.site`
-- Directory home: `docs/index.html`
-- Prayer manifest: `docs/prayers/index.json`
-- Per-prayer pages: `docs/prayers/<slug>/index.html`
-- Feed file: `docs/podcast.xml`
-- Local audio archive: `docs/audio/*.mp3`
-- Public audio URL pattern on R2: `https://audio.orapronobis.media/<episode_id>.mp3`
-- Public feed URL on GitHub Pages: `https://jctebo.github.io/spotify_praylist/podcast.xml`
-- Public audio URL pattern on GitHub Pages when `AUDIO_PUBLIC_BASE_URL` is unset: `https://jctebo.github.io/spotify_praylist/audio/<episode_id>.mp3`
-- The directory home is organized by active praylists: `Morning Praylist`, `Daily Praylist`, and `Night Praylist`.
-- Home-page prayer cards have one action, `Open prayer`; playback, Spotify links, feed links, and readable prayer text live on the generated prayer page.
-- The generated site is branded from the Ora Pro Nobis logo: the full `docs/images/logo_ora_pro_nobis.png` remains the podcast/RSS cover art, while `python -m jobs.publish.site` creates smaller web derivatives under `docs/images/site/` for page headers and hero branding.
-- Prayer cards and prayer pages focus on the local site date from `JOB_UTC_OFFSET`: exact-date sidecars show as `Today`, older sidecars show as `Most recent`, and future sidecars show as `Upcoming` so tomorrow's normal publish output is not mislabeled as today's prayer.
-- The site adds a subtle liturgical accent token from the shared daily liturgical context helper: purple for Advent/Lent, gold for Easter/Christmas, green for Ordinary Time, and red for Pentecost or martyr/passions contexts.
-- When `devotional/DCIM/devotional_image_library.json` is present, the site generator reads the current portrait/wide devotional image manifests, optimizes selected web images into `docs/images/site/`, and renders the wide image on the home page and the portrait image on prayer detail pages. If the image tree is absent or incomplete, the site falls back to a logo-only layout without broken images.
-- The directory is contract-driven and active-playlist filtered. `config/spotify/playlists/*.json` `contracts` arrays decide which contract-backed pages are generated for the Praylist surface.
-- Ora Pro Nobis generated prayers use `contract.metadata.website` in `config/publish/contracts/*.json`; Spotify-only prayers use top-level `website` metadata in `config/spotify/contracts/*.json`.
-- Published audio JSON sidecars under `docs/audio/` provide latest episode metadata, readable prayer text from ordered fragments, and individual Daily Novena episode listings when present.
-- Enabled website metadata requires `slug`, `title`, `summary`, `group`, `source_label`, and `availability`; external Spotify entries also require `external_url` unless they use a direct `spotify_uri`.
-- `publish_audio.yml` remains active and is the sole workflow that builds and deploys the site and podcast feed. Retiring the legacy devotional image workflow does not change podcast or audio publishing. The audio workflow restores the current devotional image folders from OneDrive via rclone on `main` before site generation; the heavy audio archive remains a local/R2-backed input rather than part of the Pages artifact.
+- `jobs/publish/run_text_pipeline.py` renders repository-owned publish contracts into local artifacts and episode state.
+- `jobs/publish/run_audio_pipeline.py` builds date-scoped audio, JSON sidecars, the archive index, and `docs/podcast.xml` from the same local contracts.
+- `jobs/novena_contracts/` owns contract-driven novena generation, audio artifacts, and RSS publication.
+- Spotify playlist refresh uses checked-in playlist definitions and queue contracts; it needs only Spotify credentials.
+- GitHub Pages serves only the coming-soon landing page plus podcast RSS and cover art. The prayer directory, calendar publisher, and devotional infographic publisher are retired.
 
 ## Files
 - `.agents/skills/normalize-prayer-tts/`: preview-only prayer TTS audit skill for expanding supported abbreviations, separating Versicle/Response voices, converting intention directions into bell/pause controls, and flagging ambiguous print artifacts for review; run it with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py <path> --format auto`, or audit every novena contract read-only with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py contracts/novenas --format auto`
-- `jobs/playlist/refresh_playlist.py`: active Spotify refresh runtime with Notion-owned membership/order
+- `jobs/playlist/refresh_playlist.py`: active Spotify refresh runtime driven by checked-in playlist definitions and ordered queue contracts
 - `jobs/playlist/spotify_contracts.py`: loader and validation for `config/spotify/contracts/*.json` and `config/spotify/playlists/*.json`
 - `config/spotify/contracts/*.json`: one resolver-backed, fixed-URI, or `spotify_episode_lookup` queue contract per file; the three Marian Antiphon Spotify contracts resolve the daily Ora Pro Nobis episode through ordered lookup searches
-- `config/spotify/playlists/*.json`: playlist definitions with playlist identity plus checked-in active contract arrays used by the static Praylist website
+- `config/spotify/playlists/*.json`: playlist definitions with playlist identity plus checked-in active contract arrays
 - `config/legacy/playlist_config.json`: legacy reference config kept off the active runtime path
-- `config/custom_tts/morning-prayer.json`: optional Morning Prayer custom TTS override; when absent, the page-audio runtime uses its built-in Morning Prayer contract defaults
-- `config/legacy/page_audio/*.json`, `config/legacy/rosary.json`, and `config/legacy/auxilium_daily_text.json`: discontinued top-level page-audio contracts retained only as archives; the active runtime no longer loads them
-- `jobs/publish/*.py`: new generic publish boundary for Notion text and GitHub Pages audio outputs
+- `jobs/publish/*.py`: local contract-driven text, audio, state, and RSS publishing
 - `jobs/publish/liturgical_announcement.py`: deterministic Romcal-backed liturgical/date announcement block used by Auxilium Christianorum without requiring OpenAI or Gospel text
 - `jobs/publish/saint_centered_theme.py`: deterministic D-3..D+9 calendar-window resolver and saint-centered theme brief used by every generated prayer experience
 - `jobs/publish/daily_liturgical_context.py`: compatibility context adapter exposing the approved saint-centered brief to existing generated prayer/reflection builders
@@ -128,11 +44,9 @@ Optional variables:
 - `scripts/setup_spotify.ps1`: Spotify credential wizard that also updates `config/spotify/playlists/*.json`
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` with optional single-playlist targeting
 
-- `scripts/setup_notion_playlists.ps1`: legacy Notion playlist-registry helper, no longer on the active Spotify hot path
 - `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; the daily 07:00 UTC run is gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
-- `.github/workflows/daily_notion_reset.yml`: daily + manual Notion completion reset workflow
 - `.github/workflows/publish_audio.yml`: combined publish workflow for Morning Prayer audio and novena publishing, scheduled daily and also available on manual dispatch with `novena_publish_mode=daily` as the default choice; `bootstrap-no-cache` is available for a bootstrap-style publish that rebuilds audio without using the cache
-- `.github/workflows/liturgical_calendar_yearly_sync.yml`: Jan 1 + manual Liturgical Calendar population
+- `config/site/coming-soon.html`: static landing page used by the podcast Pages deployment
 
 ## Config Timezone
 - `jobs/playlist/refresh_playlist.py` uses `JOB_UTC_OFFSET` for all date-based episode selection.
@@ -160,60 +74,18 @@ The source cache uses the General Roman Calendar and English only in this releas
 ## Spotify Contract Model
 Queue contract files in `config/spotify/contracts/` own:
 - `key`
-- `notion_name`, the exact Notion row title used for membership matching
+- `name`, a human-readable label used in resolver status and logs
 - exactly one of `resolver` or `spotify_uri` for ordinary contracts
 - `spotify_episode_lookup` for date-scoped podcast episode matching by show id, required name terms, ordered date formats, and optional ordered search profiles
-- optional top-level `website` metadata for listener-facing prayer directory entries
-- resolver names are exact; the runtime does not rewrite legacy alias names before dispatch
-- the three Marian Antiphon contracts target the Ora Pro Nobis show and try `Marian Antiphon` first, then legacy `Angelus` and `Regina Caeli` title searches for transition coverage
 - optional `fallback_resolver`
 - optional `weekdays`
 
-`spotify_episode_lookup` contracts:
-- own the Spotify show id directly in the contract file
-- match episode `name` only
-- support the flat `required_name_terms` plus `date_formats` shape for one search
-- support `searches` for multiple ordered searches, each with its own `required_name_terms` and `date_formats`
-- require every configured name term in the active search to be present
-- try the active search's configured date formats in order until one matches the episode title
-- stop at the first search that returns matches, then return every matching episode URI for the day
+`spotify_episode_lookup` contracts own the Spotify show id, match episode names, require every configured term, and try date formats/search profiles in order until the first search returns matches.
 
-Auxilium Christianorum Spotify playlist integration resolves the generated Ora Pro Nobis daily episode by title and date from the Ora Pro Nobis show. The Spotify queue contract keeps the current Notion row title `Auxillium Christianorum` for membership matching, while its episode lookup targets titles such as `Auxilium Christianorum - April 6, 2026`.
+Auxilium Christianorum, Daily Rosary, and Daily Examen contracts resolve generated Ora Pro Nobis episodes by title and date. Their local contract names are descriptive labels only.
 
-Daily Rosary Spotify playlist integration resolves the generated Ora Pro Nobis daily episode by title and date from the Ora Pro Nobis show. Its episode lookup targets titles such as `Daily Rosary - Joyful Mysteries - Saint Example - April 6, 2026` while matching only the durable `Daily Rosary` term and the publish date.
 
-Daily Examen Spotify playlist integration now resolves the generated Ora Pro Nobis Daily Reflection episode by title and date from the Ora Pro Nobis show. The Spotify queue contract keeps the current Notion row title `Daily Examen` for membership matching, while its episode lookup targets titles such as `Daily Reflection - Trust - April 6, 2026` and matches only the durable `Daily Reflection` term plus the publish date.
-
-Playlist definition files in `config/spotify/playlists/` own:
-- `key`
-- `name`
-- `playlist_id`
-- optional `contracts`, the ordered active Spotify contract keys used by the static Praylist website
-
-Playlist membership and sequence come from checked Notion rows:
-- Notion `Enabled` must be checked.
-- Notion `Output Folder` must be populated; blank `Output Folder` omits the row just like unchecked `Enabled`.
-- Notion `Name` must exactly match a contract `notion_name`.
-- Notion `Output Folder`, when populated, must match one playlist key or display name such as `Morning`, `Midday`, `Night`, or `Sunday`.
-- Notion `Order` controls queue order inside the playlist.
-- Contracts with no checked matching Notion row, or with a row whose `Output Folder` is blank, stay inactive without failing the run.
-
-The committed playlist definitions are:
-- `config/spotify/playlists/morning.json`
-- `config/spotify/playlists/midday.json`
-- `config/spotify/playlists/night.json`
-- `config/spotify/playlists/sunday.json`
-
-The runtime validates the selected playlist definitions before any Spotify write occurs and fails closed on:
-- invalid JSON
-- duplicate contract or playlist keys/names
-- invalid playlist ids
-- invalid contract weekday names
-- invalid contract resolver-vs-direct-URI shapes
-- duplicate checked Notion rows for one `notion_name`
-- checked matched rows with unknown `Output Folder`
-- checked matched rows with populated `Output Folder` but missing `Order`
-
+The runtime validates the selected definitions and all referenced contracts before any Spotify write. Invalid JSON, duplicate keys/names, invalid playlist IDs, unknown contract keys, invalid weekdays, or invalid resolver/direct-URI shapes stop the run.
 ## Local Setup
 1. Create and activate a virtual environment.
 2. Install dependencies:
@@ -235,8 +107,6 @@ $env:SPOTIFY_PLAYLIST_NAME = "morning"
 # Optional single-run override:
 $env:SPOTIFY_PLAYLIST_ID = "spotify:playlist:..."
 $env:JOB_UTC_OFFSET = "-06:00"
-$env:NOTION_TOKEN = "..."
-$env:NOTION_DATABASE_ID = "..."
 ```
 
 4. Review `config/spotify/contracts/*.json` and `config/spotify/playlists/*.json`.
@@ -254,13 +124,13 @@ or:
 
 Expected behavior:
 - refreshes the Spotify access token each run
-- loads and validates playlist definitions, queue contracts, and Notion membership before touching Spotify
+- loads and validates playlist definitions and queue contracts before touching Spotify
 - applies contract-level weekday gating such as Sunday-only or Friday-only items
 - resolves each contract through its explicit `resolver`, `spotify_uri`, or `spotify_episode_lookup`
 - resolves `spotify_episode_lookup` contracts by matching the show id, ordered search profiles, required name terms, and configured date variants against Spotify episode titles
 - replaces each selected playlist contents with the resolved queue
-- prints one summary per playlist: `playlist`, `playlist_id`, and `tracks_written`, plus `source=notion_membership`
-- exits non-zero on invalid contracts, invalid playlist definitions, missing Notion access, invalid single-playlist overrides, or unresolved selected runs
+- prints one summary per playlist: `playlist`, `playlist_id`, and `tracks_written`, plus `source=playlist_contracts`
+- exits non-zero on invalid contracts, invalid playlist definitions, invalid single-playlist overrides, or unresolved selected runs
 
 ## Portable Development Container
 This repository includes a VS Code Dev Container for developing from multiple machines without changing the deployment path.
@@ -326,12 +196,8 @@ docker run --rm --env-file .env -e SPOTIFY_PLAYLIST_NAME=morning spotify-praylis
 Run another job by overriding the command:
 
 ```bash
-docker run --rm --env-file .env spotify-praylist:local python -m jobs.notion.reset_notion_completions
-docker run --rm --env-file .env -v "$PWD/artifacts/container:/data" spotify-praylist:local python -m jobs.novena.generate_daily_novena_prayer
 docker run --rm --env-file .env -v "$PWD/artifacts/container:/data" spotify-praylist:local python -m jobs.publish.run_text_pipeline
 docker run --rm --env-file .env -v "$PWD/artifacts/container:/data" spotify-praylist:local python -m jobs.publish.run_audio_pipeline
-docker run --rm --env-file .env -v "$PWD/artifacts/container:/data" spotify-praylist:local python jobs/notion/generate_page_audio.py
-docker run --rm --env-file .env -v "$PWD/artifacts/container:/data" spotify-praylist:local python -m jobs.novena.generate_devotional_image
 ```
 
 Run with Docker Compose locally:
@@ -343,10 +209,6 @@ docker compose run --rm playlist-refresh
 Other job entrypoints are available as Compose profiles:
 
 ```bash
-docker compose --profile notion run --rm notion-reset
-docker compose --profile novena run --rm novena-prayer
-docker compose --profile audio run --rm page-audio
-docker compose --profile image run --rm devotional-image
 docker compose --profile test run --rm tests
 ```
 
@@ -377,449 +239,41 @@ Container implementation notes:
 
 ## GitHub Actions Setup
 1. Push this project to a GitHub repository.
-2. In GitHub: `Settings -> Secrets and variables -> Actions`.
-3. Add required secrets:
+2. In GitHub, open `Settings -> Secrets and variables -> Actions` and add:
 - `SPOTIFY_CLIENT_ID`
 - `SPOTIFY_CLIENT_SECRET`
 - `SPOTIFY_REFRESH_TOKEN`
 
-4. Add required Notion access for playlist membership and order:
-- `NOTION_TOKEN`
-- `NOTION_DATABASE_ID`
-- `NOTION_DATABASE_NAME`
-
-5. Add optional repository variables:
+3. Add optional variables:
 - `JOB_UTC_OFFSET`
 - `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
 
 Workflow behavior:
-- `workflow_dispatch` accepts an optional `spotify_playlist_name` input for a one-playlist validation run
-- scheduled runs use the same workflow file, but only execute when `SPOTIFY_REFRESH_SCHEDULE_ENABLED` is set to `true`
-- the base refresh path requires Spotify secrets plus Notion access to the `Opus Dei` database
+- `workflow_dispatch` accepts an optional `spotify_playlist_name` input for one playlist.
+- Scheduled runs execute only when `SPOTIFY_REFRESH_SCHEDULE_ENABLED` is `true`.
 
 Recommended rollout:
 1. Run one manual workflow dispatch with `spotify_playlist_name=morning`.
-2. Confirm Notion membership/order writes the expected playlist.
-3. Set `SPOTIFY_REFRESH_SCHEDULE_ENABLED=true` to let the daily schedule run.
-
-## Optional Notion Integrations
-The active Spotify queue assembly path reads Opus Dei rows for playlist membership and ordering. Resolver metadata still comes from repo-owned contract files.
-
-With `NOTION_TOKEN` present, the job can also run optional post-write helpers:
-- URI autosync when `SPOTIFY_ENABLE_URI_AUTOSYNC=true`
-- prayer-intention distribution through the existing Notion helper path
-
-Useful related variables:
-- `NOTION_TOKEN`
-- `NOTION_DATABASE_ID`
-- `NOTION_DATABASE_NAME`
-- `SPOTIFY_ENABLE_URI_AUTOSYNC`
-- `NOTION_URI_PROPERTY`
-- `NOTION_INTENTIONS_ENABLED`
-- `NOTION_INTENTIONS_RUN_PLAYLIST`
-
-## Daily Notion Reset
-Purpose:
-- unchecks all rows in your Notion `Completed` checkbox column so each day starts fresh
-
-Workflow:
-- `.github/workflows/daily_notion_reset.yml`
-- schedule: `0 7 * * *` (01:00 CST / 02:00 CDT)
-
-Required:
-- `NOTION_TOKEN` secret
-- `NOTION_DATABASE_ID` secret (recommended)
-
-Optional variables:
-- `NOTION_DATABASE_NAME` (fallback lookup; default `Opus Dei`)
-- `NOTION_COMPLETED_PROPERTY` (default `Completed`)
-
-## Daily Novena Prayer Generation
-Purpose:
-- reads eligible liturgical celebrations from Romcal for today through the next 8 days (9-day window)
-- uses OpenAI API to draft a litany-style novena prayer
-- writes prayer text or mirrored daily liturgical content to the Notion row titled `Daily Novenas from Liturgical Calendar`
-- the matching GitHub Actions workflow remains intentionally disabled in this release
-
-Script:
-- `jobs/novena/generate_daily_novena_prayer.py`
-- the shared Romcal helper now builds a synthetic child calendar on top of the selected calendar id, normalizes named special Sundays to `solemnity`, and carries Easter Octave weekdays as the app-level pseudo-rank `solemnity-easter octave`
-- devotional outputs now use a shared liturgical eligibility contract: allowed ranks are `solemnity`, `feast`, `memorial`, and `optional_memorial`, and Easter Octave weekdays are explicitly excluded by precedence
-
-Starter config:
-- copy values from [.env.example](c:/Users/jcteb/Code/spotify_praylist/.env.example) into your local environment or secret store; the novena/audio section now includes the render-hash metadata properties
-
-Required environment variables:
-- `OPENAI_API_KEY`
-- `NOTION_TOKEN`
-- `NOTION_DATABASE_ID` (or set `NOTION_DATABASE_NAME`)
-
-Optional variables:
-- `ROMCAL_CALENDAR` (default `general_roman`)
-- `ROMCAL_LOCALE` (default `en`)
-- `ROMCAL_WINDOW_DAYS` (default `9`, max `30`)
-- `OAI_API_BASE_URL` (default `https://api.openai.com/v1`)
-- `OAI_MODEL` (default `gpt-4.1-mini`)
-- `NOTION_TITLE_PROPERTY` (default `Name`)
-- `NOTION_NOVENA_ROW_TITLE` (default `Daily Novenas from Liturgical Calendar`)
-- `NOTION_NOVENA_PROPERTY` (optional rich_text property to store prayer text; if unset/not rich_text, page content is replaced)
-- `NOTION_WRITE_DAILY_NOVENA_PAGE` (default `true`; set `false` to mirror today's Liturgical Calendar entry into `Daily Novenas from Liturgical Calendar` while still writing day-by-day sections into today's Saint Radar row page)
-- `NOTION_SAINT_RADAR_ENABLED` (default `false`; when `true`, syncs saints into a Saint Radar database)
-- `NOTION_SAINT_DATABASE_ID` (optional explicit database id)
-- `NOTION_SAINT_DATABASE_NAME` (default `Saint Radar`; searched/created when id not provided)
-- `NOTION_SAINT_PARENT_PAGE_ID` (optional parent page id used when creating the Saint Radar database)
-- `NOTION_SAINT_TITLE_PROPERTY` (default `Name`)
-- `NOTION_SAINT_FEAST_DAY_PROPERTY` (default `Feast Day`)
-- `NOTION_SAINT_CELEBRATION_PROPERTY` (default `Celebration Rank`; maps Romcal `rank_name` as-is)
-- `NOTION_SAINT_PRECEDENCE_PROPERTY` (default `Precedence`; maps Romcal `precedence` as-is)
-- `NOTION_SAINT_BACKGROUND_PROPERTY` (default `Background`)
-- `NOTION_SAINT_INCLUDE_CALENDAR_DAYS` (default `false`; keep `false` when using separate yearly Liturgical Calendar sync)
-- `NOTION_SAINT_REFRESH_ALL` (default `false`; set `true` to regenerate all existing saint row page bodies/backgrounds)
-- `NOVENA_AUDIO_ENABLED` (default `false`; set `true` to generate and embed audio on the same Notion page)
-- `NOVENA_AUDIO_MODEL` (default `gpt-4o-mini-tts`)
-- `NOVENA_AUDIO_VOICE` (default `ash`)
-- `NOVENA_AUDIO_FORMAT` (default `mp3`)
-- `NOVENA_AUDIO_SPEED` (default `1.0`, range `0.25-4.0`)
-- `NOVENA_AUDIO_CAPTION` (default `Daily Novena Prayer (Audio)`)
-- `NOVENA_AUDIO_FAIL_OPEN` (default `true`; if `true`, text update continues even if audio upload fails)
-- `NOVENA_AUDIO_LIBRARY_DIR` (optional; default local root is `%USERPROFILE%\OneDrive\Praylist Audio\Novena Audio Library`; saint novena audio is prebuilt there with readable `day-01...day-09` filenames and JSON sidecars)
-- the daily novena job fully truncates that managed library root before regeneration so stale audio and payload files do not survive a rerun
-- `DEVOTIONAL_ONEDRIVE_REMOTE_ROOT` (optional legacy novena backfill root; when set, the daily novena workflow also prefetches `Novena Audio Library` from that location)
-- saint-day novenas now cache two layers:
-- prompt payload JSON once per saint/feast window
-- the full 9-day audio set once per saint/feast window
-- each day the job uploads the prebuilt file for that day into Notion instead of regenerating TTS inline
-- saint-day render hashes now include the actual fragment text, so a text change invalidates the cached file cleanly
-- `NOTION_AUDIO_RENDER_HASH_PROPERTY` (optional; default `Render Hash`; if that property exists on the page, the render hash is written there after a fresh audio render)
-- `NOTION_AUDIO_SAVED_PROPERTY` (optional; default `Audio Saved`; if that property exists on the page, the job writes the fresh render timestamp there)
-- `USCCB_READINGS_ENABLED` (default `true`; appends USCCB daily Mass readings as Notion toggles at page bottom)
-- `USCCB_READINGS_FAIL_OPEN` (default `true`; if `true`, prayer update continues when readings fetch/parse fails)
-- `USCCB_READINGS_BASE_URL` (default `https://bible.usccb.org/bible/readings`)
-- `JOB_UTC_OFFSET` (default `-06:00`)
-
-Workflow note:
-- the scheduled novena workflow stays disabled in GitHub Actions for this release
-- use the local script if you need to run the novena generator manually
-
-Local run:
-
-```powershell
-.\scripts\run_daily_novena_prayer_local.ps1
-```
-
-## Auto Page Audio
-Purpose:
-- reads `Opus Dei` rows whose `Platform` contains `auto-audio` or `auto-text`
-- resolves page text from `Text Resolver`
-- resolves page audio from `Auto Audio Resolver 1` and optionally `Auto Audio Resolver 2`
-- supports Notion `Audio Outputs` rows in two modes:
-- `fragments` for a top-level `Fragment Key` or `Fragment Sequence`
-- `config` only as a compatibility input; it is normalized into a generated wrapper fragment internally
-- `rosary` for the dynamic fragment-based rosary builder with weekday mystery mapping
-- falls back to the legacy `Audio Configuration` field and then the legacy resolver field when the new properties are blank
-- builds a Notion audio block for `auto-audio` rows and syncs page body content for feed-backed rows
-- caches generated fragment audio under `.cache/page_audio`
-- exports the assembled files to `%USERPROFILE%\OneDrive\Praylist Audio\Playlist Audio\<Output Folder>\<Order - FolderName - EntryName>.mp3`
-- writes the matching JSON sidecar with the same ordered stem
-- can truncate managed playlist-audio outputs locally before regeneration so stale ordered filenames disappear on the next OneDrive sync
-
-Current config:
-- Morning Prayer resolves from the built-in page-audio contract defaults unless `config/custom_tts/morning-prayer.json` or `MORNING_PRAYER_CONTRACT_FILE` points at a valid custom-TTS override.
-- `Morning Prayer` now runs from the two-list `Opus Dei` + owner-linked `Detailed Fragments` model
-- required Morning Prayer fragments are owner-linked `Audio Fragments` rows for the static prayers, `Monthly Intention`, and `Daily Novena Audio`
-- the live Morning Prayer contract currently uses these durable keys for the petition rows: `petition-church` for `Petition - Right Use of Technology`, `petition-sick-departed` for `Petition - Sanctification of the Church`, and `petition-7` for `Petition - Sick and Departed`
-- the page-audio contract also normalizes the live Morning Prayer legacy aliases `petition-technology`, `petition-sanctification-of-the-church`, and `petition-sick-and-departed` onto the same durable keys so the workflow can read the existing Notion rows without weakening missing-fragment checks
-- Morning Prayer contract rows should carry stable `Fragment Key` values; the key is the runtime identity, while the row title can be edited for display text
-- `Text Sync Mode = page_content` remains the intended Morning Prayer behavior, and the job preserves its current working block/template path instead of forcing it into the generic managed-section sync
-- archived `MORNING_PRAYER_OUTPUT` / wrapper / sequence rows can remain as migration references, but they are no longer the active runtime source of truth and are not runnable by the active loaders
-- `DIVINE_OFFICE_INVITATORY_OUTPUT` in `Audio Outputs`
-- wraps `DIVINE_OFFICE_INVITATORY_PAGE_AUDIO` from `Page Audio Configuration`
-- target row: `Divine Office Invitatory`
-- prepended intention is emitted as the shared `Random Intention` fragment and cached on disk
-- source audio: official DivineOffice.org RSS enclosure for the matching day
-- source text: synced into the page body
-- `SING_THE_HOURS_MORNING_OUTPUT` in `Audio Outputs`
-- wraps `SING_THE_HOURS_MORNING_PAGE_AUDIO` from `Page Audio Configuration`
-- target row: `Morning Prayer - Liturgy of the Hours (Spotify)`
-- prepended intention is emitted as the shared `Random Intention` fragment and cached on disk
-- source audio: public Sing the Hours RSS enclosure for the matching day's `Lauds`
-- `SING_THE_HOURS_EVENING_OUTPUT` in `Audio Outputs`
-- wraps `SING_THE_HOURS_EVENING_PAGE_AUDIO` from `Page Audio Configuration`
-- target row: `Morning Prayer - Liturgy of the Hours (Spotify)`
-- prepended intention is emitted as the shared `Random Intention` fragment and cached on disk
-- source audio: public Sing the Hours RSS enclosure for the matching day's `Vespers`
-- reliable text promoted into page content from more generic sources now uses a managed autogenerated prayer-text section so manual notes can survive
-- rows that do not resolve a reliable text source should stay audio-only for now instead of generating synthetic page text
-- additional podcast-backed outputs now live in `Audio Outputs` too, including:
-- `BIBLE_IN_A_YEAR_OUTPUT`
-- `SAINT_OF_DAY_OUTPUT`
-- `USCCB_READINGS_OUTPUT`
-- `DAILY_ROSARY_OUTPUT`
-- `AUXILIUM_OUTPUT`
-- `ANGELUS_MORNING_OUTPUT`
-- `ANGELUS_MIDDAY_OUTPUT`
-- `ANGELUS_EVENING_OUTPUT`
-- `DIVINE_OFFICE_AFTERNOON_OUTPUT`
-- `DIVINE_OFFICE_EVENING_OUTPUT`
-- `DIVINE_OFFICE_NIGHT_OUTPUT`
-- `ROSARY_INTENTIONS_OUTPUT`
-- `config/legacy/page_audio_config.json` remains on disk as an archive, but the active runtime no longer loads it
-
-Recommended Opus Dei row shape:
-- `Platform = Spotify, auto-text, auto-audio` for rows that should do all three
-- `Spotify Resolver` and `Spotify Fallback Resolver` for playlist/bookmark resolution
-- `Text Resolver` for page-body text sync
-- `Auto Audio Resolver 1` and `Auto Audio Resolver 2` for generated audio with fallback
-- `Enabled = true`
-
-Text resolvers can be RSS-backed or PDF-backed. For PDF-backed builders like `AUXILIUM_DAILY_TEXT`, set the `Feed URL` field in `Page Audio Configuration` to the source PDF URL; the job will parse and write today’s section into the page body.
-
-Environment variables:
-- `NOTION_AUDIO_PLATFORM_VALUE` (default `auto-audio,auto-text`)
-- `NOTION_AUDIO_CONFIG_PROPERTY` (default `Audio Configuration`)
-- `NOTION_AUDIO_RESOLVER_PROPERTY` (default `Spotify Resolver`)
-- `NOTION_TEXT_RESOLVER_PROPERTY` (default `Text Resolver`)
-- `NOTION_AUTO_AUDIO_RESOLVER_PRIMARY_PROPERTY` (default `Auto Audio Resolver 1`)
-- `NOTION_AUTO_AUDIO_RESOLVER_SECONDARY_PROPERTY` (default `Auto Audio Resolver 2`)
-- `NOTION_AUDIO_ENABLED_PROPERTY` (default `Enabled`)
-- `NOTION_PAGE_AUDIO_CONFIG_DATABASE_ID` (recommended)
-- `NOTION_PAGE_AUDIO_CONFIG_DATABASE_NAME` (fallback lookup; default `Page Audio Configuration`)
-- `NOTION_AUDIO_FRAGMENTS_DATABASE_ID` (recommended for fragment-backed outputs)
-- `NOTION_AUDIO_FRAGMENTS_DATABASE_NAME` (fallback lookup; default `Audio Fragments`)
-- `NOTION_AUDIO_OUTPUTS_DATABASE_ID` (recommended for fragment-backed outputs)
-- `NOTION_AUDIO_OUTPUTS_DATABASE_NAME` (fallback lookup; default `Audio Outputs`)
-- `MORNING_PRAYER_CONTRACT_FILE` (optional custom-TTS-only override path for Morning Prayer; defaults to the built-in contract when no override file exists)
-- `PAGE_AUDIO_CONFIG_FILE` (custom-TTS-only contract config; when set to a specific `config/custom_tts/*.json`, the run executes only that selected contract)
-- `PAGE_AUDIO_CACHE_DIR` (default `.cache/page_audio`)
-- `PAGE_AUDIO_LIBRARY_DIR` (optional; default local root is `%USERPROFILE%\OneDrive\Praylist Audio\Playlist Audio`)
-- `PAGE_AUDIO_TRUNCATE_MANAGED_OUTPUTS` (default `false`; when `true`, remove managed playlist-audio exports locally before regeneration)
-- `PAGE_AUDIO_CONFIG_KEY` (optional single-config filter)
-- `PAGE_AUDIO_ROW_TITLE` (optional single-row filter)
-- `PAGE_AUDIO_FAIL_OPEN` (default `false`)
-
-Morning folder override example:
-
-```powershell
-.\scripts\run_page_audio_local.ps1 -PageAudioLibraryDir "$env:USERPROFILE\OneDrive\Praylist Audio\Morning"
-```
-
-Audio fragment row shape:
-- `Name`
-- `Fragment Key`
-- for Morning Prayer contract rows, treat `Fragment Key` as required and stable across title/content edits
-- `Fragment Type` optional; defaults from the populated fields
-- `Spoken Text` for fixed text fragments
-- `Prompt` for LLM-backed fragments
-- `Prompt Model` optional; defaults to `OAI_MODEL` or `gpt-4.1-mini`
-- `Fragment Sequence` for wrapper/composite fragments
-- `Config Key` for wrapper fragments that reuse a `Page Audio Configuration` row
-- `Builder` plus normal page-audio config fields for custom builder fragments
-- `Collection`
-- `Enabled`
-- optional `Start Date` and `End Date`
-
-Audio output row shape:
-- `Name`
-- `Output Key`
-- `Output Mode`
-- `Fragment Key` or `Fragment Sequence` for fragment-driven outputs
-- `Config Key` is still accepted for migration, but the job now turns it into a wrapper fragment internally
-- `Target Row`
-- `Audio Caption`
-- `Output Folder` is required to route exported daily files into the correct OneDrive subfolder
-- `Weekday Map` for outputs that vary by weekday, like the fragment-based rosary
-- `Enabled`
-
-Archived Rosary page-audio output mode:
-- `Output Mode = rosary`
-- `config/legacy/rosary.json` is the legacy Rosary contract source of truth
-- `config/content/rosary/` holds the actual Rosary prayer text files and the meditation prompt template
-- `Weekday Map` is a JSON object like `{"Monday":"The Joyful Mysteries", ...}`
-- the Rosary contract declares the visible flow with per-block counts, so `Hail Mary x10` stays obvious in config
-- rosary decade intentions come from the Rosary page's `Intention` text, which is split into a daily pool and shuffled per decade
-- fixed prayers like `Hail Mary`, `Our Father`, and `Glory Be` now live as repo text files under `config/content/rosary/`
-- each mystery announcement is generated from the Rosary contract, not from Notion rows
-- `rosary-decade-meditation-template` is a local prompt text file that gets rendered once per decade using the page's numbered `Intention` lines
-- the Rosary summary stays compact and shows the mystery, fruit, and daily intentions instead of the full prayer text
-
-Local run:
-
-```powershell
-.\scripts\run_page_audio_local.ps1
-```
-
-## Liturgical Calendar Yearly Sync
-Purpose:
-- populates your `Liturgical Calendar` Notion database from Romcal calendar-day entries
-- keeps entries pre-created so daily 9-day jobs can update content without creating new calendar-day rows
-- reruns as an upsert by `Name` + `Feast Day`, so repopulating a year is safe when the schema stays stable
-
-Script:
-- `jobs/novena/sync_liturgical_calendar.py`
-
-Defaults:
-- scheduled Jan 1 run writes the **next year** (example: Jan 1, 2027 syncs all of 2028)
-
-Manual bootstrap examples:
-- through end of 2027: set `LITURGICAL_SYNC_END_YEAR=2027` (optionally `LITURGICAL_SYNC_START_DATE=YYYY-MM-DD`)
-- one explicit year: set `LITURGICAL_SYNC_TARGET_YEAR=2028`
-- repopulate 2026 and 2027 with the current precedence rules: set `LITURGICAL_SYNC_START_DATE=2026-01-01` and `LITURGICAL_SYNC_END_YEAR=2027`
-
-Required environment variables:
-- `NOTION_TOKEN`
-- `NOTION_DATABASE_ID` (parent database used for fallback parent lookup)
-- `LITURGICAL_CALENDAR_DATABASE_ID` (recommended: your Liturgical Calendar database id)
-
-Optional variables:
-- `ROMCAL_CALENDAR` (default `general_roman`)
-- `ROMCAL_LOCALE` (default `en`)
-- `LITURGICAL_SYNC_TARGET_YEAR` (optional `YYYY`; highest priority)
-- `LITURGICAL_SYNC_START_DATE` (optional `YYYY-MM-DD`)
-- `LITURGICAL_SYNC_END_DATE` (optional `YYYY-MM-DD`)
-- `LITURGICAL_SYNC_END_YEAR` (optional `YYYY`)
-- `LITURGICAL_CALENDAR_DATABASE_NAME` (optional explicit name; defaults to `Liturgical Calendar`)
-- `NOTION_SAINT_DATABASE_ID` and `NOTION_SAINT_DATABASE_NAME` remain supported as legacy aliases
-
-## Devotional Image Client Sync
-
-Client sync without OneDrive:
-
-```powershell
-py -3 .\sync\sync_devotional_images_client.py `
-  --config .\sync\devotional_image_client.example.json
-```
-
-Interactive setup wizard:
-
-```powershell
-.\sync\setup_devotional_image_client.ps1
-```
-
-The wizard:
-- asks whether the source is `http` or `local`
-- collects the source root or public base URL
-- collects the local target folder
-- collects manifest and cleanup options
-- writes a reusable portable client bundle into `sync\client\`
-- keeps sync/distribution files under the repo root `sync\` folder instead of mixing them with other scripts
-
-Unattended example for HTTP:
-
-```powershell
-.\sync\setup_devotional_image_client.ps1 `
-  -SourceMode http `
-  -SourceBaseUrl "https://jctebo.github.io/spotify_praylist/devotional/DCIM" `
-  -TargetRoot "C:\Users\Public\Pictures\DevotionalImages"
-```
-
-Unattended example for a local shared folder:
-
-```powershell
-.\sync\setup_devotional_image_client.ps1 `
-  -SourceMode local `
-  -SourceRoot "\\server\share\devotional\DCIM" `
-  -TargetRoot "C:\Users\Public\Pictures\DevotionalImages"
-```
-
-Build or refresh the root `sync\` folder so it contains both the public HTTP-ready source tree and the portable client bundle:
-
-```powershell
-.\sync\build_devotional_image_distribution_bundle.ps1 `
-  -SourceRoot "$env:USERPROFILE\OneDrive\Pictures\Samsung Gallery\DCIM" `
-  -BundleDir ".\sync" `
-  -PublicBaseUrl "https://jctebo.github.io/spotify_praylist/devotional/DCIM" `
-  -ClientTargetRoot "C:\Users\Public\Pictures\DevotionalImages"
-```
-
-That root folder contains:
-- `sync\public\DCIM\...` with:
-  - `Current Devotion`
-  - `Current Devotion Wide`
-  - filtered `devotional_image_library.json`
-- `sync\client\...` with:
-  - `sync_devotional_images_client.py`
-  - `devotional_image_client.json`
-  - `run_devotional_sync.bat`
-  - `run_devotional_sync.ps1`
-
-HTTP source example:
-
-```powershell
-py -3 .\sync\sync_devotional_images_client.py `
-  --config .\sync\devotional_image_client_http.example.json
-```
-
-How the HTTP mode works:
-- publish the filtered public DCIM root over HTTP
-- the public root URL must expose:
-  - `devotional_image_library.json`
-  - `Current Devotion/images_manifest.json`
-  - `Current Devotion Wide/images_manifest.json`
-- every file path listed in those manifests must be reachable at the same relative HTTP path
-- directory listing is not required; only direct file access is required
-
-Expected HTTP layout:
-
-```text
-https://jctebo.github.io/spotify_praylist/devotional/DCIM/devotional_image_library.json
-https://jctebo.github.io/spotify_praylist/devotional/DCIM/Current%20Devotion/images_manifest.json
-https://jctebo.github.io/spotify_praylist/devotional/DCIM/Current%20Devotion/<manifest-relative-image-path>.png
-https://jctebo.github.io/spotify_praylist/devotional/DCIM/Current%20Devotion%20Wide/images_manifest.json
-```
-
-Recommended client config for HTTP:
-- set `source_base_url` to the public DCIM root URL
-- leave `source_root` empty
-- set `target_root` to the local folder where the client should store the synced files
-- set `include_manifests` to `true` if the client should keep local copies of the manifest JSON files
-- set `delete_missing` to `true` only if the client should mirror the remote exactly and delete files that are no longer present upstream
-
-Direct command without a config file:
-
-```powershell
-py -3 .\sync\sync_devotional_images_client.py `
-  --source-base-url "https://jctebo.github.io/spotify_praylist/devotional/DCIM" `
-  --target-root "C:\Users\Public\Pictures\DevotionalImages" `
-  --include-manifests
-```
-
-What the client script does:
-- downloads `devotional_image_library.json`
-- reads each folder manifest referenced by the root manifest
-- downloads only files that are missing locally or whose sha256 hash changed
-- optionally deletes local files not present in the manifests when `--delete-missing` is set
-- works with either a local filesystem source (`--source-root`) or a public HTTP source (`--source-base-url`)
-
-Notes:
-- Requires Azure CLI (`az`) installed locally.
-- If service principal vars are missing, runner falls back to current `az login` context.
-
+2. Confirm the expected checked-in contract order appears in the Spotify playlist.
+3. Set `SPOTIFY_REFRESH_SCHEDULE_ENABLED=true` to enable the daily schedule.
 ## Local Job Mirrors
-Run local equivalents of each GitHub Action workflow:
+Run local equivalents of the supported scheduled jobs:
 
 ```powershell
-# Daily refresh workflow mirror
 .\scripts\run_daily_refresh_local.ps1
-
-# Daily notion reset workflow mirror
-.\scripts\run_daily_notion_reset_local.ps1
-
-# Daily novena prayer generation
-.\scripts\run_daily_novena_prayer_local.ps1
+python -m jobs.publish.run_audio_pipeline
 ```
 
-## Daily Devotional Phone and Watch Wallpapers
+## Coming Soon Page
 
-This is a separate Outlook-calendar-driven pipeline. It runs daily and checks today plus the next nine dates (10 dates total). For dates represented in the Outlook Devotion calendar, it selects a feast/private devotion or that month’s fallback when only ordinary liturgical context exists; dates absent from the calendar are skipped. No coverage marker is needed. It creates only missing phone/watch variants and never replaces an existing dated image.
+The GitHub Pages root says “Coming soon.” The podcast remains available at `https://jctebo.github.io/spotify_praylist/podcast.xml`, with its cover image served at `/images/logo_ora_pro_nobis.png`. No prayer directory or Spotify playlist website is published.
 
-Phone artwork targets the closed Samsung Galaxy Z Fold8 cover display with Niagara Launcher in mind (1080x1920). Watch artwork is independently composed at 1024x1024 for a Galaxy Watch Classic, keeping the upper 35% visually calm for clock/date UI and the devotional subject large and centered. Slightly larger exact feast/private-devotion or monthly-fallback labels are overlaid locally at the bottom, with 60 pixels of side clearance from the circular watch boundary and no broad fade or banner; generated scenes keep lower detail quiet behind captions. October’s monthly devotion is Our Lady of the Rosary.
+## Devotional Wallpapers
 
-The separate workflow `.github/workflows/daily_devotional_wallpapers.yml` writes `phone-current`, `watch-current`, `phone-queue/YYYY-MM-DD`, `watch-queue/YYYY-MM-DD`, and private rotation state under `.devotional_wallpapers/`. Each date can have multiple named observances, each with its own phone/watch pair. The resolver omits only generic weekday/week/season titles and checks the calendar on every daily run, including when the existing inventory appears complete. It does not publish wallpapers to GitHub Pages or change the existing infographic workflow. Its schedule is gated by `DEVOTIONAL_WALLPAPERS_ENABLED=true`; dispatch supports resolve-only, generation, and rotation checks. The UTC schedule targets 00:15 Central during daylight time and 01:15 Central during standard time. Local execution uses `scripts/run_devotional_wallpapers_local.ps1` and the existing rclone profile.
-
-Configuration requires the `DEVOTIONAL_ICS_URL` repository secret, existing `OPENAI_API_KEY` and `RCLONE_CONFIG_B64` secrets, and existing `RCLONE_REMOTE_NAME` and `RCLONE_REMOTE_ROOT` variables. Local rendering also requires `requirements-devotional-wallpapers.txt` and the Tesseract executable. OneDrive rotation promotes only a verified same-date set with matching phone/watch subject identities, archives prior managed images, recovers interrupted rotations from its journal, and leaves unrecognized files untouched; local device rotation remains separately operator-owned.
+The independent OneDrive wallpaper pipeline remains available. Its scheduled workflow is `.github/workflows/daily_devotional_wallpapers.yml`; local runs use `scripts/run_devotional_wallpapers_local.ps1` with the existing rclone profile/configuration. The GitHub workflow uses `RCLONE_CONFIG_B64`, `RCLONE_REMOTE_NAME`, and `RCLONE_REMOTE_ROOT`. This pipeline stores phone/watch wallpapers in OneDrive and does not publish them to GitHub Pages.
 
 ## Local Test Framework
-Run the offline unit test suite (no live Spotify/Notion API calls):
+Run the offline unit test suite (no live Spotify API calls):
 
 ```powershell
 .\scripts\run_local_tests.ps1
@@ -833,17 +287,14 @@ Verbose mode:
 
 Coverage:
 - `jobs/playlist/refresh_playlist.py` main flow and playlist recreate chunking (`PUT/POST /items`)
-- `jobs/notion/reset_notion_completions.py` checkbox reset behavior and schema error handling
-- `jobs/novena/generate_daily_novena_prayer.py` saint-window selection and Notion write mode behavior
+- GitHub Pages deployment staging for the coming-soon page and podcast assets
+- `jobs/publish/run_audio_pipeline.py` contract-driven episode output and local state behavior
 
 ## Setup Scripts
-Use setup scripts (separate from `run_*` job mirrors):
+Use the Spotify setup script (separate from `run_*` job mirrors):
 
 ```powershell
 .\scripts\setup_spotify.ps1
-.\scripts\setup_notion.ps1
-.\scripts\setup_notion_playlists.ps1
-.\scripts\setup_novena.ps1
 ```
 
 ## Notes

@@ -12,7 +12,7 @@ from tests.test_helpers import ROOT, load_module, temp_env
 def _queue_contract(
     mod,
     key,
-    notion_name=None,
+    name=None,
     resolver="",
     fallback_resolver="",
     spotify_uri="",
@@ -23,7 +23,7 @@ def _queue_contract(
 ):
     return mod.SpotifyQueueContract(
         key=key,
-        notion_name=notion_name or key.title(),
+        name=name or key.title(),
         resolver=resolver,
         fallback_resolver=fallback_resolver,
         spotify_uri=spotify_uri,
@@ -55,8 +55,6 @@ class TestRefreshJobContractPath(unittest.TestCase):
         env["SPOTIFY_CLIENT_ID"] = ""
         env["SPOTIFY_CLIENT_SECRET"] = ""
         env["SPOTIFY_REFRESH_TOKEN"] = ""
-        env["NOTION_TOKEN"] = ""
-
         result = subprocess.run(
             [sys.executable, "jobs/playlist/refresh_playlist.py"],
             cwd=ROOT,
@@ -167,7 +165,7 @@ class TestRefreshJobContractPath(unittest.TestCase):
     def test_angelus_contract_files_resolve_daily_marian_antiphon_episode(self):
         contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
 
-        for key, notion_name in (
+        for key, name in (
             ("angelus-morning", "Marian Antiphon  (Morning)"),
             ("angelus-midday", "Marian Antiphon (Midday)"),
             ("angelus-evening", "Marian Antiphon (Evening)"),
@@ -203,7 +201,7 @@ class TestRefreshJobContractPath(unittest.TestCase):
             )
 
             self.assertEqual(uris, [f"spotify:episode:{key}"])
-            self.assertTrue(status[notion_name])
+            self.assertTrue(status[name])
             sp.show_episodes.assert_called_once_with(lookup.show_id, limit=50, market="US")
 
     def test_angelus_contract_files_fall_back_to_legacy_titles(self):
@@ -283,90 +281,41 @@ class TestRefreshJobContractPath(unittest.TestCase):
             "SPOTIFY_REFRESH_TOKEN": "refresh",
             "SPOTIFY_PLAYLIST_NAME": "midday",
             "SPOTIFY_PLAYLIST_ID": "spotify:playlist:override123",
-            "NOTION_TOKEN": "notion_token",
         }
-        contracts = [
-            _queue_contract(self.mod, "daily-mass-readings", resolver="USCCB"),
-        ]
-        playlists = [
-            _playlist_definition(
-                self.mod,
-                "midday",
-                name="Midday",
-                playlist_id="playlist_midday",
-                contracts=("daily-mass-readings",),
-            )
-        ]
+        contracts = [_queue_contract(self.mod, "daily-mass-readings", resolver="USCCB")]
+        playlists = [_playlist_definition(self.mod, "midday", name="Midday", playlist_id="playlist_midday", contracts=("daily-mass-readings",))]
 
         with temp_env(env):
             with patch.object(self.mod, "set_runtime_timezone"), patch.object(
                 self.mod, "sp_client", return_value=(object(), "token_123")
-            ), patch.object(
-                self.mod, "load_spotify_queue_contracts", return_value=contracts
-            ), patch.object(
+            ), patch.object(self.mod, "load_spotify_queue_contracts", return_value=contracts), patch.object(
                 self.mod, "load_spotify_playlist_definitions", return_value=playlists
-            ), patch.object(
-                self.mod, "build_queue_for_playlist_definition", return_value=["spotify:track:111"]
-            ), patch.object(
-                self.mod,
-                "build_notion_playlist_memberships",
-                return_value=self.mod.NotionPlaylistMembershipBuild(
-                    contracts_by_playlist={"midday": tuple(contracts)},
-                    stats={},
-                ),
-            ), patch.object(
+            ), patch.object(self.mod, "build_queue_for_playlist_definition", return_value=["spotify:track:111"]), patch.object(
                 self.mod, "recreate_playlist_items", return_value=1
-            ) as recreate_mock, patch.object(
-                self.mod, "sync_notion_uris_for_playlist"
-            ) as autosync_mock, patch.object(self.mod, "distribute_prayer_intentions", return_value=(0, 0, 0)) as intentions_mock:
+            ) as recreate_mock:
                 rc = self.mod.main()
 
         self.assertEqual(rc, 0)
         recreate_mock.assert_called_once_with("token_123", "override123", ["spotify:track:111"])
-        autosync_mock.assert_not_called()
-        intentions_mock.assert_called_once_with("Midday")
 
     def test_main_skips_playlist_with_no_today_contracts_in_multi_run(self):
         env = {
             "SPOTIFY_CLIENT_ID": "cid",
             "SPOTIFY_CLIENT_SECRET": "secret",
             "SPOTIFY_REFRESH_TOKEN": "refresh",
-            "NOTION_TOKEN": "notion_token",
         }
         contracts = [
             _queue_contract(self.mod, "morning-prayer-loh", resolver="MORNING"),
             _queue_contract(self.mod, "fr-mike-sunday-homily", resolver="SUNDAY_FRMIKE", weekdays=("Sunday",)),
         ]
         playlists = [
-            _playlist_definition(
-                self.mod,
-                "morning",
-                name="Morning",
-                playlist_id="playlist_morning",
-                contracts=("morning-prayer-loh",),
-            ),
-            _playlist_definition(
-                self.mod,
-                "sunday",
-                name="Sunday",
-                playlist_id="playlist_sunday",
-                contracts=("fr-mike-sunday-homily",),
-            ),
+            _playlist_definition(self.mod, "morning", name="Morning", playlist_id="playlist_morning", contracts=("morning-prayer-loh",)),
+            _playlist_definition(self.mod, "sunday", name="Sunday", playlist_id="playlist_sunday", contracts=("fr-mike-sunday-homily",)),
         ]
         recreate_calls = []
 
-        def fake_build(
-            sp,
-            playlist_definition,
-            weekday,
-            current_date,
-            status,
-            shows_cfg,
-            fixed_cfg,
-            tokens_cfg,
-            ordered_contracts=None,
-        ):
-            if playlist_definition.key == "sunday":
+        def fake_build(sp, definition, weekday, current_date, status, shows, fixed, tokens, ordered_contracts=None):
+            if definition.key == "sunday":
                 status["__no_eligible_contracts__"] = True
                 return []
             return ["spotify:track:111"]
@@ -378,26 +327,10 @@ class TestRefreshJobContractPath(unittest.TestCase):
         with temp_env(env):
             with patch.object(self.mod, "set_runtime_timezone"), patch.object(
                 self.mod, "sp_client", return_value=(object(), "token_123")
-            ), patch.object(
-                self.mod, "load_spotify_queue_contracts", return_value=contracts
-            ), patch.object(
+            ), patch.object(self.mod, "load_spotify_queue_contracts", return_value=contracts), patch.object(
                 self.mod, "load_spotify_playlist_definitions", return_value=playlists
-            ), patch.object(
-                self.mod, "build_queue_for_playlist_definition", side_effect=fake_build
-            ), patch.object(
-                self.mod,
-                "build_notion_playlist_memberships",
-                return_value=self.mod.NotionPlaylistMembershipBuild(
-                    contracts_by_playlist={
-                        "morning": (contracts[0],),
-                        "sunday": (contracts[1],),
-                    },
-                    stats={},
-                ),
-            ), patch.object(
+            ), patch.object(self.mod, "build_queue_for_playlist_definition", side_effect=fake_build), patch.object(
                 self.mod, "recreate_playlist_items", side_effect=fake_recreate
-            ), patch.object(
-                self.mod, "distribute_prayer_intentions", return_value=(0, 0, 0)
             ):
                 rc = self.mod.main()
 
@@ -411,56 +344,51 @@ class TestRefreshJobContractPath(unittest.TestCase):
             "SPOTIFY_REFRESH_TOKEN": "refresh",
             "SPOTIFY_PLAYLIST_NAME": "midday",
             "SPOTIFY_PLAYLIST_ID": "not a spotify id",
-            "NOTION_TOKEN": "notion_token",
         }
         contracts = [_queue_contract(self.mod, "daily-mass-readings", resolver="USCCB")]
-        playlists = [
-            _playlist_definition(
-                self.mod,
-                "midday",
-                name="Midday",
-                playlist_id="playlist_midday",
-                contracts=("daily-mass-readings",),
-            )
-        ]
+        playlists = [_playlist_definition(self.mod, "midday", name="Midday", contracts=("daily-mass-readings",))]
 
         with temp_env(env):
             with patch.object(self.mod, "set_runtime_timezone"), patch.object(
                 self.mod, "sp_client", return_value=(object(), "token_123")
-            ), patch.object(
-                self.mod, "load_spotify_queue_contracts", return_value=contracts
-            ), patch.object(
+            ), patch.object(self.mod, "load_spotify_queue_contracts", return_value=contracts), patch.object(
                 self.mod, "load_spotify_playlist_definitions", return_value=playlists
-            ), patch.object(
-                self.mod, "build_queue_for_playlist_definition", return_value=["spotify:track:111"]
-            ), patch.object(
-                self.mod,
-                "build_notion_playlist_memberships",
-                return_value=self.mod.NotionPlaylistMembershipBuild(
-                    contracts_by_playlist={"midday": tuple(contracts)},
-                    stats={},
-                ),
-            ):
+            ), patch.object(self.mod, "build_queue_for_playlist_definition", return_value=["spotify:track:111"]), patch.object(
+                self.mod, "recreate_playlist_items"
+            ) as recreate_mock:
                 rc = self.mod.main()
 
         self.assertEqual(rc, 1)
+        recreate_mock.assert_not_called()
 
-    def test_main_requires_notion_token_for_membership(self):
+    def test_daily_refresh_workflow_uses_only_spotify_and_timezone_credentials(self):
+        workflow = (ROOT / ".github" / "workflows" / "daily.yml").read_text(encoding="utf-8")
+
+        self.assertIn("SPOTIFY_CLIENT_ID", workflow)
+        self.assertIn("SPOTIFY_CLIENT_SECRET", workflow)
+        self.assertIn("SPOTIFY_REFRESH_TOKEN", workflow)
+
+    def test_main_runs_token(self):
         env = {
             "SPOTIFY_CLIENT_ID": "cid",
             "SPOTIFY_CLIENT_SECRET": "secret",
             "SPOTIFY_REFRESH_TOKEN": "refresh",
-            "NOTION_TOKEN": "",
         }
+        contracts = [_queue_contract(self.mod, "daily-mass-readings", resolver="USCCB")]
+        playlists = [_playlist_definition(self.mod, "midday", name="Midday", contracts=("daily-mass-readings",))]
 
         with temp_env(env):
             with patch.object(self.mod, "set_runtime_timezone"), patch.object(
                 self.mod, "sp_client", return_value=(object(), "token_123")
-            ):
+            ), patch.object(self.mod, "load_spotify_queue_contracts", return_value=contracts), patch.object(
+                self.mod, "load_spotify_playlist_definitions", return_value=playlists
+            ), patch.object(self.mod, "build_queue_for_playlist_definition", return_value=["spotify:track:111"]), patch.object(
+                self.mod, "recreate_playlist_items", return_value=1
+            ) as recreate_mock:
                 rc = self.mod.main()
 
-        self.assertEqual(rc, 1)
-
+        self.assertEqual(rc, 0)
+        recreate_mock.assert_called_once_with("token_123", "midday_playlist", ["spotify:track:111"])
 
 if __name__ == "__main__":
     unittest.main()

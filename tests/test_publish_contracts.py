@@ -250,31 +250,6 @@ class TestPublishContracts(unittest.TestCase):
         self.assert_standard_loudness_normalization(contracts_by_id["auxilium-christianorum"].entries[0]["audio_config"])
         self.assertEqual(contracts_by_id["marian-antiphon-angelus"].season, "ordinary")
         self.assertEqual(contracts_by_id["marian-antiphon-regina-caeli"].season, "easter")
-        for contract_id in (
-            "auxilium-christianorum",
-            "daily-reflection",
-            "marian-antiphon-angelus",
-            "marian-antiphon-regina-caeli",
-            "morning-prayer-elevenlabs",
-            "rosary",
-        ):
-            website = contracts_by_id[contract_id].metadata.get("website")
-            self.assertIsInstance(website, dict)
-            self.assertTrue(website["enabled"])
-            self.assertIn(website["group"], {"ora-pro-nobis"})
-            self.assertTrue(website["slug"])
-            self.assertTrue(website["title"])
-            self.assertTrue(website["summary"])
-            self.assertTrue(website["source_label"])
-            self.assertIn(website["availability"], {"daily", "seasonal"})
-        self.assertEqual(
-            contracts_by_id["marian-antiphon-angelus"].metadata["website"]["prayer_family"],
-            "marian-antiphon",
-        )
-        self.assertEqual(
-            contracts_by_id["marian-antiphon-regina-caeli"].metadata["website"]["prayer_family"],
-            "marian-antiphon",
-        )
         self.assertEqual(
             contracts_by_id["marian-antiphon-angelus"].metadata["title_template"],
             "Marian Antiphon - Angelus - {date_display}",
@@ -1021,6 +996,54 @@ class TestPublishContracts(unittest.TestCase):
                 self.mod.load_publish_contracts(contracts_dir)
 
         self.assertIn("Duplicate publish entry_id 'duplicate'", str(ctx.exception))
+
+    def test_load_publish_contracts_preserves_valid_local_episode_state(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contract_dir = root / "contracts"
+            contract_dir.mkdir()
+            payload = {
+                "contract": {
+                    "id": "sample", "type": "daily-prayer", "frequency": "daily",
+                    "timezone": "America/Chicago", "version": "1",
+                },
+                "entries": [{
+                    "entry_id": "sample", "title": "Sample", "status": "approved", "text": "Configured text",
+                    "blocks": [{"kind": "inline", "text": "Prayer"}],
+                    "episode_state": {
+                        "entry_id": "legacy-id", "date": "2026-10-16", "status": "approved",
+                        "text": "Stored text", "text_hash": "th", "audio_enabled": True,
+                        "audio_url": "https://example.test/a.mp3", "audio_path": "docs/audio/a.mp3",
+                        "content_hash": "ch",
+                    },
+                }],
+            }
+            (contract_dir / "sample.json").write_text(json.dumps(payload), encoding="utf-8")
+            contract = self.mod.load_publish_contracts(contract_dir)[0]
+
+        state = contract.entries[0]["episode_state"]
+        self.assertEqual(state["entry_id"], "legacy-id")
+        self.assertEqual(state["text"], "Stored text")
+        self.assertEqual(state["text_hash"], "th")
+        self.assertEqual(state["audio_path"], "docs/audio/a.mp3")
+        self.assertTrue(state["audio_enabled"])
+
+    def test_load_publish_contracts_rejects_incomplete_local_episode_state(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            contract_dir = root / "contracts"
+            contract_dir.mkdir()
+            payload = {
+                "contract": {
+                    "id": "sample", "type": "daily-prayer", "frequency": "daily",
+                    "timezone": "UTC", "version": "1",
+                },
+                "entries": [{"entry_id": "sample", "title": "Sample", "status": "approved", "text": "Sample",
+                             "blocks": [{"kind": "inline", "text": "Prayer"}], "episode_state": {"entry_id": "sample"}}],
+            }
+            (contract_dir / "sample.json").write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(RuntimeError, "incomplete episode_state"):
+                self.mod.load_publish_contracts(contract_dir)
 
     def test_audio_cue_and_pause_blocks_expand_without_readable_text_or_resume_markers(self):
         with tempfile.TemporaryDirectory() as tmpdir:

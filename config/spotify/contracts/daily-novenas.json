@@ -1,9 +1,11 @@
 {
   "key": "daily-novenas",
-  "notion_name": "Daily Novenas",
+  "name": "Daily Novenas",
   "spotify_episode_lookup": {
     "show_id": "4PNxb0OazrkcEp3FAggRoD",
-    "required_name_terms": ["novena"],
+    "required_name_terms": [
+      "novena"
+    ],
     "date_formats": [
       "{month_name} {day}, {year}",
       "{month_name} {day_ordinal}, {year}",
@@ -12,17 +14,5 @@
       "{month_short} {day_ordinal}, {year}",
       "{month_short}. {day_ordinal}, {year}"
     ]
-  },
-  "website": {
-    "enabled": true,
-    "slug": "daily-novenas",
-    "title": "Daily Novenas",
-    "subtitle": "Liturgical calendar",
-    "summary": "Ora Pro Nobis novena prayers selected from the liturgical calendar and published as daily audio.",
-    "group": "ora-pro-nobis",
-    "order": 60,
-    "source_label": "Ora Pro Nobis",
-    "availability": "daily",
-    "primary_action_label": "Pray today's novena"
   }
 }

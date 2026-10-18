@@ -22,7 +22,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "morning-prayer-loh.json",
                 {
                     "key": "Morning Prayer LOH",
-                    "notion_name": "Morning Prayer (LOH)",
+                    "name": "Morning Prayer (LOH)",
                     "resolver": "MORNING",
                     "fallback_resolver": "DO_MORNING",
                 },
@@ -31,7 +31,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "fr-mike-sunday-homily.json",
                 {
                     "key": "fr-mike-sunday-homily",
-                    "notion_name": "Fr. Mike Sunday Homily",
+                    "name": "Fr. Mike Sunday Homily",
                     "resolver": "SUNDAY_FRMIKE",
                     "weekdays": ["sunday"],
                 },
@@ -50,7 +50,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "angelus-morning.json",
                 {
                     "key": "angelus-morning",
-                    "notion_name": "Marian Antiphon (Morning)",
+                    "name": "Marian Antiphon (Morning)",
                     "spotify_url_normal": "spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
                     "spotify_uri_easter": "spotify:episode:7ni2KH5KdbtK0JFL74V8x3",
                 },
@@ -59,7 +59,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "angelus-midday.json",
                 {
                     "key": "angelus-midday",
-                    "notion_name": "Marian Antiphon (Midday)",
+                    "name": "Marian Antiphon (Midday)",
                     "spotify_url_normal": "spotify:episode:2HNK8wLRWHh0mJ9xmJjlUD",
                     "spotify_uri_easter": "spotify:episode:68xFE8g1JRFu62osp0tLNg",
                 },
@@ -68,7 +68,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "angelus-evening.json",
                 {
                     "key": "angelus-evening",
-                    "notion_name": "Marian Antiphon (Evening)",
+                    "name": "Marian Antiphon (Evening)",
                     "spotify_url_normal": "spotify:track:39Jgl6ST4fQj4fNyRSQZFk",
                     "spotify_uri_easter": "spotify:episode:7ni2KH5KdbtK0JFL74V8x3",
                 },
@@ -112,7 +112,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "broken.json",
                 {
                     "key": "broken",
-                    "notion_name": "Broken",
+                    "name": "Broken",
                     "resolver": "MORNING",
                     "spotify_uri": "spotify:track:abc123",
                 },
@@ -127,7 +127,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "broken.json",
                 {
                     "key": "broken",
-                    "notion_name": "Broken",
+                    "name": "Broken",
                     "resolver": "MORNING",
                     "spotify_episode_lookup": {
                         "show_id": "show_123",
@@ -146,7 +146,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "broken.json",
                 {
                     "key": "broken",
-                    "notion_name": "Broken",
+                    "name": "Broken",
                     "spotify_uri": "https://open.spotify.com/track/abc123",
                 },
             )
@@ -160,7 +160,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "broken.json",
                 {
                     "key": "broken",
-                    "notion_name": "Broken",
+                    "name": "Broken",
                     "spotify_episode_lookup": {
                         "required_name_terms": ["Morning Prayer"],
                         "date_formats": ["{month_name} {day}, {year}"],
@@ -177,7 +177,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "broken.json",
                 {
                     "key": "broken",
-                    "notion_name": "Broken",
+                    "name": "Broken",
                     "resolver": "MORNING",
                     "weekdays": ["Funday"],
                 },
@@ -193,7 +193,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "broken.json",
                 {
                     "key": "angelus-morning",
-                    "notion_name": "Marian Antiphon (Morning)",
+                    "name": "Marian Antiphon (Morning)",
                     "spotify_url_normal": "spotify:track:1dbE76sfAobxVwYYjQ6yb6",
                 },
             )
@@ -201,26 +201,19 @@ class TestSpotifyContracts(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "must define both 'spotify_url_normal' and 'spotify_uri_easter'"):
                 self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
 
-    def test_load_spotify_queue_contracts_rejects_legacy_name_only_contract(self):
+    def test_load_spotify_queue_contracts_rejects_missing_display_name(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             contract_dir = Path(tmpdir)
-            _write_json(
-                contract_dir / "broken.json",
-                {
-                    "key": "broken",
-                    "name": "Broken",
-                    "resolver": "MORNING",
-                },
-            )
+            _write_json(contract_dir / "broken.json", {"key": "broken", "resolver": "MORNING"})
 
-            with self.assertRaisesRegex(RuntimeError, "legacy field 'name'"):
+            with self.assertRaisesRegex(RuntimeError, "missing required field 'name'"):
                 self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
 
     def test_load_spotify_queue_contracts_includes_daily_novenas_contract(self):
         contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
 
         self.assertIn("daily-novenas", contracts)
-        self.assertEqual(contracts["daily-novenas"].notion_name, "Daily Novenas")
+        self.assertEqual(contracts["daily-novenas"].name, "Daily Novenas")
         self.assertEqual(contracts["daily-novenas"].resolver, "")
         lookup = contracts["daily-novenas"].spotify_episode_lookup
         self.assertIsNotNone(lookup)
@@ -246,7 +239,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "lookup.json",
                 {
                     "key": "lookup",
-                    "notion_name": "Lookup",
+                    "name": "Lookup",
                     "spotify_episode_lookup": {
                         "show_id": "show_123",
                         "required_name_terms": ["Morning Prayer", "April"],
@@ -264,61 +257,6 @@ class TestSpotifyContracts(unittest.TestCase):
         self.assertEqual(lookup.required_name_terms, ("Morning Prayer", "April"))
         self.assertEqual(lookup.date_formats, ("{month_name} {day}, {year}",))
 
-    def test_load_spotify_queue_contracts_preserves_website_metadata(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            contract_dir = Path(tmpdir)
-            _write_json(
-                contract_dir / "bible-in-a-year.json",
-                {
-                    "key": "bible-in-a-year",
-                    "notion_name": "Bible in a Year",
-                    "resolver": "BIBLE_IN_A_YEAR",
-                    "website": {
-                        "enabled": True,
-                        "slug": "Bible in a Year",
-                        "title": "Bible in a Year",
-                        "summary": "Daily Scripture listening on Spotify.",
-                        "group": "external-spotify",
-                        "source_label": "Ascension",
-                        "availability": "daily",
-                        "order": 20,
-                        "external_url": "https://open.spotify.com/show/4Pppt42NPK2XzKwNIoW7BR",
-                        "aliases": ["BIAY"],
-                    },
-                },
-            )
-
-            contracts = self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
-
-        contract = contracts[0]
-        self.assertEqual(contract.website["slug"], "bible-in-a-year")
-        self.assertEqual(contract.website["order"], 20.0)
-        self.assertEqual(contract.website["aliases"], ["BIAY"])
-
-    def test_load_spotify_queue_contracts_rejects_invalid_website_metadata(self):
-        with tempfile.TemporaryDirectory() as tmpdir:
-            contract_dir = Path(tmpdir)
-            _write_json(
-                contract_dir / "broken.json",
-                {
-                    "key": "broken",
-                    "notion_name": "Broken",
-                    "resolver": "BROKEN",
-                    "website": {
-                        "enabled": True,
-                        "slug": "broken",
-                        "title": "Broken",
-                        "summary": "Broken entry.",
-                        "group": "external-spotify",
-                        "source_label": "Broken",
-                        "availability": "daily",
-                    },
-                },
-            )
-
-            with self.assertRaisesRegex(RuntimeError, "without 'external_url'"):
-                self.mod.load_spotify_queue_contracts(contract_dir=contract_dir)
-
     def test_load_spotify_queue_contracts_accepts_ordered_episode_lookup_searches(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             contract_dir = Path(tmpdir)
@@ -326,7 +264,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "lookup.json",
                 {
                     "key": "lookup",
-                    "notion_name": "Lookup",
+                    "name": "Lookup",
                     "spotify_episode_lookup": {
                         "show_id": "show_123",
                         "searches": [
@@ -371,7 +309,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "broken.json",
                 {
                     "key": "broken",
-                    "notion_name": "Broken",
+                    "name": "Broken",
                     "spotify_episode_lookup": {
                         "show_id": "show_123",
                         "searches": [],
@@ -388,7 +326,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "broken.json",
                 {
                     "key": "broken",
-                    "notion_name": "Broken",
+                    "name": "Broken",
                     "spotify_episode_lookup": {
                         "show_id": "show_123",
                         "required_name_terms": ["Marian Antiphon"],
@@ -412,7 +350,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "broken.json",
                 {
                     "key": "broken",
-                    "notion_name": "Broken",
+                    "name": "Broken",
                     "spotify_episode_lookup": {
                         "show_id": "show_123",
                         "searches": [
@@ -447,7 +385,7 @@ class TestSpotifyContracts(unittest.TestCase):
         contract = contracts["auxilium-christianorum"]
         lookup = contract.spotify_episode_lookup
 
-        self.assertEqual(contract.notion_name, "Auxillium Christianorum")
+        self.assertEqual(contract.name, "Auxillium Christianorum")
         self.assertEqual(contract.resolver, "")
         self.assertIsNotNone(lookup)
         self.assertEqual(lookup.show_id, "4PNxb0OazrkcEp3FAggRoD")
@@ -466,7 +404,7 @@ class TestSpotifyContracts(unittest.TestCase):
         contract = contracts["daily-rosary"]
         lookup = contract.spotify_episode_lookup
 
-        self.assertEqual(contract.notion_name, "Daily Rosary")
+        self.assertEqual(contract.name, "Daily Rosary")
         self.assertEqual(contract.resolver, "")
         self.assertIsNotNone(lookup)
         self.assertEqual(lookup.show_id, "4PNxb0OazrkcEp3FAggRoD")
@@ -486,7 +424,7 @@ class TestSpotifyContracts(unittest.TestCase):
         lookup = contract.spotify_episode_lookup
 
         self.assertIn("daily-examen", contracts)
-        self.assertEqual(contract.notion_name, "Daily Examen")
+        self.assertEqual(contract.name, "Daily Examen")
         self.assertEqual(contract.spotify_uri, "")
         self.assertIsNotNone(lookup)
         self.assertEqual(lookup.show_id, "4PNxb0OazrkcEp3FAggRoD")
@@ -517,7 +455,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "morning-prayer-loh.json",
                 {
                     "key": "morning-prayer-loh",
-                    "notion_name": "Morning Prayer (LOH)",
+                    "name": "Morning Prayer (LOH)",
                     "resolver": "MORNING",
                 },
             )
@@ -525,7 +463,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "rosary.json",
                 {
                     "key": "rosary",
-                    "notion_name": "Rosary",
+                    "name": "Rosary",
                     "resolver": "ROSARY",
                 },
             )
@@ -560,7 +498,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "known.json",
                 {
                     "key": "known",
-                    "notion_name": "Known",
+                    "name": "Known",
                     "resolver": "KNOWN",
                 },
             )
@@ -587,7 +525,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 contract_dir / "rosary.json",
                 {
                     "key": "rosary",
-                    "notion_name": "Rosary",
+                    "name": "Rosary",
                     "resolver": "ROSARY",
                 },
             )
