@@ -49,4 +49,4 @@ Write-Host "DEVOTIONAL_ONEDRIVE_REMOTE_ROOT: $RemoteRoot"
 
 Write-Host ""
 Write-Host "Next step:"
-Write-Host ".\\scripts\\run_daily_devotional_image_onedrive_local.ps1"
+Write-Host ".\\scripts\\run_devotional_wallpapers_local.ps1"

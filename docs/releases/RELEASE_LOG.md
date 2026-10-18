@@ -1,3 +1,11 @@
+## [0.4.18.0] - 2026-10-18
+
+### Removed
+- Removed Notion integrations and credentials, the ICS publisher, daily infographic publishing, and the prayer directory site.
+
+### Preserved
+- Kept daily wallpaper generation and OneDrive delivery, Spotify playlist refresh, podcast and novena audio publishing, the podcast feed and cover art, and a Coming soon landing page.
+
 # Release Log
 
 ## [0.4.17.0] - 2026-10-13
