@@ -1,9 +1,11 @@
 {
   "key": "auxilium-christianorum",
-  "notion_name": "Auxillium Christianorum",
+  "name": "Auxillium Christianorum",
   "spotify_episode_lookup": {
     "show_id": "4PNxb0OazrkcEp3FAggRoD",
-    "required_name_terms": ["Auxilium Christianorum"],
+    "required_name_terms": [
+      "Auxilium Christianorum"
+    ],
     "date_formats": [
       "{month_name} {day}, {year}",
       "{month_short} {day}, {year}",

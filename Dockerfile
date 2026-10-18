@@ -11,9 +11,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DEBIAN_FRONTEND=noninteractive \
     HOME=/home/app \
     USERPROFILE=/data \
-    PAGE_AUDIO_CACHE_DIR=/data/cache/page_audio \
-    PAGE_AUDIO_LIBRARY_DIR=/data/page_audio_library \
-    NOVENA_AUDIO_LIBRARY_DIR=/data/novena_audio_library \
     DEVOTIONAL_ONEDRIVE_DCIM_DIR=/data/devotional/DCIM
 
 WORKDIR /app

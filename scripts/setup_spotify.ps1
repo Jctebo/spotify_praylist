@@ -301,4 +301,4 @@ if (Read-YesNo "Run all playlists locally now?" $true) {
 
 Write-Host ""
 Write-Host "Done." -ForegroundColor Green
-Write-Host "For GitHub Actions, keep using repo secrets for Spotify credentials. Add Notion secrets only if you want optional post-write helpers." -ForegroundColor Green
+Write-Host "For GitHub Actions, keep using repo secrets for Spotify credentials." -ForegroundColor Green

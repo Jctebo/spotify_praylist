@@ -1,20 +1,32 @@
 {
   "key": "angelus-morning",
-  "notion_name": "Marian Antiphon  (Morning)",
+  "name": "Marian Antiphon  (Morning)",
   "spotify_episode_lookup": {
     "show_id": "4PNxb0OazrkcEp3FAggRoD",
     "searches": [
       {
-        "required_name_terms": ["Marian Antiphon"],
-        "date_formats": ["{month_name} {day}, {year}"]
+        "required_name_terms": [
+          "Marian Antiphon"
+        ],
+        "date_formats": [
+          "{month_name} {day}, {year}"
+        ]
       },
       {
-        "required_name_terms": ["Angelus"],
-        "date_formats": ["{month_name} {day}, {year}"]
+        "required_name_terms": [
+          "Angelus"
+        ],
+        "date_formats": [
+          "{month_name} {day}, {year}"
+        ]
       },
       {
-        "required_name_terms": ["Regina Caeli"],
-        "date_formats": ["{month_name} {day}, {year}"]
+        "required_name_terms": [
+          "Regina Caeli"
+        ],
+        "date_formats": [
+          "{month_name} {day}, {year}"
+        ]
       }
     ]
   }
