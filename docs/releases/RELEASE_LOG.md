@@ -8,6 +8,11 @@
 
 # Release Log
 
+## [0.4.19.1] - 2026-10-18
+
+### Changed
+- Enabled Daily Gospel Exegesis and placed it first in Midday, followed by Midmorning Prayer and Midday Prayer; retained the remaining Midday order.
+
 ## [0.4.19.0] - 2026-10-18
 
 ### Fixed
