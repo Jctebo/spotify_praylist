@@ -3,18 +3,10 @@
   "name": "Midday",
   "playlist_id": "4gQAaPAMiezBaDaoqK6sFQ",
   "contracts": [
-    "midmorning-prayer",
-    "midday-prayer",
-    "midafternoon-prayer",
-    "afternoon-prayer-loh",
-    "angelus-midday",
-    "auxilium-christianorum",
     "daily-novenas",
-    "daily-rosary",
-    "daily-examen",
-    "daily-gospel-exegesis",
-    "rosary",
-    "friday-stations-of-the-cross",
-    "lenten-devotion"
+    "angelus-midday",
+    "saint-of-the-day",
+    "auxilium-christianorum",
+    "afternoon-prayer-loh"
   ]
 }
