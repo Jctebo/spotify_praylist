@@ -8,6 +8,11 @@
 
 # Release Log
 
+## [0.4.19.0] - 2026-10-18
+
+### Fixed
+- Corrected Morning, Midday, and Night Spotify playlist membership and ordering to match enabled source rows; added regression coverage for all four playlists.
+
 ## [0.4.17.0] - 2026-10-13
 
 ### Fixed

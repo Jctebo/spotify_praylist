@@ -3,10 +3,9 @@
   "name": "Night",
   "playlist_id": "1TAlNiKHMc41cT0fvkYxTD",
   "contracts": [
-    "evening-prayer-loh",
     "angelus-evening",
-    "night-pre-compline",
-    "night-prayer-loh",
-    "office-of-readings"
+    "daily-examen",
+    "evening-prayer-loh",
+    "night-prayer-loh"
   ]
 }

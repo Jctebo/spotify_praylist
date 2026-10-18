@@ -487,6 +487,42 @@ class TestSpotifyContracts(unittest.TestCase):
         self.assertEqual(definitions[0].playlist_id, "morning123")
         self.assertEqual(definitions[0].contracts, ())
 
+    def test_repository_playlists_match_enabled_notion_membership_and_order(self):
+        definitions = self.mod.load_spotify_playlist_definitions()
+        contracts_by_playlist = {definition.key: definition.contracts for definition in definitions}
+
+        self.assertEqual(
+            contracts_by_playlist,
+            {
+                "morning": (
+                    "divine-office-invitatory",
+                    "morning-prayer",
+                    "daily-mass-readings",
+                    "morning-prayer-loh",
+                    "daily-rosary",
+                    "bible-in-a-year",
+                    "angelus-morning",
+                ),
+                "midday": (
+                    "daily-novenas",
+                    "angelus-midday",
+                    "saint-of-the-day",
+                    "auxilium-christianorum",
+                    "afternoon-prayer-loh",
+                ),
+                "night": (
+                    "angelus-evening",
+                    "daily-examen",
+                    "evening-prayer-loh",
+                    "night-prayer-loh",
+                ),
+                "sunday": (
+                    "fr-mike-sunday-homily",
+                    "barron-sunday-sermon",
+                ),
+            },
+        )
+
     def test_load_spotify_playlist_definitions_rejects_unknown_contract_keys(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

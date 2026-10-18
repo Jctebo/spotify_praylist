@@ -3,13 +3,12 @@
   "name": "Morning",
   "playlist_id": "0sy9eBsySKuCppI0PxXRJN",
   "contracts": [
-    "invitatory",
-    "morning-prayer",
-    "morning-prayer-loh",
     "divine-office-invitatory",
-    "angelus-morning",
-    "bible-in-a-year",
+    "morning-prayer",
     "daily-mass-readings",
-    "saint-of-the-day"
+    "morning-prayer-loh",
+    "daily-rosary",
+    "bible-in-a-year",
+    "angelus-morning"
   ]
 }
