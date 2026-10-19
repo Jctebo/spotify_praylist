@@ -127,10 +127,50 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: |
           rm -rf pages_artifact
+
+      - name: Stage today's devotional wallpaper when available
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        shell: bash
+        env:
+          RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RCLONE_CONFIG_B64:-}" ]; then
+            echo "No wallpaper remote configured; the site will use its image fallback."
+            exit 0
+          fi
+          sudo apt-get update
+          sudo apt-get install -y rclone
+          mkdir -p "$HOME/.config/rclone"
+          printf "%s" "$RCLONE_CONFIG_B64" | base64 -d > "$HOME/.config/rclone/rclone.conf"
+          chmod 600 "$HOME/.config/rclone/rclone.conf"
+          today="$(TZ=America/Chicago date +%F)"
+          remote="$RCLONE_REMOTE_NAME:$RCLONE_REMOTE_ROOT/phone-current"
+          matches="$(rclone lsf --files-only "$remote" 2>/dev/null | grep -E "__${today}\\.(jpg|jpeg|png|webp)$" || true)"
+          if [ -z "$matches" ]; then
+            echo "No phone wallpaper found for $today; the site will use its image fallback."
+            exit 0
+          fi
+          filename="$(printf '%s\n' "$matches" | LC_ALL=C sort | head -n 1)"
+          extension="${filename##*.}"
           mkdir -p pages_artifact/images
-          cp config/site/coming-soon.html pages_artifact/index.html
-          cp docs/podcast.xml pages_artifact/podcast.xml
-          cp docs/images/logo_ora_pro_nobis.png pages_artifact/images/logo_ora_pro_nobis.png
+          temporary="pages_artifact/images/daily-wallpaper.$extension.tmp"
+          trap 'rm -f "$temporary"' EXIT
+          rclone copyto "$remote/$filename" "$temporary"
+          mv "$temporary" "pages_artifact/images/daily-wallpaper.$extension"
+
+      - name: Build GitHub Pages artifact
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          set -euo pipefail
+          wallpaper="$(find pages_artifact/images -maxdepth 1 -type f -name 'daily-wallpaper.*' -print -quit 2>/dev/null || true)"
+          if [ -n "$wallpaper" ]; then
+            python scripts/build_pages_artifact.py --wallpaper "$wallpaper"
+          else
+            python scripts/build_pages_artifact.py
+          fi
 
       - name: Upload GitHub Pages artifact
         if: github.ref == 'refs/heads/main'

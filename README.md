@@ -25,7 +25,7 @@ Optional variables:
 - `jobs/publish/run_audio_pipeline.py` builds date-scoped audio, JSON sidecars, the archive index, and `docs/podcast.xml` from the same local contracts.
 - `jobs/novena_contracts/` owns contract-driven novena generation, audio artifacts, and RSS publication.
 - Spotify playlist refresh uses checked-in playlist definitions and queue contracts; it needs only Spotify credentials.
-- GitHub Pages serves only the coming-soon landing page plus podcast RSS and cover art. The prayer directory, calendar publisher, and devotional infographic publisher are retired.
+- GitHub Pages serves a responsive daily prayer homepage built from the checked-in Spotify playlists, with a current devotional phone wallpaper when available, plus the existing podcast RSS and cover art. The prayer directory, calendar publisher, and devotional infographic publisher are retired.
 
 ## Files
 - `.agents/skills/normalize-prayer-tts/`: preview-only prayer TTS audit skill for expanding supported abbreviations, separating Versicle/Response voices, converting intention directions into bell/pause controls, and flagging ambiguous print artifacts for review; run it with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py <path> --format auto`, or audit every novena contract read-only with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py contracts/novenas --format auto`
@@ -46,7 +46,8 @@ Optional variables:
 
 - `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; the daily 07:00 UTC run is gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
 - `.github/workflows/publish_audio.yml`: combined publish workflow for Morning Prayer audio and novena publishing, scheduled daily and also available on manual dispatch with `novena_publish_mode=daily` as the default choice; `bootstrap-no-cache` is available for a bootstrap-style publish that rebuilds audio without using the cache
-- `config/site/coming-soon.html`: static landing page used by the podcast Pages deployment
+- `config/site/`: static daily prayer home, responsive styles, and Spotify playlist rendering for the podcast Pages deployment
+- `scripts/build_pages_artifact.py`: validates Spotify queue contracts and assembles the Pages artifact with the feed, cover art, and optional current wallpaper
 
 ## Config Timezone
 - `jobs/playlist/refresh_playlist.py` uses `JOB_UTC_OFFSET` for all date-based episode selection.
