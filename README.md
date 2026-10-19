@@ -25,7 +25,7 @@ Optional variables:
 - `jobs/publish/run_audio_pipeline.py` builds date-scoped audio, JSON sidecars, the archive index, and `docs/podcast.xml` from the same local contracts.
 - `jobs/novena_contracts/` owns contract-driven novena generation, audio artifacts, and RSS publication.
 - Spotify playlist refresh uses checked-in playlist definitions and queue contracts; it needs only Spotify credentials.
-- GitHub Pages serves only the coming-soon landing page plus podcast RSS and cover art. The prayer directory, calendar publisher, and devotional infographic publisher are retired.
+- GitHub Pages serves a responsive daily prayer homepage built from the checked-in Spotify playlists, with a current devotional phone wallpaper when available, plus the existing podcast RSS and cover art. The prayer directory, calendar publisher, and devotional infographic publisher are retired.
 
 ## Files
 - `.agents/skills/normalize-prayer-tts/`: preview-only prayer TTS audit skill for expanding supported abbreviations, separating Versicle/Response voices, converting intention directions into bell/pause controls, and flagging ambiguous print artifacts for review; run it with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py <path> --format auto`, or audit every novena contract read-only with `python .agents/skills/normalize-prayer-tts/scripts/normalize_prayer_tts.py contracts/novenas --format auto`
@@ -46,7 +46,8 @@ Optional variables:
 
 - `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; the daily 07:00 UTC run is gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
 - `.github/workflows/publish_audio.yml`: combined publish workflow for Morning Prayer audio and novena publishing, scheduled daily and also available on manual dispatch with `novena_publish_mode=daily` as the default choice; `bootstrap-no-cache` is available for a bootstrap-style publish that rebuilds audio without using the cache
-- `config/site/coming-soon.html`: static landing page used by the podcast Pages deployment
+- `config/site/`: static daily prayer home, responsive styles, and Spotify playlist rendering for the podcast Pages deployment
+- `scripts/build_pages_artifact.py`: validates Spotify queue contracts and assembles the Pages artifact with the feed, cover art, and optional current wallpaper
 
 ## Config Timezone
 - `jobs/playlist/refresh_playlist.py` uses `JOB_UTC_OFFSET` for all date-based episode selection.
@@ -264,13 +265,13 @@ Run local equivalents of the supported scheduled jobs:
 python -m jobs.publish.run_audio_pipeline
 ```
 
-## Coming Soon Page
+## Daily Prayer Home
 
-The GitHub Pages root says “Coming soon.” The podcast remains available at `https://jctebo.github.io/spotify_praylist/podcast.xml`, with its cover image served at `/images/logo_ora_pro_nobis.png`. No prayer directory or Spotify playlist website is published.
+The GitHub Pages root shows the daily prayer home with ordered Morning, Midday, Night, and Sunday Spotify playlists. Each prayer links to its Spotify destination, and the full playlist is linked from each group. Today's phone wallpaper is included when available; otherwise the page uses a branded background. The podcast remains at `https://jctebo.github.io/spotify_praylist/podcast.xml`, with its cover image at `/images/logo_ora_pro_nobis.png`. No prayer directory is published.
 
 ## Devotional Wallpapers
 
-The independent OneDrive wallpaper pipeline remains available. Its scheduled workflow is `.github/workflows/daily_devotional_wallpapers.yml`; local runs use `scripts/run_devotional_wallpapers_local.ps1` with the existing rclone profile/configuration. The GitHub workflow uses `RCLONE_CONFIG_B64`, `RCLONE_REMOTE_NAME`, and `RCLONE_REMOTE_ROOT`. This pipeline stores phone/watch wallpapers in OneDrive and does not publish them to GitHub Pages.
+The independent OneDrive wallpaper pipeline remains available. Its scheduled workflow is `.github/workflows/daily_devotional_wallpapers.yml`; local runs use `scripts/run_devotional_wallpapers_local.ps1` with the existing rclone profile/configuration. The Pages workflow uses `RCLONE_CONFIG_B64`, `RCLONE_REMOTE_NAME`, and `RCLONE_REMOTE_ROOT` to copy only today's phone image from OneDrive's `phone-current` folder. That image is public at `/images/daily-wallpaper.<extension>`; watch images, queues, and archives are not published.
 
 ## Local Test Framework
 Run the offline unit test suite (no live Spotify API calls):
@@ -287,7 +288,7 @@ Verbose mode:
 
 Coverage:
 - `jobs/playlist/refresh_playlist.py` main flow and playlist recreate chunking (`PUT/POST /items`)
-- GitHub Pages deployment staging for the coming-soon page and podcast assets
+- GitHub Pages deployment artifact generation for the daily prayer home, optional wallpaper, and podcast assets
 - `jobs/publish/run_audio_pipeline.py` contract-driven episode output and local state behavior
 
 ## Setup Scripts
@@ -296,6 +297,14 @@ Use the Spotify setup script (separate from `run_*` job mirrors):
 ```powershell
 .\scripts\setup_spotify.ps1
 ```
+
+## Documentation
+- [Local episode contracts](docs/architecture/local-episode-contracts.md)
+- [Publish and feed-retention architecture](docs/architecture/publish-audio-feed-retention.md)
+- [Morning Prayer publishing architecture](docs/architecture/morning-prayer-redesign.md)
+- [Publishing roadmap (archived)](docs/roadmaps/publish-content.md)
+- [Release history](docs/releases/RELEASE_LOG.md)
+- [Current release record](docs/releases/0.4.20.0-devotional-prayer-home.md)
 
 ## Notes
 - Do not commit secrets.

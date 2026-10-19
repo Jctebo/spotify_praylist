@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#17231d">
+    <meta name="description" content="A daily place for prayer, reflection, and sacred music.">
+    <title>Daily Prayer | Ora Pro Nobis</title>
+    <link rel="icon" href="images/logo_ora_pro_nobis.png">
+    <link rel="stylesheet" href="site.css">
+    <script src="site.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Ora Pro Nobis home">
+        <img src="images/logo_ora_pro_nobis.png" alt="" width="44" height="44">
+        <span>Ora Pro Nobis</span>
+      </a>
+      <a class="feed-link" href="podcast.xml">Podcast feed <span aria-hidden="true">↗</span></a>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="page-title">
+        <img id="wallpaper" class="hero-image" alt="Today's devotional wallpaper" hidden>
+        <div class="hero-shade" aria-hidden="true"></div>
+        <div class="hero-copy">
+          <p class="eyebrow">A daily rhythm of prayer</p>
+          <h1 id="page-title">Make room for the sacred.</h1>
+          <p id="today-date" class="hero-date">Prayer for today</p>
+          <a class="hero-action" href="#prayer-times">Explore today's prayers <span aria-hidden="true">↓</span></a>
+        </div>
+        <span class="hero-credit">Daily devotional wallpaper</span>
+      </section>
+
+      <section class="prayer-section" id="prayer-times" aria-labelledby="prayer-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Listen and pray</p>
+            <h2 id="prayer-heading">Today's prayer rhythm</h2>
+          </div>
+          <p class="section-note">Choose a prayer or open the complete playlist in Spotify.</p>
+        </div>
+        <nav id="group-nav" class="group-nav" aria-label="Prayer times"></nav>
+        <div id="playlist-groups" class="playlist-groups" aria-live="polite">
+          <p class="loading-message">Preparing today's prayer list…</p>
+        </div>
+      </section>
+
+      <section class="podcast-note" aria-label="Podcast">
+        <div class="podcast-mark" aria-hidden="true">✦</div>
+        <div>
+          <p class="eyebrow">Keep listening</p>
+          <h2>Prayer for the moments in between.</h2>
+          <p>Find the Ora Pro Nobis podcast in your favorite podcast app.</p>
+        </div>
+        <a class="text-link" href="podcast.xml">Open podcast feed <span aria-hidden="true">↗</span></a>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>Ora Pro Nobis</span>
+      <span>May your day be held in prayer.</span>
+    </footer>
+  </body>
+</html>

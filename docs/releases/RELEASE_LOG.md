@@ -8,6 +8,15 @@
 
 # Release Log
 
+## [0.4.20.0] - 2026-10-18
+
+### Added
+- You can now open a daily prayer home with Morning, Midday, Night, and Sunday prayer groups, ordered Spotify links, and direct playlist links.
+- The homepage shows today's devotional wallpaper when available and a branded background otherwise.
+
+### Changed
+- The Pages publisher builds the homepage from the checked-in Spotify contracts and keeps the existing podcast feed and cover art URLs.
+
 ## [0.4.19.1] - 2026-10-18
 
 ### Changed

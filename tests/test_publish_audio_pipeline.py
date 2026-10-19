@@ -723,9 +723,10 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertIn("R2_ENDPOINT: ${{ vars.R2_ENDPOINT }}", workflow_text)
         self.assertIn("python scripts/sync_r2_audio.py", workflow_text)
         self.assertIn("Stage GitHub Pages artifact", workflow_text)
-        self.assertIn("cp config/site/coming-soon.html pages_artifact/index.html", workflow_text)
-        self.assertIn("cp docs/podcast.xml pages_artifact/podcast.xml", workflow_text)
-        self.assertIn("cp docs/images/logo_ora_pro_nobis.png pages_artifact/images/logo_ora_pro_nobis.png", workflow_text)
+        self.assertIn("Build GitHub Pages artifact", workflow_text)
+        self.assertIn("python scripts/build_pages_artifact.py", workflow_text)
+        self.assertIn("RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG_B64 }}", workflow_text)
+        self.assertIn("phone-current", workflow_text)
         self.assertNotIn("cp -a docs/. pages_artifact/", workflow_text)
         self.assertIn("path: ${{ github.workspace }}/pages_artifact", workflow_text)
 
