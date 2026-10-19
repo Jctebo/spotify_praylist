@@ -14,4 +14,4 @@ This roadmap is archived. The publishing architecture is now implemented around 
 
 ## Preserved Publishing Behavior
 
-The current pipeline retains podcast titles, descriptions, audio branding, RSS output, and scheduled publishing behavior. Spotify playlist refresh remains a separate workflow driven by checked-in queue contracts. GitHub Pages now serves a coming-soon landing page plus the podcast RSS feed and cover art; prayer-site, calendar, and devotional image publishing have been retired.
+The current pipeline retains podcast titles, descriptions, audio branding, RSS output, and scheduled publishing behavior. Spotify playlist refresh remains a separate workflow driven by checked-in queue contracts. GitHub Pages serves a daily prayer home built from those playlist contracts, the podcast RSS feed and cover art, and today's phone wallpaper from OneDrive when available. The prayer directory, calendar publisher, and devotional infographic publisher remain retired.

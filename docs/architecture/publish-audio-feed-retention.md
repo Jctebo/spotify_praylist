@@ -9,7 +9,7 @@ The simplest complete fix is to treat the published `podcast.xml` feed as the so
 Today the audio publish flow does this:
 1. Render the current target-date audio jobs.
 2. Rebuild the RSS feed from current jobs plus the previously published `podcast.xml`.
-3. Stage the podcast feed and cover art with the coming-soon landing page for GitHub Pages.
+3. Build the daily prayer homepage, optionally add today's OneDrive phone wallpaper, and stage the podcast feed and cover art for GitHub Pages.
 
 The weak point is step 2. History only survives if the runner can reconstruct it from the published feed file. That keeps the archive boundary simple, but it still depends on the feed being available when the job runs.
 
@@ -42,8 +42,8 @@ This makes the archive boundary easy to reason about: the feed is the history.
 - Novena can still consume the in-workspace feed as a same-run handoff after the audio step has written it.
 
 ### Deploy Step
-- Publishes a static coming-soon landing page, `docs/podcast.xml`, and podcast cover image to GitHub Pages.
-- Excludes generated prayer-site pages, audio files, and devotional image trees.
+- Publishes a static daily prayer homepage, `docs/podcast.xml`, and podcast cover image to GitHub Pages; includes today's phone wallpaper when available.
+- Excludes generated prayer-text pages and audio files; copies only today's current phone wallpaper from the OneDrive tree.
 
 ## Data Flow
 ```text
@@ -54,14 +54,14 @@ main branch workflow run
     +--> load existing podcast.xml
     +--> merge archive feed + current slice
     +--> write docs/podcast.xml and docs/audio/*
-    +--> stage coming-soon page + podcast.xml + cover art
+    +--> build prayer home + optional current wallpaper + podcast.xml + cover art
     +--> deploy minimal Pages artifact
 ```
 
 ## Deployment And Operational Assumptions
 - GitHub Pages remains the hosting layer, but the published content is sourced from the existing feed file rather than a second storage system.
 - `publish_audio.yml` is the sole publisher of the GitHub Pages site and podcast feed.
-- The prayer-site generator, ICS publisher, and devotional infographic publisher are retired. The separate OneDrive wallpaper pipeline remains available.
+- The prayer directory, ICS publisher, and devotional infographic publisher are retired. The separate OneDrive wallpaper pipeline remains available; the Pages job copies only today's current phone wallpaper.
 - The main repository stays clean: contracts, code, and tests live on `main`; generated outputs live in `docs/`.
 
 ## Why This Is Simpler
