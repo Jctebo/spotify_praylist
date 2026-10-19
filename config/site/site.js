@@ -53,9 +53,15 @@ function renderGroup(group) {
     const list = element("ol", "prayer-list");
     for (const prayer of group.prayers) {
       const item = element("li", "prayer-item");
-      const link = spotifyLink(prayer.spotify_url, prayer.name, "prayer-link");
-      link.append(element("span", "link-arrow", "↗"));
-      item.append(link);
+      if (prayer.spotify_url) {
+        const link = spotifyLink(prayer.spotify_url, prayer.name, "prayer-link");
+        link.append(element("span", "link-arrow", "↗"));
+        item.append(link);
+      } else {
+        const unavailable = element("span", "prayer-link prayer-link-unavailable", prayer.name);
+        unavailable.setAttribute("aria-disabled", "true");
+        item.append(unavailable);
+      }
       list.append(item);
     }
     section.append(list);

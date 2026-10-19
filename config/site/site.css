@@ -75,6 +75,7 @@ h2 { margin: 0; font: 400 clamp(2rem, 4vw, 3.5rem)/1.1 var(--serif); letter-spac
 .prayer-list { list-style: none; padding: 0; margin: 0 0 1.5rem; }
 .prayer-item { border-bottom: 1px solid #eeece5; }
 .prayer-link { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .88rem 0; color: #354d40; text-decoration: none; font-size: 1rem; line-height: 1.45; }
+.prayer-link-unavailable { color: var(--muted); cursor: default; }
 .prayer-link:hover, .text-link:hover { color: #896923; text-decoration: underline; text-underline-offset: 4px; }
 .link-arrow { color: #9a8756; font-size: .8rem; }
 .playlist-action { display: inline-flex; align-items: center; align-self: start; min-height: 44px; margin-top: auto; padding: .65rem .9rem; background: #e9ede6; color: var(--green); text-decoration: none; font-size: 1rem; font-weight: 700; }
