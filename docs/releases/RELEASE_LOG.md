@@ -8,6 +8,15 @@
 
 # Release Log
 
+## [0.4.20.0] - 2026-10-18
+
+### Added
+- Replaced the Coming soon landing page with a responsive daily prayer home showing the ordered Morning, Midday, Night, and Sunday Spotify queues, prayer links, and playlist links.
+- Added an optional current devotional phone wallpaper hero with a branded fallback when today's wallpaper is unavailable.
+
+### Changed
+- The Pages publisher now builds the homepage from validated Spotify contracts while preserving the existing podcast feed and cover art paths.
+
 ## [0.4.19.1] - 2026-10-18
 
 ### Changed

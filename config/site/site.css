@@ -35,6 +35,7 @@ a:focus-visible { outline: 3px solid #a67626; outline-offset: 4px; }
 .brand img { object-fit: contain; border-radius: 50%; }
 .feed-link, .text-link { color: var(--green); font-size: 1rem; font-weight: 600; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .feed-link { display: inline-flex; align-items: center; min-height: 44px; }
+.text-link { display: inline-flex; align-items: center; min-height: 44px; }
 
 .hero {
   position: relative;
