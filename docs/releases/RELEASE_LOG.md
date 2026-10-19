@@ -8,6 +8,11 @@
 
 # Release Log
 
+## [0.4.20.1] - 2026-10-18
+
+### Changed
+- Prayer links on the daily homepage open direct Spotify tracks or episodes; group playlist links stay unchanged.
+
 ## [0.4.20.0] - 2026-10-18
 
 ### Added
