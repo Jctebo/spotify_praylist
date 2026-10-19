@@ -10,6 +10,9 @@ class TestPagesDeployment(unittest.TestCase):
         validation = Path(".github/workflows/contract_validation.yml").read_text(encoding="utf-8")
 
         self.assertIn("python scripts/build_pages_artifact.py", workflow)
+        self.assertIn("SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}", workflow)
+        self.assertIn("SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}", workflow)
+        self.assertIn("SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}", workflow)
         self.assertIn("phone-current", workflow)
         self.assertIn("__${today}", workflow)
         self.assertIn('"site"', builder)

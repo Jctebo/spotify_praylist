@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shutil
 import sys
-from datetime import datetime
+from datetime import date as Date
+from datetime import datetime as DateTime
 from pathlib import Path
-from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -21,6 +22,14 @@ from jobs.playlist.spotify_contracts import (
     load_spotify_queue_contracts,
     normalize_spotify_queue_uri,
 )
+from jobs.playlist.refresh_playlist import (
+    SPOTIFY_CLIENT_ID,
+    SPOTIFY_CLIENT_SECRET,
+    SPOTIFY_REFRESH_TOKEN,
+    load_resolver_runtime_config,
+    resolve_contract_uris,
+    sp_client,
+)
 
 
 SITE_DIR = ROOT / "config" / "site"
@@ -29,18 +38,62 @@ PODCAST_COVER = ROOT / "docs" / "images" / "logo_ora_pro_nobis.png"
 TIMEZONE = ZoneInfo("America/Chicago")
 
 
-def _spotify_url(contract: SpotifyQueueContract) -> str:
+def _direct_item_url(uri: str) -> str | None:
+    normalized = normalize_spotify_queue_uri(uri)
+    if not normalized:
+        return None
+    kind, identifier = normalized.split(":")[1:]
+    if kind not in {"track", "episode"}:
+        return None
+    return f"https://open.spotify.com/{kind}/{identifier}"
+
+
+def _spotify_url(contract: SpotifyQueueContract, resolved_uris: list[str] | None = None) -> str | None:
+    for uri in resolved_uris or []:
+        direct_url = _direct_item_url(uri)
+        if direct_url:
+            return direct_url
+
     direct = contract.spotify_url_normal or contract.spotify_uri
     if direct:
-        normalized = normalize_spotify_queue_uri(direct)
-        if normalized:
-            kind, identifier = normalized.split(":")[1:]
-            return f"https://open.spotify.com/{kind}/{identifier}"
-        if direct.startswith("https://"):
+        direct_url = _direct_item_url(direct)
+        if direct_url:
+            return direct_url
+        if direct.startswith("https://open.spotify.com/track/") or direct.startswith("https://open.spotify.com/episode/"):
             return direct
-    if contract.spotify_episode_lookup:
-        return f"https://open.spotify.com/show/{contract.spotify_episode_lookup.show_id}"
-    return f"https://open.spotify.com/search/{quote(contract.name, safe='')}"
+    return None
+
+
+def _resolved_item_uris(contracts: list[SpotifyQueueContract], current_date: Date) -> dict[str, list[str]]:
+    credential_names = (SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN)
+    if not all(os.getenv(name, "").strip() for name in credential_names):
+        return {}
+
+    try:
+        spotify, _ = sp_client()
+    except Exception:
+        print("WARN Spotify item resolution unavailable; dynamic prayer links will be omitted.", file=sys.stderr)
+        return {}
+    _, shows_cfg, fixed_cfg, tokens_cfg = load_resolver_runtime_config({})
+    weekday = current_date.strftime("%A")
+    resolved: dict[str, list[str]] = {}
+    for contract in contracts:
+        status: dict[str, bool] = {}
+        try:
+            resolved[contract.key] = resolve_contract_uris(
+                spotify,
+                contract,
+                weekday,
+                current_date,
+                status,
+                shows_cfg,
+                fixed_cfg,
+                tokens_cfg,
+            )
+        except Exception:
+            print(f"WARN Spotify item resolution failed for '{contract.key}'; prayer link will be omitted.", file=sys.stderr)
+            resolved[contract.key] = []
+    return resolved
 
 
 def build_prayer_data(
@@ -49,6 +102,7 @@ def build_prayer_data(
     contract_dir: Path | None = None,
     date: str | None = None,
     wallpaper_path: Path | None = None,
+    spotify_resolved_uris: dict[str, list[str]] | None = None,
 ) -> dict[str, object]:
     contracts = load_spotify_queue_contracts(contract_dir)
     definitions = load_spotify_playlist_definitions(
@@ -59,13 +113,21 @@ def build_prayer_data(
     display_order = {key: index for index, key in enumerate(("morning", "midday", "night", "sunday"))}
     definitions.sort(key=lambda definition: (display_order.get(definition.key, len(display_order)), definition.key))
     by_key = {contract.key: contract for contract in contracts}
+    current_date = Date.fromisoformat(date) if date else DateTime.now(TIMEZONE).date()
+    active_keys = {key for definition in definitions for key in definition.contracts}
+    active_contracts = [contract for contract in contracts if contract.key in active_keys]
+    resolved_uris = (
+        spotify_resolved_uris
+        if spotify_resolved_uris is not None
+        else _resolved_item_uris(active_contracts, current_date)
+    )
     groups = []
     for definition in definitions:
         prayers = [
             {
                 "key": key,
                 "name": by_key[key].name,
-                "spotify_url": _spotify_url(by_key[key]),
+                "spotify_url": _spotify_url(by_key[key], resolved_uris.get(key)),
             }
             for key in definition.contracts
         ]
@@ -89,17 +151,25 @@ def build_prayer_data(
         image = f"images/daily-wallpaper{suffix}"
 
     return {
-        "date": date or datetime.now(TIMEZONE).date().isoformat(),
+        "date": date or current_date.isoformat(),
         "timezone": "America/Chicago",
         "wallpaper": image,
         "groups": groups,
     }
 
 
-def build_artifact(output_dir: Path, *, wallpaper_path: Path | None = None) -> dict[str, object]:
+def build_artifact(
+    output_dir: Path,
+    *,
+    wallpaper_path: Path | None = None,
+    spotify_resolved_uris: dict[str, list[str]] | None = None,
+) -> dict[str, object]:
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
-    payload = build_prayer_data(wallpaper_path=wallpaper_path)
+    payload = build_prayer_data(
+        wallpaper_path=wallpaper_path,
+        spotify_resolved_uris=spotify_resolved_uris,
+    )
     wallpaper_bytes = Path(wallpaper_path).read_bytes() if wallpaper_path is not None else None
 
     image_dir = output_dir / "images"

@@ -163,6 +163,10 @@ jobs:
       - name: Build GitHub Pages artifact
         if: github.ref == 'refs/heads/main'
         shell: bash
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
         run: |
           set -euo pipefail
           wallpaper="$(find pages_artifact/images -maxdepth 1 -type f -name 'daily-wallpaper.*' -print -quit 2>/dev/null || true)"
