@@ -510,6 +510,10 @@ class TestPublishRosaryReflections(unittest.TestCase):
             self.mod,
             "_call_openai_json",
             side_effect=RuntimeError("provider down"),
+        ), mock.patch.object(
+            self.mod,
+            "_resolve_observance_context",
+            return_value=self.mod.RosaryObservanceContext(),
         ):
             fallback = self.mod.build_rosary_devotional_set(self.date, JOYFUL_TEXT, day_context=context)
 
