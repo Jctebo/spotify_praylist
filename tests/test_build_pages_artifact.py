@@ -18,8 +18,15 @@ class TestPagesArtifactBuilder(unittest.TestCase):
             with patch.object(pages, "_resolved_item_uris", return_value={}):
                 payload = pages.build_artifact(output)
 
-            self.assertEqual([group["key"] for group in payload["groups"]], ["morning", "midday", "night", "sunday"])
-            self.assertEqual([len(group["prayers"]) for group in payload["groups"]], [7, 8, 4, 2])
+            self.assertEqual(
+                [group["key"] for group in payload["groups"]],
+                ["morning", "midmorning", "midday", "mid-afternoon", "evening", "night", "sunday"],
+            )
+            self.assertEqual([len(group["prayers"]) for group in payload["groups"]], [6, 2, 3, 3, 4, 2, 2])
+            self.assertNotIn(
+                "daily-mass-readings",
+                [prayer["key"] for group in payload["groups"] for prayer in group["prayers"]],
+            )
             self.assertEqual(payload["wallpaper"], None)
             self.assertEqual(json.loads((output / "prayers.json").read_text(encoding="utf-8")), payload)
             self.assertTrue((output / "index.html").is_file())
