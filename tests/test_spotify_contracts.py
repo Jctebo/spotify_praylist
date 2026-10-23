@@ -487,7 +487,7 @@ class TestSpotifyContracts(unittest.TestCase):
         self.assertEqual(definitions[0].playlist_id, "morning123")
         self.assertEqual(definitions[0].contracts, ())
 
-    def test_repository_playlists_match_enabled_notion_membership_and_order(self):
+    def test_repository_playlists_match_approved_prayer_membership_and_order(self):
         definitions = self.mod.load_spotify_playlist_definitions()
         contracts_by_playlist = {definition.key: definition.contracts for definition in definitions}
 
@@ -497,27 +497,34 @@ class TestSpotifyContracts(unittest.TestCase):
                 "morning": (
                     "divine-office-invitatory",
                     "morning-prayer",
-                    "daily-mass-readings",
                     "morning-prayer-loh",
                     "daily-rosary",
                     "bible-in-a-year",
                     "angelus-morning",
                 ),
-                "midday": (
-                    "daily-gospel-exegesis",
+                "midmorning": (
                     "midmorning-prayer",
+                    "daily-gospel-exegesis",
+                ),
+                "midday": (
                     "midday-prayer",
                     "daily-novenas",
                     "angelus-midday",
+                ),
+                "mid-afternoon": (
+                    "afternoon-prayer-loh",
                     "saint-of-the-day",
                     "auxilium-christianorum",
-                    "afternoon-prayer-loh",
                 ),
-                "night": (
+                "evening": (
+                    "office-of-readings",
                     "angelus-evening",
                     "daily-examen",
                     "evening-prayer-loh",
+                ),
+                "night": (
                     "night-prayer-loh",
+                    "night-pre-compline",
                 ),
                 "sunday": (
                     "fr-mike-sunday-homily",
@@ -525,6 +532,20 @@ class TestSpotifyContracts(unittest.TestCase):
                 ),
             },
         )
+
+        office_keys = {
+            "divine-office-invitatory",
+            "office-of-readings",
+            "morning-prayer-loh",
+            "midmorning-prayer",
+            "midday-prayer",
+            "afternoon-prayer-loh",
+            "evening-prayer-loh",
+            "night-prayer-loh",
+        }
+        included = [key for keys in contracts_by_playlist.values() for key in keys if key in office_keys]
+        self.assertCountEqual(included, office_keys)
+        self.assertNotIn("daily-mass-readings", [key for keys in contracts_by_playlist.values() for key in keys])
 
     def test_load_spotify_playlist_definitions_rejects_unknown_contract_keys(self):
         with tempfile.TemporaryDirectory() as tmpdir:

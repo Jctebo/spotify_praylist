@@ -110,7 +110,12 @@ def build_prayer_data(
         contract_dir=contract_dir,
         contracts=contracts,
     )
-    display_order = {key: index for index, key in enumerate(("morning", "midday", "night", "sunday"))}
+    display_order = {
+        key: index
+        for index, key in enumerate(
+            ("morning", "midmorning", "midday", "mid-afternoon", "evening", "night", "sunday")
+        )
+    }
     definitions.sort(key=lambda definition: (display_order.get(definition.key, len(display_order)), definition.key))
     by_key = {contract.key: contract for contract in contracts}
     current_date = Date.fromisoformat(date) if date else DateTime.now(TIMEZONE).date()

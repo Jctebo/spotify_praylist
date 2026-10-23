@@ -263,7 +263,10 @@ if ([string]::IsNullOrWhiteSpace($refreshToken)) {
 }
 
 $morningId = Read-WithDefault "Morning playlist ID (config/spotify/playlists/morning.json)" (Get-PlaylistDefinitionPlaylistId -Key "morning" -Fallback "0sy9eBsySKuCppI0PxXRJN")
+$midmorningId = Read-WithDefault "Midmorning playlist ID (config/spotify/playlists/midmorning.json)" (Get-PlaylistDefinitionPlaylistId -Key "midmorning" -Fallback "3EYFgLhMGEfILn6bRJgHJm")
 $middayId = Read-WithDefault "Midday playlist ID (config/spotify/playlists/midday.json)" (Get-PlaylistDefinitionPlaylistId -Key "midday" -Fallback "4gQAaPAMiezBaDaoqK6sFQ")
+$midAfternoonId = Read-WithDefault "Mid-afternoon playlist ID (config/spotify/playlists/mid-afternoon.json)" (Get-PlaylistDefinitionPlaylistId -Key "mid-afternoon" -Fallback "7cyrM9f9LXEfmoqwZvUaXW")
+$eveningId = Read-WithDefault "Evening playlist ID (config/spotify/playlists/evening.json)" (Get-PlaylistDefinitionPlaylistId -Key "evening" -Fallback "6HNvFLWRShih7lgtwHTqXU")
 $nightId = Read-WithDefault "Night playlist ID (config/spotify/playlists/night.json)" (Get-PlaylistDefinitionPlaylistId -Key "night" -Fallback "1TAlNiKHMc41cT0fvkYxTD")
 $sundayId = Read-WithDefault "Sunday playlist ID (config/spotify/playlists/sunday.json)" (Get-PlaylistDefinitionPlaylistId -Key "sunday" -Fallback "6J7xLMNK5tPqXY9HbgvZoM")
 
@@ -272,7 +275,10 @@ $env:SPOTIFY_CLIENT_SECRET = $clientSecret
 $env:SPOTIFY_REFRESH_TOKEN = $refreshToken
 
 Set-PlaylistDefinitionPlaylistId -Key "morning" -PlaylistId $morningId
+Set-PlaylistDefinitionPlaylistId -Key "midmorning" -PlaylistId $midmorningId
 Set-PlaylistDefinitionPlaylistId -Key "midday" -PlaylistId $middayId
+Set-PlaylistDefinitionPlaylistId -Key "mid-afternoon" -PlaylistId $midAfternoonId
+Set-PlaylistDefinitionPlaylistId -Key "evening" -PlaylistId $eveningId
 Set-PlaylistDefinitionPlaylistId -Key "night" -PlaylistId $nightId
 Set-PlaylistDefinitionPlaylistId -Key "sunday" -PlaylistId $sundayId
 

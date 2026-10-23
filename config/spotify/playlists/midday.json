@@ -3,13 +3,8 @@
   "name": "Midday",
   "playlist_id": "4gQAaPAMiezBaDaoqK6sFQ",
   "contracts": [
-    "daily-gospel-exegesis",
-    "midmorning-prayer",
     "midday-prayer",
     "daily-novenas",
-    "angelus-midday",
-    "saint-of-the-day",
-    "auxilium-christianorum",
-    "afternoon-prayer-loh"
+    "angelus-midday"
   ]
 }
