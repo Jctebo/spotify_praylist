@@ -8,6 +8,12 @@
 
 # Release Log
 
+## [0.4.21.0] - 2026-10-23
+
+### Changed
+- Split daily prayer playlists into Morning, Midmorning, Midday, Mid-afternoon, Evening, and Night; distributed all Divine Office hours across the appropriate playlists and preserved Sunday.
+- Removed Mass Readings from playlists, moved Daily Gospel Exegesis to Midmorning and Daily Examen to Evening, and updated the prayer home and Spotify setup wizard.
+
 ## [0.4.20.1] - 2026-10-18
 
 ### Changed
