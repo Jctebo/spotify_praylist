@@ -267,7 +267,7 @@ python -m jobs.publish.run_audio_pipeline
 
 ## Daily Prayer Home
 
-The GitHub Pages root shows the daily prayer home with ordered Morning, Midmorning, Midday, Mid-afternoon, Evening, Night, and Sunday Spotify playlists. Each prayer links to its Spotify destination, and the full playlist is linked from each group. Today's phone wallpaper is included when available; otherwise the page uses a branded background. The podcast remains at `https://jctebo.github.io/spotify_praylist/podcast.xml`, with its cover image at `/images/logo_ora_pro_nobis.png`. No prayer directory is published.
+The GitHub Pages root shows the daily prayer home with ordered Morning, Midmorning, Midday, Mid-afternoon, Evening, Night, and Mass and Homilies Spotify playlists. Each prayer links to its Spotify destination, and the full playlist is linked from each group. Today's phone wallpaper is included when available; otherwise the page uses a branded background. The podcast remains at `https://jctebo.github.io/spotify_praylist/podcast.xml`, with its cover image at `/images/logo_ora_pro_nobis.png`. No prayer directory is published.
 
 ## Devotional Wallpapers
 

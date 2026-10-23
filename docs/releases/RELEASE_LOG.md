@@ -8,6 +8,11 @@
 
 # Release Log
 
+## [0.4.22.0] - 2026-10-23
+
+### Changed
+- Renamed the Sunday playlist to Mass and Homilies and added the October 23 Daily TV Mass episode from Daily TV Mass.
+
 ## [0.4.21.0] - 2026-10-23
 
 ### Changed

@@ -22,7 +22,14 @@ class TestPagesArtifactBuilder(unittest.TestCase):
                 [group["key"] for group in payload["groups"]],
                 ["morning", "midmorning", "midday", "mid-afternoon", "evening", "night", "sunday"],
             )
-            self.assertEqual([len(group["prayers"]) for group in payload["groups"]], [6, 2, 3, 3, 4, 2, 2])
+            self.assertEqual([len(group["prayers"]) for group in payload["groups"]], [6, 2, 3, 3, 4, 2, 3])
+            sunday = next(group for group in payload["groups"] if group["key"] == "sunday")
+            self.assertEqual(sunday["name"], "Mass and Homilies")
+            self.assertEqual(sunday["prayers"][-1]["key"], "daily-tv-mass-2026-10-23")
+            self.assertEqual(
+                sunday["prayers"][-1]["spotify_url"],
+                "https://open.spotify.com/episode/0cwjeAbT8JYLoQXaSYeElc",
+            )
             self.assertNotIn(
                 "daily-mass-readings",
                 [prayer["key"] for group in payload["groups"] for prayer in group["prayers"]],
