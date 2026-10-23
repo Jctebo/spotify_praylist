@@ -446,6 +446,15 @@ class TestSpotifyContracts(unittest.TestCase):
         self.assertEqual(contracts["barron-sunday-sermon"].resolver, "SUNDAY_BARRON")
         self.assertEqual(contracts["barron-sunday-sermon"].weekdays, ())
 
+    def test_daily_tv_mass_is_a_fixed_episode_contract(self):
+        contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
+        contract = contracts["daily-tv-mass-2026-10-23"]
+
+        self.assertEqual(contract.name, "Daily TV Mass Friday October 23, 2026")
+        self.assertEqual(contract.spotify_uri, "spotify:episode:0cwjeAbT8JYLoQXaSYeElc")
+        self.assertEqual(contract.resolver, "")
+        self.assertIsNone(contract.spotify_episode_lookup)
+
     def test_load_spotify_playlist_definitions_matches_filter_with_identity_only_files(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -529,9 +538,12 @@ class TestSpotifyContracts(unittest.TestCase):
                 "sunday": (
                     "fr-mike-sunday-homily",
                     "barron-sunday-sermon",
+                    "daily-tv-mass-2026-10-23",
                 ),
             },
         )
+        sunday_definition = next(definition for definition in definitions if definition.key == "sunday")
+        self.assertEqual(sunday_definition.name, "Mass and Homilies")
 
         office_keys = {
             "divine-office-invitatory",

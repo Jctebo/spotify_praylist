@@ -100,6 +100,27 @@ class TestRefreshJobContractPath(unittest.TestCase):
         self.assertTrue(status["Morning Prayer"])
         sp.show_episodes.assert_called_once_with(lookup.show_id, limit=50, market="US")
 
+    def test_daily_tv_mass_contract_resolves_fixed_episode_without_search(self):
+        contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
+        mass = contracts["daily-tv-mass-2026-10-23"]
+        sp = Mock()
+        status = {}
+
+        uris = self.mod.resolve_contract_uris(
+            sp,
+            mass,
+            "Friday",
+            datetime.date(2026, 10, 23),
+            status,
+            {},
+            {},
+            {},
+        )
+
+        self.assertEqual(uris, ["spotify:episode:0cwjeAbT8JYLoQXaSYeElc"])
+        self.assertTrue(status["Fixed URI:spotify:episode:0cwjeAbT8JYLoQXaSYeElc"])
+        sp.show_episodes.assert_not_called()
+
     def test_daily_novenas_contract_routes_through_dedicated_show_slot(self):
         contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
         daily_novenas = contracts["daily-novenas"]
