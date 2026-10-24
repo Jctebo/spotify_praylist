@@ -3,8 +3,8 @@
   "name": "Midday",
   "playlist_id": "4gQAaPAMiezBaDaoqK6sFQ",
   "contracts": [
-    "midday-prayer",
     "daily-novenas",
-    "angelus-midday"
+    "angelus-midday",
+    "midday-prayer"
   ]
 }

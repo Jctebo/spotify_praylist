@@ -512,19 +512,19 @@ class TestSpotifyContracts(unittest.TestCase):
                     "angelus-morning",
                 ),
                 "midmorning": (
-                    "midmorning-prayer",
                     "daily-gospel-exegesis",
+                    "midmorning-prayer",
                 ),
                 "midday": (
-                    "midday-prayer",
                     "daily-novenas",
                     "angelus-midday",
+                    "midday-prayer",
                 ),
                 "mid-afternoon": (
-                    "afternoon-prayer-loh",
                     "angelus-afternoon",
                     "saint-of-the-day",
                     "auxilium-christianorum",
+                    "afternoon-prayer-loh",
                 ),
                 "evening": (
                     "office-of-readings",
@@ -556,6 +556,14 @@ class TestSpotifyContracts(unittest.TestCase):
         }
         included = [key for keys in contracts_by_playlist.values() for key in keys if key in office_keys]
         self.assertCountEqual(included, office_keys)
+        for playlist_key, office_prayer in {
+            "midmorning": "midmorning-prayer",
+            "midday": "midday-prayer",
+            "mid-afternoon": "afternoon-prayer-loh",
+            "evening": "evening-prayer-loh",
+            "night": "night-prayer-loh",
+        }.items():
+            self.assertEqual(contracts_by_playlist[playlist_key][-1], office_prayer)
         self.assertNotIn("daily-mass-readings", [key for keys in contracts_by_playlist.values() for key in keys])
 
     def test_load_spotify_playlist_definitions_rejects_unknown_contract_keys(self):

@@ -8,6 +8,11 @@
 
 # Release Log
 
+## [0.4.26.0] - 2026-10-24
+
+### Changed
+- Moved the Divine Office prayer to the end of the Mid-morning, Midday, and Mid-afternoon playlists. Morning remains unchanged; Evening and Night already ended with their Divine Office prayers.
+
 ## [0.4.22.0] - 2026-10-23
 
 ### Changed
