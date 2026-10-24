@@ -189,7 +189,7 @@ class TestRefreshJobContractPath(unittest.TestCase):
         for key, name in (
             ("angelus-morning", "Marian Antiphon  (Morning)"),
             ("angelus-midday", "Marian Antiphon (Midday)"),
-            ("angelus-evening", "Marian Antiphon (Evening)"),
+            ("angelus-afternoon", "Marian Antiphon (Afternoon)"),
         ):
             contract = contracts[key]
             lookup = contract.spotify_episode_lookup

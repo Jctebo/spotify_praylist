@@ -22,7 +22,7 @@ class TestPagesArtifactBuilder(unittest.TestCase):
                 [group["key"] for group in payload["groups"]],
                 ["morning", "midmorning", "midday", "mid-afternoon", "evening", "night", "sunday"],
             )
-            self.assertEqual([len(group["prayers"]) for group in payload["groups"]], [6, 2, 3, 3, 3, 2, 3])
+            self.assertEqual([len(group["prayers"]) for group in payload["groups"]], [6, 2, 3, 4, 2, 2, 3])
             sunday = next(group for group in payload["groups"] if group["key"] == "sunday")
             self.assertEqual(sunday["name"], "Mass and Homilies")
             self.assertEqual(sunday["prayers"][-1]["key"], "daily-tv-mass-2026-10-23")

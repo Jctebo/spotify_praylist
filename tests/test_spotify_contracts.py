@@ -369,7 +369,7 @@ class TestSpotifyContracts(unittest.TestCase):
     def test_load_spotify_queue_contracts_includes_angelus_lookup_contracts(self):
         contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
 
-        for key in ("angelus-morning", "angelus-midday", "angelus-evening"):
+        for key in ("angelus-morning", "angelus-midday", "angelus-afternoon"):
             lookup = contracts[key].spotify_episode_lookup
             self.assertIsNotNone(lookup)
             self.assertEqual(lookup.show_id, "4PNxb0OazrkcEp3FAggRoD")
@@ -522,16 +522,16 @@ class TestSpotifyContracts(unittest.TestCase):
                 ),
                 "mid-afternoon": (
                     "afternoon-prayer-loh",
+                    "angelus-afternoon",
                     "saint-of-the-day",
                     "auxilium-christianorum",
                 ),
                 "evening": (
                     "office-of-readings",
-                    "daily-examen",
                     "evening-prayer-loh",
                 ),
                 "night": (
-                    "angelus-evening",
+                    "daily-examen",
                     "night-prayer-loh",
                 ),
                 "sunday": (
