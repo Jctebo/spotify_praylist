@@ -527,13 +527,12 @@ class TestSpotifyContracts(unittest.TestCase):
                 ),
                 "evening": (
                     "office-of-readings",
-                    "angelus-evening",
                     "daily-examen",
                     "evening-prayer-loh",
                 ),
                 "night": (
+                    "angelus-evening",
                     "night-prayer-loh",
-                    "night-pre-compline",
                 ),
                 "sunday": (
                     "fr-mike-sunday-homily",

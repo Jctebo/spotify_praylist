@@ -1481,3 +1481,9 @@
 - Blocked prompt, schema, instruction, and model-commentary leakage from Daily Reflection audio by hardening the generated-text validation boundary.
 - Removed raw serialized helper context from the reflection generation prompt.
 - Added regression coverage for fallback behavior when leaked output is returned.
+## [0.4.23.0] - 2026-10-23
+
+### Changed
+- Moved the evening Ora Pro Nobis Marian Antiphon from Evening to the first position in Night.
+- Removed the Ignatian pre-Compline reflection from the Night playlist contract.
+- Updated playlist membership and ordering coverage.
