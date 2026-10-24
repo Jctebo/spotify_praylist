@@ -1493,3 +1493,10 @@
 ### Changed
 - Replaced the single top Podcast feed shortcut with direct Ora Pro Nobis Spotify and RSS links.
 - Added both destinations to the podcast panel and covered them in the Pages artifact test.
+
+## [0.4.25.0] - 2026-10-24
+
+### Changed
+- Limited Marian Antiphon playlist placement to Morning, Midday, and Mid-Afternoon by moving its dynamic contract to the afternoon playlist.
+- Replaced the Night playlist's Marian Antiphon with Daily Examen, keeping Night Prayer second.
+- Updated playlist membership and Pages artifact coverage.
