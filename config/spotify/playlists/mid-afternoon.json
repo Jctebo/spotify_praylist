@@ -3,9 +3,9 @@
   "name": "Mid-afternoon",
   "playlist_id": "7cyrM9f9LXEfmoqwZvUaXW",
   "contracts": [
-    "afternoon-prayer-loh",
     "angelus-afternoon",
     "saint-of-the-day",
-    "auxilium-christianorum"
+    "auxilium-christianorum",
+    "afternoon-prayer-loh"
   ]
 }
