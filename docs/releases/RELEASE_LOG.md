@@ -1487,3 +1487,9 @@
 - Moved the evening Ora Pro Nobis Marian Antiphon from Evening to the first position in Night.
 - Removed the Ignatian pre-Compline reflection from the Night playlist contract.
 - Updated playlist membership and ordering coverage.
+
+## [0.4.24.0] - 2026-10-24
+
+### Changed
+- Replaced the single top Podcast feed shortcut with direct Ora Pro Nobis Spotify and RSS links.
+- Added both destinations to the podcast panel and covered them in the Pages artifact test.

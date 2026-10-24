@@ -22,7 +22,7 @@ class TestPagesArtifactBuilder(unittest.TestCase):
                 [group["key"] for group in payload["groups"]],
                 ["morning", "midmorning", "midday", "mid-afternoon", "evening", "night", "sunday"],
             )
-            self.assertEqual([len(group["prayers"]) for group in payload["groups"]], [6, 2, 3, 3, 4, 2, 3])
+            self.assertEqual([len(group["prayers"]) for group in payload["groups"]], [6, 2, 3, 3, 3, 2, 3])
             sunday = next(group for group in payload["groups"] if group["key"] == "sunday")
             self.assertEqual(sunday["name"], "Mass and Homilies")
             self.assertEqual(sunday["prayers"][-1]["key"], "daily-tv-mass-2026-10-23")
@@ -41,6 +41,11 @@ class TestPagesArtifactBuilder(unittest.TestCase):
             self.assertTrue((output / "site.js").is_file())
             self.assertTrue((output / "podcast.xml").is_file())
             self.assertTrue((output / "images/logo_ora_pro_nobis.png").is_file())
+            page_html = (output / "index.html").read_text(encoding="utf-8")
+            self.assertIn('aria-label="Podcast links"', page_html)
+            self.assertEqual(page_html.count("https://open.spotify.com/show/4PNxb0OazrkcEp3FAggRoD"), 2)
+            self.assertIn('href="podcast.xml">RSS feed', page_html)
+            self.assertIn('href="podcast.xml">Open RSS feed', page_html)
             self.assertFalse(list((output / "images").glob("daily-wallpaper.*")))
             for group in payload["groups"]:
                 self.assertTrue(group["playlist_url"].startswith("https://open.spotify.com/playlist/"))
