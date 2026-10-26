@@ -446,14 +446,16 @@ class TestSpotifyContracts(unittest.TestCase):
         self.assertEqual(contracts["barron-sunday-sermon"].resolver, "SUNDAY_BARRON")
         self.assertEqual(contracts["barron-sunday-sermon"].weekdays, ())
 
-    def test_daily_tv_mass_is_a_fixed_episode_contract(self):
+    def test_daily_tv_mass_is_a_current_date_episode_lookup_contract(self):
         contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
-        contract = contracts["daily-tv-mass-2026-10-23"]
+        contract = contracts["daily-tv-mass"]
 
-        self.assertEqual(contract.name, "Daily TV Mass Friday October 23, 2026")
-        self.assertEqual(contract.spotify_uri, "spotify:episode:0cwjeAbT8JYLoQXaSYeElc")
+        self.assertEqual(contract.name, "Daily TV Mass")
+        self.assertEqual(contract.spotify_uri, "")
         self.assertEqual(contract.resolver, "")
-        self.assertIsNone(contract.spotify_episode_lookup)
+        self.assertEqual(contract.spotify_episode_lookup.show_id, "2WwFQr9a6BX7YQ4pkoIijp")
+        self.assertEqual(contract.spotify_episode_lookup.searches[0].required_name_terms, ("Daily TV Mass",))
+        self.assertEqual(contract.spotify_episode_lookup.searches[0].date_formats, ("{month_name} {day}, {year}",))
 
     def test_load_spotify_playlist_definitions_matches_filter_with_identity_only_files(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -537,7 +539,7 @@ class TestSpotifyContracts(unittest.TestCase):
                 "sunday": (
                     "fr-mike-sunday-homily",
                     "barron-sunday-sermon",
-                    "daily-tv-mass-2026-10-23",
+                    "daily-tv-mass",
                 ),
             },
         )

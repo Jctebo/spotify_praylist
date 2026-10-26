@@ -1,0 +1,13 @@
+{
+  "key": "daily-tv-mass",
+  "name": "Daily TV Mass",
+  "spotify_episode_lookup": {
+    "show_id": "2WwFQr9a6BX7YQ4pkoIijp",
+    "required_name_terms": [
+      "Daily TV Mass"
+    ],
+    "date_formats": [
+      "{month_name} {day}, {year}"
+    ]
+  }
+}

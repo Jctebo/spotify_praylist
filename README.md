@@ -85,6 +85,8 @@ Queue contract files in `config/spotify/contracts/` own:
 
 Auxilium Christianorum, Daily Rosary, and Daily Examen contracts resolve generated Ora Pro Nobis episodes by title and date. Their local contract names are descriptive labels only.
 
+The Mass and Homilies playlist resolves Daily TV Mass by the current job-local date. If that day's episode is unavailable, the refresh does not reuse an older Mass.
+
 
 The runtime validates the selected definitions and all referenced contracts before any Spotify write. Invalid JSON, duplicate keys/names, invalid playlist IDs, unknown contract keys, invalid weekdays, or invalid resolver/direct-URI shapes stop the run.
 ## Local Setup
@@ -304,7 +306,7 @@ Use the Spotify setup script (separate from `run_*` job mirrors):
 - [Morning Prayer publishing architecture](docs/architecture/morning-prayer-redesign.md)
 - [Publishing roadmap (archived)](docs/roadmaps/publish-content.md)
 - [Release history](docs/releases/RELEASE_LOG.md)
-- [Current release record](docs/releases/0.4.28.0-st-martin-novena-audio-repair.md)
+- [Current release record](docs/releases/0.4.29.0-daily-mass-current-date.md)
 
 ## Notes
 - Do not commit secrets.

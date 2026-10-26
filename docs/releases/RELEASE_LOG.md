@@ -8,6 +8,11 @@
 
 # Release Log
 
+## [0.4.29.0] - 2026-10-26
+
+### Fixed
+- Keep the Mass and Homilies playlist on the current day's Daily TV Mass after each refresh; if today's episode is unavailable, an older Mass is not substituted.
+
 ## [0.4.28.0] - 2026-10-26
 
 ### Fixed
