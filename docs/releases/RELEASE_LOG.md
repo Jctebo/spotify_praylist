@@ -8,6 +8,11 @@
 
 # Release Log
 
+## [0.4.28.0] - 2026-10-26
+
+### Fixed
+- Add a targeted St. Martin de Porres audio repair that refreshes the shared opening prayer and rebuilds selected dates while preserving unrelated feed entries.
+
 ## [0.4.27.0] - 2026-10-26
 
 ### Added

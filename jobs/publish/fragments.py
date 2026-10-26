@@ -143,6 +143,8 @@ def fragment_content_hash(fragment: Dict[str, Any], audio_config: Dict[str, Any]
         "audio_role": str(fragment.get("audio_role", "")).strip(),
         "tts": normalize_audio_settings(effective_audio_config),
     }
+    if "cache_revision" in fragment:
+        payload["cache_revision"] = fragment["cache_revision"]
     return _hash_payload(payload)
 
 

@@ -684,6 +684,12 @@ class TestPublishAudioPipeline(unittest.TestCase):
         self.assertIn("Manual runs default to daily.", workflow_text)
         self.assertNotIn("default: reset", workflow_text)
         self.assertIn("bootstrap-no-cache", workflow_text)
+        self.assertIn("targeted-novena-repair", workflow_text)
+        self.assertIn("novena_repair_contract_id", workflow_text)
+        self.assertIn("novena_repair_dates", workflow_text)
+        self.assertIn("NOVENA_REPAIR_CONTRACT_ID: ${{ github.event.inputs.novena_repair_contract_id }}", workflow_text)
+        self.assertIn("NOVENA_REPAIR_DATES: ${{ github.event.inputs.novena_repair_dates }}", workflow_text)
+        self.assertIn("if: github.event.inputs.novena_publish_mode != 'targeted-novena-repair'", workflow_text)
 
     def test_publish_audio_workflow_restores_and_saves_fragment_cache(self):
         workflow_text = Path(".github/workflows/publish_audio.yml").read_text(encoding="utf-8")

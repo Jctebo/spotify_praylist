@@ -31,6 +31,7 @@ def build_novena_rss_feed(
     current_jobs: Optional[Sequence[Dict[str, Any]]] = None,
     reset_feed: bool = False,
     remote_feed_url: Optional[str] = None,
+    replace_existing_current_episodes: bool = False,
 ) -> str:
     root = Path(docs_root) if docs_root else Path(__file__).resolve().parents[2] / "docs"
     feed_base_url = base_url or github_pages_base_url()
@@ -41,6 +42,15 @@ def build_novena_rss_feed(
     )
     cover_art_url = podcast_cover_art_public_url(base_url=feed_base_url)
     current = list(current_jobs or [])
+    if replace_existing_current_episodes:
+        current_ids = {
+            str(job.get("episode_id", "")).strip() or str(job.get("entry_id", "")).strip()
+            for job in current
+        }
+        existing_jobs = [
+            job for job in existing_jobs
+            if (str(job.get("episode_id", "")).strip() or str(job.get("entry_id", "")).strip()) not in current_ids
+        ]
     logger.info(
         "novena_rss start base_url=%s reset_feed=%s existing=%d current=%d current_ids=%s existing_ids=%s",
         feed_base_url,
@@ -60,6 +70,7 @@ def publish_novena_rss(
     current_jobs: Optional[Sequence[Dict[str, Any]]] = None,
     reset_feed: bool = False,
     remote_feed_url: Optional[str] = None,
+    replace_existing_current_episodes: bool = False,
 ) -> Path:
     root = Path(docs_root) if docs_root else Path(__file__).resolve().parents[2] / "docs"
     ensure_podcast_cover_art(docs_root=root)
@@ -69,6 +80,7 @@ def publish_novena_rss(
         current_jobs=current_jobs,
         reset_feed=reset_feed,
         remote_feed_url=remote_feed_url,
+        replace_existing_current_episodes=replace_existing_current_episodes,
     )
     feed_path = root / "podcast.xml"
     written = write_podcast_feed(feed_xml, feed_path)

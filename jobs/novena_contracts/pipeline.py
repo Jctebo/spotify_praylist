@@ -300,6 +300,84 @@ def _audio_job_from_sidecar(runtime: Any, payload: Dict[str, Any]) -> Dict[str, 
     }
 
 
+def _apply_contract_fragment_revisions(runtime: Any, payload: Dict[str, Any]) -> None:
+    """Apply current part cache revisions to matching legacy sidecar fragments."""
+    template = runtime.resolved_template
+    blocks = list(getattr(template, "blocks", ()) or ())
+    revisioned_parts = [
+        (block, part_index, part)
+        for block in blocks
+        if not tuple(getattr(block, "days", ()) or ())
+        or runtime.active_day in tuple(getattr(block, "days", ()) or ())
+        for part_index, part in enumerate(list(block.parts or ()), start=1)
+        if "cache_revision" in part
+    ]
+    if not revisioned_parts:
+        return
+    sidecar_fragments = payload.get("fragments")
+    if not isinstance(sidecar_fragments, list):
+        raise RuntimeError(f"Sidecar for {_episode_id(runtime)} has no fragment list to revise.")
+    context = dict(payload.get("context") or {})
+    template_payload = payload.get("template")
+    if not isinstance(template_payload, dict):
+        raise RuntimeError(f"Sidecar for {_episode_id(runtime)} has no template to revise.")
+    template_blocks = template_payload.get("blocks")
+    if not isinstance(template_blocks, list):
+        raise RuntimeError(f"Sidecar template for {_episode_id(runtime)} has no blocks to revise.")
+
+    revised = 0
+    for block, part_index, part in revisioned_parts:
+        kind = str(part.get("kind", "")).strip().lower().replace("-", "_")
+        if kind == "text":
+            source_text = render_publish_template(str(part.get("text", "")), context).strip()
+        elif kind == "fragment":
+            fragment_key = str(part.get("fragment_key", "")).strip()
+            source_fragment = next(
+                (item for item in template.fragments if item.key == fragment_key), None
+            )
+            if source_fragment is None:
+                raise RuntimeError(
+                    f"Current contract fragment '{fragment_key}' is missing for {_episode_id(runtime)}."
+                )
+            source_text = render_publish_template(source_fragment.text, context).strip()
+        else:
+            raise RuntimeError(
+                f"cache_revision is unsupported on {kind or 'unknown'} parts for {_episode_id(runtime)}."
+            )
+        block_path = f"block-{block.key}/part-{part_index}"
+        matches = [
+            fragment
+            for fragment in sidecar_fragments
+            if isinstance(fragment, dict)
+            and str(fragment.get("block_path", "")).strip() == block_path
+        ]
+        if len(matches) != 1 or str(matches[0].get("text", "")).strip() != source_text:
+            raise RuntimeError(
+                f"Cannot safely revise {_episode_id(runtime)} fragment '{block_path}': "
+                "expected exactly one fragment with matching source text."
+            )
+        matches[0]["cache_revision"] = part["cache_revision"]
+
+        matching_blocks = [
+            item for item in template_blocks
+            if isinstance(item, dict)
+            and str(item.get("key", "")).strip() == str(block.key).strip()
+        ]
+        if len(matching_blocks) != 1 or not isinstance(matching_blocks[0].get("parts"), list):
+            raise RuntimeError(
+                f"Cannot safely revise {_episode_id(runtime)} template block '{block.key}'."
+            )
+        template_parts = matching_blocks[0]["parts"]
+        if len(template_parts) < part_index or not isinstance(template_parts[part_index - 1], dict):
+            raise RuntimeError(
+                f"Cannot safely revise {_episode_id(runtime)} template part '{block_path}'."
+            )
+        template_parts[part_index - 1]["cache_revision"] = part["cache_revision"]
+        revised += 1
+    if revised == 0:
+        raise RuntimeError(f"No revisioned source fragments found for {_episode_id(runtime)}.")
+
+
 def _daily_liturgical_context_matches(existing: Dict[str, Any], expected: Dict[str, Any]) -> bool:
     for key in DAILY_LITURGICAL_CONTEXT_FRESHNESS_KEYS:
         if key not in existing or key not in expected:
@@ -397,6 +475,8 @@ def run_novena_pipeline(
     cache_root: Optional[Path] = None,
     today: Optional[_dt.date] = None,
     publish_dates: Optional[Sequence[_dt.date]] = None,
+    contract_id: Optional[str] = None,
+    force_episode_rebuild: bool = False,
     reset_feed: bool = False,
     renderer: Optional[Callable[[str, Dict[str, Any]], bytes]] = None,
     generate_text_fn: Callable[[str, Dict[str, Any]], str] = generate_text,
@@ -406,6 +486,14 @@ def run_novena_pipeline(
     root = Path(docs_root) if docs_root else Path(__file__).resolve().parents[2] / "docs"
     audio_base_url = resolve_audio_public_base_url(base_url=base_url)
     contracts = load_novena_contracts(contract_dir or DEFAULT_CONTRACT_DIR)
+    if contract_id:
+        if reset_feed:
+            raise RuntimeError("A contract-targeted novena publish cannot reset the existing RSS feed.")
+        requested_contract_id = str(contract_id).strip().lower().replace("-", "_")
+        matching_contracts = [item for item in contracts if item.contract_id == requested_contract_id]
+        if len(matching_contracts) != 1:
+            raise RuntimeError(f"Expected exactly one novena contract '{requested_contract_id}'.")
+        contracts = matching_contracts
     anchor_date = today or _dt.date.today()
     target_dates = list(publish_dates) if publish_dates is not None else [anchor_date]
     target_date_set = {target for target in target_dates}
@@ -418,7 +506,13 @@ def run_novena_pipeline(
     )
     active: List[Any] = []
     for target_date in target_dates:
-        active.extend(resolve_active_novenas(target_date, contracts=contracts))
+        date_active = resolve_active_novenas(target_date, contracts=contracts)
+        if contract_id and len(date_active) != 1:
+            raise RuntimeError(
+                f"Expected exactly one active novena '{contract_id}' on {target_date.isoformat()}, "
+                f"found {len(date_active)}."
+            )
+        active.extend(date_active)
     if not active:
         logger.info("novena_pipeline no_active base_url=%s publish_dates=%s", base_url or github_pages_base_url(), ",".join(target.isoformat() for target in target_dates))
         return {
@@ -469,6 +563,8 @@ def run_novena_pipeline(
             audio_payload = sidecar_payload.get("audio") if isinstance(sidecar_payload.get("audio"), dict) else {}
             if runtime.date in target_date_set or not bool(audio_payload.get("rendered", False)):
                 sidecar_payload = None
+        if sidecar_payload is not None and contract_id:
+            _apply_contract_fragment_revisions(runtime, sidecar_payload)
         if sidecar_payload is None:
             if daily_theme_context is None:
                 daily_theme_context = daily_theme_cache.get(runtime.date, _daily_theme_config_for_runtime(runtime))
@@ -485,6 +581,7 @@ def run_novena_pipeline(
                     docs_root=root,
                     cache_root=cache_root,
                     write_sidecar=False,
+                    force_episode_rebuild=force_episode_rebuild,
                 )
                 _normalize_audio_result_url(audio_result, audio_base_url=audio_base_url)
             else:
@@ -506,6 +603,7 @@ def run_novena_pipeline(
                     docs_root=root,
                     cache_root=cache_root,
                     write_sidecar=False,
+                    force_episode_rebuild=force_episode_rebuild,
                 )
                 _normalize_audio_result_url(audio_result, audio_base_url=audio_base_url)
             else:
@@ -515,7 +613,10 @@ def run_novena_pipeline(
                 audio_result.setdefault("audio_path", str(audio_output_path(_episode_id(runtime), docs_root=root)))
                 audio_result.setdefault("audio_url", str(sidecar_payload.get("audio_url", "")))
                 audio_result["rendered"] = bool(audio_result.get("rendered", False)) and Path(str(audio_result.get("audio_path", ""))).exists()
-            sidecar_path = _sidecar_path(runtime, docs_root=root)
+            if runtime.date in target_date_set and contract_id:
+                sidecar_path = write_novena_artifact(runtime, rendered, audio_result, docs_root=root)
+            else:
+                sidecar_path = _sidecar_path(runtime, docs_root=root)
         item = {
             "runtime": runtime.to_dict(),
             "rendered": rendered,
@@ -533,6 +634,7 @@ def run_novena_pipeline(
         current_jobs=current_jobs,
         reset_feed=reset_feed,
         remote_feed_url=remote_feed_url,
+        replace_existing_current_episodes=bool(contract_id),
     )
     logger.info("novena_pipeline write feed_path=%s items=%d", feed_path, len(current_jobs))
     return {
@@ -567,7 +669,30 @@ def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     mode = str(os.environ.get("NOVENA_PUBLISH_MODE", "daily")).strip().lower()
     anchor_today = _dt.date.today()
-    if mode in {"bootstrap", "bootstrap-no-cache"}:
+    contract_id: Optional[str] = None
+    force_episode_rebuild = False
+    if mode == "targeted-novena-repair":
+        contract_id = str(os.environ.get("NOVENA_REPAIR_CONTRACT_ID", "")).strip()
+        raw_dates = str(os.environ.get("NOVENA_REPAIR_DATES", "")).strip()
+        if not contract_id or not raw_dates:
+            raise RuntimeError(
+                "targeted-novena-repair requires NOVENA_REPAIR_CONTRACT_ID and NOVENA_REPAIR_DATES."
+            )
+        date_values = [value.strip() for value in raw_dates.split(",")]
+        if any(not value for value in date_values):
+            raise RuntimeError("NOVENA_REPAIR_DATES must be a comma-separated list of ISO dates.")
+        try:
+            publish_dates = [_dt.date.fromisoformat(value) for value in date_values]
+        except ValueError as exc:
+            raise RuntimeError("NOVENA_REPAIR_DATES must contain valid ISO dates (YYYY-MM-DD).") from exc
+        if any(date.isoformat() != value for date, value in zip(publish_dates, date_values)):
+            raise RuntimeError("NOVENA_REPAIR_DATES must use YYYY-MM-DD format.")
+        if len(set(publish_dates)) != len(publish_dates):
+            raise RuntimeError("NOVENA_REPAIR_DATES must not contain duplicates.")
+        publish_dates.sort()
+        reset_feed = False
+        force_episode_rebuild = True
+    elif mode in {"bootstrap", "bootstrap-no-cache"}:
         publish_dates = [anchor_today, anchor_today + _dt.timedelta(days=1)]
         reset_feed = False
     elif mode == "reset":
@@ -582,6 +707,8 @@ def main() -> int:
     result = run_novena_pipeline(
         base_url=github_pages_base_url(),
         publish_dates=publish_dates,
+        contract_id=contract_id,
+        force_episode_rebuild=force_episode_rebuild,
         reset_feed=reset_feed,
         remote_feed_url=podcast_feed_public_url(),
     )

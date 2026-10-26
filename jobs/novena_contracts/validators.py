@@ -180,6 +180,15 @@ def validate_template_payload(payload: Dict[str, Any], *, source: str) -> None:
                 if not str(part.get("text", "")).strip():
                     raise RuntimeError(f"Invalid template in {source}: {label} part {index} is missing text.")
             if part_kind in {"text", "fragment"}:
+                cache_revision = part.get("cache_revision")
+                if cache_revision is not None and (
+                    isinstance(cache_revision, bool)
+                    or not isinstance(cache_revision, int)
+                    or cache_revision <= 0
+                ):
+                    raise RuntimeError(
+                        f"Invalid template in {source}: {label} part {index} cache_revision must be a positive integer."
+                    )
                 repeat = part.get("repeat", 1)
                 try:
                     repeat_count = int(repeat)

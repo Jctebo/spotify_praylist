@@ -45,7 +45,7 @@ Optional variables:
 - `scripts/run_daily_refresh_local.ps1`: local mirror of `.github/workflows/daily.yml` with optional single-playlist targeting
 
 - `.github/workflows/daily.yml`: manual + scheduled Spotify refresh workflow; the daily 07:00 UTC run is gated by `SPOTIFY_REFRESH_SCHEDULE_ENABLED`
-- `.github/workflows/publish_audio.yml`: combined publish workflow for Morning Prayer audio and novena publishing, scheduled daily and also available on manual dispatch with `novena_publish_mode=daily` as the default choice; `bootstrap-no-cache` is available for a bootstrap-style publish that rebuilds audio without using the cache
+- `.github/workflows/publish_audio.yml`: combined publish workflow for Morning Prayer audio and novena publishing, scheduled daily and also available on manual dispatch with `novena_publish_mode=daily` as the default choice; `bootstrap-no-cache` rebuilds audio without using the cache, and `targeted-novena-repair` rebuilds selected novena dates from `novena_repair_contract_id` and `novena_repair_dates` while skipping daily audio
 - `config/site/`: static daily prayer home, responsive styles, and Spotify playlist rendering for the podcast Pages deployment
 - `scripts/build_pages_artifact.py`: validates Spotify queue contracts and assembles the Pages artifact with the feed, cover art, and optional current wallpaper
 
@@ -304,7 +304,7 @@ Use the Spotify setup script (separate from `run_*` job mirrors):
 - [Morning Prayer publishing architecture](docs/architecture/morning-prayer-redesign.md)
 - [Publishing roadmap (archived)](docs/roadmaps/publish-content.md)
 - [Release history](docs/releases/RELEASE_LOG.md)
-- [Current release record](docs/releases/0.4.21.0-divine-office-playlist-distribution.md)
+- [Current release record](docs/releases/0.4.28.0-st-martin-novena-audio-repair.md)
 
 ## Notes
 - Do not commit secrets.

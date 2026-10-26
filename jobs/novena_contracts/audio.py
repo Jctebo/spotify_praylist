@@ -115,6 +115,7 @@ def render_novena_audio_job(
     docs_root: Optional[Path] = None,
     cache_root: Optional[Path] = None,
     write_sidecar: bool = True,
+    force_episode_rebuild: bool = False,
 ) -> Dict[str, Any]:
     root = Path(docs_root) if docs_root else Path(__file__).resolve().parents[2] / "docs"
     episode_id = str(job.get("episode_id", "")).strip()
@@ -131,7 +132,7 @@ def render_novena_audio_job(
         audio_config["audio_branding"] = {"status": "skipped", "skip_reason": f"metadata_failed: {exc}"}
     content_hash = audio_manifest_hash(job, fragments, audio_config)
     force_rebuild = _env_flag(PUBLISH_AUDIO_FORCE_REBUILD)
-    if not force_rebuild and _sidecar_matches(audio_path, sidecar_path, content_hash):
+    if not force_rebuild and not force_episode_rebuild and _sidecar_matches(audio_path, sidecar_path, content_hash):
         rendered = dict(job)
         rendered.update(
             {
@@ -147,7 +148,7 @@ def render_novena_audio_job(
     fragment_paths = []
     fragment_results = []
     target_format = str(audio_config.get("format", "mp3")).strip().lower() or "mp3"
-    if not force_rebuild and audio_path.exists() and not sidecar_path.exists():
+    if not force_rebuild and not force_episode_rebuild and audio_path.exists() and not sidecar_path.exists():
         rendered = dict(job)
         rendered.update(
             {
@@ -174,7 +175,7 @@ def render_novena_audio_job(
                 fragment_audio_config,
                 renderer,
                 cache_root=fragment_root,
-                force_rebuild=False,
+                force_rebuild=force_rebuild,
             )
             rendered_effective_config = dict(rendered_fragment.get("audio_config") or fragment_audio_config)
         fragment_paths.append(Path(rendered_fragment["audio_path"]))
@@ -192,6 +193,8 @@ def render_novena_audio_job(
             "audio_path": str(rendered_fragment["audio_path"]),
             "rendered": bool(rendered_fragment.get("rendered", False)),
         }
+        if "cache_revision" in fragment:
+            fragment_result["cache_revision"] = fragment["cache_revision"]
         if fragment_kind in {"audio-cue", "pause"}:
             fragment_result["source"] = "generated"
             if fragment_kind == "audio-cue":
