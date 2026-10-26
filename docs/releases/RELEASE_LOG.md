@@ -8,6 +8,11 @@
 
 # Release Log
 
+## [0.4.29.0] - 2026-10-26
+
+### Fixed
+- Updated the Mass and Homilies playlist to select the Daily TV Mass episode for the current job-local date; an older Mass is not substituted when today's episode is unavailable.
+
 ## [0.4.28.0] - 2026-10-26
 
 ### Fixed
