@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import datetime as dt
 from difflib import SequenceMatcher
 import io
 import json
@@ -551,6 +552,24 @@ def validate_local_qa(
     return QAResult(not issues, tuple(issues), expected_title, expected_subtitle)
 
 
+def _qa_issue_categories(issues: list[str] | tuple[str, ...]) -> list[str]:
+    """Keep useful failure classes while excluding OCR text and model prose."""
+    categories: set[str] = set()
+    for issue in issues:
+        lowered = str(issue).casefold()
+        if any(term in lowered for term in ("ocr", "spelling", "letter", "word", "title", "subtitle", "text")):
+            categories.add("text_legibility")
+        if any(term in lowered for term in ("anatomy", "hand", "face", "head", "hair", "limb")):
+            categories.add("anatomy")
+        if any(term in lowered for term in ("iconography", "saint", "subject", "devotional")):
+            categories.add("iconography")
+        if any(term in lowered for term in ("composition", "space", "clock", "safe area", "layout", "caption", "overlap")):
+            categories.add("layout")
+        if not categories:
+            categories.add("other")
+    return sorted(categories)
+
+
 def render_variant(
     client: Any,
     spec: DailyImageSpec,
@@ -562,21 +581,44 @@ def render_variant(
     tesseract_cmd: Optional[str] = None,
     variation: str = "",
     rejected_path: Optional[Path] = None,
+    telemetry: Optional[dict[str, Any]] = None,
 ) -> tuple[bytes, dict[str, Any]]:
+    telemetry = telemetry if telemetry is not None else {}
+    telemetry.setdefault("generation_attempts", [])
+    telemetry["render_invocations"] = int(telemetry.get("render_invocations", 0)) + 1
     feedback = ""
     last_final = b""
     last_local: Optional[QAResult] = None
     last_vision: Optional[dict[str, Any]] = None
     fallback_stage = "local_qa"
     for attempt in range(3):
-        raw = generate_artwork(
-            client, spec, variant, caller_model=caller_model, image_model=image_model,
-            variation=variation, qa_feedback=feedback,
-        )
+        attempt_record: dict[str, Any] = {
+            "attempt": len(telemetry["generation_attempts"]) + 1,
+            "started_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+        }
+        telemetry["generation_attempts"].append(attempt_record)
+        try:
+            raw = generate_artwork(
+                client, spec, variant, caller_model=caller_model, image_model=image_model,
+                variation=variation, qa_feedback=feedback,
+            )
+            attempt_record["generation_status"] = "returned_image"
+            attempt_record["finished_at"] = dt.datetime.now(dt.timezone.utc).isoformat()
+        except Exception as exc:
+            attempt_record["generation_status"] = "generation_error"
+            attempt_record["error_type"] = type(exc).__name__
+            attempt_record["finished_at"] = dt.datetime.now(dt.timezone.utc).isoformat()
+            status_code = getattr(exc, "status_code", None)
+            if isinstance(status_code, int):
+                attempt_record["http_status"] = status_code
+            raise
         final = overlay_wallpaper_text(raw, spec, variant)
         last_final = final
         local = validate_local_qa(final, spec, variant, recognize=lambda data: ocr_text(data, tesseract_cmd=tesseract_cmd))
         last_local = local
+        attempt_record["local_qa_approved"] = local.approved
+        attempt_record["local_qa_issue_count"] = len(local.issues)
+        attempt_record["local_qa_issue_categories"] = _qa_issue_categories(local.issues)
         if not local.approved:
             feedback = "; ".join(local.issues)
             fallback_stage = "local_qa"
@@ -586,6 +628,9 @@ def render_variant(
             break
         vision = vision_qa(client, final, spec, variant, model=qa_model)
         last_vision = vision
+        attempt_record["vision_qa_approved"] = vision["approved"]
+        attempt_record["vision_qa_issue_count"] = len(vision["issues"])
+        attempt_record["vision_qa_issue_categories"] = _qa_issue_categories(vision["issues"])
         if not vision["approved"]:
             feedback = "; ".join(vision["issues"] or ["unapproved image"])
             fallback_stage = "vision_qa"

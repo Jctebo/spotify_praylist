@@ -8,6 +8,14 @@
 
 # Release Log
 
+## [0.4.27.0] - 2026-10-26
+
+### Added
+- Record privacy-safe per-image wallpaper generation, retry, and QA telemetry locally and in cumulative private history; add a read-only monthly analyzer.
+
+### Changed
+- Retain wallpaper workflow run artifacts for 90 days.
+
 ## [0.4.26.0] - 2026-10-24
 
 ### Changed
