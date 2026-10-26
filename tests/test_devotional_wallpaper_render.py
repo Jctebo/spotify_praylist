@@ -16,6 +16,7 @@ from jobs.novena.devotional_wallpaper_render import (
     WATCH_TEXT_LAYOUT,
     WATCH_RENDER_VERSION,
     QAResult,
+    _qa_issue_categories,
     _draw_centered_label,
     _circular_chord_width,
     _font,
@@ -61,6 +62,28 @@ class WallpaperRenderTests(unittest.TestCase):
             )
         self.assertEqual(phone_info["render_version"], "wallpaper-v1")
         self.assertEqual(watch_info["render_version"], "wallpaper-v3")
+
+    def test_render_variant_records_generation_and_qa_telemetry(self):
+        telemetry = {"generation_attempts": [], "render_invocations": 0}
+        with (
+            patch("jobs.novena.devotional_wallpaper_render.generate_artwork", return_value=self.art),
+            patch("jobs.novena.devotional_wallpaper_render.validate_local_qa", return_value=QAResult(False, ("OCR title mismatch",), "", "")),
+        ):
+            _rendered, info = render_variant(
+                object(), self.spec, "watch", caller_model="caller", image_model="image",
+                qa_model="review", telemetry=telemetry,
+            )
+        self.assertEqual(telemetry["render_invocations"], 1)
+        self.assertEqual(len(telemetry["generation_attempts"]), 3)
+        self.assertEqual(telemetry["generation_attempts"][0]["generation_status"], "returned_image")
+        self.assertEqual(telemetry["generation_attempts"][0]["local_qa_issue_categories"], ["text_legibility"])
+        self.assertEqual(info["render_attempts"], 3)
+
+    def test_qa_issue_categories_omit_raw_issue_text(self):
+        self.assertEqual(
+            _qa_issue_categories(("OCR read 'PRIVATE PROMPT TEXT' incorrectly", "hand anatomy issue")),
+            ["anatomy", "text_legibility"],
+        )
 
     def test_circle_chord_contract_and_model_tool_sizes(self):
         self.assertLessEqual(_circular_chord_width(512, 512, WATCH_SAFE_RADIUS), 920)

@@ -2,6 +2,7 @@ import datetime as dt
 import contextlib
 import io
 import json
+import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -22,6 +23,39 @@ class PipelineOrchestrationTests(unittest.TestCase):
             rotate_only=False, resolve_only=False, resume_run=None,
             artifact_dir=Path("artifacts/test-wallpapers"), tesseract_cmd=None, rclone_exe="rclone",
         )
+
+    def test_asset_telemetry_is_written_locally_and_merged_idempotently(self):
+        with tempfile.TemporaryDirectory() as directory:
+            history_path = f"{pipeline.WALLPAPER_ROOT}/manifests/telemetry.json"
+
+            class FakeStore:
+                def __init__(self):
+                    self.payloads = {history_path: {"schema": 1, "records": [
+                        {"record_key": "existing", "status": "rendered"},
+                        {"record_key": "same-key", "status": "old"},
+                    ]}}
+
+                def read_json(self, path):
+                    return self.payloads.get(path)
+
+                def mkdir(self, _path):
+                    pass
+
+                def write_json(self, path, payload):
+                    self.payloads[path] = payload
+
+            store = FakeStore()
+            record = {"record_key": "same-key", "status": "rendered", "variant": "watch"}
+            pipeline._persist_asset_telemetry(store, Path(directory), "run-1", record)
+            pipeline._persist_asset_telemetry(store, Path(directory), "run-1", record)
+
+            local = json.loads((Path(directory) / "run-1-telemetry.json").read_text(encoding="utf-8"))
+            remote = store.payloads[history_path]
+            self.assertEqual(local["records"], [record])
+            self.assertEqual(remote["records"], [
+                {"record_key": "existing", "status": "rendered"},
+                record,
+            ])
 
     def test_missing_only_generation_retries_rotation_and_skips_absent_dates(self):
         present = [

@@ -18,7 +18,7 @@ class DevotionalWallpaperWorkflowTests(unittest.TestCase):
         self.assertIn("python jobs/novena/generate_devotional_wallpapers.py", text)
         self.assertIn("if: always()", text)
         self.assertIn("path: artifacts/devotional-wallpapers/", text)
-        self.assertIn("retention-days: 30", text)
+        self.assertIn("retention-days: 90", text)
 
     def test_local_runner_uses_preserved_wallpaper_generator(self):
         runner = Path("scripts/run_devotional_wallpapers_local.ps1")

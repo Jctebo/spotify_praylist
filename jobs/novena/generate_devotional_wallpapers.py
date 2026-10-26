@@ -153,6 +153,103 @@ def _persist_remote_state(store: RcloneStore, state: dict[str, Any]) -> None:
     store.write_json(f"{WALLPAPER_ROOT}/manifests/runs/{run_id}.json", state)
 
 
+def _write_local_asset_telemetry(artifact_dir: Path, run_id: str, record: dict[str, Any]) -> None:
+    local_path = artifact_dir / f"{run_id}-telemetry.json"
+    local_payload: dict[str, Any] = {"schema": 1, "run_id": run_id, "records": []}
+    if local_path.is_file():
+        try:
+            value = json.loads(local_path.read_text(encoding="utf-8"))
+            if isinstance(value, dict) and isinstance(value.get("records"), list):
+                local_payload = value
+        except (OSError, json.JSONDecodeError):
+            pass
+    record_key = str(record["record_key"])
+    local_records = [r for r in local_payload["records"] if r.get("record_key") != record_key]
+    local_records.append(record)
+    local_payload["records"] = local_records
+    _write_json_atomic(local_path, local_payload)
+
+
+def _merge_remote_asset_telemetry(store: RcloneStore, record: dict[str, Any]) -> None:
+    remote_path = f"{WALLPAPER_ROOT}/manifests/telemetry.json"
+    remote_payload = store.read_json(remote_path) or {"schema": 1, "records": []}
+    remote_records = remote_payload.get("records")
+    if not isinstance(remote_records, list):
+        raise RuntimeError("Wallpaper telemetry history has an invalid records field")
+    record_key = str(record["record_key"])
+    remote_records = [r for r in remote_records if r.get("record_key") != record_key]
+    remote_records.append(record)
+    store.mkdir(f"{WALLPAPER_ROOT}/manifests")
+    store.write_json(remote_path, {"schema": 1, "records": remote_records})
+
+
+def _persist_asset_telemetry(
+    store: RcloneStore,
+    artifact_dir: Path,
+    run_id: str,
+    record: dict[str, Any],
+) -> None:
+    """Save a safe per-image record locally and merge it into private history."""
+    _write_local_asset_telemetry(artifact_dir, run_id, record)
+    _merge_remote_asset_telemetry(store, record)
+
+
+def _asset_telemetry_record(
+    run_id: str,
+    date: dt.date,
+    spec: DailyImageSpec,
+    variant: str,
+    telemetry: dict[str, Any],
+    qa: Optional[dict[str, Any]],
+    *,
+    status: str,
+    error: Optional[Exception] = None,
+) -> dict[str, Any]:
+    from jobs.novena.devotional_wallpaper_render import image_tool
+
+    tool = image_tool(
+        variant=variant,
+        model=os.getenv("DEVOTIONAL_WALLPAPER_IMAGE_MODEL", "gpt-image-2"),
+        quality="high",
+    )
+    record = {
+        "run_id": run_id,
+        "asset_date": date.isoformat(),
+        "asset_key": _key(date, spec, variant),
+        "workflow_run_id": os.getenv("GITHUB_RUN_ID", "local"),
+        "workflow_run_attempt": os.getenv("GITHUB_RUN_ATTEMPT", "1"),
+        "variant": variant,
+        "status": status,
+        "image_model": tool["model"],
+        "caller_model": os.getenv("DEVOTIONAL_WALLPAPER_CALLER_MODEL", "gpt-5-mini"),
+        "qa_model": os.getenv("DEVOTIONAL_WALLPAPER_QA_MODEL", "gpt-5-mini"),
+        "size": tool["size"],
+        "quality": tool["quality"],
+        "render_invocations": int(telemetry.get("render_invocations", 0)),
+        "transient_retry_count": max(0, int(telemetry.get("render_invocations", 0)) - 1),
+        "generation_attempts": list(telemetry.get("generation_attempts", [])),
+        "generation_request_count": len(telemetry.get("generation_attempts", [])),
+        "generation_response_count": sum(
+            1 for item in telemetry.get("generation_attempts", [])
+            if item.get("generation_status") == "returned_image"
+        ),
+        "qa_approved": qa.get("approved") if qa else None,
+        "fallback_used": bool(qa and qa.get("fallback_used")),
+        "fallback_stage": qa.get("fallback_stage") if qa else None,
+        "recorded_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+    }
+    execution_id = f"{record['workflow_run_id']}-{record['workflow_run_attempt']}"
+    if record["workflow_run_id"] == "local":
+        execution_id = record["recorded_at"]
+    record["record_key"] = f"{run_id}:{execution_id}:{record['asset_key']}"
+    if error is not None:
+        record["error_type"] = type(error).__name__
+        status_code = getattr(error, "status_code", None)
+        if isinstance(status_code, int):
+            record["http_status"] = status_code
+    return record
+
+
 def _key(date: dt.date, spec: DailyImageSpec, variant: str) -> str:
     from jobs.novena.devotional_image_contract import slugify
     return f"{date.isoformat()}:{slugify(spec.title)}:{variant}"
@@ -176,10 +273,10 @@ def _run_local_only(args: argparse.Namespace, start_date: dt.date, dates: list[d
         print(json.dumps({"status": "resolved", "dates": len(resolution.specs), "missing_dates": len(resolution.missing_dates),
                           "unclassified_events_skipped": len(resolution.unclassified_events)}))
         return 0
-    client = _provider()
     image_model = os.getenv("DEVOTIONAL_WALLPAPER_IMAGE_MODEL", "gpt-image-2")
     caller_model = os.getenv("DEVOTIONAL_WALLPAPER_CALLER_MODEL", "gpt-5-mini")
     qa_model = os.getenv("DEVOTIONAL_WALLPAPER_QA_MODEL", "gpt-5-mini")
+    run_id = _run_id(start_date, dates[-1], resolution.feed_checksum)
     rendered = 0
     client = None
     for specs in resolution.specs.values():
@@ -190,17 +287,33 @@ def _run_local_only(args: argparse.Namespace, start_date: dt.date, dates: list[d
                     continue
                 if client is None:
                     client = _provider()
-                image_bytes, qa = render_variant(
-                    client,
-                    spec,
-                    variant,
-                    caller_model=caller_model,
-                    image_model=image_model,
-                    qa_model=qa_model,
-                    tesseract_cmd=args.tesseract_cmd,
-                    variation=monthly_variation(spec.date) if spec.monthly_fallback else "",
-                    rejected_path=args.artifact_dir / ".rejected" / variant / spec.date.isoformat() / build_filename(spec, variant),
+                render_telemetry: dict[str, Any] = {"generation_attempts": [], "render_invocations": 0}
+                try:
+                    image_bytes, qa = render_variant(
+                        client,
+                        spec,
+                        variant,
+                        caller_model=caller_model,
+                        image_model=image_model,
+                        qa_model=qa_model,
+                        tesseract_cmd=args.tesseract_cmd,
+                        variation=monthly_variation(spec.date) if spec.monthly_fallback else "",
+                        rejected_path=args.artifact_dir / ".rejected" / variant / spec.date.isoformat() / build_filename(spec, variant),
+                        telemetry=render_telemetry,
+                    )
+                except Exception as exc:
+                    record = _asset_telemetry_record(
+                        run_id, spec.date, spec, variant, render_telemetry, None,
+                        status="failed", error=exc,
+                    )
+                    _write_local_asset_telemetry(args.artifact_dir, run_id, record)
+                    raise
+                record = _asset_telemetry_record(
+                    run_id, spec.date, spec, variant, render_telemetry, qa,
+                    status="rendered",
                 )
+                qa["telemetry"] = record
+                _write_local_asset_telemetry(args.artifact_dir, run_id, record)
                 final_path.parent.mkdir(parents=True, exist_ok=True)
                 final_path.write_bytes(image_bytes)
                 _write_json_atomic(final_path.with_suffix(".qa.json"), qa)
@@ -343,6 +456,7 @@ def run_pipeline(args: argparse.Namespace) -> int:
             if client is None:
                 client = _provider()
             last_error: Optional[Exception] = None
+            render_telemetry: dict[str, Any] = {"generation_attempts": [], "render_invocations": 0}
             for attempt in range(3):
                 try:
                     image_bytes, qa = render_variant(
@@ -355,16 +469,34 @@ def run_pipeline(args: argparse.Namespace) -> int:
                         tesseract_cmd=args.tesseract_cmd,
                         variation=monthly_variation(spec.date) if spec.monthly_fallback else "",
                         rejected_path=args.artifact_dir / ".rejected" / variant / spec.date.isoformat() / build_filename(spec, variant),
+                        telemetry=render_telemetry,
                     )
                     break
                 except Exception as exc:
                     last_error = exc
                     if attempt == 2 or not _transient_provider_error(exc):
+                        failed_record = _asset_telemetry_record(
+                            run_id, missing_date, spec, variant, render_telemetry, None,
+                            status="failed", error=exc,
+                        )
+                        try:
+                            _persist_asset_telemetry(store, args.artifact_dir, run_id, failed_record)
+                        except Exception as telemetry_exc:
+                            print(f"WARNING wallpaper telemetry persistence failed asset={slot} error={type(telemetry_exc).__name__}", file=sys.stderr)
                         raise
                     import time
                     time.sleep(5 * (2 ** attempt))
             else:
                 raise RuntimeError(f"Wallpaper render failed: {last_error}")
+            telemetry_record = _asset_telemetry_record(
+                run_id, missing_date, spec, variant, render_telemetry, qa,
+                status="rendered",
+            )
+            qa["telemetry"] = telemetry_record
+            try:
+                _persist_asset_telemetry(store, args.artifact_dir, run_id, telemetry_record)
+            except Exception as telemetry_exc:
+                print(f"WARNING wallpaper telemetry persistence failed asset={slot} error={type(telemetry_exc).__name__}", file=sys.stderr)
             local_path.parent.mkdir(parents=True, exist_ok=True)
             local_path.write_bytes(image_bytes)
             stage_path.parent.mkdir(parents=True, exist_ok=True)

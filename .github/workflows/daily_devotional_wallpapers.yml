@@ -71,4 +71,4 @@ jobs:
           name: devotional-wallpapers-${{ github.run_id }}
           path: artifacts/devotional-wallpapers/
           if-no-files-found: ignore
-          retention-days: 30
+          retention-days: 90
