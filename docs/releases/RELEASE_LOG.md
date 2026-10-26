@@ -8,6 +8,11 @@
 
 # Release Log
 
+## [0.4.28.0] - 2026-10-26
+
+### Fixed
+- Repair St. Martin de Porres novena audio by refreshing the shared opening prayer fragment and rebuilding selected episode dates without resetting unrelated feed entries.
+
 ## [0.4.27.0] - 2026-10-26
 
 ### Added
