@@ -100,26 +100,107 @@ class TestRefreshJobContractPath(unittest.TestCase):
         self.assertTrue(status["Morning Prayer"])
         sp.show_episodes.assert_called_once_with(lookup.show_id, limit=50, market="US")
 
-    def test_daily_tv_mass_contract_resolves_fixed_episode_without_search(self):
+    def test_daily_tv_mass_contract_resolves_weekday_and_sunday_titles_for_exact_date(self):
         contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
-        mass = contracts["daily-tv-mass-2026-10-23"]
+        mass = contracts["daily-tv-mass"]
+        cases = (
+            (
+                datetime.date(2026, 10, 26),
+                "Daily TV Mass Monday October 26, 2026",
+                "spotify:episode:weekday-current",
+            ),
+            (
+                datetime.date(2026, 10, 25),
+                "Sunday Daily TV Mass Sunday October 25, 2026",
+                "spotify:episode:sunday-current",
+            ),
+        )
+
+        for current_date, current_title, expected_uri in cases:
+            with self.subTest(current_date=current_date):
+                sp = Mock()
+                sp.show_episodes.return_value = {
+                    "items": [
+                        {"name": current_title, "uri": expected_uri},
+                        {
+                            "name": "Daily TV Mass Friday October 23, 2026",
+                            "uri": "spotify:episode:stale",
+                        },
+                    ]
+                }
+                status = {}
+
+                uris = self.mod.resolve_contract_uris(
+                    sp,
+                    mass,
+                    current_date.strftime("%A"),
+                    current_date,
+                    status,
+                    {},
+                    {},
+                    {},
+                )
+
+                self.assertEqual(uris, [expected_uri])
+                self.assertTrue(status["Daily TV Mass"])
+                sp.show_episodes.assert_called_once_with("2WwFQr9a6BX7YQ4pkoIijp", limit=50, market="US")
+
+    def test_daily_tv_mass_does_not_fall_back_when_current_episode_is_missing(self):
+        contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}
+        mass = contracts["daily-tv-mass"]
         sp = Mock()
+        sp.show_episodes.return_value = {
+            "items": [
+                {
+                    "name": "Daily TV Mass Friday October 23, 2026",
+                    "uri": "spotify:episode:stale",
+                }
+            ]
+        }
         status = {}
 
         uris = self.mod.resolve_contract_uris(
             sp,
             mass,
-            "Friday",
-            datetime.date(2026, 10, 23),
+            "Monday",
+            datetime.date(2026, 10, 26),
             status,
             {},
             {},
             {},
         )
 
-        self.assertEqual(uris, ["spotify:episode:0cwjeAbT8JYLoQXaSYeElc"])
-        self.assertTrue(status["Fixed URI:spotify:episode:0cwjeAbT8JYLoQXaSYeElc"])
-        sp.show_episodes.assert_not_called()
+        self.assertEqual(uris, [])
+        self.assertFalse(status["Daily TV Mass"])
+        playlist = next(
+            definition for definition in self.mod.load_spotify_playlist_definitions() if definition.key == "sunday"
+        )
+        queue_status = {}
+
+        def resolve_for_queue(_sp, contract, _weekday, _current_date, status, *_configs):
+            resolved = {
+                "fr-mike-sunday-homily": ["spotify:episode:frmike"],
+                "barron-sunday-sermon": ["spotify:episode:barron"],
+                "daily-tv-mass": [],
+            }[contract.key]
+            status[contract.name] = bool(resolved)
+            return resolved
+
+        with patch.object(self.mod, "resolve_contract_uris", side_effect=resolve_for_queue):
+            queue = self.mod.build_queue_for_playlist_definition(
+                sp,
+                playlist,
+                "Monday",
+                datetime.date(2026, 10, 26),
+                queue_status,
+                {},
+                {},
+                {},
+                tuple(contracts[key] for key in playlist.contracts),
+            )
+
+        self.assertEqual(queue, ["spotify:episode:frmike", "spotify:episode:barron"])
+        self.assertFalse(queue_status["Unresolved:Daily TV Mass"])
 
     def test_daily_novenas_contract_routes_through_dedicated_show_slot(self):
         contracts = {contract.key: contract for contract in self.mod.load_spotify_queue_contracts()}

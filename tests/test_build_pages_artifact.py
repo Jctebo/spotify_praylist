@@ -25,11 +25,9 @@ class TestPagesArtifactBuilder(unittest.TestCase):
             self.assertEqual([len(group["prayers"]) for group in payload["groups"]], [6, 2, 3, 4, 2, 2, 3])
             sunday = next(group for group in payload["groups"] if group["key"] == "sunday")
             self.assertEqual(sunday["name"], "Mass and Homilies")
-            self.assertEqual(sunday["prayers"][-1]["key"], "daily-tv-mass-2026-10-23")
-            self.assertEqual(
-                sunday["prayers"][-1]["spotify_url"],
-                "https://open.spotify.com/episode/0cwjeAbT8JYLoQXaSYeElc",
-            )
+            self.assertEqual(sunday["prayers"][-1]["key"], "daily-tv-mass")
+            self.assertEqual(sunday["prayers"][-1]["name"], "Daily TV Mass")
+            self.assertIsNone(sunday["prayers"][-1]["spotify_url"])
             self.assertNotIn(
                 "daily-mass-readings",
                 [prayer["key"] for group in payload["groups"] for prayer in group["prayers"]],
@@ -119,6 +117,16 @@ class TestPagesArtifactBuilder(unittest.TestCase):
         prayer = next(item for item in morning["prayers"] if item["key"] == dynamic.key)
         self.assertEqual(prayer["spotify_url"], "https://open.spotify.com/episode/2HNK8wLRWHh0mJ9xmJjlUD")
         self.assertEqual(morning["playlist_url"], "https://open.spotify.com/playlist/0sy9eBsySKuCppI0PxXRJN")
+
+        mass = next(contract for contract in contracts if contract.key == "daily-tv-mass")
+        mass_payload = pages.build_prayer_data(
+            date="2026-10-26",
+            spotify_resolved_uris={mass.key: ["spotify:episode:todaymass"]},
+        )
+        mass_group = next(group for group in mass_payload["groups"] if group["key"] == "sunday")
+        mass_prayer = next(item for item in mass_group["prayers"] if item["key"] == mass.key)
+        self.assertEqual(mass_prayer["spotify_url"], "https://open.spotify.com/episode/todaymass")
+        self.assertEqual(mass_group["playlist_url"], "https://open.spotify.com/playlist/6J7xLMNK5tPqXY9HbgvZoM")
 
     def test_dynamic_item_resolution_uses_shared_resolver_and_handles_auth_failure(self):
         contract = load_spotify_queue_contracts()[0]
