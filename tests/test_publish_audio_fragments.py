@@ -124,6 +124,20 @@ class TestPublishAudioFragments(unittest.TestCase):
             ),
         )
 
+    def test_fragment_cache_revision_changes_hash_without_changing_legacy_hash(self):
+        fragment = {"kind": "text", "text": "The complete opening prayer."}
+        settings = {"model": "gpt-4o-mini-tts", "voice": "ash", "format": "mp3", "speed": 1.0}
+
+        legacy_hash = self.fragments_mod.fragment_content_hash(fragment, settings)
+        self.assertEqual(legacy_hash, self.fragments_mod.fragment_content_hash(dict(fragment), settings))
+        self.assertNotEqual(
+            legacy_hash,
+            self.fragments_mod.fragment_content_hash({**fragment, "cache_revision": 1}, settings),
+        )
+        self.assertNotEqual(
+            self.fragments_mod.fragment_content_hash({**fragment, "cache_revision": 1}, settings),
+            self.fragments_mod.fragment_content_hash({**fragment, "cache_revision": 2}, settings),
+        )
     def test_sanitize_tts_input_removes_label_and_literal_colon_artifacts(self):
         self.assertEqual(
             self.fragments_mod.sanitize_tts_input("Prayer: Father, hear us."),

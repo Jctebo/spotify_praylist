@@ -4,15 +4,24 @@ on:
   workflow_dispatch:
     inputs:
       novena_publish_mode:
-        description: Publish mode; daily publishes tomorrow only, bootstrap seeds today and tomorrow once, bootstrap-no-cache does the same but rebuilds audio without cache, and reset seeds today and tomorrow and truncates the novena feed. Manual runs default to daily.
+        description: Publish mode; targeted-novena-repair rebuilds specified novena episodes, daily publishes tomorrow only, bootstrap seeds today and tomorrow once, bootstrap-no-cache rebuilds without cache, and reset truncates the novena feed. Manual runs default to daily.
         required: false
         type: choice
         options:
           - daily
           - bootstrap
           - bootstrap-no-cache
+          - targeted-novena-repair
           - reset
         default: daily
+      novena_repair_contract_id:
+        description: Contract ID for targeted-novena-repair (for example st_martin_de_porres).
+        required: false
+        type: string
+      novena_repair_dates:
+        description: Comma-separated ISO dates for targeted-novena-repair (for example 2026-10-25,2026-10-26).
+        required: false
+        type: string
   schedule:
     - cron: "0 6 * * *" # daily 06:00 UTC
 
@@ -36,6 +45,8 @@ jobs:
       OAI_API_BASE_URL: https://api.openai.com/v1
       PUBLISH_MODE: ${{ github.event.inputs.novena_publish_mode }}
       NOVENA_PUBLISH_MODE: ${{ github.event.inputs.novena_publish_mode }}
+      NOVENA_REPAIR_CONTRACT_ID: ${{ github.event.inputs.novena_repair_contract_id }}
+      NOVENA_REPAIR_DATES: ${{ github.event.inputs.novena_repair_dates }}
       PUBLISH_GITHUB_PAGES_BASE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
       PUBLISH_PODCAST_FEED_URL: https://jctebo.github.io/spotify_praylist/podcast.xml
       AUDIO_PUBLIC_BASE_URL: ${{ vars.AUDIO_PUBLIC_BASE_URL }}
@@ -88,6 +99,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Publish audio files and RSS feed
+        if: github.event.inputs.novena_publish_mode != 'targeted-novena-repair'
         run: python -m jobs.publish.run_audio_pipeline
 
       - name: Publish novena audio and RSS feed

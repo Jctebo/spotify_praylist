@@ -311,6 +311,8 @@ def _block_parts_to_fragments(
                 "repeat_count": repeat,
                 "source_fragment_key": source_fragment_key,
             }
+            if "cache_revision" in part:
+                fragment_row["cache_revision"] = part["cache_revision"]
             audio_role = str(part.get("audio_role", "")).strip().lower()
             if audio_role:
                 fragment_row["audio_role"] = audio_role

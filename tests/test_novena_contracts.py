@@ -25,6 +25,21 @@ class TestNovenaContracts(unittest.TestCase):
         self.assertEqual(contract.novena.content_mode, "fixed")
         self.assertEqual(contract.family_id, "sacred_heart")
 
+    def test_st_martin_shared_opening_prayer_has_cache_revision_for_all_nine_days(self):
+        contract = next(
+            item for item in self.contracts_mod.load_novena_contracts()
+            if item.contract_id == "st_martin_de_porres"
+        )
+        day_blocks = [
+            block for block in contract.novena.template.blocks
+            if block.key.startswith("days_")
+        ]
+        openings = [block.parts[0] for block in day_blocks]
+
+        self.assertEqual(len(day_blocks), 9)
+        self.assertEqual({part.get("cache_revision") for part in openings}, {1})
+        self.assertEqual(len({part.get("text") for part in openings}), 1)
+
     def test_catalog_relative_feasts_resolve_across_years(self):
         contracts = {item.family_id: item for item in self.contracts_mod.load_novena_contracts()}
         for year, holy_face, queen in (
@@ -452,6 +467,44 @@ class TestNovenaContracts(unittest.TestCase):
         }
 
         self.validators_mod.validate_template_payload(payload, source="test")
+
+    def test_validate_template_payload_accepts_positive_cache_revision(self):
+        payload = {
+            "template_id": "embedded-fixed",
+            "sections": [
+                {"key": "prayer", "title": "Prayer", "kind": "fixed", "text": "Pray."},
+            ],
+            "blocks": [
+                {
+                    "key": "prayer",
+                    "title": "Prayer",
+                    "kind": "fixed",
+                    "parts": [{"kind": "text", "text": "Pray.", "cache_revision": 1}],
+                },
+            ],
+        }
+
+        self.validators_mod.validate_template_payload(payload, source="test")
+
+    def test_validate_template_payload_rejects_invalid_cache_revision(self):
+        for revision in (True, False, 0, -1, "1", 1.5):
+            with self.subTest(revision=revision):
+                payload = {
+                    "template_id": "embedded-fixed",
+                    "sections": [
+                        {"key": "prayer", "title": "Prayer", "kind": "fixed", "text": "Pray."},
+                    ],
+                    "blocks": [
+                        {
+                            "key": "prayer",
+                            "title": "Prayer",
+                            "kind": "fixed",
+                            "parts": [{"kind": "text", "text": "Pray.", "cache_revision": revision}],
+                        },
+                    ],
+                }
+                with self.assertRaisesRegex(RuntimeError, "cache_revision"):
+                    self.validators_mod.validate_template_payload(payload, source="test")
 
     def test_validate_template_payload_rejects_invalid_control_parts(self):
         base = {

@@ -618,6 +618,209 @@ class TestNovenaPipeline(unittest.TestCase):
         self.assertEqual(captured["publish_dates"], [today, today + datetime.timedelta(days=1)])
         self.assertFalse(captured["reset_feed"])
 
+    def test_targeted_repair_revises_only_the_matching_sidecar_part(self):
+        contract = next(
+            item for item in contracts_mod.load_novena_contracts()
+            if item.contract_id == "st_martin_de_porres"
+        )
+        runtime = pipeline_mod.resolve_active_novenas(
+            datetime.date(2026, 10, 25), contracts=[contract]
+        )[0]
+        block = next(item for item in runtime.resolved_template.blocks if item.key == "days_1")
+        source_text = block.parts[0]["text"]
+        template = runtime.resolved_template.to_dict()
+        template_block = next(item for item in template["blocks"] if item["key"] == block.key)
+        template_block["parts"][0].pop("cache_revision", None)
+        payload = {
+            "template": template,
+            "context": {"saint_name": "St. Martin de Porres"},
+            "fragments": [
+                {"block_path": "block-days_1/part-1", "text": source_text},
+                {"block_path": "block-days_1/part-2", "text": "The ordinary closing."},
+            ],
+        }
+
+        pipeline_mod._apply_contract_fragment_revisions(runtime, payload)
+
+        self.assertEqual(payload["fragments"][0]["cache_revision"], 1)
+        self.assertNotIn("cache_revision", payload["fragments"][1])
+        self.assertEqual(template_block["parts"][0]["cache_revision"], 1)
+
+    def test_targeted_repair_fails_closed_when_sidecar_source_differs(self):
+        contract = next(
+            item for item in contracts_mod.load_novena_contracts()
+            if item.contract_id == "st_martin_de_porres"
+        )
+        runtime = pipeline_mod.resolve_active_novenas(
+            datetime.date(2026, 10, 25), contracts=[contract]
+        )[0]
+        payload = {
+            "template": runtime.resolved_template.to_dict(),
+            "context": {"saint_name": "St. Martin de Porres"},
+            "fragments": [{"block_path": "block-days_1/part-1", "text": "Divergent prayer."}],
+        }
+
+        with self.assertRaisesRegex(RuntimeError, "matching source text"):
+            pipeline_mod._apply_contract_fragment_revisions(runtime, payload)
+
+    def test_targeted_repair_rebuilds_both_live_days_from_revisioned_shared_fragment(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            docs_root = root / "docs"
+            cache_root = root / ".cache"
+            dates = [datetime.date(2026, 10, 25), datetime.date(2026, 10, 26)]
+            renderer_calls = []
+
+            def fake_renderer(text, audio_config):
+                renderer_calls.append(text)
+                return make_test_mp3_bytes()
+
+            result = pipeline_mod.run_novena_pipeline(
+                docs_root=docs_root,
+                cache_root=cache_root,
+                publish_dates=dates,
+                contract_id="st_martin_de_porres",
+                force_episode_rebuild=True,
+                renderer=fake_renderer,
+                generate_text_fn=self._fake_generate_text,
+            )
+            self.assertEqual(result["audio"], 2)
+            first_render_count = len(renderer_calls)
+            st_martin_contract = next(
+                item for item in contracts_mod.load_novena_contracts()
+                if item.contract_id == "st_martin_de_porres"
+            )
+            opening_text = next(
+                part["text"]
+                for block in st_martin_contract.novena.template.blocks
+                if block.key == "days_1"
+                for part in block.parts[:1]
+            )
+            self.assertEqual(renderer_calls.count(opening_text), 1)
+            sidecar_paths = [
+                docs_root / "audio" / f"{date.isoformat()}-st_martin_de_porres-day-{index}.json"
+                for index, date in enumerate(dates, start=1)
+            ]
+            for sidecar_path in sidecar_paths:
+                payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+                target = next(
+                    fragment for fragment in payload["fragments"]
+                    if fragment.get("cache_revision") == 1
+                )
+                target.pop("cache_revision")
+                matching_block = next(
+                    block for block in payload["template"]["blocks"]
+                    if f"block-{block['key']}/part-1" == target["block_path"]
+                )
+                matching_block["parts"][0].pop("cache_revision", None)
+                payload["content_hash"] = "legacy-content-hash"
+                payload["audio"]["content_hash"] = "legacy-content-hash"
+                sidecar_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+            feed_path = docs_root / "podcast.xml"
+            feed_root = ET.fromstring(feed_path.read_text(encoding="utf-8"))
+            for item in feed_root.findall("./channel/item"):
+                guid = item.find("guid")
+                if guid is not None:
+                    guid.text = f"{guid.text}::legacy"
+            channel = feed_root.find("./channel")
+            unrelated = ET.SubElement(channel, "item")
+            ET.SubElement(unrelated, "title").text = "Unrelated episode"
+            ET.SubElement(unrelated, "guid", isPermaLink="false").text = "unrelated-episode::stable"
+            ET.SubElement(unrelated, "link").text = "https://audio.example/unrelated.mp3"
+            ET.SubElement(unrelated, "description").text = "Keep this feed entry."
+            ET.SubElement(unrelated, "pubDate").text = "Mon, 26 Oct 2026 12:00:00 +0000"
+            ET.SubElement(
+                unrelated,
+                "enclosure",
+                url="https://audio.example/unrelated.mp3",
+                length="10",
+                type="audio/mpeg",
+            )
+            ET.ElementTree(feed_root).write(feed_path, encoding="utf-8", xml_declaration=True)
+
+            repaired = pipeline_mod.run_novena_pipeline(
+                docs_root=docs_root,
+                cache_root=cache_root,
+                publish_dates=dates,
+                contract_id="st_martin_de_porres",
+                force_episode_rebuild=True,
+                renderer=fake_renderer,
+                generate_text_fn=self._fake_generate_text,
+            )
+
+            self.assertEqual(repaired["audio"], 2)
+            self.assertEqual(len(renderer_calls), first_render_count)
+            feed_root = ET.fromstring(feed_path.read_text(encoding="utf-8"))
+            feed_items = feed_root.findall("./channel/item")
+            self.assertEqual(len(feed_items), 3)
+            self.assertTrue(
+                any((entry.findtext("guid") or "") == "unrelated-episode::stable" for entry in feed_items)
+            )
+            for item, sidecar_path in zip(repaired["items"], sidecar_paths):
+                self.assertTrue(item["audio"]["rendered"])
+                payload = json.loads(sidecar_path.read_text(encoding="utf-8"))
+                self.assertEqual(payload["audio"]["content_hash"], item["audio"]["content_hash"])
+                self.assertTrue(any(fragment.get("cache_revision") == 1 for fragment in payload["fragments"]))
+                fragments = payload["fragments"]
+                opening_index = next(
+                    index for index, fragment in enumerate(fragments)
+                    if fragment.get("cache_revision") == 1
+                )
+                self.assertTrue(fragments[opening_index]["text"].endswith("state in which God has placed us."))
+                self.assertEqual(fragments[opening_index + 1]["cue"], "sacred_bell")
+                self.assertEqual(fragments[opening_index + 2]["duration_ms"], 5000)
+                self.assertTrue(
+                    any(
+                        (entry.findtext("guid") or "") == payload["rss_guid"]
+                        for entry in feed_items
+                    )
+                )
+                self.assertFalse(any((entry.findtext("guid") or "").endswith("::legacy") for entry in feed_items))
+
+    def test_main_targeted_repair_parses_dates_and_forces_episode_only_rebuild(self):
+        captured = {}
+        original = pipeline_mod.run_novena_pipeline
+
+        def fake_run_novena_pipeline(**kwargs):
+            captured.update(kwargs)
+            return {
+                "contracts": 1,
+                "active": 2,
+                "rendered": 2,
+                "feed_path": "/tmp/podcast.xml",
+                "publish_dates": [value.isoformat() for value in kwargs["publish_dates"]],
+            }
+
+        pipeline_mod.run_novena_pipeline = fake_run_novena_pipeline
+        try:
+            with temp_env({
+                "NOVENA_PUBLISH_MODE": "targeted-novena-repair",
+                "NOVENA_REPAIR_CONTRACT_ID": "st_martin_de_porres",
+                "NOVENA_REPAIR_DATES": "2026-10-26,2026-10-25",
+            }):
+                rc = pipeline_mod.main()
+        finally:
+            pipeline_mod.run_novena_pipeline = original
+
+        self.assertEqual(rc, 0)
+        self.assertEqual(captured["contract_id"], "st_martin_de_porres")
+        self.assertEqual(
+            captured["publish_dates"],
+            [datetime.date(2026, 10, 25), datetime.date(2026, 10, 26)],
+        )
+        self.assertTrue(captured["force_episode_rebuild"])
+        self.assertFalse(captured["reset_feed"])
+
+    def test_main_targeted_repair_rejects_duplicate_dates(self):
+        with temp_env({
+            "NOVENA_PUBLISH_MODE": "targeted-novena-repair",
+            "NOVENA_REPAIR_CONTRACT_ID": "st_martin_de_porres",
+            "NOVENA_REPAIR_DATES": "2026-10-25,2026-10-25",
+        }):
+            with self.assertRaisesRegex(RuntimeError, "duplicates"):
+                pipeline_mod.main()
+
     def test_pipeline_skips_disabled_novena_contracts(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

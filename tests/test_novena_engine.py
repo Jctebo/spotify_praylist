@@ -298,7 +298,7 @@ class TestNovenaEngine(unittest.TestCase):
                         kind="fixed",
                         days=(1,),
                         parts=(
-                            {"kind": "text", "text": "Name your intention."},
+                            {"kind": "text", "text": "Name your intention.", "cache_revision": 1},
                             {"kind": "audio_cue", "cue": "sacred_bell"},
                             {"kind": "pause", "duration_ms": 5000, "purpose": "personal_intention"},
                             {"kind": "text", "text": "Let us continue."},
@@ -319,6 +319,7 @@ class TestNovenaEngine(unittest.TestCase):
         self.assertEqual(rendered["audio_fragments"][2]["cue"], "sacred_bell")
         self.assertEqual(rendered["audio_fragments"][3]["duration_ms"], 5000)
         self.assertEqual(rendered["audio_fragments"][3]["purpose"], "personal_intention")
+        self.assertEqual(rendered["audio_fragments"][1]["cache_revision"], 1)
         self.assertNotIn("Sacred Bell", rendered["content"]["text"])
         self.assertNotIn("Pause", rendered["content"]["text"])
 

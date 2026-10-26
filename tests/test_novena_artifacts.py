@@ -113,6 +113,14 @@ class TestNovenaArtifacts(unittest.TestCase):
                 cache_root=cache_root,
                 write_sidecar=False,
             )
+            rebuilt_episode = audio_mod.render_novena_audio_job(
+                job,
+                renderer=fake_renderer,
+                docs_root=docs_root,
+                cache_root=cache_root,
+                write_sidecar=False,
+                force_episode_rebuild=True,
+            )
             sidecar = artifact_writer_mod.write_novena_artifact(runtime, rendered, first, docs_root=docs_root)
             payload = json.loads(sidecar.read_text(encoding="utf-8"))
 
@@ -124,6 +132,7 @@ class TestNovenaArtifacts(unittest.TestCase):
             self.assertEqual(first["audio_branding"]["season"], "ordinary_time")
         self.assertTrue(first["rendered"])
         self.assertFalse(second["rendered"])
+        self.assertTrue(rebuilt_episode["rendered"])
         self.assertEqual(fake_renderer_calls["count"], 4)
         self.assertTrue(job["audio_config"]["loudness_normalization"]["enabled"])
         self.assertEqual(payload["id"], "2026-06-03-most_sacred_heart_of_jesus-day-1")
@@ -145,7 +154,7 @@ class TestNovenaArtifacts(unittest.TestCase):
             generate_text_fn=lambda prompt, context: f"{prompt} ({context['theme']})",
         )
         rendered["audio_fragments"] = [
-            {"kind": "text", "fragment_key": "before", "label": "Before", "text": "Name your intention."},
+            {"kind": "text", "fragment_key": "before", "label": "Before", "text": "Name your intention.", "cache_revision": 1},
             {"kind": "audio_cue", "fragment_key": "bell", "label": "Sacred Bell", "text": "", "cue": "sacred_bell"},
             {
                 "kind": "pause",
@@ -178,6 +187,7 @@ class TestNovenaArtifacts(unittest.TestCase):
         fragment_results = payload["fragments"]
         self.assertEqual([item["kind"] for item in fragment_results], ["text", "audio_cue", "pause", "text"])
         self.assertEqual(fragment_results[1]["source"], "generated")
+        self.assertEqual(fragment_results[0]["cache_revision"], 1)
         self.assertEqual(fragment_results[1]["cue"], "sacred_bell")
         self.assertEqual(fragment_results[2]["duration_ms"], 500)
         self.assertEqual(fragment_results[2]["purpose"], "personal_intention")
