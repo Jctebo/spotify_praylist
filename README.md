@@ -304,7 +304,7 @@ Use the Spotify setup script (separate from `run_*` job mirrors):
 - [Morning Prayer publishing architecture](docs/architecture/morning-prayer-redesign.md)
 - [Publishing roadmap (archived)](docs/roadmaps/publish-content.md)
 - [Release history](docs/releases/RELEASE_LOG.md)
-- [Current release record](docs/releases/0.4.21.0-divine-office-playlist-distribution.md)
+- [Current release record](docs/releases/0.4.28.0-st-martin-novena-audio-repair.md)
 
 ## Notes
 - Do not commit secrets.
