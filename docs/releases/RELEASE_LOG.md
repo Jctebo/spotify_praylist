@@ -8,6 +8,11 @@
 
 # Release Log
 
+## [0.4.29.1] - 2026-10-28
+
+### Changed
+- Move the third daily Marian Antiphon from Mid-afternoon to Evening so Morning, Midday, and Evening each have one antiphon.
+
 ## [0.4.29.0] - 2026-10-26
 
 ### Fixed
