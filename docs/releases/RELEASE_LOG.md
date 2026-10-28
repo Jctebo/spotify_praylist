@@ -8,6 +8,11 @@
 
 # Release Log
 
+## [0.4.29.1] - 2026-10-28
+
+### Changed
+- Place one Marian Antiphon in each of Morning, Midday, and Evening, with none in Mid-afternoon.
+
 ## [0.4.29.0] - 2026-10-26
 
 ### Fixed
