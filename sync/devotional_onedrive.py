@@ -58,7 +58,7 @@ class RcloneConfig:
             pure = PurePosixPath(part)
             if pure.is_absolute() or any(seg in {".", ".."} for seg in pure.parts):
                 raise ValueError("Remote path component is unsafe")
-            if any(not SAFE_ROOT_PART.fullmatch(seg) for seg in pure.parts):
+            if "\\" in part or any(any(ord(ch) < 32 for ch in seg) for seg in pure.parts):
                 raise ValueError("Remote path component contains unsupported characters")
             if pure.parts and pure.parts[0] not in allowed_roots:
                 raise ValueError(f"Wallpaper writes are not allowed under {pure.parts[0]}")
@@ -420,20 +420,35 @@ def rotate_current(store: RcloneStore, date: str) -> dict[str, Any]:
     if current_date != target_date and current_date is not None and (subject_sets["phone"] != subject_sets["watch"] or queue_subjects["phone"] != queue_subjects["watch"]):
         return {"rotated": False, "current_date": current_date, "reason": "today_subject_sets_incomplete", "phone_subjects": sorted(subject_sets["phone"]), "watch_subjects": sorted(subject_sets["watch"]), "missing_previous_files": missing_previous_files}
 
-    actual = {variant: _current_listing(store, variant) for variant in ("phone", "watch")}
-    expected_managed_names = {variant: {record["filename"] for record in _managed_files(managed.get(variant) or {})} for variant in ("phone", "watch")}
-    for variant in ("phone", "watch"):
-        for filename, info in actual[variant].items():
-            match = re.search(r"__(\d{4}-\d{2}-\d{2})\.(?:jpe?g|png)$", filename, re.I)
-            if not match or match.group(1) != current_date:
-                if filename not in expected_managed_names.get(variant, set()):
-                    raise RuntimeError(f"Unmanaged file in {variant}-current; refusing rotation: {filename}")
-        unknown = set(actual[variant]) - expected_managed_names.get(variant, set())
-        if unknown:
-            raise RuntimeError(f"Unmanaged files in {variant}-current; refusing rotation: {', '.join(sorted(unknown))}")
-
     previous_date = current_date
     _archive_current_pair(store, str(previous_date or target_date), managed)
+
+    # Preserve every current file in its device queue before promotion. Selected
+    # same-day current assets must remain discoverable under their dated path.
+    relocated: dict[str, str] = {}
+    for variant in ("phone", "watch"):
+        selected_current = {a.path for a in selected[variant] if a.path.startswith(f"{variant}-current/")}
+        for filename in sorted(_current_listing(store, variant)):
+            source = f"{variant}-current/{filename}"
+            data = store.download_bytes(source)
+            digest = sha256(data)
+            folder = f"{variant}-queue/{target_date}" if source in selected_current else f"{variant}-queue"
+            store.mkdir(folder)
+            target = f"{folder}/{filename}"
+            try:
+                existing = store.download_bytes(target)
+            except RuntimeError as exc:
+                if not _is_missing_remote_error(exc):
+                    raise
+            else:
+                if sha256(existing) != digest:
+                    # Keep both files, including when the queue already contains
+                    # a different version with the same name.
+                    target = f"{variant}-queue/{digest}-{filename}"
+            _copy_verify(store, source, target, digest)
+            store.remove(source)
+            relocated[source] = target
+
     next_managed: dict[str, dict[str, Any]] = {}
     next_by_variant = {v: [] for v in ("phone", "watch")}
     journal = {
@@ -447,11 +462,9 @@ def rotate_current(store: RcloneStore, date: str) -> dict[str, Any]:
     for variant in ("phone", "watch"):
         records = []
         for asset in selected[variant]:
-            if current_date == target_date and asset.path.startswith(f"{variant}-current/") and asset.subject not in queue_subjects[variant]:
-                records.append({"path": asset.path, "queue_path": asset.path, "sha256": sha256(store.download_bytes(asset.path)), "subject": asset.subject, "already_current": True})
-                continue
-            data = store.download_bytes(asset.path)
-            records.append({"path": f"{variant}-current/{asset.name}", "queue_path": asset.path, "sha256": sha256(data), "subject": asset.subject})
+            source = relocated.get(asset.path, asset.path)
+            data = store.download_bytes(source)
+            records.append({"path": f"{variant}-current/{asset.name}", "queue_path": source, "sha256": sha256(data), "subject": asset.subject})
         journal["next"][variant] = records
     state["rotation"] = journal
     store.write_json(state_path, state)
@@ -513,7 +526,7 @@ def recover_rotation(store: RcloneStore) -> dict[str, Any]:
             queue_path = str(record["queue_path"])
             expected = str(record["sha256"])
             already_current = bool(record.get("already_current"))
-            if not remote_path.startswith(f"{variant}-current/") or (not already_current and not queue_path.startswith(f"{variant}-queue/{date}/")) or (already_current and queue_path != remote_path):
+            if not remote_path.startswith(f"{variant}-current/") or (not already_current and not queue_path.startswith(f"{variant}-queue/")) or (already_current and queue_path != remote_path):
                 raise RuntimeError("Wallpaper rotation journal contains an out-of-scope path")
             if not re.fullmatch(r"[a-f0-9]{64}", expected):
                 raise RuntimeError("Wallpaper rotation journal contains an invalid checksum")

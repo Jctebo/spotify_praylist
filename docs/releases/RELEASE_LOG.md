@@ -8,6 +8,13 @@
 
 # Release Log
 
+## [0.4.30.0] - 2026-11-02
+
+### Fixed
+- Preserve manually renamed current wallpapers in their queues before promoting a new set.
+- Update the website test to reflect the shipped prayer schedule.
+
+
 ## [0.4.29.1] - 2026-10-28
 
 ### Changed
