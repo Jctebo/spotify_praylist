@@ -233,13 +233,24 @@ class DevotionalRotationTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "network timeout"):
             rotate_current(store, "2026-09-29")
 
-    def test_unknown_current_file_blocks_without_deletion(self):
+    def test_unknown_current_files_are_preserved_in_queue(self):
         store = MemoryStore()
-        store.files["phone-current/handmade__2026-09-01.jpg"] = b"untouched"
+        store.files["phone-current/file_renamed.png"] = b"manual"
+        store.files["watch-current/my edited image.png"] = b"watch manual"
         add_pair(store, "2026-10-01")
-        with self.assertRaisesRegex(RuntimeError, "Unmanaged"):
-            rotate_current(store, "2026-10-01")
-        self.assertIn("phone-current/handmade__2026-09-01.jpg", store.files)
+        self.assertTrue(rotate_current(store, "2026-10-01")["rotated"])
+        self.assertEqual(store.files["phone-queue/file_renamed.png"], b"manual")
+        self.assertEqual(store.files["watch-queue/my edited image.png"], b"watch manual")
+        self.assertIn("phone-current/holy-eucharist__2026-10-01.jpg", store.files)
+
+    def test_current_queue_name_collision_preserves_both_files(self):
+        store = MemoryStore()
+        store.files["phone-current/manual.png"] = b"current"
+        store.files["phone-queue/manual.png"] = b"existing"
+        add_pair(store, "2026-10-01")
+        rotate_current(store, "2026-10-01")
+        self.assertEqual(store.files["phone-queue/manual.png"], b"existing")
+        self.assertEqual(store.files[f"phone-queue/{hashlib.sha256(b'current').hexdigest()}-manual.png"], b"current")
 
     def test_multiple_named_observances_rotate_as_a_matched_set(self):
         store = MemoryStore()
