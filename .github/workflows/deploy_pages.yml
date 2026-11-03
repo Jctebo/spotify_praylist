@@ -1,0 +1,102 @@
+name: Deploy GitHub Pages (deploy-only)
+
+# Deploy-only twin of Publish Prayer Audio's Pages tail: stages the same
+# artifact from the committed docs/ and deploys it. No rendering, no R2 sync,
+# no feed changes. Manual dispatch only. Added 2026-11-03 for the Muse-run
+# cutover (plan: cutover-plan-2026-11-03.md).
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: podcast-pages-publish
+  cancel-in-progress: false
+
+jobs:
+  deploy-pages-only:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Configure GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: actions/configure-pages@v5
+
+      - name: Stage GitHub Pages artifact
+        if: github.ref == 'refs/heads/main'
+        run: |
+          rm -rf pages_artifact
+
+      - name: Stage today's devotional wallpaper when available
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        shell: bash
+        env:
+          RCLONE_CONFIG_B64: ${{ secrets.RCLONE_CONFIG_B64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RCLONE_CONFIG_B64:-}" ]; then
+            echo "No wallpaper remote configured; the site will use its image fallback."
+            exit 0
+          fi
+          sudo apt-get update
+          sudo apt-get install -y rclone
+          mkdir -p "$HOME/.config/rclone"
+          printf "%s" "$RCLONE_CONFIG_B64" | base64 -d > "$HOME/.config/rclone/rclone.conf"
+          chmod 600 "$HOME/.config/rclone/rclone.conf"
+          today="$(TZ=America/Chicago date +%F)"
+          remote="$RCLONE_REMOTE_NAME:$RCLONE_REMOTE_ROOT/phone-current"
+          matches="$(rclone lsf --files-only "$remote" 2>/dev/null | grep -E "__${today}\\.(jpg|jpeg|png|webp)$" || true)"
+          if [ -z "$matches" ]; then
+            echo "No phone wallpaper found for $today; the site will use its image fallback."
+            exit 0
+          fi
+          filename="$(printf '%s\n' "$matches" | LC_ALL=C sort | head -n 1)"
+          extension="${filename##*.}"
+          mkdir -p pages_artifact/images
+          temporary="pages_artifact/images/daily-wallpaper.$extension.tmp"
+          trap 'rm -f "$temporary"' EXIT
+          rclone copyto "$remote/$filename" "$temporary"
+          mv "$temporary" "pages_artifact/images/daily-wallpaper.$extension"
+
+      - name: Build GitHub Pages artifact
+        if: github.ref == 'refs/heads/main'
+        shell: bash
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
+        run: |
+          set -euo pipefail
+          wallpaper="$(find pages_artifact/images -maxdepth 1 -type f -name 'daily-wallpaper.*' -print -quit 2>/dev/null || true)"
+          if [ -n "$wallpaper" ]; then
+            python scripts/build_pages_artifact.py --wallpaper "$wallpaper"
+          else
+            python scripts/build_pages_artifact.py
+          fi
+
+      - name: Upload GitHub Pages artifact
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: ${{ github.workspace }}/pages_artifact
+
+      - name: Deploy GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        id: deploy-pages
+        uses: actions/deploy-pages@v4
