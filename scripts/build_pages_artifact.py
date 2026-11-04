@@ -202,7 +202,18 @@ def main() -> int:
     parser.add_argument("--output", type=Path, default=ROOT / "pages_artifact")
     parser.add_argument("--wallpaper", type=Path)
     args = parser.parse_args()
-    payload = build_artifact(args.output, wallpaper_path=args.wallpaper)
+    wallpaper_path = args.wallpaper
+    if wallpaper_path is None:
+        # Muse-run pipeline (2026-11-04): the runner commits the day's
+        # phone wallpaper — picked from the Google Drive rotation — to
+        # assets/daily-wallpaper.jpg in the same commit as the feed, and
+        # the deploy-only workflow no longer stages one (its rclone ->
+        # OneDrive staging retired with the Drive cutover, which left
+        # the site wallpaper null). Fall back to the committed asset.
+        committed = sorted((ROOT / "assets").glob("daily-wallpaper.*"))
+        if committed:
+            wallpaper_path = committed[0]
+    payload = build_artifact(args.output, wallpaper_path=wallpaper_path)
     print(
         f"Built Pages artifact: {len(payload['groups'])} playlists, "
         f"{sum(len(group['prayers']) for group in payload['groups'])} prayers, "
