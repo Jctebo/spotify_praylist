@@ -37,27 +37,50 @@ a:focus-visible { outline: 3px solid #a67626; outline-offset: 4px; }
 .header-link, .text-link { color: var(--green); font-size: 1rem; font-weight: 600; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .header-link, .text-link { display: inline-flex; align-items: center; min-height: 44px; }
 
+/* Hero: a contained SQUARE CARD on a deep-blue backdrop — the daily
+   wallpaper is composited into a deep-blue square by the runner
+   (square canvas, gradient ground, image blended in, fading to dark
+   blue at the bottom), and the card presents it as-is. Restored
+   2026-11-04 per John's design note (the wide full-bleed hero was a
+   later layout; the card-on-blue treatment is the intended look). */
 .hero {
   position: relative;
-  min-height: min(650px, 66vw);
-  margin: 0 clamp(1rem, 3vw, 3rem);
-  overflow: hidden;
-  display: flex;
-  align-items: end;
+  display: grid;
   isolation: isolate;
   color: #fffdf7;
-  background: radial-gradient(ellipse at 74% 25%, #8d9b71 0%, transparent 34%), linear-gradient(125deg, #1e3529 3%, #596c4d 54%, #bea979 100%);
+  padding: clamp(1.5rem, 4vw, 3rem) 1rem clamp(2rem, 5vw, 3.5rem);
+  background: radial-gradient(ellipse at 50% -10%, #1a3a6e 0%, transparent 55%), linear-gradient(180deg, #0c2350 0%, #081831 100%);
 }
-.hero-image, .hero-shade { position: absolute; z-index: -1; inset: 0; width: 100%; height: 100%; }
-.hero-image { object-fit: cover; opacity: 0; transition: opacity .5s ease; }
+.hero > * { grid-area: 1 / 1; }
+.hero-image {
+  position: static;
+  justify-self: center;
+  width: min(88vw, 600px);
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgb(0 0 0 / 45%);
+  opacity: 0;
+  transition: opacity .5s ease;
+}
 .hero-image.is-ready { opacity: 1; }
-.hero-shade { background: linear-gradient(90deg, rgb(13 27 20 / 78%) 0%, rgb(13 27 20 / 40%) 48%, rgb(13 27 20 / 5%) 100%), linear-gradient(0deg, rgb(12 23 18 / 45%), transparent 45%); }
-.hero-copy { max-width: 760px; padding: clamp(2.5rem, 7vw, 6rem); }
+.hero-shade { display: none; }
+.hero-copy {
+  z-index: 1;
+  align-self: end;
+  justify-self: center;
+  width: min(88vw, 600px);
+  max-width: 600px;
+  padding: 2.6rem 1.6rem 1.6rem;
+  background: linear-gradient(180deg, transparent 0%, rgb(4 11 26 / 42%) 55%, rgb(4 11 26 / 66%) 100%);
+  border-radius: 0 0 18px 18px;
+}
 .eyebrow { margin: 0 0 .85rem; text-transform: uppercase; letter-spacing: .16em; font-size: .68rem; font-weight: 700; }
-.hero h1 { max-width: 690px; margin: 0; font: 400 clamp(2.8rem, 7vw, 6.5rem)/1.03 var(--serif); letter-spacing: -.045em; }
+.hero h1 { max-width: 690px; margin: 0; font: 400 clamp(2rem, 5.5vw, 3.3rem)/1.05 var(--serif); letter-spacing: -.045em; }
 .hero-date { margin: 1.35rem 0 1.8rem; font-size: 1rem; color: rgb(255 253 247 / 88%); }
 .hero-action { display: inline-flex; align-items: center; gap: .8rem; min-height: 44px; padding: .75rem 1.15rem; background: #fffefa; color: var(--ink); text-decoration: none; font-size: 1rem; font-weight: 700; }
-.hero-credit { position: absolute; right: 1.4rem; bottom: 1.25rem; font-size: .68rem; letter-spacing: .05em; text-shadow: 0 1px 5px #000; }
+.hero-credit { z-index: 1; position: static; align-self: start; justify-self: center; width: min(88vw, 600px); text-align: right; padding: .85rem 1.1rem; font-size: .68rem; letter-spacing: .05em; text-shadow: 0 1px 5px #000; }
 
 .prayer-section { max-width: 1320px; margin: 0 auto; padding: clamp(4rem, 7vw, 7rem) clamp(1.25rem, 5vw, 5rem) 5.5rem; }
 .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 2rem; }
@@ -99,11 +122,10 @@ h2 { margin: 0; font: 400 clamp(2rem, 4vw, 3.5rem)/1.1 var(--serif); letter-spac
   .brand img { width: 38px; height: 38px; }
   .header-links { flex-direction: column; align-items: flex-end; gap: 0; }
   .header-link { min-height: 32px; font-size: .84rem; }
-  .hero { min-height: 580px; margin: 0 .55rem; }
-  .hero-copy { padding: 2rem 1.35rem 3.6rem; }
-  .hero-shade { background: linear-gradient(0deg, rgb(13 27 20 / 80%) 0%, rgb(13 27 20 / 28%) 78%, rgb(13 27 20 / 10%) 100%); }
-  .hero h1 { font-size: clamp(2.8rem, 13vw, 4.6rem); }
-  .hero-credit { right: .9rem; bottom: .75rem; font-size: .6rem; }
+  .hero { padding: 1.1rem .55rem 1.6rem; }
+  .hero-copy { padding: 2.2rem 1.2rem 1.3rem; }
+  .hero h1 { font-size: clamp(1.9rem, 9vw, 2.6rem); }
+  .hero-credit { font-size: .6rem; }
   .section-heading { display: block; }
   .section-note { margin-top: .8rem; }
   .playlist-groups { grid-template-columns: minmax(0, 1fr); }
