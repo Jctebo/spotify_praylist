@@ -13,15 +13,23 @@ Root: `.devotional_wallpapers` — folder IDs are constants in
 
 | Folder | Holds |
 | --- | --- |
-| `phone-current` | The live phone wallpapers (one set, flat) |
-| `watch-current` | The live watch wallpapers (one set, flat) |
+| `phone-current` | The live phone wallpapers (one daily set + the monthly extra, flat) |
+| `watch-current` | The live watch wallpapers (one daily set + the monthly extra, flat) |
 | `phone-queue` | Upcoming phone sets, rolling 7-day queue |
 | `watch-queue` | Upcoming watch sets, rolling 7-day queue |
 | `archive` | Displaced current sets, names preserved |
 | `manifests` | One `rotation-<YYYY-MM-DD>.json` per completed rotation |
+| `monthly-devotions/phone` | Staged monthly-devotion extras for the phone (one file per month) |
+| `monthly-devotions/watch` | Staged monthly-devotion extras for the watch (one file per month) |
 
 Queue files sit directly in the queue folder, or in a dated subfolder
 `queue/<YYYY-MM-DD>/`; the rotator reads both layouts.
+
+Staging folder IDs: `monthly-devotions` root
+`1JgGt63u8ny4bY3wt47rnSVmBTN4nJd-X`, its `phone` subfolder
+`1_xCNj4HfKiU9CyPbSoYobjkpCHbXCbmr`, its `watch` subfolder
+`1OrOog7pvNkIos8-3GfTy1tjJeI1_Z6AQ` (constants `monthly-root` /
+`monthly-phone` / `monthly-watch` in `wallpaper_rotate.py`).
 
 ## Production filename — the only allowed shape
 
@@ -57,6 +65,70 @@ Note the slug also changes: the full spec title is slugified
 (`SAINT ELIZABETH` → `saint-elizabeth`, `HOLY SOULS IN PURGATORY` →
 `holy-souls-in-purgatory`), not a hand-shortened form.
 
+## Monthly-devotion extra — filename and model
+
+Since 2026-11-05, each current folder carries, **in addition to** the
+daily set, ONE monthly-devotion image: the month's traditional devotion
+(November — Holy Souls in Purgatory; December — Divine Infancy of
+Christ; January — Holy Name of Jesus; February — Holy Family; March —
+Saint Joseph; April — Holy Eucharist; May — Blessed Virgin Mary; June —
+Sacred Heart of Jesus; July — Precious Blood of Jesus; August —
+Immaculate Heart of Mary; September — Our Lady of Sorrows; October —
+Holy Rosary). It is an extra, never a replacement: both daily rotations
+run exactly as before. The extra stays in `current` all month and is
+swapped only when the served month changes — first changeover is the
+rotation serving 2026-11-08 (Holy Souls), then 2026-12-01 (Divine
+Infancy), and so on.
+
+Monthly filename — the only allowed shape:
+
+```
+<slug>__<YYYY-MM>.jpg
+```
+
+- Built ONLY by `build_monthly_filename(title, month)` in
+  `jobs/novena/devotional_image_contract.py`
+  (`MONTHLY_FILENAME_RE` / `require_monthly_filename()` sit beside the
+  daily pattern). Phone and watch copies of a month share one filename;
+  the variant is carried by the folder, exactly as for daily files.
+- The `.` right after the two month digits is what separates a monthly
+  name from a daily one — a daily name has `-DD` there, so the daily
+  `__<YYYY-MM-DD>` greps (Pages steps, site-wallpaper pick, inventory
+  parser) never match a monthly extra, and the rotator's monthly pattern
+  never matches a daily file.
+- Artwork is rendered per variant with the same contracts as daily
+  images (phone: 1080×1920 vertical layout; watch: 1024×1024 with the
+  clock-zone rule), titled with the devotion name and subtitled
+  `<MONTH> DEVOTION` (the contract's monthly-fallback spec shape).
+- Local library + Drive staging: the finished set lives locally at
+  `~/workspace/goals/saint-of-the-day-picture-rotation/files/monthly-devotion-wallpapers/`
+  (`phone/`, `watch/`, raw art in `art/`, IDs in `library.json`) and is
+  staged on Drive in `monthly-devotions/phone` and
+  `monthly-devotions/watch` — all months staged ahead (Nov 2026 –
+  Dec 2027), so the rotator always finds the next month waiting.
+
+How the rotator handles the extra (state-based, in
+`runner/wallpaper_rotate.py`):
+
+- Every plan reads the target date's month and each current folder's
+  monthly state: `current` (the folder already holds a file stamped
+  `__<YYYY-MM>` for the target month), `would_promote` (staging holds
+  it), or `missing` (not staged).
+- On a normal daily rotation, displaced-file archiving skips the target
+  month's extra (it stays); a previous month's extra is archived like
+  any displaced file; a promotable extra moves
+  `monthly-devotions/<variant>` → `<variant>-current` in the same run.
+- A `missing` extra never blocks or alters the daily rotation: the
+  manifest records `monthly_extras.<variant>.action: "missing"` and the
+  run's JSON summary carries the monthly states. Stage the month image
+  and re-run the same date: the plan becomes a monthly-only fix-up
+  (`WOULD_ROTATE` with only monthly moves; the rewritten manifest is
+  flagged `"monthly_fixup": true`).
+- Manifests record the extras under `monthly_extras` (per variant:
+  month, action `promoted` / `already_current` / `missing`, name, Drive
+  ID), and monthly moves are tagged `"monthly": true` in the
+  moved-to-archive / moved-to-current lists.
+
 ## Generate-then-rotate sequence (what the cron agent does)
 
 For target date `D` (= run date + 2 for the picture side's rolling queue):
@@ -84,13 +156,16 @@ For target date `D` (= run date + 2 for the picture side's rolling queue):
    e. Re-run step 1; it must now report `WOULD_ROTATE`.
 3. **Rotate for real:**
    `python3 runner/wallpaper_rotate.py --date <D> --apply --rundir <run dir>`
-   - Every file currently in `phone-current` / `watch-current` moves to
-     `archive`, name preserved; on a name collision the archived copy is
-     suffixed with the rotation date (`-rotated-<D>` before the extension).
+   - Every daily file currently in `phone-current` / `watch-current`
+     moves to `archive`, name preserved; on a name collision the
+     archived copy is suffixed with the rotation date (`-rotated-<D>`
+     before the extension). The target month's monthly extra is NOT a
+     daily file: it stays in `current` untouched (see the monthly-extra
+     section above for its own moves).
    - `D`'s files move queue → matching current folder.
    - A manifest `rotation-<D>.json` (date, rotated_at, files moved in/out
-     with Drive IDs, source folders) is uploaded to `manifests`, with a
-     local copy in `--rundir`.
+     with Drive IDs, source folders, `monthly_extras` summary) is
+     uploaded to `manifests`, with a local copy in `--rundir`.
 4. **Idempotency:** re-running for an already-rotated date reports
    `ALREADY_ROTATED` and exits 0 with no moves (current holds `D`'s files
    and the manifest exists). If current holds `D`'s files but no manifest
@@ -116,3 +191,8 @@ any other subject.
   rotator, so the manifest always matches reality.
 - A subject set is complete only when phone and watch queues carry the
   same subjects for the date; the rotator refuses partial sets.
+- Monthly extras: exactly one file per month per variant in
+  `monthly-devotions/<variant>`, named with `build_monthly_filename()`.
+  Stage a month before its first rotation; if a month was missed, stage
+  it late and re-run any date in that month — the fix-up converges
+  `current` to the right extra without touching the daily set.
