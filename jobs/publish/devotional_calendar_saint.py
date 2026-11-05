@@ -15,15 +15,22 @@ Selection from the calendar, for the target date:
   trimmed (source ``calendar``). Entries the calendar itself marks
   superseded (``Superseded:`` descriptions) are not celebrated and do
   not count.
-* No liturgical saint, but the day carries a roster entry (title
-  ``[<bracket>] 🔵 <Principal> — Roman Martyrology (private
-  devotion)``; older files use the unbracketed ``🔵 Roman Martyrology
-  (private devotion)``) -> the entry's ``Principal:`` saint (source
-  ``roster``), framed as the calendar frames it: a private devotion.
-  The bracket grades the Principal's source and is carried through as
-  ``roster_bracket``: ``P2`` = the traditional calendar of 1962,
-  ``P3`` = the Roman Martyrology's own order, ``m`` = a ferial
-  Saturday (the Principal is the Blessed Virgin Mary).
+* No liturgical saint, but the day carries a roster entry -> the
+  entry's ``Principal:`` saint (source ``roster``), framed as the
+  calendar frames it: a private devotion. Roster titles name the
+  Principal, and the ending names the bracket's source:
+  ``[P2] 🔵 <Principal> — 1962 Calendar (private devotion)`` (the
+  traditional calendar of 1962), ``[P3] 🔵 <Principal> — Roman
+  Martyrology (private devotion)`` (the Martyrology's own order).
+  A ferial Saturday's roster event carries instead the plain
+  optional-memorial title ``[m] ⚪ The Blessed Virgin Mary, Optional
+  Memorial`` — Our Lady is in the day itself and takes no
+  private-devotion label; it is recognized as the roster carrier by
+  its roster description (the genuine liturgical Saturday memorial
+  bears the identical title but a ``Church observance:``
+  description). Older files use the unbracketed ``🔵 Roman
+  Martyrology (private devotion)``. The bracket is carried through
+  as ``roster_bracket`` (``P2`` / ``P3`` / ``m``).
 * Otherwise (solemnities and feasts of the Lord, Ash Wednesday, Holy
   Week, the Easter octave, named observances) -> no saint
   (state ``gospel_only``, reason ``no_saint_named``).
@@ -54,18 +61,40 @@ _CALENDAR_PATH = Path(
 )
 
 _ROSTER_TITLE = "🔵 Roman Martyrology (private devotion)"  # legacy unbracketed form
+# Current [P2]/[P3] forms: the ending names the bracket's source. Both
+# endings are accepted for either bracket here (the calendar build's
+# validator enforces the exact pairing); a transitional form ended
+# every bracket with the Roman Martyrology label.
 _ROSTER_TITLE_RE = re.compile(
-    r"^\[(P2|P3|m)\] 🔵 .+ — Roman Martyrology \(private devotion\)$"
+    r"^\[(P2|P3)\] 🔵 .+ — (?:1962 Calendar|Roman Martyrology) \(private devotion\)$"
 )
+# Transitional Saturday form (bracket + circle + Martyrology ending).
+_ROSTER_SATURDAY_LEGACY_RE = re.compile(
+    r"^\[m\] [🔵⚪] .+ — Roman Martyrology \(private devotion\)$"
+)
+# Current Saturday form: the plain optional-memorial title. It is the
+# day's roster carrier ONLY when its description is the roster
+# description — the genuine liturgical Saturday memorial carries the
+# identical title with a "Church observance:" description and must
+# stay on the liturgical path.
+_ROSTER_SATURDAY_TITLE = "[m] ⚪ The Blessed Virgin Mary, Optional Memorial"
 
 
-def _roster_bracket(summary: str) -> str | None:
+def _roster_bracket(summary: str, description: str = "") -> str | None:
     """A roster event's source bracket ('P2'/'P3'/'m'); '' for the legacy
     unbracketed title; None when the event is not a roster event."""
     if summary == _ROSTER_TITLE:
         return ""
     m = _ROSTER_TITLE_RE.match(summary)
-    return m.group(1) if m else None
+    if m:
+        return m.group(1)
+    if _ROSTER_SATURDAY_LEGACY_RE.match(summary):
+        return "m"
+    if summary == _ROSTER_SATURDAY_TITLE and description.startswith(
+        "Private devotion:"
+    ):
+        return "m"
+    return None
 
 # Observances that name saints without a "Saint"/"Blessed" word in them.
 _EXTRA_SAINT_PATTERNS = (
@@ -173,7 +202,7 @@ def calendar_saint_for(target: dt.date) -> dict | None:
     principal = ""
     roster_bracket = ""
     for summary, description in _events_by_date().get(target, []):
-        bracket = _roster_bracket(summary)
+        bracket = _roster_bracket(summary, description)
         if bracket is not None:
             roster_bracket = bracket
             m = re.search(r"Principal:\s*(.+?)\.\s*Source:", description, re.S)
