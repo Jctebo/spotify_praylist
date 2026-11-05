@@ -117,35 +117,44 @@ lives under `~/workspace` — never `/tmp` (512 MB tmpfs).
   with the cutover comment; the two-date catch-up lists shifted by the same +1.
 - Verification numbers always come from the settled pass — this VM has
   write-visibility lag, so build-time probes read short.
-- **Saint ladder + daily Gospel (John, approved 2026-11-05; supersedes the
-  same morning's no-saint rule for the witness).** The Daily Reflection
-  witness is resolved by `jobs/publish/saint_witness_ladder.py`, base
-  calendar = the CURRENT calendar: (1) the calendar names a saint → that
-  saint; (2) no saint + Saturday → the Blessed Virgin Mary (in-day source);
-  (3) no saint + not Saturday → BACKUP SOURCES, paired: the Roman
-  Martyrology's lead commemoration for the date names the saint, and the
-  1962 calendar's observance is carried alongside; (4) the backups name
-  none → no saint, Gospel only. Backup data is vendored offline in
-  `config/publish/offline/martyrology-1962.json` (pre-conciliar
-  public-domain English Martyrology; 365 of 366 month-days carry a lead —
-  Feb 29 has none). plan.json context carries `witness_name`,
-  `witness_source` (`calendar`/`saturday`/`backup`/`none`),
-  `martyrology_lead`, `martyrology_text`, `calendar_1962`, and the
-  `saintWitnessQuote` fields (backup days). Nobody picks any other saint:
-  no novena-completion pick, no invented saint. WORDING: in-day saints
-  (rungs 1–2) are carried by a "The Church celebrates …" sentence, with NO
-  "Today's saint is …" sentence; backup saints (rung 3) take both
-  "Today's saint is [name]." and "This saint was chosen based on the Roman
-  Martyrology and the traditional calendar of 1962, which this podcast
-  keeps as a private devotion." GOSPEL EVERY DAY: the Daily Reflection
-  joins a reflection on the day's Gospel (`gospel_citation` /
-  `gospel_text` in plan context) with the saint — daily, not a fallback.
-  The episode description follows the same ladder where it is rendered
+- **Calendar-only saint + daily Gospel (John, 2026-11-05; supersedes the
+  witness ladder approved the same morning).** The Daily Reflection saint
+  is read from ONE source: John's devotional calendar — the ICS at
+  `~/workspace/goals/saint-of-the-day-picture-rotation/files/devotional-calendar-2026-11-06-to-2027-12-31.ics`
+  (the same file imported to his Outlook Devotion calendar) — via
+  `jobs/publish/devotional_calendar_saint.py`. No runtime resolution from
+  romcal, the Martyrology dataset, or the ladder. Selection, for the
+  target date: SUNDAY → no saint, ever — the reflection is the day's
+  Gospel message only; liturgical entries name saint(s) → those saints,
+  all of them, never trimmed (entries the calendar marks superseded do
+  not count); no liturgical saint + a `🔵 Roman Martyrology (private
+  devotion)` roster entry → the entry's `Principal:` saint, framed as the
+  calendar frames it (a private devotion from the Roman Martyrology);
+  any other saintless day (solemnities/feasts of the Lord, Ash Wednesday,
+  Holy Week, the Easter octave…) → Gospel only. Gospel-only days carry the
+  explicit state `witness_state`/`witness_source` = `gospel_only` (with
+  `gospel_reason` `sunday` or `no_saint_named`) — never a silently empty
+  saint. plan.json context carries `witness_name`, `witness_source`
+  (`calendar`/`roster`/`gospel_only`), `witness_state`, `gospel_reason`,
+  and `saint_of_day`/`saint_witness` set to the same calendar saint.
+  Nobody picks any other saint: no novena-completion pick, no invented
+  saint. WORDING: a named saint is carried by the plain calendar form — a
+  "The Church celebrates …" sentence; there is NO "Today's saint is …"
+  sentence and NO backup-attribution sentence (both retired with the
+  ladder). GOSPEL EVERY DAY: the Daily Reflection joins a reflection on
+  the day's Gospel (`gospel_citation` / `gospel_text` in plan context)
+  with the saint — daily, not a fallback. The episode description is
+  filled from the same calendar lookup where it is rendered
   (`jobs/publish/contracts.py`, with a safety net in
-  `runner/pass1_collect.py`): the saint slot takes the calendar saint, Our
-  Lady on Saturdays, or the Martyrology lead with the source named on
-  backup days; the empty slot never ships, and rung-4 days keep the Gospel
-  wording. Novena contracts and feast dates are untouched by this rule.
+  `runner/pass1_collect.py`): the saint slot takes the calendar saint, or
+  the roster Principal with the Roman Martyrology (private devotion)
+  named; gospel_only days keep the Gospel wording and the empty slot
+  never ships. FALLBACK: for target dates outside the calendar file's
+  range (2026-11-06 → 2027-12-31), the resolver keeps the previous
+  behavior — the witness ladder in `jobs/publish/saint_witness_ladder.py`
+  (kept in place for history) over the repo liturgical context — until a
+  new calendar file supersedes this one. Novena contracts and feast dates
+  are untouched by this rule.
 
 ## Repo-venv note
 

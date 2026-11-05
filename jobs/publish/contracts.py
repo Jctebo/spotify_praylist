@@ -17,7 +17,7 @@ from jobs.publish.devotional_intro import (
     normalize_intro_profile,
 )
 from jobs.publish.saint_centered_theme import build_saint_centered_theme_brief
-from jobs.publish.saint_witness_ladder import resolve_witness as _resolve_saint_witness
+from jobs.publish.devotional_calendar_saint import resolve_saint_of_day as _resolve_saint_witness
 from jobs.publish.daily_liturgical_context import build_daily_liturgical_context
 from jobs.publish.daily_theme_runtime import (
     DailyThemeRuntimeCache as _PublishDailyThemeRuntimeCache,
@@ -1172,17 +1172,19 @@ def _entry_runtime_context(
         )
         runtime["daily_reflection_tone"] = str(context_payload.get("emotionalTone", "")).strip()
         runtime["daily_reflection_saint"] = str(context_payload.get("saintOfDay", "")).strip()
-        # Saint ladder (John, approved 2026-11-05): when the current calendar
-        # names no saint, the description slot still never ships empty —
-        # Saturdays take the Blessed Virgin Mary, other days take the Roman
-        # Martyrology's lead commemoration (1962 calendar paired), and only
-        # when the backups name none does the slot stay empty for the Gospel
-        # wording in _render_entry_metadata.
+        # Calendar-only saint (John, 2026-11-05): the description slot is
+        # filled from John's devotional calendar — the liturgical entries'
+        # saints, or the roster entry's Principal on ferial roster days.
+        # Sundays and other saintless days resolve to the explicit
+        # "gospel_only" state (empty name, source "gospel_only"), never a
+        # silently empty slot. (Out-of-range dates keep the old ladder
+        # behavior inside the resolver.)
         _witness = _resolve_saint_witness(
             target_date, calendar_saint=runtime["daily_reflection_saint"]
         )
         runtime["daily_reflection_saint"] = _witness["witness_name"]
         runtime["daily_reflection_saint_source"] = _witness["witness_source"]
+        runtime["daily_reflection_saint_state"] = _witness["witness_state"]
         runtime["daily_reflection_calendar_1962"] = _witness["calendar_1962"]
         runtime["daily_reflection_pause_ms"] = int(config.get("pause_ms", DEFAULT_REFLECTION_PAUSE_MS))
     return runtime
@@ -2424,11 +2426,13 @@ def _render_entry_metadata(
         title = str(entry.get("entry_id", "")).strip()
     description = render_publish_template(description_template, context) if description_template else title
     _saint_source = str(context.get("daily_reflection_saint_source") or "").strip()
-    if not str(context.get("daily_reflection_saint") or "").strip() and "praying with  and" in description:
-        # Saint ladder rung 4 (John, approved 2026-11-05): the calendar and
-        # the backup sources name no saint, so the Daily Reflection
-        # description takes the day's Gospel as its focus — the empty saint
-        # slot never ships.
+    _saint_name = str(context.get("daily_reflection_saint") or "").strip()
+    if not _saint_name and "praying with  and" in description:
+        # Calendar-only model (John, 2026-11-05): the devotional calendar
+        # names no saint for this date (state "gospel_only" — every Sunday,
+        # and saintless non-roster days), so the Daily Reflection
+        # description takes the day's Gospel as its focus — the empty
+        # saint slot never ships.
         gospel_citation = str(context.get("daily_gospel_citation") or "").strip()
         gospel_clause = (
             f"praying with the day's Gospel, {gospel_citation}"
@@ -2438,17 +2442,31 @@ def _render_entry_metadata(
         description = description.replace(
             "praying with  and the saint's approved saying", gospel_clause
         )
+    elif _saint_source == "roster" and " and the saint's approved saying" in description:
+        # The saint is the roster entry's Principal, framed as the calendar
+        # frames it: a private devotion from the Roman Martyrology. (The
+        # old backup-attribution sentence is retired.)
+        description = description.replace(
+            " and the saint's approved saying",
+            ", named today in the Roman Martyrology (private devotion)",
+        )
     elif _saint_source == "backup" and " and the saint's approved saying" in description:
-        # Saint ladder rung 3: the description names the source, as the audio
-        # wording does — the saint comes from the Roman Martyrology and the
-        # traditional calendar of 1962, kept as a private devotion.
+        # Out-of-range fallback only (witness ladder): the description
+        # names the source, as before.
         description = description.replace(
             " and the saint's approved saying",
             ", named today in the Roman Martyrology and the traditional calendar of 1962",
         )
-    elif _saint_source == "saturday" and "the saint's approved saying" in description:
-        # Saint ladder rung 2: the witness is Our Lady — her saying, not "the
-        # saint's".
+    elif (
+        _saint_name
+        and all(
+            ("Blessed Virgin Mary" in part or "Our Lady" in part or "Mother of God" in part)
+            for part in _saint_name.split("; ")
+        )
+        and "the saint's approved saying" in description
+    ):
+        # The saint is Our Lady alone (a calendar Marian observance or a
+        # roster Principal) — her saying, not "the saint's".
         description = description.replace(
             "the saint's approved saying", "her approved saying"
         )
