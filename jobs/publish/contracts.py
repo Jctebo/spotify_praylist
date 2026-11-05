@@ -2410,6 +2410,19 @@ def _render_entry_metadata(
     if not title:
         title = str(entry.get("entry_id", "")).strip()
     description = render_publish_template(description_template, context) if description_template else title
+    if not str(context.get("daily_reflection_saint") or "").strip() and "praying with  and" in description:
+        # No-saint day (John, 2026-11-05): the calendar names no saint, so the
+        # Daily Reflection description takes the day's Gospel as its focus —
+        # the empty saint slot never ships.
+        gospel_citation = str(context.get("daily_gospel_citation") or "").strip()
+        gospel_clause = (
+            f"praying with the day's Gospel, {gospel_citation}"
+            if gospel_citation
+            else "praying with the day's Gospel"
+        )
+        description = description.replace(
+            "praying with  and the saint's approved saying", gospel_clause
+        )
     episode_id = derive_episode_id(context=context, template=episode_id_template)
     return {
         "context": context,
