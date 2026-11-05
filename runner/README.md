@@ -115,17 +115,35 @@ lives under `~/workspace` — never `/tmp` (512 MB tmpfs).
   with the cutover comment; the two-date catch-up lists shifted by the same +1.
 - Verification numbers always come from the settled pass — this VM has
   write-visibility lag, so build-time probes read short.
-- **No-saint days (John, 2026-11-05).** When the liturgical context names
-  no saint for the target date, nobody picks one: no traditional-calendar
-  substitute, no novena-completion pick, no invented saint. The Daily
-  Reflection — and any seam text that needs a focus or witness — takes the
-  day's Gospel from the offline lectionary (plan.json context carries
-  `gospel_citation` and `gospel_text`) as its source and focus, and names
-  no saint. The reflection's episode description is rewritten to the Gospel
-  focus where it is rendered (`jobs/publish/contracts.py`, with a safety
-  net in `runner/pass1_collect.py`), so the empty saint slot never ships.
-  Days with a named saint are unchanged; novena contracts and feast dates
-  are untouched by this rule.
+- **Saint ladder + daily Gospel (John, approved 2026-11-05; supersedes the
+  same morning's no-saint rule for the witness).** The Daily Reflection
+  witness is resolved by `jobs/publish/saint_witness_ladder.py`, base
+  calendar = the CURRENT calendar: (1) the calendar names a saint → that
+  saint; (2) no saint + Saturday → the Blessed Virgin Mary (in-day source);
+  (3) no saint + not Saturday → BACKUP SOURCES, paired: the Roman
+  Martyrology's lead commemoration for the date names the saint, and the
+  1962 calendar's observance is carried alongside; (4) the backups name
+  none → no saint, Gospel only. Backup data is vendored offline in
+  `config/publish/offline/martyrology-1962.json` (pre-conciliar
+  public-domain English Martyrology; 365 of 366 month-days carry a lead —
+  Feb 29 has none). plan.json context carries `witness_name`,
+  `witness_source` (`calendar`/`saturday`/`backup`/`none`),
+  `martyrology_lead`, `martyrology_text`, `calendar_1962`, and the
+  `saintWitnessQuote` fields (backup days). Nobody picks any other saint:
+  no novena-completion pick, no invented saint. WORDING: in-day saints
+  (rungs 1–2) are carried by a "The Church celebrates …" sentence, with NO
+  "Today's saint is …" sentence; backup saints (rung 3) take both
+  "Today's saint is [name]." and "This saint was chosen based on the Roman
+  Martyrology and the traditional calendar of 1962, which this podcast
+  keeps as a private devotion." GOSPEL EVERY DAY: the Daily Reflection
+  joins a reflection on the day's Gospel (`gospel_citation` /
+  `gospel_text` in plan context) with the saint — daily, not a fallback.
+  The episode description follows the same ladder where it is rendered
+  (`jobs/publish/contracts.py`, with a safety net in
+  `runner/pass1_collect.py`): the saint slot takes the calendar saint, Our
+  Lady on Saturdays, or the Martyrology lead with the source named on
+  backup days; the empty slot never ships, and rung-4 days keep the Gospel
+  wording. Novena contracts and feast dates are untouched by this rule.
 
 ## Repo-venv note
 

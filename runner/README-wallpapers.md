@@ -97,10 +97,12 @@ For target date `D` (= run date + 2 for the picture side's rolling queue):
    exists, the rotator reports `ALREADY_IN_CURRENT_MANIFEST_MISSING` and
    still makes no moves — investigate before trusting that date.
 
-## No-saint days — Gospel-scene subjects (John, 2026-11-05)
+## Gospel-scene subject — every day (John, approved 2026-11-05)
 
-When the devotional calendar names no saint for a date, a wallpaper subject
-depicting the day's Gospel scene is permitted. It stands alongside the
+Every day's wallpaper set includes a subject depicting the day's Gospel
+scene, alongside the saint/devotion subjects (the saint follows the same
+ladder as the podcast: calendar saint, Our Lady on Saturdays, the
+Martyrology/1962 lead on other saintless days). It stands alongside the
 standing data-driven devotions (e.g. BVM on Saturdays, Holy Souls in
 November), which are unchanged. Name the file with `build_filename()` like
 any other subject.

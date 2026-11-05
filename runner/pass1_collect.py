@@ -117,6 +117,12 @@ def collect(target: dt.date, outdir: Path) -> dict:
     ctx = build_daily_liturgical_context(target, calendar=calendar, locale=locale)
     ctxd = ctx.to_dict()
     gospel = resolve_offline_gospel(target, calendar=calendar, locale=locale)
+    from jobs.publish.saint_witness_ladder import resolve_witness
+
+    # Saint ladder (John, approved 2026-11-05): calendar saint -> Blessed
+    # Virgin Mary on Saturdays -> Roman Martyrology lead (1962 calendar
+    # paired) -> none (Gospel only).
+    witness = resolve_witness(target, calendar_saint=str(ctxd.get("saintWitness", "")).strip())
     lect = json.loads((FORK / "config/publish/offline/lectionary.json").read_text())
     lect_entry = (lect.get("entries") or {}).get(date_iso, {})
     readings = lect_entry.get("readings") or {}
@@ -128,6 +134,14 @@ def collect(target: dt.date, outdir: Path) -> dict:
         "feast_day": ctxd.get("feastDay", ""),
         "saint_of_day": ctxd.get("saintOfDay", ""),
         "saint_witness": ctxd.get("saintWitness", ""),
+        "witness_name": witness["witness_name"],
+        "witness_source": witness["witness_source"],
+        "martyrology_lead": witness["martyrology_lead"],
+        "martyrology_text": witness["martyrology_text"],
+        "calendar_1962": witness["calendar_1962"],
+        "saintWitnessQuote": witness["saintWitnessQuote"],
+        "saintWitnessQuoteSource": witness["saintWitnessQuoteSource"],
+        "saintWitnessQuoteSourceUrl": witness["saintWitnessQuoteSourceUrl"],
         "shared_theme_title": ctxd.get("sharedThemeTitle", ""),
         "gospel_citation": gospel.citation,
         "gospel_text": gospel.text,
@@ -209,10 +223,22 @@ def collect(target: dt.date, outdir: Path) -> dict:
             register_block(
                 "daily-reflection/body",
                 key,
-                "Daily Reflection body (Ignatian reflection on the day's readings; with the day's "
-                "saint witness when the calendar names one — on a no-saint day the Gospel is the "
-                "focus and no saint is named (John, 2026-11-05); paragraphs are separated by blank "
-                "lines and by 15000 ms pauses).",
+                "Daily Reflection body (Ignatian reflection; EVERY day it joins two threads: a "
+                "reflection on the day's Gospel (context gospel_citation / gospel_text, from the "
+                "day's Mass readings) AND the day's saint witness (context witness_name / "
+                "witness_source). Saint ladder (John, approved 2026-11-05): witness_source "
+                "'calendar' = the current calendar's saint; 'saturday' = the Blessed Virgin Mary "
+                "(no calendar saint, and Saturday is dedicated to her); 'backup' = the Roman "
+                "Martyrology's lead commemoration for the date (context martyrology_lead / "
+                "martyrology_text), paired with the 1962 calendar observance (context "
+                "calendar_1962); 'none' = no saint anywhere. WORDING: for 'calendar' and "
+                "'saturday', the saint is carried by a 'The Church celebrates ...' sentence and "
+                "there is NO 'Today's saint is ...' sentence; for 'backup', include BOTH "
+                "sentences in these forms: 'Today's saint is [witness_name].' and 'This saint "
+                "was chosen based on the Roman Martyrology and the traditional calendar of "
+                "1962, which this podcast keeps as a private devotion.'; for 'none', no saint "
+                "is named and the Gospel alone carries the reflection. Paragraphs are separated "
+                "by blank lines and by 15000 ms pauses).",
                 "\n\n".join(reflection_texts),
                 seg_rel,
                 reflection_indices,
@@ -220,10 +246,12 @@ def collect(target: dt.date, outdir: Path) -> dict:
                 {"episode_title": title},
             )
         if "praying with  and" in description:
-            # Safety net for the no-saint rule (John, 2026-11-05): the render
-            # site (jobs/publish/contracts.py) already rewrites this; if an
-            # empty saint slot ever reaches the runner anyway, fill it from
-            # the day's Gospel here — an empty slot never ships.
+            # Safety net for the saint ladder (John, approved 2026-11-05):
+            # the render site (jobs/publish/contracts.py) resolves the slot
+            # by the ladder (calendar / Our Lady on Saturdays / Martyrology
+            # lead on backup days); if an empty slot ever reaches the runner
+            # anyway, the day is rung 4 — fill it from the day's Gospel here.
+            # An empty slot never ships.
             gospel_citation = str(shared_context.get("gospel_citation", "")).strip()
             gospel_clause = (
                 f"praying with the day's Gospel, {gospel_citation}"
@@ -235,7 +263,7 @@ def collect(target: dt.date, outdir: Path) -> dict:
             )
             flags.append(
                 f"{episode_id}: repo description had an empty saint slot; rewritten to the "
-                "day's Gospel focus (no-saint rule, John 2026-11-05)."
+                "day's Gospel focus (saint ladder rung 4, John 2026-11-05)."
             )
         _write_json(outdir / seg_rel, {"episode": key, "file_base": file_base, "gap_ms": gap_ms, "segments": segments})
         spoken = [s["text"] for s in segments if "text" in s]
@@ -368,13 +396,39 @@ def collect(target: dt.date, outdir: Path) -> dict:
             }
         )
 
-    if not ctxd.get("saintWitness"):
+    if witness["witness_source"] == "saturday":
         flags.append(
-            "Repo liturgical context names no saint witness for this date (ferial day). "
-            "NO-SAINT RULE (John, 2026-11-05): agent texts at the seam must NOT name or pick "
-            "any saint — no traditional-calendar substitute, no novena-completion pick. The "
-            "Daily Reflection and any witness-needing text take the day's Gospel as source "
-            "and focus (context gospel_citation / gospel_text, from the offline lectionary)."
+            "SAINT LADDER (John, approved 2026-11-05): the current calendar names no saint "
+            "for this date and the date is a Saturday, so the Daily Reflection witness is "
+            "the Blessed Virgin Mary (context witness_name / witness_source = 'saturday'; "
+            "Saturday is dedicated to her — an in-day source, no backup needed). WORDING: "
+            "the witness is carried by a 'The Church celebrates ...' sentence; do NOT add a "
+            "'Today's saint is ...' sentence. The reflection joins the day's Gospel "
+            "(context gospel_citation / gospel_text) with Our Lady, as it joins the Gospel "
+            "with the witness every day."
+        )
+    elif witness["witness_source"] == "backup":
+        flags.append(
+            "SAINT LADDER (John, approved 2026-11-05): the current calendar names no saint "
+            f"for this date, so the witness comes from the BACKUP SOURCES: {witness['martyrology_lead']} "
+            "(context witness_name / witness_source = 'backup'), the Roman Martyrology's lead "
+            f"commemoration for the date, paired with the 1962 calendar observance "
+            f"\"{witness['calendar_1962']}\". WORDING: include BOTH sentences in these forms: "
+            f"\"Today's saint is {witness['martyrology_lead']}.\" and \"This saint was chosen "
+            "based on the Roman Martyrology and the traditional calendar of 1962, which "
+            "this podcast keeps as a private devotion.\" The Martyrology eulogy is in "
+            "context martyrology_text and in the saintWitnessQuote fields as the sourced "
+            "quote. The reflection joins the day's Gospel (context gospel_citation / "
+            "gospel_text) with the witness, as it does every day. Do NOT substitute any "
+            "other saint (no novena-completion pick)."
+        )
+    elif witness["witness_source"] == "none":
+        flags.append(
+            "SAINT LADDER (John, approved 2026-11-05): the current calendar names no saint "
+            "for this date and the backup sources (Roman Martyrology / 1962 calendar) name "
+            "none either (context witness_source = 'none'). No saint is named in any text; "
+            "the Daily Reflection is Gospel only (context gospel_citation / gospel_text, "
+            "from the offline lectionary)."
         )
     plan = {
         "date": date_iso,
