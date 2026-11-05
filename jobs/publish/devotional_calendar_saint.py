@@ -15,10 +15,15 @@ Selection from the calendar, for the target date:
   trimmed (source ``calendar``). Entries the calendar itself marks
   superseded (``Superseded:`` descriptions) are not celebrated and do
   not count.
-* No liturgical saint, but the day carries a ``🔵 Roman Martyrology
-  (private devotion)`` roster entry -> the entry's ``Principal:`` saint
-  (source ``roster``), framed as the calendar frames it: a private
-  devotion from the Roman Martyrology.
+* No liturgical saint, but the day carries a roster entry (title
+  ``[<bracket>] 🔵 <Principal> — Roman Martyrology (private
+  devotion)``; older files use the unbracketed ``🔵 Roman Martyrology
+  (private devotion)``) -> the entry's ``Principal:`` saint (source
+  ``roster``), framed as the calendar frames it: a private devotion.
+  The bracket grades the Principal's source and is carried through as
+  ``roster_bracket``: ``P2`` = the traditional calendar of 1962,
+  ``P3`` = the Roman Martyrology's own order, ``m`` = a ferial
+  Saturday (the Principal is the Blessed Virgin Mary).
 * Otherwise (solemnities and feasts of the Lord, Ash Wednesday, Holy
   Week, the Easter octave, named observances) -> no saint
   (state ``gospel_only``, reason ``no_saint_named``).
@@ -48,7 +53,19 @@ _CALENDAR_PATH = Path(
     )
 )
 
-_ROSTER_TITLE = "🔵 Roman Martyrology (private devotion)"
+_ROSTER_TITLE = "🔵 Roman Martyrology (private devotion)"  # legacy unbracketed form
+_ROSTER_TITLE_RE = re.compile(
+    r"^\[(P2|P3|m)\] 🔵 .+ — Roman Martyrology \(private devotion\)$"
+)
+
+
+def _roster_bracket(summary: str) -> str | None:
+    """A roster event's source bracket ('P2'/'P3'/'m'); '' for the legacy
+    unbracketed title; None when the event is not a roster event."""
+    if summary == _ROSTER_TITLE:
+        return ""
+    m = _ROSTER_TITLE_RE.match(summary)
+    return m.group(1) if m else None
 
 # Observances that name saints without a "Saint"/"Blessed" word in them.
 _EXTRA_SAINT_PATTERNS = (
@@ -131,6 +148,7 @@ def _empty_result() -> dict:
         "witness_source": "gospel_only",
         "witness_state": "gospel_only",
         "gospel_reason": "",
+        "roster_bracket": "",
         "saints": [],
         "principal": "",
         "martyrology_lead": "",
@@ -153,8 +171,11 @@ def calendar_saint_for(target: dt.date) -> dict | None:
         return result
     saints: list[str] = []
     principal = ""
+    roster_bracket = ""
     for summary, description in _events_by_date().get(target, []):
-        if summary == _ROSTER_TITLE:
+        bracket = _roster_bracket(summary)
+        if bracket is not None:
+            roster_bracket = bracket
             m = re.search(r"Principal:\s*(.+?)\.\s*Source:", description, re.S)
             if m:
                 principal = m.group(1).strip()
@@ -175,6 +196,7 @@ def calendar_saint_for(target: dt.date) -> dict | None:
         result["witness_name"] = principal
         result["witness_source"] = "roster"
         result["witness_state"] = "saint"
+        result["roster_bracket"] = roster_bracket
         result["principal"] = principal
         return result
     result["gospel_reason"] = "no_saint_named"
@@ -199,4 +221,5 @@ def resolve_saint_of_day(target: dt.date, calendar_saint: str = "") -> dict:
     legacy["gospel_reason"] = "" if legacy["witness_name"] else "no_saint_named"
     legacy["saints"] = [legacy["witness_name"]] if legacy["witness_name"] else []
     legacy["principal"] = ""
+    legacy["roster_bracket"] = legacy.get("roster_bracket", "")
     return legacy

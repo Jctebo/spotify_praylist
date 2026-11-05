@@ -1185,6 +1185,7 @@ def _entry_runtime_context(
         runtime["daily_reflection_saint"] = _witness["witness_name"]
         runtime["daily_reflection_saint_source"] = _witness["witness_source"]
         runtime["daily_reflection_saint_state"] = _witness["witness_state"]
+        runtime["daily_reflection_roster_bracket"] = _witness.get("roster_bracket", "")
         runtime["daily_reflection_calendar_1962"] = _witness["calendar_1962"]
         runtime["daily_reflection_pause_ms"] = int(config.get("pause_ms", DEFAULT_REFLECTION_PAUSE_MS))
     return runtime
@@ -2427,6 +2428,7 @@ def _render_entry_metadata(
     description = render_publish_template(description_template, context) if description_template else title
     _saint_source = str(context.get("daily_reflection_saint_source") or "").strip()
     _saint_name = str(context.get("daily_reflection_saint") or "").strip()
+    _roster_bracket = str(context.get("daily_reflection_roster_bracket") or "").strip()
     if not _saint_name and "praying with  and" in description:
         # Calendar-only model (John, 2026-11-05): the devotional calendar
         # names no saint for this date (state "gospel_only" — every Sunday,
@@ -2442,14 +2444,29 @@ def _render_entry_metadata(
         description = description.replace(
             "praying with  and the saint's approved saying", gospel_clause
         )
-    elif _saint_source == "roster" and " and the saint's approved saying" in description:
+    elif (
+        _saint_source == "roster"
+        and _roster_bracket != "m"
+        and " and the saint's approved saying" in description
+    ):
         # The saint is the roster entry's Principal, framed as the calendar
-        # frames it: a private devotion from the Roman Martyrology. (The
+        # frames it: a private devotion. The wording follows the roster
+        # title's source bracket (John, 2026-11-05): [P2] the Principal is
+        # kept in the traditional calendar of 1962; [P3] (and a legacy
+        # unbracketed roster) names the Roman Martyrology. An [m] roster
+        # day is a ferial Saturday — Our Lady is the Principal and the
+        # description falls through to her "approved saying" below. (The
         # old backup-attribution sentence is retired.)
-        description = description.replace(
-            " and the saint's approved saying",
-            ", named today in the Roman Martyrology (private devotion)",
-        )
+        if _roster_bracket == "P2":
+            description = description.replace(
+                " and the saint's approved saying",
+                ", kept today in the traditional calendar of 1962 (private devotion)",
+            )
+        else:
+            description = description.replace(
+                " and the saint's approved saying",
+                ", named today in the Roman Martyrology (private devotion)",
+            )
     elif _saint_source == "backup" and " and the saint's approved saying" in description:
         # Out-of-range fallback only (witness ladder): the description
         # names the source, as before.

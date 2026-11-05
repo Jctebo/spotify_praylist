@@ -143,6 +143,7 @@ def collect(target: dt.date, outdir: Path) -> dict:
         "witness_name": witness["witness_name"],
         "witness_source": witness["witness_source"],
         "witness_state": witness["witness_state"],
+        "roster_bracket": witness.get("roster_bracket", ""),
         "gospel_reason": witness.get("gospel_reason", ""),
         "martyrology_lead": witness["martyrology_lead"],
         "martyrology_text": witness["martyrology_text"],
@@ -238,8 +239,10 @@ def collect(target: dt.date, outdir: Path) -> dict:
                 "from John's devotional calendar, the only source. witness_source "
                 "'calendar' = the calendar's liturgical entries name the saint(s) — all of "
                 "them, never trimmed; 'roster' = the calendar's Roman Martyrology roster "
-                "entry's Principal for the day, a private devotion from the Roman Martyrology "
-                "as the calendar frames it; 'gospel_only' = the calendar names no saint "
+                "entry's Principal for the day, a private devotion as the calendar frames "
+                "it (context roster_bracket grades its source: 'P2' = the traditional "
+                "calendar of 1962, 'P3' = the Roman Martyrology, 'm' = a ferial Saturday "
+                "with Our Lady as Principal); 'gospel_only' = the calendar names no saint "
                 "(witness_state 'gospel_only'; EVERY Sunday is gospel_only, whatever any "
                 "source could name, and so are saintless non-roster days like solemnities, "
                 "Ash Wednesday, Holy Week, and the Easter octave). WORDING: when a saint is "
@@ -407,12 +410,20 @@ def collect(target: dt.date, outdir: Path) -> dict:
         )
 
     if witness["witness_source"] == "roster":
+        _bracket = witness.get("roster_bracket", "")
+        if _bracket == "P2":
+            _frame = "a private devotion from the traditional calendar of 1962"
+        elif _bracket == "m":
+            _frame = "a private devotion (the roster day is a ferial Saturday; Our Lady is the Principal by the Saturday rule)"
+        else:
+            _frame = "a private devotion from the Roman Martyrology"
         flags.append(
             "CALENDAR-ONLY SAINT (John, 2026-11-05): the devotional calendar's liturgical "
             f"entries name no saint for this date; the day's saint is the calendar's Roman "
             f"Martyrology roster entry's Principal: {witness['witness_name']} (context "
-            "witness_name / witness_source = 'roster'). Frame it as the calendar frames "
-            "it — a private devotion from the Roman Martyrology. WORDING: carry the saint "
+            "witness_name / witness_source = 'roster', roster_bracket = "
+            f"'{_bracket}'). Frame it as the calendar frames "
+            f"it — {_frame}. WORDING: carry the saint "
             "with the plain calendar form ('The Church celebrates ...'); do NOT use a "
             "'Today's saint is ...' sentence or the retired backup-attribution sentence. "
             "The reflection joins the day's Gospel (context gospel_citation / "
