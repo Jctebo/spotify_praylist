@@ -11,8 +11,10 @@ ElevenLabs is excluded by design — there is no fallback provider, ever.
 Assemble: ffmpeg concat of 48 kHz mono fragment WAVs (head/tail silence trim
 keeping 0.05 s, the Nov 6 method) with the episode's gap (350 ms default;
 Daily Reflection 15000 ms) between fragments, contract pauses carried as
-segment items, and the synthesized sacred bell (392/784/1176 Hz, 4.8 s) for
-novena bell items.
+segment items, and the synthesized church bell (jobs.publish.bell v3:
+inharmonic partial stack, per-partial exponential decays, strike
+transient; 4.8 s, RMS-matched to the retired 392/784/1176 Hz sine bell)
+for novena bell items.
 
 Brand: repo jobs.publish.audio_branding._mix_audio with the loaded branding
 config (welcome = the episode's first segment, rendered in the main voice;
@@ -142,21 +144,17 @@ def render_one(item, cache: Path):
 
 
 def ensure_bell(cache: Path) -> Path:
-    bell = cache / "bell.wav"
+    # Church bell synthesis v3 (jobs.publish.bell, shared with the repo
+    # publish pipeline): inharmonic partial stack with per-partial
+    # exponential decays + a strike transient, still exactly 4.8 s and
+    # RMS-matched to the old 392/784/1176 sine bell. New filename so a
+    # stale v2 bell.wav in the cache is never picked up.
+    from jobs.publish.bell import church_bell_ffmpeg_args
+
+    bell = cache / "bell-v3.wav"
     if bell.exists():
         return bell
-    cmd = [
-        "ffmpeg", "-y", "-v", "error",
-        "-f", "lavfi", "-i", "sine=frequency=392:duration=4.8:sample_rate=48000",
-        "-f", "lavfi", "-i", "sine=frequency=784:duration=4.8:sample_rate=48000",
-        "-f", "lavfi", "-i", "sine=frequency=1176:duration=4.8:sample_rate=48000",
-        "-filter_complex",
-        "[0:a]volume=0.46,afade=t=out:st=0.20:d=4.55[p0];"
-        "[1:a]volume=0.18,afade=t=out:st=0.14:d=4.62[p1];"
-        "[2:a]volume=0.08,afade=t=out:st=0.08:d=4.70[p2];"
-        "[p0][p1][p2]amix=inputs=3:normalize=0,alimiter=limit=0.88[a]",
-        "-map", "[a]", "-ar", "48000", "-ac", "1", str(bell),
-    ]
+    cmd = ["ffmpeg", *church_bell_ffmpeg_args(bell, 48000, ["-ar", "48000", "-ac", "1"])]
     run(cmd, check=True)
     return bell
 

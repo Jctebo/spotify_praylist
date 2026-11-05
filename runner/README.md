@@ -64,7 +64,9 @@ lives under `~/workspace` — never `/tmp` (512 MB tmpfs).
   (override per run with `--cache-dir`). Key:
   `sha1("<full voice>|<normalized text>")`, file `<key>.mp3`; TTS text is
   normalized first with the repo's normalize-prayer-tts skill code. The
-  synthesized sacred bell (`bell.wav`, 392/784/1176 Hz, 4.8 s) lives there too.
+  synthesized church bell (`bell-v3.wav`, jobs.publish.bell v3 — inharmonic
+  partial stack with per-partial exponential decays and a strike transient,
+  4.8 s, RMS-matched to the retired 392/784/1176 Hz sine bell) lives there too.
 - Per-run scratch: `RUNDIR/work/`, `RUNDIR/branding-cache/`.
 
 ## Failure rules

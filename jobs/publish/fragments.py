@@ -10,6 +10,8 @@ from typing import Any, Dict, List, Optional, Sequence
 
 import imageio_ffmpeg
 
+from jobs.publish.bell import church_bell_ffmpeg_args
+
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_PUBLISH_AUDIO_CACHE_DIR = ROOT / ".cache" / "publish_audio"
 DEFAULT_FRAGMENT_SILENCE_MS = 350
@@ -243,7 +245,7 @@ def ensure_silence_fragment(cache_root: Path, audio_format: str, silence_ms: int
     return silence_path
 
 
-SACRED_BELL_SYNTH_VERSION = 2
+SACRED_BELL_SYNTH_VERSION = 3
 
 
 def _sacred_bell_cache_path(cache_root: Path, audio_format: str) -> Path:
@@ -266,33 +268,11 @@ def ensure_sacred_bell_fragment(cache_root: Path, audio_format: str) -> Path:
         return cue_path
     cue_path.parent.mkdir(parents=True, exist_ok=True)
     _run_ffmpeg(
-        [
-            "-y",
-            "-f",
-            "lavfi",
-            "-i",
-            "sine=frequency=392:sample_rate=44100:duration=4.8",
-            "-f",
-            "lavfi",
-            "-i",
-            "sine=frequency=784:sample_rate=44100:duration=4.8",
-            "-f",
-            "lavfi",
-            "-i",
-            "sine=frequency=1176:sample_rate=44100:duration=4.8",
-            "-filter_complex",
-            (
-                "[0:a]volume=0.46,afade=t=out:st=0.20:d=4.55[a0];"
-                "[1:a]volume=0.18,afade=t=out:st=0.14:d=4.62[a1];"
-                "[2:a]volume=0.08,afade=t=out:st=0.08:d=4.70[a2];"
-                "[a0][a1][a2]amix=inputs=3:normalize=0,alimiter=limit=0.88[bell]"
-            ),
-            "-map",
-            "[bell]",
-            "-vn",
-            *_audio_output_args(target_format),
-            str(cue_path),
-        ]
+        church_bell_ffmpeg_args(
+            cue_path,
+            44100,
+            _audio_output_args(target_format),
+        )
     )
     return cue_path
 
