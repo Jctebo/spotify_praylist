@@ -1,0 +1,24 @@
+# Ora Pro Nobis — the prayer app (v305).
+# A package inside the Ora Pro Nobis monorepo (the spotify_praylist fork):
+# the app package lives at app/ beside jobs/ and runner/, with its OWN
+# Worker + D1 + R2 — the podcast pipeline/runner is untouched by it.
+# Ship-pass steps (NOT done by Implement):
+#   wrangler d1 create ora-pro-nobis-app   -> paste the real id below
+#   wrangler r2 bucket create ora-pro-nobis-audio
+#   wrangler secret put AGENT_TOKEN        -> this app's OWN door token
+#   Cloudflare Access app for this Worker's domain: Google sign-in,
+#   allow ONLY john@thibeaux.com + john.thibeaux@gmail.com (John-only;
+#   there is no Pam allowlist entry, no Pam actor, no actor concept).
+name = "ora-pro-nobis-app"
+main = "worker/src/index.ts"
+compatibility_date = "2026-11-07"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "ora-pro-nobis-app"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "AUDIO"
+bucket_name = "ora-pro-nobis-audio"
