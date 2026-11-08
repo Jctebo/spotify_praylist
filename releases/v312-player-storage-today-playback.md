@@ -100,3 +100,152 @@ Background playback and media-session behavior cannot be proven by a harness: a 
 
 - **Recommendation: Through Review (level 4)** — Scope · Plan · Implement · Review run autonomously and the chain stops before Ship.
 - **Reason:** the settled decision is complete and the design space is narrow, so Plan and Implement need no further input; but this release changes the app's storage model and retires a read path, and its pinned criterion requires John's own phone at Review — Ship should be a separate word from John after he has run the lock-screen check and seen the Review evidence. Plain "approve" sets this level.
+
+### Amendment 1 — 2026-11-08 (after the Scope pass, at approval — §1's passed text above stands unrewritten)
+
+- **Font readability pass (John, Ora Pro Nobis thread, 2026-11-08 17:06 CT, verbatim: "The app font is too small"):** the LIVE v305 app's UI text is too small — this is the app itself, not any document. Verified in the app's own CSS (`app/worker/src/ui.ts`, `APP_CSS`): bottom tab labels 11.5px · tagline 10.5px · meta text 12.5px · secondary/sub text 12–13.5px · card titles 16px · base 16px. The small floor is the problem, not the titles.
+- **John's approval (Ora Pro Nobis thread, 2026-11-08 17:07 CT, verbatim in substance: "Go ahead and approve the changes, assuming you fix the font"):** v312 is APPROVED at the recommended level — **Through Review** — with the font readability pass **folded into v312 as a condition of the approval**, not a separate release. The main seat set the registry run_directive to "Through Review" by direct D1 update and read it back (releases row 570).
+- **Fix shape (settled):** a CSS-only readability pass in `app/worker/src/ui.ts` raising the floor across the app — nothing under ~13px · tab labels ~13px · meta ~14px · body/card text ~17px · titles up one step where the layout holds. No layout or behavior change. The exact per-selector map is pinned in §2, element E7.
+- **Acceptance:** John's eyes on his phone at Review — he reversed an over-enlargement on a different app in October, so size is judged on device, not by a number. The Review phone check covers font size **and** background play together (one verdict, §1 criterion 6's mechanism extended by one item in §2).
+
+## 2 · Plan
+
+- **Agent:** Plan Agent (v312) — Plan claim record 1061, claimed 2026-11-08 23:10 UTC (17:10 CT)
+- **Level in force:** Through Review (John's approval, Amendment 1) — Plan · Implement · Review run autonomously; the chain STOPS before Ship.
+- **Inputs read:** §1 in full · Amendment 1 · WF-2-PLAN skill (Ora Pro Nobis Agent Skills Open Standard) · `app/worker/src/index.ts` (feedEpisodes, playerDayPayload, the prayer-audio agent door at lines 413–432, the segment GET route) · `app/worker/src/client.ts` (the shell player: one `audioEl`, `playQueue`, `setTab('intentions')` at line 351) · `app/worker/src/ui.ts` (`APP_CSS` font inventory, service-worker `CACHE = "ora-pro-nobis-v305-1"`) · `app/migrations/0001–0006` (next migration number is **0007**) · the four most recent production run records (`~/workspace/ora-runner-runs/2026-11-07 … 2026-11-10/report.json`, measured for E2/E8 sizing) · `app/tests/harness-v305.mjs` (the harness mold).
+- **Plan writes NO production code.** Everything below is a build specification for Implement; the only files this section's pass touches are this document and its publication.
+
+### Build elements
+
+**E1 — Episode index storage: migration 0007 (app D1).**
+- New file `app/migrations/0007_player_episodes.sql` (0006 is the last standing migration; 0007 is next and is this release's only migration).
+- Table `player_episodes`: `date TEXT NOT NULL` · `episode_id TEXT NOT NULL` (the run manifest's own id, e.g. `daily-rosary`) · `title TEXT NOT NULL` (the full manifest title) · `block TEXT NOT NULL` — one of the six block names, or the explicit unblocked marker **`'unblocked'`** (§1's explicit-marker rule) · `sort INTEGER NOT NULL` (position within the whole day, assigned at push time; block order then sort renders the day) · `duration_s REAL NOT NULL DEFAULT 0` · `r2_key TEXT NOT NULL DEFAULT ''` (empty only on a missing row) · `size_bytes INTEGER NOT NULL DEFAULT 0` · `audio_state TEXT NOT NULL` — `'present'` or `'missing'` · `pushed_at TEXT NOT NULL`. PRIMARY KEY `(date, episode_id)`; INDEX on `(date, sort)`.
+- Table `player_day` (the stored-day singleton): `id INTEGER PRIMARY KEY CHECK (id = 1)` · `date TEXT NOT NULL` · `episode_count INTEGER NOT NULL` · `pushed_at TEXT NOT NULL`. The commit step (E2) writes this row last inside its D1 batch — it is the one explicit answer to "which day does the app hold," and the read path (E3) keys off it, never off a MAX() guess.
+- One data retirement inside the same migration: `DELETE FROM player_sources WHERE source_kind = 'rss';` — the single rss mapping row retires with the read path (§1 item 5). The six playlist rows stand untouched (presentation "Open in Spotify" data).
+- No other table changes. `prayer_audio` stands exactly as migration 0002 built it.
+
+**E2 — The door push surface (app Worker, agent door — extension of the proven prayer-audio pattern).**
+Three agent routes, Bearer AGENT_TOKEN, mirroring `POST /api/agent/prayer/audio`'s header shape (`app/worker/src/index.ts` lines 413–432 is the template):
+1. `POST /api/agent/player/episodes/audio` — headers `X-Episode-Date` (YYYY-MM-DD) + `X-Episode-Id`; raw MP3 body; writes R2 key **`episodes/<date>/<episode_id>.mp3`** (content-type `audio/mpeg`) and returns `{ok, date, episodeId, size}`. **It writes no D1 row** — staging only, so a push that fails partway leaves the prior stored day fully intact (§1 item 3's failure rule).
+2. `POST /api/agent/player/day` — the **replace-day commit**. JSON body `{date, episodes: [{episode_id, title, block, sort, duration_s, size_bytes, audio_state}]}` (block already resolved by the pusher, E8). The handler, in order: (i) for every `audio_state='present'` entry, verify the staged R2 object exists and its size equals the manifest's `size_bytes` — any mismatch aborts the commit with a named 409 and writes nothing; (ii) one D1 batch: `DELETE FROM player_episodes WHERE date <> ?` · upsert the day's rows · `DELETE FROM prayer_audio WHERE date <> ?` · upsert the `player_day` singleton; (iii) R2 sweep after the batch: delete every object under `episodes/` whose key date is not D, and every `segments/<other-date>/` object (the segment keys of the deleted `prayer_audio` rows); (iv) read back and return `{ok, storedDate, rowCount, perTrack: [{episode_id, audio: 'verified'|'missing'}], segmentsHeld: [blocks for D]}`. Idempotent: re-committing the same date with the same manifest changes nothing (§1's v299 shape).
+3. `GET /api/agent/player/stored-day` — the read-back the nightly report consumes: `{storedDate, episodeCount, tracksPresent, tracksMissing, segmentBlocks}` from `player_day` + `player_episodes` + `prayer_audio`.
+- **Missing rows:** a manifest entry the run could not build arrives with `audio_state='missing'`, `r2_key=''`, `size_bytes=0`; the commit accepts it without an R2 check. That is the only door through which a counted-but-unplayable track enters the store (§1 item 7's missing-track rule, criterion 5).
+- **E2a — the size spike, Implement's FIRST step (the stop condition's test):** before any other Implement work, push one synthetic MP3 of ~20 MB through route 1 against the scratch instance and read it back (size + a ranged GET). The measured need is real: the Daily Rosary runs 19,738,317 B (2026-11-09) to 19,926,237 B (2026-11-10). If a ~20 MB body cannot pass the door/R2 pattern, **STOP — return to Scope** (§1's stop condition, restated in full below); do not substitute a design that references the podcast hosts.
+
+**E3 — Player read path rewrite (app Worker).**
+- `playerDayPayload` is rebuilt to read **only** `player_day`, `player_episodes`, `prayer_audio`, and the `player_sources` playlist rows. `feedEpisodes`, `FEED_DEFAULT`, the `feedCache`, the regex parse, and the prefix/date matching are **deleted**, not bypassed — a grep for them in the player path returns zero (harness-checked, E9).
+- The payload keeps its standing shape (`{ok, date, dateLabel, blocks, episodes, audioMissing}`) with these pins: `date` is always the stored day from `player_day` (a `?date=` for any other day returns the stored day, named by its own `date`/`dateLabel` — §1 item 5); blocks stand in the fixed six-block order, each block's tracks are its `player_episodes` rows in `sort` order shaped `{episodeId, title, kind: 'episode', available, streamUrl, durationS, sizeBytes}` where `streamUrl` is **`/api/player/audio/<date>/<episode_id>`** for present rows and `null` for missing rows; the Intentions card is built from `prayer_audio` for the stored date and spliced exactly where it stands today (index 1 when the block has tracks, else 0), segment-file route only, `spotifyUrl: null` always; rows with `block='unblocked'` render in the `episodes` group ("From today's podcast") after the blocks, in `sort` order; each block additionally carries `trackCount` = its episode rows + the Intentions card, **including missing rows** — the count is the day's count, never a filtered count.
+- New session route `GET /api/player/audio/<date>/<episode_id>`: row lookup → 404 with a named error when the row or the object is absent → otherwise stream the R2 object, passing the request's `Range` header through to the R2 get and returning `206` + `Content-Range` on a ranged response (lock-screen seek, E6, depends on ranged reads working; the harness proves it, E9).
+- A store with no `player_day` row (pre-first-push) returns the named empty shape: blocks in order, every block's Intentions card not-available, `episodes: []`, and a top-level `storedDay: null` — never a blank payload, never an exception (§1's whole-day-not-pushed shape).
+
+**E4 — Today-centered Prayers tab + opening tab (app client).**
+- `app/worker/src/client.ts` line 351: `setTab('intentions')` → **`setTab('prayers')`** — the app opens on Prayers. The four tabs and their order in `SHELL_HTML` do not change (Prayers already stands first).
+- The Prayers render (`renderPrayers`) loses the `.daynav` block entirely (prev / next / date picker out — the CSS class may stand unused or go with E7's pass; no navigation code survives). In its place, one header row: the stored day's `dateLabel` as the screen sub-line, and the **Play All (whole day)** control (E5) at the top. The client fetches `/api/player/day` with **no date parameter**.
+- Each block header gains its count as **"N tracks"** (from the payload's `trackCount`, missing included).
+- A missing track's card renders in place, in order: title, duration, and the plain line **"Not available in the app yet"** (the Intentions card's standing wording), with no play control. A stored day that has not been pushed renders the E3 named empty shape the same way — blocks in order, surfaces named not-available, no blank screen.
+
+**E5 — Playback engine: one queue, Play All ×2, autoplay-next, resume (app client).**
+- The queue becomes a list of track descriptors `{episodeId, title, url, available}` built **from payload order**: whole-day = block order, then `sort` inside the block, then the unblocked group; per-block = that block's slice. The Intentions cards stand in the queue at their payload position, as today. This one builder serves both Play All shapes (§1 item 7).
+- Controls: **Play All** at the top of the Prayers tab (whole-day queue) · the per-block queue button kept on each block header (per-block queue). Tapping the active Play All again pauses (the standing toggle shape).
+- Advance: the `ended` handler moves to the next **available** descriptor; a missing descriptor is passed over only at the moment the queue reaches it, and its card is flashed/marked as skipped-named (the card itself, with its not-available line, is what shows why — §1's wording). Autoplay-next holds across block boundaries in the whole-day queue. At queue end, playback stops and the playing marks clear.
+- State lives in the shell scope where it stands today (`audioEl`, queue state in `client.ts` module scope) — **no render function resets queue or audio state**, so switching tabs never stops or resets playback (§1's background rule, client half).
+- The currently playing track is marked on its card (the standing `markPlaying` shape, keyed by episodeId).
+- **Resume:** `localStorage` key `opn-resume-v312` = `{date, episodeId, positionS, savedAt}`; saved on `pause` and on a ~5 s `timeupdate` throttle. On app load, if `date` equals the stored day, the matching card shows a **"Resume"** affordance and, when its track is first loaded, playback stands paused at `positionS` (set after `loadedmetadata`); the app never autoplays sound on open. A stored position whose date differs from the stored day is discarded on sight. In-queue pause/resume keeps the native position, as today.
+
+**E6 — Media Session + background playback (app client).**
+- Guarded by `'mediaSession' in navigator`. On every track start: `navigator.mediaSession.metadata = new MediaMetadata({title: <track title>, artist: 'Ora Pro Nobis', album: 'Ora Pro Nobis — <dateLabel>', artwork: [{src: '/logo.png', sizes: '512x512', type: 'image/png'}]})`.
+- Action handlers, set once at boot: `play` → `audioEl.play()` · `pause` → `audioEl.pause()` · `previoustrack` / `nexttrack` → move within the active queue (same available-skip rule as E5) · `seekto` → `audioEl.currentTime = seekTime` (fastSeek when offered) · `seekforward` / `seekbackward` → ±10 s clamped. Handlers operate on the queue wherever the view stands — they never call `setTab` or a render.
+- `navigator.mediaSession.setPositionState` on `loadedmetadata` / `timeupdate` / `seeked` (duration, position, playbackRate), clearing the state at queue end.
+- Background playback is the native element + E5's shell-scope state; no new mechanism is claimed. The service-worker cache name bumps (E7) so the new client reaches John's phone; the SW's fetch behavior does not change, and audio routes are never SW-cached (the standing network path stands).
+
+**E7 — Font readability pass (CSS only, `app/worker/src/ui.ts` `APP_CSS`) — John's approval condition (Amendment 1).**
+Exact per-selector map (current → pinned); **no other CSS property changes, no HTML/layout/behavior change**:
+- `body` — add `font-size:17px` (the base; today unset ≈16px)
+- `.tagline` 10.5px → **13px** · `.tab` 11.5px → **13px** (`.tab .tabicon` 17px → 19px)
+- `.stat span` 11px → **13px** · `.pri` 11px → **13px** · `label.f` 12px → **13px**
+- `.meta` 12.5px → **14px** · `button.btn.small` 12.5px → **14px** · `.spot` 12px → **14px** · `.count` 12px → **14px** · `.about` 12px → **14px** (line-height 1.5 → 1.6)
+- `.sub` 13.5px → **15px** · `.modes button` 13.5px → **15px** · `.chipbtn` 13px → **14px** · `.chip` 13px → **14px** · `.notavail` 13px → **14px**
+- `.card h3` 16px → **17px** · `button.btn` 14px → **15px** · `.err` 14px → **15px** · `.prompt .ptext` 15.5px → **17px** · `.entry` 14.5px → **16px** · `.daynav .dlabel` 15px → **16px** · `input/select/textarea` 15px → **16px**
+- `.blockhead h2` 17px → **18px** · `h1.screen` 21px → **22px** · `.wordmark` 19px stands (brand, already above the floor)
+- Net rule, harness-checked: **no `font-size` below 13px remains anywhere in the served `/styles.css`**, and the floor values above read back from the served CSS, not only from source.
+- Same edit, one non-font line: service-worker `CACHE` `"ora-pro-nobis-v305-1"` → **`"ora-pro-nobis-v312-1"`** (so John's phone takes the new CSS/client; the v304 lesson — a stale cache hides a shipped fix).
+
+**E8 — Nightly-run push step (production run job sheet + a repo helper).**
+- New helper in the fork repo, `jobs/push_episodes_to_app.py` (the run's own tree, Python, the `prayer_door.py` pattern — Bearer token from the standing store, values never printed): inputs = the run's `report.json` + the built MP3 files on disk. Steps: resolve each episode's block with §1's push-time rule (mapped `player_sources` titles first, then the day's prayer-item names from the app payload; unmatched → `'unblocked'`; `sort` = manifest order) → POST each built episode's audio to E2 route 1 → build the manifest (built episodes `audio_state='present'` with measured `size_bytes`; a manifest episode with no built file `audio_state='missing'`) → POST E2 route 2 (commit) → GET E2 route 3 and assert `storedDate == target date` and counts match the manifest → print the report field (below). A failed assert exits non-zero, so the run's step fails loudly and the reconcile tail (v299) re-runs the whole push idempotently.
+- Job-sheet step, drafted here in full for the Ship pass to insert (Implement does **not** edit the live job sheet; the v306 precedent — the job-sheet edit is a Ship step): **"Step 4B — APP PUSH (v312): after step 4's publish verification completes and BEFORE the ledger flip, run `jobs/push_episodes_to_app.py` for the target date. The push is part of the publish tail: a timeout or failure is completed by `--reconcile` exactly like the rest of the tail, ledger flip still last. The closing report gains the mandatory field **'App push (v312)'**: date pushed · episode count (present / missing) · per-track audio verified · the stored date after the push, read back from the app."**
+- **Ordering vs the Intentions segment push (pinned, §1's open item):** the two pushes are independent by construction. The replace-day commit deletes **only** rows and objects whose date is **not** D — `player_episodes` (date <> D), episode R2 keys (prefix date ≠ D), `prayer_audio` rows (date <> D) and their segment keys. It therefore **cannot delete a date-D segment, whether that segment arrives before or after the episode commit**; the segment push remains the standing idempotent upsert keyed `(date, block)` and simply fills D's Intentions cards whenever it lands. The commit never waits for segments. The guard is the read-back: E2 route 2 returns `segmentsHeld` for D, E2 route 3 re-reads it, and the devotional job's own standing `audioMissing` naming continues to report any block whose segment has not landed — a gap is named in a report, never silently absorbed.
+
+**E9 — Harness: `app/tests/harness-v312.mjs` (the v305 mold).**
+Scratch wrangler instance inside the worktree (persist dir `.wrangler-test-v312`), the standing HARD GUARD (refuse if the app path resolves inside the shared fork checkout), synthetic fixture only, ports 8921 (app) + 8922 (a feed address that is started, counted, and then made unreachable — see check 3), tallies read from the COMPLETE log. Fixture day D1 (`2027-03-01`): 8 manifest episodes — 6 across the blocks, 1 `unblocked`, 1 `missing` — plus the 6 Intentions segments pushed through the standing segment route; fixture day D2 (`2027-03-02`): 3 episodes. Checks:
+1. Door push end-to-end: audio POSTs accepted (sizes read back), commit returns `storedDate = D1`, rowCount 8, per-track verified/missing exactly as the manifest.
+2. **Replace-day leaves exactly one date:** after the D2 commit — `player_episodes` holds only D2 rows · the R2 listing under `episodes/` holds only D2 keys · `prayer_audio` holds only D2 rows and `segments/` only D2 keys · a staged-but-uncommitted D3 audio object does not disturb the stored day and is swept by the next commit.
+3. **Feed unreachable, full day served:** the app boots with `FEED_URL` pointing at the dead 8922 address; `GET /api/player/day` returns the full D2 payload; a request counter on the feed server reads **zero** hits across the whole run; static grep of the built Worker source finds no `FEED_DEFAULT`, `feedEpisodes`, or `feedCache`.
+4. **Payload = manifest, track-for-track:** titles, blocks (incl. the `unblocked` group), `sort` order, durations, and counts equal the pushed manifest exactly; each block's `trackCount` includes its missing row and its Intentions card.
+5. **Missing track:** the missing episode renders named, in its block and order, with "Not available in the app yet", `available: false`, `streamUrl: null` — and stands in the count.
+6. **Queue order = day order:** in the real-browser boot (the v305 harness's chromium shape), the whole-day queue built by Play All equals the payload order; the missing track is skipped at advance and playback lands on the next available track; per-block queue is the block slice; autoplay-next crosses a block boundary.
+7. **Opening tab + today shape:** a fresh boot lands on the Prayers tab; the served Prayers HTML carries no `.daynav` element; the Play All control stands at the top.
+8. **Media Session (agent-side evidence):** after a user-gesture play in the browser boot, `navigator.mediaSession.metadata` carries the track title + "Ora Pro Nobis"; the six handlers (`play`, `pause`, `previoustrack`, `nexttrack`, `seekto`, `seekforward`/`seekbackward`) are registered; a `seekto` moves `currentTime`; a ranged GET on `/api/player/audio/…` returns `206` + `Content-Range`.
+9. **Resume:** play, seek to a position, pause, reload — the same stored day offers the track paused at the remembered position (within 2 s) and does not autoplay; after the D2 push, the D1 position is not offered.
+10. **Font floor:** the served `/styles.css` contains no `font-size` below 13px, and `.tab` / `.tagline` / `.meta` / body read back at E7's pinned values.
+11. **Parse + boot pin (standing rule):** the served `/app.js` parses and executes in the browser boot with zero page errors; `/styles.css` and `/sw.js` serve and parse; the SW cache name reads `ora-pro-nobis-v312-1`.
+12. **Nothing else moves:** the Intentions card carries `spotifyUrl: null` in every block; the four tab ids/order are unchanged; Access refusals behave as in harness-v305 (locked instance); `player_sources` playlist rows stand, the rss row is gone.
+- Regressions: harness-v305 re-run on the branch and read from its complete log — its feed-fixture expectations are the one expected casualty of E3: the Implement section names every v305 check that the RSS removal retires or rewrites, with the replacement v312 check beside it; any other v305 regression is a defect, not a casualty.
+
+### Sizing — measured (the Scope assumption, confirmed)
+
+Production run records (`report.json`, episodes dict, bytes summed first-hand this pass):
+
+| Day | Episodes | Total audio | Duration | Largest file |
+|---|---|---|---|---|
+| 2026-11-07 | 17 | 58,668,165 B (55.95 MiB) | 4,235.5 s | Daily Rosary 19,819,917 B |
+| 2026-11-08 | 17 | 61,123,077 B (58.29 MiB) | 4,399.9 s | Daily Rosary 19,677,117 B |
+| 2026-11-09 | 18 | **62,174,490 B (59.29 MiB)** | 4,474.8 s | Daily Rosary 19,738,317 B |
+| 2026-11-10 | 16 | 56,943,432 B (54.31 MiB) | 4,093.5 s | Daily Rosary 19,926,237 B |
+
+- **Worst recent day: 2026-11-09 — 18 episodes, 62,174,490 B (59.29 MiB).** Plus the day's six Intentions segments (small beside the episodes). Under the one-day rule the app bucket therefore holds **at most ~65 MiB of episode audio at any moment** — the copy-into-the-app reading (§1's assumption) is confirmed acceptable; storage is a non-issue precisely because retention is one day.
+- **The binding size fact is per-file, not per-day:** the Daily Rosary is ~19.9 MB every day. That is what E2a's spike must prove through the door pattern, and it is why episodes push **one file per request** (the segment pattern), never as one day-sized body (~60 MB).
+
+### Sequence for Implement (order matters)
+
+1. **E2a spike** (20 MB door push + read-back on scratch). Failure = stop, return to Scope — nothing else starts.
+2. **E1** migration 0007 on scratch · **E2** door routes · **E3** read path — the storage spine, harness checks 1–5.
+3. **E8 helper** against the scratch door (fixture manifest in, report field out) — proves the push before the client work leans on the payload.
+4. **E4 + E5 + E6** client (tab shape, queue, Media Session, resume) · **E7** font + cache bump — harness checks 6–11.
+5. **E9** full harness + harness-v305 regression read; Implement section (§3) written with tallies read from COMPLETE logs.
+
+### Review placement — BEFORE the trunk landing (pinned)
+
+This release changes the app's storage model and retires its read path (data / shared-core), so under the standing rule **Review runs on the branch candidate, before any trunk landing**. The Review agent re-runs harness-v312 + the v305 regression first-hand, verifies E2a's spike evidence, and checks §1's criteria 1–5, 7, 8 on agent evidence. **Criterion 6 (background play + media controls) and the font condition pass only on John's phone:** the main seat puts the branch candidate in front of John (the v305 rehearsal shape — a test deployment of the branch build behind the app's own Access) with the check list below; John's pass/fail per item is recorded as a verdict on the v312 row (the app's verdict route, **actor John**) and quoted verbatim in the Review section (§4). **Review does not pass on agent evidence alone for these items.**
+
+John's Review phone check (six items — §1's five, plus the font):
+1. Start Play All, lock the phone — audio continues.
+2. Lock-screen pause and resume both work.
+3. Lock-screen next and previous change the track and the shown title.
+4. Lock-screen seek moves the position.
+5. Background the app for another app — audio continues.
+6. **Font:** the app's text is readable at the new floor — tabs, card details, and body text — by his eyes, on the Prayers tab and one other tab.
+
+If the installed-app surface behaves differently from the browser surface on his phone, the surface John actually uses is the one that must pass (§1). A fail on any item returns the release to Implement with the named item; Ship is a separate word from John after Review (Through Review stops the chain there in any case).
+
+### Implement expectations — the shape (times are set by the Coordinator at seating, per the expectations rule)
+
+Named outputs, each with a clock time written in the seating brief, the Ora thread, and the coordinator record; a miss triggers replacement at the miss; a blocker named before its deadline is information, not a miss:
+- **Spike result** (E2a: the 20 MB push + read-back, logged) — first output, early in the span.
+- **Storage-spine commit** (E1 + E2 + E3 on `release/v312`, with harness checks 1–5 green in a named log).
+- **Client commit** (E4 + E5 + E6 + E7 on `release/v312`).
+- **Push-helper commit** (E8 helper + the drafted step 4B text standing in the release folder).
+- **Harness log** (harness-v312 complete-log tally + harness-v305 regression tally, both read whole).
+- **Implement pass** (§3 written, published to the app documents store, phase passed on record).
+Production stays untouched through Implement: no production D1 migration, no production deploy, no live job-sheet edit (step 4B inserts at Ship, per E8).
+
+### Stop condition (from §1, carried verbatim in effect)
+
+If the episode audio cannot be copied into the app bucket within the door pattern (size or route limits — E2a is where this surfaces), **stop and return to Scope**. A player that references the podcast hosts again is a different design than the one John approved, not a Plan-level substitution. The same return applies if the replace-day commit cannot be made atomic-enough to keep a failed push from disturbing the stored day: staging + verify-then-commit (E2) is the approved shape, and a weaker shape is not Implement's to invent.
+
+### Concerns and Information Needs
+
+- **Facts:** migrations stand at 0006, so 0007 is free and unambiguous · the segment door route (index.ts 413–432) is the exact template for E2 and already carries production pushes nightly · measured worst day 59.29 MiB / largest file ~19.9 MB (table above) · zero Media Session code exists in the app today (§1) · the SW cache name is `ora-pro-nobis-v305-1` and the client/boot pin failures of the v289/v293 era trace to stale caches — E7's bump is load-bearing, not cosmetic · `playerDayPayload`'s Intentions-card splice position (index 1 or 0) and the payload's field names are pinned in E3 so the client diff stays small · the segment push and the episode push run in two different nightly jobs (§1), and E8's date-scoped deletion is what makes their relative order harmless.
+- **Assumptions:** the run's `report.json` episodes dict (episode_id → {title, file, duration_s, bytes, status}) is the manifest source, as measured · a built episode's file stands on disk in the run directory at publish time (§1 finding 4) · `/logo.png` serves at 512×512-suitable size for Media Session artwork (Implement verifies the actual pixel size; a smaller true size is declared honestly in the artwork entry, not upscaled) · headless Chromium exposes `navigator.mediaSession`, so E9 check 8 can assert registration — if it does not, that check degrades to a static handler-registration grep **plus** John's phone check, and the Review section must say which evidence stood.
+- **Uncertainties:** whether John's Z Fold 8 honors `seekto` / position state from the installed-app surface — unknowable from here, and exactly what Review item 4 exists to learn · whether the phone's media stack throttles a backgrounded PWA's audio over a full Rosary (~23 min) — Review item 5 samples it, but only a real day's use proves it fully; a post-Ship watch note belongs in the Ship section, not as a Review blocker beyond John's verdict · R2 list/delete sweep cost per commit is trivial at one-day scale (≤ ~24 objects).
+- **Decision impact:** none open for John inside this Plan — every §1 open item is pinned above at Plan level (migration 0007 + schema · R2 key `episodes/<date>/<episode_id>.mp3` · segment ordering by date-scoped deletion + read-back · worst day 59.29 MiB · opening tab = Prayers · the 12-check harness). The one judgment reserved to John is at Review: the six-item phone check, as a verdict.
+- **First source to check:** `app/worker/src/index.ts` lines 413–432 (the door template) and lines 243–330 (the read path being replaced) — every E2/E3 claim traces to them; sizing traces to the four `report.json` records named above.
