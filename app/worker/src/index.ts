@@ -22,8 +22,6 @@ export interface Env {
   // deterministic per (date, item) so the gate can assert the
   // weighted distribution exactly (the DevOps LOCAL_DEV precedent).
   LOCAL_DEV?: string;
-  // The frozen podcast RSS feed; overridable only by the harness.
-  FEED_URL?: string;
 }
 
 import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
@@ -31,7 +29,6 @@ import { APP_JS } from "./client";
 import { LOGO_PNG_B64 } from "./logo";
 
 const JOHN_EMAILS = new Set(["john@thibeaux.com", "john.thibeaux@gmail.com"]);
-const FEED_DEFAULT = "https://jctebo.github.io/spotify_praylist/podcast.xml";
 const SUITE_AUDIO_BASE = "https://devotional-suite.john-thibeaux.workers.dev/audio";
 
 function json(body: unknown, status = 200): Response {
@@ -238,72 +235,53 @@ async function prayerDayPayload(env: Env, date: string) {
 }
 
 // ---- Player -------------------------------------------------------------
-interface FeedEpisode { title: string; prefix: string; date: string; url: string; }
-let feedCache: { at: number; items: FeedEpisode[] } | null = null;
-async function feedEpisodes(env: Env): Promise<FeedEpisode[]> {
-  if (feedCache && Date.now() - feedCache.at < 300000) return feedCache.items;
-  const items: FeedEpisode[] = [];
-  try {
-    const res = await fetch(env.FEED_URL || FEED_DEFAULT);
-    if (res.ok) {
-      const xml = await res.text();
-      const itemRe = /<item>([\s\S]*?)<\/item>/g;
-      let m: RegExpExecArray | null;
-      while ((m = itemRe.exec(xml)) !== null) {
-        const body = m[1];
-        const titleM = /<title>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/title>/.exec(body);
-        const encM = /<enclosure[^>]*url="([^"]+)"/.exec(body);
-        const dateM = /<pubDate>([^<]+)<\/pubDate>/.exec(body);
-        if (!titleM || !encM || !dateM) continue;
-        const title = titleM[1].trim();
-        const prefix = title.replace(/ - [A-Z][a-z]+ \d{1,2}, \d{4}$/, "");
-        items.push({ title, prefix, date: chicagoDateOf(new Date(dateM[1])), url: encM[1] });
-      }
-    }
-  } catch { /* the feed being unreachable leaves episode tracks absent; segment + playlist routes stand */ }
-  feedCache = { at: Date.now(), items };
-  return items;
+// v312: the player reads ONLY the app's own store — player_day (the
+// stored-day singleton), player_episodes, prayer_audio, and the
+// player_sources playlist rows (presentation "Open in Spotify" data).
+// The RSS read path (fetch, regex parse, prefix matching, cache) is
+// deleted, not bypassed: what the nightly run published is what the
+// player shows, and a day the run did not publish reads as a named
+// missing day.
+interface PlayerEpisodeRow {
+  date: string; episode_id: string; title: string; block: string; sort: number;
+  duration_s: number; r2_key: string; size_bytes: number; audio_state: string; pushed_at: string;
 }
-
-async function playerDayPayload(env: Env, date: string) {
-  const items = (await prayerGetItems(env)).filter((i) => i.enabled);
+function episodeTrackShape(row: PlayerEpisodeRow) {
+  const present = row.audio_state === "present";
+  return {
+    episodeId: row.episode_id, title: row.title, kind: "episode",
+    available: present,
+    streamUrl: present ? `/api/player/audio/${row.date}/${encodeURIComponent(row.episode_id)}` : null,
+    durationS: row.duration_s, sizeBytes: row.size_bytes,
+  };
+}
+async function playerDayPayload(env: Env) {
   const labelRows = await env.DB.prepare("SELECT block, label FROM prayer_block_labels").all<{ block: string; label: string }>();
   const labels = new Map((labelRows.results ?? []).map((r) => [r.block, r.label]));
   const srcRows = await env.DB.prepare("SELECT * FROM player_sources ORDER BY sort, id").all<{
     id: number; block: string; title: string; source_kind: string; rss_url: string; spotify_url: string; sort: number;
   }>();
   const sources = srcRows.results ?? [];
-  const episodes = (await feedEpisodes(env)).filter((e) => e.date === date);
-  const byPrefix = new Map<string, FeedEpisode>();
-  for (const e of episodes) if (!byPrefix.has(e.prefix)) byPrefix.set(e.prefix, e);
-  const usedPrefixes = new Set<string>();
-  const audio = await prayerAudioMap(env, date);
+  const dayRow = await env.DB.prepare("SELECT * FROM player_day WHERE id=1").first<{ date: string; episode_count: number; pushed_at: string }>();
 
+  const mkBlock = (block: string, tracks: unknown[], trackCount: number) => {
+    const route = sources.find((x) => x.block === block && x.source_kind === "playlist");
+    return { block, label: labels.get(block) ?? block, caption: BLOCK_CAPTION[block], spotifyUrl: route?.spotify_url || PRAYLIST_URL[block], tracks, trackCount };
+  };
+  if (!dayRow) {
+    // Named empty shape (Scope §1: a whole day not yet pushed) — blocks
+    // in order, every Intentions card not-available, never blank.
+    const blocks = PRAYER_BLOCKS.map((block) => mkBlock(block, [{
+      title: "Intentions", kind: "segment", intentionsCard: true, available: false, streamUrl: null, spotifyUrl: null,
+    }], 1));
+    return { ok: true, date: null, dateLabel: "", storedDay: null, episodes: [], blocks, audioMissing: [...PRAYER_BLOCKS] };
+  }
+  const date = dayRow.date;
+  const audio = await prayerAudioMap(env, date);
+  const rows = await env.DB.prepare("SELECT * FROM player_episodes WHERE date=? ORDER BY sort, episode_id").bind(date).all<PlayerEpisodeRow>();
+  const eps = rows.results ?? [];
   const blocks = PRAYER_BLOCKS.map((block) => {
-    const route = sources.find((s) => s.block === block && s.source_kind === "playlist");
-    const spotify = route?.spotify_url || PRAYLIST_URL[block];
-    const tracks: unknown[] = [];
-    // Mapped sources for this block (Amendment 3: the mapping is data).
-    for (const s of sources) {
-      if (s.block !== block || s.source_kind === "playlist") continue;
-      if (s.source_kind === "rss") {
-        const ep = byPrefix.get(s.title);
-        if (ep) { usedPrefixes.add(ep.prefix); tracks.push({ title: s.title, kind: "rss", available: true, streamUrl: ep.url, spotifyUrl: s.spotify_url || spotify }); }
-        else tracks.push({ title: s.title, kind: "rss", available: false, streamUrl: null, spotifyUrl: s.spotify_url || spotify });
-      } else {
-        tracks.push({ title: s.title, kind: "segment", available: !!s.rss_url, streamUrl: s.rss_url || null, spotifyUrl: s.spotify_url || spotify });
-      }
-    }
-    // The block's devotions, matched to the day's feed episodes by name.
-    for (const i of items.filter((x) => x.block === block)) {
-      if (tracks.some((t) => (t as { title: string }).title === i.name)) continue;
-      const ep = byPrefix.get(i.name);
-      if (ep) { usedPrefixes.add(ep.prefix); tracks.push({ title: i.name, kind: "rss", available: true, streamUrl: ep.url, spotifyUrl: spotify }); }
-      else tracks.push({ title: i.name, kind: "item", available: false, streamUrl: null, spotifyUrl: spotify });
-    }
-    // The Intentions card (Amendment 9 item 6): this block's spoken
-    // intentions segment, from the app's own audio store; segment-file
-    // route only — NO Spotify link ever stands under it.
+    const tracks: unknown[] = eps.filter((r) => r.block === block).map(episodeTrackShape);
     const hasAudio = audio.has(block);
     const card = {
       title: "Intentions", kind: "segment", intentionsCard: true,
@@ -312,12 +290,48 @@ async function playerDayPayload(env: Env, date: string) {
       spotifyUrl: null,
     };
     tracks.splice(tracks.length ? 1 : 0, 0, card);
-    return { block, label: labels.get(block) ?? block, caption: BLOCK_CAPTION[block], spotifyUrl: spotify, tracks };
+    return mkBlock(block, tracks, tracks.length);
   });
-  const unmapped = episodes.filter((e) => !usedPrefixes.has(e.prefix)).map((e) => ({
-    title: e.prefix, kind: "rss", available: true, streamUrl: e.url, spotifyUrl: null,
-  }));
-  return { ok: true, date, dateLabel: prayerDateLabel(date), episodes: unmapped, blocks, audioMissing: PRAYER_BLOCKS.filter((b) => !audio.has(b)) };
+  const unblocked = eps.filter((r) => r.block === "unblocked").map(episodeTrackShape);
+  return {
+    ok: true, date, dateLabel: prayerDateLabel(date), storedDay: date,
+    episodes: unblocked, blocks,
+    audioMissing: PRAYER_BLOCKS.filter((b) => !audio.has(b)),
+  };
+}
+
+// ---- Player push (v312, agent door) --------------------------------------
+// Staging + verify-then-commit (Plan E2): the audio POST writes R2
+// only; the day POST verifies every staged object against the
+// manifest, then swaps the stored day in one D1 batch, then sweeps
+// every other date's objects. A failed push leaves the prior stored
+// day fully intact and named as the stored day.
+async function sweepOtherDates(env: Env, keepDate: string): Promise<void> {
+  for (const prefix of ["episodes/", "segments/"]) {
+    let cursor: string | undefined = undefined;
+    do {
+      const listed: R2Objects = await env.AUDIO.list({ prefix, cursor, limit: 1000 });
+      const stale = listed.objects.map((o) => o.key).filter((k) => {
+        const d = k.slice(prefix.length).split("/")[0];
+        return d !== keepDate;
+      });
+      if (stale.length) await env.AUDIO.delete(stale);
+      cursor = listed.truncated ? listed.cursor : undefined;
+    } while (cursor);
+  }
+}
+async function storedDayReadback(env: Env) {
+  const dayRow = await env.DB.prepare("SELECT * FROM player_day WHERE id=1").first<{ date: string; episode_count: number }>();
+  if (!dayRow) return { storedDate: null, episodeCount: 0, tracksPresent: 0, tracksMissing: 0, segmentBlocks: [] as string[] };
+  const rows = await env.DB.prepare("SELECT audio_state FROM player_episodes WHERE date=?").bind(dayRow.date).all<{ audio_state: string }>();
+  const segs = await env.DB.prepare("SELECT block FROM prayer_audio WHERE date=? ORDER BY block").bind(dayRow.date).all<{ block: string }>();
+  const list = rows.results ?? [];
+  return {
+    storedDate: dayRow.date, episodeCount: list.length,
+    tracksPresent: list.filter((r) => r.audio_state === "present").length,
+    tracksMissing: list.filter((r) => r.audio_state === "missing").length,
+    segmentBlocks: (segs.results ?? []).map((r) => r.block),
+  };
 }
 
 // ---- Examination + Confession -------------------------------------------
@@ -429,6 +443,85 @@ export default {
         ).bind(date, block, key, bytes.length, nowISO()).run();
         return json({ ok: true, date, block, size: bytes.length });
       }
+      if (seg[2] === "player" && seg[3] === "episodes" && seg[4] === "audio" && request.method === "POST") {
+        // E2 route 1 — staging only: writes the R2 object, no D1 row,
+        // so a push that fails partway leaves the stored day intact.
+        const date = request.headers.get("x-episode-date") ?? "";
+        const episodeId = request.headers.get("x-episode-id") ?? "";
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "X-Episode-Date must be YYYY-MM-DD");
+        if (!/^[A-Za-z0-9][A-Za-z0-9\-]*$/.test(episodeId)) return err(400, "bad X-Episode-Id");
+        const bytes = new Uint8Array(await request.arrayBuffer());
+        if (!bytes.length) return err(400, "empty body");
+        const key = `episodes/${date}/${episodeId}.mp3`;
+        await env.AUDIO.put(key, bytes, { httpMetadata: { contentType: "audio/mpeg" } });
+        return json({ ok: true, date, episodeId, size: bytes.length });
+      }
+      if (seg[2] === "player" && seg[3] === "day" && request.method === "POST") {
+        // E2 route 2 — the replace-day commit.
+        const body = await request.json().catch(() => ({})) as {
+          date?: string;
+          episodes?: { episode_id?: string; title?: string; block?: string; sort?: number; duration_s?: number; size_bytes?: number; audio_state?: string }[];
+        };
+        const date = String(body.date ?? "");
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+        if (!Array.isArray(body.episodes)) return err(400, "episodes array required");
+        const validBlocks = new Set<string>([...PRAYER_BLOCKS, "unblocked"]);
+        const eps: { episode_id: string; title: string; block: string; sort: number; duration_s: number; size_bytes: number; audio_state: string }[] = [];
+        for (const e of body.episodes) {
+          if (!e.episode_id || !/^[A-Za-z0-9][A-Za-z0-9\-]*$/.test(e.episode_id)) return err(400, "bad episode_id in manifest");
+          if (!validBlocks.has(e.block ?? "")) return err(400, `bad block for ${e.episode_id}`);
+          if (!["present", "missing"].includes(e.audio_state ?? "")) return err(400, `bad audio_state for ${e.episode_id}`);
+          eps.push({
+            episode_id: e.episode_id, title: String(e.title ?? e.episode_id), block: e.block!,
+            sort: Number(e.sort ?? 0), duration_s: Number(e.duration_s ?? 0),
+            size_bytes: Number(e.size_bytes ?? 0), audio_state: e.audio_state!,
+          });
+        }
+        // (i) Verify every staged object against the manifest — any
+        // mismatch aborts with a named 409 and writes nothing.
+        for (const e of eps) {
+          if (e.audio_state !== "present") continue;
+          const head = await env.AUDIO.head(`episodes/${date}/${e.episode_id}.mp3`);
+          if (!head) return err(409, `staged audio missing for ${e.episode_id}`);
+          if (head.size !== e.size_bytes) return err(409, `staged size mismatch for ${e.episode_id}: manifest ${e.size_bytes}, staged ${head.size}`);
+        }
+        // (ii) One D1 batch: other dates out, this day in, the
+        // stored-day singleton written last.
+        const pushedAt = nowISO();
+        const stmts: D1PreparedStatement[] = [
+          env.DB.prepare("DELETE FROM player_episodes WHERE date <> ?").bind(date),
+          env.DB.prepare("DELETE FROM prayer_audio WHERE date <> ?").bind(date),
+        ];
+        for (const e of eps) {
+          stmts.push(env.DB.prepare(
+            `INSERT INTO player_episodes (date, episode_id, title, block, sort, duration_s, r2_key, size_bytes, audio_state, pushed_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             ON CONFLICT(date, episode_id) DO UPDATE SET title=excluded.title, block=excluded.block, sort=excluded.sort,
+               duration_s=excluded.duration_s, r2_key=excluded.r2_key, size_bytes=excluded.size_bytes,
+               audio_state=excluded.audio_state, pushed_at=excluded.pushed_at`,
+          ).bind(date, e.episode_id, e.title, e.block, e.sort, e.duration_s,
+            e.audio_state === "present" ? `episodes/${date}/${e.episode_id}.mp3` : "",
+            e.size_bytes, e.audio_state, pushedAt));
+        }
+        stmts.push(env.DB.prepare(
+          `INSERT INTO player_day (id, date, episode_count, pushed_at) VALUES (1, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET date=excluded.date, episode_count=excluded.episode_count, pushed_at=excluded.pushed_at`,
+        ).bind(date, eps.length, pushedAt));
+        await env.DB.batch(stmts);
+        // (iii) R2 sweep: every other date's episode + segment objects.
+        await sweepOtherDates(env, date);
+        // (iv) Read back.
+        const rb = await storedDayReadback(env);
+        return json({
+          ok: true, storedDate: rb.storedDate, rowCount: rb.episodeCount,
+          perTrack: eps.map((e) => ({ episode_id: e.episode_id, audio: e.audio_state === "present" ? "verified" : "missing" })),
+          segmentsHeld: rb.segmentBlocks,
+        });
+      }
+      if (seg[2] === "player" && seg[3] === "stored-day" && request.method === "GET") {
+        const rb = await storedDayReadback(env);
+        return json({ ok: true, ...rb });
+      }
       return err(404, "unknown agent route");
     }
 
@@ -516,9 +609,45 @@ export default {
 
       if (seg[0] === "api" && seg[1] === "player") {
         if (seg[2] === "day" && request.method === "GET") {
-          const date = url.searchParams.get("date") ?? prayerChicagoNow().date;
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
-          return json(await playerDayPayload(env, date));
+          // v312: the stored day is the only day served; any ?date=
+          // returns the stored day, named by its own date/dateLabel.
+          return json(await playerDayPayload(env));
+        }
+        if (seg[2] === "audio" && request.method === "GET") {
+          // Episode audio from the app store, with Range passthrough
+          // (lock-screen seek depends on ranged reads, Plan E3/E6).
+          const date = seg[3] ?? "";
+          const episodeId = decodeURIComponent(seg[4] ?? "");
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !episodeId) return err(400, "bad audio path");
+          const row = await env.DB.prepare("SELECT r2_key, audio_state FROM player_episodes WHERE date=? AND episode_id=?")
+            .bind(date, episodeId).first<{ r2_key: string; audio_state: string }>();
+          if (!row) return err(404, "no episode for that date and id");
+          if (row.audio_state !== "present" || !row.r2_key) return err(404, "episode audio not available in the app yet");
+          const rangeHdr = request.headers.get("range");
+          let range: R2Range | undefined = undefined;
+          if (rangeHdr) {
+            const m = /^bytes=(\d*)-(\d*)$/.exec(rangeHdr.trim());
+            if (m && (m[1] || m[2])) {
+              if (m[1] === "") range = { suffix: Number(m[2]) };
+              else if (m[2] === "") range = { offset: Number(m[1]) };
+              else range = { offset: Number(m[1]), length: Number(m[2]) - Number(m[1]) + 1 };
+            }
+          }
+          const obj = range ? await env.AUDIO.get(row.r2_key, { range }) : await env.AUDIO.get(row.r2_key);
+          if (!obj) return err(404, "episode audio missing from the store");
+          const headers: Record<string, string> = {
+            "content-type": "audio/mpeg", "cache-control": "private, max-age=3600", "accept-ranges": "bytes",
+          };
+          if (range && obj.range) {
+            const total = obj.size;
+            const offset = obj.range.offset ?? (obj.range.suffix !== undefined ? total - (obj.range.length ?? obj.range.suffix) : 0);
+            const length = obj.range.length ?? (total - offset);
+            headers["content-range"] = `bytes ${offset}-${offset + length - 1}/${total}`;
+            headers["content-length"] = String(length);
+            return new Response(obj.body, { status: 206, headers });
+          }
+          headers["content-length"] = String(obj.size);
+          return new Response(obj.body, { headers });
         }
         if (seg[2] === "sources" && request.method === "GET") {
           const r = await env.DB.prepare("SELECT * FROM player_sources ORDER BY sort, id").all();

@@ -1,0 +1,6 @@
+ok - scratch app up
+ok - 20 MiB staging POST accepted through the door pattern (status 200, size read back 20971520, 719 ms)
+ok - commit verifies the staged 20 MiB object (status 200, storedDate 2027-03-01)
+ok - ranged read-back exact (status 206, content-range bytes 1000000-1000999/20971520, bytes verified)
+ok - tail range reads to the exact end of the 20 MiB object
+SPIKE RESULT: PASS — ~20 MB passes the door pattern; the stop condition does not trip
