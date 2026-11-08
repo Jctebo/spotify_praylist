@@ -80,6 +80,21 @@ lives under `~/workspace` — never `/tmp` (512 MB tmpfs).
   `~/workspace/goals/ora-pro-nobis-tts-migration-gpt-4o-mini-tts-shutdown/hidden_files/published-drops.json`;
   if the target date is already `published`, it exits with `SKIP` and does
   nothing else.
+- **Reconcile (tail finisher).** `python3 runner/pass2_build.py --rundir RUNDIR --reconcile`
+  finishes a publish whose tail was interrupted (the 2026-11-07 case: the
+  Nov 9 publish completed R2 + graft + commit + deploy, then the 1700 s
+  wrapper timeout killed the run during live-feed verification polling,
+  before the ledger flip). It checks, in order, the local set (report.json
+  settled pass + `out/` files), the R2 manifest/bucket, the live feed
+  (items matched by GUID/enclosure identity), and the ledger — then
+  completes only the missing steps with the publish path's own functions:
+  R2 upload of the missing objects + manifest reconciliation, graft of the
+  missing items only, commit + deploy, live verify, ledger flip LAST
+  (feed commit + deploy run recorded; `--ledger PATH` overrides the ledger
+  for tests). A partial/unverified local set aborts before any external
+  write; a fully published date prints `already complete — no changes`
+  and touches nothing. On a wrapper timeout, run `--reconcile` once, then
+  report.
 - **Manifest rule.** The R2 `.audio-sync-manifest.json` is never rewritten
   from the local plan (that is what `scripts/sync_r2_audio.py` would do, and
   it would drop every older episode's entry). The publish path GETs the

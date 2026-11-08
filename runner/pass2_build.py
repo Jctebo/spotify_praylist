@@ -42,6 +42,19 @@ RECONCILIATION (merge into the bucket's existing .audio-sync-manifest.json,
 never rewrite it from the local plan), live-feed graft, GitHub commit via the
 connector, deploy-pages dispatch, live verification, ledger flip. Publishing
 requires the FULL expected set: any failed episode aborts before any upload.
+
+--reconcile: see reconcile_drop() — the idempotent tail finisher. Checks, in
+publish order, the local set (report.json settled pass + out/ files), the R2
+manifest/bucket, the live feed (items matched by GUID/enclosure identity),
+and the ledger; then completes ONLY the missing tail steps with the publish
+path's own functions (R2 upload of the missing objects + manifest
+reconciliation, graft of the missing items only, commit + deploy, live
+verify, ledger flip LAST with the feed commit + deploy run recorded). A
+partial/unverified local set aborts before any external write; a fully
+published date prints "already complete — no changes" and touches nothing.
+Built for the 2026-11-07 failure: the Nov 9 publish had finished R2, graft,
+commit, and deploy when the 1700 s wrapper timeout killed the run during
+live-feed verification polling, before the in-code ledger flip.
 """
 from __future__ import annotations
 
@@ -793,33 +806,24 @@ def graft_items(live_feed: str, new_items: list[str]) -> str:
     return new_feed
 
 
-def publish_drop(rundir: Path, report: dict) -> dict:
-    """Publish the built day. Coded per the Nov 5 packet mechanics; the ledger
-    skip runs FIRST, and any failed episode aborts before any external write."""
-    import datetime as dt
-
-    date_iso = report["date"]
-    ledger = json.loads(LEDGER_PATH.read_text()) if LEDGER_PATH.exists() else {}
-    entry = ledger.get(date_iso) or {}
-    if entry.get("status") == "published":
-        print(f"SKIP {date_iso}: ledger already marks this date published.")
-        return {"skipped": True, "reason": "ledger_published"}
-    if report["totals"]["failed"] or report["totals"]["built"] != report["totals"]["episodes"]:
-        raise SystemExit("PUBLISH ABORTED: the day is not fully built (partial days are never published).")
-
-    plan = json.loads((rundir / "plan.json").read_text())
+def _expected_files(rundir: Path, plan: dict):
+    """The publish set: exactly RUNDIR/out/<episode_id>.mp3 + .json per plan
+    episode (never a glob — out/ also holds hand-run-name copies and
+    -script.txt files). Returns (files, missing)."""
     outdir = rundir / "out"
-    files = []
+    files, missing = [], []
     for ep in plan["episodes"]:
         for suffix in (".mp3", ".json"):
             p = outdir / f"{ep['episode_id']}{suffix}"
-            if not p.exists():
-                raise SystemExit(f"PUBLISH ABORTED: missing output {p}")
-            files.append(p)
+            (files if p.exists() else missing).append(p)
+    return files, missing
 
-    # Feed backup: first time each new date is published, keep the pre-drop
-    # live feed next to the ledger.
-    live_feed = urllib.request.urlopen(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
+
+def _backup_feed_once(live_feed: str, date_iso: str) -> None:
+    """First time a date is published, keep the pre-drop live feed next to
+    the ledger."""
+    import datetime as dt
+
     backup = LEDGER_PATH.parent / f"podcast-feed-backup-{dt.date.today().isoformat()}-before-{date_iso}.xml"
     first_for_date = not any(
         p.name.endswith(f"before-{date_iso}.xml") for p in LEDGER_PATH.parent.glob("podcast-feed-backup-*.xml")
@@ -827,15 +831,20 @@ def publish_drop(rundir: Path, report: dict) -> dict:
     if first_for_date and not backup.exists():
         backup.write_text(live_feed)
 
-    # (1) R2 uploads (keys = filenames at bucket root).
+
+def _upload_to_r2(files: list[Path], upload_names: set[str] | None = None) -> None:
+    """Publish steps (1)+(2): upload the day's objects (all of them, or only
+    upload_names when given), then manifest reconciliation — GET the bucket's
+    existing .audio-sync-manifest.json, merge the FULL set's entries into it
+    in the sync_r2_audio.py schema, PUT the merged manifest back LAST — then
+    verify every key by listing the bucket."""
     for p in files:
+        if upload_names is not None and p.name not in upload_names:
+            continue
         ctype = "audio/mpeg" if p.suffix == ".mp3" else "application/json"
         res = _cf_r2_put(p.name, p.read_bytes(), ctype)
         if not res.get("success"):
             raise SystemExit(f"R2 upload failed for {p.name}: {json.dumps(res)[:300]}")
-
-    # (2) Manifest reconciliation: GET the existing remote manifest, merge the
-    # new objects in the exact sync_r2_audio.py schema, PUT it back LAST.
     manifest: dict = {"version": 1, "objects": {}}
     raw_manifest = _cf_r2_get_bytes(MANIFEST_KEY)
     if raw_manifest:
@@ -860,12 +869,19 @@ def publish_drop(rundir: Path, report: dict) -> dict:
     if missing:
         raise SystemExit(f"R2 verification failed; missing keys: {missing}")
 
-    # (3) Feed graft: build ONLY the new items with repo RSS code, insert them
-    # at the top of the CURRENT live feed; live items stay byte-identical.
+
+def _build_new_items(rundir: Path, plan: dict, date_iso: str, only_episode_ids: set[str] | None = None):
+    """Publish step (3), item side: build the day's RSS item blocks with the
+    repo RSS code, from the out/ sidecars. Returns (jobs, new_items). With
+    only_episode_ids, only those episodes' items are built (reconcile's
+    partial graft)."""
     from jobs.publish.rss import build_rss_feed
 
+    outdir = rundir / "out"
     jobs = []
     for ep in plan["episodes"]:
+        if only_episode_ids is not None and ep["episode_id"] not in only_episode_ids:
+            continue
         side = json.loads((outdir / f"{ep['episode_id']}.json").read_text())
         jobs.append(
             {
@@ -889,9 +905,15 @@ def publish_drop(rundir: Path, report: dict) -> dict:
     built_feed = build_rss_feed(jobs)
     built_root = ET.fromstring(built_feed)
     new_items = [ET.tostring(item, encoding="unicode") for item in built_root.find("channel").findall("item")]
-    new_feed = graft_items(live_feed, new_items)
+    return jobs, new_items
 
-    # (4) Commit docs/podcast.xml to main via the Git Data API.
+
+def _commit_feed(new_feed: str, date_iso: str):
+    """Publish step (4): commit docs/podcast.xml to main via the Git Data
+    API. The site wallpaper blob rides in the same commit when the Drive
+    pick succeeds (see _site_wallpaper_blob); a miss never blocks the audio
+    publish and is reported through the return value. Returns
+    (commit_sha, site_wallpaper)."""
     ref = _gh_request("GET", f"/repos/{GH_REPO}/git/ref/heads/main")
     head_sha = ref["object"]["sha"]
     head_commit = _gh_request("GET", f"/repos/{GH_REPO}/git/commits/{head_sha}")
@@ -900,10 +922,6 @@ def publish_drop(rundir: Path, report: dict) -> dict:
         {"content": base64.b64encode(new_feed.encode("utf-8")).decode(), "encoding": "base64"},
     )
     tree_entries = [{"path": "docs/podcast.xml", "mode": "100644", "type": "blob", "sha": blob["sha"]}]
-    # (4b) Site wallpaper: today's saint phone wallpaper from the Drive
-    # rotation, committed alongside the feed so the deploy that follows
-    # ships it as the site background (see _site_wallpaper_blob). A miss
-    # never blocks the audio publish; it lands in the result dict.
     site_wallpaper = None
     try:
         site_wallpaper = _site_wallpaper_blob()
@@ -922,11 +940,15 @@ def publish_drop(rundir: Path, report: dict) -> dict:
          "tree": tree["sha"], "parents": [head_sha]},
     )
     _gh_request("PATCH", f"/repos/{GH_REPO}/git/refs/heads/main", {"sha": commit["sha"], "force": False})
+    return commit["sha"], site_wallpaper
 
-    # (5) Dispatch the deploy-only Pages workflow and poll to completion.
-    deploy_run_url = _dispatch_deploy(commit["sha"])
 
-    # (6) Verify the live feed lists the new date's items on top.
+def _verify_live_feed(plan: dict, date_iso: str) -> str:
+    """Publish step (6): poll the live feed until the day's episodes are the
+    top items with R2 enclosures. Returns the verification string, or ""
+    when the 300 s deadline passes."""
+    import xml.etree.ElementTree as ET
+
     verification = ""
     deadline = time.time() + 300
     while time.time() < deadline:
@@ -934,13 +956,56 @@ def publish_drop(rundir: Path, report: dict) -> dict:
         root = ET.fromstring(text)
         items = root.find("channel").findall("item")
         top_ids = []
-        for item in items[: len(jobs)]:
+        for item in items[: len(plan["episodes"])]:
             enc = item.find("enclosure")
             top_ids.append((enc.get("url") or "") if enc is not None else "")
         if all(f"{AUDIO_PUBLIC_BASE}/{ep['episode_id']}.mp3" in top_ids for ep in plan["episodes"]):
             verification = f"Live feed verified: {len(items)} items, {date_iso} episodes on top with R2 enclosures."
             break
         time.sleep(20)
+    return verification
+
+
+def publish_drop(rundir: Path, report: dict) -> dict:
+    """Publish the built day. Coded per the Nov 5 packet mechanics; the ledger
+    skip runs FIRST, and any failed episode aborts before any external write."""
+    import datetime as dt
+
+    date_iso = report["date"]
+    ledger = json.loads(LEDGER_PATH.read_text()) if LEDGER_PATH.exists() else {}
+    entry = ledger.get(date_iso) or {}
+    if entry.get("status") == "published":
+        print(f"SKIP {date_iso}: ledger already marks this date published.")
+        return {"skipped": True, "reason": "ledger_published"}
+    if report["totals"]["failed"] or report["totals"]["built"] != report["totals"]["episodes"]:
+        raise SystemExit("PUBLISH ABORTED: the day is not fully built (partial days are never published).")
+
+    plan = json.loads((rundir / "plan.json").read_text())
+    files, missing_files = _expected_files(rundir, plan)
+    if missing_files:
+        raise SystemExit(f"PUBLISH ABORTED: missing output {missing_files[0]}")
+
+    # Feed backup: first time each new date is published, keep the pre-drop
+    # live feed next to the ledger.
+    live_feed = urllib.request.urlopen(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
+    _backup_feed_once(live_feed, date_iso)
+
+    # (1)+(2) R2 uploads + manifest reconciliation (merged manifest LAST).
+    _upload_to_r2(files)
+
+    # (3) Feed graft: build ONLY the new items with repo RSS code, insert them
+    # at the top of the CURRENT live feed; live items stay byte-identical.
+    _jobs, new_items = _build_new_items(rundir, plan, date_iso)
+    new_feed = graft_items(live_feed, new_items)
+
+    # (4) Commit docs/podcast.xml (+ site wallpaper) to main via the Git
+    # Data API, then (5) dispatch the deploy-only Pages workflow and poll to
+    # completion.
+    commit_sha, site_wallpaper = _commit_feed(new_feed, date_iso)
+    deploy_run_url = _dispatch_deploy(commit_sha)
+
+    # (6) Verify the live feed lists the new date's items on top.
+    verification = _verify_live_feed(plan, date_iso)
     if not verification:
         raise SystemExit("Live feed verification failed: new items not on top after deploy.")
 
@@ -948,14 +1013,14 @@ def publish_drop(rundir: Path, report: dict) -> dict:
     ledger[date_iso] = {
         "status": "published",
         "published_at": dt.datetime.now(dt.timezone(dt.timedelta(hours=-6))).isoformat(),
-        "feed_commit": commit["sha"],
+        "feed_commit": commit_sha,
         "deploy_run": deploy_run_url,
         "verification": verification,
     }
     LEDGER_PATH.write_text(json.dumps(ledger, indent=1, sort_keys=True))
     return {
         "skipped": False,
-        "feed_commit": commit["sha"],
+        "feed_commit": commit_sha,
         "deploy_run": deploy_run_url,
         "verification": verification,
         "uploaded_objects": len(files),
@@ -964,16 +1029,288 @@ def publish_drop(rundir: Path, report: dict) -> dict:
     }
 
 
+# ------------------------------------------------------------- reconcile --
+def _local_set_state(rundir: Path, plan: dict):
+    """Reconcile check (a): the rundir's own evidence that the day is fully
+    built and verified — report.json (the settled verification pass) plus
+    the out/ files and sidecars it vouches for. Returns (ok, problems,
+    files)."""
+    date_iso = plan["date"]
+    problems: list[str] = []
+    report_path = rundir / "report.json"
+    if not report_path.exists():
+        return False, ["report.json missing — the day was never built/verified by pass 2"], []
+    report = json.loads(report_path.read_text())
+    if report.get("date") != date_iso:
+        problems.append(f"report.json date {report.get('date')} != plan date {date_iso}")
+    totals = report.get("totals") or {}
+    if totals.get("failed"):
+        problems.append(f"report totals show {totals['failed']} failed episode(s)")
+    if totals.get("built") != totals.get("episodes"):
+        problems.append("report totals: built != episodes")
+    results = report.get("episodes") or {}
+    files, missing = _expected_files(rundir, plan)
+    for p in missing:
+        problems.append(f"missing output {p}")
+    for ep in plan["episodes"]:
+        r = results.get(ep["key"]) or {}
+        if r.get("status") != "built":
+            problems.append(f"{ep['episode_id']}: report status is {r.get('status')!r}, not 'built'")
+            continue
+        if r.get("decode_ok") is not True:
+            problems.append(f"{ep['episode_id']}: settled verification decode_ok is not true")
+        mp3 = rundir / "out" / f"{ep['episode_id']}.mp3"
+        side_path = rundir / "out" / f"{ep['episode_id']}.json"
+        if mp3.exists() and side_path.exists():
+            try:
+                side = json.loads(side_path.read_text())
+            except Exception as exc:  # noqa: BLE001 - named in the problem list
+                problems.append(f"{ep['episode_id']}: sidecar JSON unreadable: {exc}")
+                continue
+            if not side.get("rss_guid"):
+                problems.append(f"{ep['episode_id']}: sidecar carries no rss_guid")
+            if side.get("audio_length") != mp3.stat().st_size:
+                problems.append(
+                    f"{ep['episode_id']}: MP3 size {mp3.stat().st_size} != sidecar audio_length {side.get('audio_length')}"
+                )
+            if r.get("bytes") and r["bytes"] != mp3.stat().st_size:
+                problems.append(f"{ep['episode_id']}: MP3 size != settled verification bytes {r['bytes']}")
+    return not problems, problems, files
+
+
+def _r2_state(files: list[Path]):
+    """Reconcile check (b): the bucket manifest must carry every file with
+    matching size + sha256, and the bucket listing must hold every key.
+    Returns (ok, bad_names, detail)."""
+    raw = _cf_r2_get_bytes(MANIFEST_KEY)
+    objects: dict = {}
+    if raw:
+        try:
+            parsed = json.loads(raw.decode("utf-8"))
+            if isinstance(parsed.get("objects"), dict):
+                objects = parsed["objects"]
+        except Exception:
+            objects = {}
+    bad = []
+    for p in files:
+        entry = objects.get(p.name)
+        data = p.read_bytes()
+        if not entry or entry.get("size") != len(data) or entry.get("sha256") != hashlib.sha256(data).hexdigest():
+            bad.append(p.name)
+    bucket_keys = set(_cf_r2_list())
+    unlisted = [p.name for p in files if p.name not in bucket_keys]
+    return (
+        not bad and not unlisted,
+        sorted(set(bad) | set(unlisted)),
+        {"manifest_entries": len(objects), "bucket_keys": len(bucket_keys)},
+    )
+
+
+def _feed_state(rundir: Path, plan: dict):
+    """Reconcile check (c): which of the day's items are already in the LIVE
+    feed, matched by the feed's own item identity — the item GUID (the
+    sidecar rss_guid the graft path emits) or the item's R2 enclosure URL.
+    Returns (present_ids, missing_ids, total_items, feed_text)."""
+    import xml.etree.ElementTree as ET
+
+    feed_text = urllib.request.urlopen(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
+    root = ET.fromstring(feed_text)
+    items = root.find("channel").findall("item")
+    guids, urls = set(), set()
+    for item in items:
+        g = item.find("guid")
+        if g is not None and g.text:
+            guids.add(g.text.strip())
+        enc = item.find("enclosure")
+        if enc is not None and enc.get("url"):
+            urls.add(enc.get("url"))
+    present, missing = [], []
+    for ep in plan["episodes"]:
+        side = json.loads((rundir / "out" / f"{ep['episode_id']}.json").read_text())
+        if side.get("rss_guid") in guids or f"{AUDIO_PUBLIC_BASE}/{ep['episode_id']}.mp3" in urls:
+            present.append(ep["episode_id"])
+        else:
+            missing.append(ep["episode_id"])
+    return present, missing, len(items), feed_text
+
+
+def _recover_feed_refs(rundir: Path, date_iso: str, report: dict | None):
+    """Feed commit + deploy run URL for a graft that already happened (the
+    reconcile case this mode exists for): the rundir report's publish block
+    first; else the newest commit touching docs/podcast.xml and the deploy
+    run on its head_sha."""
+    pub = (report or {}).get("publish") or {}
+    if pub.get("feed_commit") and pub.get("deploy_run"):
+        return pub["feed_commit"], pub["deploy_run"]
+    commits = _gh_request("GET", f"/repos/{GH_REPO}/commits?path=docs/podcast.xml&per_page=5")
+    for c in commits:
+        runs = _gh_request("GET", f"/repos/{GH_REPO}/actions/workflows/deploy_pages.yml/runs?per_page=10")
+        match = [r for r in runs.get("workflow_runs", []) if r.get("head_sha") == c["sha"]]
+        if match:
+            return c["sha"], match[0].get("html_url", "")
+    if commits:
+        return commits[0]["sha"], ""
+    return "", ""
+
+
+def reconcile_drop(rundir: Path, ledger_path: Path) -> int:
+    """--reconcile: finish a publish's tail idempotently.
+
+    Built for the 2026-11-07 failure (target 2026-11-09): --publish had
+    completed R2 upload, manifest reconciliation, feed graft, commit, and
+    deploy when the 1700 s wrapper timeout killed the run during live-feed
+    verification polling — before the in-code ledger flip; the ledger was
+    flipped by hand on verified evidence. This mode re-derives that
+    evidence mechanically and completes only what is missing.
+
+    Checks, in publish order: (a) local set complete + verified (report.json
+    settled pass + out/ files + sidecars); (b) R2 manifest + bucket listing;
+    (c) live feed items by GUID/enclosure identity; (d) ledger entry. Then
+    it completes only the missing tail steps, reusing the publish path's own
+    functions: R2 upload of the missing objects + manifest reconciliation,
+    graft of the missing items only (graft_items verifies the splice, so a
+    present item is never duplicated), commit + deploy-only workflow,
+    live-feed verify, and the ledger flip LAST (feed commit + deploy run
+    recorded). If (a) fails, exit 2 and change nothing — a partial day is
+    never published. If everything is already done, print the explicit
+    already-complete result and change nothing.
+    """
+    import datetime as dt
+
+    plan = json.loads((rundir / "plan.json").read_text())
+    date_iso = plan["date"]
+    print(f"RECONCILE {date_iso}: checking the publish tail in order — local set, R2, live feed, ledger.")
+    report = None
+    if (rundir / "report.json").exists():
+        report = json.loads((rundir / "report.json").read_text())
+
+    # (a) Local set.
+    ok, problems, files = _local_set_state(rundir, plan)
+    if not ok:
+        print(f"RECONCILE ABORTED: PARTIAL DAY — the local set for {date_iso} is incomplete or unverified; "
+              "nothing was uploaded or published.")
+        for p in problems:
+            print(f"  - {p}")
+        return 2
+    print(f"CHECK local set: OK — {len(files)} files ({len(plan['episodes'])} episodes), "
+          "all verified by the run's settled pass.")
+
+    # (b) R2.
+    try:
+        r2_ok, r2_bad, r2_detail = _r2_state(files)
+    except (RuntimeError, SystemExit) as exc:
+        print(f"RECONCILE FAILED at the R2 check: {exc}")
+        return 1
+    print(f"CHECK R2: {'OK' if r2_ok else 'INCOMPLETE'} — manifest {r2_detail['manifest_entries']} entries, "
+          f"bucket {r2_detail['bucket_keys']} keys" + (f"; missing/mismatched: {r2_bad}" if r2_bad else ""))
+
+    # (c) Live feed.
+    present, missing_eps, total_items, _feed_text = _feed_state(rundir, plan)
+    feed_ok = not missing_eps
+    print(f"CHECK live feed: {'OK' if feed_ok else 'INCOMPLETE'} — {len(present)}/{len(plan['episodes'])} "
+          f"of the day's items present among {total_items} feed items"
+          + (f"; missing: {missing_eps}" if missing_eps else ""))
+
+    # (d) Ledger.
+    ledger = json.loads(ledger_path.read_text()) if ledger_path.exists() else {}
+    entry = ledger.get(date_iso) or {}
+    ledger_done = entry.get("status") == "published"
+    print(f"CHECK ledger: {'published' if ledger_done else 'NOT published'} ({ledger_path})")
+
+    if r2_ok and feed_ok and ledger_done:
+        print(f"RECONCILE RESULT {date_iso}: already complete — no changes "
+              "(no re-upload, no re-graft, no new commit, no ledger rewrite).")
+        return 0
+    if ledger_done and not (r2_ok and feed_ok):
+        print("NOTE: the ledger already marks this date published but an earlier step is incomplete; "
+              "completing the external steps only — the ledger entry is left untouched.")
+
+    completed: list[str] = []
+    commit_sha = entry.get("feed_commit", "")
+    deploy_run_url = entry.get("deploy_run", "")
+    verification = ""
+    try:
+        # Tail step 1: R2 upload (missing objects only) + manifest reconciliation.
+        if not r2_ok:
+            _upload_to_r2(files, upload_names=set(r2_bad))
+            completed.append(f"R2 upload of {len(r2_bad)} object(s) + manifest reconciliation")
+            print(f"DONE R2: uploaded {len(r2_bad)} missing/mismatched object(s); manifest reconciled "
+                  "over the full set; bucket listing verified.")
+        # Tail step 2: graft the missing items only + commit + deploy + verify.
+        if not feed_ok:
+            live_feed = urllib.request.urlopen(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
+            _backup_feed_once(live_feed, date_iso)
+            _jobs, new_items = _build_new_items(rundir, plan, date_iso, only_episode_ids=set(missing_eps))
+            new_feed = graft_items(live_feed, new_items)
+            commit_sha, _site_wallpaper = _commit_feed(new_feed, date_iso)
+            deploy_run_url = _dispatch_deploy(commit_sha)
+            completed.append(f"feed graft of {len(new_items)} item(s) + commit {commit_sha} + deploy {deploy_run_url}")
+            print(f"DONE feed: grafted {len(new_items)} item(s); commit {commit_sha}; deploy {deploy_run_url}.")
+            verification = _verify_live_feed(plan, date_iso)
+            if not verification:
+                print("RECONCILE FAILED: live feed verification failed after the graft/deploy; "
+                      "the ledger was NOT flipped. Re-run --reconcile to resume.")
+                return 1
+        else:
+            _p, _m, total_now, _t = _feed_state(rundir, plan)
+            verification = (f"Live feed verified: {total_now} items, {date_iso} episodes present "
+                            "with R2 enclosures (GUID/enclosure match).")
+        # Tail step 3: ledger flip LAST.
+        if not ledger_done:
+            if not commit_sha:
+                commit_sha, deploy_run_url = _recover_feed_refs(rundir, date_iso, report)
+            if not commit_sha:
+                print("RECONCILE FAILED: no feed commit could be recovered for the ledger record; "
+                      "the ledger was NOT flipped. Re-run --reconcile to resume.")
+                return 1
+            ledger[date_iso] = {
+                "status": "published",
+                "published_at": dt.datetime.now(dt.timezone(dt.timedelta(hours=-6))).isoformat(),
+                "feed_commit": commit_sha,
+                "deploy_run": deploy_run_url,
+                "verification": verification,
+                "reconciled_by": "runner/pass2_build.py --reconcile",
+            }
+            ledger_path.write_text(json.dumps(ledger, indent=1, sort_keys=True))
+            completed.append(f"ledger flip (feed_commit {commit_sha}, deploy_run {deploy_run_url})")
+            print(f"DONE ledger: {date_iso} marked published in {ledger_path}.")
+            if report is not None:
+                report["published"] = True
+                report["publish"] = {
+                    "skipped": False,
+                    "feed_commit": commit_sha,
+                    "deploy_run": deploy_run_url,
+                    "verification": verification,
+                    "uploaded_objects": len(files),
+                    "reconciled": True,
+                }
+                (rundir / "report.json").write_text(json.dumps(report, indent=1))
+                (rundir / "report.md").write_text(render_report_md(report, plan))
+    except SystemExit as exc:
+        print(f"RECONCILE FAILED mid-tail: {exc} Completed so far: {completed or 'none'}. "
+              "The ledger was flipped only if listed above; re-run --reconcile to resume.")
+        return 1
+    print(f"RECONCILE RESULT {date_iso}: tail completed — {'; '.join(completed)}. Final state: published.")
+    return 0
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Pass 2: render + assemble + brand + verify (and optionally publish).")
     parser.add_argument("--rundir", required=False, default=None, help="Run directory produced by pass1/pass1b")
     parser.add_argument("--cache-dir", default=str(FRAGCACHE_DEFAULT), help="Persistent fragment cache directory")
     parser.add_argument("--publish", action="store_true", help="Publish the built day (R2 + feed + deploy + ledger)")
+    parser.add_argument("--reconcile", action="store_true",
+                        help="Idempotently finish a publish's tail (R2/feed/ledger checks, missing steps only); no rebuild")
+    parser.add_argument("--ledger", default=str(LEDGER_PATH),
+                        help="Published-drops ledger path for --reconcile (default: the production ledger)")
     parser.add_argument("--site-wallpaper-only", action="store_true",
                         help="Only refresh the Pages site background from today's Drive wallpaper pick and re-deploy; no build/publish")
     args = parser.parse_args()
     if args.site_wallpaper_only:
         return refresh_site_wallpaper()
+    if args.reconcile:
+        if not args.rundir:
+            parser.error("--rundir is required with --reconcile")
+        return reconcile_drop(Path(args.rundir), Path(args.ledger))
     if not args.rundir:
         parser.error("--rundir is required unless --site-wallpaper-only is given")
     rundir = Path(args.rundir)
