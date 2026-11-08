@@ -182,6 +182,13 @@ standing data-driven devotions (e.g. BVM on Saturdays, Holy Souls in
 November), which are unchanged. Name the file with `build_filename()` like
 any other subject.
 
+Build the Gospel spec with `gospel_scene=True` in `DailyImageSpec`. Its
+overlaid subheading reads "Today's Gospel" — the contract returns
+`TODAY'S GOSPEL` as its subtitle, whatever its classification or subtitle
+fields hold. The Gospel spec must not borrow the saint's classification
+for its text: its `classification` field is only an ordering artifact
+(it sets the spec's sort position in the day's set), never wording.
+
 ## Queue discipline
 
 - Keep a rolling 7-day queue: generate/upload sets for the coming week,
