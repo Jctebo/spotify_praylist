@@ -1,0 +1,7 @@
+.wrangler/
+.wrangler-test-v305/
+.wrangler-test-v305-locked/
+.wrangler-test-v305-seed.sql
+.dev.vars
+node_modules/
+tests/logs/

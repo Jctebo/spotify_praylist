@@ -1,0 +1,41 @@
+{
+ "ok": "boolean",
+ "date": "string",
+ "dateLabel": "string",
+ "addendum": "string",
+ "blocks": [
+  {
+   "block": "string",
+   "label": "string",
+   "due": "boolean",
+   "praylistUrl": "string",
+   "segmentAudioUrl": "string",
+   "devotions": [
+    {
+     "id": "number",
+     "name": "string",
+     "sub": "string",
+     "kind": "string",
+     "color": "string",
+     "openingPrayer": "string",
+     "closingPrayer": "string",
+     "done": "boolean",
+     "intentions": [
+      {
+       "id": "number",
+       "text": "string",
+       "priority": "string"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "devotionCount": "number",
+ "prayerCount": "number",
+ "activityCount": "number",
+ "doneCount": "number",
+ "dueCount": "number",
+ "currentBlock": "string",
+ "isToday": "boolean"
+}

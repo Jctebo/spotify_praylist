@@ -148,9 +148,9 @@ function drawRandom(env: Env, date: string, itemId: number): number {
   if (env.LOCAL_DEV !== "1") return Math.random();
   const s = `${date}:${itemId}`;
   let h = 2166136261;
-  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
-  const x = (Math.imul(h, 1103515245) + 12345) % 2147483648;
-  return x / 2147483648;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  h ^= h >>> 16; h = Math.imul(h, 2246822507); h ^= h >>> 13; h = Math.imul(h, 3266489909); h ^= h >>> 16;
+  return (h >>> 0) / 4294967296;
 }
 // Weighted draw: one active intention per enabled item. Weights H=4, M=2, L=1.
 async function prayerDrawForDate(env: Env, date: string): Promise<Map<number, number>> {
