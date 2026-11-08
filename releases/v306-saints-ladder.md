@@ -345,3 +345,59 @@ For the nightly Ora Pro Nobis job sheet, to be applied by the main seat at Ship:
 - Raw note: block-kind admission in jobs/publish/contracts.py lives in FOUR dispatches (normalization, validation, resolve_block_content, fragment expansion) — the Plan inventoried three and the miss cost one gate run. Any future block kind should grep the kind string across the whole file before the touch-point count is written into a plan.
 - Raw note: the Plan's Oct 9 feast hand-read (two saints) repeated the Scope pass's error shape — a hand-read source standing in for a function that could have been run. The Plan did run the resolver for its counts but read the calendar by eye for the feast input; one `resolve_saint_of_day` call at Plan would have pinned 33 from the start.
 - Raw note: `pipeline.py`'s uncommitted diff is production-live but committed nowhere, like the alias work was — the shared fork tree still carries ~17 uncommitted production changes (site, playlists, rss, wallpaper machinery, runner files). The tree is production; its uncommitted state is a standing exposure this pass did not create and was not scoped to clear.
+
+## 4 · Review
+
+- **Agent:** Review Agent — v306 (seated 2026-11-08 by the main seat; Review claim record 1051, claimed 15:25 CT). Placement: BEFORE the trunk landing, per the Plan's shared-core classification. Run Directive: Autonomous to Ship.
+- **Inputs read:** skills/review/SKILL.md · skills/phase-workflow/references/release-document-standard.md · this document §§1–3 in full (Scope + John's answers + both Plan amendments + Implement) · the complete gate logs (hidden_files/harness-v306-gate2-2026-11-08.log · hidden_files/v306-alias-tests-2026-11-08.log) · releases/v306-saints-ladder-sweep.json · config/publish/saints-ladder.json · jobs/publish/saints_ladder.py · jobs/publish/contracts.py (kind touch points) · config/publish/contracts/morning-prayer.json · trunk and branch git state, read directly.
+
+### Independent verification (this seat's own runs and reads, not the Implement record)
+
+- **Alias landing.** Trunk `muse-draft-week` tip is 0351f6b on 6232309; `git show --stat` confirms exactly the 4 named files, +895 (saint_aliases.py +322 · resolver.py +170 · the two test files). The alias log reads in full: **Ran 25 tests — OK**. The shared checkout's dirty set stands at exactly the 17 named entries, the four alias files are clean, and `pipeline.py`'s diff contains **zero** alias/canonical references (grep count 0) — its exclusion from the changeset is correct.
+- **Gate tally.** The complete gate2 log's own summary line: **Ran 98 tests — OK**. Exactly one `source=fallback` line in the log — the deliberate broken-data test — against repeated `source=resolver` lines from the publish-contracts suite's live Morning Prayer builds.
+- **The pinned totals, re-derived by this seat** (repo venv, production sources, the branch's own module — one run per date):
+  - **2026-10-09 feast input:** `resolve_saint_of_day` returns exactly ONE saint — `"Saint Denis and his companions"`. John Leonardi is not named that day. Implement's correction is confirmed against the production source, first-hand.
+  - **2026-10-09 total: 33** — core 9 · Tier 2 nine (Denis and Companions, then windows in resolver order: John XXIII · Carlo Acutis · Callistus I · Hedwig of Silesia · Gerard Majella · Margaret Mary · Ignatius of Antioch · Luke) · patrons 15. Carlo Acutis stands exactly once, in the Tier 2 position; Teresa of Ávila stands exactly once, in the core, with both her contract forms active that day; Our Lady of La Leche absent (Marian exclusion).
+  - **2026-11-08 total: 34** — feast input empty (Sunday, verified), Tier 2 = the 11 window saints of the Plan's list (Albert the Great and Elizabeth of Hungary promoted out of the patrons), patrons 14. Matches the Plan's pinned list name for name.
+  - **2026-12-21 total: 31** — verified END-TO-END against production by this seat (the Plan/Implement record carried it as a stubbed fixture): feast input is Saint Peter Canisius, as the fixture assumed; Saint John the Apostle stands in the core, position 8, once, with his window open; Tier 2 set identical to the fixture (window order follows the resolver, Stephen before Holy Innocents); patrons all 16.
+- **Sweep audit.** The sweep record reads: 397 contracts · 776 windows · 377 identities · `unclassified: []`. Spot checks against the Plan's named classes all land: `st_gertrude_prayer` → Saint Gertrude · Corona and Dymphna devotion contracts folded onto their saints · La Leche excluded: marian · Ascension excluded: lords-feast · 54 Day Rosary and Impossible Requests Annunciation excluded: devotion · All Saints and Holy Souls excluded: collective · Holy Innocents and Denis and Companions invoked as named · the St. Andrew Christmas contract maps to the apostle's key, as Implement's §3 ruling states. The data file itself carries core = the settled nine in order and patrons = the settled 16 in template order.
+- **Mechanism, read in code.** `resolve_invocations` implements the five-step rule as planned: a first-wins `place()` over canonical/member keys (core sticky, dedupe by construction) · feast in calendar order with exclusions and the Mary skip · windows in resolver order with member promotion, exclusion skip, and unmapped → warning + skip, never guessed · patrons last. The `saints-litany` kind stands admitted at every dispatch in contracts.py (normalization L420 · validation L632 · resolution L1614/1682 · fragment expansion L1861 · the admitted-kinds list L2241), with the structural fallback and its WARN/INFO source lines as designed. The Morning Prayer contract's Intercessory Litany block is the only contract change; the template file is untouched.
+
+### Criterion table (§1 acceptance criteria)
+
+| # | Criterion | Verdict | Evidence |
+|---|---|---|---|
+| 1 | Litany = core + resolved Tier 2 + patrons, deduped by canonical key, highest tier, current form, unchanged frame | **Met** | Three production dates re-derived by this seat (33 · 34 · 31); frame byte-pinned by test in the 98-test gate |
+| 2 | Carlo Acutis promotion (2026-10-09) | **Met** | Production run: exactly once, Tier 2 position, on Oct 9; exactly once, in the patrons, on Nov 8 and Dec 21 (outside his window) |
+| 3 | Core saint never duplicated or displaced by a window | **Met** | Teresa of Ávila, Oct 9 (both contract forms active — core only); John the Apostle, Dec 21 (core position 8, once) |
+| 4 | No window + no calendar saint → core + patrons + closing, well-formed | **Met** | Stubbed fixture in the gate suite; the Sunday shape (windows only, no feast input) proven live on Nov 8 |
+| 5 | Data-file edit changes the litany with no code change | **Met** | Data-edit test inside the passing gate suite; membership stands in config/publish/saints-ladder.json as data |
+| 6 | Window saints ⊆ `resolve_active_novenas(date)` + feast saint(s) | **Met** | By construction — pass1 primes the ladder with the same runtimes list the novena loop consumes; unprimed calls run the same function (code-read) |
+| 7 | Nothing else changes (voice, episode set, endpoints) | **Met** | Branch diff confined to the ladder module, the one contract block, the contracts.py kind admission, and pass1 priming; no voice/render/publish machinery touched |
+
+### Rulings on the two in-phase items
+
+- **The Oct 9 correction — ACCEPTED, and the disposition is right.** The Plan's criterion is the resolution rule, not the numeral: §1 finding 4 binds Tier 2's feast input to the devotional calendar *as it names the day*, and the calendar names one saint on 2026-10-09. Pinning the production 33 in the integration test — with the evidence in its comment — while the stubbed two-saint case stands as the mechanism fixture is the correct split: the fixture proves the feast-first multi-saint mechanism; the production pin proves the ladder takes the calendar exactly as it stands. No Plan amendment is required before Ship; the count follows the source, as it did in this release's earlier 30 → 34 recompute. Recommended record hygiene (not a gate condition): a dated amendment under §2 noting the production 33, so the Plan's verification table does not stand uncorrected on trunk.
+- **The fourth kind dispatch — ACCEPTED as integration rework absorbed in-phase.** The Plan inventoried three admission points in contracts.py; the file carries the dispatch in one seam family, and the fix admits `saints-litany` at the fourth point identically to `file`, with the fragment label derived from the fallback stem — the same "Intercessory Litany" label the file block produced. No design, scope, or behavior change; the gate caught it and the re-run is green. This is ordinary integration drift, not a Plan gap that should have returned the release. Implement's Curator note (grep the kind string across the whole file before counting touch points) is endorsed.
+
+### Ship handover — confirmed standing in §3
+
+Implement's step-6 job-sheet texts stand complete in §3 for the Ship brief to carry verbatim: **(a)** the binding first-run read-back — the produced Morning Prayer script's litany diffed against `resolve_invocations(target)` recomputed independently, both recorded in the Ship section, any mismatch or fallback firing fixed forward before the next night's run, never silently; **(b)** the standing nightly-report field naming the litany source for the produced day (resolver | fallback), with the ladder warning lines when any fired. The main seat applies both to the nightly Ora job sheet at Ship.
+
+### Verdict
+
+**PASS.** All seven Scope criteria Met, both in-phase items accepted with rulings above, gate evidence read from the complete logs (98 OK · alias 25 OK), and the three pinned dates re-derived independently by this seat — Oct 9 at its corrected production 33, Nov 8 at 34, Dec 21 at 31 (upgraded from fixture to production-verified). The release proceeds to Ship under Autonomous to Ship: merge release/v306 onto the fork trunk, the first-run watch and job-sheet texts riding the Ship brief.
+
+### Concerns and Information Needs
+
+- **Facts (verified, with source):** every figure in this section comes from this seat's own git reads, log reads, sweep audit, and three production resolver runs (repo venv, 2026-11-08) — no Implement claim was taken on trust.
+- **Assumptions:** none material — the one Implement assumption left open (the Dec 21 feast input, unmeasured at Implement) was measured by this seat and confirmed.
+- **Uncertainties:** window-name classifications beyond the spot checks above were audited by class, not name-by-name over all 377; a single misclassification changes one name on some days, never the prayer's shape — the standing residual the Plan already named.
+- **Decision impact:** if John wants John Leonardi invoked on Oct 9, that is a devotional-calendar content change, not a ladder change (Implement's §3 point, concurred).
+- **First source to check:** the first-run read-back at Ship — the produced script against a recomputed `resolve_invocations(target)`.
+- **Stop condition:** none met.
+
+### Notes for the Curator
+
+- Raw note: this Review upgraded the Dec 21 case from stubbed fixture to production-verified at no extra design cost — the feast input and total both confirmed the fixture exactly. Where a fixture's inputs are cheaply measurable at Review, measuring them closes the last assumption an Implement pass had to carry.
+- Raw note: the Oct 9 correction is the second arithmetic-follows-source correction on this one release (30 → 34 at Plan, 34 → 33 production at Implement), both times a hand-read standing in for a runnable function. Implement's §3 note names the pattern; this seat concurs it is the release's recurring defect class.
