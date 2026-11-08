@@ -330,20 +330,20 @@ try {
   const pageErrors = [];
   page.on("pageerror", (e) => pageErrors.push(String(e)));
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
-  await page.waitForSelector(".prayer-item", { timeout: 15000 });
-  ok(await page.locator(".brand-name").innerText().then((t) => t.includes("ORA PRO NOBIS")), "boot: brand bar renders");
-  ok(await page.locator(".prayer-item").count().then((c) => c >= 11), "boot: Intentions pool renders its rows");
+  await page.waitForSelector(".stats", { timeout: 20000 });
+  ok(await page.locator(".wordmark").innerText().then((t) => t.includes("ORA PRO NOBIS")), "boot: brand bar renders");
+  ok(await page.locator('[data-act="edit"]').count().then((c) => c >= 11), "boot: Intentions pool renders its rows");
   await page.click('[data-tab="prayers"]');
-  await page.waitForSelector(".block-head", { timeout: 15000 });
-  const blockHeads = await page.locator(".block-head").allInnerTexts();
+  await page.waitForSelector(".blockhead", { timeout: 15000 });
+  const blockHeads = await page.locator(".blockhead").allInnerTexts();
   ok(blockHeads.some((t) => t.includes("MORNING")) && blockHeads.length === 6, "boot: player renders all six blocks");
-  ok(await page.locator(".track.intentions-card").count().then((c) => c === 6), "boot: every block carries its Intentions card");
+  ok(await page.locator(".intentions-card").count().then((c) => c === 6), "boot: every block carries its Intentions card");
   await page.click('[data-tab="examination"]');
   await page.waitForSelector(".prompt", { timeout: 15000 });
   ok(await page.locator(".chip").count().then((c) => c >= 10), "boot: examination renders its category chips");
   await page.click('[data-tab="confession"]');
-  await page.waitForSelector(".step", { timeout: 15000 });
-  ok(await page.locator(".step").count().then((c) => c === 5), "boot: confession renders the five guide steps");
+  await page.waitForSelector("text=Act of Contrition", { timeout: 15000 });
+  ok(await page.locator("h3").filter({ hasText: "·" }).count().then((c) => c >= 5), "boot: confession renders the five guide steps");
   ok(pageErrors.length === 0, `boot: zero page errors${pageErrors.length ? " — " + pageErrors.join(" | ") : ""}`);
 } catch (e) {
   n++; fails++; console.log(`not ok ${n} - harness crashed: ${e.message}`);
