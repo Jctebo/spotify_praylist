@@ -127,6 +127,7 @@ function loadResume(desc, positionS) {
   setMediaSessionFor(desc);
   state.pendingResume = { episodeId: desc.episodeId, positionS: positionS };
   audioEl.src = desc.url;
+  audioEl.load(); // preload="none": an explicit load is what brings metadata (and the pending position) in
   markPlaying(desc.episodeId);
   // Stands paused at the position (set on loadedmetadata); the app
   // never autoplays sound on open.
@@ -168,6 +169,11 @@ function setupMediaSession() {
   Object.keys(handlers).forEach(function (a) {
     try { navigator.mediaSession.setActionHandler(a, handlers[a]); } catch (e) {}
   });
+  // Harness hook (E9 check 8): Media Session handlers are not readable
+  // back from navigator.mediaSession, so the registered handler table
+  // is exposed for the gate's agent-side evidence. John's phone check
+  // at Review remains the binding criterion.
+  window.__opnMediaHandlers = handlers;
 }
 
 function setTab(tab) {

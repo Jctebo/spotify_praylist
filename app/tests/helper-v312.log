@@ -1,0 +1,4 @@
+App push (v312): date pushed 2027-03-05 · episodes 3 (2 present / 1 missing) · per-track audio verified 2 · stored date after push 2027-03-05
+stored-day: {'ok': True, 'storedDate': '2027-03-05', 'episodeCount': 3, 'tracksPresent': 2, 'tracksMissing': 1, 'segmentBlocks': []}
+blocks: {'morning-prayer': 'Morning', 'daily-rosary': 'Morning', 'lost-ep': 'unblocked'}
+HELPER PROOF: PASS
