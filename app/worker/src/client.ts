@@ -348,6 +348,6 @@ function openGuideEditor(guide) {
   });
 }
 
-setTab('prayers');
+setTab('intentions');
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(function () {}); }
 `;
