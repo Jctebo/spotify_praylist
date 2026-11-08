@@ -1,0 +1,2028 @@
+{
+ "version": 1,
+ "core": [
+  {
+   "key": "mary-mother-of-god",
+   "spoken": "Holy Mary, Mother of God",
+   "match_ids": [],
+   "match_names": [
+    "Mary",
+    "Holy Mary, Mother of God",
+    "Mary, Mother of God",
+    "Blessed Virgin Mary"
+   ]
+  },
+  {
+   "key": "joseph",
+   "spoken": "Saint Joseph",
+   "match_ids": [
+    "st_joseph",
+    "st_joseph_the_worker"
+   ],
+   "match_names": [
+    "St. Joseph",
+    "Saint Joseph",
+    "St Joseph the Worker",
+    "Saint Joseph the Worker"
+   ]
+  },
+  {
+   "key": "michael-the-archangel",
+   "spoken": "Saint Michael the Archangel",
+   "match_ids": [
+    "st_michael"
+   ],
+   "match_names": [
+    "St. Michael",
+    "Saint Michael",
+    "Saint Michael the Archangel"
+   ]
+  },
+  {
+   "key": "gabriel-the-archangel",
+   "spoken": "Saint Gabriel the Archangel",
+   "match_ids": [
+    "st_gabriel"
+   ],
+   "match_names": [
+    "St. Gabriel",
+    "Saint Gabriel",
+    "Saint Gabriel the Archangel"
+   ]
+  },
+  {
+   "key": "raphael-the-archangel",
+   "spoken": "Saint Raphael the Archangel",
+   "match_ids": [
+    "st_raphael"
+   ],
+   "match_names": [
+    "St. Raphael",
+    "Saint Raphael",
+    "Saint Raphael the Archangel"
+   ]
+  },
+  {
+   "key": "john-the-baptist",
+   "spoken": "Saint John the Baptist",
+   "match_ids": [
+    "st_john_the_baptist"
+   ],
+   "match_names": [
+    "St. John the Baptist",
+    "Saint John the Baptist"
+   ]
+  },
+  {
+   "key": "peter-and-paul",
+   "spoken": "Saint Peter and Saint Paul",
+   "match_ids": [
+    "st_peter_and_paul",
+    "st_peter"
+   ],
+   "match_names": [
+    "St. Peter and Paul",
+    "Saint Peter and Saint Paul",
+    "St Peter",
+    "Saint Peter"
+   ]
+  },
+  {
+   "key": "john-the-apostle",
+   "spoken": "Saint John the Apostle",
+   "match_ids": [
+    "st_john_the_apostle"
+   ],
+   "match_names": [
+    "St. John the Apostle",
+    "Saint John the Apostle",
+    "St John the Evangelist",
+    "Saint John the Evangelist"
+   ]
+  },
+  {
+   "key": "teresa-of-avila",
+   "spoken": "Saint Teresa of Ávila",
+   "match_ids": [
+    "st_teresa_of_avila",
+    "teresa_of_jesus_of_avila_virgin"
+   ],
+   "match_names": [
+    "St. Teresa of Avila",
+    "Saint Teresa of Ávila",
+    "Saint Teresa of Jesus",
+    "Teresa of Avila"
+   ]
+  }
+ ],
+ "patrons": [
+  {
+   "key": "therese-of-lisieux",
+   "spoken": "Saint Thérèse of Lisieux",
+   "match_ids": [
+    "st_therese_of_lisieux_rose",
+    "therese_of_the_child_jesus_and_the_holy_face_of_lisieux_virgin"
+   ],
+   "match_names": [
+    "St. Therese of Lisieux",
+    "St. Thérèse of Lisieux",
+    "Saint Thérèse of Lisieux",
+    "Saint Thérèse of the Child Jesus",
+    "Therese of Lisieux"
+   ]
+  },
+  {
+   "key": "john-bosco",
+   "spoken": "Saint John Bosco",
+   "match_ids": [
+    "st_john_bosco"
+   ],
+   "match_names": [
+    "St. John Bosco",
+    "Saint John Bosco"
+   ]
+  },
+  {
+   "key": "thomas-more",
+   "spoken": "Saint Thomas More",
+   "match_ids": [
+    "st_thomas_more"
+   ],
+   "match_names": [
+    "St. Thomas More",
+    "Saint Thomas More"
+   ]
+  },
+  {
+   "key": "francis-de-sales",
+   "spoken": "Saint Francis de Sales",
+   "match_ids": [
+    "st_francis_de_sales"
+   ],
+   "match_names": [
+    "St. Francis de Sales",
+    "Saint Francis de Sales"
+   ]
+  },
+  {
+   "key": "isidore-of-seville",
+   "spoken": "Saint Isidore of Seville",
+   "match_ids": [
+    "st_isidore_of_seville"
+   ],
+   "match_names": [
+    "St Isidore of Seville",
+    "Saint Isidore of Seville"
+   ]
+  },
+  {
+   "key": "albert-the-great",
+   "spoken": "Saint Albert the Great",
+   "match_ids": [
+    "st_albert_the_great"
+   ],
+   "match_names": [
+    "St Albert the Great",
+    "Saint Albert the Great"
+   ]
+  },
+  {
+   "key": "maximilian-kolbe",
+   "spoken": "Saint Maximilian Kolbe",
+   "match_ids": [
+    "st_maximilian_kolbe"
+   ],
+   "match_names": [
+    "St. Maximilian Kolbe",
+    "Saint Maximilian Kolbe"
+   ]
+  },
+  {
+   "key": "john-paul-ii",
+   "spoken": "Saint John Paul II",
+   "match_ids": [
+    "pope_st_john_paul_ii"
+   ],
+   "match_names": [
+    "Pope St. John Paul II",
+    "Saint John Paul II",
+    "St John Paul II"
+   ]
+  },
+  {
+   "key": "teresa-of-calcutta",
+   "spoken": "Saint Teresa of Calcutta",
+   "match_ids": [
+    "st_mother_teresa"
+   ],
+   "match_names": [
+    "St Mother Teresa",
+    "Saint Teresa of Calcutta",
+    "Mother Teresa"
+   ]
+  },
+  {
+   "key": "elizabeth-of-hungary",
+   "spoken": "Saint Elizabeth of Hungary",
+   "match_ids": [
+    "st_elizabeth_of_hungary"
+   ],
+   "match_names": [
+    "St. Elizabeth of Hungary",
+    "Saint Elizabeth of Hungary"
+   ]
+  },
+  {
+   "key": "sebastian",
+   "spoken": "Saint Sebastian",
+   "match_ids": [
+    "st_sebastian"
+   ],
+   "match_names": [
+    "St. Sebastian",
+    "Saint Sebastian"
+   ]
+  },
+  {
+   "key": "pier-giorgio-frassati",
+   "spoken": "Saint Pier Giorgio Frassati",
+   "match_ids": [
+    "st_pier_giorgio_frassati"
+   ],
+   "match_names": [
+    "St Pier Giorgio Frassati",
+    "Saint Pier Giorgio Frassati"
+   ]
+  },
+  {
+   "key": "mark",
+   "spoken": "Saint Mark",
+   "match_ids": [
+    "mark_evangelist"
+   ],
+   "match_names": [
+    "Saint Mark",
+    "St Mark",
+    "Saint Mark, Evangelist"
+   ]
+  },
+  {
+   "key": "angela-merici",
+   "spoken": "Saint Angela Merici",
+   "match_ids": [
+    "st_angela_merici"
+   ],
+   "match_names": [
+    "St Angela Merici",
+    "Saint Angela Merici"
+   ]
+  },
+  {
+   "key": "josemaria-escriva",
+   "spoken": "Saint Josemaría Escrivá",
+   "match_ids": [
+    "st_josemaria_escriva"
+   ],
+   "match_names": [
+    "St. Josemaria Escriva",
+    "Saint Josemaría Escrivá"
+   ]
+  },
+  {
+   "key": "carlo-acutis",
+   "spoken": "Saint Carlo Acutis",
+   "match_ids": [
+    "st_carlo_acutis"
+   ],
+   "match_names": [
+    "St Carlo Acutis",
+    "Saint Carlo Acutis"
+   ]
+  }
+ ],
+ "window_names": {
+  "14 holy helpers": {
+   "excluded": "collective"
+  },
+  "30 day novena to st joseph": {
+   "excluded": "devotion"
+  },
+  "54 day rosary": {
+   "excluded": "devotion"
+  },
+  "abigail": {
+   "key": "abigail",
+   "spoken": "Saint Abigail"
+  },
+  "adalbert": {
+   "key": "adalbert of prague bishop",
+   "spoken": "Saint Adalbert"
+  },
+  "adalbert of prague bishop": {
+   "key": "adalbert of prague bishop",
+   "spoken": "Saint Adalbert"
+  },
+  "adelaide": {
+   "key": "adelaide",
+   "spoken": "Saint Adelaide"
+  },
+  "agatha": {
+   "key": "agatha",
+   "spoken": "Saint Agatha"
+  },
+  "agnes": {
+   "key": "agnes",
+   "spoken": "Saint Agnes"
+  },
+  "all saints": {
+   "excluded": "collective"
+  },
+  "aloysius gonzaga": {
+   "key": "aloysius gonzaga",
+   "spoken": "Saint Aloysius Gonzaga"
+  },
+  "alphonsus liguori": {
+   "key": "alphonsus liguori",
+   "spoken": "Saint Alphonsus Liguori"
+  },
+  "ambrose": {
+   "key": "ambrose",
+   "spoken": "Saint Ambrose"
+  },
+  "anastasia": {
+   "key": "anastasia",
+   "spoken": "Saint Anastasia"
+  },
+  "andre bessette": {
+   "key": "andre bessette",
+   "spoken": "Saint Andre Bessette"
+  },
+  "andrew avellino": {
+   "key": "andrew avellino",
+   "spoken": "Saint Andrew Avellino"
+  },
+  "andrew bobola": {
+   "key": "andrew bobola",
+   "spoken": "Saint Andrew Bobola"
+  },
+  "andrew christmas": {
+   "key": "andrew the apostle",
+   "spoken": "Saint Andrew"
+  },
+  "andrew dung lac": {
+   "key": "andrew dung lac priest and companions martyrs",
+   "spoken": "Saint Andrew Dũng-Lạc and Companions"
+  },
+  "andrew dung lac priest and companions martyrs": {
+   "key": "andrew dung lac priest and companions martyrs",
+   "spoken": "Saint Andrew Dũng-Lạc and Companions"
+  },
+  "andrew kim tae gon priest paul chong ha sang and companions martyrs": {
+   "key": "andrew kim tae gon priest paul chong ha sang and companions martyrs",
+   "spoken": "Saints Andrew Kim Tae-gŏn, Paul Chŏng Ha-sang and Companions"
+  },
+  "andrew kim tae gon": {
+   "key": "andrew kim tae gon priest paul chong ha sang and companions martyrs",
+   "spoken": "Saints Andrew Kim Tae-gŏn, Paul Chŏng Ha-sang and Companions"
+  },
+  "andrew the apostle": {
+   "key": "andrew the apostle",
+   "spoken": "Saint Andrew"
+  },
+  "angelic warfare confraternity": {
+   "excluded": "devotion"
+  },
+  "anne": {
+   "key": "anne",
+   "spoken": "Saint Anne"
+  },
+  "annunciation": {
+   "excluded": "lords-feast"
+  },
+  "anselm of canterbury bishop": {
+   "key": "anselm of canterbury bishop",
+   "spoken": "Saint Anselm"
+  },
+  "anselm": {
+   "key": "anselm of canterbury bishop",
+   "spoken": "Saint Anselm"
+  },
+  "ansgar": {
+   "key": "ansgar of hamburg bishop",
+   "spoken": "Saint Ansgar"
+  },
+  "ansgar of hamburg bishop": {
+   "key": "ansgar of hamburg bishop",
+   "spoken": "Saint Ansgar"
+  },
+  "anthony": {
+   "key": "anthony of egypt abbot",
+   "spoken": "Saint Anthony"
+  },
+  "anthony mary claret": {
+   "key": "anthony mary claret",
+   "spoken": "Saint Anthony Mary Claret"
+  },
+  "anthony of egypt abbot": {
+   "key": "anthony of egypt abbot",
+   "spoken": "Saint Anthony"
+  },
+  "anthony zaccaria": {
+   "key": "anthony zaccaria priest",
+   "spoken": "Saint Anthony Zaccaria"
+  },
+  "anthony zaccaria priest": {
+   "key": "anthony zaccaria priest",
+   "spoken": "Saint Anthony Zaccaria"
+  },
+  "apollinaris of ravenna bishop": {
+   "key": "apollinaris of ravenna bishop",
+   "spoken": "Saint Apollinaris"
+  },
+  "apollinaris": {
+   "key": "apollinaris of ravenna bishop",
+   "spoken": "Saint Apollinaris"
+  },
+  "apollonia": {
+   "key": "apollonia",
+   "spoken": "Saint Apollonia"
+  },
+  "the ascension of the lord": {
+   "excluded": "lords-feast"
+  },
+  "ascension of the lord": {
+   "excluded": "lords-feast"
+  },
+  "assumption": {
+   "excluded": "marian"
+  },
+  "athanasius of alexandria bishop": {
+   "key": "athanasius of alexandria bishop",
+   "spoken": "Saint Athanasius"
+  },
+  "athanasius": {
+   "key": "athanasius of alexandria bishop",
+   "spoken": "Saint Athanasius"
+  },
+  "augustine": {
+   "key": "augustine",
+   "spoken": "Saint Augustine"
+  },
+  "augustine of canterbury bishop": {
+   "key": "augustine of canterbury bishop",
+   "spoken": "Saint Augustine of Canterbury"
+  },
+  "augustine of canterbury": {
+   "key": "augustine of canterbury bishop",
+   "spoken": "Saint Augustine of Canterbury"
+  },
+  "augustine zhao rong": {
+   "key": "augustine zhao rong priest and companions martyrs",
+   "spoken": "Saint Augustine Zhao Rong and Companions"
+  },
+  "augustine zhao rong priest and companions martyrs": {
+   "key": "augustine zhao rong priest and companions martyrs",
+   "spoken": "Saint Augustine Zhao Rong and Companions"
+  },
+  "baptism of the lord": {
+   "excluded": "lords-feast"
+  },
+  "the baptism of the lord": {
+   "excluded": "lords-feast"
+  },
+  "barbara": {
+   "key": "barbara",
+   "spoken": "Saint Barbara"
+  },
+  "barnabas apostle": {
+   "key": "barnabas apostle",
+   "spoken": "Saint Barnabas"
+  },
+  "barnabas": {
+   "key": "barnabas apostle",
+   "spoken": "Saint Barnabas"
+  },
+  "bartholomew": {
+   "key": "bartholomew apostle",
+   "spoken": "Saint Bartholomew"
+  },
+  "bartholomew apostle": {
+   "key": "bartholomew apostle",
+   "spoken": "Saint Bartholomew"
+  },
+  "basil the great and gregory nazianzen": {
+   "key": "basil the great and gregory nazianzen bishops",
+   "spoken": "Saints Basil the Great and Gregory Nazianzen"
+  },
+  "basil the great and gregory nazianzen bishops": {
+   "key": "basil the great and gregory nazianzen bishops",
+   "spoken": "Saints Basil the Great and Gregory Nazianzen"
+  },
+  "bede the venerable priest": {
+   "key": "bede the venerable priest",
+   "spoken": "Saint Bede the Venerable"
+  },
+  "bede the venerable": {
+   "key": "bede the venerable priest",
+   "spoken": "Saint Bede the Venerable"
+  },
+  "benedict": {
+   "key": "benedict",
+   "spoken": "Saint Benedict"
+  },
+  "benedict joseph labre": {
+   "key": "benedict joseph labre",
+   "spoken": "Saint Benedict Joseph Labre"
+  },
+  "bernadette": {
+   "key": "bernadette",
+   "spoken": "Saint Bernadette"
+  },
+  "bernadine of siena": {
+   "key": "bernadine of siena",
+   "spoken": "Saint Bernadine of Siena"
+  },
+  "bernardine of siena": {
+   "key": "bernadine of siena",
+   "spoken": "Saint Bernadine of Siena"
+  },
+  "bernardine of siena priest": {
+   "key": "bernadine of siena",
+   "spoken": "Saint Bernadine of Siena"
+  },
+  "bernard of clairvaux": {
+   "key": "bernard of clairvaux",
+   "spoken": "Saint Bernard of Clairvaux"
+  },
+  "blaise": {
+   "key": "blaise",
+   "spoken": "Saint Blaise"
+  },
+  "bonaventure": {
+   "key": "bonaventure",
+   "spoken": "Saint Bonaventure"
+  },
+  "boniface of mainz bishop": {
+   "key": "boniface of mainz bishop",
+   "spoken": "Saint Boniface"
+  },
+  "boniface": {
+   "key": "boniface of mainz bishop",
+   "spoken": "Saint Boniface"
+  },
+  "brendan": {
+   "key": "brendan",
+   "spoken": "Saint Brendan"
+  },
+  "bridget of sweden": {
+   "key": "bridget of sweden",
+   "spoken": "Saint Bridget of Sweden"
+  },
+  "brigid of ireland": {
+   "key": "brigid of ireland",
+   "spoken": "Saint Brigid of Ireland"
+  },
+  "bruno of cologne priest": {
+   "key": "bruno of cologne priest",
+   "spoken": "Saint Bruno"
+  },
+  "bruno": {
+   "key": "bruno of cologne priest",
+   "spoken": "Saint Bruno"
+  },
+  "cajetan": {
+   "key": "cajetan",
+   "spoken": "Saint Cajetan"
+  },
+  "callistus i": {
+   "key": "callistus i pope",
+   "spoken": "Saint Callistus I"
+  },
+  "callistus i pope": {
+   "key": "callistus i pope",
+   "spoken": "Saint Callistus I"
+  },
+  "camillus de lellis": {
+   "key": "camillus de lellis",
+   "spoken": "Saint Camillus de Lellis"
+  },
+  "cardinal burke our lady of guadalupe": {
+   "excluded": "marian"
+  },
+  "casimir": {
+   "key": "casimir of poland",
+   "spoken": "Saint Casimir"
+  },
+  "casimir of poland": {
+   "key": "casimir of poland",
+   "spoken": "Saint Casimir"
+  },
+  "catherine of alexandria": {
+   "key": "catherine of alexandria",
+   "spoken": "Saint Catherine of Alexandria"
+  },
+  "catherine of bologna": {
+   "key": "catherine of bologna",
+   "spoken": "Saint Catherine of Bologna"
+  },
+  "catherine of siena": {
+   "key": "catherine of siena",
+   "spoken": "Saint Catherine of Siena"
+  },
+  "cecilia": {
+   "key": "cecilia",
+   "spoken": "Saint Cecilia"
+  },
+  "chair of saint peter the apostle": {
+   "excluded": "lords-feast"
+  },
+  "the chair of saint peter the apostle": {
+   "excluded": "lords-feast"
+  },
+  "sharbel makhluf priest": {
+   "key": "charbel",
+   "spoken": "Saint Charbel"
+  },
+  "charbel": {
+   "key": "charbel",
+   "spoken": "Saint Charbel"
+  },
+  "sharbel makhluf": {
+   "key": "charbel",
+   "spoken": "Saint Charbel"
+  },
+  "charles borromeo": {
+   "key": "charles borromeo",
+   "spoken": "Saint Charles Borromeo"
+  },
+  "charles lwanga and companions": {
+   "key": "charles lwanga and companions martyrs",
+   "spoken": "Saints Charles Lwanga and Companions"
+  },
+  "charles lwanga and companions martyrs": {
+   "key": "charles lwanga and companions martyrs",
+   "spoken": "Saints Charles Lwanga and Companions"
+  },
+  "christ the king": {
+   "excluded": "lords-feast"
+  },
+  "christina the astonishing": {
+   "key": "christina the astonishing",
+   "spoken": "Saint Christina the Astonishing"
+  },
+  "christopher": {
+   "key": "christopher",
+   "spoken": "Saint Christopher"
+  },
+  "christopher magallanes priest and companions martyrs": {
+   "key": "christopher magallanes priest and companions martyrs",
+   "spoken": "Saint Christopher Magallanes and Companions"
+  },
+  "christopher magallanes": {
+   "key": "christopher magallanes priest and companions martyrs",
+   "spoken": "Saint Christopher Magallanes and Companions"
+  },
+  "clare": {
+   "key": "clare",
+   "spoken": "Saint Clare"
+  },
+  "clement i pope": {
+   "key": "clement i pope",
+   "spoken": "Saint Clement I"
+  },
+  "clement i": {
+   "key": "clement i pope",
+   "spoken": "Saint Clement I"
+  },
+  "colette": {
+   "key": "colette",
+   "spoken": "Saint Colette"
+  },
+  "columban of luxeuil abbot": {
+   "key": "columban of luxeuil abbot",
+   "spoken": "Saint Columban"
+  },
+  "columban": {
+   "key": "columban of luxeuil abbot",
+   "spoken": "Saint Columban"
+  },
+  "conversion of saint paul the apostle": {
+   "excluded": "lords-feast"
+  },
+  "the conversion of saint paul the apostle": {
+   "excluded": "lords-feast"
+  },
+  "cornelius i pope and cyprian of carthage bishop martyrs": {
+   "key": "cornelius i pope and cyprian of carthage bishop martyrs",
+   "spoken": "Saints Cornelius"
+  },
+  "cornelius": {
+   "key": "cornelius i pope and cyprian of carthage bishop martyrs",
+   "spoken": "Saints Cornelius"
+  },
+  "corona": {
+   "key": "corona",
+   "spoken": "Saint Corona"
+  },
+  "corona novena against pandemics": {
+   "key": "corona",
+   "spoken": "Saint Corona"
+  },
+  "corpus christi": {
+   "excluded": "lords-feast"
+  },
+  "cosmas of cilicia and damian of cilicia martyrs": {
+   "key": "cosmas and damian",
+   "spoken": "Saints Cosmas and Damian"
+  },
+  "cosmas and damian": {
+   "key": "cosmas and damian",
+   "spoken": "Saints Cosmas and Damian"
+  },
+  "cyril constantine the philosopher monk and methodius michael of thessaloniki bishop": {
+   "key": "cyril constantine the philosopher monk and methodius michael of thessaloniki bishop",
+   "spoken": "Saints Cyril"
+  },
+  "cyril": {
+   "key": "cyril constantine the philosopher monk and methodius michael of thessaloniki bishop",
+   "spoken": "Saints Cyril"
+  },
+  "cyril of alexandria bishop": {
+   "key": "cyril of alexandria bishop",
+   "spoken": "Saint Cyril of Alexandria"
+  },
+  "cyril of alexandria": {
+   "key": "cyril of alexandria bishop",
+   "spoken": "Saint Cyril of Alexandria"
+  },
+  "cyril of jerusalem": {
+   "key": "cyril of jerusalem",
+   "spoken": "Saint Cyril of Jerusalem"
+  },
+  "cyril of jerusalem bishop": {
+   "key": "cyril of jerusalem",
+   "spoken": "Saint Cyril of Jerusalem"
+  },
+  "damien of molokai": {
+   "key": "damien of molokai",
+   "spoken": "Saint Damien of Molokai"
+  },
+  "dedication of the basilicas of saints peter and paul apostles": {
+   "excluded": "lords-feast"
+  },
+  "the dedication of the basilicas of saints peter and paul": {
+   "excluded": "lords-feast"
+  },
+  "dedication of the lateran basilica": {
+   "excluded": "lords-feast"
+  },
+  "the dedication of the lateran basilica": {
+   "excluded": "lords-feast"
+  },
+  "denis of paris bishop and companions martyrs": {
+   "key": "denis of paris bishop and companions martyrs",
+   "spoken": "Saint Denis and Companions"
+  },
+  "denis": {
+   "key": "denis of paris bishop and companions martyrs",
+   "spoken": "Saint Denis and Companions"
+  },
+  "divine mercy": {
+   "excluded": "devotion"
+  },
+  "dominic": {
+   "key": "dominic",
+   "spoken": "Saint Dominic"
+  },
+  "dominic savio": {
+   "key": "dominic savio",
+   "spoken": "Saint Dominic Savio"
+  },
+  "dymphna": {
+   "key": "dymphna",
+   "spoken": "Saint Dymphna"
+  },
+  "dymphna novena prayers for mental illnesses": {
+   "key": "dymphna",
+   "spoken": "Saint Dymphna"
+  },
+  "easter sunday of the resurrection of the lord": {
+   "excluded": "lords-feast"
+  },
+  "easter sunday": {
+   "excluded": "lords-feast"
+  },
+  "teresa benedicta of the cross stein virgin": {
+   "key": "edith stein",
+   "spoken": "Saint Teresa Benedicta of the Cross"
+  },
+  "edith stein": {
+   "key": "edith stein",
+   "spoken": "Saint Teresa Benedicta of the Cross"
+  },
+  "teresa benedicta of the cross stein": {
+   "key": "edith stein",
+   "spoken": "Saint Teresa Benedicta of the Cross"
+  },
+  "edmund campion": {
+   "key": "edmund campion",
+   "spoken": "Saint Edmund Campion"
+  },
+  "election": {
+   "excluded": "devotion"
+  },
+  "election consecration 54 day": {
+   "excluded": "devotion"
+  },
+  "elizabeth": {
+   "key": "elizabeth",
+   "spoken": "Saint Elizabeth"
+  },
+  "elizabeth ann seton": {
+   "key": "elizabeth ann seton",
+   "spoken": "Saint Elizabeth Ann Seton"
+  },
+  "elizabeth of portugal": {
+   "key": "elizabeth of portugal",
+   "spoken": "Saint Elizabeth of Portugal"
+  },
+  "elizabeth of the trinity": {
+   "key": "elizabeth of the trinity",
+   "spoken": "Saint Elizabeth of the Trinity"
+  },
+  "english martyrs": {
+   "excluded": "collective"
+  },
+  "ephrem the syrian deacon": {
+   "key": "ephrem the syrian deacon",
+   "spoken": "Saint Ephrem"
+  },
+  "ephrem": {
+   "key": "ephrem the syrian deacon",
+   "spoken": "Saint Ephrem"
+  },
+  "epiphany magi": {
+   "excluded": "lords-feast"
+  },
+  "the epiphany of the lord": {
+   "excluded": "lords-feast"
+  },
+  "epiphany of the lord": {
+   "excluded": "lords-feast"
+  },
+  "eusebius of vercelli": {
+   "key": "eusebius of vercelli bishop",
+   "spoken": "Saint Eusebius of Vercelli"
+  },
+  "eusebius of vercelli bishop": {
+   "key": "eusebius of vercelli bishop",
+   "spoken": "Saint Eusebius of Vercelli"
+  },
+  "expeditus": {
+   "key": "expeditus",
+   "spoken": "Saint Expeditus"
+  },
+  "fabian i pope": {
+   "key": "fabian i pope",
+   "spoken": "Saint Fabian"
+  },
+  "fabian": {
+   "key": "fabian i pope",
+   "spoken": "Saint Fabian"
+  },
+  "faustina": {
+   "key": "faustina",
+   "spoken": "Saint Faustina"
+  },
+  "fertility to conceive": {
+   "excluded": "devotion"
+  },
+  "fidelis of sigmaringen": {
+   "key": "fidelis of sigmaringen priest",
+   "spoken": "Saint Fidelis of Sigmaringen"
+  },
+  "fidelis of sigmaringen priest": {
+   "key": "fidelis of sigmaringen priest",
+   "spoken": "Saint Fidelis of Sigmaringen"
+  },
+  "the first martyrs of the holy roman church": {
+   "excluded": "collective"
+  },
+  "first martyrs of the holy roman church": {
+   "excluded": "collective"
+  },
+  "fr michael mcgivney": {
+   "key": "fr michael mcgivney",
+   "spoken": "Blessed Michael McGivney"
+  },
+  "fr vincent capodanno": {
+   "key": "fr vincent capodanno",
+   "spoken": "Father Vincent Capodanno"
+  },
+  "frances of rome": {
+   "key": "frances of rome",
+   "spoken": "Saint Frances of Rome"
+  },
+  "frances xavier cabrini": {
+   "key": "frances xavier cabrini",
+   "spoken": "Saint Frances Cabrini"
+  },
+  "francis of assisi": {
+   "key": "francis of assisi",
+   "spoken": "Saint Francis of Assisi"
+  },
+  "francis of paola hermit": {
+   "key": "francis of paola hermit",
+   "spoken": "Saint Francis of Paola"
+  },
+  "francis of paola": {
+   "key": "francis of paola hermit",
+   "spoken": "Saint Francis of Paola"
+  },
+  "francis xavier": {
+   "key": "francis xavier",
+   "spoken": "Saint Francis Xavier"
+  },
+  "francis xavier seelos": {
+   "key": "francis xavier seelos",
+   "spoken": "Blessed Francis Xavier Seelos"
+  },
+  "fulton sheen": {
+   "key": "fulton sheen",
+   "spoken": "Fulton Sheen"
+  },
+  "gabriel of our lady of sorrows": {
+   "key": "gabriel of our lady of sorrows",
+   "spoken": "Saint Gabriel of Our Lady of Sorrows"
+  },
+  "gemma galgani": {
+   "key": "gemma galgani",
+   "spoken": "Saint Gemma Galgani"
+  },
+  "genevieve": {
+   "key": "genevieve",
+   "spoken": "Saint Genevieve"
+  },
+  "george": {
+   "key": "george",
+   "spoken": "Saint George"
+  },
+  "gerard majella": {
+   "key": "gerard majella",
+   "spoken": "Saint Gerard Majella"
+  },
+  "germaine cousin": {
+   "key": "germaine cousin",
+   "spoken": "Saint Germaine Cousin"
+  },
+  "gertrude of nivelles": {
+   "key": "gertrude of nivelles",
+   "spoken": "Saint Gertrude of Nivelles"
+  },
+  "gertrude prayer": {
+   "key": "gertrude",
+   "spoken": "Saint Gertrude"
+  },
+  "gianna molla": {
+   "key": "gianna molla",
+   "spoken": "Saint Gianna Molla"
+  },
+  "giuseppe moscati": {
+   "key": "giuseppe moscati",
+   "spoken": "Saint Giuseppe Moscati"
+  },
+  "gratitude": {
+   "excluded": "devotion"
+  },
+  "gregory of narek abbot": {
+   "key": "gregory of narek abbot",
+   "spoken": "Saint Gregory of Narek"
+  },
+  "gregory of narek": {
+   "key": "gregory of narek abbot",
+   "spoken": "Saint Gregory of Narek"
+  },
+  "gregory the great": {
+   "key": "gregory the great",
+   "spoken": "Saint Gregory the Great"
+  },
+  "gregory vii": {
+   "key": "gregory vii pope",
+   "spoken": "Saint Gregory VII"
+  },
+  "gregory vii pope": {
+   "key": "gregory vii pope",
+   "spoken": "Saint Gregory VII"
+  },
+  "guardian angel": {
+   "excluded": "devotion"
+  },
+  "hedwig of silesia religious": {
+   "key": "hedwig of silesia religious",
+   "spoken": "Saint Hedwig of Silesia"
+  },
+  "hedwig": {
+   "key": "hedwig of silesia religious",
+   "spoken": "Saint Hedwig of Silesia"
+  },
+  "helena": {
+   "key": "helena",
+   "spoken": "Saint Helena"
+  },
+  "henry ii emperor": {
+   "key": "henry ii emperor",
+   "spoken": "Saint Henry"
+  },
+  "henry": {
+   "key": "henry ii emperor",
+   "spoken": "Saint Henry"
+  },
+  "hilary": {
+   "key": "hilary of poitiers bishop",
+   "spoken": "Saint Hilary"
+  },
+  "hilary of poitiers bishop": {
+   "key": "hilary of poitiers bishop",
+   "spoken": "Saint Hilary"
+  },
+  "hildegard of bingen": {
+   "key": "hildegard of bingen",
+   "spoken": "Saint Hildegard of Bingen"
+  },
+  "holy cloak of st joseph": {
+   "excluded": "devotion"
+  },
+  "holy cross": {
+   "excluded": "lords-feast"
+  },
+  "holy face of jesus": {
+   "excluded": "devotion"
+  },
+  "holy family": {
+   "excluded": "lords-feast"
+  },
+  "the holy guardian angels": {
+   "excluded": "collective"
+  },
+  "holy guardian angels": {
+   "excluded": "collective"
+  },
+  "holy innocents": {
+   "key": "holy innocents",
+   "spoken": "Holy Innocents"
+  },
+  "holy name of jesus": {
+   "excluded": "lords-feast"
+  },
+  "holy souls in purgatory": {
+   "excluded": "collective"
+  },
+  "commemoration of all the faithful departed": {
+   "excluded": "collective"
+  },
+  "the commemoration of all the faithful departed all soul s day": {
+   "excluded": "collective"
+  },
+  "holy spirit novena powerful pentecost prayers": {
+   "excluded": "devotion"
+  },
+  "homobonus": {
+   "key": "homobonus",
+   "spoken": "Saint Homobonus"
+  },
+  "hubert": {
+   "key": "hubert",
+   "spoken": "Saint Hubert"
+  },
+  "ignatius loyola": {
+   "key": "ignatius loyola",
+   "spoken": "Saint Ignatius Loyola"
+  },
+  "ignatius of antioch bishop": {
+   "key": "ignatius of antioch bishop",
+   "spoken": "Saint Ignatius of Antioch"
+  },
+  "ignatius of antioch": {
+   "key": "ignatius of antioch bishop",
+   "spoken": "Saint Ignatius of Antioch"
+  },
+  "immaculate conception": {
+   "excluded": "marian"
+  },
+  "immaculate heart of mary": {
+   "excluded": "marian"
+  },
+  "impossible requests annunciation": {
+   "excluded": "devotion"
+  },
+  "infant of prague": {
+   "excluded": "devotion"
+  },
+  "irenaeus": {
+   "key": "irenaeus of lyon bishop",
+   "spoken": "Saint Irenaeus"
+  },
+  "irenaeus of lyon bishop": {
+   "key": "irenaeus of lyon bishop",
+   "spoken": "Saint Irenaeus"
+  },
+  "isidore the farmer": {
+   "key": "isidore the farmer",
+   "spoken": "Saint Isidore the Farmer"
+  },
+  "jacinta and francisco marto": {
+   "key": "jacinta and francisco marto",
+   "spoken": "Saints Jacinta and Francisco Marto"
+  },
+  "james the greater": {
+   "key": "james the greater",
+   "spoken": "Saint James the Greater"
+  },
+  "jane frances de chantal": {
+   "key": "jane frances de chantal",
+   "spoken": "Saint Jane Frances de Chantal"
+  },
+  "januarius gennaro": {
+   "key": "januarius gennaro",
+   "spoken": "Saint Januarius (Gennaro)"
+  },
+  "jerome": {
+   "key": "jerome",
+   "spoken": "Saint Jerome"
+  },
+  "jerome emiliani": {
+   "key": "jerome emiliani",
+   "spoken": "Saint Jerome Emiliani"
+  },
+  "joachim and anne": {
+   "key": "joachim and anne",
+   "spoken": "Saints Joachim and Anne"
+  },
+  "joan of arc": {
+   "key": "joan of arc",
+   "spoken": "Saint Joan of Arc"
+  },
+  "john baptist de la salle priest": {
+   "key": "john baptist de la salle priest",
+   "spoken": "Saint John Baptist de la Salle"
+  },
+  "john baptist de la salle": {
+   "key": "john baptist de la salle priest",
+   "spoken": "Saint John Baptist de la Salle"
+  },
+  "john chrysostom bishop": {
+   "key": "john chrysostom bishop",
+   "spoken": "Saint John Chrysostom"
+  },
+  "john chrysostom": {
+   "key": "john chrysostom bishop",
+   "spoken": "Saint John Chrysostom"
+  },
+  "john damascene": {
+   "key": "john damascene",
+   "spoken": "Saint John Damascene"
+  },
+  "john eudes": {
+   "key": "john eudes priest",
+   "spoken": "Saint John Eudes"
+  },
+  "john eudes priest": {
+   "key": "john eudes priest",
+   "spoken": "Saint John Eudes"
+  },
+  "john henry newman": {
+   "key": "john henry newman",
+   "spoken": "Saint John Henry Newman"
+  },
+  "john i": {
+   "key": "john i pope",
+   "spoken": "Saint John I"
+  },
+  "john i pope": {
+   "key": "john i pope",
+   "spoken": "Saint John I"
+  },
+  "john leonardi": {
+   "key": "john leonardi priest",
+   "spoken": "Saint John Leonardi"
+  },
+  "john leonardi priest": {
+   "key": "john leonardi priest",
+   "spoken": "Saint John Leonardi"
+  },
+  "john neumann": {
+   "key": "john neumann",
+   "spoken": "Saint John Neumann"
+  },
+  "john of avila": {
+   "key": "john of avila priest",
+   "spoken": "Saint John of Ávila"
+  },
+  "john of avila priest": {
+   "key": "john of avila priest",
+   "spoken": "Saint John of Ávila"
+  },
+  "john of capistrano": {
+   "key": "john of capistrano priest",
+   "spoken": "Saint John of Capistrano"
+  },
+  "john of capistrano priest": {
+   "key": "john of capistrano priest",
+   "spoken": "Saint John of Capistrano"
+  },
+  "john of god": {
+   "key": "john of god",
+   "spoken": "Saint John of God"
+  },
+  "john of the cross": {
+   "key": "john of the cross",
+   "spoken": "Saint John of the Cross"
+  },
+  "john vianney": {
+   "key": "john vianney",
+   "spoken": "Saint John Vianney"
+  },
+  "john xxiii": {
+   "key": "john xxiii pope",
+   "spoken": "Saint John XXIII"
+  },
+  "john xxiii pope": {
+   "key": "john xxiii pope",
+   "spoken": "Saint John XXIII"
+  },
+  "josaphat kuntsevych bishop": {
+   "key": "josaphat kuntsevych bishop",
+   "spoken": "Saint Josaphat"
+  },
+  "josaphat": {
+   "key": "josaphat kuntsevych bishop",
+   "spoken": "Saint Josaphat"
+  },
+  "jose luis sanchez del rio": {
+   "key": "jose luis sanchez del rio",
+   "spoken": "Saint Jose Luis Sanchez del Rio"
+  },
+  "joseph cupertino": {
+   "key": "joseph cupertino",
+   "spoken": "Saint Joseph Cupertino"
+  },
+  "joseph of calasanz": {
+   "key": "joseph of calasanz priest",
+   "spoken": "Saint Joseph of Calasanz"
+  },
+  "joseph of calasanz priest": {
+   "key": "joseph of calasanz priest",
+   "spoken": "Saint Joseph of Calasanz"
+  },
+  "josephine bakhita": {
+   "key": "josephine bakhita",
+   "spoken": "Saint Josephine Bakhita"
+  },
+  "juan diego": {
+   "key": "juan diego",
+   "spoken": "Saint Juan Diego"
+  },
+  "jude": {
+   "key": "jude",
+   "spoken": "Saint Jude"
+  },
+  "juliana falconieri": {
+   "key": "juliana falconieri",
+   "spoken": "Saint Juliana Falconieri"
+  },
+  "justin martyr": {
+   "key": "justin martyr",
+   "spoken": "Saint Justin Martyr"
+  },
+  "kateri": {
+   "key": "kateri",
+   "spoken": "Saint Kateri"
+  },
+  "katharine drexel": {
+   "key": "katharine drexel",
+   "spoken": "Saint Katharine Drexel"
+  },
+  "kevin": {
+   "key": "kevin",
+   "spoken": "Saint Kevin"
+  },
+  "lapsed fallen away catholics": {
+   "excluded": "devotion"
+  },
+  "lawrence": {
+   "key": "lawrence",
+   "spoken": "Saint Lawrence"
+  },
+  "lawrence of brindisi priest": {
+   "key": "lawrence of brindisi priest",
+   "spoken": "Saint Lawrence of Brindisi"
+  },
+  "lawrence of brindisi": {
+   "key": "lawrence of brindisi priest",
+   "spoken": "Saint Lawrence of Brindisi"
+  },
+  "lawrence ruiz and companions martyrs": {
+   "key": "lawrence ruiz and companions martyrs",
+   "spoken": "Saint Lawrence Ruiz and Companions"
+  },
+  "lawrence ruiz and companions": {
+   "key": "lawrence ruiz and companions martyrs",
+   "spoken": "Saint Lawrence Ruiz and Companions"
+  },
+  "louis and zelie martin": {
+   "key": "louis and zelie martin",
+   "spoken": "Saints Louis and Zelie Martin"
+  },
+  "louis de montfort": {
+   "key": "louis de montfort",
+   "spoken": "Saint Louis de Montfort"
+  },
+  "louis king of france": {
+   "key": "louis king of france",
+   "spoken": "Saint Louis King of France"
+  },
+  "louise de marillac": {
+   "key": "louise de marillac",
+   "spoken": "Saint Louise de Marillac"
+  },
+  "lucy": {
+   "key": "lucy",
+   "spoken": "Saint Lucy"
+  },
+  "luke": {
+   "key": "luke",
+   "spoken": "Saint Luke"
+  },
+  "lydwine": {
+   "key": "lydwine",
+   "spoken": "Saint Lydwine"
+  },
+  "marcellinus of rome and peter the exorcist martyrs": {
+   "key": "marcellinus of rome and peter the exorcist martyrs",
+   "spoken": "Saints Marcellinus and Peter"
+  },
+  "marcellinus and peter": {
+   "key": "marcellinus of rome and peter the exorcist martyrs",
+   "spoken": "Saints Marcellinus and Peter"
+  },
+  "margaret mary": {
+   "key": "margaret mary",
+   "spoken": "Saint Margaret Mary"
+  },
+  "margaret of castello": {
+   "key": "margaret of castello",
+   "spoken": "Saint Margaret of Castello"
+  },
+  "margaret of cortona": {
+   "key": "margaret of cortona",
+   "spoken": "Saint Margaret of Cortona"
+  },
+  "margaret of scotland": {
+   "key": "margaret of scotland",
+   "spoken": "Saint Margaret of Scotland"
+  },
+  "maria goretti": {
+   "key": "maria goretti",
+   "spoken": "Saint Maria Goretti"
+  },
+  "marianne cope": {
+   "key": "marianne cope",
+   "spoken": "Saint Marianne Cope"
+  },
+  "mark ji tianxiang": {
+   "key": "mark ji tianxiang",
+   "spoken": "Saint Mark Ji Tianxiang"
+  },
+  "martha of bethany": {
+   "key": "martha of bethany",
+   "spoken": "Saint Martha of Bethany"
+  },
+  "martha": {
+   "key": "martha of bethany mary of bethany and lazarus of bethany",
+   "spoken": "Saints Martha"
+  },
+  "martha of bethany mary of bethany and lazarus of bethany": {
+   "key": "martha of bethany mary of bethany and lazarus of bethany",
+   "spoken": "Saints Martha"
+  },
+  "martin de porres": {
+   "key": "martin de porres",
+   "spoken": "Saint Martin de Porres"
+  },
+  "martin i pope": {
+   "key": "martin i pope",
+   "spoken": "Saint Martin I"
+  },
+  "martin i": {
+   "key": "martin i pope",
+   "spoken": "Saint Martin I"
+  },
+  "martin of tours": {
+   "key": "martin of tours",
+   "spoken": "Saint Martin of Tours"
+  },
+  "mary help of christians": {
+   "excluded": "marian"
+  },
+  "mary": {
+   "excluded": "marian"
+  },
+  "mary mackillop": {
+   "key": "mary mackillop",
+   "spoken": "Saint Mary MacKillop"
+  },
+  "mary magdalene": {
+   "key": "mary magdalene",
+   "spoken": "Saint Mary Magdalene"
+  },
+  "mary magdalene de pazzi": {
+   "key": "mary magdalene de pazzi",
+   "spoken": "Saint Mary Magdalene de Pazzi"
+  },
+  "the octave day of the nativity of the lord solemnity of mary": {
+   "excluded": "marian"
+  },
+  "mary mother of god": {
+   "excluded": "marian"
+  },
+  "mary of egypt": {
+   "key": "mary of egypt",
+   "spoken": "Saint Mary of Egypt"
+  },
+  "mary queen of the apostles": {
+   "excluded": "marian"
+  },
+  "mary undoer of knots": {
+   "excluded": "marian"
+  },
+  "matthew": {
+   "key": "matthew",
+   "spoken": "Saint Matthew"
+  },
+  "matthias apostle": {
+   "key": "matthias apostle",
+   "spoken": "Saint Matthias Apostle"
+  },
+  "michael s lent": {
+   "excluded": "devotion"
+  },
+  "miguel agustin pro": {
+   "key": "miguel agustin pro",
+   "spoken": "Blessed Miguel Agustín Pro"
+  },
+  "miraculous medal": {
+   "excluded": "marian"
+  },
+  "monica": {
+   "key": "monica",
+   "spoken": "Saint Monica"
+  },
+  "the most holy body and blood of christ": {
+   "excluded": "lords-feast"
+  },
+  "most holy body and blood of christ": {
+   "excluded": "lords-feast"
+  },
+  "the most holy name of mary": {
+   "excluded": "marian"
+  },
+  "most holy name of mary": {
+   "excluded": "marian"
+  },
+  "most holy trinity": {
+   "excluded": "lords-feast"
+  },
+  "the most holy trinity": {
+   "excluded": "lords-feast"
+  },
+  "nativity of mary": {
+   "excluded": "marian"
+  },
+  "nativity of the lord": {
+   "excluded": "lords-feast"
+  },
+  "the nativity of the lord christmas": {
+   "excluded": "lords-feast"
+  },
+  "nereus of terracina and achilleus of terracina martyrs": {
+   "key": "nereus of terracina and achilleus of terracina martyrs",
+   "spoken": "Saints Nereus and Achilleus"
+  },
+  "nereus and achilleus": {
+   "key": "nereus of terracina and achilleus of terracina martyrs",
+   "spoken": "Saints Nereus and Achilleus"
+  },
+  "nicholas": {
+   "key": "nicholas",
+   "spoken": "Saint Nicholas"
+  },
+  "norbert": {
+   "key": "norbert",
+   "spoken": "Saint Norbert"
+  },
+  "john de brebeuf isaac jogues priests and companions martyrs": {
+   "key": "north american martyrs",
+   "spoken": "Saints John de Brébeuf and Isaac Jogues and Companions"
+  },
+  "north american martyrs": {
+   "key": "north american martyrs",
+   "spoken": "Saints John de Brébeuf and Isaac Jogues and Companions"
+  },
+  "john de brebeuf and isaac jogues": {
+   "key": "north american martyrs",
+   "spoken": "Saints John de Brébeuf and Isaac Jogues and Companions"
+  },
+  "odilia": {
+   "key": "odilia",
+   "spoken": "Saint Odilia"
+  },
+  "of champion": {
+   "excluded": "marian"
+  },
+  "of charity": {
+   "excluded": "marian"
+  },
+  "of czestochowa": {
+   "excluded": "marian"
+  },
+  "of fatima": {
+   "excluded": "marian"
+  },
+  "of good counsel": {
+   "excluded": "marian"
+  },
+  "of good health": {
+   "excluded": "marian"
+  },
+  "of good remedy": {
+   "excluded": "marian"
+  },
+  "of good success": {
+   "excluded": "marian"
+  },
+  "of graces": {
+   "excluded": "marian"
+  },
+  "of guadalupe": {
+   "excluded": "marian"
+  },
+  "of hope": {
+   "excluded": "marian"
+  },
+  "of knock": {
+   "excluded": "marian"
+  },
+  "of la leche": {
+   "excluded": "marian"
+  },
+  "of la salette": {
+   "excluded": "marian"
+  },
+  "of loreto": {
+   "excluded": "marian"
+  },
+  "of lourdes": {
+   "excluded": "marian"
+  },
+  "of monte berico": {
+   "excluded": "marian"
+  },
+  "of mount carmel": {
+   "excluded": "marian"
+  },
+  "of peace": {
+   "excluded": "marian"
+  },
+  "of perpetual help": {
+   "excluded": "marian"
+  },
+  "of sorrows": {
+   "excluded": "marian"
+  },
+  "of the atonement": {
+   "excluded": "marian"
+  },
+  "of the forsaken": {
+   "excluded": "marian"
+  },
+  "of the rosary": {
+   "excluded": "marian"
+  },
+  "of the snows": {
+   "excluded": "marian"
+  },
+  "of walsingham": {
+   "excluded": "marian"
+  },
+  "oliver plunkett": {
+   "key": "oliver plunkett",
+   "spoken": "Saint Oliver Plunkett"
+  },
+  "one year st bridget of sweden": {
+   "excluded": "devotion"
+  },
+  "padre pio": {
+   "key": "padre pio",
+   "spoken": "Saint Padre Pio"
+  },
+  "pius francesco forgione priest": {
+   "key": "padre pio",
+   "spoken": "Saint Padre Pio"
+  },
+  "pius of pietrelcina": {
+   "key": "padre pio",
+   "spoken": "Saint Padre Pio"
+  },
+  "palm sunday of the passion of the lord": {
+   "excluded": "lords-feast"
+  },
+  "pancras of rome martyr": {
+   "key": "pancras of rome martyr",
+   "spoken": "Saint Pancras"
+  },
+  "pancras": {
+   "key": "pancras of rome martyr",
+   "spoken": "Saint Pancras"
+  },
+  "passion of saint john the baptist": {
+   "excluded": "lords-feast"
+  },
+  "the passion of saint john the baptist": {
+   "excluded": "lords-feast"
+  },
+  "patrick": {
+   "key": "patrick",
+   "spoken": "Saint Patrick"
+  },
+  "paul miki and companions martyrs": {
+   "key": "paul miki and companions martyrs",
+   "spoken": "Saint Paul Miki and Companions"
+  },
+  "paul miki and companions": {
+   "key": "paul miki and companions martyrs",
+   "spoken": "Saint Paul Miki and Companions"
+  },
+  "paul of the cross": {
+   "key": "paul of the cross",
+   "spoken": "Saint Paul of the Cross"
+  },
+  "paul of the cross priest": {
+   "key": "paul of the cross",
+   "spoken": "Saint Paul of the Cross"
+  },
+  "paul vi": {
+   "key": "paul vi pope",
+   "spoken": "Saint Paul VI"
+  },
+  "paul vi pope": {
+   "key": "paul vi pope",
+   "spoken": "Saint Paul VI"
+  },
+  "paulinus of nola bishop": {
+   "key": "paulinus of nola bishop",
+   "spoken": "Saint Paulinus of Nola"
+  },
+  "paulinus of nola": {
+   "key": "paulinus of nola bishop",
+   "spoken": "Saint Paulinus of Nola"
+  },
+  "pedro calungsod": {
+   "key": "pedro calungsod",
+   "spoken": "Saint Pedro Calungsod"
+  },
+  "peregrine": {
+   "key": "peregrine",
+   "spoken": "Saint Peregrine"
+  },
+  "perpetua and felicity": {
+   "key": "perpetua and felicity",
+   "spoken": "Saints Perpetua and Felicity"
+  },
+  "perpetua of carthage and felicity of carthage martyrs": {
+   "key": "perpetua and felicity",
+   "spoken": "Saints Perpetua and Felicity"
+  },
+  "peter chanel": {
+   "key": "peter chanel",
+   "spoken": "Saint Peter Chanel"
+  },
+  "peter chrysologus": {
+   "key": "peter chrysologus bishop",
+   "spoken": "Saint Peter Chrysologus"
+  },
+  "peter chrysologus bishop": {
+   "key": "peter chrysologus bishop",
+   "spoken": "Saint Peter Chrysologus"
+  },
+  "peter claver priest": {
+   "key": "peter claver priest",
+   "spoken": "Saint Peter Claver"
+  },
+  "peter claver": {
+   "key": "peter claver priest",
+   "spoken": "Saint Peter Claver"
+  },
+  "peter damian": {
+   "key": "peter damian",
+   "spoken": "Saint Peter Damian"
+  },
+  "peter julian eymard": {
+   "key": "peter julian eymard",
+   "spoken": "Saint Peter Julian Eymard"
+  },
+  "philip and james": {
+   "key": "philip and james",
+   "spoken": "Saints Philip and James"
+  },
+  "philip neri": {
+   "key": "philip neri",
+   "spoken": "Saint Philip Neri"
+  },
+  "philomena": {
+   "key": "philomena",
+   "spoken": "Saint Philomena"
+  },
+  "pius v": {
+   "key": "pius v pope",
+   "spoken": "Saint Pius V"
+  },
+  "pius v pope": {
+   "key": "pius v pope",
+   "spoken": "Saint Pius V"
+  },
+  "polycarp": {
+   "key": "polycarp of smyrna bishop",
+   "spoken": "Saint Polycarp"
+  },
+  "polycarp of smyrna bishop": {
+   "key": "polycarp of smyrna bishop",
+   "spoken": "Saint Polycarp"
+  },
+  "pontian": {
+   "key": "pontian i pope and hippolytus of rome priest",
+   "spoken": "Saints Pontian"
+  },
+  "pontian i pope and hippolytus of rome priest": {
+   "key": "pontian i pope and hippolytus of rome priest",
+   "spoken": "Saints Pontian"
+  },
+  "pope s repose and new pope": {
+   "excluded": "devotion"
+  },
+  "pope st leo the great": {
+   "key": "pope st leo the great",
+   "spoken": "Saint Leo the Great"
+  },
+  "pope st pius x": {
+   "key": "pope st pius x",
+   "spoken": "Saint Pius X"
+  },
+  "precious blood": {
+   "excluded": "devotion"
+  },
+  "presentation of the blessed virgin mary": {
+   "excluded": "marian"
+  },
+  "the presentation of the lord": {
+   "excluded": "lords-feast"
+  },
+  "presentation of the lord": {
+   "excluded": "lords-feast"
+  },
+  "priscilla": {
+   "key": "priscilla",
+   "spoken": "Saint Priscilla"
+  },
+  "queenship of mary": {
+   "excluded": "marian"
+  },
+  "rafqa": {
+   "key": "rafqa",
+   "spoken": "Saint Rafqa"
+  },
+  "raymond nonnatus": {
+   "key": "raymond nonnatus",
+   "spoken": "Saint Raymond Nonnatus"
+  },
+  "raymond of penyafort": {
+   "key": "raymond of penyafort priest",
+   "spoken": "Saint Raymond of Penyafort"
+  },
+  "raymond of penyafort priest": {
+   "key": "raymond of penyafort priest",
+   "spoken": "Saint Raymond of Penyafort"
+  },
+  "release from ancestral curses": {
+   "excluded": "devotion"
+  },
+  "respect life": {
+   "excluded": "devotion"
+  },
+  "rita": {
+   "key": "rita",
+   "spoken": "Saint Rita of Cascia"
+  },
+  "rita of cascia novena powerful prayer for impossible causes": {
+   "key": "rita",
+   "spoken": "Saint Rita of Cascia"
+  },
+  "robert bellarmine": {
+   "key": "robert bellarmine",
+   "spoken": "Saint Robert Bellarmine"
+  },
+  "rocco novena against plague": {
+   "key": "rocco novena against plague",
+   "spoken": "Saint Rocco"
+  },
+  "romuald": {
+   "key": "romuald of ravenna abbot",
+   "spoken": "Saint Romuald"
+  },
+  "romuald of ravenna abbot": {
+   "key": "romuald of ravenna abbot",
+   "spoken": "Saint Romuald"
+  },
+  "rose of lima": {
+   "key": "rose of lima",
+   "spoken": "Saint Rose of Lima"
+  },
+  "rose philippine duchesne": {
+   "key": "rose philippine duchesne",
+   "spoken": "Saint Rose Philippine Duchesne"
+  },
+  "sacred heart": {
+   "excluded": "lords-feast"
+  },
+  "scholastica": {
+   "key": "scholastica",
+   "spoken": "Saint Scholastica"
+  },
+  "the seven holy founders of the servite order": {
+   "excluded": "collective"
+  },
+  "seven holy founders of the servite order": {
+   "excluded": "collective"
+  },
+  "seven sorrows and joys of st joseph": {
+   "excluded": "devotion"
+  },
+  "simon and jude apostles": {
+   "key": "simon and jude apostles",
+   "spoken": "Saints Simon and Jude"
+  },
+  "simon and jude": {
+   "key": "simon and jude apostles",
+   "spoken": "Saints Simon and Jude"
+  },
+  "sixtus ii": {
+   "key": "sixtus ii pope and companions martyrs",
+   "spoken": "Saint Sixtus II and Companions"
+  },
+  "sixtus ii pope and companions martyrs": {
+   "key": "sixtus ii pope and companions martyrs",
+   "spoken": "Saint Sixtus II and Companions"
+  },
+  "solanus casey": {
+   "key": "solanus casey",
+   "spoken": "Blessed Solanus Casey"
+  },
+  "sophia of rome": {
+   "key": "sophia of rome",
+   "spoken": "Saint Sophia of Rome"
+  },
+  "stanislaus": {
+   "key": "stanislaus of szczepanow bishop",
+   "spoken": "Saint Stanislaus"
+  },
+  "stanislaus of szczepanow bishop": {
+   "key": "stanislaus of szczepanow bishop",
+   "spoken": "Saint Stanislaus"
+  },
+  "stanley rother": {
+   "key": "stanley rother",
+   "spoken": "Blessed Stanley Rother"
+  },
+  "star of the sea": {
+   "excluded": "marian"
+  },
+  "stephen": {
+   "key": "stephen",
+   "spoken": "Saint Stephen"
+  },
+  "stephen i of hungary": {
+   "key": "stephen i of hungary",
+   "spoken": "Saint Stephen of Hungary"
+  },
+  "stephen of hungary": {
+   "key": "stephen i of hungary",
+   "spoken": "Saint Stephen of Hungary"
+  },
+  "sunday of the word of god": {
+   "excluded": "lords-feast"
+  },
+  "third sunday in ordinary time": {
+   "excluded": "lords-feast"
+  },
+  "surrender": {
+   "excluded": "devotion"
+  },
+  "teresa of the andes": {
+   "key": "teresa of the andes",
+   "spoken": "Saint Teresa of the Andes"
+  },
+  "the divine infant king": {
+   "excluded": "devotion"
+  },
+  "the three hail marys": {
+   "excluded": "devotion"
+  },
+  "thomas apostle": {
+   "key": "thomas apostle",
+   "spoken": "Saint Thomas"
+  },
+  "thomas": {
+   "key": "thomas apostle",
+   "spoken": "Saint Thomas"
+  },
+  "thomas aquinas": {
+   "key": "thomas aquinas",
+   "spoken": "Saint Thomas Aquinas"
+  },
+  "thomas becket": {
+   "key": "thomas becket",
+   "spoken": "Saint Thomas Becket"
+  },
+  "timothy": {
+   "key": "timothy",
+   "spoken": "Saint Timothy"
+  },
+  "timothy and maura": {
+   "key": "timothy and maura",
+   "spoken": "Saints Timothy and Maura"
+  },
+  "transfiguration of the lord": {
+   "excluded": "lords-feast"
+  },
+  "the transfiguration of the lord": {
+   "excluded": "lords-feast"
+  },
+  "turibius of mogrovejo bishop": {
+   "key": "turibius of mogrovejo bishop",
+   "spoken": "Saint Turibius of Mogrovejo"
+  },
+  "turibius of mogrovejo": {
+   "key": "turibius of mogrovejo bishop",
+   "spoken": "Saint Turibius of Mogrovejo"
+  },
+  "valentine": {
+   "key": "valentine",
+   "spoken": "Saint Valentine"
+  },
+  "veronica giuliani": {
+   "key": "veronica giuliani",
+   "spoken": "Saint Veronica Giuliani"
+  },
+  "vincent de paul": {
+   "key": "vincent de paul",
+   "spoken": "Saint Vincent de Paul"
+  },
+  "vincent ferrer": {
+   "key": "vincent ferrer",
+   "spoken": "Saint Vincent Ferrer"
+  },
+  "vincent of saragossa deacon": {
+   "key": "vincent of saragossa deacon",
+   "spoken": "Saint Vincent"
+  },
+  "vincent": {
+   "key": "vincent of saragossa deacon",
+   "spoken": "Saint Vincent"
+  },
+  "virgin of revelation": {
+   "excluded": "marian"
+  },
+  "visitation": {
+   "excluded": "marian"
+  },
+  "wenceslaus i of bohemia martyr": {
+   "key": "wenceslaus i of bohemia martyr",
+   "spoken": "Saint Wenceslaus"
+  },
+  "wenceslaus": {
+   "key": "wenceslaus i of bohemia martyr",
+   "spoken": "Saint Wenceslaus"
+  },
+  "zita": {
+   "key": "zita",
+   "spoken": "Saint Zita"
+  },
+  "denis and companions": {
+   "key": "denis of paris",
+   "spoken": "Saint Denis and Companions"
+  },
+  "peter canisius": {
+   "key": "peter canisius",
+   "spoken": "Saint Peter Canisius"
+  }
+ }
+}
