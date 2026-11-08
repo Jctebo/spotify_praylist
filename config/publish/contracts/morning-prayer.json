@@ -128,8 +128,8 @@
           "title": "Intercessory Litany",
           "blocks": [
             {
-              "kind": "file",
-              "path": "config/publish/templates/morning-prayer/intercessory-litany.txt"
+              "kind": "saints-litany",
+              "fallback_file": "config/publish/templates/morning-prayer/intercessory-litany.txt"
             }
           ]
         }

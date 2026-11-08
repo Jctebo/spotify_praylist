@@ -417,6 +417,13 @@ def _normalize_block(block: Any, path: Path, entry_id: str) -> Dict[str, Any]:
         normalized["path"] = file_path
         if "audio_role" in normalized:
             normalized["audio_role"] = normalize_publish_key(normalized.get("audio_role"))
+    elif kind == "saints-litany":
+        fallback_path = str(normalized.get("fallback_file", "")).strip()
+        if not fallback_path:
+            raise RuntimeError(f"Publish entry '{entry_id}' in '{path}' has a saints-litany block without 'fallback_file'.")
+        normalized["fallback_file"] = fallback_path
+        if "audio_role" in normalized:
+            normalized["audio_role"] = normalize_publish_key(normalized.get("audio_role"))
     elif kind == "inline":
         normalized["text"] = str(normalized.get("text", ""))
         if "audio_role" in normalized:
@@ -621,6 +628,15 @@ def _validate_entry_blocks(blocks: Sequence[Dict[str, Any]], path: Path, entry_i
             if not resolved_path.exists():
                 raise RuntimeError(
                     f"Publish entry '{entry_id}' in '{path}' references missing template file '{resolved_path}'."
+                )
+        elif kind == "saints-litany":
+            fallback_path = str(block.get("fallback_file", "")).strip()
+            resolved_path = Path(fallback_path)
+            if not resolved_path.is_absolute():
+                resolved_path = ROOT / resolved_path
+            if not resolved_path.exists():
+                raise RuntimeError(
+                    f"Publish entry '{entry_id}' in '{path}' references missing saints-litany fallback file '{resolved_path}'."
                 )
         elif kind == "monthly-template":
             folder_path = str(block.get("folder", "")).strip()
@@ -1595,6 +1611,50 @@ def _resolve_rosary_decades_content(
 
 
 
+def _resolve_saints_litany_content(
+    block: Dict[str, Any],
+    *,
+    entry: Dict[str, Any],
+    target_date: _dt.date,
+    runtime_context: Optional[Dict[str, Any]] = None,
+) -> str:
+    """Resolve a saints-litany block through the v306 ladder resolver.
+
+    The fallback is structural: ANY failure — ladder data missing or
+    invalid, window or calendar resolution error, an implausibly short
+    result (fewer names than core + patrons) — returns the static
+    template file's text and prints a warning, so the episode never
+    blocks on the ladder. The run output names the source either way.
+    """
+    fallback_path = str(block.get("fallback_file", "")).strip()
+    try:
+        from jobs.publish import saints_ladder
+
+        injected = (runtime_context or {}).get("saints_ladder_windows")
+        if injected is not None:
+            names = saints_ladder.resolve_invocations(target_date, windows=injected)
+        else:
+            names = saints_ladder.resolve_invocations(target_date)
+        if len(names) < saints_ladder.minimum_invocation_count():
+            raise RuntimeError(
+                f"saints_ladder resolved implausibly few invocations ({len(names)}) "
+                f"for {target_date.isoformat()}"
+            )
+        print(
+            "INFO saints_litany source=resolver "
+            f"entry={entry.get('entry_id', '')} date={target_date.isoformat()} names={len(names)}",
+            file=sys.stderr,
+        )
+        return saints_ladder.render_litany_from_names(names)
+    except Exception as exc:
+        print(
+            "WARN saints_litany source=fallback "
+            f"entry={entry.get('entry_id', '')} date={target_date.isoformat()} reason={exc}",
+            file=sys.stderr,
+        )
+        return _read_text_file(fallback_path)
+
+
 def resolve_block_content(
     block: Any,
     *,
@@ -1619,6 +1679,13 @@ def resolve_block_content(
             return str(block.get("text", "")).strip()
         if kind == "file":
             return _read_text_file(str(block.get("path", "")).strip())
+        if kind == "saints-litany":
+            return _resolve_saints_litany_content(
+                block,
+                entry=entry,
+                target_date=effective_date,
+                runtime_context=runtime_context,
+            )
         if kind == "monthly-template":
             month_name = evaluate_selector(block.get("selector", "current_calendar_month"), target_date=effective_date, timezone=contract.timezone, contract=contract, entry=entry)
             folder = str(block.get("folder", "")).strip()

@@ -180,7 +180,18 @@ def collect(target: dt.date, outdir: Path) -> dict:
 
     # ---------------- publish episodes ----------------
     contracts = load_publish_contracts(DEFAULT_CONTRACT_DIR)
+    # v306: resolve the night's novena windows ONCE, here. The saints
+    # ladder inside build_audio_jobs consumes this same list (primed
+    # into the ladder module), and the novena loop below reuses it —
+    # the resolver cost is paid a single time, and the Morning Prayer
+    # can never invoke a novena the show is not running tonight.
+    window_runtimes = resolve_active_novenas(target)
+    from jobs.publish import saints_ladder
+
+    saints_ladder.prime_window_runtimes(target, window_runtimes)
     jobs = build_audio_jobs(contracts, target_date=target)
+    for ladder_warning in saints_ladder.last_warnings():
+        print(f"WARN {ladder_warning}")
     jobs.sort(key=lambda j: EPISODE_ORDER.index(ENTRY_KEY.get(j.get("entry_id", ""), j.get("entry_id", "")))
               if ENTRY_KEY.get(j.get("entry_id", "")) in EPISODE_ORDER else 99)
     for job in jobs:
@@ -300,7 +311,7 @@ def collect(target: dt.date, outdir: Path) -> dict:
         )
 
     # ---------------- novenas ----------------
-    for runtime in resolve_active_novenas(target):
+    for runtime in window_runtimes:
         cid = runtime.contract_id
         day = runtime.active_day
         saint = str(runtime.saint.get("name", "")).strip()
