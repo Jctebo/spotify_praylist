@@ -1858,6 +1858,10 @@ def _fragment_label_for_block(block: Dict[str, Any], text: str) -> str:
         path_text = str(block.get("path", "")).strip()
         return _humanize_slug(Path(path_text).stem) if path_text else "Fragment"
 
+    if kind == "saints-litany":
+        fallback_text = str(block.get("fallback_file", "")).strip()
+        return _humanize_slug(Path(fallback_text).stem) if fallback_text else "Intercessory Litany"
+
     if kind == "daily-intro":
         return explicit or "Daily Intro"
 
@@ -2234,6 +2238,7 @@ def _expand_audio_fragments_from_block(
 
     if kind in {
         "file",
+        "saints-litany",
         "inline",
         "daily-intro",
         "liturgical-announcement",
