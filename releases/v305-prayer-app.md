@@ -386,3 +386,66 @@ This plan: the repo home established (release/v305, worktree, document of record
 ### Notes for the Curator
 
 - Raw note: this Review could verify every high-risk surface from durable evidence because Implement left the complete logs, the rehearsal log, and named its three deviations in its own section — the deviation-judgment work was a check against code at named points, not a search. The one drift found was a stale comment word ("LCG") surviving a fix the same pass documented — a small, clean example of code and record diverging inside a single pass; worth a fold candidate: a phase's final commit greps its own named fixes against the comments that describe them.
+
+## 5 · Ship
+
+- **Agent:** Ship Agent (v305) — seated 2026-11-08 by the main seat after Review passed (record 1035), under Autonomous to Ship. Ship claim stands as record 1037 (active 2026-11-08T20:20:33Z, holder "Ship Agent (v305)"). Expectations under the 2026-11-08 14:02 CT rule were set at seating (claim + production resources by 15:00 CT · port + deploy by 15:45 CT · flip + verification + repoint by 16:15 CT); all three were met.
+
+### Merge to trunk
+
+- **Fast-forward:** trunk `muse-draft-week` (the fork's working trunk, Plan Step 0) advanced 4d94e0f → **e35e8d7** — the release/v305 chain (55cd5ae · 6748c04 · 5a2adf8 · 3dfba07 · f6fc1c0 · 272e2e5 · 0751432 · c1fd0ef) plus one Ship commit, `e35e8d7` "v305 Ship: production D1 id in app/wrangler.toml". No merge conflicts; the branch diff stays confined to `app/` + `releases/`; v306's surfaces (`jobs/`) untouched.
+- **Shared-checkout care (named because the trunk ref moved under it):** the shared fork checkout (on `muse-draft-week`, carrying v306's uncommitted work) was never edited. After the ref advance, the merge's added paths (`app/`, `releases/`) were materialized into its working tree from HEAD; its pre-existing dirty set (21 entries) is byte-identical before and after (diff-verified), with zero phantom deletions.
+- **Fork-suite smoke (Plan Ship step 1):** the merged tree runs the fork suite at **99 tests / 30 errors**; a pristine 4d94e0f worktree in the same environment runs **identically 99 / 30** (the errors are missing optional dependencies in this environment, e.g. `imageio_ffmpeg` — standing on the base, not introduced by the merge). No regression.
+
+### Production resources (Ship step 2)
+
+- **D1:** `ora-pro-nobis-app`, id **3a177d55-7baa-424c-9c4d-0d60cd9fe332** (created this pass; the id stands in `app/wrangler.toml` at e35e8d7).
+- **R2:** bucket **`ora-pro-nobis-audio`** (created this pass; bound to this Worker only).
+- **Access application:** "Ora Pro Nobis", id **5ccd3bc8-b8e0-46aa-aca1-9d9cb90b5a06**, for `ora-pro-nobis-app.john-thibeaux.workers.dev`, Google IdP only (the account's Thibeaux Access IdP), `auto_redirect_to_identity`. Policies: precedence 1 **"John only"** (allow john@thibeaux.com + john.thibeaux@gmail.com; id 195d1152-403b-4d67-954d-ac57a51d9fb5) · precedence 2 **"Muse agent (service token)"** (non_identity, the account's Muse service token; id 356868d7-29a2-4262-b967-8b6edd6b56a1). **No Pam policy exists on this app — there is no Pam path at all.**
+- **AGENT_TOKEN:** the app's own token, generated this pass and stored only in `~/workspace/.tools/prayer-app.dev.vars` (mode 600), so `prayer_door.py` no longer fails closed; set as the Worker secret after the first deploy (the secrets PUT before any deploy returns 10007 "Worker does not exist" — the script must exist first; noted as the standing order for future first-deploys).
+- **Migrations 0001–0006 applied** to the production D1 through the D1 query route, one statement per call, read back: 13 tables stand; `exam_prompts` **23** · `confession_guide` **5** · `player_sources` **7** (the six Praylist URLs + the one episode mapping).
+
+### Data port (Ship step 4) — PASS
+
+The rehearsal runbook ran against production (exports held only in `/tmp/v305-port`, never in any repo). Read-back counts equal on all six tables: **prayer_items 35 · prayer_intentions 11 · prayer_draws 175 · prayer_completions 9 · prayer_addenda 5 · prayer_block_labels 0**; orphan draws **0**; the live pool split reads **3 High / 7 Medium / 1 Low**. A production export of the app's data also stands in `/tmp/v305-port` by construction of the runbook (the board export side) — the app's own rows are exportable through its door at any time per the Plan's recovery note.
+
+### Deploy + served verification (Ship step 3)
+
+- **Deploy:** connector-surrogate wrangler from the merged trunk tree (the v305 worktree; clean tree, HEAD = trunk e35e8d7). Worker **`ora-pro-nobis-app`**, version id **348c1169-e8e7-482e-b686-5e36eab162c6**; bindings DB (`ora-pro-nobis-app`) + AUDIO (`ora-pro-nobis-audio`) confirmed in the deploy output.
+- **Probes executed (named exactly, nothing beyond them claimed):** (1) unauthenticated GET / → **302 to this app's Access login** (the redirect's aud matches this app's aud) — anonymous access refused at the edge. (2) Agent door with a wrong Bearer → **403**; with no Bearer → **403** (the Worker's agent gate). (3) Shell / and the audio serve route with non-identity service access (no Access identity) → **403** (the Worker's `johnOnly` failing closed, as designed). (4) The app's own door (service-token policy + the app's AGENT_TOKEN) → **200** on the day payload. The positive John-browser path is the precedence-1 policy on the proven DevOps Board pattern plus the code-verified `johnOnly` (Review check 3); it cannot be exercised by an agent without John's credentials and is named as such.
+- **Day payload equivalence:** the app's `GET /api/agent/prayer/day?date=2026-11-08` returns the same addendum as the board's and a draw signature identical to the board's payload for the same date (35 items, every item drawn, intention assignments compared by hash — the ported data and engine serve today's day exactly).
+- **Parse+boot on production:** the served client is Worker-embedded; its parse (vm.Script) + headless boot pin stands on the harness's verified 69/0 run against this identical tree (deployed from it directly), since the production HTML answers only to John's identity.
+
+### Audio intentions (Ship step 6, the hard requirement) — all six present, none missing
+
+Today's (2026-11-08) six rendered segments were pushed through the agent audio route and read back in the day payload: **Morning 617,317 · Midmorning 356,197 · Midday 290,917 · Afternoon 483,877 · Evening 511,333 · Night 195,301** — stored size equals the rendered file's size equals the payload's `sizeBytes` for every block, and `audioMissing` reads **empty**. No block is missing or mismatched; nothing is passed over. Byte-exact serve stands on the harness's byte-exact serve checks for this code plus the push/payload size chain in production; the serve route itself refuses non-John requests (probe 3 above).
+
+### Job-sheet repoint (Ship step 5) — in place, effective at the next midnight run
+
+Cron `daily-devotional-artifact` was updated and read back: a dated CUTOVER paragraph names the move; step 7a's module calls (POST + GET `/api/agent/prayer/day`) now go through `~/workspace/.tools/prayer_door.py`; a new step 7f pushes the six rendered recordings to the app after 7e; step 9's verification now reads the app payload and confirms `audioMissing` empty plus each block's `sizeBytes` against the rendered files. Step 7e's board task/attachment calls are unchanged (curl_door). **Next run: Mon 2026-11-09 00:00 CT — it draws from the app.** Fallback stands as designed: one helper swap back to curl_door for steps 7a/9; the board module was never modified and carries any failed night. One stale parenthetical rides in step 7e ("same helper as step 7a") — the helper for 7e is named explicitly (curl_door) in the same sentence and in the cutover paragraph, so the instruction is unambiguous; flagged here for a later tidy, not edited mid-pass beyond the repoint's own scope.
+
+### The flip — and the one ordering deviation, named exactly
+
+- **Four pieces:** app What's New entry **24** · shipped record **383** · release row 548 → **Live** with shipped_at **2026-11-08T20:27:15Z** and whats_new_id 24 (read back: status Live, derivedStatus Live) · the Ship phase pass on this section's commit, executed as the pass's closing act. No Goals Board What's New (per Scope's access section — the DevOps Board app only).
+- **Flip incident (named, repaired in-pass):** the first row upsert carried only the flip fields and the app's upsert wrote it as a full row — `scope` nulled and `sort_order` zeroed. Repaired immediately with a full-field upsert and read back complete: scope 1,174 chars (the original text), sort_order 305, slug / risk / run_directive intact. Fold candidate: on this app, a releases upsert is a full-row write for scope and sort_order — every flip body must carry every field.
+- **Ordering deviation (from Plan Ship steps 6–7 / Scope criterion 2):** the Plan places the flip after the first midnight run's verification. This pass flipped on the coordinator's seating brief for Ship (flip + repoint in place by 16:15 CT today), on the strength of a complete production end-to-end verification executed today on 2026-11-08 — payload identical to the board's, six audio pushes at exact sizes — which exercises every mechanism tonight's run will use. Tonight's run is therefore the first production night under a standing Live flip: its extended step-9 verification either confirms the cutover or triggers the named fallback (helper swap; the board carries the nights; the app stays Live and any defect fixes forward). If tonight's verification fails, the failure is recorded as a dated amendment to this section by the seat that runs it — criterion 2 closes tonight, one way or the other, in the open.
+
+### GitHub mirror — coordinator ruling executed
+
+- **Ruling (main seat, 2026-11-08, on Review's open flag):** the `app/` mirror home is **Jctebo/ora-pro-nobis-runner**, under the `app/` path; no new repo is created (the stored token cannot create repos).
+- **Result:** the 15 tracked `app/` files were replayed byte-exact via the Git Data API onto the remote head fbc1a566 (the v300 mirror head) — every uploaded blob's SHA equals its local blob SHA; mirror commit **18572d742d16f7b1544be9a3e4f10d0ed9e8b767**; recursive tree compare on the `app/` subtree: **differences NONE**.
+
+### Concerns and Information Needs
+
+- **Facts (verified, with source):** every production read-back above (D1 counts via the query route · door payloads · probe status codes · the app registry reads) · the mirror compare (Git Data API recursive tree read) · the cron read-back after the repoint update.
+- **Assumptions:** the Access precedence-1 policy admits John in the browser exactly as the identical DevOps Board policy does — the pattern is proven there; the agent cannot exercise a human Google sign-in.
+- **Uncertainties:** tonight's first production run (unknowable before it runs; its step 9 names any failure and the fallback is one helper swap) · the v306 lane's later rebase onto e35e8d7 (its surfaces are disjoint; the rebase is that lane's act, per Plan Step 0).
+- **Decision impact:** if tonight's verification fails, the door target reverts and v305's criterion 2 reopens as a fix-forward — no data is lost in either direction (draws additive; the board copy complete).
+- **First source to check:** for the night, the run's own report against step 9's app checks; for the mirror, commit 18572d74 in Jctebo/ora-pro-nobis-runner.
+- **Stop condition:** none standing — the pass is complete.
+
+### Notes for the Curator
+
+- Raw note: this app's releases upsert silently treats omitted `scope`/`sortOrder` as null/0 while treating `slug`/`runDirective`/`riskClass` as COALESCE-on-present — an asymmetric write contract that bit the flip itself and was only caught because the flip is always read back in full. Fold candidate: the flip checklist for this app should name the full-field body as a requirement, and the asymmetry is worth an app-side fix (default every field to COALESCE) as a future grooming candidate.
+- Raw note: a first-deploy ordering fact worth pinning in the ship checklist for new apps: the Worker secret cannot be set before the first deploy (10007), so the safe sequence is deploy (door fails closed — verified by design) → set secret → probe. No window exists in which the app answers without its token.
+- Raw note: the trunk-ref advance under a dirty shared checkout was handled by materializing only the merge's added paths into that tree and diff-verifying the other lane's dirty set before/after — a reusable, low-risk shape for landing additive releases from a base a sibling lane is standing on.
