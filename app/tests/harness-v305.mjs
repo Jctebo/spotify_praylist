@@ -106,9 +106,12 @@ function d1exec(persist, file) {
 }
 function applySchema(persist) {
   fs.rmSync(persist, { recursive: true, force: true });
-  for (const f of fs.readdirSync(path.join(APP, "migrations")).filter((x) => x.endsWith(".sql")).sort()) {
-    d1exec(persist, path.join(APP, "migrations", f));
-  }
+  // One wrangler invocation for the whole chain (each boot is slow).
+  const all = fs.readdirSync(path.join(APP, "migrations")).filter((x) => x.endsWith(".sql")).sort()
+    .map((f) => fs.readFileSync(path.join(APP, "migrations", f), "utf8")).join("\n");
+  const tmp = path.join(APP, ".wrangler-test-v305-schema.sql");
+  fs.writeFileSync(tmp, all);
+  d1exec(persist, tmp);
 }
 function startWrangler(port, persist, locked) {
   const args = ["dev", "--config", path.join(APP, "wrangler.toml"), "--local", "--port", String(port), "--persist-to", persist,
@@ -119,7 +122,7 @@ function startWrangler(port, persist, locked) {
   return child;
 }
 async function waitUp(base) {
-  for (let i = 0; i < 90; i++) {
+  for (let i = 0; i < 150; i++) {
     try { const r = await fetch(base + "/"); if (r.status) return true; } catch { /* not up */ }
     await sleep(1000);
   }
@@ -144,7 +147,7 @@ let app1 = null, app2 = null, browser = null;
 try {
   // Build integrity: the Worker bundles.
   execFileSync("/home/hatch/workspace/.tools/wrangler-env/node_modules/.bin/esbuild",
-    [path.join(APP, "worker/src/index.ts"), "--bundle", "--format=esm", "--outfile", "/tmp/v305-harness-bundle.mjs", "--log-level=error"], { stdio: "pipe" });
+    [path.join(APP, "worker/src/index.ts"), "--bundle", "--format=esm", "--outfile=/tmp/v305-harness-bundle.mjs", "--log-level=error"], { stdio: "pipe" });
   ok(true, "worker bundles clean (esbuild)");
 
   await new Promise((r) => feedServer.listen(FEED_PORT, "127.0.0.1", r));
@@ -154,8 +157,8 @@ try {
   d1exec(PERSIST, seedFile);
   applySchema(PERSIST_LOCKED);
   app1 = startWrangler(PORT, PERSIST, false);
-  app2 = startWrangler(LOCKED_PORT, PERSIST_LOCKED, true);
   ok(await waitUp(BASE), "app up on local wrangler (LOCAL_DEV harness mode)");
+  app2 = startWrangler(LOCKED_PORT, PERSIST_LOCKED, true);
   ok(await waitUp(LOCKED), "locked instance up (no LOCAL_DEV)");
 
   // ---------- Intentions pool: CRUD + draw rules ----------
@@ -251,7 +254,8 @@ try {
   const fMorning = r.body.blocks.find((b) => b.block === "Morning");
   const fCard = fMorning.tracks.find((t) => t.intentionsCard);
   ok(fCard && fCard.available === true && fCard.streamUrl === `/api/prayer/audio/${FUTURE}/Morning`, "player Intentions card plays the pushed segment");
-  const gospelTrack = fMorning.tracks.find((t) => t.title === "Daily Gospel Exegesis");
+  const fMid = r.body.blocks.find((b) => b.block === "Midmorning");
+  const gospelTrack = fMid.tracks.find((t) => t.title === "Daily Gospel Exegesis");
   ok(gospelTrack && gospelTrack.available === false && !!gospelTrack.spotifyUrl, "a track with no file stands not-available WITH its playlist link");
   r = await api(BASE, "GET", "/api/player/sources");
   ok(r.body.sources.length === 7, "player_sources holds the six block routes + the mapped episode row");
@@ -268,7 +272,7 @@ try {
   r = await api(BASE, "GET", "/api/exam/today");
   ok(r.status === 200 && r.body.run.state === "open" && r.body.prompts.length === 23, "examination opens tonight's run with the 23 seeded Lasance prompts");
   ok(r.body.categories.includes("Commandment VI and IX"), "Lasance's combined VI-and-IX examination stands as one category");
-  ok(r.body.prompts.some((p) => p.text.includes("daily examination of conscience")), "seed text is Lasance's own wording (public domain, cited)");
+  ok(r.body.prompts.some((p) => p.text.includes("Seven Capital Sins")) && r.body.prompts.every((p) => (p.source || "").includes("Lasance")), "seed text is Lasance's own wording, every prompt carrying its citation");
   const runId = r.body.run.id;
   const ivPrompt = r.body.prompts.find((p) => p.category === "Commandment IV");
   r = await api(BASE, "POST", "/api/exam/entries", { json: { runId, promptId: ivPrompt.id, text: "Synthetic entry one" } });

@@ -29,7 +29,7 @@ INSERT INTO exam_prompts (category, commandment_no, text, sort, source) VALUES
   ('Precepts of the Church', NULL, 'Have you gone to confession at least once a year? Received holy communion during Easter-time?', 1110, 'Lasance, My Prayer Book (1908), p. 349'),
   ('Precepts of the Church', NULL, 'Have you violated the fasts of the Church, or eaten flesh-meat on prohibited days?', 1120, 'Lasance, My Prayer Book (1908), p. 349'),
   ('Precepts of the Church', NULL, 'Have you sinned against any other commandment of the Church?', 1130, 'Lasance, My Prayer Book (1908), p. 349'),
-  ('Capital Sins', NULL, 'Examine yourself also in regard to the Seven Capital Sins and the nine ways of being accessory to another''s sin.', 1210, 'Lasance, My Prayer Book (1908), p. 349');
+  ('Capital Sins', NULL, 'Examine yourself also in regard to the Seven Capital Sins and the nine ways of being accessary to another''s sin.', 1210, 'Lasance, My Prayer Book (1908), p. 349');
 
 INSERT INTO confession_guide (step_no, title, body) VALUES
   (1, 'Opening', 'Approach the confessional with the same recollectedness and reverence as would fill your heart if Christ our Lord were seated there in person ready to hear your confession. The priest is really the representative of Christ. When you kneel down, say: Bless me, Father, for I have sinned, and then begin the Confiteor, proceeding as far as "through my fault," etc. Then tell when you made your last confession and begin the avowal of your sins.'),

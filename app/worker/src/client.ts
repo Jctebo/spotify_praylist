@@ -6,7 +6,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'prayers', playerDate: null, examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1 };
+var state = { tab: 'intentions', playerDate: null, examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1 };
 
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function todayChicago() {
@@ -89,7 +89,7 @@ function renderIntentions() {
     var missing = (day.audioMissing || []).length ? '<p class="notavail">Not yet generated: ' + esc((day.audioMissing || []).join(', ')) + '</p>' : '';
     var html = '<h1 class="screen">Intentions</h1><p class="sub">the pool</p>';
     html += '<div class="stats"><div class="stat"><b>' + cnt.H + '</b><span>High</span></div><div class="stat"><b>' + cnt.M + '</b><span>Medium</span></div><div class="stat"><b>' + cnt.L + '</b><span>Low</span></div><div class="stat"><b>' + active.length + '</b><span>active</span></div></div>';
-    html += '<div class="card"><h3>Today\'s intentions — audio</h3><div class="audiobar">' + bar + '</div>' + missing + '<p class="meta" style="margin-top:8px">Generated nightly from the day\'s draw — one spoken intentions segment for each block.</p></div>';
+    html += '<div class="card"><h3>Today&rsquo;s intentions — audio</h3><div class="audiobar">' + bar + '</div>' + missing + '<p class="meta" style="margin-top:8px">Generated nightly from the day&rsquo;s draw — one spoken intentions segment for each block.</p></div>';
     [['H', 'High · weight 4'], ['M', 'Medium · weight 2'], ['L', 'Low · weight 1']].forEach(function (g) {
       var rows = active.filter(function (i) { return i.priority === g[0]; });
       html += '<h2 style="color:var(--navy);font-weight:normal;letter-spacing:1px;font-size:16px;margin:16px 0 8px">' + g[1].toUpperCase() + '</h2>';
@@ -143,7 +143,7 @@ function trackCard(t) {
   var inner = '';
   if (t.intentionsCard) {
     inner = '<div class="card intentions-card"><div class="row"><button class="playbtn" data-play="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>Intentions</h3><div class="meta">Plays here · segment file · generated nightly</div></div></div></div>';
-    if (!t.available) inner = '<div class="card intentions-card"><h3>Intentions</h3><div class="notavail">Not available in the app yet — today\'s segment has not been generated.</div></div>';
+    if (!t.available) inner = '<div class="card intentions-card"><h3>Intentions</h3><div class="notavail">Not available in the app yet — today&rsquo;s segment has not been generated.</div></div>';
     return inner;
   }
   if (t.available) {
@@ -158,13 +158,13 @@ function trackCard(t) {
 function renderPrayers() {
   var date = state.playerDate || todayChicago();
   state.playerDate = date;
-  view.innerHTML = '<h1 class="screen">Listen</h1><p class="sub">the day\'s prayers</p><p class="meta">Loading...</p>';
+  view.innerHTML = '<h1 class="screen">Listen</h1><p class="sub">the day&rsquo;s prayers</p><p class="meta">Loading...</p>';
   api('/api/player/day?date=' + date).then(function (day) {
-    var html = '<h1 class="screen">Listen</h1><p class="sub">the day\'s prayers</p>';
+    var html = '<h1 class="screen">Listen</h1><p class="sub">the day&rsquo;s prayers</p>';
     html += '<div class="daynav"><button class="btn ghost" id="d-prev">&#8249;</button><div class="dlabel">' + (date === todayChicago() ? 'Today — ' : '') + esc(day.dateLabel || date) + '</div><button class="btn ghost" id="d-next">&#8250;</button></div>';
     html += '<div class="row"><span class="meta grow">filter by day</span><input type="date" id="d-pick" value="' + date + '" style="width:auto"></div>';
     if ((day.episodes || []).length) {
-      html += '<h2 style="color:var(--navy);font-weight:normal;letter-spacing:1px;font-size:16px;margin:16px 0 8px">FROM TODAY\'S PODCAST</h2>';
+      html += '<h2 style="color:var(--navy);font-weight:normal;letter-spacing:1px;font-size:16px;margin:16px 0 8px">FROM TODAY&rsquo;S PODCAST</h2>';
       html += day.episodes.map(trackCard).join('');
     }
     (day.blocks || []).forEach(function (b) {
@@ -190,7 +190,7 @@ function renderPrayers() {
 
 /* ---------------- Examination ---------------- */
 function renderExamination() {
-  view.innerHTML = '<h1 class="screen">Tonight\'s examination</h1><p class="meta">Loading...</p>';
+  view.innerHTML = '<h1 class="screen">Tonight&rsquo;s examination</h1><p class="meta">Loading...</p>';
   api('/api/exam/today').then(function (data) {
     var run = data.run;
     var closed = run && run.state === 'closed';
@@ -200,9 +200,9 @@ function renderExamination() {
     var entriesByPrompt = {};
     (data.entries || []).forEach(function (e) { if (e.prompt_id) { (entriesByPrompt[e.prompt_id] = entriesByPrompt[e.prompt_id] || []).push(e); } });
     var customs = (data.entries || []).filter(function (e) { return !e.prompt_id && e.category === state.examCat; });
-    var html = '<div class="row"><div class="grow"><h1 class="screen">Tonight\'s examination</h1><p class="sub">' + esc(data.dateLabel || data.date) + '</p></div><button class="btn ghost small" id="ex-gear">Prompts</button></div>';
+    var html = '<div class="row"><div class="grow"><h1 class="screen">Tonight&rsquo;s examination</h1><p class="sub">' + esc(data.dateLabel || data.date) + '</p></div><button class="btn ghost small" id="ex-gear">Prompts</button></div>';
     html += '<p class="sub">Begin with gratitude for the day, and a short review of it. Then take the questions as reflection prompts — tap one to write an entry in your own words. What you write flows to Confession preparation.</p>';
-    if (data.focusCategory) html += '<p class="meta">Tonight\'s focus in depth: <b>' + esc(data.focusCategory) + '</b> — the full short form stands every night.</p>';
+    if (data.focusCategory) html += '<p class="meta">Tonight&rsquo;s focus in depth: <b>' + esc(data.focusCategory) + '</b> — the full short form stands every night.</p>';
     html += '<div class="chips">' + cats.map(function (c) { return '<button class="chip' + (c === state.examCat ? ' active' : '') + '" data-cat="' + esc(c) + '">' + esc(c.replace('Commandment ', '')) + '</button>'; }).join('') + '</div>';
     html += '<div class="modes"><button id="m-quick" class="' + (state.examMode === 'quick' ? 'active' : '') + '">Quick Review</button><button id="m-deep" class="' + (state.examMode === 'deep' ? 'active' : '') + '">Deep Reflection</button></div>';
     html += '<h2 style="color:var(--navy);font-weight:normal;font-size:17px;margin:4px 0 8px">' + esc(state.examCat) + '</h2>';
@@ -221,8 +221,8 @@ function renderExamination() {
     }
     html += '<div class="card"><h3>Add your own — ' + esc(state.examCat) + '</h3>' + (closed ? '<p class="meta">This run is closed.</p>' : '<textarea id="custom-text" placeholder="In your own words..."></textarea><div style="margin-top:8px"><button class="btn gold" id="custom-add">Add entry</button></div>') + customs.map(function (e) { return entryHtml(e); }).join('') + '</div>';
     html += '<div class="card"><h3>Anything else</h3><p class="meta">Close the night: anything that weighs on you, and a resolution for tomorrow.</p>' + (closed ? '' : '<textarea id="free-text" placeholder="In your own words..."></textarea><div style="margin-top:8px"><button class="btn gold" id="free-add">Add entry</button></div>') + (data.entries || []).filter(function (e) { return e.category === 'Anything else'; }).map(function (e) { return entryHtml(e); }).join('') + '</div>';
-    if (!closed) html += '<button class="btn" id="run-close" style="width:100%">Close tonight\'s examination</button>';
-    else html += '<p class="meta">Tonight\'s run is closed. Its entries stand in Confession preparation.</p>';
+    if (!closed) html += '<button class="btn" id="run-close" style="width:100%">Close tonight&rsquo;s examination</button>';
+    else html += '<p class="meta">Tonight&rsquo;s run is closed. Its entries stand in Confession preparation.</p>';
     html += '<p class="about">Examination of conscience after Fr. F. X. Lasance, My Prayer Book (Benziger Brothers, 1908; public domain), pp. 347-349 — seeded verbatim; every prompt is editable (Prompts, above). Entries are never read by any job and never leave this app.</p>';
     view.innerHTML = html;
     wireExamination(data);
@@ -271,7 +271,7 @@ function wireExamination(data) {
     a.addEventListener('click', function (ev) { ev.preventDefault(); api('/api/exam/entries/' + a.getAttribute('data-del-entry'), { method: 'DELETE' }).then(renderExamination); });
   });
   var rc = document.getElementById('run-close');
-  if (rc) rc.addEventListener('click', function () { if (confirm('Close tonight\'s examination?')) post('/api/exam/runs/' + run.id + '/close', {}).then(renderExamination); });
+  if (rc) rc.addEventListener('click', function () { if (confirm('Close the examination for tonight?')) post('/api/exam/runs/' + run.id + '/close', {}).then(renderExamination); });
   var gear = document.getElementById('ex-gear');
   if (gear) gear.addEventListener('click', function () { openPromptsEditor(data.prompts || []); });
 }
@@ -317,7 +317,7 @@ function renderConfession() {
       html += '<h2 style="color:var(--navy);font-weight:normal;letter-spacing:1px;font-size:16px;margin:16px 0 8px">HISTORY</h2>';
       html += c.history.map(function (h) { return '<div class="card"><div class="row"><div class="grow"><h3>' + esc(h.date) + '</h3><div class="meta">' + (h.note ? esc(h.note) + ' · ' : '') + h.entryCount + (h.entryCount === 1 ? ' entry' : ' entries') + (h.penance_text ? ' · penance recorded' : '') + '</div></div></div></div>'; }).join('');
     }
-    html += '<p class="about">This app prepares for confession; it does not record the sacrament\'s ministry. Examination entries are never read by any job and never leave this app.</p>';
+    html += '<p class="about">This app prepares for confession; it does not record the sacrament&rsquo;s ministry. Examination entries are never read by any job and never leave this app.</p>';
     view.innerHTML = html;
     var pd = document.getElementById('pen-done');
     if (pd) pd.addEventListener('click', function () { post('/api/confession/penance/done', {}).then(renderConfession); });
