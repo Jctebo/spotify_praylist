@@ -236,8 +236,17 @@ const DGE_XML = rss(
   xitem("Daily Gospel Exegesis — Old", rfc(YDAY, 6), `${FEED}/audio/dge-old.mp3`));
 const mmdd = (iso) => `${iso.slice(5, 7)}/${iso.slice(8, 10)}`;
 const SAINT_XML = rss(xitem(`${mmdd(TODAY)} - St. Fixture`, rfc(TODAY, 5), `${FEED}/audio/saint-today.mp3`));
+// BIAY feed GENERATED presented-day (like the DO feed): the
+// captured fixture's Day-N items carry prior years in their
+// titles, and extMatchBible admits only the current year's —
+// the stale capture settles the slot named-missing in every
+// open. The generated feed carries a current-year Day-N item
+// (day-of-year of the presented date) with a presented-day
+// pubDate.
+const BIAY_XML = rss(
+  xitem(`Day ${doyOf(TODAY)}: Fixture Reading (${TODAY.slice(0, 4)})`, rfc(TODAY, 6), `${FEED}/audio/biay-today.mp3`) +
+  xitem(`Day ${doyOf(YDAY)}: Fixture Reading (${YDAY.slice(0, 4)})`, rfc(YDAY, 6), `${FEED}/audio/biay-yday.mp3`));
 const feedBytes = {
-  biay: fs.readFileSync(path.join(FIX, "bible-in-a-year.xml")),
   sth: fs.readFileSync(path.join(FIX, "sing-the-hours.xml")),
 };
 const audioBytes = (name) => Buffer.from(`AUDIO-FIXTURE:${name}:` + "x".repeat(64));
@@ -289,7 +298,7 @@ const feedServer = http.createServer((req, res) => {
   const cors = { "access-control-allow-origin": "*" };
   const xml = (body) => { res.writeHead(200, { "content-type": "application/rss+xml", ...cors }); return res.end(body); };
   if (u.pathname === "/do.xml") return xml(DO_XML);
-  if (u.pathname === "/biay.xml") return xml(feedBytes.biay);
+  if (u.pathname === "/biay.xml") return xml(BIAY_XML);
   if (u.pathname === "/sth.xml") return xml(feedBytes.sth);
   if (u.pathname === "/dge.xml") return xml(DGE_XML);
   if (u.pathname === "/saint.xml") return xml(SAINT_XML);
@@ -328,7 +337,7 @@ const feedServer = http.createServer((req, res) => {
 });
 
 // ---- HTTPS site (orapronobis.media, host-mapped in the browser) --
-const siteState = { podcast: PODCAST_MAIN, intentions: INTENTIONS_MAIN };
+const siteState = { podcast: PODCAST_MAIN, intentions: INTENTIONS_MAIN, intentionsDelayMs: 0 };
 let siteServer = null;
 function startSite() {
   const crt = path.join(TMPD, "site.crt"), key = path.join(TMPD, "site.key");
@@ -342,8 +351,9 @@ function startSite() {
     }
     if (u.pathname === "/intentions.xml") {
       if (siteState.intentions == null) { res.writeHead(404); return res.end("not found"); }
-      res.writeHead(200, { "content-type": "application/rss+xml", "access-control-allow-origin": "*" });
-      return res.end(siteState.intentions);
+      const sendIntentions = () => { res.writeHead(200, { "content-type": "application/rss+xml", "access-control-allow-origin": "*" }); res.end(siteState.intentions); };
+      if (siteState.intentionsDelayMs) setTimeout(sendIntentions, siteState.intentionsDelayMs); else sendIntentions();
+      return;
     }
     res.writeHead(404); res.end();
   });
@@ -377,6 +387,14 @@ async function main() {
   for (const [itemId, intentionId] of Object.entries(REPOINT)) {
     d1q(APP, PERSIST, `UPDATE prayer_draws SET intention_id = ${intentionId} WHERE date = '${TODAY}' AND item_id = ${itemId};`);
   }
+  // The post-boot D1 write can drop the dev instance's socket
+  // (observed: "other side closed" on the next fetch) — restart
+  // the app on the same persist dir before reading back; the
+  // re-pointed draws stand in the persisted state.
+  for (const p of procs.splice(0)) { try { p.kill("SIGTERM"); } catch { /* noop */ } }
+  for (let i = 0; i < 15; i++) { try { await fetch(BASE + "/"); } catch { break; } await sleep(1000); }
+  startApp(APP, PORT, PERSIST);
+  check("setup: candidate app re-boots after the draw re-point", await waitUp(BASE));
   const prayerDay = (await api(BASE, "GET", `/api/agent/prayer/day?date=${TODAY}`, { token: TOKEN })).body;
   const drawText = {};
   for (const b of prayerDay.blocks || []) for (const d of b.devotions || []) drawText[d.name] = (d.intentions || [])[0] ? d.intentions[0].text : "";
@@ -410,6 +428,13 @@ async function main() {
     await ctx.route("https://feeds.buzzsprout.com/949645.rss", (route) => route.fulfill({ status: 200, contentType: "application/rss+xml", headers: { "access-control-allow-origin": "*" }, body: TVMASS_XML }));
     await ctx.route("https://anchor.fm/s/1025ef1c/podcast/rss", (route) => route.fulfill({ status: 200, contentType: "application/rss+xml", headers: { "access-control-allow-origin": "*" }, body: DGE_XML }));
     await ctx.route("https://feeds.buzzsprout.com/2216056.rss", (route) => route.fulfill({ status: 200, contentType: "application/rss+xml", headers: { "access-control-allow-origin": "*" }, body: SAINT_XML }));
+    // The client-direct BIAY leg fetches the hardcoded fireside
+    // URL (EXT_BIAY_URL in the client) — the route fulfills it
+    // with the generated presented-day feed (the v336-v338
+    // pattern; v342's routes omitted it because its legs never
+    // rode the BIAY slot).
+    await ctx.route("https://feeds.fireside.fm/bibleinayear/rss", (route) => route.fulfill({ status: 200, contentType: "application/rss+xml", headers: { "access-control-allow-origin": "*" }, body: BIAY_XML }));
+    await ctx.route(/media\.blubrry\.com|traffic\.libsyn\.com|content\.libsyn\.com|dts\.podtrac\.com|aphid\.fireside\.fm|cdn\.fireside\.fm|episodes\.castos\.com/, (route) => route.fulfill({ status: 200, contentType: "audio/mpeg", headers: { "access-control-allow-origin": "*" }, body: tone("media-route.mp3", 330, 1) }));
   };
   const newCtx = async () => {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
@@ -464,13 +489,13 @@ async function main() {
   const stateA = await pageA.evaluate(() => ({
     invitatory: window.state.extSlots["ext-invitatory"] && window.state.extSlots["ext-invitatory"].state,
     doMorning: window.state.extSlots["ext-morning-prayer"] && window.state.extSlots["ext-morning-prayer"].state,
+    biay: window.state.extSlots["ext-bible-in-a-year"] && window.state.extSlots["ext-bible-in-a-year"].state,
     intros: Object.keys(window.state.dayPayload.intros || {}),
-    introTextsOk: Object.entries({
-      "daily-rosary": "TT", "morning-prayer": "TT",
-    }).length === 2,
   }));
   check("1 the presented-day DO courier fixture settles present (invitatory + morning prayer, not named-missing)",
     stateA.invitatory === "present" && stateA.doMorning === "present", JSON.stringify(stateA));
+  check("1 the generated presented-day BIAY fixture settles present (current-year Day-N match)",
+    stateA.biay === "present", JSON.stringify(stateA));
   check("1 the intros fixture stands complete for the fixture day (all 10 ids in the built map)",
     INTRO_IDS.every((id) => stateA.intros.includes(id)), JSON.stringify(stateA.intros));
 
@@ -577,45 +602,57 @@ async function main() {
 
 
   // Leg 6: cache-valid second open (same context — reload) renders
-  // settled external cards WITH panels.
+  // settled external cards WITH panels. The DO pair's second slot
+  // (ext-morning-prayer) carries no keyed intro in the fixture
+  // model — intentions key per block, and the Divine Office
+  // block's intention stands on the Invitatory row — so it stands
+  // present and panel-free by design; the panel assertions ride
+  // the keyed courier slot (ext-invitatory) and the keyed
+  // client-direct slot (ext-bible-in-a-year).
   await pageA.reload({ waitUntil: "load" });
   await waitOwnSettled(pageA);
   await waitExtSettled(pageA);
   await waitPanel(pageA, "ext-invitatory");
-  await waitPanel(pageA, "ext-morning-prayer");
+  await waitPanel(pageA, "ext-bible-in-a-year");
   const inv6 = await cardInfo(pageA, "ext-invitatory");
+  const biay6 = await cardInfo(pageA, "ext-bible-in-a-year");
   const doM6 = await cardInfo(pageA, "ext-morning-prayer");
   check("6 cache-valid open: settled external cards render WITH their panels (courier slots included)",
-    !!inv6 && inv6.panel && !!doM6 && doM6.panel, JSON.stringify({ inv: inv6 && inv6.panel, doM: doM6 && doM6.panel }));
+    !!inv6 && inv6.panel && !!biay6 && biay6.panel, JSON.stringify({ inv: inv6 && inv6.panel, biay: biay6 && biay6.panel }));
+  check("6 the DO pair's second slot stands present and panel-free (its block's intention is keyed to the Invitatory row)",
+    !!doM6 && !doM6.panel && !doM6.notavail, JSON.stringify(doM6));
   await pageA.close(); await ctxA.close();
 
-  // ---- OPEN B — leg 5: fresh open, intentions held late ----------
-  // The intentions.xml route is held at the network gate until
-  // the test has SEEN the settled panel-free cards; then it is
-  // released and the same session must gain the panels.
+  // ---- OPEN B — leg 5: fresh open, intentions delayed ------------
+  // The intentions response is delayed 5s at the fixture server:
+  // inside the client's 8s fetch budget (extFetchText aborts at
+  // 8s — a network-level hold would kill the fetch outright) but
+  // past the courier + direct slots' settle (~1-2s locally). The
+  // precondition is polled inside the delay window: both slots
+  // present, the built intros map still empty, both cards
+  // panel-free — the defect shape, SEEN before the source lands.
+  siteState.intentionsDelayMs = 5000;
   const ctxB = await newCtx();
-  let releaseIntentions;
-  const intentionsGate = new Promise((r) => { releaseIntentions = r; });
-  await ctxB.route("**/intentions.xml", async (route) => {
-    try { await intentionsGate; await route.continue(); } catch { /* context closing */ }
-  });
   const pageB = await ctxB.newPage();
   await pageB.goto(BASE + "/", { waitUntil: "load" });
-  // Both the courier slot and the client-direct slot settle
-  // present while the intentions source is still held.
-  await pageB.waitForFunction(() => {
-    const s = window.state && window.state.extSlots;
-    return s && s["ext-invitatory"] && s["ext-invitatory"].state === "present" &&
-      s["ext-bible-in-a-year"] && s["ext-bible-in-a-year"].state === "present";
-  }, null, { timeout: 60000 }).catch(() => {});
-  const preB = {
-    inv: await cardInfo(pageB, "ext-invitatory"),
-    biay: await cardInfo(pageB, "ext-bible-in-a-year"),
-  };
-  check("5 precondition: with intentions held, the settled courier + direct cards stand panel-free (the defect shape)",
-    !!preB.inv && !preB.inv.panel && !!preB.biay && !preB.biay.panel, JSON.stringify(preB));
+  let preB = null;
+  for (let i = 0; i < 18; i++) {
+    const s = await pageB.evaluate(() => {
+      const st = window.state || {};
+      const panelOf = (id) => { const c = document.querySelector('[data-card="' + id + '"]'); return c ? !!c.querySelector(".intention-panel") : null; };
+      return {
+        inv: st.extSlots && st.extSlots["ext-invitatory"] && st.extSlots["ext-invitatory"].state,
+        biay: st.extSlots && st.extSlots["ext-bible-in-a-year"] && st.extSlots["ext-bible-in-a-year"].state,
+        intros: st.dayPayload && st.dayPayload.intros ? Object.keys(st.dayPayload.intros).length : 0,
+        invPanel: panelOf("ext-invitatory"), biayPanel: panelOf("ext-bible-in-a-year"),
+      };
+    }).catch(() => null);
+    if (s && s.inv === "present" && s.biay === "present" && s.intros === 0 && s.invPanel === false && s.biayPanel === false) { preB = s; break; }
+    await sleep(250);
+  }
+  check("5 precondition: with intentions delayed, the settled courier + direct cards stand panel-free (the defect shape)",
+    !!preB, JSON.stringify(preB));
   await pageB.evaluate(() => { window.__leg5session = "same-session"; });
-  releaseIntentions();
   await waitPanel(pageB, "ext-invitatory");
   await waitPanel(pageB, "ext-bible-in-a-year");
   const postB = {
@@ -627,6 +664,7 @@ async function main() {
     !!postB.inv && postB.inv.panel && postB.session === "same-session", JSON.stringify(postB.inv));
   check("5 the settled client-direct card gains its panel in the same session too",
     !!postB.biay && postB.biay.panel, JSON.stringify(postB.biay));
+  siteState.intentionsDelayMs = 0;
   await pageB.close(); await ctxB.close();
 
   // ---- OPEN D — leg 9: untouched shapes ---------------------------
