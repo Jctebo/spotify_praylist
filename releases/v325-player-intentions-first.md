@@ -200,3 +200,47 @@ The change is payload-only, so rollback is a **pure redeploy or revert**: redepl
 - **The Ship wait is the pinned order, not a stall:** after Review, v325's Ship stands until the §2.6 precondition holds. The expectations and stall machinery should read v325's Ship phase against §2.6, not against the clock alone; silence from the Ship seat while v320 or v318-app is still in flight is the plan working, not a miss.
 - **Heads that are not yet playable:** unchanged from §1's concern — a block whose segment lands after its episodes opens with a named not-available Intentions card, and Play All's first playable track is the block's first episode. Any different behavior for a not-available head is a new word from John, not this release.
 - **Information need — none outstanding for Plan.** The base-head refinement (§2.1) and the check-8 correction (§2.4) are the two places this Plan departs from §1's letter; both are named above with their reasons, and neither changes §1's call.
+
+## 3 · Implement
+
+- **Agent:** Implement Agent (v325) — Implement claim record 1114, claimed 2026-11-09 02:11 UTC (2026-11-08 20:11 CT) · time contract 36 · build commit **0de6ca7** on release/v325 (cut from muse-draft-week @ 9347be4, per §2.1)
+- **Inputs read:** §1 + §2 in full · the splice site verified first-hand in this worktree · `app/worker/src/client.ts` read in full (queue construction, `startQueue`'s skip-at-reach, the resume path) · `app/tests/harness-v312.mjs` read in full before editing it
+
+### The build
+
+**Exactly the §2.2 change, nothing else.** In `app/worker/src/index.ts`, `playerDayPayload`, the splice line now reads `tracks.splice(0, 0, card);` — the production diff is one line (build commit 0de6ca7; the commit's full file list is that line plus the two harness files and their logs below). The pinned non-changes stand verified by the diff itself: no `client.ts` change, no `ui.ts` change and no service-worker cache rename, no store/schema/migration change, no push or job-sheet change. **No trunk landing and no deploy in this phase** — the landing is Ship's, against the §2.6 precondition.
+
+### harness-v325 — new, 31 ok / 0 FAIL
+
+New file `app/tests/harness-v325.mjs` on the harness-v312 mold (in-worktree scratch instance, HARD GUARD standing, synthetic fixture only); the complete log is committed at `app/tests/harness-v325.log`. Fixture day F1 (2027-04-01): episodes in five blocks — Morning the multi-episode block (2 episodes), Midmorning with **no** episodes, and Afternoon as the check-6 leg (segment audio never pushed, first episode missing) — plus one unblocked episode. The seven §2.3 checks, as run:
+
+1. **Payload order — green.** Every block's `tracks[0]` is the Intentions card; Morning reads `[card, fx-a1, fx-a2]`; the no-episode block is `[card]` alone; every block's episode order after the head equals the manifest sort order.
+2. **Empty shape — green.** Before any push, the payload is the named empty shape and every block is `[card]` exactly as today.
+3. **Rendered DOM — green.** The first card under each block header is that block's Intentions card (`seg:<Block>` for all six blocks, read from the live DOM).
+4. **Whole-day queue head — green.** The Play All queue equals the rendered day order and its head is `seg:Morning`; the playing track after start is the Morning Intentions.
+5. **Per-block queue head — green.** Midday's Play All starts playing the block's Intentions segment; its queue is `["seg:Midday", "fx-c"]`.
+6. **Not-available head — green, both legs.** Payload: the Afternoon block reads `[card, fx-d1, fx-d2]` with the head card `available:false, streamUrl:null` and the missing first episode named in place after it. Browser: the Afternoon queue holds all three descriptors in place and reaches past the not-available card and the missing episode to fx-d2 (`queueIdx` 2, fx-d2 playing) — the missing-track rule is unchanged.
+7. **Nothing else moves — green.** trackCounts equal the manifest-derived counts per block (episodes + the one card); the unblocked group is identical (one episode, same shape, no card created); resume behaves as in harness-v312 check 9 (same-day offer, paused at the remembered position, retired by the next day's push); zero page errors across the boot.
+
+**Port discipline (the v318 Review lesson, applied):** harness-v325 runs on ports 8941/8942 — distinct from harness-v312 (8921–8923) and harness-v318 (8931) — and proves the answering server is its own instance three ways: the spawned child stands alive after boot, the fresh store reads the named empty shape, and the fixture commit's read-back names this harness's own episode ids.
+
+**Check-7 method note (named, for Review's judgment):** the pre-fix comparison is made against the pre-fix payload reconstructed by the retired splice rule itself (§1 quotes it verbatim — card at index 1 when the block has episodes, else 0) applied to the same fixture: same track multiset per block, same episode subsequence, only the card's position changed; trackCounts are asserted against the manifest counts, which harness-v312's check 4 already proved equal to the pre-fix payload's counts on its fixture. No second pre-fix instance was stood up; if Review wants the two-instance form, it is a harness extension, not a build change.
+
+**First-run disclosure:** the first harness-v325 run stood 25 ok / 1 FAIL — the failure was a harness authoring bug in the resume leg (a `page.evaluate` callback referenced the Node-side fixture constant, undefined in the browser context), not a product failure; every product assertion in that run passed. Fixed by inlining the fixture date literal and re-run clean: **31 ok / 0 FAIL**. The committed log is the clean re-run.
+
+### harness-v312 regression — with the §2.4 updates, 59 ok / 0 FAIL
+
+`app/tests/harness-v312.mjs` edited in the check-6 and check-8 regions only; the complete log of the run against this build is committed at `app/tests/harness-v312.log` — **59 ok / 0 FAIL**. The §2.4 updates, as run:
+
+- **Check 6 first track:** `seg:Morning` (log line 32), with the autoplay chain comment re-derived (seg:Morning → d2-a → seg:Midmorning → d2-m skipped at reach → seg:Midday → d2-b); the block-crossing wait on `d2-b` stands, and the queue-equality assertion self-derives from DOM order — the logged queue reads `seg:Morning,d2-a,seg:Midmorning,d2-m,seg:Midday,d2-b,seg:Afternoon,seg:Evening,seg:Night`.
+- **Check 6 Midday slice:** `["seg:Midday", "d2-b"]` (log line 36). A wait for `current === "seg:Midday"` stands ahead of the standing `d2-b` wait, evidencing §1's "the slice's first playing track is the segment"; the `d2-b` wait itself stands as §2.4 pins.
+- **Check 8 legs swapped:** previoustrack from d2-b → `seg:Midday` first (log line 40), then nexttrack back to `d2-b` (line 41); the metadata assertion (title "Day Two Beta", current is d2-b at that point) and the ranged seek leg stand.
+- **Checks 4, 5, 7, 9–12 stand byte-identical** — the file's diff stands in the check-6 and check-8 regions only.
+
+**§2 deviations: none in the build.** The fix's form, the non-changes, the harness set, and the regression updates all stand exactly as §2 pins. The §2.5 final-trunk regressions (harness-v318 + harness-v320 on the merged tree) remain Ship work, as pinned — neither branch has landed on this build base.
+
+### Concerns and Information Needs
+
+- **For Ship — harness-v312 check 11's cache-name pin:** check 11 asserts the served SW cache name `ora-pro-nobis-v312-1`, which stands on this build base (9347be4) and passes byte-identical, as §2.4 pins. When v320 lands, its `ui.ts` cache rename rides with it (§2.2), so the rebased tree Ship re-runs this harness on will carry the successor name and check 11's pin will fail unless it receives the same named-update treatment (harness-only, named in §5, re-run to green — the §2.5 pattern). Flagged here so Ship meets it as a named step, not a surprise; nothing in this release renames the cache.
+- **The Ship wait is the pinned order, not a stall** (§2.6, restated from §2): Review judges this branch build next; Ship stands until v320 is Live and v318's app half has landed (or the §1 fallback holds), then rebases, re-runs, merges, deploys.
+- **Information need — none outstanding for Implement.** The two judgment calls in this section (the check-7 comparison method, the first-run disclosure) are named above for Review.
