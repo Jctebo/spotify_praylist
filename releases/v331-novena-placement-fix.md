@@ -103,3 +103,36 @@ Placement is expressed as DATA in the push path — a small seed table the resol
 5. **Forward compatibility — MET.** The table is named, isolated, and commented as superseded by v328's settings read; nothing of v328 is built here.
 
 - **Concerns and Information Needs:** Ship's production proof is the re-push read-back (§2.3 criterion 4 of §1): if any of the 13 rows does not stand in its seed block after the re-push, Ship does not flip — the push helper's own asserts plus the D1 read-back are the gate, and a second re-push (idempotent by design) is the only remedy attempted before reporting back.
+
+## 5 · Ship
+
+- **Agent:** Ship Agent (v331) — Ship claim record 1144, claimed 2026-11-09T04:45:07Z · time contract 67 ("Re-push verified in production" met · "Ship flip complete" met at this pass)
+- **Result: SHIPPED LIVE** — flip 2026-11-09T04:46:36Z
+
+### 5.1 — Landing
+
+- Merge **fac2e4f** (--no-ff, release/v331 → muse-draft-week @ 7f938f3). The shared tree's standing unrelated modifications are path-disjoint from this branch's five files and were left exactly as found. No Worker deploy rides with this release (the fix is in the push helper the nightly run executes from this trunk); no migration.
+- Implement contract 64's expectation "Fix committed on muse-draft-week" was judged met at this landing.
+
+### 5.2 — Production re-push (the ship proof)
+
+Command (the v327 invocation shape, `--rundir` leg included), run from the landed trunk: `python3 jobs/push_episodes_to_app.py --report ~/workspace/ora-runner-runs/2026-11-08/report.json --rundir ~/workspace/ora-runner-runs/2026-11-08/out`
+
+- Output field, verbatim: **App push (v312): date pushed 2026-11-08 · episodes 17 (17 present / 0 missing) · per-track audio verified 17 · stored date after push 2026-11-08 · texts 0 / 17**
+- Production read-back (D1, stored date 2026-11-08, all 17 rows): Morning — morning-prayer sort 1 · daily-rosary sort 2 · **marian-antiphon-angelus sort 3 (its v328 order-table position)** · Midmorning — **all 12 novenas, sorts 6–17 in manifest order** · Afternoon — auxilium-christianorum sort 4 · Night — daily-reflection sort 5. **'unblocked' rows: 0.**
+- **Audio verification: audio_state = "present" on all 17 rows after the re-push** (r2 keys and sizes carried through the replace-day commit; per-track audio verified 17 by the push itself). **Text verification: text_state = "missing" on all 17 — untouched by this release, exactly as found; the "Not available in the app yet" card line is the v318 text line, and episode texts first attach with tonight's midnight run (the v318 publish in the same drop).**
+- Intentions splice (door-equivalent read): stored-day reads `segmentBlocks: ["Afternoon","Evening","Midday","Midmorning","Morning","Night"]` — every block holds its Intentions segment; under v325's Live splice rule the Midmorning block now opens with its Intentions card followed by the 12 novenas, and Morning opens with Intentions, then Morning Prayer, Daily Rosary, and the Antiphon.
+
+### 5.3 — The nightly run inherits the fix — NO job-sheet change
+
+- Verified by reading the sheet (`ora-pro-nobis-nightly-run`, this Ship pass): step 4B already invokes `jobs/push_episodes_to_app.py --report <the run's report.json> --rundir ~/workspace/ora-runner-runs/<TARGET>/out` from the fork's muse-draft-week tree — the helper this release fixed. **The job sheet needs no change and none was made.** Tonight's 00:00 CT run (target Nov 11) executes the fixed resolver; its "App push (v312)" field is the standing confirmation.
+
+### 5.4 — Flip (all four pieces, read back)
+
+- Release row 606: **Live**, shipped_at 2026-11-09T04:46:36Z, whats_new_id **44**, derivedStatus Live.
+- Shipped record **404** (title carried, shipped_at + whats_new_id 44).
+- What's New **44** — "Novenas now land in Midmorning in the player, and the Marian Antiphon stands in Morning".
+- Phase records: Scope 1138 · Plan 1140 · Implement 1141 · Review 1142 · Ship 1144 — all passed. Time contracts 61 · 63 · 64 · 65 · 67 — every expectation met, none at its deadline.
+- Curator note `ship-v331-2026-11-08` filed.
+
+- **Concerns and Information Needs:** John's phone remains the human acceptance check (the Midmorning block showing Intentions first, then the novenas). v328 remains the standing cure for placement generally — its settings read supersedes this seed table when it lands, and any future producer the name-match cannot place still falls visibly to 'unblocked' until then. Rollback is a revert of merge fac2e4f on muse-draft-week; the stored day's blocks would change only on a further re-push, which no rollback step performs.
