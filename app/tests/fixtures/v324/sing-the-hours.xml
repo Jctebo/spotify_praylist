@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<rss xmlns:ns0="http://www.w3.org/2005/Atom" xmlns:ns1="http://www.spotify.com/ns/rss" xmlns:ns2="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:ns3="https://podcastindex.org/namespace/1.0" version="2.0"><channel><title>The Liturgy of the Hours: Sing the Hours</title>
+        <generator>Castos</generator>
+        <ns0:link href="https://feeds.castos.com/x8g54" rel="self" type="application/rss+xml" />
+        <link>https://www.singthehours.org</link>
+        <description>Join for morning (Lauds) and evening (Vespers) prayer. All Hymns, Psalms, and Prayer sung.</description>
+        <lastBuildDate>Mon, 09 Nov 2026 04:00:00 +0000</lastBuildDate>
+        <language>en</language>
+        <copyright>© 2020</copyright>
+        
+        <ns1:limit recentCount="25" />
+        
+        <ns1:countryOfOrigin>
+              
+        </ns1:countryOfOrigin>
+                    <image>
+                <url>https://episodes.castos.com/5fc9b29bee76f8-62659591/images/Sing-The-Hours-Logo-4.jpeg</url>
+                <title>The Liturgy of the Hours: Sing the Hours</title>
+                <link>https://www.singthehours.org</link>
+            </image>
+                <ns2:subtitle>Join for morning (Lauds) and evening (Vespers) prayer. All Hymns, Psalms, and Prayer sung.</ns2:subtitle>
+        <ns2:author>Paul Rose</ns2:author>
+        <ns2:type>episodic</ns2:type>
+        <ns2:summary>Join for morning (Lauds) and evening (Vespers) prayer. All Hymns, Psalms, and Prayer sung.</ns2:summary>
+        <ns2:owner>
+            <ns2:name>Paul Rose</ns2:name>
+            <ns2:email>singthehours@gmail.com</ns2:email>
+        </ns2:owner>
+        <ns2:explicit>false</ns2:explicit>
+                    <ns2:image href="https://episodes.castos.com/5fc9b29bee76f8-62659591/images/Sing-The-Hours-Logo-4.jpeg" />
+        
+                                    <ns2:category text="Religion &amp; Spirituality">
+                                            <ns2:category text="Christianity" />
+                                    </ns2:category>
+                                                <ns2:category text="Music" />
+                    
+                    <ns2:new-feed-url>https://feeds.castos.com/x8g54</ns2:new-feed-url>
+                
+        
+        <ns3:locked>yes</ns3:locked>
+                                            <item>
+                <title>
+                    Divine Office 11.9.26 | Monday Evening Prayer | Vespers
+                </title>
+                <pubDate>Mon, 09 Nov 2026 04:00:00 +0000</pubDate>
+                <guid isPermaLink="true">
+                    https://permalink.castos.com/podcast/16996/episode/2692510</guid>
+                                    <link>https://singthehours.castos.com/episodes/divine-office-11926-monday-evening-prayer-vespers</link>
+                                <enclosure url="https://episodes.castos.com/5fc9b29bee76f8-62659591/2692510/c1e-n985u84wvnt3qzmg-3445v2dvh384-yq4are.mp3" length="39977536" type="audio/mpeg">
+                    </enclosure>
+                                <ns2:duration>00:16:39</ns2:duration>
+                                                    </item>
+                    <item>
+                <title>
+                    Divine Office 11.9.26 | Monday Morning Prayer | Lauds
+                </title>
+                <pubDate>Sun, 08 Nov 2026 17:00:00 +0000</pubDate>
+                <guid isPermaLink="true">
+                    https://permalink.castos.com/podcast/16996/episode/2692504</guid>
+                                    <link>https://singthehours.castos.com/episodes/divine-office-11926-monday-morning-prayer-lauds</link>
+                                <enclosure url="https://episodes.castos.com/5fc9b29bee76f8-62659591/2692504/c1e-xp35ikdz4xtxk7jv-gppj1rrwh632-hvqibj.mp3" length="45766336" type="audio/mpeg">
+                    </enclosure>
+                                <ns2:duration>00:19:04</ns2:duration>
+                                                    </item>
+                    <item>
+                <title>
+                    Divine Office 11.8.26 | Sunday Evening Prayer | Vespers II
+                </title>
+                <pubDate>Sun, 08 Nov 2026 04:00:00 +0000</pubDate>
+                <guid isPermaLink="true">
+                    https://permalink.castos.com/podcast/16996/episode/2692498</guid>
+                                    <link>https://singthehours.castos.com/episodes/divine-office-11826-sunday-evening-prayer-vespers-ii</link>
+                                <enclosure url="https://episodes.castos.com/5fc9b29bee76f8-62659591/2692498/c1e-qn52crzmxvu6jvpz-gppj161wtdx3-e8lkau.mp3" length="36100096" type="audio/mpeg">
+                    </enclosure>
+                                <ns2:duration>00:15:02</ns2:duration>
+                                                    </item>
+                    <item>
+                <title>
+                    Divine Office 11.8.26 | Sunday Morning Prayer | Lauds
+                </title>
+                <pubDate>Sat, 07 Nov 2026 17:20:11 +0000</pubDate>
+                <guid isPermaLink="true">
+                    https://permalink.castos.com/podcast/16996/episode/2692496</guid>
+                                    <link>https://singthehours.castos.com/episodes/divine-office-11826-sunday-morning-prayer-lauds</link>
+                                <enclosure url="https://episodes.castos.com/5fc9b29bee76f8-62659591/2692496/c1e-kxg1h8r6w8bzg40p-gppj173ghonp-7nrklk.mp3" length="46038016" type="audio/mpeg">
+                    </enclosure>
+                                <ns2:duration>00:19:10</ns2:duration>
+                                                    </item>
+                    <item>
+                <title>
+                    Divine Office 11.7.26 | Saturday Evening Prayer | Vespers I
+                </title>
+                <pubDate>Sat, 07 Nov 2026 04:00:00 +0000</pubDate>
+                <guid isPermaLink="true">
+                    https://permalink.castos.com/podcast/16996/episode/2692307</guid>
+                                    <link>https://singthehours.castos.com/episodes/divine-office-11726-saturday-evening-prayer-vespers-i</link>
+                                <enclosure url="https://episodes.castos.com/5fc9b29bee76f8-62659591/2692307/c1e-0m6qhmwxovuj6mdr-34455jwrt2ww-jx1cvt.mp3" length="39126016" type="audio/mpeg">
+                    </enclosure>
+                                <ns2:duration>00:16:18</ns2:duration>
+                                                    </item>
+                    <item>
+                <title>
+                    Divine Office 11.7.26 | Saturday Morning Prayer | Lauds
+                </title>
+                <pubDate>Fri, 06 Nov 2026 17:00:00 +0000</pubDate>
+                <guid isPermaLink="true">
+                    https://permalink.castos.com/podcast/16996/episode/2691681</guid>
+                                    <link>https://singthehours.castos.com/episodes/divine-office-11726-saturday-morning-prayer-lauds</link>
+                                <enclosure url="https://episodes.castos.com/5fc9b29bee76f8-62659591/2691681/c1e-1g6qc0gk9vfr6vog-jppq08jgfjp-79yqmo.mp3" length="28726336" type="audio/mpeg">
+                    </enclosure>
+                                <ns2:duration>00:11:58</ns2:duration>
+                                                    </item>
+                    </channel></rss>
