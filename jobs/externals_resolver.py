@@ -239,6 +239,47 @@ def _match_sing_the_hours(items, target: datetime.date, token: str):
     return None
 
 
+def _latest_by_release_date(items, target: datetime.date):
+    """The bundle contract's latest_by_release_date
+    (refresh_playlist.py L255) ported for the two v337 parity
+    slots, with the app port's bound: the item with the latest
+    release date NOT AFTER the target date; an enclosure is part
+    of the match (this file's standing RSS pin); ties keep feed
+    order. Only the resolution target changes from the Spotify
+    context — the RSS enclosure instead of a Spotify URI (John,
+    2026-11-09 06:55 CT). This function is the Python ORACLE for
+    the Worker/client TypeScript ports; harness-v337 legs 10/11
+    prove the ports against it, never against themselves."""
+    if items is None:
+        return None
+    best = None
+    for it in items:
+        if not it["url"] or it["pubdate"] is None:
+            continue
+        if it["pubdate"].date() > target:
+            continue
+        if best is None or it["pubdate"] > best["pubdate"]:
+            best = it
+    return best
+
+
+def match_gospel_exegesis(items, target: datetime.date):
+    """Contract daily-gospel-exegesis (resolver DGE) =
+    latest_by_release_date on the Logical Bible Study feed."""
+    return _latest_by_release_date(items, target)
+
+
+def match_saint_of_the_day(items, target: datetime.date):
+    """Contract saint-of-the-day = latest_by_release_date with the
+    title's MM/DD prefix checked against the target date — a
+    latest item whose title date disagrees is no match (the slot
+    stands named-missing), never a wrong-day saint."""
+    it = _latest_by_release_date(items, target)
+    if it is None:
+        return None
+    return it if it["title"].startswith(target.strftime("%m/%d")) else None
+
+
 def _bible_title(item, target: datetime.date) -> str:
     n = day_of_year_1_to_365(target)
     base = f"Bible in a Year — Day {n}"

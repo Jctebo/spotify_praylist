@@ -29,6 +29,11 @@ export interface Env {
   EXT_DO_FEED_URL?: string;
   EXT_BIAY_FEED_URL?: string;
   EXT_STH_FEED_URL?: string;
+  // v337 harness seams, same rule: fixture-feed overrides for the
+  // two new parity slots' pass-through matchers. Production leaves
+  // them unset; the pinned feed URLs below govern.
+  EXT_DGE_FEED_URL?: string;
+  EXT_SAINT_FEED_URL?: string;
 }
 
 import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
@@ -122,6 +127,17 @@ function chicagoDateOf(d: Date): string {
   const p: Record<string, string> = {};
   for (const part of parts) p[part.type] = part.value;
   return `${p.year}-${p.month}-${p.day}`;
+}
+// v337 §2.2: the retention floor — ONE floor governing the
+// replace-day commit deletes and the R2 sweep: the Chicago
+// calendar date minus one day, computed by UTC date math on the
+// Chicago Y/M/D parts (never by subtracting 24h from a timestamp —
+// DST-safe). Standing result on any day: four dates of rows
+// (yesterday · today · today+1 · the pushed today+2).
+function retentionFloor(): string {
+  const { date } = prayerChicagoNow();
+  const [y, m, d] = date.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d - 1)).toISOString().slice(0, 10);
 }
 function prayerDateLabel(date: string): string {
   const [y, m, d] = date.split("-").map(Number);
@@ -256,19 +272,23 @@ async function prayerDayPayload(env: Env, date: string) {
 // deleted, not bypassed: what the nightly run published is what the
 // player shows, and a day the run did not publish reads as a named
 // missing day.
-// v324 §2.2: the nine external slots, fixed — slot id -> the seed's
+// v324 §2.2: the external slots, fixed — slot id -> the seed's
 // block. Slot-neutral ids (the fallback can change who fills a
 // slot). v328 §2.2: this table is demoted to the slot-id REGISTRY —
-// an external episode_id must still be one of the nine — while the
-// block is validated as data (one of PRAYER_BLOCKS or 'unblocked')
-// and taken from the posted entry, because under the source-mapping
-// settings an external's block is John's configuration, not a pin.
+// an external episode_id must still be one of the registered slots —
+// while the block is validated as data (one of PRAYER_BLOCKS or
+// 'unblocked') and taken from the posted entry, because under the
+// source-mapping settings an external's block is John's
+// configuration, not a pin. v337 §2.8: the registry gains the two
+// daily parity ports (Gospel Exegesis, Saint of the Day).
 const EXTERNAL_SLOTS: Record<string, string> = {
   "ext-invitatory": "Morning",
   "ext-morning-prayer": "Morning",
   "ext-bible-in-a-year": "Morning",
+  "ext-gospel-exegesis": "Midmorning",
   "ext-midmorning-prayer": "Midmorning",
   "ext-midday-prayer": "Midday",
+  "ext-saint-of-the-day": "Afternoon",
   "ext-midafternoon-prayer": "Afternoon",
   "ext-office-of-readings": "Evening",
   "ext-evening-prayer": "Evening",
@@ -309,6 +329,20 @@ function episodeTrackShape(row: PlayerEpisodeRow) {
     textUrl: hasText ? `/api/player/text/${row.date}/${encodeURIComponent(row.episode_id)}` : null,
   };
 }
+// v337 §2.1(4): the canonical own-episode ids behind the settings
+// rows, for the failed-push day's named-missing enumeration — one
+// entry per enabled own source row, at that row's block position.
+// The three Marian Antiphon rows govern the one episode.
+const OWN_ROW_EPISODE: Record<string, string> = {
+  "morning-prayer": "morning-prayer",
+  "daily-rosary": "daily-rosary",
+  "marian-antiphon": "marian-antiphon-angelus",
+  "marian-antiphon-midday": "marian-antiphon-angelus",
+  "marian-antiphon-evening": "marian-antiphon-angelus",
+  "novenas": "novenas",
+  "auxilium-christianorum": "auxilium-christianorum",
+  "daily-reflection": "daily-reflection",
+};
 async function playerDayPayload(env: Env) {
   const labelRows = await env.DB.prepare("SELECT block, label FROM prayer_block_labels").all<{ block: string; label: string }>();
   const labels = new Map((labelRows.results ?? []).map((r) => [r.block, r.label]));
@@ -317,6 +351,13 @@ async function playerDayPayload(env: Env) {
   }>();
   const sources = srcRows.results ?? [];
   const dayRow = await env.DB.prepare("SELECT * FROM player_day WHERE id=1").first<{ date: string; episode_count: number; pushed_at: string }>();
+  // v337 §2.1: the PRESENTED day is the Chicago calendar day — the
+  // app presents today; production (date+2) stays a production fact.
+  // The singleton is still read: it names the PRODUCED day
+  // (storedDay) and nothing else — it no longer selects what is
+  // served. Presenting any other date in place of the calendar day
+  // is the defect this release removes, in every form.
+  const presented = prayerChicagoNow().date;
 
   const mkBlock = (block: string, tracks: unknown[], trackCount: number) => {
     const route = sources.find((x) => x.block === block && x.source_kind === "playlist");
@@ -325,21 +366,22 @@ async function playerDayPayload(env: Env) {
   if (!dayRow) {
     // Named empty shape (Scope §1: a whole day not yet pushed) — blocks
     // in order, every Intentions card not-available, never blank.
+    // v337 §2.1(3): date/dateLabel name the PRESENTED day, storedDay
+    // null — no produced fact stands to name.
     const blocks = PRAYER_BLOCKS.map((block) => mkBlock(block, [{
       title: "Intentions", kind: "segment", intentionsCard: true, available: false, streamUrl: null, spotifyUrl: null,
     }], 1));
-    return { ok: true, date: null, dateLabel: "", storedDay: null, episodes: [], blocks, audioMissing: [...PRAYER_BLOCKS] };
+    return { ok: true, date: presented, dateLabel: prayerDateLabel(presented), storedDay: null, presentedDay: presented, episodes: [], blocks, audioMissing: [...PRAYER_BLOCKS] };
   }
-  const date = dayRow.date;
   const audio = await prayerAudioMap(env);
-  const rows = await env.DB.prepare("SELECT * FROM player_episodes WHERE date=? ORDER BY sort, episode_id").bind(date).all<PlayerEpisodeRow>();
+  const rows = await env.DB.prepare("SELECT * FROM player_episodes WHERE date=? ORDER BY sort, episode_id").bind(presented).all<PlayerEpisodeRow>();
   // v334 §2.6: stored external rows never reach the client — the
   // Prayers screen builds its externals solely from the at-open
   // resolve + the device day cache. The rows stand untouched in D1
-  // and age out by the one-day retention at the next replace-day.
+  // and age out by the retention floor at the next replace-day.
   const eps = (rows.results ?? []).filter((r) => r.kind !== "external");
-  const blocks = PRAYER_BLOCKS.map((block) => {
-    const tracks: unknown[] = eps.filter((r) => r.block === block).map(episodeTrackShape);
+  const mkTracks = (block: string, own: unknown[]) => {
+    const tracks: unknown[] = [...own];
     const hasAudio = audio.has(block);
     const card = {
       title: "Intentions", kind: "segment", intentionsCard: true,
@@ -348,11 +390,46 @@ async function playerDayPayload(env: Env) {
       spotifyUrl: null,
     };
     tracks.splice(0, 0, card);
+    return tracks;
+  };
+  if (eps.length === 0) {
+    // v337 §2.1(4): the failed-push presented day. The payload MUST
+    // NOT serve another date: it returns the presented date with
+    // presentedMissing and, per block, the own tracks named-missing,
+    // enumerated from the enabled OWN settings rows (one entry per
+    // row — the Antiphon in its three blocks). External slots are
+    // NOT enumerated here — the client resolves them at open against
+    // the presented date as usual. The Intentions card splices first
+    // in every block (its availability is the standing 'current'
+    // family, date-independent).
+    const ownRows = await env.DB.prepare(
+      "SELECT source_key, name, block, sort_order FROM player_source_settings WHERE family='own' AND enabled=1",
+    ).all<{ source_key: string; name: string; block: string; sort_order: number | null }>();
+    const missingFor = (block: string) => (ownRows.results ?? [])
+      .filter((r) => r.block === block && OWN_ROW_EPISODE[r.source_key])
+      .sort((a, b) => (a.sort_order ?? Number.MAX_SAFE_INTEGER) - (b.sort_order ?? Number.MAX_SAFE_INTEGER) || a.source_key.localeCompare(b.source_key))
+      .map((r) => episodeTrackShape({
+        date: presented, episode_id: OWN_ROW_EPISODE[r.source_key], title: r.name, block,
+        sort: 0, duration_s: 0, r2_key: "", size_bytes: 0, audio_state: "missing",
+        pushed_at: "", text_state: "missing", text_r2_key: "", kind: "episode", source: "", stream_url: "",
+      }));
+    const blocks = PRAYER_BLOCKS.map((block) => {
+      const tracks = mkTracks(block, missingFor(block));
+      return mkBlock(block, tracks, tracks.length);
+    });
+    return {
+      ok: true, date: presented, dateLabel: prayerDateLabel(presented), storedDay: dayRow.date, presentedDay: presented,
+      presentedMissing: true, episodes: [], blocks,
+      audioMissing: PRAYER_BLOCKS.filter((b) => !audio.has(b)),
+    };
+  }
+  const blocks = PRAYER_BLOCKS.map((block) => {
+    const tracks = mkTracks(block, eps.filter((r) => r.block === block).map(episodeTrackShape));
     return mkBlock(block, tracks, tracks.length);
   });
   const unblocked = eps.filter((r) => r.block === "unblocked").map(episodeTrackShape);
   return {
-    ok: true, date, dateLabel: prayerDateLabel(date), storedDay: date,
+    ok: true, date: presented, dateLabel: prayerDateLabel(presented), storedDay: dayRow.date, presentedDay: presented,
     episodes: unblocked, blocks,
     audioMissing: PRAYER_BLOCKS.filter((b) => !audio.has(b)),
   };
@@ -361,22 +438,27 @@ async function playerDayPayload(env: Env) {
 // ---- Player push (v312, agent door) --------------------------------------
 // Staging + verify-then-commit (Plan E2): the audio POST writes R2
 // only; the day POST verifies every staged object against the
-// manifest, then swaps the stored day in one D1 batch, then sweeps
-// every other date's objects. A failed push leaves the prior stored
+// manifest, then commits the day in one D1 batch (v337: the deletes
+// are scoped to dates older than the retention floor, so the days
+// between production and consumption stand), then sweeps every
+// pre-floor date's objects. A failed push leaves the prior stored
 // day fully intact and named as the stored day.
-async function sweepOtherDates(env: Env, keepDate: string): Promise<void> {
-  // v318 T8: texts/ joins the sweep — the one-day rule takes
-  // yesterday's texts with yesterday's rows and audio in one commit.
-  for (const prefix of ["episodes/", "segments/", "texts/"]) {
+async function sweepBelowFloor(env: Env, floor: string): Promise<void> {
+  // v337 §2.2: the sweep mirrors the commit's retention floor — a
+  // dated object is deleted iff its date segment is OLDER than the
+  // floor (Chicago yesterday); every date >= floor is kept (the
+  // pushed date stands >= floor by construction). v318 T8: texts/
+  // is swept with episodes/ and segments/. v335 §2.4: the standing
+  // families — segments/current/… and the v337 intros/current/… —
+  // are invisible to the dated rotation: a 'current' date segment
+  // is always kept, under every prefix that carries one.
+  for (const prefix of ["episodes/", "segments/", "texts/", "intros/"]) {
     let cursor: string | undefined = undefined;
     do {
       const listed: R2Objects = await env.AUDIO.list({ prefix, cursor, limit: 1000 });
       const stale = listed.objects.map((o) => o.key).filter((k) => {
         const d = k.slice(prefix.length).split("/")[0];
-        // v335 §2.4: the standing segment family (segments/current/…)
-        // is invisible to the dated rotation — kept alongside keepDate.
-        // No 'current' family exists under episodes/ or texts/.
-        return d !== keepDate && !(prefix === "segments/" && d === "current");
+        return d !== "current" && d < floor;
       });
       if (stale.length) await env.AUDIO.delete(stale);
       cursor = listed.truncated ? listed.cursor : undefined;
@@ -384,8 +466,30 @@ async function sweepOtherDates(env: Env, keepDate: string): Promise<void> {
   }
 }
 async function storedDayReadback(env: Env) {
+  // v337 §2.3: the read-back names produced and presented as TWO
+  // facts. Every existing field keeps its meaning (the production
+  // fact: the stored date and its counts); the presented fields are
+  // additive — the presented date, its row count, its present/
+  // missing counts, and the standing intro family's size (the
+  // generation read-back §2.7 needs). No field is renamed or
+  // removed.
+  const presented = prayerChicagoNow().date;
+  const prows = await env.DB.prepare("SELECT audio_state FROM player_episodes WHERE date=?").bind(presented).all<{ audio_state: string }>();
+  const plist = prows.results ?? [];
+  let standingIntros = 0;
+  try {
+    const ir = await env.DB.prepare("SELECT COUNT(*) AS n FROM prayer_intros WHERE date='current'").first<{ n: number }>();
+    standingIntros = ir?.n ?? 0;
+  } catch { standingIntros = 0; } // the table lands with migration 0011; an unmigrated store reads zero
+  const presentedFields = {
+    presentedDate: presented,
+    presentedEpisodes: plist.length,
+    presentedPresent: plist.filter((r) => r.audio_state === "present").length,
+    presentedMissing: plist.filter((r) => r.audio_state === "missing").length,
+    standingIntros,
+  };
   const dayRow = await env.DB.prepare("SELECT * FROM player_day WHERE id=1").first<{ date: string; episode_count: number }>();
-  if (!dayRow) return { storedDate: null, episodeCount: 0, tracksPresent: 0, tracksMissing: 0, textsPresent: 0, textsMissing: 0, externalsPresent: 0, externalsMissing: 0, segmentBlocks: [] as string[] };
+  if (!dayRow) return { storedDate: null, episodeCount: 0, tracksPresent: 0, tracksMissing: 0, textsPresent: 0, textsMissing: 0, externalsPresent: 0, externalsMissing: 0, segmentBlocks: [] as string[], ...presentedFields };
   const rows = await env.DB.prepare("SELECT audio_state, text_state, kind FROM player_episodes WHERE date=?").bind(dayRow.date).all<{ audio_state: string; text_state: string; kind: string }>();
   // v335 §2.3: segmentBlocks names the blocks whose STANDING segment
   // exists (date='current') — the fact the nightly report prints.
@@ -406,6 +510,7 @@ async function storedDayReadback(env: Env) {
     externalsPresent: externals.filter((r) => r.audio_state === "present").length,
     externalsMissing: externals.filter((r) => r.audio_state === "missing").length,
     segmentBlocks: (segs.results ?? []).map((r) => r.block),
+    ...presentedFields,
   };
 }
 
@@ -637,6 +742,35 @@ function extMatchSth(items: ExtFeedItem[], y: number, mo: number, d: number, tok
   }
   return null;
 }
+const EXT_DGE_FEED_URL = "https://anchor.fm/s/1025ef1c/podcast/rss";
+const EXT_SAINT_FEED_URL = "https://feeds.buzzsprout.com/2216056.rss";
+function extMatchLatestByDate(items: ExtFeedItem[], y: number, mo: number, d: number): ExtFeedItem | null {
+  // v337 §2.8: the bundle contract's latest_by_release_date ported
+  // (the daily-gospel-exegesis resolver DGE; the Saint matcher
+  // below shares the pick) — the item with the latest release date
+  // NOT AFTER the presented date; an enclosure is part of the match
+  // (the resolver's standing RSS pin); ties keep feed order. Only
+  // the resolution target changes from the Spotify context — the
+  // RSS enclosure instead of a Spotify URI (John, 2026-11-09
+  // 06:55 CT). jobs/externals_resolver.py is the Python oracle.
+  const endMs = Date.UTC(y, mo - 1, d, 23, 59, 59, 999);
+  let best: ExtFeedItem | null = null;
+  for (const it of items) {
+    if (!it.url || it.pubMs == null || it.pubMs > endMs) continue;
+    if (!best || it.pubMs > (best.pubMs ?? -Infinity)) best = it;
+  }
+  return best;
+}
+function extMatchSaint(items: ExtFeedItem[], y: number, mo: number, d: number): ExtFeedItem | null {
+  // v337 §2.8: latest_by_release_date with the title's MM/DD prefix
+  // checked against the presented date — a latest item whose title
+  // date disagrees reads named-missing (null here), never a
+  // wrong-day saint.
+  const it = extMatchLatestByDate(items, y, mo, d);
+  if (!it) return null;
+  const prefix = `${String(mo).padStart(2, "0")}/${String(d).padStart(2, "0")}`;
+  return it.title.startsWith(prefix) ? it : null;
+}
 async function extFetchFeedItems(url: string): Promise<ExtFeedItem[]> {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), 15000);
@@ -755,6 +889,42 @@ export default {
         ).bind(date, block, key, bytes.length, nowISO()).run();
         return json({ ok: true, date, block, size: bytes.length });
       }
+      if (seg[2] === "prayer" && seg[3] === "intro" && request.method === "POST") {
+        // v337 §2.7: the standing intro family's push — raw MP3 with
+        // the segment push's header shape. The date header accepts
+        // the literal 'current' ONLY: intros are one standing file
+        // per track, replaced in place; dated copies never exist.
+        const date = request.headers.get("x-prayer-date") ?? "";
+        const episodeId = request.headers.get("x-episode-id") ?? "";
+        if (date !== "current") return err(400, "X-Prayer-Date must be the literal 'current' for intros");
+        if (!/^[A-Za-z0-9][A-Za-z0-9\-_]*$/.test(episodeId)) return err(400, "bad X-Episode-Id");
+        const bytes = new Uint8Array(await request.arrayBuffer());
+        if (!bytes.length) return err(400, "empty body");
+        const key = `intros/current/${episodeId}.mp3`;
+        await env.AUDIO.put(key, bytes, { httpMetadata: { contentType: "audio/mpeg" } });
+        await env.DB.prepare(
+          `INSERT INTO prayer_intros (date, episode_id, size_bytes, pushed_at) VALUES ('current', ?, ?, ?)
+           ON CONFLICT(date, episode_id) DO UPDATE SET size_bytes = excluded.size_bytes, pushed_at = excluded.pushed_at`,
+        ).bind(episodeId, bytes.length, nowISO()).run();
+        return json({ ok: true, episodeId, sizeBytes: bytes.length });
+      }
+      if (seg[2] === "prayer" && seg[3] === "intros" && request.method === "GET") {
+        // v337 §2.7: the standing intro family's read-back — the
+        // generation's verification surface (episodeId · sizeBytes ·
+        // pushedAt per standing intro).
+        const r = await env.DB.prepare("SELECT episode_id, size_bytes, pushed_at FROM prayer_intros WHERE date='current' ORDER BY episode_id").all<{ episode_id: string; size_bytes: number; pushed_at: string }>();
+        return json({ ok: true, intros: (r.results ?? []).map((x) => ({ episodeId: x.episode_id, sizeBytes: x.size_bytes, pushedAt: x.pushed_at })) });
+      }
+      if (seg[2] === "prayer" && seg[3] === "intro" && request.method === "DELETE") {
+        // v337 §2.7: the generation's stale-clear — an intro whose
+        // track is no longer presented is deleted (R2 object + index
+        // row) so no stale intro survives its track.
+        const episodeId = url.searchParams.get("episode_id") ?? "";
+        if (!/^[A-Za-z0-9][A-Za-z0-9\-_]*$/.test(episodeId)) return err(400, "bad episode_id");
+        await env.AUDIO.delete(`intros/current/${episodeId}.mp3`);
+        await env.DB.prepare("DELETE FROM prayer_intros WHERE date='current' AND episode_id=?").bind(episodeId).run();
+        return json({ ok: true, episodeId });
+      }
       if (seg[2] === "player" && seg[3] === "episodes" && seg[4] === "audio" && request.method === "POST") {
         // E2 route 1 — staging only: writes the R2 object, no D1 row,
         // so a push that fails partway leaves the stored day intact.
@@ -839,20 +1009,28 @@ export default {
           if (!head) return err(409, `staged text missing for ${e.episode_id}`);
           if (head.size !== e.text_size_bytes) return err(409, `staged text size mismatch for ${e.episode_id}: manifest ${e.text_size_bytes}, staged ${head.size}`);
         }
-        // (ii) One D1 batch: other dates out, this day in, the
-        // stored-day singleton written last.
+        // (ii) One D1 batch: dates older than the retention floor
+        // out, this day in, the stored-day singleton written last.
+        // v337 §2.2: the floor (Chicago yesterday) is computed here,
+        // at commit time, from the same Chicago clock the payload
+        // selects by — retention now spans production to
+        // consumption (four dates standing) instead of holding the
+        // pushed date alone.
+        const floor = retentionFloor();
         const pushedAt = nowISO();
         const stmts: D1PreparedStatement[] = [
-          env.DB.prepare("DELETE FROM player_episodes WHERE date <> ?").bind(date),
+          env.DB.prepare("DELETE FROM player_episodes WHERE date < ?").bind(floor),
           // v335 §2.4: standing rows (date='current') are never in the
-          // dated delete's reach; dated segment rows keep their rule.
-          env.DB.prepare("DELETE FROM prayer_audio WHERE date <> ? AND date <> 'current'").bind(date),
+          // dated delete's reach (the guard stays explicit even
+          // though the string comparison already spares them);
+          // dated segment rows follow the same floor.
+          env.DB.prepare("DELETE FROM prayer_audio WHERE date < ? AND date <> 'current'").bind(floor),
         ];
         for (const e of eps) {
           stmts.push(env.DB.prepare(
             `INSERT INTO player_episodes (date, episode_id, title, block, sort, duration_s, r2_key, size_bytes, audio_state, pushed_at, text_state, text_r2_key, kind, source, stream_url)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-             ON CONFLICT(date, episode_id) DO UPDATE SET title=excluded.title, block=excluded.block, sort=excluded.sort,
+             ON CONFLICT(date, episode_id, block) DO UPDATE SET title=excluded.title, sort=excluded.sort,
                duration_s=excluded.duration_s, r2_key=excluded.r2_key, size_bytes=excluded.size_bytes,
                audio_state=excluded.audio_state, pushed_at=excluded.pushed_at,
                text_state=excluded.text_state, text_r2_key=excluded.text_r2_key,
@@ -871,8 +1049,9 @@ export default {
            ON CONFLICT(id) DO UPDATE SET date=excluded.date, episode_count=excluded.episode_count, pushed_at=excluded.pushed_at`,
         ).bind(date, eps.length, pushedAt));
         await env.DB.batch(stmts);
-        // (iii) R2 sweep: every other date's episode + segment objects.
-        await sweepOtherDates(env, date);
+        // (iii) R2 sweep: every pre-floor date's objects, under the
+        // same floor the deletes used (§2.2).
+        await sweepBelowFloor(env, floor);
         // (iv) Read back.
         const rb = await storedDayReadback(env);
         return json({
@@ -890,6 +1069,13 @@ export default {
         // settings + version, read-only. No door write route exists;
         // writes are John's, session-only.
         return json(await sourceSettingsPayload(env));
+      }
+      if (seg[2] === "player" && seg[3] === "day" && request.method === "GET") {
+        // v337 §2.7: the amended step's presented-set read — the
+        // same payload the session serves, through the door (the
+        // generation iterates the presented own tracks from it and
+        // pairs them against the day's draw).
+        return json(await playerDayPayload(env));
       }
       return err(404, "unknown agent route");
     }
@@ -1011,8 +1197,10 @@ export default {
 
       if (seg[0] === "api" && seg[1] === "player") {
         if (seg[2] === "day" && request.method === "GET") {
-          // v312: the stored day is the only day served; any ?date=
-          // returns the stored day, named by its own date/dateLabel.
+          // v337 §2.1(5): serves the PRESENTED (Chicago calendar)
+          // day; any ?date= remains ignored. The produced day rides
+          // along as storedDay — a production fact, never the
+          // selection.
           return json(await playerDayPayload(env));
         }
         if (seg[2] === "audio" && request.method === "GET") {
@@ -1066,6 +1254,17 @@ export default {
           if (!obj) return err(404, "episode text missing from the store");
           return new Response(obj.body, { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "private, max-age=3600" } });
         }
+        if (seg[2] === "intro-audio" && request.method === "GET") {
+          // v337 §2.7: the standing intro family's serving route —
+          // built and pinned in this release so v338's Plan consumes
+          // a fixed contract; v338's payload splice is what first
+          // references it. 404 when no standing intro exists.
+          const episodeId = decodeURIComponent(seg[3] ?? "");
+          if (!/^[A-Za-z0-9][A-Za-z0-9\-_]*$/.test(episodeId)) return err(400, "bad intro path");
+          const obj = await env.AUDIO.get(`intros/current/${episodeId}.mp3`);
+          if (!obj) return err(404, "no standing intro for that episode");
+          return new Response(obj.body, { headers: { "content-type": "audio/mpeg", "cache-control": "private, max-age=3600", "content-length": String(obj.size) } });
+        }
         if (seg[2] === "sources" && request.method === "GET") {
           const r = await env.DB.prepare("SELECT * FROM player_sources ORDER BY sort, id").all();
           return json({ ok: true, sources: r.results ?? [] });
@@ -1086,14 +1285,16 @@ export default {
         if (seg[2] === "externals" && seg[3] === "live" && request.method === "GET") {
           // v334 §2.2 — the courier: session-only (this whole surface
           // stands behind johnOnly), fetches the Divine Office feed
-          // at this moment, matches in-request, stores nothing. The
-          // stored day is the only resolvable day. Cache-Control is
-          // HTTP response reuse on the device (300 s), not a
-          // server-side cache: the server keeps nothing.
+          // at this moment, matches in-request, stores nothing.
+          // Cache-Control is HTTP response reuse on the device
+          // (300 s), not a server-side cache: the server keeps
+          // nothing. v337 §2.4: the gate re-keys from the stored day
+          // to the PRESENTED day — the calendar day is the only
+          // resolvable day.
           const date = url.searchParams.get("date") ?? "";
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
-          const dayRow = await env.DB.prepare("SELECT date FROM player_day WHERE id=1").first<{ date: string }>();
-          if (!dayRow || dayRow.date !== date) return err(400, `date ${date} is not the stored day ${dayRow?.date ?? "none"}`);
+          const presented = prayerChicagoNow().date;
+          if (date !== presented) return err(400, `date ${date} is not the presented day ${presented}`);
           const payload = await externalsLivePayload(env, date);
           return new Response(JSON.stringify({ ok: true, date, ...payload }), {
             status: 200,
@@ -1113,8 +1314,9 @@ export default {
           const slotId = url.searchParams.get("slot") ?? "";
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
           if (!(slotId in EXTERNAL_SLOTS)) return err(400, "unknown external slot");
-          const dayRow = await env.DB.prepare("SELECT date FROM player_day WHERE id=1").first<{ date: string }>();
-          if (!dayRow || dayRow.date !== date) return err(400, `date ${date} is not the stored day ${dayRow?.date ?? "none"}`);
+          // v337 §2.4: the presented-day gate, as on the live route.
+          const presented = prayerChicagoNow().date;
+          if (date !== presented) return err(400, `date ${date} is not the presented day ${presented}`);
           const settings = await sourceSettingsPayload(env);
           const [yy, mm, dd] = date.split("-").map(Number);
           const wdMon0 = (new Date(Date.UTC(yy, mm - 1, dd)).getUTCDay() + 6) % 7;
@@ -1126,6 +1328,13 @@ export default {
           try {
             if (slotId === "ext-bible-in-a-year") {
               item = extMatchBible(await extFetchFeedItems(env.EXT_BIAY_FEED_URL || EXT_BIAY_FEED_URL), yy, mm, dd);
+            } else if (slotId === "ext-gospel-exegesis") {
+              // v337 §2.8: pass-through parity for the Exegesis port
+              // — the same pick the client makes, from the same feed.
+              item = extMatchLatestByDate(await extFetchFeedItems(env.EXT_DGE_FEED_URL || EXT_DGE_FEED_URL), yy, mm, dd);
+            } else if (slotId === "ext-saint-of-the-day") {
+              // v337 §2.8: pass-through parity for the Saint port.
+              item = extMatchSaint(await extFetchFeedItems(env.EXT_SAINT_FEED_URL || EXT_SAINT_FEED_URL), yy, mm, dd);
             } else {
               const doSlot = EXT_DO_SLOTS.find((s) => s.slotId === slotId);
               if (doSlot) {

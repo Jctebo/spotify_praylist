@@ -861,15 +861,19 @@ function updateNpSeek() {
 }
 /* ---------------- Externals at open (v334) ----------------
    The day renders from /api/player/day at once (own episodes only —
-   the payload no longer carries stored externals); the nine
-   external slots then resolve live, in place: Bible in a Year and
-   Sing the Hours by direct feed reads in this client, Divine
-   Office through the Worker courier (its feed forbids browser
-   reads). Source settings are read at open and applied identically
+   the payload no longer carries stored externals); the external
+   slots then resolve live, in place: Bible in a Year and Sing the
+   Hours by direct feed reads in this client, Divine Office through
+   the Worker courier (its feed forbids browser reads), and — v337
+   §2.8 — Daily Gospel Exegesis and Saint of the Day by direct feed
+   reads with ported bundle matchers (their downloads follow each
+   slot's probed posture: pass-through only, resp. direct-first).
+   Source settings are read at open and applied identically
    to every leg. Resolved present slots are kept in the device-local
-   day cache (opn-ext-cache-v1): valid only for the same stored day
-   and the same settings version; only present slots are written,
-   so a missing slot re-checks on the next open. AMENDMENT A1
+   day cache (opn-ext-cache-v1): valid only for the same PRESENTED
+   day (v337 — resolution keys on the calendar day the payload
+   presents) and the same settings version; only present slots are
+   written, so a missing slot re-checks on the next open. AMENDMENT A1
    (John, 2026-11-09 04:32 CT — "Download always so seeking can
    work"): a resolved slot DOWNLOADS its audio to the device
    (Cache Storage, opn-ext-audio-v1) and plays/seeks from the local
@@ -883,8 +887,10 @@ var EXT_SLOTS = [
   { slotId: 'ext-invitatory', title: 'Invitatory' },
   { slotId: 'ext-morning-prayer', title: 'Morning Prayer', fallbackToken: 'Lauds' },
   { slotId: 'ext-bible-in-a-year', title: null },
+  { slotId: 'ext-gospel-exegesis', title: 'Daily Gospel Exegesis', source: 'Logical Bible Study', feedUrl: 'https://anchor.fm/s/1025ef1c/podcast/rss', matcher: 'latest-by-release-date', download: 'passthrough' },
   { slotId: 'ext-midmorning-prayer', title: 'Midmorning Prayer' },
   { slotId: 'ext-midday-prayer', title: 'Midday Prayer' },
+  { slotId: 'ext-saint-of-the-day', title: 'Saint of the Day', source: 'Good Catholic', feedUrl: 'https://feeds.buzzsprout.com/2216056.rss', matcher: 'latest-by-release-date-title', download: 'direct-first' },
   { slotId: 'ext-midafternoon-prayer', title: 'Midafternoon Prayer' },
   { slotId: 'ext-office-of-readings', title: 'Office of Readings' },
   { slotId: 'ext-evening-prayer', title: 'Evening Prayer', fallbackToken: 'Vespers' },
@@ -998,6 +1004,33 @@ function extMatchSth(items, dateStr, token) {
   }
   return null;
 }
+function extMatchLatestByDate(items, dateStr) {
+  // v337 §2.8: the bundle contract's latest_by_release_date ported
+  // (the daily-gospel-exegesis resolver DGE; the Saint matcher
+  // below shares the pick) — the item with the latest release date
+  // NOT AFTER the presented date; an enclosure is part of the
+  // match; ties keep feed order. The TS port of
+  // jobs/externals_resolver.py's oracle; harness-v337 legs 10/11
+  // prove the client pick == the Worker pass-through pick.
+  var p = dateStr.split('-').map(Number);
+  var endMs = Date.UTC(p[0], p[1] - 1, p[2], 23, 59, 59, 999);
+  var best = null;
+  items.forEach(function (it) {
+    if (!it.url || it.pubMs == null || it.pubMs > endMs) return;
+    if (!best || it.pubMs > best.pubMs) best = it;
+  });
+  return best;
+}
+function extMatchSaint(items, dateStr) {
+  // v337 §2.8: latest_by_release_date with the title's MM/DD prefix
+  // checked against the presented date — a latest item whose title
+  // date disagrees stands named-missing, never a wrong-day saint.
+  var it = extMatchLatestByDate(items, dateStr);
+  if (!it) return null;
+  var p = dateStr.split('-').map(Number);
+  var prefix = (p[1] < 10 ? '0' : '') + p[1] + '/' + (p[2] < 10 ? '0' : '') + p[2];
+  return it.title.indexOf(prefix) === 0 ? it : null;
+}
 function extFetchText(url) {
   var ctl = new AbortController();
   var timer = setTimeout(function () { ctl.abort(); }, 8000);
@@ -1097,7 +1130,10 @@ function extRebuildDescs(day) {
   return descs;
 }
 function resolveExternals(day) {
-  var date = day.storedDay || day.date;
+  // v337 §2.4: resolution keys on the PRESENTED day (the payload's
+  // presentedDay; its date field carries the same day). storedDay
+  // is the produced fact and no longer keys any consumption path.
+  var date = day.presentedDay || day.date;
   if (!date) return;
   state.extSlots = {};
   state.extStanding = [];
@@ -1112,7 +1148,7 @@ function resolveExternals(day) {
     EXT_SLOTS.forEach(function (s) {
       var row = prim[s.slotId];
       if (!row || row.enabled !== 1 || !extDayRulePasses(row.dayRule || 'daily', wd)) return;
-      standing.push({ slotId: s.slotId, title: s.title, fallbackToken: s.fallbackToken, block: row.block || 'Morning', sortOrder: row.sortOrder, fbRow: fb[s.slotId] || null });
+      standing.push({ slotId: s.slotId, title: s.title, fallbackToken: s.fallbackToken, block: row.block || 'Morning', sortOrder: row.sortOrder, fbRow: fb[s.slotId] || null, source: s.source || 'Divine Office', feedUrl: s.feedUrl || null, matcher: s.matcher || null, download: s.download || null });
     });
     state.extStanding = standing;
     // Day cache: valid only for this date AND this settings version.
@@ -1158,7 +1194,13 @@ function resolveExternals(day) {
       // materialized to a Blob BEFORE the cache write, so no
       // stream clone is ever raced.
       var passthrough = '/api/player/externals/audio?date=' + encodeURIComponent(date) + '&slot=' + encodeURIComponent(slot.slotId);
-      var routes = meta.source === 'Sing the Hours' ? [passthrough, meta.enclosureUrl] : [meta.enclosureUrl, passthrough];
+      // v337 §2.8: a 'passthrough' slot (Gospel Exegesis — the
+      // Anchor→CloudFront enclosure chain's final hop sends no
+      // CORS header) downloads ONLY through the Worker; every other
+      // slot keeps the A1 two-route shape (direct first unless the
+      // source is Sing the Hours, whose host forbids the read).
+      var routes = slot.download === 'passthrough' ? [passthrough]
+        : (meta.source === 'Sing the Hours' ? [passthrough, meta.enclosureUrl] : [meta.enclosureUrl, passthrough]);
       var tryRoute = function (u) {
         return fetch(u).then(function (r) {
           if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -1172,7 +1214,9 @@ function resolveExternals(day) {
           return put.then(function () { return blob; });
         });
       };
-      tryRoute(routes[0]).catch(function () { return tryRoute(routes[1]); }).then(function (blob) {
+      var attempt = tryRoute(routes[0]);
+      if (routes.length > 1) attempt = attempt.catch(function () { return tryRoute(routes[1]); });
+      attempt.then(function (blob) {
         settle(slot, { state: 'present', title: meta.title, streamUrl: URL.createObjectURL(blob), enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source });
       }).catch(function () {
         settle(slot, { state: 'missing', title: meta.title, source: meta.source });
@@ -1216,13 +1260,15 @@ function resolveExternals(day) {
       if (state.extSlots[slot.slotId].state === 'downloading') extRestoreCached(slot);
     });
     var missingSt = function (slot, source) {
-      return { state: 'missing', title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle(null, extMatchBibleDayN(date)) : slot.title, source: source || 'Divine Office' };
+      return { state: 'missing', title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle(null, extMatchBibleDayN(date)) : slot.title, source: source || slot.source || 'Divine Office' };
     };
     var cachedIds = {};
     if (cacheValid) Object.keys(rec.slots || {}).forEach(function (k) { if (rec.slots[k].state === 'present') cachedIds[k] = rec.slots[k]; });
     var uncached = function (slot) { return !cachedIds[slot.slotId]; };
-    var doSlots = standing.filter(function (s) { return s.slotId !== 'ext-bible-in-a-year'; });
+    var doSlots = standing.filter(function (s) { return !!EXT_TOKENS[s.slotId]; });
     var bibleSlot = standing.filter(function (s) { return s.slotId === 'ext-bible-in-a-year'; })[0];
+    var exegesisSlot = standing.filter(function (s) { return s.slotId === 'ext-gospel-exegesis'; })[0];
+    var saintSlot = standing.filter(function (s) { return s.slotId === 'ext-saint-of-the-day'; })[0];
     // Courier leg (Divine Office) — only if some DO slot is not
     // carried by the day cache (§2.8 leg 3: a fully cached source
     // issues no network work). When it does run, a cached slot
@@ -1261,6 +1307,30 @@ function resolveExternals(day) {
         else settle(bibleSlot, { state: 'missing', title: extBibleTitle(null, m.dayN), source: 'Bible in a Year' });
       }).catch(function () { settle(bibleSlot, { state: 'missing', title: extBibleTitle(null, extMatchBibleDayN(date)), source: 'Bible in a Year' }); });
     }
+    // Gospel Exegesis direct leg (v337 §2.8): the Anchor feed is
+    // client-readable (ACAO *); the pick is latest-by-release-date
+    // against the presented date; the download runs through the
+    // Worker pass-through only (the slot's download pin, applied
+    // in extDownload — the enclosure chain's final hop sends no
+    // CORS header).
+    if (exegesisSlot && uncached(exegesisSlot)) {
+      extFetchText(exegesisSlot.feedUrl).then(function (text) {
+        var it = extMatchLatestByDate(extParseFeed(text), date);
+        if (it) settleMeta(exegesisSlot, { title: it.title || exegesisSlot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: exegesisSlot.source });
+        else settle(exegesisSlot, { state: 'missing', title: exegesisSlot.title, source: exegesisSlot.source });
+      }).catch(function () { settle(exegesisSlot, { state: 'missing', title: exegesisSlot.title, source: exegesisSlot.source }); });
+    }
+    // Saint of the Day direct leg (v337 §2.8): the Buzzsprout feed
+    // is client-readable; latest-by-release-date with the MM/DD
+    // title check; the download is direct-first with the Worker
+    // pass-through as fallback (the slot's download pin).
+    if (saintSlot && uncached(saintSlot)) {
+      extFetchText(saintSlot.feedUrl).then(function (text) {
+        var it = extMatchSaint(extParseFeed(text), date);
+        if (it) settleMeta(saintSlot, { title: it.title || saintSlot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: saintSlot.source });
+        else settle(saintSlot, { state: 'missing', title: saintSlot.title, source: saintSlot.source });
+      }).catch(function () { settle(saintSlot, { state: 'missing', title: saintSlot.title, source: saintSlot.source }); });
+    }
     // Resolve watchdog: no slot may spin forever. A leg or restore
     // that has produced nothing after 9 s is treated as failed —
     // a cached slot re-downloads from its recorded enclosure, an
@@ -1271,7 +1341,7 @@ function resolveExternals(day) {
         if (!st || (st.state !== 'loading' && st.state !== 'downloading')) return;
         var c = cachedIds[slot.slotId];
         if (c) extDownload(slot, { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source });
-        else settle(slot, missingSt(slot, slot.slotId === 'ext-bible-in-a-year' ? 'Bible in a Year' : 'Divine Office'));
+        else settle(slot, missingSt(slot, slot.slotId === 'ext-bible-in-a-year' ? 'Bible in a Year' : (slot.source || 'Divine Office')));
       });
     }, 9000);
     // Sing the Hours fallback — only after the courier settles, and

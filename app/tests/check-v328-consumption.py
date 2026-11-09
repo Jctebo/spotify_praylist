@@ -122,7 +122,11 @@ def drop_items(xml_bytes, pred):
 # ------------------------------------------------------------------
 by_key, prim, fb = helper.settings_maps(SEED)
 placed, excluded, unmapped = helper.resolve_own_with_settings(EPISODES, TARGET, by_key)
-blocks = {k: v[0] for k, v in placed.items()}
+# v337 §2.6: placed now carries a placement LIST per key (one per
+# enabled governing row); the primary placement is the first. The
+# seed fixtures carry no extra governing rows, so every list here
+# is single and the assertions below read exactly as before.
+blocks = {k: v[0][0] for k, v in placed.items()}
 check("a1", "seed blocks equal the golden on all 17 episodes", blocks == GOLDEN["blocks"],
       str({k: (blocks.get(k), GOLDEN["blocks"].get(k)) for k in GOLDEN["blocks"] if blocks.get(k) != GOLDEN["blocks"].get(k)}))
 check("a2", "check-v331 subset: every novena resolves to Midmorning",
@@ -134,7 +138,8 @@ check("a4", "seed stands nothing out and maps every family", excluded == [] and 
 seqs = {}
 for key in EPISODES:
     if key in placed:
-        seqs.setdefault(placed[key][0], []).append((placed[key][1], key))
+        for _blk, _srt in placed[key]:
+            seqs.setdefault(_blk, []).append((_srt, key))
 seqs = {b: [k for _s, k in sorted(v)] for b, v in seqs.items()}
 check("a5", "per-block own sequences equal the golden (settings sorts preserve manifest order)",
       seqs == GOLDEN["sequences"], str(seqs))
@@ -277,7 +282,7 @@ c_blocks = {}
 if settings is not None:
     bk, _p, _f = helper.settings_maps(settings)
     p2, _e2, _u2 = helper.resolve_own_with_settings(EPISODES, TARGET, bk)
-    c_blocks = {k: v[0] for k, v in p2.items()}
+    c_blocks = {k: v[0][0] for k, v in p2.items()}
 check("c1", "read fails with a cache standing: the cache governs — blocks equal the golden in full",
       settings is not None and c_blocks == GOLDEN["blocks"], str(c_blocks)[:200])
 check("c2", "the suffix names it: 'settings v1 (last-known cache)'",

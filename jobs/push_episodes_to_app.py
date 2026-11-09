@@ -211,13 +211,30 @@ def _settings_sort(block: str, sort_order, intra: int = 0) -> int:
     return BLOCK_ORDINAL.get(block, 7) * 100000 + (sort_order or 0) * 100 + intra
 
 
+# ---- v337 §2.6: one own source, several block rows ---------------
+# An own source whose settings carry more than one enabled block
+# row emits one manifest entry per enabled row — same episode_id,
+# same staged audio/text objects (the commit's verification runs
+# per manifest entry and verifies the shared objects once per
+# placement) — with block and sort taken from each row. The Marian
+# Antiphon is the rule's only instance: its Midday and Evening rows
+# (migration 0011) govern the one episode beside the Morning row
+# family_of already names. An extra key absent from the settings
+# read (a pre-0011 store) simply does not place.
+EXTRA_GOVERNING_ROWS = {
+    "marian-antiphon-angelus": ["marian-antiphon-midday", "marian-antiphon-evening"],
+}
+
+
 def resolve_own_with_settings(episodes: dict, target: datetime.date, by_key: dict):
-    """-> (placed, excluded, unmapped). placed: key -> (block, sort)
-    for every episode that stands in the day; excluded: [(name,
-    reason)] for family episodes the settings stand out (NOT pushed
-    as tracks, §1 in-scope 3); unmapped: [keys] the settings do not
-    name — committed as 'unblocked' in manifest order (§2.4 step
-    3(c)), sorted after the block-mapped unblocked rows."""
+    """-> (placed, excluded, unmapped). placed: key -> [(block,
+    sort), ...] — one placement per enabled governing row (v337
+    §2.6; exactly one for every source but the Antiphon);
+    excluded: [(name, reason)] for family episodes the settings
+    stand out (NOT pushed as tracks, §1 in-scope 3); unmapped:
+    [keys] the settings do not name — committed as 'unblocked' in
+    manifest order (§2.4 step 3(c)), sorted after the block-mapped
+    unblocked rows."""
     placed, excluded, unmapped = {}, [], []
     intra = {}
     for idx, key in enumerate(episodes):
@@ -228,7 +245,7 @@ def resolve_own_with_settings(episodes: dict, target: datetime.date, by_key: dic
         row = by_key.get(fam) if fam else None
         if row is None:
             unmapped.append(key)
-            placed[key] = ("unblocked", BLOCK_ORDINAL["unblocked"] * 100000 + 50000 + idx)
+            placed[key] = [("unblocked", BLOCK_ORDINAL["unblocked"] * 100000 + 50000 + idx)]
             continue
         if not row.get("enabled"):
             excluded.append((row.get("name") or key, "off"))
@@ -237,7 +254,16 @@ def resolve_own_with_settings(episodes: dict, target: datetime.date, by_key: dic
             excluded.append((row.get("name") or key, f"day rule: {row.get('dayRule')}"))
             continue
         block = row.get("block") or "unblocked"
-        placed[key] = (block, _settings_sort(block, row.get("sortOrder"), n))
+        spots = [(block, _settings_sort(block, row.get("sortOrder"), n))]
+        for extra_key in EXTRA_GOVERNING_ROWS.get(key, []):
+            erow = by_key.get(extra_key)
+            if erow is None or not erow.get("enabled"):
+                continue
+            if not day_rule_passes(erow.get("dayRule") or "daily", target):
+                continue
+            eblock = erow.get("block") or "unblocked"
+            spots.append((eblock, _settings_sort(eblock, erow.get("sortOrder"), n)))
+        placed[key] = spots
     return placed, excluded, unmapped
 
 
@@ -423,7 +449,9 @@ def main() -> int:
     if settings is not None:
         by_key, slot_prim, slot_fb = settings_maps(settings)
         placed, stood, unmapped = resolve_own_with_settings(episodes, target_date, by_key)
-        order = [(key, placed[key][0], placed[key][1]) for key in episodes if key in placed]
+        # v337 §2.6: the order expands placements — an episode with
+        # several governing rows contributes one manifest entry each.
+        order = [(key, block, sort) for key in episodes if key in placed for (block, sort) in placed[key]]
     else:
         blocks = resolve_blocks(date, episodes)
         order = [(key, blocks[key], i + 1) for i, key in enumerate(episodes)]
