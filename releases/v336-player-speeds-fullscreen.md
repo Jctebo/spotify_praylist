@@ -290,3 +290,43 @@ Each suite ran complete on the final tree AND on an untouched `df6d4f6` worktree
 - **Estate debt, unchanged and not this release's:** harness-v326 and harness-v320 can no longer run their back halves (pre-v335/v334 fixture shapes); the SW-pin expectations in both will read stale until the fixture-refresh follow-on lands. The follow-on's scope should include the check-3/4 glyph cluster's timing sensitivity, which this seat observed flapping on both trees.
 - **Phone facts remain unproven by design:** `input[type=range]` scrub behavior and `setPositionState` rate acceptance on John's Android Chrome ride on the waived phone check's standing note.
 - **Open points for John:** none. The gate is decided: PASS.
+
+## 5 · Ship
+
+- **Agent:** Ship Agent (v336) — Ship claim record 1187, claimed 2026-11-09T14:27:26Z · time contract 107, all three expectations met.
+- **Verdict: SHIPPED LIVE 2026-11-09T14:36:00Z.** Run level Autonomous to Ship; the phone check stands WAIVED under John's blanket word — waived, not passed; no verdict written. The candidate stands for his optional check (see teardown note below).
+
+### Landing
+
+- Fast-forward landing `df6d4f6` → `2afa58a` on trunk `muse-draft-week` in the fork: exactly the release's seven commits in order (4ee42f7 Scope · 7663b7a Plan · a9139d1 build · cae79df the Range-passthrough deviation, ruled UPHELD in §4 · b57f822 harness · bebf138 §3 · 2afa58a §4). Recursive tree compare: the landed trunk tree is identical to the release branch tree (matching ls-tree hashes).
+- GitHub: the fork trunk `muse-draft-week` has no ref on GitHub (verified this pass — Jctebo/spotify_praylist carries main/master and feature branches only), the same posture as the v334/v335 landings; the landing stands in the fork, and the shared checkout was verified at the landed head with its tracked tree clean after the merge.
+
+### Merged-tree proof (complete logs)
+
+- The harness refuses the shared fork checkout by design, so the proof ran in a detached worktree at the landed head `2afa58a`: **harness-v336: 86/86** · **harness-v334: 30/30** (its live-smoke leg read 9/9 present this run). Tallies read from the complete log files.
+
+### Deploy + production proof
+
+- Worker `ora-pro-nobis-app` deployed from the merged tree via the connector-surrogate wrangler route (deploy-board.py not used). **New Worker version: 91e9a858-2820-453d-9018-fd20bed7944b** (versions API confirms it live, created 2026-11-09T14:31:52Z, over bd5c0061). Rollback target: **bd5c0061** (the v335 version), whole and sufficient — no migration, no data change (migration 0011 stands unconsumed); the deviation's route change rolls back with the same version.
+- Production proof: the deployed source is the merged tree's build — service-worker pin `ora-pro-nobis-v336-1` (ui.ts) with the activate purge's `opn-ext-audio-v1` exemption line verbatim · zero `dockJump`/`dockjump` strings in the build · `openNowPlaying` present · the speed key `opn-speed-v336` standing. The shell-parses, dock-tap-opens-Now-Playing, and speed-applies spot checks are the merged-tree harness's own legs (86/86, including the served-build parse + pin assertions); the production origin itself answers behind Cloudflare Access, as designed. Stored-day read-back through the agent door after the deploy: stored day **2026-11-11** standing, all six Intentions segment blocks present — the deploy touched no data.
+
+### The flip — four pieces, all read back
+
+- Release row 620 → **Live**, shipped_at 2026-11-09T14:36:00Z, whats_new_id **53** (full-field upsert; the row's ship fields take camelCase `shippedAt`/`whatsNewId` — the first upsert with snake_case silently left them null and was corrected and re-read in this pass).
+- Shipped record **414** (camelCase POST, title carried).
+- What's New entry **53** via the project-scoped route (live max read first: 52).
+- Phase records: Scope · Plan · Implement · Review passed standing; Ship passed with this section.
+
+### Teardown
+
+- No remote candidate was stood up for this release (Review's candidate was its local harness instance); nothing remote to tear down. The merged-tree proof worktree (v336-ship) was removed after the proof. The candidate stands for John's optional phone check in the only form it ever had — the production build itself under the new service-worker pin, which force-updates his app at next open.
+
+### Sequencing
+
+- v336 has landed BEFORE v337 (§2.8 satisfied). **v337 Implement branches from the landed trunk head: `2afa58a`** plus this Ship gate-log commit (the §5 commit on top of 2afa58a — the trunk head at the time v337 seats is the governing read).
+
+### Concerns and Information Needs
+
+- **Phone facts remain unproven by design:** `input[type=range]` scrub behavior and `setPositionState` rate acceptance on John's Android Chrome ride on the waived phone check's standing note.
+- **Estate debt, unchanged:** harness-v326/v320 fixture refresh and the fork's tracked `.wrangler-test-*` scratch state remain follow-on business, named in §3/§4 and the Curator's list; neither is a condition on this release.
+- **Open points for John:** none.
