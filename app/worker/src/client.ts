@@ -6,7 +6,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, dateLabel: '', pendingResume: null };
+var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, dateLabel: '', pendingResume: null, sleep: { mode: 'off' } };
 
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function todayChicago() {
@@ -77,6 +77,7 @@ function updatePositionState() {
   } catch (e) {}
 }
 function startDesc(desc) {
+  fadeRestore(); // v320 §2.6 restore point (2): every playback start passes through here
   state.current = desc;
   setMediaSessionFor(desc);
   audioEl.src = desc.url;
@@ -140,21 +141,175 @@ audioEl.addEventListener('loadedmetadata', function () {
   updatePositionState();
 });
 audioEl.addEventListener('ended', function () {
+  if (state.sleep && state.sleep.mode === 'track') { sleepTrackEnd(); return; }
   if (state.queue.length) { advanceQueue(1); return; }
   state.current = null; markPlaying(null);
 });
 audioEl.addEventListener('pause', function () { saveResume(); if (!state.queue.length) markPlaying(state.current ? state.current.episodeId : null); });
 var lastResumeSave = 0;
 audioEl.addEventListener('timeupdate', function () {
+  sleepTick();
   updatePositionState();
   var now = Date.now();
   if (now - lastResumeSave > 5000) { lastResumeSave = now; saveResume(); }
 });
 audioEl.addEventListener('seeked', updatePositionState);
+
+/* ---------------- Sleep timer (v320) ----------------
+   A player state, not bound to a track: state.sleep is exactly one of
+   {mode:'off'} · {mode:'minutes', presetMin, deadlineMs} · {mode:'track'}.
+   It lives and dies in shell scope — never written anywhere (no new
+   storage key; the resume record's byte shape is unchanged), so an app
+   restart, reload, or SW-update reload resets it. A minute arm is a
+   wall-clock deadline: remaining time is always recomputed from the
+   deadline, never decremented. Firing a timed stop is a plain pause()
+   — the standing pause handler saves the resume point — and the queue
+   stands held, not cleared. */
+var fade = { started: false, base: 1, probed: false, supported: true };
+function fadeRestore() {
+  // §2.6: restore = the captured base (1 when no fade ran), fade state cleared.
+  try { audioEl.volume = fade.base; } catch (e) {}
+  fade.started = false; fade.probed = false; fade.supported = true;
+}
+function sleepLabel() {
+  var s = state.sleep || { mode: 'off' };
+  if (s.mode === 'minutes') {
+    var t = Math.ceil(Math.max(0, s.deadlineMs - Date.now()) / 1000);
+    return 'Sleep · ' + Math.floor(t / 60) + ':' + ('0' + (t % 60)).slice(-2);
+  }
+  if (s.mode === 'track') return 'Sleep · End of track';
+  return 'Sleep · Off';
+}
+function updateSleepLabel() {
+  var b = document.getElementById('sleep-btn');
+  if (b) b.textContent = sleepLabel();
+}
+function armSleepMinutes(n) {
+  if (fade.started) fadeRestore();
+  state.sleep = { mode: 'minutes', presetMin: n, deadlineMs: Date.now() + n * 60000 };
+  updateSleepLabel();
+}
+function armSleepTrack() {
+  if (fade.started) fadeRestore();
+  state.sleep = { mode: 'track' };
+  updateSleepLabel();
+}
+function disarmSleep() { state.sleep = { mode: 'off' }; }
+function fireTimedStop() {
+  // §2.4, in order: pause (the pause handler saves the resume point;
+  // the timer adds no save of its own) · disarm · fade restore · label.
+  // §2.3 idle edge: already paused or nothing loaded — disarm only,
+  // no pause call, no resume write; the fade restore still runs.
+  if (!audioEl.paused && state.current) audioEl.pause();
+  disarmSleep();
+  fadeRestore();
+  updateSleepLabel();
+}
+function sleepTick() {
+  if (!state.sleep || state.sleep.mode !== 'minutes') return;
+  var remaining = state.sleep.deadlineMs - Date.now();
+  updateSleepLabel();
+  if (remaining <= 15000) {
+    // §2.6 fade: the ramp recomputes from the remaining time on every
+    // tick, never accumulated; the stop never depends on it.
+    if (!fade.started) { fade.started = true; fade.base = audioEl.volume; fade.probed = false; }
+    if (fade.supported) {
+      var target = fade.base * Math.max(0, remaining / 15000);
+      try { audioEl.volume = target; } catch (e) {}
+      if (!fade.probed) {
+        fade.probed = true;
+        // Capability probe: if the written value did not take (it
+        // reads back materially above the target), the platform does
+        // not honour element volume — no further writes this run,
+        // and the stop proceeds without a fade, silently.
+        if ((audioEl.volume || 0) > target + 0.02) fade.supported = false;
+      }
+    }
+  }
+  if (remaining <= 0) fireTimedStop();
+}
+function sleepTrackEnd() {
+  // §2.5: the arm disarms as it fires in every sub-case, so exactly
+  // one track end is ever suppressed; the next natural end advances.
+  disarmSleep();
+  if (state.queue.length) {
+    var i = state.queueIdx + 1;
+    var next = null;
+    while (i < state.queue.length) {
+      var d = state.queue[i];
+      if (!d.available) { markSkipped(d.episodeId); i++; continue; }
+      next = d; break;
+    }
+    if (next) {
+      // (a) hold at the next track's head, unstarted: advance queueIdx
+      // by advanceQueue's own skip rule without playing; the explicit
+      // saveResume writes the next track at currentTime = 0 (the
+      // element is preload="none", so load() is explicit, per v312).
+      state.queueIdx = i;
+      state.current = next;
+      setMediaSessionFor(next);
+      audioEl.src = next.url;
+      audioEl.load();
+      markPlaying(next.episodeId);
+      saveResume();
+      updateSleepLabel();
+      return;
+    }
+    // (b) queue exhausted: exactly the standing queue-end path.
+    state.queue = []; state.queueIdx = -1; state.current = null; markPlaying(null); updatePositionState();
+    updateSleepLabel();
+    return;
+  }
+  // (c) no queue (a single track): exactly the standing end path.
+  state.current = null; markPlaying(null);
+  updateSleepLabel();
+}
+function openSleepSheet() {
+  var choices = [
+    { k: 'off', label: 'Off' }, { k: '5', label: '5' }, { k: '10', label: '10' },
+    { k: '15', label: '15' }, { k: '30', label: '30' }, { k: '45', label: '45' },
+    { k: '60', label: '60' }, { k: 'track', label: 'End of track' },
+  ];
+  function isArmed(c) {
+    if (c.k === 'off') return state.sleep.mode === 'off';
+    if (c.k === 'track') return state.sleep.mode === 'track';
+    return state.sleep.mode === 'minutes' && state.sleep.presetMin === Number(c.k);
+  }
+  var sheet = document.createElement('div'); sheet.className = 'sheet';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Sleep timer</h1><button class="btn ghost" id="sl-close">Close</button></div>'
+    + '<p class="meta">Minutes until playback stops — the queue is held, not cleared. End of track stops when the playing track finishes.</p>'
+    + '<div class="chips">' + choices.map(function (c) { return '<button class="chip' + (isArmed(c) ? ' active' : '') + '" data-sleep-choice="' + c.k + '">' + c.label + '</button>'; }).join('') + '</div></div>';
+  document.body.appendChild(sheet);
+  sheet.querySelector('#sl-close').addEventListener('click', function () { sheet.remove(); });
+  sheet.querySelectorAll('[data-sleep-choice]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var k = b.getAttribute('data-sleep-choice');
+      if (k === 'off') { disarmSleep(); updateSleepLabel(); }
+      else if (k === 'track') armSleepTrack();
+      else armSleepMinutes(Number(k));
+      sheet.remove();
+    });
+  });
+}
+// Harness seam (§2.10): the hook and the sheet call the same arm/disarm
+// functions, so the hook cannot drift from the shipped behavior.
+window.__opnSleep = {
+  state: function () {
+    var c = {};
+    Object.keys(state.sleep).forEach(function (k) { c[k] = state.sleep[k]; });
+    c.remainingMs = state.sleep.mode === 'minutes' ? Math.max(0, state.sleep.deadlineMs - Date.now()) : null;
+    return c;
+  },
+  armMinutes: function (n) { armSleepMinutes(n); },
+  armTrack: function () { armSleepTrack(); },
+  disarm: function () { disarmSleep(); updateSleepLabel(); },
+};
+setInterval(sleepTick, 1000);
+
 function setupMediaSession() {
   if (!('mediaSession' in navigator)) return;
   var handlers = {
-    play: function () { audioEl.play().catch(function () {}); },
+    play: function () { fadeRestore(); audioEl.play().catch(function () {}); }, // v320 §2.6 restore point (3): the one play path that bypasses startDesc
     pause: function () { audioEl.pause(); },
     previoustrack: function () { if (state.queue.length) advanceQueue(-1); },
     nexttrack: function () { if (state.queue.length) advanceQueue(1); },
@@ -299,7 +454,7 @@ function renderPrayers() {
     }
     var resumeDesc = resumeRec ? allDescs.filter(function (d) { return d.episodeId === resumeRec.episodeId && d.available; })[0] : null;
     var html = '<h1 class="screen">Listen</h1><p class="sub">' + esc(day.dateLabel || 'the day&rsquo;s prayers') + '</p>';
-    html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span></div>';
+    html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span><button class="btn ghost" id="sleep-btn">' + esc(sleepLabel()) + '</button></div>';
     if (resumeDesc) {
       html += '<div class="card"><div class="row"><div class="grow"><h3>Resume</h3><div class="meta">' + esc(resumeDesc.title) + ' · at ' + fmtDur(resumeRec.positionS) + '</div></div><button class="btn ghost small" id="resume-btn">Resume</button></div></div>';
     }
@@ -315,6 +470,7 @@ function renderPrayers() {
     }
     view.innerHTML = html;
     document.getElementById('play-all').addEventListener('click', function () { startQueue(allDescs); });
+    document.getElementById('sleep-btn').addEventListener('click', openSleepSheet);
     var rb = document.getElementById('resume-btn');
     if (rb && resumeDesc) rb.addEventListener('click', function () { loadResume(resumeDesc, resumeRec.positionS || 0); });
     if (resumeDesc) {
