@@ -1,0 +1,21 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 3 - locked instance up (no LOCAL_DEV)
+ok 4 - check 1: episode audio staging POSTs accepted, sizes read back
+ok 5 - check 1: commit returns storedDate = D1, rowCount 8
+ok 6 - check 1: per-track verified/missing exactly as the manifest
+ok 7 - check 1: commit read-back names all six Intentions segments held for D1
+ok 8 - check 1: a commit whose staged audio is missing aborts 409 naming the track, writes nothing
+ok 9 - check 1: stored-day read-back — D1, 8 episodes (7 present / 1 missing)
+ok 10 - check 4: payload names the stored day
+ok 11 - check 4: payload = manifest track-for-track (ids, titles, blocks incl. unblocked, durations, sort order)
+ok 12 - check 4: each block's trackCount includes its missing row and its Intentions card
+ok 13 - check 5: the missing episode stands named in its block and order, available:false, streamUrl:null
+ok 14 - check 2: D2 commit lands (rowCount 3)
+ok 15 - check 2: player_episodes holds only D2 rows after the replace-day commit
+ok 16 - check 2: the prior day's episode audio is gone (404)
+ok 17 - check 2: the prior day's Intentions segment rows are gone (404)
+ok 18 - check 2: prayer_audio holds only the stored date (D1 segments swept, none for D2 yet)
+ok 19 - check 2: a staged-but-uncommitted D3 object does not disturb the stored day
+ok 20 - check 2: re-committing the same day is idempotent
+ok 21 - check 2: the next commit swept the staged D3 object (its commit now fails 409)

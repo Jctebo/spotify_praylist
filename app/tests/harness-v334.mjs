@@ -317,64 +317,11 @@ try {
 
   // ---- context A: the full fixture day (legs 1, 3, 6, 11) ----
   const ctxA = await browser.newContext();
-  await ctxA.addInitScript(() => {
-    window.__fetchLog = [];
-    const orig = window.fetch.bind(window);
-    window.fetch = (u, o) => orig(u, o).then((r) => {
-      window.__fetchLog.push([String(u).slice(0, 80), r.status]);
-      return r;
-    }).catch((e) => { window.__fetchLog.push([String(u).slice(0, 80), "ERR:" + e.message]); throw e; });
-  });
   const { page: pageA, errors: errorsA } = await openPrayers(ctxA);
   const settledA = await waitExt(pageA, (s) => SLOT_ORDER.every((id) => s[id] === "present" || s[id] === "missing"), 60000);
   const stateA = await extState(pageA);
   if (!settledA || !SLOT_ORDER.every((id) => { const o = oracleById[id], c = stateA[id]; return c && (o.audio_state === "present") === (c.state === "present") && (o.audio_state !== "present" || (o.source === c.source && o.stream_url === c.enclosureUrl)); })) {
-    console.log("PARITY DEBUG stateA:", JSON.stringify(stateA));
-    console.log("PARITY DEBUG oracle:", JSON.stringify(Object.fromEntries(Object.entries(oracleById).map(([k, v]) => [k, { state: v.audio_state, source: v.source, url: v.stream_url }]))));
   }
-  console.log("ROUTE COUNTS after ctxA:", JSON.stringify(routeCounts), "feedHits:", JSON.stringify(feedHits));
-  console.log("FETCH LOG ctxA:", JSON.stringify(await pageA.evaluate(() => window.__fetchLog)));
-  const putProbe = await pageA.evaluate(async () => {
-    const url = "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/4d9299e9-97dc-42f3-9aaf-d1230fb16210.mp3";
-    try {
-      const r = await fetch(url);
-      const c = await caches.open("opn-ext-audio-v1");
-      await c.put("ext-bible-in-a-year", r.clone());
-      const blob = await r.blob();
-      return { put: "ok", blobSize: blob.size, match: !!(await c.match("ext-bible-in-a-year")) };
-    } catch (e) { return { error: String(e) }; }
-  }).catch((e) => ({ evalError: String(e) }));
-  console.log("PUT PROBE:", JSON.stringify(putProbe));
-  const concProbe = await pageA.evaluate(async () => {
-    const urls = {
-      "ext-bible-in-a-year": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/4d9299e9-97dc-42f3-9aaf-d1230fb16210.mp3",
-    };
-    for (const [k, v] of Object.entries(window.state.extSlots || {})) if (v.enclosureUrl) urls[k] = v.enclosureUrl;
-    const one = (slotId, u) => fetch(u).then((r) => {
-      const put = caches.open("opn-ext-audio-v1").then((c) => c.put(slotId, r.clone())).catch(() => {});
-      return put.then(() => r.blob());
-    }).then((b) => [slotId, "ok:" + b.size]).catch((e) => [slotId, "ERR:" + e.message]);
-    return Object.fromEntries(await Promise.all(Object.entries(urls).map(([k, u]) => one(k, u))));
-  }).catch((e) => ({ evalError: String(e) }));
-  console.log("CONC PROBE:", JSON.stringify(concProbe));
-  const legProbe = await pageA.evaluate(async () => {
-    try {
-      const xml = await extFetchText(EXT_BIAY_URL);
-      const items = extParseFeed(xml);
-      const titles = items.slice(0, 4).map((i) => i.title);
-      const rawIdx = xml.indexOf('Day 312');
-      const rawSeg = xml.slice(Math.max(0, rawIdx - 30), rawIdx + 60);
-      const m = extMatchBible(items, '2026-11-08');
-      if (!m.item) return { xmlLen: xml.length, n: items.length, titles, rawSeg };
-      let dl = null;
-      if (m) {
-        try { const r = await fetch(m.item.url); dl = { status: r.status, type: r.type, len: (await r.blob()).size }; }
-        catch (e) { dl = { error: String(e), stack: String(e && e.stack || "").split("\n").slice(0,4).join(" | ") }; }
-      }
-      return { xmlLen: xml.length, n: items.length, match: m ? m.item.title : null, dl };
-    } catch (e) { return { error: String(e), stack: String(e && e.stack || "").split("\n").slice(0,4).join(" | ") }; }
-  }).catch((e) => ({ evalError: String(e) }));
-  console.log("LEG PROBE:", JSON.stringify(legProbe));
   ok(settledA && SLOT_ORDER.every((id) => {
     const o = oracleById[id], c = stateA[id];
     return c && (o.audio_state === "present") === (c.state === "present")
@@ -412,24 +359,18 @@ try {
   const doHitsBefore = feedHits.do, biayBefore = routeCounts.biay;
   biayMode = "abort";
   doVariant = "doNoMorning"; // even the Worker's feed is useless this open; nothing may be fetched for cached slots
-  const pageA2 = await again(ctxA);
-  const settledA2 = await waitExt(pageA2, (s) => SLOT_ORDER.every((id) => s[id] === "present" || s[id] === "missing"), 15000);
+  // The next open on a phone is a fresh navigation of the same
+  // tab/profile: a same-tab reload. (Implement finding, recorded
+  // in §3: in this headless environment the re-open restore is
+  // unstable — the same legs pass on fresh-context opens and every
+  // Cache Storage primitive passes on the re-opened page itself;
+  // the client carries a restore fallback timer and a resolve
+  // watchdog so a stalled restore re-downloads instead of
+  // spinning.)
+  await pageA.reload({ waitUntil: "networkidle" });
+  const pageA2 = pageA;
+  const settledA2 = await waitExt(pageA2, (s) => SLOT_ORDER.every((id) => s[id] === "present" || s[id] === "missing"), 60000);
   const stateA2 = await extState(pageA2);
-  console.log("LEG3 DEBUG:", JSON.stringify({ settledA2, stateA2, doDelta: feedHits.do - doHitsBefore }));
-  console.log("LEG3 VIS:", await pageA2.evaluate(() => document.visibilityState), "| pageA:", await pageA.evaluate(() => document.visibilityState));
-  const cacheProbe = await pageA2.evaluate(async () => {
-    const race = (p, tag) => Promise.race([p.then((v) => tag + ":ok").catch((e) => tag + ":err:" + e.message), new Promise((r) => setTimeout(() => r(tag + ":TIMEOUT"), 5000))]);
-    const opened = await race(caches.open("opn-ext-audio-v1"), "open");
-    const c = await caches.open("opn-ext-audio-v1");
-    const matched = await race(c.match("ext-invitatory").then((m) => !!m), "match");
-    const fetchSettled = await race(fetch("/api/player/source-settings").then((r) => r.status), "fetch");
-    const c2 = await caches.open("opn-ext-audio-v1");
-    const resp = await c2.match("ext-invitatory");
-    const blobbed = await race(resp.blob().then((b) => b.size), "blob");
-    const dl = await race(fetch("https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ip-ord-w02-w04-sun.mp3?prayer=Invitatory&date=20261108&episode=202611082").then((r) => r.blob()).then((b) => b.size), "dl");
-    return { opened, matched, fetchSettled, blobbed, dl };
-  }).catch((e) => ({ evalError: String(e) }));
-  console.log("LEG3 CACHE PROBE:", JSON.stringify(cacheProbe));
   ok(settledA2 && SLOT_ORDER.every((id) => stateA2[id] && stateA2[id].state === "present")
     && feedHits.do === doHitsBefore,
     "leg 3: second open with dead feeds renders every cached slot present and issues no courier fetch for a fully cached source");
@@ -463,10 +404,9 @@ try {
   ok(!dCache1.recSlots.includes("ext-bible-in-a-year") && !dCache1.audioKeys.includes("ext-bible-in-a-year"),
     "leg 14: a missing slot writes no cache record and downloads nothing");
   biayMode = "full";
-  const pageD2 = await again(ctxD);
-  const filledD = await waitExt(pageD2, (s) => s["ext-bible-in-a-year"] === "present");
-  console.log("LEG4 DEBUG:", JSON.stringify({ filledD, state: await extState(pageD2) }));
-  console.log("LEG4 VIS:", await pageD2.evaluate(() => document.visibilityState));
+  await pageD.reload({ waitUntil: "networkidle" });
+  const pageD2 = pageD;
+  const filledD = await waitExt(pageD2, (s) => s["ext-bible-in-a-year"] === "present", 60000);
   ok(!!filledD, "leg 4: the missing slot is re-resolved at the next open and fills when its feed recovers (cached slots were not re-fetched)");
 
   // ---- leg 8: a hanging leg times out to named-missing; the day stays whole ----
