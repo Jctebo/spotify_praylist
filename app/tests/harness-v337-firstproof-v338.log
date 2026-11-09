@@ -1,0 +1,90 @@
+ok - 7 fresh D1: Morning contract order
+ok - 7 fresh D1: Midmorning contract order
+ok - 7 fresh D1: Midday contract order
+ok - 7 fresh D1: Afternoon contract order
+ok - 7 fresh D1: Evening contract order
+ok - 7 fresh D1: Night unchanged
+ok - 7 fresh D1: fallbacks follow their slots
+ok - 7 fresh D1: saint converted to external
+ok - 7 fresh D1: exegesis inserted external
+ok - 7 fresh D1: antiphon rows stand own
+ok - 7 fresh D1: meta version bumped exactly +1 (1 -> 2)
+ok - 7 fresh D1: prayer_intros table stands
+ok - 7 fresh D1: player_episodes PK widened to (date, episode_id, block)
+ok - 7 moved D1: the user-moved row stands untouched (held override)
+ok - 7 moved D1: every unmoved row still aligns
+ok - 1 payload date == presentedDay == real Chicago today
+ok - 1 storedDay stays the produced fact (+2)
+ok - 1 presentedMissing false on a standing day
+ok - 1 today's own rows served in Morning
+ok - 1 no other date's title leaks into the payload
+ok - 1 pre-commit: the dated segment row for the old date stands in D1 (the floor leg's target)
+ok - 4 presentedMissing true when the presented day has no rows
+ok - 4 Morning named-missing set
+ok - 4 Antiphon named-missing in Midday and Evening too
+ok - 4 novenas named-missing once in Midmorning
+ok - 4 Intentions card stands first in Morning from 'current'
+ok - 4 no +2 title anywhere in the missing payload
+ok - staging: 'current' segment objects staged via the door
+ok - staging: pre-floor + survivor objects staged
+ok - 9 real push helper exits 0
+ok - 9 manifest carries three Antiphon placements (7 entries, all present)
+ok - 9 the helper's own read-backs verify all 7 placement rows
+ok - 9 payload lists the Antiphon in Morning, Midday, Evening
+ok - 9 Midday's only episode is the Antiphon (contract slot 1)
+ok - 9 the one R2 object serves under the placements
+ok - 2 rows stand for every date >= floor and none older
+ok - 2 the singleton names the pushed date
+ok - 2 dated prayer_audio obeys the floor; 'current' untouched (6 rows)
+ok - 3 pre-floor episode object swept (route 404)
+ok - 3 at-floor episode object survives (route 200)
+ok - 3 segments/current survives the sweep (route 200)
+ok - 3 pre-floor dated segment swept (route 404)
+ok - 8 Morning settings order is the contract list
+ok - 8 the StH fallback stands numbered at its slot's position
+ok - 8 settings version stands at 2 after 0011
+ok - 5 live courier accepts the presented day (200 shape)
+ok - 5 live courier refuses +2 naming the presented day
+ok - 5 live courier refuses yesterday too
+ok - 5 audio courier refuses +2 with the same gate
+ok - 5 audio courier passes the gate for the presented day (200 or named 404, never 400)
+ok - 10 Worker pass-through picks the presented-day Exegesis item
+ok - 11 Worker pass-through picks the presented-day Saint item
+ok - 10 oracle picks the same Exegesis enclosure
+ok - 11 oracle picks the same Saint enclosure
+ok - 11 oracle stands the wrong-day Saint fixture missing
+ok - 13 join rule: a leading 'for' is not doubled
+ok - 13 template: a bare intention joins plainly
+ok - 13 pairing: Antiphon pairs once to its home-block item; novenas pair per episode
+ok - 13 draw for the consumption day stands
+ok - 13 the Novenas item carries a drawn intention
+ok - 13 compose run exits 0
+ok - 13 Segments field exact shape, all standing
+ok - 13 intros stand for every paired presented track (each novena separately)
+ok - 13 six standing segments read back
+ok - 13 segment renders use the Suite composition texts verbatim (dual-compose)
+ok - 13 intro text = template + the Novenas draw (join rule applied)
+ok - 13 one failed render is named by title; the run completes the rest
+ok - 14 missing composition: named, exit non-zero, no substitute composed
+ok - 15 payload carries NO intro entries while the intro family stands populated
+ok - 12 session PUT accepted (whole-table write)
+ok - 12 the settings read-back reflects the move (rosary renumbered after bible, version 3)
+ok - browser: first open settles the externals
+ok - 10 client matcher picks the presented-day Exegesis item (parity x3)
+ok - 11 client matcher picks the presented-day Saint item (parity x3)
+ok - 10 Exegesis download takes the pass-through route
+ok - 11 Saint download takes the direct route (no pass-through request)
+ok - 6 cache record keyed to the PRESENTED date + current settings version
+ok - 8 Morning cards: Intentions, own in contract order, externals after (v334 queue rule)
+ok - 10 Exegesis card stands in Midmorning at the head of its externals
+ok - browser: second open settles
+ok - 6 valid cache record: the second open fetches no feed again for the cached slots
+ok - 6 a record keyed to the stored (+2) date is discarded whole and re-resolved
+ok - 8/6 an old-settings-version record is invalidated by the 0011 bump
+ok - 11 a latest title with a different MM/DD stands named-missing (never a wrong-day saint)
+ok - 12 a Worker restart re-applies nothing — the user's move stands
+ok - 17 served client carries both new slots + the ported matchers
+ok - 17 SW pins ora-pro-nobis-v337-1 with the opn-ext-audio-v1 exemption verbatim
+note - leg 16 regressions run COMPLETE by the gate runner alongside this harness; tallies land in §3
+RESULT harness-v337: 87 passed, 0 failed
+EXIT=0

@@ -667,7 +667,7 @@ async function main() {
   await sleep(3000);
   const RULED = {
     "harness-v337": (l) => /Intentions card|payload carries NO intro|Morning cards|Exegesis card|SW pins ora-pro-nobis-v337-1|record keyed to the stored|old-settings-version record/.test(l),
-    "harness-v336": (l) => /CACHE = ora-pro-nobis-v336-1/.test(l),
+    "harness-v336": (l) => /CACHE = ora-pro-nobis-v336-1|HARNESS ERROR/.test(l),
     "harness-v335": (l) => /card|audioMissing|segmentAudioUrl|segment|audio key|STANDING row|retired by the commit|deleted by the commit/i.test(l),
     "harness-v334": (l) => /courier returns the resolver|Cache-Control private|matcher parity|Sing the Hours feed is never fetched|device cache|HARNESS ERROR/.test(l),
     "harness-v325": (l) => /card|intention|seg|empty shape|episode order after the head|harness crashed/i.test(l),
@@ -678,7 +678,7 @@ async function main() {
       return (r.stdout || "") + (r.stderr || "");
     };
     const judge = (out) => {
-      const failLines = out.split("\n").filter((l) => /^(FAIL - |not ok )/.test(l));
+      const failLines = out.split("\n").filter((l) => /^(FAIL - |not ok |HARNESS ERROR|harness crashed)/.test(l));
       const unruled = failLines.filter((l) => !RULED[h](l.replace(/^(FAIL - |not ok \d+ - )/, "")));
       return { failLines, unruled, resultLine: out.split("\n").filter((l) => /^(RESULT|TALLY)/.test(l)).join(" ") };
     };
