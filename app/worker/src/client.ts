@@ -1015,13 +1015,13 @@ var EXT_SLOTS = [
   { slotId: 'ext-gospel-exegesis', title: 'Daily Gospel Exegesis', source: 'Logical Bible Study', feedUrl: 'https://anchor.fm/s/1025ef1c/podcast/rss', matcher: 'latest-by-release-date', download: 'passthrough' },
   { slotId: 'ext-midmorning-prayer', title: 'Midmorning Prayer' },
   { slotId: 'ext-midday-prayer', title: 'Midday Prayer' },
-  { slotId: 'ext-saint-of-the-day', title: 'Saint of the Day', source: 'Good Catholic', feedUrl: 'https://feeds.buzzsprout.com/2216056.rss', matcher: 'latest-by-release-date-title', download: 'direct-first' },
+  { slotId: 'ext-saint-of-the-day', title: 'Saint of the Day', source: 'Good Catholic', feedUrl: 'https://rss.buzzsprout.com/2216056.rss', matcher: 'latest-by-release-date-title', download: 'direct-first' },
   { slotId: 'ext-midafternoon-prayer', title: 'Midafternoon Prayer' },
   { slotId: 'ext-office-of-readings', title: 'Office of Readings' },
   { slotId: 'ext-evening-prayer', title: 'Evening Prayer', fallbackToken: 'Vespers' },
   { slotId: 'ext-night-prayer', title: 'Night Prayer' },
   { slotId: 'ext-usccb-readings', title: 'USCCB Daily Readings', source: 'USCCB', courier: true, download: 'direct-first' },
-  { slotId: 'ext-daily-tv-mass', title: 'Daily TV Mass', source: 'Daily TV Mass', feedUrl: 'https://feeds.buzzsprout.com/949645.rss', matcher: 'title-date', download: 'direct-first' },
+  { slotId: 'ext-daily-tv-mass', title: 'Daily TV Mass', source: 'Daily TV Mass', feedUrl: 'https://rss.buzzsprout.com/949645.rss', matcher: 'title-date', download: 'direct-first' },
   { slotId: 'ext-fr-mike-homily', title: 'Fr. Mike Sunday Homily', source: 'Fr. Mike Schmitz', courier: true, download: 'direct-first' },
   { slotId: 'ext-barron-sermon', title: 'Bp. Barron Sunday Sermon', source: 'Word on Fire', courier: true, download: 'direct-first' }
 ];
