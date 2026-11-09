@@ -28,17 +28,17 @@ ok 27 - check 7: the served Prayers screen carries no .daynav element
 ok 28 - check 7: the Play All (whole day) control stands at the top
 ok 29 - check 7: block headers carry their 'N tracks' counts
 ok 30 - check 5 (browser): the missing track renders named in place with the not-available line
-ok 31 - check 6: the whole-day queue built by Play All equals the payload order (d2-a,seg:Morning,d2-m,seg:Midmorning,d2-b,seg:Midday,seg:Afternoon,seg:Evening,seg:Night)
-ok 32 - check 6: Play All starts at the day's first track
+ok 31 - check 6: the whole-day queue built by Play All equals the payload order (seg:Morning,d2-a,seg:Midmorning,d2-m,seg:Midday,d2-b,seg:Afternoon,seg:Evening,seg:Night)
+ok 32 - check 6: Play All starts at the day's first track (v325: the Morning Intentions segment)
 ok 33 - check 6: autoplay-next crossed a block boundary and passed over the missing track at reach
 ok 34 - check 6: the missing track never becomes the playing track
 ok 35 - check 6: per-block queue is the block slice (exercised below via the block button)
-ok 36 - check 6: per-block Play All builds exactly that block's slice (d2-b,seg:Midday)
+ok 36 - check 6: per-block Play All builds exactly that block's slice (seg:Midday,d2-b)
 ok 37 - check 8: all Media Session handlers registered (play,pause,previoustrack,nexttrack,seekto,seekforward,seekbackward)
 ok 38 - check 8: media metadata carries the track title + 'Ora Pro Nobis'
 ok 39 - check 8: a seekto moves currentTime (0.40s)
-ok 40 - check 8: nexttrack moves within the active queue (seg:Midday)
-ok 41 - check 8: previoustrack moves back within the active queue (d2-b)
+ok 40 - check 8: previoustrack moves within the active queue (seg:Midday)
+ok 41 - check 8: nexttrack moves back within the active queue (d2-b)
 ok 42 - check 8: a ranged GET on the episode route returns 206 + Content-Range (bytes 10-19/3571)
 ok 43 - check 9: reopening on the same stored day offers Resume
 ok 44 - check 9: the resumed track stands paused — no autoplay on open

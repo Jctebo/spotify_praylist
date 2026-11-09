@@ -296,7 +296,7 @@ async function playerDayPayload(env: Env) {
       streamUrl: hasAudio ? `/api/prayer/audio/${date}/${encodeURIComponent(block)}` : null,
       spotifyUrl: null,
     };
-    tracks.splice(tracks.length ? 1 : 0, 0, card);
+    tracks.splice(0, 0, card);
     return mkBlock(block, tracks, tracks.length);
   });
   const unblocked = eps.filter((r) => r.block === "unblocked").map(episodeTrackShape);
