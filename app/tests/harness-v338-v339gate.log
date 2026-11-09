@@ -1,0 +1,78 @@
+ok - setup: main app boots
+ok - setup: the day's draw stands
+ok - setup: draws stand for the paired items
+ok - setup: nine intros stand at 'current'
+ok - setup: the real push helper commits the day
+ok - 16 payload: presented day stands (no presentedMissing)
+ok - 16 payload: intros map carries every paired presented id
+ok - 4 payload half: the unavailable track's map entry STANDS
+ok - 8 payload half: no entry for the intro-less track
+ok - 16 payload: entry shape {title, text, streamUrl, sizeBytes}
+ok - 2 payload half: each novena's entry is keyed to its own episode id
+ok - 12 no payload shape carries an intentions card
+ok - 12 trackCount counts prayers only (fixture day shape)
+ok - 11 Range request: 206 + Content-Range + Accept-Ranges
+ok - 11 no-Range request: 200 with the full object
+ok - 11 suffix Range resolves against the object end
+ok - 11 absent id: 404
+ok - 17 intros stand ONLY at date='current' after every payload read
+ok - 13 prayerDayPayload carries neither segmentAudioUrl nor audioMissing
+ok - 13 the player payload carries no audioMissing either
+ok - 16 served client carries the seam + panel render
+FAIL - 16 served SW pins ora-pro-nobis-v338-1 with the purge exemption verbatim
+ok - 12 served client + styles carry no intentions-card trace
+ok - browser: main page settles the externals
+ok - 1 renderPrayers build: Morning pairs in payload order
+ok - 1 Antiphon pair stands in Midday + Evening too
+ok - 1 externals-rebuild build: the same pairs stand adjacent
+ok - 2 each novena is preceded by its OWN intro (keyed per episode)
+ok - 2 each novena intro streams from its own episode id
+ok - 3 a resolved slot is preceded by its intro (saint; the DO slots stand named-missing on the Nov-8-dated fixture)
+ok - 4 the unavailable prayer takes NO intro descriptor
+ok - 4 the unavailable prayer's card carries no panel
+ok - 5 a block Play All queue starts on the pairs, in order
+ok - 6 combined row: panel FIRST with label + drawn text + own small play button
+ok - 6 panel width is ~25% of the row
+ok - 6+8 the no-intro card is byte-identical to the standing card
+ok - 7 the panel button plays ONLY the intro through playTrack
+ok - 7 the audio element streams the intro route; the panel button lights, the prayer's does not
+ok - 10 the standing rate applies to the intro; the dock names it
+ok - 10 queue advances intro -> prayer; sleep-timer state untouched
+ok - 10 Now Playing names the prayer after the advance; intro named while it played
+ok - 10 Now Playing names the intro while the intro plays
+ok - 7 the panel button toggles pause
+ok - 8 the intro-less prayer plays as before
+ok - 13 the Intentions screen has no segment audio bar; the listing stands
+ok - 3 a named-missing slot emits NO intro though one stands
+ok - 18 fixture stands in the frozen state (the Morning slot is still downloading)
+ok - 18 the tap-time queue froze the slot unavailable (the defect's condition)
+ok - 18 the block plays through in order — intro pairs advance, and the landed slot joins at its turn
+ok - 9 session PUT accepted (swap two own sources; disable the saint slot)
+ok - 9 the settings read-back reflects the move (numbering follows position; saint disabled)
+ok - 9 the standing push re-commits under the moved settings
+ok - 9 payload order re-derives from the settings swap
+ok - 9 the disabled slot's intro entry is gone; the moved tracks' entries follow their ids unchanged
+ok - 9 NO intro-side write anywhere (prayer_intros byte-identical across the move)
+ok - 14 --intros-only run exits 0 with the intros-only field shape
+ok - 14 --intros-only renders NO segments (intros only)
+ok - 14 the intros read back complete after the flag run
+ok - 14 no-flag run keeps the dual shape (regression)
+ok - setup: missing-shape app boots
+ok - setup: an intro stands on the missing-shape instance
+ok - 4 presentedMissing: stored +2 stands; the presented day presents missing
+ok - 4 presentedMissing carries NO own intros (rule (a): no own row stands)
+ok - 4 presentedMissing blocks carry the named-missing own tracks, every one unavailable (v337 §2.1(4) shape)
+note - harness-v337: first run had 2 unruled failure(s) — re-running once
+note - harness-v337: RESULT harness-v337: 79 passed, 8 failed · 8 failure line(s), 2 unruled
+FAIL - 15 harness-v337: every failure is of the ruled class :: FAIL - 8 settings version stands at 2 after 0011 :: version=3 | FAIL - 12 the settings read-back reflects the move (rosary renumbered after bible, version 3) :: rosary=6 bible=5 version=4
+note - harness-v336:  · 2 failure line(s), 0 unruled
+ok - 15 harness-v336: every failure is of the ruled class
+note - harness-v335: RESULT: 26 ok / 9 FAIL · 9 failure line(s), 0 unruled
+ok - 15 harness-v335: every failure is of the ruled class
+note - harness-v334: RESULT harness-v334 8/14 ok · 6 failure line(s), 0 unruled
+ok - 15 harness-v334: every failure is of the ruled class
+note - harness-v325: first run had 1 unruled failure(s) — re-running once
+note - harness-v325: TALLY: 5 ok / 14 FAIL (19 checks) · 14 failure line(s), 1 unruled
+FAIL - 15 harness-v325: every failure is of the ruled class :: not ok 7 - check 1: payload names the stored fixture day, six blocks
+RESULT harness-v338 66/69 ok
+FAILURES: 16 served SW pins ora-pro-nobis-v338-1 with the purge exemption verbatim · 15 harness-v337: every failure is of the ruled class · 15 harness-v325: every failure is of the ruled class
