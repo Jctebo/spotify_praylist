@@ -289,9 +289,10 @@ try {
   ok(JSON.stringify(queueIds) === JSON.stringify(expectedQueue),
     `check 6: the whole-day queue built by Play All equals the payload order (${queueIds.join(",")})`);
   const firstCurrent = await page.evaluate(() => window.state.current.episodeId);
-  ok(firstCurrent === "d2-a", "check 6: Play All starts at the day's first track");
-  // d2-a (0.8s) ends -> seg:Morning (0.8s) -> d2-m is missing, skipped
-  // at reach -> seg:Midmorning -> d2-b: autoplay has crossed blocks.
+  ok(firstCurrent === "seg:Morning", "check 6: Play All starts at the day's first track (v325: the Morning Intentions segment)");
+  // seg:Morning (0.8s) ends -> d2-a (0.8s) -> seg:Midmorning (0.8s)
+  // -> d2-m is missing, skipped at reach -> seg:Midday -> d2-b:
+  // autoplay has crossed blocks.
   await page.waitForFunction(() => window.state && window.state.current && window.state.current.episodeId === "d2-b",
     null, { timeout: 30000 });
   ok(true, "check 6: autoplay-next crossed a block boundary and passed over the missing track at reach");
@@ -305,12 +306,15 @@ try {
   await page.evaluate(() => { window.state.queue = []; window.audioElFix = true; });
   await page.evaluate(() => document.getElementById("audio").pause());
 
-  // Per-block queue via the block's own button (Midday: d2-b + segment).
+  // Per-block queue via the block's own button (Midday: segment +
+  // d2-b — v325: the Intentions segment stands first and plays first;
+  // the wait for current === "d2-b" stands below it).
   const middayBtn = page.locator('[data-queue="Midday"]');
   await middayBtn.click();
+  await page.waitForFunction(() => window.state && window.state.current && window.state.current.episodeId === "seg:Midday", null, { timeout: 15000 });
   await page.waitForFunction(() => window.state && window.state.current && window.state.current.episodeId === "d2-b", null, { timeout: 15000 });
   const blockQueue = await page.evaluate(() => window.state.queue.map((d) => d.episodeId));
-  ok(JSON.stringify(blockQueue) === JSON.stringify(["d2-b", "seg:Midday"]),
+  ok(JSON.stringify(blockQueue) === JSON.stringify(["seg:Midday", "d2-b"]),
     `check 6: per-block Play All builds exactly that block's slice (${blockQueue.join(",")})`);
   await page.evaluate(() => document.getElementById("audio").pause());
 
@@ -334,18 +338,21 @@ try {
     return el.currentTime;
   });
   ok(seeked > 0.2, `check 8: a seekto moves currentTime (${seeked.toFixed(2)}s)`);
-  const nxt = await page.evaluate(async () => {
-    window.__opnMediaHandlers.nexttrack({});
-    await new Promise((r) => setTimeout(r, 300));
-    return window.state.current ? window.state.current.episodeId : null;
-  });
-  ok(nxt === "seg:Midday", `check 8: nexttrack moves within the active queue (${nxt})`);
+  // v325 (§2.4): the Midday queue now stands ["seg:Midday", "d2-b"]
+  // with current = d2-b, the LAST track — the handler legs swap:
+  // previoustrack from d2-b -> seg:Midday first, then nexttrack back.
   const prv = await page.evaluate(async () => {
     window.__opnMediaHandlers.previoustrack({});
     await new Promise((r) => setTimeout(r, 300));
     return window.state.current ? window.state.current.episodeId : null;
   });
-  ok(prv === "d2-b", `check 8: previoustrack moves back within the active queue (${prv})`);
+  ok(prv === "seg:Midday", `check 8: previoustrack moves within the active queue (${prv})`);
+  const nxt = await page.evaluate(async () => {
+    window.__opnMediaHandlers.nexttrack({});
+    await new Promise((r) => setTimeout(r, 300));
+    return window.state.current ? window.state.current.episodeId : null;
+  });
+  ok(nxt === "d2-b", `check 8: nexttrack moves back within the active queue (${nxt})`);
   const rg = await fetch(`${BASE}/api/player/audio/${D2}/d2-b`, { headers: { range: "bytes=10-19" } });
   ok(rg.status === 206 && (rg.headers.get("content-range") || "").startsWith("bytes 10-19/"),
     `check 8: a ranged GET on the episode route returns 206 + Content-Range (${rg.headers.get("content-range")})`);
