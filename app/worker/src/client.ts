@@ -6,7 +6,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, dateLabel: '', pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null };
+var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, dateLabel: '', pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {} };
 
 /* ---------------- Playback speed (v336) ----------------
    One rate for the one audio element: a listener preference in
@@ -736,8 +736,75 @@ function intentionPanelHtml(t, intro) {
   // playable from its own panel), wired exactly as the standing
   // card buttons through playTrack on the intro descriptor. No
   // seek bar, no speed control, no Read control stand in the panel.
-  return '<div class="intention-panel"><div class="intention-label">Intention</div><div class="intention-text">' + esc(intro.text) + '</div><button class="playbtn small" data-playkey="intro:' + esc(t.episodeId) + '" aria-label="Play the intention">&#9654;</button></div>';
+  // v343 §2.4: the two controls stand in a new .panel-foot row —
+  // the play button, then the ellipsis (⋯) that expands the capped
+  // text in place. The ellipsis stands only when the text is
+  // actually clamped — a rendered measurement armed after
+  // insertion by armEllipsis; an expanded row's button always
+  // stands (it is the collapse control). The expand state is
+  // per-row and session-only (state.expandedIntros), re-rendered
+  // in expanded form when its id stands in the set.
+  var expanded = !!(state.expandedIntros && state.expandedIntros[t.episodeId]);
+  return '<div class="intention-panel"><div class="intention-label">Intention</div><div class="intention-text">' + esc(intro.text) + '</div>'
+    + '<div class="panel-foot"><button class="playbtn small" data-playkey="intro:' + esc(t.episodeId) + '" aria-label="Play the intention">&#9654;</button>'
+    + '<button class="ellipsis-btn' + (expanded ? ' stands' : '') + '" data-expand="' + esc(t.episodeId) + '" aria-label="Show the full intention" aria-expanded="' + (expanded ? 'true' : 'false') + '">&#8943;</button></div></div>';
 }
+function introForTrack(t) {
+  // v343 §2.5(1): the panel's intro for a track, descriptor-first.
+  // The intro descriptor standing in state.dayDescs (built by
+  // expandDescs at every rebuild, carrying intentionText) is the
+  // freshest source — a card rendered from it no longer depends on
+  // the open-time payload snapshot. Fallback (named): the standing
+  // map read on state.dayPayload, byte-identical to the v338
+  // behavior — it covers the initial own-track build and any
+  // instant before a rebuild has run. Availability stays the
+  // caller's standing rule: expandDescs emits no intro descriptor
+  // for an unavailable prayer, and trackCard asks only for
+  // available tracks — no available prayer, no panel, both ways.
+  if (!t || !t.episodeId) return null;
+  var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === 'intro:' + t.episodeId; })[0];
+  if (d && d.intentionText) return { text: d.intentionText, title: d.title, streamUrl: d.url };
+  var map = state.dayPayload && state.dayPayload.intros;
+  var intro = map ? map[t.episodeId] : null;
+  return intro ? { text: intro.text, title: intro.title, streamUrl: intro.streamUrl } : null;
+}
+function armEllipsis(cardEl) {
+  // v343 §2.4: the ellipsis stands iff the intention text is
+  // actually clamped — the rendered-height comparison
+  // (scrollHeight > clientHeight + 1), never a length derivation.
+  // The exact-fit two-line text reads equal and stands no ellipsis
+  // (nothing is hidden). An expanded row's button always stands.
+  if (!cardEl || !cardEl.classList || !cardEl.classList.contains('intro-row')) return;
+  var btn = cardEl.querySelector('.ellipsis-btn');
+  var txt = cardEl.querySelector('.intention-text');
+  if (!btn || !txt) return;
+  if (cardEl.classList.contains('expanded') || txt.scrollHeight > txt.clientHeight + 1) btn.classList.add('stands');
+  else btn.classList.remove('stands');
+}
+function armAllEllipses() {
+  view.querySelectorAll('.card.intro-row').forEach(armEllipsis);
+}
+function wireExpand(root) {
+  // v343 §2.4: the expand control is wired at the same render
+  // paths that wire [data-playkey] (initial build, insert, swap),
+  // beside that wiring. Per-element and idempotent — the
+  // data-expand-wired flag guards the listener against re-arming.
+  (root || view).querySelectorAll('[data-expand]').forEach(function (btn) {
+    if (btn.getAttribute('data-expand-wired')) return;
+    btn.setAttribute('data-expand-wired', '1');
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-expand');
+      var card = btn.closest('.card.intro-row');
+      if (!card || !id) return;
+      var on = card.classList.toggle('expanded');
+      btn.setAttribute('aria-expanded', on ? 'true' : 'false');
+      if (!state.expandedIntros) state.expandedIntros = {};
+      if (on) state.expandedIntros[id] = true; else delete state.expandedIntros[id];
+      armEllipsis(card);
+    });
+  });
+}
+window.addEventListener('resize', function () { armAllEllipses(); });
 function trackCard(t) {
   var key = t.episodeId || ('seg:' + (t._block || ''));
   // v338 §2.7(1)/(5): the combined row stands iff the payload's
@@ -748,11 +815,13 @@ function trackCard(t) {
   // settled card). No intro standing → the plain standing card,
   // byte-identical to the pre-v338 shape (§2.7(4)); an unavailable
   // prayer renders its standing unavailable card, panel-free.
-  var intro = (t.available && t.episodeId && state.dayPayload && state.dayPayload.intros) ? (state.dayPayload.intros[t.episodeId] || null) : null;
+  // v343 §2.5(1): the lookup now runs through introForTrack —
+  // descriptor-first, the payload map as its named fallback.
+  var intro = t.available ? introForTrack(t) : null;
   var wrap = function (rowInner) {
-    return intro
-      ? '<div class="card intro-row" data-card="' + esc(key) + '"><div class="row">' + intentionPanelHtml(t, intro) + rowInner + '</div></div>'
-      : '<div class="card" data-card="' + esc(key) + '"><div class="row">' + rowInner + '</div></div>';
+    if (!intro) return '<div class="card" data-card="' + esc(key) + '"><div class="row">' + rowInner + '</div></div>';
+    var expanded = !!(state.expandedIntros && state.expandedIntros[t.episodeId]);
+    return '<div class="card intro-row' + (expanded ? ' expanded' : '') + '" data-card="' + esc(key) + '"><div class="row">' + intentionPanelHtml(t, intro) + rowInner + '</div></div>';
   };
   if (t.kind === 'external') {
     // v324 §2.9: an external track names its source in the meta line
@@ -1203,6 +1272,9 @@ function extSwapCard(slot) {
       if (d) playTrack(d);
     });
   });
+  // v343 §2.4: the swap path arms the ellipsis like every other.
+  wireExpand(fresh);
+  armEllipsis(fresh);
   if (state.current && state.current.episodeId === slot.slotId) markPlaying(slot.slotId);
 }
 function extInsertCards(day, standing) {
@@ -1235,6 +1307,9 @@ function extInsertCards(day, standing) {
           if (d) playTrack(d);
         });
       });
+      // v343 §2.4: the insert path arms the ellipsis too.
+      wireExpand(el);
+      armEllipsis(el);
     });
   });
 }
@@ -1376,6 +1451,9 @@ function ownInsertCards(day) {
             if (t) openRead(t);
           });
         });
+        // v343 §2.4: the own insert path arms the ellipsis too.
+        wireExpand(el);
+        armEllipsis(el);
       });
     });
   });
@@ -1412,6 +1490,9 @@ function ownSwapRow(row, day) {
         if (t) openRead(t);
       });
     });
+    // v343 §2.4: the own swap path arms the ellipsis too.
+    wireExpand(el);
+    armEllipsis(el);
   });
   olds.forEach(function (o) { o.remove(); });
   (st.tracks || []).forEach(function (m) {
@@ -1680,6 +1761,22 @@ function ownBuildIntentions(day, cachedRec) {
       var st = state.ownSlots[row.sourceKey];
       if (st && st.state === 'present') (st.tracks || []).forEach(function (m) { ownFetchIntro(day, m.episodeId); });
     });
+    // v343 §2.5(3): the completion leg at the map's assignment
+    // point — the descriptor list rebuilds over the full map,
+    // then every PRESENT external slot whose standing card still
+    // lacks its panel while its intro now stands re-renders in
+    // this same session through the standing swap path. (On the
+    // cached path applyRec runs before any card exists — the
+    // guards make the leg a no-op there by construction; the
+    // settle path covers that open.)
+    extRebuildDescs(day);
+    (state.extStanding || []).forEach(function (slot) {
+      var st2 = state.extSlots && state.extSlots[slot.slotId];
+      if (!st2 || st2.state !== 'present') return;
+      var card = view.querySelector('[data-card="' + slot.slotId + '"]');
+      if (!card || card.querySelector('.intention-panel')) return;
+      if (introForTrack(extSlotTrack(slot, st2))) extSwapCard(slot);
+    });
   };
   if (cachedRec) { applyRec(cachedRec); return Promise.resolve(); }
   return extFetchText(INTRO_FEED_URL).then(function (text) {
@@ -1816,8 +1913,12 @@ function resolveExternals(day) {
     state.ownWriteCache = writeCache;
     var settle = function (slot, st) {
       state.extSlots[slot.slotId] = st;
-      extSwapCard(slot);
+      // v343 §2.5(2): settle order flip — the descriptor rebuild
+      // runs BEFORE the swap render, so the card the swap draws
+      // consults the descriptor built from the settle that just
+      // landed (descriptor-first, introForTrack).
       extRebuildDescs(day);
+      extSwapCard(slot);
       writeCache();
     };
     var extDownload = function (slot, meta) {
@@ -2126,6 +2227,10 @@ function renderPrayers() {
         startQueue(descs);
       });
     });
+    // v343 §2.4: the initial build arms every combined row in the
+    // view — wiring for the expand controls, then the arm pass.
+    wireExpand(view);
+    armAllEllipses();
     if (state.current) markPlaying(state.current.episodeId);
     // v334: externals resolve at open, in place, after the day has
     // rendered — the resolve never blocks the day's own episodes.

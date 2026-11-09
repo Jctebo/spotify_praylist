@@ -96,9 +96,22 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 /* Modular intentions (v338): the combined row — intention panel
    FIRST at ~25%, hairline divider on its right, subordinate type in
    the .meta tone, no gold, no nested card. */
-.intro-row .intention-panel { flex:0 0 25%; border-right:1px solid var(--line); padding-right:10px; font-size:14px; color:#6d6353; }
-.intention-label { font-size:13px; letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
-.intention-text { line-height:1.4; margin-bottom:8px; }
+/* Uniform intention rows (v343): every combined row stands at one
+   fixed height — 136px, measured on the real DOM at Plan (the
+   two-line-title novena shape governs the family maximum) — with
+   the compacted chrome below. The intention text caps at two
+   lines; overflow sits behind the panel-side ellipsis (⋯), which
+   stands only when the text is actually clamped (armed by
+   measurement in the client). An expanded row grows in place. */
+.card.intro-row { padding:9px 14px; height:136px; overflow:hidden; }
+.intro-row .intention-panel { flex:0 0 25%; border-right:1px solid var(--line); padding-right:8px; font-size:14px; color:#6d6353; }
+.intention-label { font-size:13px; letter-spacing:1px; text-transform:uppercase; margin-bottom:2px; }
+.intention-text { line-height:1.4; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.panel-foot { display:flex; align-items:center; gap:6px; }
+.ellipsis-btn { display:none; background:none; border:none; font-family:inherit; font-size:14px; line-height:1; color:#6d6353; cursor:pointer; padding:4px 2px; }
+.ellipsis-btn.stands { display:inline-block; }
+.card.intro-row.expanded { height:auto; overflow:visible; }
+.card.intro-row.expanded .intention-text { display:block; -webkit-line-clamp:none; overflow:visible; }
 .playbtn.small { width:30px; height:30px; font-size:12px; }
 .chips { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px; }
 .chip { font-family:inherit; font-size:14px; padding:6px 11px; border-radius:20px; border:1px solid var(--line); background:#fff; cursor:pointer; }
@@ -155,7 +168,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v342-1";
+var CACHE = "ora-pro-nobis-v343-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
