@@ -1356,9 +1356,13 @@ function ownInsertCards(day) {
       var tmp = document.createElement('div');
       tmp.innerHTML = st && st.state === 'present' ? st.tracks.map(function (m) { return trackCard(ownSlotTrack(row, m, day.presentedDay || day.date)); }).join('') : ownPlaceholderCard(row);
       // Insert the row's cards as a run, in order, before ref.
+      // Each card carries its ROW's identity (data-own-row): the
+      // Antiphon's three placements share one episode id, and a
+      // swap must replace only its own row's cards.
       var nodes = [];
       while (tmp.firstChild) nodes.push(tmp.removeChild(tmp.firstChild));
       nodes.forEach(function (el) {
+        el.setAttribute('data-own-row', row.sourceKey);
         view.insertBefore(el, ref);
         el.querySelectorAll('[data-playkey]').forEach(function (b2) {
           b2.addEventListener('click', function () {
@@ -1377,8 +1381,10 @@ function ownInsertCards(day) {
   });
 }
 function ownSwapRow(row, day) {
-  var key = row.episodeId;
-  var olds = view.querySelectorAll('[data-card="' + key + '"]');
+  // Selection is by the row's own identity (data-own-row), never
+  // by episode id: three rows share the Antiphon's id, and a swap
+  // must replace only its own row's cards.
+  var olds = view.querySelectorAll('[data-own-row="' + row.sourceKey + '"]');
   if (!olds.length) return;
   var st = state.ownSlots[row.sourceKey];
   var html;
@@ -1392,6 +1398,7 @@ function ownSwapRow(row, day) {
   while (tmp.firstChild) nodes.push(tmp.removeChild(tmp.firstChild));
   var first = olds[0];
   nodes.forEach(function (el) {
+    el.setAttribute('data-own-row', row.sourceKey);
     first.parentNode.insertBefore(el, first);
     el.querySelectorAll('[data-playkey]').forEach(function (b2) {
       b2.addEventListener('click', function () {
@@ -1461,8 +1468,10 @@ function paintResume(day) {
 // Downloads for own + intention audio (§2.3): the enclosure host
 // refuses browser reads, so the bytes come through the Worker
 // pass-through and land in the standing device audio cache; the
-// download key is the canonical episode id ('intro:<id>' for
-// intros) — one cache entry serves every placement of the track.
+// download key is the canonical episode id ('intro/<id>' for
+// intros — path form, because 'intro:<id>' parses as a URL
+// scheme and the Cache API rejects non-http(s) keys) — one cache
+// entry serves every placement of the track.
 function ownFetchAudio(cacheKey, enclosureUrl, done) {
   state.ownAudioDl = state.ownAudioDl || {};
   if (state.ownAudioDl[cacheKey]) { state.ownAudioDl[cacheKey].push(done); return; }
@@ -1514,10 +1523,12 @@ function ownResolveFeed(day, needed) {
     if (finished) return;
     finished = true;
     Object.keys(needed).forEach(function (fam) {
-      var row = needed[fam];
+      var rows = needed[fam];
       var items = found[fam] || [];
-      if (items.length) ownSettlePresent(day, row, fam === 'novenas' ? items : [items[0]]);
-      else ownSettleMissing(day, row);
+      rows.forEach(function (row) {
+        if (items.length) ownSettlePresent(day, row, fam === 'novenas' ? items : [items[0]]);
+        else ownSettleMissing(day, row);
+      });
     });
     paintResume(day);
   };
@@ -1541,9 +1552,12 @@ function ownResolveFeed(day, needed) {
     };
     (found[fam.family] = found[fam.family] || []).push(meta);
     if (fam.family !== 'novenas') {
-      var row = needed[fam.family];
+      // Every standing row of the family settles — the Antiphon
+      // item places into each of its enabled rows (Morning,
+      // Midday, Evening) from this one match.
+      var rows = needed[fam.family];
       delete needed[fam.family];
-      ownSettlePresent(day, row, [meta]);
+      rows.forEach(function (row) { ownSettlePresent(day, row, [meta]); });
     }
     return false;
   };
@@ -1612,18 +1626,25 @@ function ownSettlePresent(day, row, metas) {
       ownRegisterReadTracks();
       extRebuildDescs(day);
     });
-    var intro = day.intros && day.intros[m.episodeId];
-    if (intro && intro.streamUrl) {
-      ownFetchAudio('intro:' + m.episodeId, intro.streamUrl, function (objUrl) {
-        if (!objUrl || !day.intros[m.episodeId]) return;
-        day.intros[m.episodeId].streamUrl = objUrl;
-        (state.ownStanding || []).forEach(function (r2) {
-          var st2 = state.ownSlots[r2.sourceKey];
-          if (st2 && st2.tracks && st2.tracks.some(function (t2) { return t2.episodeId === m.episodeId; })) ownSwapRow(r2, day);
-        });
-        extRebuildDescs(day);
-      });
-    }
+    ownFetchIntro(day, m.episodeId);
+  });
+}
+// The intro paired with a present own track downloads through
+// the same pass-through (its streamUrl swaps to the blob when it
+// lands). Called at settle time AND when the intentions map
+// lands — own tracks usually settle first, before the map
+// exists; the download dedupes by cache key either way.
+function ownFetchIntro(day, episodeId) {
+  var intro = day.intros && day.intros[episodeId];
+  if (!intro || !intro.streamUrl || String(intro.streamUrl).indexOf('blob:') === 0) return;
+  ownFetchAudio('intro/' + episodeId, intro.streamUrl, function (objUrl) {
+    if (!objUrl || !day.intros[episodeId]) return;
+    day.intros[episodeId].streamUrl = objUrl;
+    (state.ownStanding || []).forEach(function (r2) {
+      var st2 = state.ownSlots[r2.sourceKey];
+      if (st2 && st2.tracks && st2.tracks.some(function (t2) { return t2.episodeId === episodeId; })) ownSwapRow(r2, day);
+    });
+    extRebuildDescs(day);
   });
 }
 function ownSettleMissing(day, row) {
@@ -1652,6 +1673,13 @@ function ownBuildIntentions(day, cachedRec) {
     day.intros = intros;
     state.daySegments = rec2.segments || {};
     state.introRec = rec2;
+    // Own tracks usually settle BEFORE this map exists; their
+    // intro downloads were skipped at settle time for want of a
+    // URL. Kick them now that the map stands (the call dedupes).
+    (state.ownStanding || []).forEach(function (row) {
+      var st = state.ownSlots[row.sourceKey];
+      if (st && st.state === 'present') (st.tracks || []).forEach(function (m) { ownFetchIntro(day, m.episodeId); });
+    });
   };
   if (cachedRec) { applyRec(cachedRec); return Promise.resolve(); }
   return extFetchText(INTRO_FEED_URL).then(function (text) {
@@ -1876,7 +1904,7 @@ function resolveExternals(day) {
     ownStanding.forEach(function (row) {
       var st = state.ownSlots[row.sourceKey];
       if (st.state === 'present') ownSettlePresent(day, row, st.tracks);
-      else ownNeeded[row.episodeId] = row;
+      else (ownNeeded[row.episodeId] = ownNeeded[row.episodeId] || []).push(row);
     });
     if (Object.keys(ownNeeded).length) ownResolveFeed(day, ownNeeded);
     else paintResume(day);
