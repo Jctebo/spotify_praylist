@@ -597,6 +597,41 @@ function extMatchDivineOffice(items: ExtFeedItem[], y: number, mo: number, d: nu
   }
   return out;
 }
+const EXT_BIAY_FEED_URL = "https://feeds.fireside.fm/bibleinayear/rss";
+const EXT_STH_FEED_URL = "https://feeds.castos.com/x8g54";
+function extMatchBible(items: ExtFeedItem[], y: number, mo: number, d: number): ExtFeedItem | null {
+  // The resolver's Bible matcher ported (courier pass-through use):
+  // Day N (day-of-year capped 365) + enclosure + current year only;
+  // newest pubDate wins.
+  const doy = Math.floor((Date.UTC(y, mo - 1, d) - Date.UTC(y, 0, 0)) / 86400000);
+  const n = doy > 365 ? 365 : doy;
+  const pat = new RegExp(`\\bDay\\s*0*${n}\\b`, "i");
+  let best: ExtFeedItem | null = null;
+  for (const it of items) {
+    if (!it.url || !pat.test(it.title)) continue;
+    const years = it.title.match(/\b(20\d{2})\b/g);
+    const year = years ? Math.max(...years.map(Number)) : (it.pubMs != null ? new Date(it.pubMs).getUTCFullYear() : null);
+    if (year !== y) continue;
+    if (!best || (it.pubMs ?? -Infinity) > (best.pubMs ?? -Infinity)) best = it;
+  }
+  return best;
+}
+function extMatchSth(items: ExtFeedItem[], y: number, mo: number, d: number, token: string): ExtFeedItem | null {
+  const prefix = `${mo}.${d}.${String(y).slice(2)}`;
+  for (const it of items) {
+    if (it.url && it.title.includes(prefix) && it.title.toLowerCase().includes(token.toLowerCase())) return it;
+  }
+  return null;
+}
+async function extFetchFeedItems(url: string): Promise<ExtFeedItem[]> {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 15000);
+  try {
+    const res = await fetch(url, { headers: { "user-agent": "ora-pro-nobis-externals-resolver/1.0" }, signal: ctl.signal });
+    if (!res.ok) throw new Error(`feed fetch failed: HTTP ${res.status}`);
+    return extParseFeed(await res.text());
+  } finally { clearTimeout(timer); }
+}
 function extDayRulePasses(rule: string, weekdayMon0: number): boolean {
   // The push helper's day_rule_passes, ported: 'fallback-only' on a
   // primary row never passes.
@@ -1012,6 +1047,65 @@ export default {
             status: 200,
             headers: { "content-type": "application/json", "cache-control": "private, max-age=300" },
           });
+        }
+        if (seg[2] === "externals" && seg[3] === "audio" && request.method === "GET") {
+          // v334 Amendment A1 — the audio pass-through (John,
+          // 2026-11-09 04:32 CT: "Download always"): for a source
+          // whose enclosure host forbids browser reads (Sing the
+          // Hours — episodes.castos.com sends no CORS header), the
+          // Worker resolves the slot server-side, fetches the
+          // enclosure, and streams it through so the phone can save
+          // it from its own Worker. The Worker keeps NOTHING: no D1
+          // write, no R2 write, no retained state.
+          const date = url.searchParams.get("date") ?? "";
+          const slotId = url.searchParams.get("slot") ?? "";
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+          if (!(slotId in EXTERNAL_SLOTS)) return err(400, "unknown external slot");
+          const dayRow = await env.DB.prepare("SELECT date FROM player_day WHERE id=1").first<{ date: string }>();
+          if (!dayRow || dayRow.date !== date) return err(400, `date ${date} is not the stored day ${dayRow?.date ?? "none"}`);
+          const settings = await sourceSettingsPayload(env);
+          const [yy, mm, dd] = date.split("-").map(Number);
+          const wdMon0 = (new Date(Date.UTC(yy, mm - 1, dd)).getUTCDay() + 6) % 7;
+          const primRow = settings.sources.find((s) => s.family === "external" && s.slotId === slotId && s.role !== "fallback");
+          if (!primRow || primRow.enabled !== 1 || !extDayRulePasses(primRow.dayRule || "daily", wdMon0)) {
+            return err(404, "slot does not stand under the current settings");
+          }
+          let item: ExtFeedItem | null = null;
+          try {
+            if (slotId === "ext-bible-in-a-year") {
+              item = extMatchBible(await extFetchFeedItems(EXT_BIAY_FEED_URL), yy, mm, dd);
+            } else {
+              const doSlot = EXT_DO_SLOTS.find((s) => s.slotId === slotId);
+              if (doSlot) {
+                const matches = extMatchDivineOffice(await extFetchFeedItems(env.EXT_DO_FEED_URL || EXT_DO_FEED_URL), yy, mm, dd);
+                item = matches.get(slotId) ?? null;
+                if (!item) {
+                  const fbRow = settings.sources.find((s) => s.family === "external" && s.slotId === slotId && s.role === "fallback");
+                  const token = slotId === "ext-morning-prayer" ? "Lauds" : slotId === "ext-evening-prayer" ? "Vespers" : null;
+                  const fills = fbRow && fbRow.enabled === 1 && (fbRow.dayRule === "fallback-only" || extDayRulePasses(fbRow.dayRule || "daily", wdMon0));
+                  if (token && fills) item = extMatchSth(await extFetchFeedItems(EXT_STH_FEED_URL), yy, mm, dd, token);
+                }
+              }
+            }
+          } catch { return err(502, "feed fetch failed"); }
+          if (!item || !item.url) return err(404, "no episode resolved for that slot today");
+          const fwd: Record<string, string> = { "user-agent": "ora-pro-nobis-externals-resolver/1.0" };
+          const range = request.headers.get("range");
+          if (range) fwd["range"] = range;
+          let audioRes: Response;
+          try {
+            audioRes = await fetch(item.url, { headers: fwd });
+          } catch { return err(502, "enclosure fetch failed"); }
+          if (!audioRes.ok && audioRes.status !== 206) return err(502, `enclosure fetch failed: HTTP ${audioRes.status}`);
+          const headers: Record<string, string> = {
+            "content-type": audioRes.headers.get("content-type") || "audio/mpeg",
+            "cache-control": "private, no-store",
+          };
+          for (const h of ["content-length", "accept-ranges", "content-range"]) {
+            const v = audioRes.headers.get(h);
+            if (v) headers[h] = v;
+          }
+          return new Response(audioRes.body, { status: audioRes.status, headers });
         }
         if (seg[2] === "source-settings" && request.method === "GET") {
           // v328 §2.2 route 1 — the Settings screen's read: the

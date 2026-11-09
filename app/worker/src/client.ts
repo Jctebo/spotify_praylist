@@ -728,8 +728,16 @@ function openRead(t) {
    to every leg. Resolved present slots are kept in the device-local
    day cache (opn-ext-cache-v1): valid only for the same stored day
    and the same settings version; only present slots are written,
-   so a missing slot re-checks on the next open. No audio is ever
-   cached — slots hold links and metadata only. */
+   so a missing slot re-checks on the next open. AMENDMENT A1
+   (John, 2026-11-09 04:32 CT — "Download always so seeking can
+   work"): a resolved slot DOWNLOADS its audio to the device
+   (Cache Storage, opn-ext-audio-v1) and plays/seeks from the local
+   copy — Divine Office and Bible in a Year download directly
+   (their enclosure chains send Access-Control-Allow-Origin: * at
+   every hop, probed at Implement); Sing the Hours' host sends no
+   such header, so its fills download through the Worker
+   pass-through, which keeps nothing. Invalidation discards the
+   audio with the record. */
 var EXT_SLOTS = [
   { slotId: 'ext-invitatory', title: 'Invitatory' },
   { slotId: 'ext-morning-prayer', title: 'Morning Prayer', fallbackToken: 'Lauds' },
@@ -855,6 +863,13 @@ function extCacheRead() {
 function extCacheWrite(rec) {
   try { localStorage.setItem('opn-ext-cache-v1', JSON.stringify(rec)); } catch (e) { /* degrades to session memory (§2.4) */ }
 }
+function extDiscardCaches() {
+  try { localStorage.removeItem('opn-ext-cache-v1'); } catch (e) {}
+  if ('caches' in window) { caches.delete('opn-ext-audio-v1').catch(function () {}); }
+}
+function extDownloadingCard(slot) {
+  return '<div class="card" data-card="' + esc(slot.slotId) + '"><h3>' + esc(slot.title || 'Bible in a Year') + '</h3><div class="meta">Downloading&hellip;</div></div>';
+}
 function extPlaceholderCard(slot) {
   return '<div class="card" data-card="' + esc(slot.slotId) + '"><h3>' + esc(slot.title || 'Bible in a Year') + '</h3><div class="meta">Loading&hellip;</div></div>';
 }
@@ -870,7 +885,7 @@ function extSwapCard(slot) {
   var old = view.querySelector('[data-card="' + slot.slotId + '"]');
   if (!old || !st) return;
   var tmp = document.createElement('div');
-  tmp.innerHTML = trackCard(extSlotTrack(slot, st));
+  tmp.innerHTML = st.state === 'downloading' ? extDownloadingCard(slot) : (st.state === 'loading' ? extPlaceholderCard(slot) : trackCard(extSlotTrack(slot, st)));
   var fresh = tmp.firstChild;
   old.replaceWith(fresh);
   var btn = fresh.querySelector('[data-playkey]');
@@ -950,23 +965,26 @@ function resolveExternals(day) {
     // Day cache: valid only for this date AND this settings version.
     var cache = extCacheRead();
     var cacheValid = !!cache && cache.date === date && cache.settingsVersion === settings.version && cache.slots;
-    if (cache && !cacheValid) { try { localStorage.removeItem('opn-ext-cache-v1'); } catch (e) {} cache = null; }
+    if (cache && !cacheValid) { extDiscardCaches(); cache = null; }
     var rec = cacheValid ? cache : { date: date, settingsVersion: settings.version, savedAt: new Date().toISOString(), slots: {} };
     standing.forEach(function (slot) {
       var c = cacheValid ? rec.slots[slot.slotId] : null;
       if (c && c.state === 'present') {
-        state.extSlots[slot.slotId] = { state: 'present', title: c.title, streamUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source };
+        state.extSlots[slot.slotId] = { state: 'downloading', title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source };
       } else {
         state.extSlots[slot.slotId] = { state: 'loading', title: slot.title || 'Bible in a Year' };
       }
     });
     extInsertCards(day, standing);
     extRebuildDescs(day);
+    standing.forEach(function (slot) {
+      if (state.extSlots[slot.slotId].state === 'downloading') extRestoreCached(slot);
+    });
     var writeCache = function () {
       standing.forEach(function (slot) {
         var st = state.extSlots[slot.slotId];
         if (st && st.state === 'present') {
-          rec.slots[slot.slotId] = { state: 'present', title: st.title, streamUrl: st.streamUrl, durationSec: st.durationSec, sizeBytes: st.sizeBytes, source: st.source, block: slot.block, sortOrder: slot.sortOrder };
+          rec.slots[slot.slotId] = { state: 'present', title: st.title, streamUrl: st.enclosureUrl || st.streamUrl, durationSec: st.durationSec, sizeBytes: st.sizeBytes, source: st.source, block: slot.block, sortOrder: slot.sortOrder };
         }
       });
       rec.savedAt = new Date().toISOString();
@@ -977,6 +995,49 @@ function resolveExternals(day) {
       extSwapCard(slot);
       extRebuildDescs(day);
       writeCache();
+    };
+    var extDownload = function (slot, meta) {
+      // Amendment A1 routes: direct from the enclosure host where
+      // its chain allows the read (Divine Office, Bible in a Year);
+      // the Worker pass-through where it does not (Sing the Hours),
+      // and as the single retry when a direct download fails.
+      var passthrough = '/api/player/externals/audio?date=' + encodeURIComponent(date) + '&slot=' + encodeURIComponent(slot.slotId);
+      var first = meta.source === 'Sing the Hours' ? passthrough : meta.enclosureUrl;
+      var attempt = function (u) {
+        return fetch(u).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r; });
+      };
+      attempt(first).catch(function () {
+        if (first !== passthrough) return attempt(passthrough);
+        throw new Error('download failed');
+      }).then(function (resp) {
+        var put = ('caches' in window)
+          ? caches.open('opn-ext-audio-v1').then(function (c) { return c.put(slot.slotId, resp.clone()); }).catch(function () {})
+          : Promise.resolve();
+        return put.then(function () { return resp.blob(); });
+      }).then(function (blob) {
+        settle(slot, { state: 'present', title: meta.title, streamUrl: URL.createObjectURL(blob), enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source });
+      }).catch(function () {
+        settle(slot, { state: 'missing', title: meta.title, source: meta.source });
+      });
+    };
+    var settleMeta = function (slot, meta) {
+      var cur = state.extSlots[slot.slotId];
+      if (cur && cur.state === 'present' && cur.enclosureUrl === meta.enclosureUrl) return;
+      state.extSlots[slot.slotId] = { state: 'downloading', title: meta.title, enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source };
+      extSwapCard(slot);
+      extRebuildDescs(day);
+      extDownload(slot, meta);
+    };
+    var extRestoreCached = function (slot) {
+      var c = rec.slots[slot.slotId];
+      var meta = { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source };
+      if (!('caches' in window)) { extDownload(slot, meta); return; }
+      caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(slot.slotId); }).then(function (resp) {
+        if (!resp) { extDownload(slot, meta); return; }
+        resp.blob().then(function (blob) {
+          settle(slot, { state: 'present', title: meta.title, streamUrl: URL.createObjectURL(blob), enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source });
+        });
+      }).catch(function () { extDownload(slot, meta); });
     };
     var missingSt = function (slot, source) {
       return { state: 'missing', title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle(null, extMatchBibleDayN(date)) : slot.title, source: source || 'Divine Office' };
@@ -993,7 +1054,7 @@ function resolveExternals(day) {
         doSlots.forEach(function (slot) {
           var e = byId[slot.slotId];
           if (e && e.state === 'present') {
-            settle(slot, { state: 'present', title: e.title, streamUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: 'Divine Office' });
+            settleMeta(slot, { title: e.title, enclosureUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: 'Divine Office' });
           } else if (e) {
             settle(slot, missingSt(slot, 'Divine Office'));
           } else if (uncached(slot)) {
@@ -1010,7 +1071,7 @@ function resolveExternals(day) {
     if (bibleSlot && uncached(bibleSlot)) {
       extFetchText(EXT_BIAY_URL).then(function (text) {
         var m = extMatchBible(extParseFeed(text), date);
-        if (m.item) settle(bibleSlot, { state: 'present', title: extBibleTitle(m.item, m.dayN), streamUrl: m.item.url, durationSec: m.item.durationS, sizeBytes: m.item.length, source: 'Bible in a Year' });
+        if (m.item) settleMeta(bibleSlot, { title: extBibleTitle(m.item, m.dayN), enclosureUrl: m.item.url, durationSec: m.item.durationS, sizeBytes: m.item.length, source: 'Bible in a Year' });
         else settle(bibleSlot, { state: 'missing', title: extBibleTitle(null, m.dayN), source: 'Bible in a Year' });
       }).catch(function () { settle(bibleSlot, { state: 'missing', title: extBibleTitle(null, extMatchBibleDayN(date)), source: 'Bible in a Year' }); });
     }
@@ -1026,7 +1087,7 @@ function resolveExternals(day) {
         var items = extParseFeed(text);
         need.forEach(function (slot) {
           var it = extMatchSth(items, date, slot.fallbackToken);
-          if (it) settle(slot, { state: 'present', title: slot.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: 'Sing the Hours' });
+          if (it) settleMeta(slot, { title: slot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: 'Sing the Hours' });
         });
       }).catch(function () { /* the slots stand named missing */ });
     });
