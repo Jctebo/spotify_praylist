@@ -235,3 +235,58 @@ Each suite ran complete on the final tree AND on an untouched `df6d4f6` worktree
 - **The SW-pin expectations in harness-v320 (check 1) and harness-v326 (check 20)** will read stale until that same follow-on updates them to `ora-pro-nobis-v336-1`; they are expected red on any tree carrying this release's pin and green only on the pre-v336 trunk.
 - **Phone facts remain unproven by design:** the scrub behavior of `input[type=range]` on John's Android Chrome and `setPositionState`'s acceptance of every D1 rate on his device are covered by the waived phone check's standing note, not by this gate.
 - **Information needs:** none outstanding for Implement. Review needs the deviation ruling and the baseline logs, both in this section.
+
+## 4 · Review
+
+- **Agent:** Review Agent (v336) — Review claim record 1186, claimed 2026-11-09T14:14:43Z · time contract 106
+- **Verdict: PASS.** All eleven §1 criteria pass, judged as §2.10 re-reads them. The Implement deviation is ruled UPHELD (below). Ship seats on this pass; run level is Autonomous to Ship, and the phone check stands WAIVED under John's blanket word — waived, not passed; no verdict is written for it.
+- **Method:** §1–§3 read in full · the deviation diff `cae79df` and build commits inspected first-hand · the SW pin and the purge exemption compared byte-for-byte against the `df6d4f6` base · every harness run below is this seat's OWN complete run on the release tree (harness-v336 stands its own candidate on a fresh port; tallies read from complete log files only), plus this seat's own pristine-baseline run of harness-v326 for attribution.
+
+### This seat's own tallies (complete logs)
+
+- **harness-v336: 86/86** — all fourteen §2.9 legs green, zero page errors. §3's claim reproduced exactly.
+- **harness-v334: 30/30** · **harness-v335: 35/0** — clean. (v335 exercises the segment route the deviation touches; its plain reads stand unchanged.)
+- **harness-v312: 32 ok / 4 FAIL** — checks 1, 2, 6 and the closing crash: the dated-segment fixture family, identical to §3 and to the ruled v335 §3 family.
+- **harness-v325: 20 ok / 2 FAIL** — check 4 and its downstream crash, identical to §3.
+- **harness-v320: 55 ok / 6 FAIL** — reds: check 1 (the SW pin reads `ora-pro-nobis-v336-1` where the harness still expects v334's — the §2.7 re-pin working as designed, the standing named update), check 14 (early), check 10's pair, check 14's key set, check 15's slice. Against the pristine baseline's 56/5 the ONLY delta is check 1, exactly as §3 recorded.
+- **harness-v326: 35 checks recorded, 24 ok / 11 FAIL, then the harness crash — and this seat's own pristine-baseline (`df6d4f6`) run reads identically: 24 ok / 11 FAIL with the same crash.** Baseline reds: check 3 (one glyph leg), check 4 (one leg), check 5 setup + its three legs, check 6 ×4, + the crash. Release-tree reds: check 20 (the SW pin), check 4 (one leg), check 5 setup + its three legs, check 6 ×4, + the crash. The check-3/4 glyph-agreement legs flap between runs on BOTH trees (a different leg of the same cluster red on each of my two runs) — timing noise in a pre-v335 harness, downstream of nothing this release touches (card↔dock glyph sync is not in the v336 diff). **The only systematic delta between the two trees is check 20, the SW pin** — §3's structural claim confirmed first-hand; its exact ok/FAIL counts (25/10, 26/9) differ from mine by the flapping glyph legs, which is itself the evidence the cluster is noise, not signal.
+
+### Per-criterion verdicts (§1's eleven, as §2.10 re-reads them)
+
+1. **Speed control stands in Now Playing, immediate effect, active chip — PASS.** Harness-v336 legs 1 + 4: the D1 set renders as chips, the current rate is active, a mid-track change moves `playbackRate` with `src` unchanged and position continuous.
+2. **Persistence across close/reopen and days; first run 1× — PASS.** Leg 2: the rate survives a full reload and stands at boot before any play; a corrupt stored value falls back to 1.
+3. **One rate across all families, incl. queue crossings — PASS.** Leg 3: 1.25 held across own → downloaded external → Intentions segment crossings of a Play All queue; the Media Session position state reports 1.25.
+4. **Dock tap = D5 as approved; the dock's buttons unchanged and do not open the surface — PASS.** Leg 5: the tap opens `.np-sheet` from a non-Prayers tab with no tab switch and no `.dockjump` anywhere; `#dock-play` and `#dock-next` act and open nothing. This seat's grep of the served source: zero `dockJump`/`dockjump` strings.
+5. **Now Playing opens over any tab; minimize is view-only — PASS.** Legs 5, 6, 13: minimize leaves `paused` false, position continuous, an armed sleep state byte-identical.
+6. **Seek bar, judged per §2.5's family table — PASS.** Legs 7–9: own episode exact playing (30.3 of 60.0 at the half) and paused (15.0 at the quarter); downloaded external exact (local blob); Intentions segment lands within tolerance (post-deviation, see the ruling); elapsed/remaining render `m:ss` / `-m:ss` at the font floor.
+7. **Prev/next under the standing skip rules; disabled states match the dock's rule — PASS.** Leg 10, incl. equivalence with the Media Session handlers on the same queue.
+8. **Sleep: one state, two surfaces — PASS.** Leg 11: arming from Now Playing reads identically on the Play All row and vice versa; the end-of-track arm fires from Now Playing.
+9. **Read stands exactly where the track has text; stacking never disturbs playback — PASS.** Leg 12.
+10. **Lock screen / Android Auto unchanged; position state reports the rate — PASS.** Legs 3 + 10; the Media Session paths are untouched in the diff.
+11. **No regression in the standing player — PASS, with the v326 exception disposition ruled below.** v312 resume: harness-v312's reds are the identical fixture family, and harness-v336 leg 2 exercises the standing persistence paths · v320 sleep: 55/6 with the pin as the only delta · v325 Intentions-first: 20/2 identical · v326 dock visibility/buttons/progress: every leg that ran on either tree passes or matches baseline noise (below) · v334 at-open externals + day cache: 30/30 on the candidate tree.
+
+### The v326 named exception — disposition ruled SATISFIES criterion 11
+
+§2.9 named checks 17/18 (dock body tap jumps to the playing card; chip-play tap is a no-op) as superseded by John's approved deviation and expected to fail. **The evidence shows they run on NEITHER tree:** harness-v326 dies at the check-6/7 boundary (its `#dock-play` click times out — no dock stands) because check 5's setup fails first — the harness's dated-segment fixture predates v335's standing-segment model, so the Morning block queue never starts from the Intentions card. This seat reproduced the crash identically on the pristine baseline and on the release tree. The exception therefore stands UNEXERCISED, not failed, and the fault is in the harness's fixture, not in either tree's code. The retired behavior's absence — the thing the exception legs exist to prove a negative about — is affirmatively proven two ways: harness-v336 legs 5 + 13 (the tap opens Now Playing titled correctly, the tab does not move, a chip play gains the surface) on this seat's own 86/86 run, and the served source carrying zero `dockJump`/`dockjump` strings. Criterion 11 is judged on the dock's standing behaviors — visibility derived from `state.current`, buttons, progress — and every one of those legs that executed passes. **Disposition: criterion 11 SATISFIED.** The harness-v326 fixture refresh remains an estate follow-on (already standing in the Curator's list); it is not a condition on this release.
+
+### THE DEVIATION — ruled UPHELD
+
+§2.5 pinned "no Worker change" for Intentions segments on the premise that a full-body 200 is seekable inside its buffered range. Implement measured the premise false on the landed route (fully buffered, `seekable` still 0–0, a seek assignment does not hold — the route sent no `Accept-Ranges`), making §2.9 leg 9 unpassable as pinned, and shipped `cae79df`: `/api/prayer/audio/*` gains the episode route's exact Range passthrough.
+
+**Ruling: UPHELD — an evidence-based correction inside the release's intent.** Evidence, all first-hand this seat: (1) the diff is exactly what §3 claims — the episode route's header parse, R2 ranged get, 206 + `content-range` + `accept-ranges` + `content-length`, and the non-range reply gains only `accept-ranges` + `content-length`; body, R2 key, and the `private, max-age=3600` cache rule are unchanged, and the dated + `current` names share the one handler. (2) With the fix, leg 9 passes on this seat's own complete run; without it, no segment scrub could ever land — the alternative is a Now Playing whose seek bar silently fails on every Intentions segment, contradicting criterion 6 read with §2.10 and §1's D2 (one surface for every family). (3) No collateral: harness-v335 runs 35/0 on this seat's run over the very route changed. In letter the fix crosses §1's "no Worker route change" out-of-scope line; in substance it changes no payload, no data, and no route's shape — it adds the standard range answer to one existing route, was forced by measured platform behavior, and was flagged by Implement for this ruling rather than buried. It rolls back with the same Worker version as everything else in this release.
+
+### Ship conditions restated (for the Ship seat)
+
+- Merge `release/v336` → trunk `muse-draft-week`; deploy the prayer-app Worker via the connector-surrogate wrangler route (never deploy-board.py); production proof = served SW pin `ora-pro-nobis-v336-1` + shell parse + a dock-tap spot check on the deployed build.
+- The four-piece flip with What's New read live first (expected next id 53 — read it, do not assume).
+- Rollback = Worker `bd5c0061` (the v335 version), whole and sufficient — no migration, no data change (migration 0011 stands unconsumed); the deviation's route change rolls back with the same version.
+- The Review candidate (this seat's harness- stood local candidate) needs no teardown beyond its local processes; no remote candidate was stood up. The candidate stands for John's optional phone check; the check itself is WAIVED, not passed.
+- Sequencing: v336 lands BEFORE v337 (§2.8); v337's Plan inherits the reciprocal rebase onto the landed v336 tree.
+
+### Concerns and Information Needs
+
+- **Facts (verified first-hand this pass):** every tally above is from this seat's own complete runs, including a self-run pristine baseline for harness-v326 and harness-v320's attribution · the deviation diff read line by line · the SW pin `ora-pro-nobis-v336-1` and the activate purge's `opn-ext-audio-v1` exemption compared against the base file — the filter line stands verbatim.
+- **The one evidence correction to §3:** its v326 counts (25/10 final, 26/9 baseline) could not be reproduced exactly — this seat reads 24/11 on both trees, the difference being the flapping check-3/4 glyph legs. §3's structural claims (same crash, same fixture family, delta = the pin alone) are all confirmed; the count difference is recorded here rather than silently matched.
+- **Estate debt, unchanged and not this release's:** harness-v326 and harness-v320 can no longer run their back halves (pre-v335/v334 fixture shapes); the SW-pin expectations in both will read stale until the fixture-refresh follow-on lands. The follow-on's scope should include the check-3/4 glyph cluster's timing sensitivity, which this seat observed flapping on both trees.
+- **Phone facts remain unproven by design:** `input[type=range]` scrub behavior and `setPositionState` rate acceptance on John's Android Chrome ride on the waived phone check's standing note.
+- **Open points for John:** none. The gate is decided: PASS.
