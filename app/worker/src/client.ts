@@ -785,6 +785,19 @@ function extParseDuration(raw) {
   var v = Number(t);
   return isFinite(v) ? Math.trunc(v) : 0;
 }
+function extWs(t) {
+  // Whitespace collapse with NO backslash escapes: this client
+  // ships inside a template literal the bundler cooks once and the
+  // browser cooks again, so a written escape class does not
+  // survive to runtime (a single-escaped class lost its backslash
+  // in the first v334 gate run and stripped letters from titles).
+  // The estate's rule stands: no backslash patterns inside APP_JS.
+  return String(t == null ? '' : t)
+    .split(String.fromCharCode(10)).join(' ')
+    .split(String.fromCharCode(13)).join(' ')
+    .split(String.fromCharCode(9)).join(' ')
+    .split(' ').filter(function (x) { return x.length > 0; }).join(' ');
+}
 function extParseFeed(text) {
   var doc = new DOMParser().parseFromString(text, 'text/xml');
   if (doc.querySelector('parsererror')) throw new Error('feed parse failed');
@@ -796,22 +809,14 @@ function extParseFeed(text) {
     var durEl = it.getElementsByTagName('itunes:duration')[0] || null;
     var pubMs = pubEl ? Date.parse(pubEl.textContent.trim()) : NaN;
     items.push({
-      title: (titleEl ? titleEl.textContent : '').replace(/\s+/g, ' ').trim(),
+      title: extWs(titleEl ? titleEl.textContent : ''),
       url: enc ? (enc.getAttribute('url') || '') : '',
-      length: enc && /^\d+$/.test(enc.getAttribute('length') || '') ? Number(enc.getAttribute('length')) : 0,
+      length: enc && (enc.getAttribute('length') || '').trim() !== '' && !isNaN(Number(enc.getAttribute('length'))) ? Number(enc.getAttribute('length')) : 0,
       pubMs: isFinite(pubMs) ? pubMs : null,
       durationS: extParseDuration(durEl ? durEl.textContent : null)
     });
   });
   return items;
-}
-var EXT_MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-var EXT_MONTHS_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-function extDateRe(month, day) {
-  return new RegExp('(?:^|[^A-Za-z])' + month + '\\s*[-,]*\\s*0?' + day + '(?:st|nd|rd|th)?(?:\\s*,?\\s*\\d{4})?(?!\\w)', 'i');
-}
-function extMatchesMonthDay(title, mo, d) {
-  return extDateRe(EXT_MONTHS_FULL[mo - 1], d).test(title) || extDateRe(EXT_MONTHS_ABBR[mo - 1], d).test(title);
 }
 function extMatchBible(items, dateStr) {
   // The resolver's Bible matcher ported: Day N (day-of-year, capped
@@ -819,11 +824,12 @@ function extMatchBible(items, dateStr) {
   var p = dateStr.split('-').map(Number);
   var doy = Math.floor((Date.UTC(p[0], p[1] - 1, p[2]) - Date.UTC(p[0], 0, 0)) / 86400000);
   var n = doy > 365 ? 365 : doy;
-  var pat = new RegExp('\\bDay\\s*0*' + n + '\\b', 'i');
+  var BS = String.fromCharCode(92);
+  var pat = new RegExp(BS + 'bDay' + BS + 's*0*' + n + BS + 'b', 'i');
   var best = null;
   items.forEach(function (it) {
     if (!it.url || !pat.test(it.title)) return;
-    var years = it.title.match(/\b(20\d{2})\b/g);
+    var years = it.title.match(new RegExp(BS + 'b(20' + BS + 'd{2})' + BS + 'b', 'g'));
     var year = years ? Math.max.apply(null, years.map(Number)) : (it.pubMs != null ? new Date(it.pubMs).getUTCFullYear() : null);
     if (year !== p[0]) return;
     if (!best || (it.pubMs || -Infinity) > (best.pubMs || -Infinity)) best = it;
@@ -831,9 +837,15 @@ function extMatchBible(items, dateStr) {
   return { item: best, dayN: n };
 }
 function extBibleTitle(item, n) {
+  // The resolver's strip via string operations only (no regex —
+  // see the extWs note): drop the leading "Day N:" segment and a
+  // trailing "(YYYY)".
   var base = 'Bible in a Year — Day ' + n;
   if (!item) return base;
-  var sub = item.title.replace(/^Day\s*\d+\s*:\s*/, '').replace(/\s*\(\d{4}\)\s*$/, '').trim();
+  var t = item.title;
+  var colon = t.indexOf(':');
+  var sub = (t.indexOf('Day') === 0 && colon > 0) ? t.slice(colon + 1).trim() : t;
+  if (sub.endsWith(')') && sub.lastIndexOf('(') > 0) sub = sub.slice(0, sub.lastIndexOf('(')).trim();
   return sub ? base + ': ' + sub : base;
 }
 function extMatchSth(items, dateStr, token) {

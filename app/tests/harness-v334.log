@@ -1,0 +1,46 @@
+ok - setup: the Worker bundles clean (esbuild)
+ok - leg 10: the shipped client contains no Divine Office feed URL (no direct read is attempted)
+ok - setup: app up on local wrangler (port 8974) with the feed seams pointed at the fixture server
+ok - setup: the stored day 2026-11-08 commits with own episodes and NO externals (200)
+ok - leg 2: the courier returns the resolver's Divine Office outcome for the fixture feed
+ok - leg 2: the courier stores nothing (episode rows 2 -> 2)
+ok - leg 2: the courier reply carries Cache-Control private, max-age=300 (device response reuse)
+ok - leg 2: a non-stored date is refused 400 and a non-John session is refused by the gate (400/403)
+ok - leg 2: the retired agent-door externals POST answers 404 (404)
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+PARITY DEBUG stateA: {"ext-invitatory":{"state":"present","source":"Divine Office","enclosureUrl":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ip-ord-w02-w04-sun.mp3?prayer=Invitatory&date=20261108&episode=202611082"},"ext-morning-prayer":{"state":"present","source":"Divine Office","enclosureUrl":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-mp.mp3?prayer=MorningPrayer&date=20261108&episode=202611084"},"ext-bible-in-a-year":{"state":"missing","source":"Bible in a Year","enclosureUrl":null},"ext-midmorning-prayer":{"state":"present","source":"Divine Office","enclosureUrl":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-dp1.mp3?prayer=MidmorningPrayer&date=20261108&episode=202611085"},"ext-midday-prayer":{"state":"present","source":"Divine Office","enclosureUrl":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-dp2.mp3?prayer=MiddayPrayer&date=20261108&episode=202611086"},"ext-midafternoon-prayer":{"state":"present","source":"Divine Office","enclosureUrl":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-dp3.mp3?prayer=MidafternoonPrayer&date=20261108&episode=202611087"},"ext-office-of-readings":{"state":"present","source":"Divine Office","enclosureUrl":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-or.mp3?prayer=OfficeOfReadings&date=20261108&episode=202611083"},"ext-evening-prayer":{"state":"present","source":"Divine Office","enclosureUrl":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-ep2.mp3?prayer=EveningPrayer&date=20261108&episode=202611088"},"ext-night-prayer":{"state":"present","source":"Divine Office","enclosureUrl":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-sun-np2.w2-w4.mp3?prayer=NightPrayer&date=20261108&episode=202611089"}}
+PARITY DEBUG oracle: {"ext-invitatory":{"state":"present","source":"Divine Office","url":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ip-ord-w02-w04-sun.mp3?prayer=Invitatory&date=20261108&episode=202611082"},"ext-morning-prayer":{"state":"present","source":"Divine Office","url":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-mp.mp3?prayer=MorningPrayer&date=20261108&episode=202611084"},"ext-bible-in-a-year":{"state":"present","source":"Bible in a Year","url":"https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/4d9299e9-97dc-42f3-9aaf-d1230fb16210.mp3"},"ext-midmorning-prayer":{"state":"present","source":"Divine Office","url":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-dp1.mp3?prayer=MidmorningPrayer&date=20261108&episode=202611085"},"ext-midday-prayer":{"state":"present","source":"Divine Office","url":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-dp2.mp3?prayer=MiddayPrayer&date=20261108&episode=202611086"},"ext-midafternoon-prayer":{"state":"present","source":"Divine Office","url":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-dp3.mp3?prayer=MidafternoonPrayer&date=20261108&episode=202611087"},"ext-office-of-readings":{"state":"present","source":"Divine Office","url":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-or.mp3?prayer=OfficeOfReadings&date=20261108&episode=202611083"},"ext-evening-prayer":{"state":"present","source":"Divine Office","url":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-ep2.mp3?prayer=EveningPrayer&date=20261108&episode=202611088"},"ext-night-prayer":{"state":"present","source":"Divine Office","url":"https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-sun-np2.w2-w4.mp3?prayer=NightPrayer&date=20261108&episode=202611089"}}
+ROUTE COUNTS after ctxA: {"biay":1,"sth":0} feedHits: {"do":2,"biay":0,"sth":0}
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+LEG PROBE: {"error":"TypeError: Cannot read properties of undefined (reading 'split')"}
+FAIL - leg 1: matcher parity — the merged system outcome (courier + direct legs) equals the Python resolver on the fixture set
+ok - leg 6: with both Divine Office primaries matched, the Sing the Hours feed is never fetched
+ok - leg 1: every slot's placeholder swapped in place after resolve (no Loading left standing)
+FAIL - leg 11: every resolved slot's AUDIO stands in the device cache (keys: ext-invitatory,ext-morning-prayer,ext-midmorning-prayer,ext-midday-prayer,ext-midafternoon-prayer,ext-office-of-readings,ext-evening-prayer,ext-night-prayer)
+ok - leg 11: the external plays from a blob: (local) source and seeks within the local copy
+ok - leg 11: zero page errors on the full-fixture open
+FAIL - leg 3: second open with dead feeds renders every cached slot present and issues no courier fetch for a fully cached source
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+ok - leg 7: with only prior-year Day 312 items standing, Bible in a Year stands named-missing — last year's episode is never presented
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+ok - leg 14: a missing slot writes no cache record and downloads nothing
+FAIL - leg 4: the missing slot is re-resolved at the next open and fills when its feed recovers (cached slots were not re-fetched)
+REQFAIL: https://feeds.fireside.fm/bibleinayear/rss net::ERR_ABORTED
+FAIL - leg 8: the hanging Bible leg stands named-missing after the timeout (0 ms) while own episodes stand rendered and playable
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+RESP: 200 https://feeds.castos.com/x8g54
+FAIL - leg 13: with the Divine Office Morning item gone, Sing the Hours fills the slot (through the pass-through download)
+ok - leg 13: the pass-through stored nothing server-side (stored rows still 2, externals 0)
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+ok - leg 5: the settings edit bumps the version (1 -> 2)
+FAIL - leg 5: after the settings edit the next open re-resolves and the moved slot stands in its new block (settings apply at open, courier + direct alike)
+FAIL - leg 12: the settings-change discard drops the cached audio (the re-resolve then re-downloads under the new version)
+ok - leg 5: the stored day rolling discards the record (new date stands) and the open re-resolves fresh
+ok - leg 9: a day payload carrying stored kind='external' rows serves none of them (0 served)
+ok - live smoke: the courier against the live Divine Office feed bytes matches the resolver for 2026-11-09 (present: ext-invitatory,ext-morning-prayer,ext-midmorning-prayer,ext-midday-prayer,ext-midafternoon-prayer,ext-office-of-readings,ext-evening-prayer,ext-night-prayer)
+RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
+FAIL - live smoke: the client's direct Bible leg against the live feed bytes agrees with the resolver for 2026-11-09 (present)
+LIVE SMOKE detail: resolver on live feeds for 2026-11-09: 9/9 present · failed feeds: none
+ok - final: zero page errors across the gate's main browser context
+RESULT harness-v334 21/30 ok
+exit=1
