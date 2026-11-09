@@ -144,7 +144,12 @@ self.addEventListener("install", function (e) {
 });
 self.addEventListener("activate", function (e) {
   e.waitUntil(caches.keys().then(function (keys) {
-    return Promise.all(keys.filter(function (k) { return k !== CACHE; }).map(function (k) { return caches.delete(k); }));
+    // The purge retires old SHELL caches only. The externals audio
+    // cache (opn-ext-audio-v1, v334) is owned by the client's day
+    // cache invalidation and must survive activation — deleting it
+    // here raced the at-open downloads and wiped landed audio
+    // (harness-v334 leg 11, rework 2026-11-09).
+    return Promise.all(keys.filter(function (k) { return k !== CACHE && k !== "opn-ext-audio-v1"; }).map(function (k) { return caches.delete(k); }));
   }).then(function () { return self.clients.claim(); }));
 });
 self.addEventListener("fetch", function (e) {

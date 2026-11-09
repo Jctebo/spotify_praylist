@@ -989,9 +989,6 @@ function resolveExternals(day) {
     });
     extInsertCards(day, standing);
     extRebuildDescs(day);
-    standing.forEach(function (slot) {
-      if (state.extSlots[slot.slotId].state === 'downloading') extRestoreCached(slot);
-    });
     var writeCache = function () {
       standing.forEach(function (slot) {
         var st = state.extSlots[slot.slotId];
@@ -1068,6 +1065,15 @@ function resolveExternals(day) {
         });
       }).catch(function () { if (!done) { done = true; clearTimeout(fallback); extDownload(slot, meta); } });
     };
+    // The restore starts only here — after extRestoreCached is
+    // assigned. (Rework 2026-11-09: this loop previously stood
+    // before the assignment; on a re-open with a valid day cache
+    // every slot stands 'downloading', the call threw, the outer
+    // catch swallowed it, and the courier/Bible/watchdog legs
+    // never started — legs 3-4 of harness-v334.)
+    standing.forEach(function (slot) {
+      if (state.extSlots[slot.slotId].state === 'downloading') extRestoreCached(slot);
+    });
     var missingSt = function (slot, source) {
       return { state: 'missing', title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle(null, extMatchBibleDayN(date)) : slot.title, source: source || 'Divine Office' };
     };
