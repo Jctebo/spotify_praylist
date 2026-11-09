@@ -923,19 +923,23 @@ function extMatchCourierSlot(slot: (typeof EXT_COURIER_SLOTS)[number], items: Ex
 async function extCourierSlotsPayload(env: Env, prim: Map<string, SourceSettingRow & { sourceKey: string }>, y: number, mo: number, d: number, weekdayMon0: number): Promise<unknown[]> {
   // v339 §2.3: each courier-class slot fetched and matched
   // in-request, per-source; a failed feed leaves ITS slot
-  // named-missing and touches nothing else.
-  const out: unknown[] = [];
-  for (const cs of EXT_COURIER_SLOTS) {
+  // named-missing and touches nothing else. The fetches run
+  // CONCURRENTLY — the courier's response time stays bounded by
+  // the slowest single feed (the pre-v339 posture for the Divine
+  // Office leg), never by their sum.
+  const standing = EXT_COURIER_SLOTS.filter((cs) => {
     const row = prim.get(cs.slotId);
-    if (!row || row.enabled !== 1 || !extDayRulePasses(row.day_rule || "daily", weekdayMon0)) continue;
+    return !!row && row.enabled === 1 && extDayRulePasses(row.day_rule || "daily", weekdayMon0);
+  });
+  return Promise.all(standing.map(async (cs) => {
+    const row = prim.get(cs.slotId)!;
     let it: ExtFeedItem | null = null;
     try {
       it = extMatchCourierSlot(cs, await extFetchFeedItems(cs.feed(env), cs.browserUa ? EXT_BROWSER_UA : undefined), y, mo, d);
     } catch { it = null; }
-    if (!it) { out.push({ slotId: cs.slotId, state: "missing", title: cs.title, streamUrl: null, durationSec: 0, sizeBytes: 0, block: row.block || EXTERNAL_SLOTS[cs.slotId], sortOrder: row.sort_order }); continue; }
-    out.push({ slotId: cs.slotId, state: "present", title: cs.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS[cs.slotId], sortOrder: row.sort_order });
-  }
-  return out;
+    if (!it) return { slotId: cs.slotId, state: "missing", title: cs.title, streamUrl: null, durationSec: 0, sizeBytes: 0, block: row.block || EXTERNAL_SLOTS[cs.slotId], sortOrder: row.sort_order };
+    return { slotId: cs.slotId, state: "present", title: cs.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS[cs.slotId], sortOrder: row.sort_order };
+  }));
 }
 function extDayRulePasses(rule: string, weekdayMon0: number): boolean {
   // The push helper's day_rule_passes, ported: 'fallback-only' on a
