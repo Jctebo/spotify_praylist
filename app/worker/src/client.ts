@@ -6,7 +6,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, dateLabel: '', pendingResume: null };
+var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, dateLabel: '', pendingResume: null, readTracks: {}, dayDescs: [] };
 
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function todayChicago() {
@@ -267,6 +267,12 @@ function openIntentionEditor(it) {
 function trackDesc(t) {
   return { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, available: !!t.available };
 }
+function readButton(t, key) {
+  // v318 T9: the Read control. A track with no text carries NO Read
+  // control — the plain not-available line stands in its place
+  // (readLine below), never a dead button.
+  return '<div style="margin-top:6px"><button class="btn ghost small" data-read="' + esc(key) + '">Read</button></div>';
+}
 function trackCard(t) {
   var key = t.episodeId || ('seg:' + (t._block || ''));
   if (t.intentionsCard) {
@@ -275,10 +281,44 @@ function trackCard(t) {
   }
   if (t.available) {
     return '<div class="card" data-card="' + esc(key) + '"><div class="row"><button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">Plays here · episode file' + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div>'
-      + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '') + '</div></div></div>';
+      + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '')
+      + (t.hasText && t.textUrl ? readButton(t, key) : '<div class="notavail">Not available in the app yet</div>') + '</div></div></div>';
   }
   return '<div class="card" data-card="' + esc(key) + '"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) : '') + '</div><div class="notavail">Not available in the app yet</div>'
+    + (t.hasText && t.textUrl ? readButton(t, key) : '')
     + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '') + '</div>';
+}
+function openRead(t) {
+  // v318 T9: the reading view — the episode's full text within the
+  // Prayers tab, set at the app's reading size under the font floor.
+  // Its play/pause control calls playTrack on the SAME descriptor
+  // the card's button uses, so it drives the same shell-level audio
+  // element and queue; closing the view never stops or resets
+  // playback, and switching back to the card list doesn't either
+  // (v312's shell-scope rule). No position highlighting, no
+  // auto-scroll sync — out of scope (§1).
+  var old = document.querySelector('.readsheet');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet readsheet';
+  sheet.innerHTML = '<div class="inner"><div class="row"><button class="playbtn" data-playkey="' + esc(t.episodeId) + '">&#9654;</button><div class="grow"><h1 class="screen">' + esc(t.title) + '</h1><p class="sub">the episode&rsquo;s text</p></div><button class="btn ghost" data-readclose="1">Close</button></div><div class="readtext">Loading...</div></div>';
+  document.body.appendChild(sheet);
+  sheet.querySelector('[data-readclose]').addEventListener('click', function () { sheet.remove(); });
+  sheet.querySelector('[data-playkey]').addEventListener('click', function () {
+    var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === t.episodeId; })[0];
+    if (d) playTrack(d);
+  });
+  if (state.current && state.current.episodeId === t.episodeId) markPlaying(t.episodeId);
+  fetch(t.textUrl).then(function (r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text();
+  }).then(function (text) {
+    var body = sheet.querySelector('.readtext');
+    if (body) body.textContent = text;
+  }).catch(function () {
+    var body = sheet.querySelector('.readtext');
+    if (body) body.textContent = 'Not available in the app yet';
+  });
 }
 function renderPrayers() {
   view.innerHTML = '<h1 class="screen">Listen</h1><p class="sub">the day&rsquo;s prayers</p><p class="meta">Loading...</p>';
@@ -292,6 +332,12 @@ function renderPrayers() {
       (b.tracks || []).forEach(function (t) { var tt = Object.assign({}, t, { _block: b.block }); allDescs.push(trackDesc(tt)); });
     });
     (day.episodes || []).forEach(function (t) { allDescs.push(trackDesc(t)); });
+    // v318 T9: the Read view's lookup — payload tracks by episode id,
+    // and the day's descriptors for its play/pause control.
+    state.dayDescs = allDescs;
+    state.readTracks = {};
+    (day.blocks || []).forEach(function (b) { (b.tracks || []).forEach(function (t) { if (t.episodeId) state.readTracks[t.episodeId] = t; }); });
+    (day.episodes || []).forEach(function (t) { if (t.episodeId) state.readTracks[t.episodeId] = t; });
     var resumeRec = readResume();
     if (resumeRec && resumeRec.date !== state.storedDay) {
       try { localStorage.removeItem('opn-resume-v312'); } catch (e) {}
@@ -332,6 +378,12 @@ function renderPrayers() {
       btn.addEventListener('click', function () {
         var d = allDescs.filter(function (x) { return x.episodeId === btn.getAttribute('data-playkey'); })[0];
         if (d) playTrack(d);
+      });
+    });
+    view.querySelectorAll('[data-read]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var t = state.readTracks[btn.getAttribute('data-read')];
+        if (t) openRead(t);
       });
     });
     view.querySelectorAll('[data-queue]').forEach(function (btn) {
