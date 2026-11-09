@@ -1,0 +1,33 @@
+ok - setup: candidate app boots
+ok - setup: the day's draw stands
+ok - setup: candidate app re-boots after the draw re-point
+ok - setup: re-pointed draws carry the calibrated texts
+ok - 11 served build parses and executes (construction proof deferred to the browser legs) and carries the v343 seams
+ok - 11 SW pin ora-pro-nobis-v343-1 with the opn-ext-audio-v1 purge exemption verbatim
+ok - 1 the presented-day DO courier fixture settles present (invitatory + morning prayer, not named-missing)
+ok - 1 the generated presented-day BIAY fixture settles present (current-year Day-N match)
+ok - 1 the intros fixture stands complete for the fixture day (all 10 ids in the built map)
+ok - 2 every combined row stands at exactly 136px (own + external, short + long intention, two-line novena title)
+ok - 2 clip guard: no combined row's content exceeds the fixed height (scrollHeight <= 137 collapsed)
+ok - 3 the >2-line panel (rosary, 8-line text) stands its ellipsis
+ok - 3 the exact-two-line panel (morning prayer) stands NO ellipsis — nothing is hidden (scrollHeight == clientHeight)
+ok - 3 the one-line panel (daily reflection) stands NO ellipsis
+ok - 4 tapping the ellipsis expands that row only (height > 136, clamp released, full text visible, aria-expanded true)
+ok - 4 every other combined row stays at 136 while one row is expanded
+ok - 4 the expansion survives the row's settle re-render (session set re-renders it expanded)
+ok - 4 tapping again on the re-rendered control collapses the row back to 136
+ok - 8 compact chrome on a combined row (padding 9 · panel 8 · margins 2/6 · fonts 13/14/17 · buttons 42/30)
+ok - 10 the panel play button on a combined row starts its intro descriptor (treatment A behavior preserved)
+ok - 7 the settled courier card's panel text equals that slot's drawn intention text
+ok - 7 the settled external panel's play button resolves its intro descriptor on click
+ok - 6 cache-valid open: settled external cards render WITH their panels (courier slots included)
+ok - 6 the DO pair's second slot stands present and panel-free (its block's intention is keyed to the Invitatory row)
+ok - 5 precondition: with intentions delayed, the settled courier + direct cards stand panel-free (the defect shape)
+ok - 5 the settled courier card gains its panel in the same session when the intro lands, no reopen
+ok - 5 the settled client-direct card gains its panel in the same session too
+ok - 9 a no-intro own card keeps its standing shape (no intro-row class, no panel, no fixed height)
+ok - 9 an unavailable card keeps its standing shape (no intro-row class, no fixed height)
+
+regressions (v342 · v339 · v338 · v337 · v336 · v335 · v334) run separately — tallies in §3.
+
+harness-v343: 29 passed, 0 failed

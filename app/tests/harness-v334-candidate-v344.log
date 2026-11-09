@@ -1,0 +1,9 @@
+ok - setup: the Worker bundles clean (esbuild)
+ok - leg 10: the shipped client contains no Divine Office feed URL (no direct read is attempted)
+ok - setup: app up on local wrangler (port 8974) with the feed seams pointed at the fixture server
+HARNESS ERROR: Error: segment push 2026-11-08/Morning -> 404
+    at pushSegments (file:///home/hatch/workspace/.worktrees/v344-app/app/tests/harness-v334.mjs:170:33)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async commitDay (file:///home/hatch/workspace/.worktrees/v344-app/app/tests/harness-v334.mjs:174:3)
+    at async file:///home/hatch/workspace/.worktrees/v344-app/app/tests/harness-v334.mjs:225:11
+RESULT harness-v334 3/4 ok
