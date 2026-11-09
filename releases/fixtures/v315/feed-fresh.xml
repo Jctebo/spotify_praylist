@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- v315 rehearsal fixture: FRESH case.
+     Newest date D = 2026-11-15 (two items); rehearsal check date = 2026-11-13, expected = D.
+     Required output: RSS feed: fresh — newest 2026-11-15 (2 items) -->
+<rss version="2.0">
+  <channel>
+    <title>Ora Pro Nobis (fixture)</title>
+    <link>https://orapronobis.media/</link>
+    <description>v315 rehearsal fixture — not a real feed.</description>
+    <item>
+      <title>Fixture Episode One — November 15, 2026</title>
+      <pubDate>Sun, 15 Nov 2026 00:00:00 -0600</pubDate>
+    </item>
+    <item>
+      <title>Fixture Episode Two — November 15, 2026</title>
+      <pubDate>Sun, 15 Nov 2026 00:00:00 -0600</pubDate>
+    </item>
+    <item>
+      <title>Fixture Episode Three — November 14, 2026</title>
+      <pubDate>Sat, 14 Nov 2026 00:00:00 -0600</pubDate>
+    </item>
+  </channel>
+</rss>
