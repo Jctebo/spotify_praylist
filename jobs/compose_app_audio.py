@@ -376,10 +376,14 @@ def _pub_r2_list(prefix: str) -> list:
         if cursor:
             url += f"&cursor={urllib.parse.quote(cursor, safe='')}"
         r = _pub_cf_open(urllib.request.Request(url, method="GET"))
-        result = r.get("result") or {}
-        for o in result.get("objects", []):
+        # The R2 list response's result is the bare object array
+        # itself; result_info (with the cursor) is its top-level
+        # sibling — NOT a dict envelope holding "objects" (the
+        # first live publish, 2026-11-09, died on that assumption
+        # in this prune step, after its commit + deploy landed).
+        for o in r.get("result") or []:
             out.append(o["key"])
-        cursor = (result.get("result_info") or {}).get("cursor")
+        cursor = (r.get("result_info") or {}).get("cursor")
         if not cursor:
             return out
 
@@ -709,6 +713,7 @@ def main() -> int:
             continue
         eligible.append((track, item))
     intros_ok = 0
+    retired_push_noted = False
     for track, item in eligible:
         f = tmp / f"intro-{track}.mp3"
         try:
@@ -719,6 +724,22 @@ def main() -> int:
                 continue
             res = push_intro(track, f)
             if not res.get("ok"):
+                if publish and res.get("error") == "unknown agent route":
+                    # The v342 push family retired in production
+                    # ahead of this release's Ship — the v343 ship
+                    # (2026-11-09 16:18 CT) carried the v342 Worker
+                    # live, and its agent door has no intro push
+                    # route. In publish mode the feed is the intro's
+                    # standing carrier: the rendered file already
+                    # stands in pub_intro_files, and the Intentions
+                    # feed field below judges the publish itself.
+                    # Any OTHER push refusal stays a named failure.
+                    if not retired_push_noted:
+                        print("compose_app_audio: intro door push retired in production "
+                              "(unknown agent route) — publish mode carries the intros by feed")
+                        retired_push_noted = True
+                    intros_ok += 1
+                    continue
                 raise RuntimeError(f"push: {res}")
             intros_ok += 1
         except Exception:
