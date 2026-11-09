@@ -186,11 +186,17 @@ def _match_divine_office(items, target: datetime.date):
     for slot_id, _block, _title, _src, key, _fb in SLOTS:
         if key is None or _src != "Divine Office":
             continue
-        terms = _terms(key)
+        # A term matches only at a non-letter boundary: the
+        # contracts' plain containment would let "Morning Prayer"
+        # match inside "Midmorning Prayer" and take the wrong hour
+        # when the day's own Morning Prayer item is absent (the RSS
+        # titles compound the hour names; the Spotify track names the
+        # contracts were written against do not).
+        pats = [re.compile(r"(?<![A-Za-z])" + re.escape(t), re.IGNORECASE) for t in _terms(key)]
         for idx, it in enumerate(items):
             if idx in consumed or not it["url"]:
                 continue
-            if any(t.lower() in it["title"].lower() for t in terms) and matches_month_day(it["title"], target):
+            if any(p.search(it["title"]) for p in pats) and matches_month_day(it["title"], target):
                 out[slot_id] = it
                 consumed.add(idx)
                 break
