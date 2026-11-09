@@ -242,12 +242,42 @@ async function prayerDayPayload(env: Env, date: string) {
 // deleted, not bypassed: what the nightly run published is what the
 // player shows, and a day the run did not publish reads as a named
 // missing day.
+// v324 §2.2: the nine external slots, fixed — slot id -> pinned
+// block. Slot-neutral ids (the fallback can change who fills a slot);
+// the commit route and the externals route both validate against
+// this one table.
+const EXTERNAL_SLOTS: Record<string, string> = {
+  "ext-invitatory": "Morning",
+  "ext-morning-prayer": "Morning",
+  "ext-bible-in-a-year": "Morning",
+  "ext-midmorning-prayer": "Midmorning",
+  "ext-midday-prayer": "Midday",
+  "ext-midafternoon-prayer": "Afternoon",
+  "ext-office-of-readings": "Evening",
+  "ext-evening-prayer": "Evening",
+  "ext-night-prayer": "Night",
+};
 interface PlayerEpisodeRow {
   date: string; episode_id: string; title: string; block: string; sort: number;
   duration_s: number; r2_key: string; size_bytes: number; audio_state: string; pushed_at: string;
   text_state: string; text_r2_key: string;
+  kind: string; source: string; stream_url: string;
 }
 function episodeTrackShape(row: PlayerEpisodeRow) {
+  // v324 §2.9: an external track streams from its feed enclosure URL
+  // (row.stream_url), names its source for the meta line, and never
+  // carries read-along text in this release.
+  if (row.kind === "external") {
+    const present = row.audio_state === "present";
+    return {
+      episodeId: row.episode_id, title: row.title, kind: "external",
+      source: row.source,
+      available: present,
+      streamUrl: present ? row.stream_url : null,
+      durationS: row.duration_s, sizeBytes: row.size_bytes,
+      hasText: false, textUrl: null,
+    };
+  }
   const present = row.audio_state === "present";
   const hasText = row.text_state === "present";
   return {
@@ -331,10 +361,11 @@ async function sweepOtherDates(env: Env, keepDate: string): Promise<void> {
 }
 async function storedDayReadback(env: Env) {
   const dayRow = await env.DB.prepare("SELECT * FROM player_day WHERE id=1").first<{ date: string; episode_count: number }>();
-  if (!dayRow) return { storedDate: null, episodeCount: 0, tracksPresent: 0, tracksMissing: 0, textsPresent: 0, textsMissing: 0, segmentBlocks: [] as string[] };
-  const rows = await env.DB.prepare("SELECT audio_state, text_state FROM player_episodes WHERE date=?").bind(dayRow.date).all<{ audio_state: string; text_state: string }>();
+  if (!dayRow) return { storedDate: null, episodeCount: 0, tracksPresent: 0, tracksMissing: 0, textsPresent: 0, textsMissing: 0, externalsPresent: 0, externalsMissing: 0, segmentBlocks: [] as string[] };
+  const rows = await env.DB.prepare("SELECT audio_state, text_state, kind FROM player_episodes WHERE date=?").bind(dayRow.date).all<{ audio_state: string; text_state: string; kind: string }>();
   const segs = await env.DB.prepare("SELECT block FROM prayer_audio WHERE date=? ORDER BY block").bind(dayRow.date).all<{ block: string }>();
   const list = rows.results ?? [];
+  const externals = list.filter((r) => r.kind === "external");
   return {
     storedDate: dayRow.date, episodeCount: list.length,
     tracksPresent: list.filter((r) => r.audio_state === "present").length,
@@ -343,6 +374,11 @@ async function storedDayReadback(env: Env) {
     // text is named and counted, never silently absent.
     textsPresent: list.filter((r) => r.text_state === "present").length,
     textsMissing: list.filter((r) => r.text_state === "missing").length,
+    // v324 (check 23): the day's external rows counted on their own,
+    // so the push helper and the morning re-resolve read the fill
+    // from the store, never from the commit reply alone.
+    externalsPresent: externals.filter((r) => r.audio_state === "present").length,
+    externalsMissing: externals.filter((r) => r.audio_state === "missing").length,
     segmentBlocks: (segs.results ?? []).map((r) => r.block),
   };
 }
@@ -487,13 +523,13 @@ export default {
         // E2 route 2 — the replace-day commit.
         const body = await request.json().catch(() => ({})) as {
           date?: string;
-          episodes?: { episode_id?: string; title?: string; block?: string; sort?: number; duration_s?: number; size_bytes?: number; audio_state?: string; text_state?: string; text_size_bytes?: number }[];
+          episodes?: { episode_id?: string; title?: string; block?: string; sort?: number; duration_s?: number; size_bytes?: number; audio_state?: string; text_state?: string; text_size_bytes?: number; kind?: string; source?: string; stream_url?: string }[];
         };
         const date = String(body.date ?? "");
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
         if (!Array.isArray(body.episodes)) return err(400, "episodes array required");
         const validBlocks = new Set<string>([...PRAYER_BLOCKS, "unblocked"]);
-        const eps: { episode_id: string; title: string; block: string; sort: number; duration_s: number; size_bytes: number; audio_state: string; text_state: string; text_size_bytes: number }[] = [];
+        const eps: { episode_id: string; title: string; block: string; sort: number; duration_s: number; size_bytes: number; audio_state: string; text_state: string; text_size_bytes: number; kind: string; source: string; stream_url: string }[] = [];
         for (const e of body.episodes) {
           if (!e.episode_id || !/^[A-Za-z0-9][A-Za-z0-9\-_]*$/.test(e.episode_id)) return err(400, "bad episode_id in manifest");
           if (!validBlocks.has(e.block ?? "")) return err(400, `bad block for ${e.episode_id}`);
@@ -502,16 +538,31 @@ export default {
           // that omits them (the pre-v318 helper) reads text missing.
           const textState = e.text_state ?? "missing";
           if (!["present", "missing"].includes(textState)) return err(400, `bad text_state for ${e.episode_id}`);
+          // v324 §2.4: kind/source/stream_url ride the same way —
+          // absent kind is an own episode (the v312 helper shape
+          // keeps committing); an external entry must name one of
+          // the nine pinned slots and its pinned block.
+          const kind = e.kind ?? "episode";
+          if (!["episode", "external"].includes(kind)) return err(400, `bad kind for ${e.episode_id}`);
+          if (kind === "external") {
+            const slotBlock = EXTERNAL_SLOTS[e.episode_id];
+            if (!slotBlock) return err(400, `external episode_id ${e.episode_id} is not a pinned slot`);
+            if ((e.block ?? "") !== slotBlock) return err(400, `external block for ${e.episode_id} must be ${slotBlock}`);
+          }
           eps.push({
             episode_id: e.episode_id, title: String(e.title ?? e.episode_id), block: e.block!,
             sort: Number(e.sort ?? 0), duration_s: Number(e.duration_s ?? 0),
             size_bytes: Number(e.size_bytes ?? 0), audio_state: e.audio_state!,
             text_state: textState, text_size_bytes: Number(e.text_size_bytes ?? 0),
+            kind, source: String(e.source ?? ""), stream_url: String(e.stream_url ?? ""),
           });
         }
         // (i) Verify every staged object against the manifest — any
         // mismatch aborts with a named 409 and writes nothing.
+        // v324 §2.4: external entries stand OUTSIDE this verification
+        // — their audio is never staged, there is nothing to verify.
         for (const e of eps) {
+          if (e.kind === "external") continue;
           if (e.audio_state !== "present") continue;
           const head = await env.AUDIO.head(`episodes/${date}/${e.episode_id}.mp3`);
           if (!head) return err(409, `staged audio missing for ${e.episode_id}`);
@@ -519,6 +570,7 @@ export default {
         }
         // (i-bis, v318 T8) The same verify for staged texts.
         for (const e of eps) {
+          if (e.kind === "external") continue;
           if (e.text_state !== "present") continue;
           const head = await env.AUDIO.head(`texts/${date}/${e.episode_id}.txt`);
           if (!head) return err(409, `staged text missing for ${e.episode_id}`);
@@ -533,16 +585,21 @@ export default {
         ];
         for (const e of eps) {
           stmts.push(env.DB.prepare(
-            `INSERT INTO player_episodes (date, episode_id, title, block, sort, duration_s, r2_key, size_bytes, audio_state, pushed_at, text_state, text_r2_key)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `INSERT INTO player_episodes (date, episode_id, title, block, sort, duration_s, r2_key, size_bytes, audio_state, pushed_at, text_state, text_r2_key, kind, source, stream_url)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(date, episode_id) DO UPDATE SET title=excluded.title, block=excluded.block, sort=excluded.sort,
                duration_s=excluded.duration_s, r2_key=excluded.r2_key, size_bytes=excluded.size_bytes,
                audio_state=excluded.audio_state, pushed_at=excluded.pushed_at,
-               text_state=excluded.text_state, text_r2_key=excluded.text_r2_key`,
+               text_state=excluded.text_state, text_r2_key=excluded.text_r2_key,
+               kind=excluded.kind, source=excluded.source, stream_url=excluded.stream_url`,
           ).bind(date, e.episode_id, e.title, e.block, e.sort, e.duration_s,
-            e.audio_state === "present" ? `episodes/${date}/${e.episode_id}.mp3` : "",
+            // v324 §2.4: an external row's r2_key binds '' regardless
+            // of audio_state — the key derives from state for episode
+            // rows only; the branch is on kind, not on state.
+            e.kind === "external" ? "" : (e.audio_state === "present" ? `episodes/${date}/${e.episode_id}.mp3` : ""),
             e.size_bytes, e.audio_state, pushedAt,
-            e.text_state, e.text_state === "present" ? `texts/${date}/${e.episode_id}.txt` : ""));
+            e.text_state, e.text_state === "present" ? `texts/${date}/${e.episode_id}.txt` : "",
+            e.kind, e.source, e.kind === "external" && e.audio_state === "present" ? e.stream_url : ""));
         }
         stmts.push(env.DB.prepare(
           `INSERT INTO player_day (id, date, episode_count, pushed_at) VALUES (1, ?, ?, ?)
@@ -557,6 +614,68 @@ export default {
           ok: true, storedDate: rb.storedDate, rowCount: rb.episodeCount,
           perTrack: eps.map((e) => ({ episode_id: e.episode_id, audio: e.audio_state === "present" ? "verified" : "missing", text: e.text_state === "present" ? "verified" : "missing" })),
           segmentsHeld: rb.segmentBlocks,
+        });
+      }
+      if (seg[2] === "player" && seg[3] === "externals" && request.method === "POST") {
+        // v324 §2.5 — the morning re-resolve write path: rewrites
+        // ONLY the stored day's nine external rows. Every guard is a
+        // named refusal that writes nothing; the swap is 9-for-9, so
+        // player_day.episode_count never moves.
+        const body = await request.json().catch(() => ({})) as {
+          date?: string;
+          tracks?: { episode_id?: string; title?: string; block?: string; sort?: number; duration_s?: number; size_bytes?: number; audio_state?: string; source?: string; stream_url?: string }[];
+        };
+        const date = String(body.date ?? "");
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+        const dayRow = await env.DB.prepare("SELECT date FROM player_day WHERE id=1").first<{ date: string }>();
+        if (!dayRow || dayRow.date !== date) return err(409, `externals date ${date} is not the stored day ${dayRow?.date ?? "none"}`);
+        if (!Array.isArray(body.tracks)) return err(400, "tracks array required");
+        const pinned = Object.keys(EXTERNAL_SLOTS);
+        const ids = body.tracks.map((t) => String(t.episode_id ?? ""));
+        const missingIds = pinned.filter((id) => !ids.includes(id));
+        const extraIds = ids.filter((id) => !pinned.includes(id));
+        if (missingIds.length || extraIds.length || new Set(ids).size !== ids.length) {
+          return err(400, `externals track set must be exactly the nine pinned slots (missing: ${missingIds.join(", ") || "none"}; extra: ${extraIds.join(", ") || "none"})`);
+        }
+        const tracks: { episode_id: string; title: string; block: string; sort: number; duration_s: number; size_bytes: number; audio_state: string; source: string; stream_url: string }[] = [];
+        for (const t of body.tracks) {
+          const id = String(t.episode_id ?? "");
+          if ((t.block ?? "") !== EXTERNAL_SLOTS[id]) return err(400, `external block for ${id} must be ${EXTERNAL_SLOTS[id]}`);
+          if (!["present", "missing"].includes(t.audio_state ?? "")) return err(400, `bad audio_state for ${id}`);
+          tracks.push({
+            episode_id: id, title: String(t.title ?? id), block: EXTERNAL_SLOTS[id],
+            sort: Number(t.sort ?? 0), duration_s: Number(t.duration_s ?? 0),
+            size_bytes: Number(t.size_bytes ?? 0), audio_state: t.audio_state!,
+            source: String(t.source ?? ""), stream_url: String(t.stream_url ?? ""),
+          });
+        }
+        // The swap's before-state, for the reply's filled list (the
+        // morning report names what the re-resolve landed).
+        const beforeRows = await env.DB.prepare("SELECT episode_id, audio_state FROM player_episodes WHERE date=? AND kind='external'").bind(date).all<{ episode_id: string; audio_state: string }>();
+        const before = new Map((beforeRows.results ?? []).map((r) => [r.episode_id, r.audio_state]));
+        const pushedAt = nowISO();
+        const stmts: D1PreparedStatement[] = [
+          env.DB.prepare("DELETE FROM player_episodes WHERE date=? AND kind='external'").bind(date),
+        ];
+        for (const t of tracks) {
+          stmts.push(env.DB.prepare(
+            `INSERT INTO player_episodes (date, episode_id, title, block, sort, duration_s, r2_key, size_bytes, audio_state, pushed_at, text_state, text_r2_key, kind, source, stream_url)
+             VALUES (?, ?, ?, ?, ?, ?, '', ?, ?, ?, 'missing', '', 'external', ?, ?)`,
+          ).bind(date, t.episode_id, t.title, t.block, t.sort, t.duration_s,
+            t.size_bytes, t.audio_state, pushedAt, t.source,
+            t.audio_state === "present" ? t.stream_url : ""));
+        }
+        await env.DB.batch(stmts);
+        const perSlot = tracks
+          .slice()
+          .sort((a, b) => a.sort - b.sort)
+          .map((t) => ({ episode_id: t.episode_id, audio_state: t.audio_state, source: t.source }));
+        return json({
+          ok: true, storedDate: date,
+          externalsPresent: tracks.filter((t) => t.audio_state === "present").length,
+          externalsMissing: tracks.filter((t) => t.audio_state === "missing").length,
+          perSlot,
+          filled: tracks.filter((t) => t.audio_state === "present" && before.get(t.episode_id) !== "present").map((t) => t.episode_id),
         });
       }
       if (seg[2] === "player" && seg[3] === "stored-day" && request.method === "GET") {
