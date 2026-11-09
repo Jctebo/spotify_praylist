@@ -247,9 +247,14 @@ sys.argv = ["push_episodes_to_app.py", "--report", r"${path.join(rundir, "report
 rc = helper.main()
 assert rc == 0, f"helper exit {rc}"
 status, stored = local_call("GET", "/api/agent/player/stored-day")
-assert stored["storedDate"] == "${D3}" and stored["episodeCount"] == 3, stored
-assert stored["textsPresent"] == 1 and stored["textsMissing"] == 2, stored
-assert stored["tracksPresent"] == 2 and stored["tracksMissing"] == 1, stored
+# v324 Implement named update (harness-only): the push helper now
+# appends the nine external rows to the same commit (§2.7), so the
+# stored day carries 3 own + 9 external rows; for this 2027 fixture
+# date every external stands missing (no live feed carries it).
+assert stored["storedDate"] == "${D3}" and stored["episodeCount"] == 12, stored
+assert stored["textsPresent"] == 1 and stored["textsMissing"] == 11, stored
+assert stored["tracksPresent"] == 2 and stored["tracksMissing"] == 10, stored
+assert stored["externalsPresent"] == 0 and stored["externalsMissing"] == 9, stored
 print("HELPER-V318: PASS")
 `);
   const helperOut = execFileSync("python3", [driver], { cwd: APP, encoding: "utf8" });
@@ -300,7 +305,7 @@ print("HELPER-V318: PASS")
   let parses = true; try { new vm.Script(appJs); } catch { parses = false; }
   ok(parses, "the served /app.js parses (vm.Script)");
   const sw = (await api(BASE, "GET", "/sw.js")).text;
-  ok(sw.includes("ora-pro-nobis-v318-1"), "the SW cache name reads ora-pro-nobis-v318-1 (the T9 bump)");
+  ok(sw.includes("ora-pro-nobis-v324-1"), "the SW cache name reads ora-pro-nobis-v324-1 (v324 Implement named update: the pin follows the landed trunk's cache rename, v324's; the T9 bump named v318-1)");
   ok(pageErrors.length === 0, `the browser boot ran with zero page errors${pageErrors.length ? " — " + pageErrors.join(" | ") : ""}`);
 } catch (e) {
   n++; fails++; console.log(`not ok ${n} - harness crashed: ${e.message}`);
