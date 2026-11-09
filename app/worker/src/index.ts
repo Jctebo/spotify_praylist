@@ -971,9 +971,40 @@ export default {
           if (!/^(\d{4}-\d{2}-\d{2}|current)$/.test(date) || !PRAYER_BLOCKS.includes(block as typeof PRAYER_BLOCKS[number])) return err(400, "bad audio path");
           const row = await env.DB.prepare("SELECT r2_key FROM prayer_audio WHERE date=? AND block=?").bind(date, block).first<{ r2_key: string }>();
           if (!row) return err(404, "no segment for that block and date");
-          const obj = await env.AUDIO.get(row.r2_key);
+          // v336 Implement DEVIATION (see §3): the segment route
+          // gains the episode route's exact Range passthrough.
+          // §2.5 assumed a full-body 200 makes in-buffer scrubs
+          // land; measured on the landed route, Chrome exposes
+          // seekable 0-0 without Accept-Ranges, so no segment
+          // scrub could ever land (leg 9 unpassable as pinned).
+          // The route now answers ranged reads exactly like
+          // /api/player/audio does; the body, the key, and the
+          // cache rule are unchanged.
+          const rangeHdr = request.headers.get("range");
+          let range: R2Range | undefined = undefined;
+          if (rangeHdr) {
+            const m = /^bytes=(\d*)-(\d*)$/.exec(rangeHdr.trim());
+            if (m && (m[1] || m[2])) {
+              if (m[1] === "") range = { suffix: Number(m[2]) };
+              else if (m[2] === "") range = { offset: Number(m[1]) };
+              else range = { offset: Number(m[1]), length: Number(m[2]) - Number(m[1]) + 1 };
+            }
+          }
+          const obj = range ? await env.AUDIO.get(row.r2_key, { range }) : await env.AUDIO.get(row.r2_key);
           if (!obj) return err(404, "segment missing from the store");
-          return new Response(obj.body, { headers: { "content-type": "audio/mpeg", "cache-control": "private, max-age=3600" } });
+          const headers: Record<string, string> = {
+            "content-type": "audio/mpeg", "cache-control": "private, max-age=3600", "accept-ranges": "bytes",
+          };
+          if (range && obj.range) {
+            const total = obj.size;
+            const offset = obj.range.offset ?? (obj.range.suffix !== undefined ? total - (obj.range.length ?? obj.range.suffix) : 0);
+            const length = obj.range.length ?? (total - offset);
+            headers["content-range"] = `bytes ${offset}-${offset + length - 1}/${total}`;
+            headers["content-length"] = String(length);
+            return new Response(obj.body, { status: 206, headers });
+          }
+          headers["content-length"] = String(obj.size);
+          return new Response(obj.body, { headers });
         }
         return err(404, "unknown prayer route");
       }
