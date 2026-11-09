@@ -82,3 +82,84 @@ Read, stated so he can correct it: a persistent mini-player bar docked at the bo
 
 - **Recommendation: Through Review (level 4)** — Scope · Plan · Implement · Review run autonomously and the chain stops before Ship.
 - **Reason:** the design space is narrow and client-only, so Plan and Implement need no further input once D1–D7 settle at approval; but this is an interaction change whose binding test is John's hand on his own phone (criterion 9), and the v312/v320 pattern puts that check at Review on a candidate deployment — Ship should be a separate word from John after he has used the dock. Plain "approve" sets this level.
+
+## 2 · Plan
+
+- **Agent:** Plan Agent (v326) — Plan claim record 1134, claimed 2026-11-09T04:32:17Z · time contract 57 ("Plan section committed and published" ASAP, hard deadline 2026-11-09T05:05:00Z · "Plan pass" ASAP, hard deadline 2026-11-09T05:20:00Z)
+- **Inputs read:** §1 in full (Scope record 1120, D1–D7 settled by John's approval 2026-11-08 21:03 CT — Autonomous to Ship, Review phone check standing) · the Plan precondition verified met: v318 Live 2026-11-09T04:16Z · v325 Live 2026-11-09T04:31Z · the landed trunk first-hand: `muse-draft-week` @ 7f938f3 — `app/worker/src/ui.ts` (SHELL_HTML, APP_CSS, SW_JS) and `app/worker/src/client.ts` (state, startDesc/playTrack/advanceQueue, the sleep paths, trackDesc/trackCard/openRead, setTab) · production Worker of record 9f2a2d02 (v325 Ship)
+- **Traceability:** every step below traces to a §1 line (Scope Record items 1–8, decisions D1–D7, acceptance criteria 1–9). No scope gap found; nothing absorbed beyond §1.
+
+### 2.1 The rebase (Implement step 0)
+
+- release/v326 was cut from `muse-draft-week` @ c59a32b and carries only this document (230b5b5, 17aa1d8). **Implement rebases release/v326 onto the trunk as it stands at Implement start** (7f938f3 at this Plan; re-pin then — if v324 has landed meanwhile, the rebase target moves and §2.10's drift rule applies). Expected conflict surface: **none in production code** (the branch touches no app file); the release document itself is branch-only.
+- Trunk changes since c59a32b that touch the shell/client, and how the dock composes with each:
+  - **v318 (landed):** client.ts gains `openRead` (the `.sheet readsheet`, z-50), `readButton`, `state.dayDescs`, and — load-bearing for §2.5 — **every track card now carries `data-card="<key>"`** (key = episodeId, or `seg:<block>` for Intentions cards); ui.ts gains only the `.readtext` rule and the SW rename to `ora-pro-nobis-v318-1`. Composition: the Read sheet stands at z-50, above the dock's z-40 (§2.2) — D6 holds with no special case; the dock's updater tolerates the sheet exactly as it tolerates any render.
+  - **v325 (landed):** one server line (`playerDayPayload` splice) — **client-untouched**, verified in the c59a32b..7f938f3 diff (client.ts changes are v318's alone). Composition: none needed; Intentions-first order is simply the queue order the dock's next button walks.
+  - **v327 (landed):** Worker index.ts id-pattern lines only — client-untouched. No composition.
+
+### 2.2 DOM and state design (ui.ts + client.ts)
+
+- **Element:** one shell-level element added to `SHELL_HTML` in ui.ts, between `<audio id="audio">` and `<nav class="tabbar">`, rendered once at boot, never part of any tab render:
+  `<div id="dock" class="dock hidden"><img class="dockthumb" src="/logo.png" alt=""><div class="docktext"><div class="docktitle" id="dock-title"></div><div class="dockmeta" id="dock-meta"></div></div><button id="dock-play" class="playbtn" aria-label="Play or pause"></button><button id="dock-next" class="docknext" aria-label="Next track">&#9197;</button><div class="dockprogress"><i id="dock-progress-fill"></i></div></div>`
+- **Contents per D2:** logo thumb · title (17px card-title step) · meta line (14px meta step: the track's block, else the stored day's label) · play/pause (the standing 42px `.playbtn` roundel) · next · the progress line as a 3px track pinned to the dock's bottom edge. Text floor per §1 item 9 — nothing under 13px.
+- **Position and z-order:** `.dock { position: fixed; left:0; right:0; z-index: 40; background: var(--navy); color: var(--cream); }` — above the tab bar (z-30), below sheets (z-50, D6), clear of the sticky brand bar (top, z-30, never overlaps). The dock's `bottom` is **measured, not hardcoded**: at boot and on `resize`, client.ts sets `--tabh` on `:root` from `tabbar.offsetHeight` (which already includes the safe-area padding), and the dock sits at `bottom: var(--tabh)`. The tab bar itself is untouched — its safe-area padding, markup, and CSS stand byte-for-byte.
+- **Clearance arithmetic (the number §1 left to Plan):** while the dock stands, `--dockh` is set from `dock.offsetHeight` (expected 60px: 56px row + 3px progress + hairline) and APP_CSS gains `body.dock-on .view { padding-bottom: calc(96px + var(--dockh)); }`. Dock hidden ⇒ `body.dock-on` absent ⇒ the standing 96px pad is exactly what stands (criterion 6, no dead band). Both values are measured at runtime, so a safe-area or fold change re-derives them; the harness asserts the arithmetic, not a constant.
+- **State machine — derived, no new flag:** the dock is visible ⟺ `state.current !== null` (D1, §1 fact 8). One function, `updateDock()`, reads `state.current` + `audioEl.paused` and renders title/meta/glyph/progress/next-disabled, toggling `.hidden` and `body.dock-on`. It is called from: `startDesc` · the element's own `play` and `pause` events (these two cover every path, Media Session included) · `advanceQueue` (advance and the end-clear) · the `ended` handler · `sleepTrackEnd` (all three sub-cases) · the Read view's post-open `markPlaying` point. The dock's play button carries **its own id and no `data-playkey`** — §1's named trap: `markPlaying`'s document-wide sweep must never own the dock's glyph; `updateDock` is the dock's only sync path. `updateDock` tolerates absence by construction (the element always exists; only its content changes).
+- **Progress:** the standing `timeupdate` listener gains one line — the fill's width % = `audioEl.currentTime / audioEl.duration * 100` (0 when duration is not finite yet), reset to 0 by `updateDock` at every track change. **Display-only (D2):** no click, drag, or key handler is attached to the progress line; seek stays on the lock screen, unchanged.
+- **Descriptor widening (client-internal, no payload change):** `trackDesc` gains `block: t._block || ''`. For Intentions segment descriptors the episodeId already encodes the block (`seg:<block>`); for chip plays (§2.3) block is empty and the meta line falls back to `state.dateLabel`.
+
+### 2.3 Behavior per surface
+
+- **Prayers:** dock and in-screen controls both live; agreement is structural — both drive the same `audioEl` through `playTrack`/`advanceQueue`, and both glyph sets re-derive from the element's events (`markPlaying` for cards, `updateDock` for the dock). Play All, per-block queue buttons, per-card buttons, and the Sleep button are **unchanged** (D4, D5).
+- **Intentions tab:** chip plays call `play(url, btn)` → `playTrack({episodeId: 'url:…', title: 'Intentions', …})` — `state.current` sets, so the dock appears with title **"Intentions"**, meta = the day label, and **next disabled** (no queue stands) (D7). The dock's play/pause toggles that same descriptor through `playTrack(state.current)`.
+- **Examination · Confession:** no surface change of their own; the dock is the first playback sign and pause control on either tab (the §1 gap). Nothing in their renders is touched.
+- **Read view open:** the sheet (z-50) covers the dock (z-40) (D6); its own play button drives the same descriptor; closing the sheet reveals the dock exactly as `updateDock` last rendered it.
+- **Dock transport:** play/pause = `playTrack(state.current)` — one standing path, inheriting the pause handler's resume save and v320's fade-restore-on-play without re-implementation. Next = `advanceQueue(1)` with its standing skip rule (missing tracks passed over and named on their cards); next renders disabled when `state.queue` is empty.
+
+### 2.4 The jump (D3)
+
+- Dock body click (any target inside `#dock` except `#dock-play` / `#dock-next`): **no-op when `state.current.episodeId` starts with `url:`** (an Intentions chip play has no card). Otherwise: `setTab('prayers')` (which synchronously re-renders the day screen), then in the next animation frame `document.querySelector('[data-card="' + episodeId + '"]')` — the v318-landed card identity — gets `.scrollIntoView({block: 'center', behavior: 'smooth'})` plus a transient outline class so the eye lands on it.
+- **No-op cases, named:** chip plays (above) · the playing track is not among today's rendered cards (e.g. a resumed stored-day track whose card the current render does not carry) — the tab switch still happens; the scroll simply finds nothing. Playback, position, queue, and sleep state are never touched by the jump.
+
+### 2.5 Sleep interplay (v320, D5)
+
+- The dock carries **no sleep control**; `#sleep-btn` stays the single label-is-state element in the Play All row.
+- **Timed stop:** `fireTimedStop` pauses only (queue held, `state.current` stands) — the element's `pause` event fires `updateDock`, so the dock shows the loaded track in the paused state with its progress where it stopped. No dock-specific sleep code.
+- **End-of-track hold:** `sleepTrackEnd` (a) sets `state.current` to the next track, loaded and unstarted — `updateDock` (hooked there) shows the next track's title with the paused glyph and progress 0; (b)/(c) clear `state.current` — the dock clears, exactly the queue-end rule.
+
+### 2.6 Service worker / cache
+
+- The client change **bumps the cache name**: `ora-pro-nobis-v318-1` → **`ora-pro-nobis-v326-1`** in `SW_JS` (ui.ts), the standing mechanism (§1 item 7).
+- **Named pin updates (the superseded-pin pattern, v325 Ship §2.5):** three standing harnesses pin the old name as a literal and get the one-string update to `ora-pro-nobis-v326-1`, each named in §5 as harness-only: harness-v312 check 11 · harness-v318's SW check (~line 303) · harness-v320 check 1. harness-v325 and harness-v327 carry **no cache pin** (verified by grep on the trunk) and stand untouched.
+
+### 2.7 Steps in order (Implement)
+
+1. Rebase release/v326 onto the standing trunk (§2.1); confirm the base in the §3 opening line.
+2. ui.ts: the dock element in `SHELL_HTML` · the APP_CSS block (`.dock` family + `body.dock-on .view` rule) · the SW name bump.
+3. client.ts: `trackDesc` block widening · `updateDock()` + its hook calls (§2.2) · the `timeupdate` progress line · the dock handlers (play, next, body-tap jump) · the `--tabh`/`--dockh` measurement at boot and on `resize`.
+4. harness-v326 (new, §2.8) + the three named pin updates (§2.6).
+5. Run the gate set (§2.8); tallies read from the COMPLETE log files. Parse+boot pin: the gate **parses and executes the served client** (the standing app-line rule) — harness-v326's boot checks run against the served shell of a scratch instance.
+6. §3 appended, committed, published; Implement passes. Review after the trunk landing by default (client-only rule), §2.9.
+
+**Files changed (complete list):** `app/worker/src/ui.ts` · `app/worker/src/client.ts` · `app/tests/harness-v326.mjs` (new) · `app/tests/harness-v312.mjs`, `app/tests/harness-v318.mjs`, `app/tests/harness-v320.mjs` (the one-string pin updates only). **No migration. No Worker route, D1, R2, payload, job-sheet, or feed change.**
+
+### 2.8 Harness design
+
+- **harness-v326** (the v312/v320 mold: fixture day, scratch wrangler instance in a detached guard worktree, own port **8971** — sibling harnesses hardcode theirs, 8931/8951 among them, and a shared port silently cross-serves): ~24 checks —
+  1. dock absent before any load, on all four tabs, and the view pad reads the standing 96px · 2. card play ⇒ dock appears, title + block correct · 3. dock play/pause pauses; the card glyph agrees · 4. card pause ⇒ the dock glyph agrees (both directions) · 5. dock next advances; a missing track is skipped and named on its card · 6. dock persists across all four tabs with playback running · 7. Examination and Confession each show the dock with a working pause · 8. progress fill advances under `timeupdate` and resets to 0 at a track change · 9. clicking the progress line changes nothing (no seek) · 10. queue end clears the dock and restores the 96px pad · 11. a lone track's end clears the dock · 12. sleep timed stop ⇒ dock shows the held track, paused, progress held · 13. sleep end-of-track hold ⇒ dock shows the next track unstarted, progress 0 · 14. the sleep sheet opens over the dock (z-order) · 15. Read view opens over the dock; its play drives the same track; close ⇒ the dock stands as it was · 16. Intentions chip play ⇒ dock title "Intentions", next disabled, play/pause working · 17. dock body tap ⇒ Prayers tab active and the playing card scrolled into view (asserted in the harness DOM) · 18. dock body tap during a chip play ⇒ no-op (tab and scroll unchanged) · 19. with the dock standing, view bottom pad = 96px + the dock's measured height; dock bottom offset = the tab bar's measured height · 20. SW name reads `ora-pro-nobis-v326-1` · 21. served `/app.js` parses and the shell boots with the dock element present exactly once.
+- **Regressions (same gate):** harness-v312 · harness-v318 · harness-v320 (each with its §2.6 pin update) · harness-v325 · harness-v327 — all re-run on the rebased tree. Named standing artifact: harness-v320's check-4 label leg has an environment-timing history (v325 Ship §5) — a lone check-4 failure is re-run and judged against that record, never silently counted either way. Full-suite catch-up position: this gate set IS the player's full standing set for the touched surface (five harnesses + the new one); no separate board suite exists on this line.
+
+### 2.9 Review design
+
+- **Candidate deployment (fresh, v326's own):** Worker **`ora-pro-nobis-app-v326-review`** with its **own D1, own R2, own Access application** (the v320-review pattern), seeded with a stored day through the standing push path, built from the landed trunk. v326 does **not** reuse the still-standing `ora-pro-nobis-app-v320-review` deployment, and its teardown stays that release's own owed item — v326 neither uses it nor absorbs it.
+- **Criteria:** §1's acceptance criteria 1–8 on agent evidence (harness-v326 + the regression set on the candidate's exact build, the two-actor-free client checks being single-actor here) · **criterion 9 — John's phone check on the candidate — is the LAST Review criterion and stands unwaived**: Autonomous to Ship governs the chain, but the flip waits on his check, exactly as Scope carried it. Review does not pass on agent evidence alone for criterion 9.
+- **Teardown:** the v326 candidate's teardown (Worker + D1 + R2 + Access app) is named in §5 as a Ship follow-on item, so it cannot silently join the standing teardown debt.
+
+### 2.10 Rollback, merge slot, drift
+
+- **Rollback: pure redeploy of production Worker `9f2a2d02`** (the v325 Ship version). No data or migration rollback exists to perform — the change is client-only; the bumped SW name means a rolled-back client simply re-caches under the old name on next fetch.
+- **Merge slot:** Implement lands to `muse-draft-week` in the coordinator's order. **Drift watch:** v324's Implement (externals in the player) seats after v325 and may land before or during v326's Implement; it touches the same client (external-track rendering) — if it lands first, Implement rebases onto it and re-runs the full §2.8 set before passing; if it lands during, the same re-rebase + re-run applies. v328's Plan (lands last in the player line) carries no client conflict with the dock.
+
+### Concerns and Information Needs
+
+- **Concerns and Information Needs:** no scope gap stands — §1's D1–D7, as approved, cover every design question this Plan had to settle, including the two items §1 expressly left open (the clearance arithmetic, pinned in §2.2 as measured values with the 96px + dock-height rule; the phone-surface behavior, carried to Review criterion 9 unwaived). Two named judgments for the Coordinator's awareness, neither blocking: the dock bottom/clearance uses runtime measurement (`--tabh`/`--dockh`) rather than a hardcoded offset, chosen because the tab bar's height includes the device safe-area and the fold form factor changes it — the harness asserts the arithmetic on the scratch instance, and the phone check is the device proof · harness-v320's check-4 environment-artifact history is carried into §2.8 by name so a recurrence is judged against evidence, not surprise. The still-standing v320-review candidate teardown remains that item's own debt, expressly not absorbed here (§2.9).
