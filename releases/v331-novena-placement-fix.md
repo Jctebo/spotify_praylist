@@ -65,3 +65,26 @@ Placement is expressed as DATA in the push path — a small seed table the resol
 - Ship: merge release/v331 to muse-draft-week; re-push the 2026-11-08 set with the v327 invocation (`--report ~/workspace/ora-runner-runs/2026-11-08/report.json --rundir ~/workspace/ora-runner-runs/2026-11-08/out`); production read-back per criterion 4; verify the nightly job sheet needs no change (the fix lives in the helper step 4B already invokes) and state it expressly; four-piece flip (release row Live · shipped record · What's New 44 · Ship phase pass); Curator note `ship-v331-2026-11-08`.
 
 - **Concerns and Information Needs:** The landing must complete before 00:00 CT so the midnight run executes the fixed helper from muse-draft-week. The push's own read-back asserts (stored date, counts, per-track verification) stand as the failure gate: any mismatch exits non-zero and the re-push is re-run, never hand-patched in D1.
+
+## 3 · Implement
+
+- **Agent:** Implement Agent (v331) — Implement claim record 1141, claimed 2026-11-09T04:42:14Z · time contract 64 ("Fix committed on muse-draft-week" — ASAP, hard deadline 2026-11-09T05:05:00Z; judged at the Ship landing, the commit's arrival on muse-draft-week)
+- **Build commit:** be776fe on release/v331
+
+### The change (all of it)
+
+- `jobs/push_episodes_to_app.py`, +31 lines, insertions only, no line removed or altered in behavior:
+  1. A module-level `SEED_PLACEMENT` data table — two rows: `("prefix", "novena-", "Midmorning")` and `("exact", "marian-antiphon-angelus", "Morning")` — with a comment naming it as the v328 seed rows and v328's settings read as its successor.
+  2. A `seed_block(episode_id)` reader: the seed block for an id, or None when the seed does not name it.
+  3. One hook in `resolve_blocks`: an episode the seed names takes its seed block; every other episode flows through the standing name-match (player_sources titles, then day-payload names, longest head match, else 'unblocked') byte-for-byte as before.
+  4. A four-line docstring note recording the seed's place in the resolution order.
+- No app Worker change, no migration, no config, no job-sheet change. The four standing placements are produced by the untouched name-match path, re-proven below.
+- New test: `app/tests/check-v331-placement.py` — runs the resolver against the REAL 2026-11-08 manifest with the door stubbed to the answers behind today's standing placements, asserting all 17 placements.
+
+### Harness evidence (tallies read from the complete logs)
+
+- **Placement check (new): 17 ok / 0 FAIL** on the changed tree. On the base tree's helper the same check reads **4 ok / 13 FAIL** — every failure an 'unblocked' novena or the Antiphon: the defect itself is the red proof, and the four name-match placements pass on both trees (unchanged, as required).
+- **harness-v327: 10 ok / 0 FAIL** (log app/tests/harness-v331-v327-regression.log) — the standing push of the real manifest against a local instance still commits all 17 episodes, underscore ids included.
+- **harness-v312: 59 ok / 0 FAIL** (log app/tests/harness-v331-v312-regression.log) — no check fails this run; the pre-ruled check-11 cache-pin class does not arise (no client code touched, no cache renamed).
+
+- **Concerns and Information Needs:** The seed is consulted BEFORE the name-match by design: for the two named producer families the seed is the placement of record, so a future prayer item that happened to share a novena title's head could not silently move a novena out of Midmorning — v328's settings, when they land, are the one intended way placement changes. The placement check stubs the door with today's production answers; if the day payload's item names change, the check's stub must change with them (it fails loudly on any unexpected door call rather than guessing).
