@@ -88,3 +88,18 @@ Placement is expressed as DATA in the push path — a small seed table the resol
 - **harness-v312: 59 ok / 0 FAIL** (log app/tests/harness-v331-v312-regression.log) — no check fails this run; the pre-ruled check-11 cache-pin class does not arise (no client code touched, no cache renamed).
 
 - **Concerns and Information Needs:** The seed is consulted BEFORE the name-match by design: for the two named producer families the seed is the placement of record, so a future prayer item that happened to share a novena title's head could not silently move a novena out of Midmorning — v328's settings, when they land, are the one intended way placement changes. The placement check stubs the door with today's production answers; if the day payload's item names change, the check's stub must change with them (it fails loudly on any unexpected door call rather than guessing).
+
+## 4 · Review
+
+- **Agent:** Review Agent (v331) — Review claim record 1142, claimed 2026-11-09T04:43:5xZ · time contract 65 ("Review pass" — ASAP, hard deadline 2026-11-09T05:10:00Z)
+- **Verdict: PASS** — Review ran BEFORE the trunk landing, as this class requires (the change touches the nightly push path).
+
+### Criterion rulings
+
+1. **Diff boundary — MET.** The full branch diff against muse-draft-week is 5 files, 271 insertions, 0 deletions: the helper (+31, insertions only), the new placement check, two harness logs, and this document. No app Worker file, no migration, no config, no job sheet. The helper diff was read line by line: the seed table carries exactly §1's two rows; `seed_block` returns None for every other id; the `resolve_blocks` hook is the only behavior change, and the name-match body below it is untouched.
+2. **Placement proof (dry, on the fixture) — MET.** Review re-ran `app/tests/check-v331-placement.py` first-hand: **17 ok / 0 FAIL** against the real 2026-11-08 manifest — 12 novenas → Midmorning, the Antiphon → Morning, the four standing placements reproduced by the untouched name-match. Against the base helper: 4 ok / 13 FAIL, each failure an 'unblocked' defect row.
+3. **Regressions — MET.** Review's own re-runs from the complete logs: harness-v327 **10 ok / 0 FAIL** (app/tests/harness-v331-review-v327.log) · harness-v312 **59 ok / 0 FAIL** (app/tests/harness-v331-review-v312.log). No cache-pin exception arose; none was needed.
+4. **Seed semantics — MET.** Prefix match on the episode id (not the title) for `novena-`, exact match for the Antiphon id: title wording changes cannot move placement, and no other producer's id can collide with either row. Sort stays manifest order, so the Antiphon stands at Morning position 3 among the day's own episodes (its v328 order-table position) and the novenas follow in manifest order in Midmorning behind the v325 Intentions splice.
+5. **Forward compatibility — MET.** The table is named, isolated, and commented as superseded by v328's settings read; nothing of v328 is built here.
+
+- **Concerns and Information Needs:** Ship's production proof is the re-push read-back (§2.3 criterion 4 of §1): if any of the 13 rows does not stand in its seed block after the re-push, Ship does not flip — the push helper's own asserts plus the D1 read-back are the gate, and a second re-push (idempotent by design) is the only remedy attempted before reporting back.
