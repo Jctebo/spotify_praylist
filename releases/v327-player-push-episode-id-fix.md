@@ -84,3 +84,39 @@ Not enforcement: line 621 checks only that an episode id is present on the audio
 
 - Thin-scope discipline: the Ship agent stops and reports on any snag rather than widening the fix (a second defect in the push path would be named, not folded in).
 - The harness instance must be production-shaped (the real manifest, real MP3 bytes) — a fixture manifest without underscore ids would prove nothing.
+
+## 3 · Implement
+
+- **Agent:** Implement Agent (v327) — Implement claim record 1123, claimed 2026-11-09T03:02:39Z; time contract 45
+- **Build commit:** 1a3891b on release/v327 · **Harness commit:** ab35bf5
+
+### 3.1 — The change (complete diff against muse-draft-week @ c59a32b, production code)
+
+Exactly two lines in `app/worker/src/index.ts`, each the pinned widening `\-` → `\-_` inside the character class:
+
+- Line 452 (episode audio staging, `X-Episode-Id` header check): `/^[A-Za-z0-9][A-Za-z0-9\-]*$/` → `/^[A-Za-z0-9][A-Za-z0-9\-_]*$/`
+- Line 471 (replace-day commit, manifest `episode_id` check): same literal change
+
+No other production line changes. No client change → no SW cache rename (the cache stays `ora-pro-nobis-v320-1` from v320's landing). No migration, no manifest change, no helper change.
+
+### 3.2 — Push leg (Plan §2.2) — PASS
+
+`app/tests/harness-v327.mjs` (driver `app/tests/push-leg-v327.py`): a scratch local instance inside this worktree (port 8943, schema from all migrations, seeded with the v312 mold — 35 prayer items + the 11-intention pool), then the REAL standing helper `jobs/push_episodes_to_app.py`, unmodified, run with the REAL `~/workspace/ora-runner-runs/2026-11-08/report.json` and `--rundir` pointing at the run's built MP3s in `out/`. The driver rebinds only the helper's door target (local base + harness token); the helper code is untouched.
+
+- Helper output, verbatim: `App push (v312): date pushed 2026-11-08 · episodes 17 (17 present / 0 missing) · per-track audio verified 17 · stored date after push 2026-11-08`
+- Stored episode ids read back from D1 are exactly the manifest's 17 ids; all 12 underscore novena ids stored; every row `audio_state = present` (the commit's staged-size verification passed for all 17 real MP3s).
+- Stored-day read-back: `{"storedDate":"2026-11-08","episodeCount":17,"tracksPresent":17,"tracksMissing":0}`.
+- Tally (complete log `app/tests/harness-v327.log`): **10 ok / 0 FAIL**.
+
+### 3.3 — Regression leg (Plan §2.2) — PASS with one named, pre-ruled exception
+
+harness-v312 on this tree (complete log `app/tests/harness-v312-on-v327.log`): **58 ok / 1 FAIL**. The single FAIL is check 11, the literal SW cache-name pin `ora-pro-nobis-v312-1` — superseded by v320's own §2.12 rename to `ora-pro-nobis-v320-1` on this trunk, the identical single FAIL recorded at v320's Implement/Ship and v318's app-half runs. §2.2 of this release expected check 11 to pass as-is on this base; that expectation was wrong (the base is post-v320) and is corrected here — the FAIL is the standing superseded-pin class, not a v327 effect: this diff touches no client code and no cache name. Every other check, including the full door push end-to-end and commit read-backs, is green.
+
+### 3.4 — Named observation for the record (NOT folded into this fix)
+
+The helper resolves an episode's audio file as `<rundir>/<file>`, and the standing run reports carry `rundir` = the run root while the built MP3s stand in `<rundir>/out/`. A push invoked with `--report` alone therefore finds no files and would commit every episode as `missing` (the commit still validates ids first — which is why today's failure surfaced as the 400). The push leg above used the helper's own `--rundir` flag to point at the built files; the Ship pass must do the same for the production push so the day lands with its audio, and §5 will report both facts plainly. Fixing the runner's report `rundir` value or the helper's resolution is a separate item — named here, not changed (the brief forbids helper changes in v327).
+
+### Concerns and Information Needs
+
+- Review: judge the diff by `git diff c59a32b..HEAD -- app/worker/src/` — it must show exactly the two regex lines. The harness tallies above are reproducible from the committed logs.
+- Ship: the production push needs `--rundir ~/workspace/ora-runner-runs/2026-11-08/out` alongside the pinned `--report` (see §3.4); report the "App push (v312)" field verbatim in §5 either way.
