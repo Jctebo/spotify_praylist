@@ -42,8 +42,8 @@ import { LOGO_PNG_B64 } from "./logo";
 
 const JOHN_EMAILS = new Set(["john@thibeaux.com", "john.thibeaux@gmail.com"]);
 // v335: the Devotional Suite audio fallback constant is deleted — a
-// segment the app does not hold reads as missing (segmentAudioUrl
-// null), never as a Suite URL wearing the app's name (§1 part 3, §2.5).
+// segment the app does not hold reads as missing, never as a Suite
+// URL wearing the app's name (§1 part 3, §2.5).
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -207,10 +207,10 @@ async function prayerAudioMap(env: Env): Promise<Map<string, { size: number }>> 
 }
 // The day payload: field-identical in shape to the board module's
 // (the midnight job repoints by door target only), plus this app's
-// own audio record: each block's segmentAudioUrl points at the app's
-// standing audio name when the app holds that block's standing
-// segment (v335), and is null when it does not — a missing segment
-// reads as missing everywhere.
+// own audio record per block (v335's standing segment fact).
+// v338 §2.9(3): the per-block segment audio bar retires —
+// segmentAudioUrl and the payload's audioMissing list are REMOVED;
+// the Intentions tab's item/intention listing is untouched.
 async function prayerDayPayload(env: Env, date: string) {
   const { date: today, hour } = prayerChicagoNow();
   const items = await prayerGetItems(env);
@@ -232,7 +232,6 @@ async function prayerDayPayload(env: Env, date: string) {
       label: labels.get(block) ?? block,
       due: prayerBlockDue(date, block, today, hour),
       praylistUrl: PRAYLIST_URL[block],
-      segmentAudioUrl: hasAudio ? `/api/prayer/audio/current/${encodeURIComponent(block)}` : null,
       audio: { available: hasAudio, url: hasAudio ? `/api/prayer/audio/current/${encodeURIComponent(block)}` : null, sizeBytes: hasAudio ? audio.get(block)!.size : null },
       devotions: blockItems.map((i) => ({
         id: i.id, name: i.name, sub: i.sub, kind: i.kind, color: i.color,
@@ -260,7 +259,6 @@ async function prayerDayPayload(env: Env, date: string) {
       ? PRAYER_BLOCKS.reduce((cur, b) => (hour >= (PRAYER_BLOCK_START[b] ?? 0) ? b : cur), "Morning" as string)
       : "Morning",
     isToday: date === today,
-    audioMissing: PRAYER_BLOCKS.filter((b) => !audio.has(b)),
   };
 }
 
@@ -343,6 +341,85 @@ const OWN_ROW_EPISODE: Record<string, string> = {
   "auxilium-christianorum": "auxilium-christianorum",
   "daily-reflection": "daily-reflection",
 };
+// v338 §2.2: the pairing mirror — v337 §2.7's table as data in the
+// Worker, mirroring jobs/compose_app_audio.py's OWN_PAIRING (the
+// five entries verbatim) + SLOT_PAIRING (the eleven entries
+// verbatim); the novena-* prefix pairs to the Novenas item (the
+// helper's pairing_for). The table now stands in TWO places —
+// contract data: a change lands in both in the same release, or in
+// neither (v339's four rows land in both).
+const INTRO_PAIRING: Record<string, string> = {
+  "morning-prayer": "Morning Prayer",
+  "daily-rosary": "Daily Rosary",
+  "marian-antiphon-angelus": "Morning Marian Antiphon",
+  "auxilium-christianorum": "Auxilium Christianorum",
+  "daily-reflection": "Daily Reflection",
+  "ext-invitatory": "Invitatory",
+  "ext-morning-prayer": "Morning Prayer (Liturgy of the Hours)",
+  "ext-midmorning-prayer": "Midmorning (Terce)",
+  "ext-midday-prayer": "Midday Prayer",
+  "ext-midafternoon-prayer": "None (Liturgy of the Hours)",
+  "ext-office-of-readings": "Office of Readings",
+  "ext-evening-prayer": "Vespers",
+  "ext-night-prayer": "Compline",
+  "ext-bible-in-a-year": "Bible in a Year",
+  "ext-gospel-exegesis": "Daily Gospel Exegesis",
+  "ext-saint-of-the-day": "Saint of the Day",
+};
+function introPairingFor(trackId: string): string | null {
+  if (trackId in INTRO_PAIRING) return INTRO_PAIRING[trackId];
+  if (trackId.startsWith("novena-")) return "Novenas";
+  return null;
+}
+// v338 §2.1(3)/(4): the intros map — one entry per PRESENTED track
+// whose intro stands: (a) the track is presented (an own row in the
+// presented day's episodes, or an enabled external settings row —
+// primaries; a fallback fill presents under its slot's id and
+// inherits its pairing), (b) a prayer_intros row stands at
+// date='current' for the id, (c) the paired item drew an intention
+// for the PRESENTED date. Absence is the missing-intro signal —
+// never an error, never a placeholder. Derivation only, no new
+// storage: the standing family + this payload's own prayer payload
+// (the same content source the helper's read_draw consumes). The
+// sentinel duty (§1 concern 5): prayer_intros is read ONLY at
+// date='current' — the query names the family.
+// The Marian Antiphon is keyed once (marian-antiphon-angelus);
+// its three block placements all read the one entry. Unblocked
+// tracks never carry intros (no pairing key exists for them).
+async function playerIntrosMap(
+  env: Env,
+  presented: string,
+  ownTracks: { id: string; title: string }[],
+): Promise<Record<string, { title: string; text: string; streamUrl: string; sizeBytes: number }>> {
+  const r = await env.DB.prepare("SELECT episode_id, size_bytes FROM prayer_intros WHERE date='current'").all<{ episode_id: string; size_bytes: number }>();
+  const standing = new Map((r.results ?? []).map((x) => [x.episode_id, x.size_bytes]));
+  if (!standing.size) return {};
+  const settings = await sourceSettingsPayload(env);
+  const presentedTracks = [...ownTracks];
+  for (const s of settings.sources) {
+    if (s.family === "external" && s.enabled === 1 && s.role !== "fallback" && s.slotId) {
+      presentedTracks.push({ id: s.slotId, title: s.name });
+    }
+  }
+  const day = await prayerDayPayload(env, presented);
+  const drawByItem = new Map<string, string>();
+  for (const b of day.blocks) {
+    for (const d of b.devotions) {
+      if (d.intentions && d.intentions[0] && d.intentions[0].text) drawByItem.set(d.name, d.intentions[0].text);
+    }
+  }
+  const out: Record<string, { title: string; text: string; streamUrl: string; sizeBytes: number }> = {};
+  for (const t of presentedTracks) {
+    const size = standing.get(t.id);
+    if (size === undefined) continue;
+    const item = introPairingFor(t.id);
+    if (!item) continue;
+    const text = drawByItem.get(item);
+    if (!text) continue;
+    out[t.id] = { title: `Intention — ${t.title}`, text, streamUrl: `/api/player/intro-audio/${t.id}`, sizeBytes: size };
+  }
+  return out;
+}
 async function playerDayPayload(env: Env) {
   const labelRows = await env.DB.prepare("SELECT block, label FROM prayer_block_labels").all<{ block: string; label: string }>();
   const labels = new Map((labelRows.results ?? []).map((r) => [r.block, r.label]));
@@ -364,34 +441,26 @@ async function playerDayPayload(env: Env) {
     return { block, label: labels.get(block) ?? block, caption: BLOCK_CAPTION[block], spotifyUrl: route?.spotify_url || PRAYLIST_URL[block], tracks, trackCount };
   };
   if (!dayRow) {
-    // Named empty shape (Scope §1: a whole day not yet pushed) — blocks
-    // in order, every Intentions card not-available, never blank.
-    // v337 §2.1(3): date/dateLabel name the PRESENTED day, storedDay
-    // null — no produced fact stands to name.
-    const blocks = PRAYER_BLOCKS.map((block) => mkBlock(block, [{
-      title: "Intentions", kind: "segment", intentionsCard: true, available: false, streamUrl: null, spotifyUrl: null,
-    }], 1));
-    return { ok: true, date: presented, dateLabel: prayerDateLabel(presented), storedDay: null, presentedDay: presented, presentedMissing: true, episodes: [], blocks, audioMissing: [...PRAYER_BLOCKS] };
+    // Named empty shape (Scope §1: a whole day not yet pushed) —
+    // blocks in order, never blank. v337 §2.1(3): date/dateLabel
+    // name the PRESENTED day, storedDay null — no produced fact
+    // stands to name. v338 §2.1(1): no Intentions card stands in
+    // this shape either — the blocks carry no tracks at all.
+    const blocks = PRAYER_BLOCKS.map((block) => mkBlock(block, [], 0));
+    const intros = await playerIntrosMap(env, presented, []);
+    return { ok: true, date: presented, dateLabel: prayerDateLabel(presented), storedDay: null, presentedDay: presented, presentedMissing: true, episodes: [], blocks, intros };
   }
-  const audio = await prayerAudioMap(env);
   const rows = await env.DB.prepare("SELECT * FROM player_episodes WHERE date=? ORDER BY sort, episode_id").bind(presented).all<PlayerEpisodeRow>();
   // v334 §2.6: stored external rows never reach the client — the
   // Prayers screen builds its externals solely from the at-open
   // resolve + the device day cache. The rows stand untouched in D1
   // and age out by the retention floor at the next replace-day.
   const eps = (rows.results ?? []).filter((r) => r.kind !== "external");
-  const mkTracks = (block: string, own: unknown[]) => {
-    const tracks: unknown[] = [...own];
-    const hasAudio = audio.has(block);
-    const card = {
-      title: "Intentions", kind: "segment", intentionsCard: true,
-      available: hasAudio,
-      streamUrl: hasAudio ? `/api/prayer/audio/current/${encodeURIComponent(block)}` : null,
-      spotifyUrl: null,
-    };
-    tracks.splice(0, 0, card);
-    return tracks;
-  };
+  // v338 §2.1(1): the Intentions-card splice is DELETED — blocks
+  // carry prayer tracks only, and trackCount counts prayer tracks
+  // (§2.1(2)); an intro is not a track and is never counted. The
+  // intros ride the payload's `intros` map (§2.1(3)), keyed by
+  // track id, derived per payload — never stored.
   if (eps.length === 0) {
     // v337 §2.1(4): the failed-push presented day. The payload MUST
     // NOT serve another date: it returns the presented date with
@@ -399,9 +468,11 @@ async function playerDayPayload(env: Env) {
     // enumerated from the enabled OWN settings rows (one entry per
     // row — the Antiphon in its three blocks). External slots are
     // NOT enumerated here — the client resolves them at open against
-    // the presented date as usual. The Intentions card splices first
-    // in every block (its availability is the standing 'current'
-    // family, date-independent).
+    // the presented date as usual. v338 §2.1(1): no card stands in
+    // this shape — the blocks carry exactly the named-missing own
+    // tracks. No own intros stand either (no own row stands in the
+    // presented day's episodes, §2.1(3)(a)); slot entries may stand
+    // in the intros map and live/die with the slot's resolution.
     const ownRows = await env.DB.prepare(
       "SELECT source_key, name, block, sort_order FROM player_source_settings WHERE family='own' AND enabled=1",
     ).all<{ source_key: string; name: string; block: string; sort_order: number | null }>();
@@ -414,24 +485,25 @@ async function playerDayPayload(env: Env) {
         pushed_at: "", text_state: "missing", text_r2_key: "", kind: "episode", source: "", stream_url: "",
       }));
     const blocks = PRAYER_BLOCKS.map((block) => {
-      const tracks = mkTracks(block, missingFor(block));
+      const tracks = missingFor(block);
       return mkBlock(block, tracks, tracks.length);
     });
+    const intros = await playerIntrosMap(env, presented, []);
     return {
       ok: true, date: presented, dateLabel: prayerDateLabel(presented), storedDay: dayRow.date, presentedDay: presented,
-      presentedMissing: true, episodes: [], blocks,
-      audioMissing: PRAYER_BLOCKS.filter((b) => !audio.has(b)),
+      presentedMissing: true, episodes: [], blocks, intros,
     };
   }
   const blocks = PRAYER_BLOCKS.map((block) => {
-    const tracks = mkTracks(block, eps.filter((r) => r.block === block).map(episodeTrackShape));
+    const tracks = eps.filter((r) => r.block === block).map(episodeTrackShape);
     return mkBlock(block, tracks, tracks.length);
   });
   const unblocked = eps.filter((r) => r.block === "unblocked").map(episodeTrackShape);
+  const intros = await playerIntrosMap(env, presented,
+    eps.filter((r) => (PRAYER_BLOCKS as readonly string[]).includes(r.block)).map((r) => ({ id: r.episode_id, title: r.title })));
   return {
     ok: true, date: presented, dateLabel: prayerDateLabel(presented), storedDay: dayRow.date, presentedDay: presented,
-    presentedMissing: false, episodes: unblocked, blocks,
-    audioMissing: PRAYER_BLOCKS.filter((b) => !audio.has(b)),
+    presentedMissing: false, episodes: unblocked, blocks, intros,
   };
 }
 
@@ -1259,11 +1331,39 @@ export default {
           // built and pinned in this release so v338's Plan consumes
           // a fixed contract; v338's payload splice is what first
           // references it. 404 when no standing intro exists.
+          // v338 §2.8(4): the route gains the EPISODE route's exact
+          // Range passthrough (as built it returned the full body
+          // with no Accept-Ranges — the v336 segment-route defect
+          // class: unseekable even when buffered). Body, key, and
+          // cache headers otherwise unchanged.
           const episodeId = decodeURIComponent(seg[3] ?? "");
           if (!/^[A-Za-z0-9][A-Za-z0-9\-_]*$/.test(episodeId)) return err(400, "bad intro path");
-          const obj = await env.AUDIO.get(`intros/current/${episodeId}.mp3`);
+          const key = `intros/current/${episodeId}.mp3`;
+          const rangeHdr = request.headers.get("range");
+          let range: R2Range | undefined = undefined;
+          if (rangeHdr) {
+            const m = /^bytes=(\d*)-(\d*)$/.exec(rangeHdr.trim());
+            if (m && (m[1] || m[2])) {
+              if (m[1] === "") range = { suffix: Number(m[2]) };
+              else if (m[2] === "") range = { offset: Number(m[1]) };
+              else range = { offset: Number(m[1]), length: Number(m[2]) - Number(m[1]) + 1 };
+            }
+          }
+          const obj = range ? await env.AUDIO.get(key, { range }) : await env.AUDIO.get(key);
           if (!obj) return err(404, "no standing intro for that episode");
-          return new Response(obj.body, { headers: { "content-type": "audio/mpeg", "cache-control": "private, max-age=3600", "content-length": String(obj.size) } });
+          const headers: Record<string, string> = {
+            "content-type": "audio/mpeg", "cache-control": "private, max-age=3600", "accept-ranges": "bytes",
+          };
+          if (range && obj.range) {
+            const total = obj.size;
+            const offset = obj.range.offset ?? (obj.range.suffix !== undefined ? total - (obj.range.length ?? obj.range.suffix) : 0);
+            const length = obj.range.length ?? (total - offset);
+            headers["content-range"] = `bytes ${offset}-${offset + length - 1}/${total}`;
+            headers["content-length"] = String(length);
+            return new Response(obj.body, { status: 206, headers });
+          }
+          headers["content-length"] = String(obj.size);
+          return new Response(obj.body, { headers });
         }
         if (seg[2] === "sources" && request.method === "GET") {
           const r = await env.DB.prepare("SELECT * FROM player_sources ORDER BY sort, id").all();

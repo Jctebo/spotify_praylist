@@ -93,7 +93,13 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .spot { display:inline-block; margin-top:5px; font-size:14px; color:var(--gold); }
 .notavail { font-size:14px; color:#8a4b2a; margin-top:4px; }
 .readtext { font-size:17px; line-height:1.7; white-space:pre-wrap; margin-top:10px; }
-.intentions-card { border-color:var(--gold); background:#fdf6e0; }
+/* Modular intentions (v338): the combined row — intention panel
+   FIRST at ~25%, hairline divider on its right, subordinate type in
+   the .meta tone, no gold, no nested card. */
+.intro-row .intention-panel { flex:0 0 25%; border-right:1px solid var(--line); padding-right:10px; font-size:14px; color:#6d6353; }
+.intention-label { font-size:13px; letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+.intention-text { line-height:1.4; margin-bottom:8px; }
+.playbtn.small { width:30px; height:30px; font-size:12px; }
 .chips { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px; }
 .chip { font-family:inherit; font-size:14px; padding:6px 11px; border-radius:20px; border:1px solid var(--line); background:#fff; cursor:pointer; }
 .chip.active { background:var(--navy); color:var(--cream); border-color:var(--navy); }
@@ -149,7 +155,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v337-1";
+var CACHE = "ora-pro-nobis-v338-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

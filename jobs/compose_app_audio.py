@@ -284,12 +284,20 @@ def presented_tracks(date: str):
 def main() -> int:
     args = sys.argv[1:]
     date = None
+    intros_only = False
     i = 0
     while i < len(args):
         if args[i] == "--date":
             date = args[i + 1]; i += 2
+        elif args[i] == "--intros-only":
+            # v338 §2.10(2): the segments dual-compose leg is
+            # skipped and the report field prints the intros-only
+            # shape (§2.10(4)). Default behavior (no flag) is the
+            # as-built dual-compose — the standing sheet keeps
+            # working until the Ship-time sheet switch lands.
+            intros_only = True; i += 1
         else:
-            raise SystemExit(f"unknown arg {args[i]!r} — usage: compose_app_audio.py [--date YYYY-MM-DD]")
+            raise SystemExit(f"unknown arg {args[i]!r} — usage: compose_app_audio.py [--date YYYY-MM-DD] [--intros-only]")
     if date is None:
         date = datetime.datetime.now(ZoneInfo("America/Chicago")).date().isoformat()
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
@@ -305,27 +313,30 @@ def main() -> int:
     draw = read_draw(date)
 
     # ---- (2) segments, dual-compose ----------------------------------
-    composition = {}
-    for attempt in range(RETRY_ATTEMPTS):
-        composition = read_composition(date)
-        if len(composition) == len(BLOCKS):
-            break
-        if attempt < RETRY_ATTEMPTS - 1:
-            time.sleep(RETRY_DELAY_S)
+    # v338 §2.10(2): under --intros-only this leg is skipped whole —
+    # no composition read, no segment renders, no segment pushes.
     segments_ok = 0
-    if len(composition) < len(BLOCKS):
-        missing.append(f"segments: composition missing for {date}")
-    else:
-        for block in BLOCKS:
-            f = tmp / f"segment-{block}.mp3"
-            try:
-                render(composition[block], f)
-                status, res = door.push_audio("current", block, str(f))
-                if status != 200 or not res.get("ok"):
-                    raise RuntimeError(f"push {status}: {res}")
-                segments_ok += 1
-            except Exception as exc:  # named, never substituted
-                missing.append(f"segment {block}: {exc}")
+    if not intros_only:
+        composition = {}
+        for attempt in range(RETRY_ATTEMPTS):
+            composition = read_composition(date)
+            if len(composition) == len(BLOCKS):
+                break
+            if attempt < RETRY_ATTEMPTS - 1:
+                time.sleep(RETRY_DELAY_S)
+        if len(composition) < len(BLOCKS):
+            missing.append(f"segments: composition missing for {date}")
+        else:
+            for block in BLOCKS:
+                f = tmp / f"segment-{block}.mp3"
+                try:
+                    render(composition[block], f)
+                    status, res = door.push_audio("current", block, str(f))
+                    if status != 200 or not res.get("ok"):
+                        raise RuntimeError(f"push {status}: {res}")
+                    segments_ok += 1
+                except Exception as exc:  # named, never substituted
+                    missing.append(f"segment {block}: {exc}")
 
     # ---- (3) intros ---------------------------------------------------
     own_ids, slot_ids, titles = presented_tracks(date)
@@ -364,6 +375,16 @@ def main() -> int:
     # ---- (4) the report field -----------------------------------------
     print(f"compose_app_audio: presented {date} · paired tracks {len(eligible)} · unpaired {unpaired}")
     missing_txt = ", ".join(missing) if missing else "none"
+    if intros_only:
+        # v338 §2.10(4): the field NAME stands; the shape is
+        # intros-only (no segments clause).
+        if missing:
+            print(f"Segments (v337): MISSING — intros {intros_ok}/{len(eligible)} for presented {date} · "
+                  f"missing: {missing_txt}")
+            return 1
+        print(f"Segments (v337): standing — intros {intros_ok}/{len(eligible)} for presented {date} · "
+              f"missing: none")
+        return 0
     if missing:
         print(f"Segments (v337): MISSING — segments {segments_ok}/6 for presented {date} · "
               f"intros {intros_ok}/{len(eligible)} for presented {date} · missing: {missing_txt}")

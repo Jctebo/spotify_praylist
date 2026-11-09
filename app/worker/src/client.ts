@@ -6,7 +6,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, dateLabel: '', pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [] };
+var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, dateLabel: '', pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null };
 
 /* ---------------- Playback speed (v336) ----------------
    One rate for the one audio element: a listener preference in
@@ -131,12 +131,6 @@ function playTrack(desc) {
   if (state.current && state.current.episodeId === desc.episodeId && !audioEl.paused) { audioEl.pause(); return; }
   state.queue = []; state.queueIdx = -1;
   startDesc(desc);
-}
-function play(url, btn) {
-  // Legacy single-play (the Intentions audio bar): a bare URL becomes
-  // a one-off descriptor outside any queue.
-  if (!url) return;
-  playTrack({ episodeId: 'url:' + url, title: 'Intentions', url: url, available: true });
 }
 function startQueue(descs) {
   if (!descs.length) return;
@@ -621,16 +615,11 @@ function renderIntentions() {
     var active = intentions.filter(function (i) { return i.status === 'active'; });
     var retired = intentions.filter(function (i) { return i.status !== 'active'; });
     var cnt = { H: 0, M: 0, L: 0 }; active.forEach(function (i) { cnt[i.priority] = (cnt[i.priority] || 0) + 1; });
-    var audioByBlock = {}; (day.blocks || []).forEach(function (b) { audioByBlock[b.block] = b.audio; });
-    var bar = (day.blocks || []).map(function (b) {
-      var a = audioByBlock[b.block];
-      if (a && a.available) return '<button class="chipbtn" data-play="' + esc(a.url) + '">' + esc(b.block) + ' &#9654;</button>';
-      return '<span class="chipbtn missing">' + esc(b.block) + ' — not yet</span>';
-    }).join('');
-    var missing = (day.audioMissing || []).length ? '<p class="notavail">Not yet generated: ' + esc((day.audioMissing || []).join(', ')) + '</p>' : '';
+    // v338 §2.9(3): the per-block segment audio bar retires with
+    // the payload's segment fields — the Intentions tab's
+    // item/intention listing below stands untouched (§2.9(2)).
     var html = '<h1 class="screen">Intentions</h1><p class="sub">the pool</p>';
     html += '<div class="stats"><div class="stat"><b>' + cnt.H + '</b><span>High</span></div><div class="stat"><b>' + cnt.M + '</b><span>Medium</span></div><div class="stat"><b>' + cnt.L + '</b><span>Low</span></div><div class="stat"><b>' + active.length + '</b><span>active</span></div></div>';
-    html += '<div class="card"><h3>Today&rsquo;s intentions — audio</h3><div class="audiobar">' + bar + '</div>' + missing + '<p class="meta" style="margin-top:8px">Generated nightly from the day&rsquo;s draw — one spoken intentions segment for each block.</p></div>';
     [['H', 'High · weight 4'], ['M', 'Medium · weight 2'], ['L', 'Low · weight 1']].forEach(function (g) {
       var rows = active.filter(function (i) { return i.priority === g[0]; });
       html += '<h2 style="color:var(--navy);font-weight:normal;letter-spacing:1px;font-size:16px;margin:16px 0 8px">' + g[1].toUpperCase() + '</h2>';
@@ -646,7 +635,6 @@ function renderIntentions() {
   }).catch(function (e) { view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
 }
 function wireIntentions(intentions) {
-  view.querySelectorAll('.audiobar [data-play]').forEach(function (b) { b.addEventListener('click', function () { play(b.getAttribute('data-play'), b); }); });
   var add = document.getElementById('new-add');
   if (add) add.addEventListener('click', function () {
     var text = document.getElementById('new-text').value.trim();
@@ -686,32 +674,77 @@ function trackDesc(t) {
   // seek bar see them on every family's descriptor alike.
   return { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0 };
 }
+function introDescFor(t, day) {
+  // v338 §2.3(1): the intro descriptor for a prayer track, from the
+  // payload's intros map. durationS 0 = not probed — Now Playing's
+  // seek reads the audio element's own duration; no duration is
+  // fabricated. hasText is never set: no Read control stands on an
+  // intro (§2.7(7)).
+  var intro = day && day.intros && t.episodeId ? day.intros[t.episodeId] : null;
+  if (!intro) return null;
+  return { episodeId: 'intro:' + t.episodeId, kind: 'intention', title: intro.title, url: intro.streamUrl, available: true, block: t._block || '', source: '', durationS: 0, intentionText: intro.text };
+}
+function expandDescs(t, day) {
+  // v338 §2.3(2)/(3): THE one expansion seam — both descriptor
+  // builds (renderPrayers' initial build and extRebuildDescs) emit
+  // prayer descriptors through here, and no other call site may
+  // emit one without it. An intro descriptor stands IMMEDIATELY
+  // before its prayer's descriptor iff the intros map carries the
+  // track AND the prayer's descriptor is available — an unavailable
+  // prayer takes its intro with it: no orphan intro ever speaks
+  // for an absent prayer (both families, one rule).
+  var d = trackDesc(t);
+  if (!d.available) return [d];
+  var intro = introDescFor(t, day);
+  return intro ? [intro, d] : [d];
+}
 function readButton(t, key) {
   // v318 T9: the Read control. A track with no text carries NO Read
   // control — the plain not-available line stands in its place
   // (readLine below), never a dead button.
   return '<div style="margin-top:6px"><button class="btn ghost small" data-read="' + esc(key) + '">Read</button></div>';
 }
+function intentionPanelHtml(t, intro) {
+  // v338 §2.7(2)/(3): the intention panel — FIRST in the combined
+  // row, subordinate by construction (meta tone, hairline divider,
+  // no card of its own, no gold). Contents: the Intention label,
+  // the intention TEXT (the very words the intro speaks), and the
+  // panel's OWN small play button (John's amendment — the intro is
+  // playable from its own panel), wired exactly as the standing
+  // card buttons through playTrack on the intro descriptor. No
+  // seek bar, no speed control, no Read control stand in the panel.
+  return '<div class="intention-panel"><div class="intention-label">Intention</div><div class="intention-text">' + esc(intro.text) + '</div><button class="playbtn small" data-playkey="intro:' + esc(t.episodeId) + '" aria-label="Play the intention">&#9654;</button></div>';
+}
 function trackCard(t) {
   var key = t.episodeId || ('seg:' + (t._block || ''));
-  if (t.intentionsCard) {
-    if (!t.available) return '<div class="card intentions-card" data-card="' + esc(key) + '"><h3>Intentions</h3><div class="notavail">Not available in the app yet — today&rsquo;s segment has not been generated.</div></div>';
-    return '<div class="card intentions-card" data-card="' + esc(key) + '"><div class="row"><button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>Intentions</h3><div class="meta">Plays here · segment file · generated nightly</div></div></div></div>';
-  }
+  // v338 §2.7(1)/(5): the combined row stands iff the payload's
+  // intros map carries this track AND the track is available —
+  // consulted UNIFORMLY by track id from the day payload in state,
+  // for both families (own tracks and external slots render through
+  // this one seam; extSwapCard's re-render takes the panel with the
+  // settled card). No intro standing → the plain standing card,
+  // byte-identical to the pre-v338 shape (§2.7(4)); an unavailable
+  // prayer renders its standing unavailable card, panel-free.
+  var intro = (t.available && t.episodeId && state.dayPayload && state.dayPayload.intros) ? (state.dayPayload.intros[t.episodeId] || null) : null;
+  var wrap = function (rowInner) {
+    return intro
+      ? '<div class="card intro-row" data-card="' + esc(key) + '"><div class="row">' + intentionPanelHtml(t, intro) + rowInner + '</div></div>'
+      : '<div class="card" data-card="' + esc(key) + '"><div class="row">' + rowInner + '</div></div>';
+  };
   if (t.kind === 'external') {
     // v324 §2.9: an external track names its source in the meta line
     // (D5); a miss stands as "Not available today". No Read control —
     // externals carry no text (the payload's hasText is false), and a
     // present external carries no not-available line.
     if (t.available) {
-      return '<div class="card" data-card="' + esc(key) + '"><div class="row"><button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">Plays here · ' + esc(t.source || '') + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div></div></div></div>';
+      return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">Plays here · ' + esc(t.source || '') + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div></div>');
     }
     return '<div class="card" data-card="' + esc(key) + '"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) : '') + '</div><div class="notavail">Not available today</div></div>';
   }
   if (t.available) {
-    return '<div class="card" data-card="' + esc(key) + '"><div class="row"><button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">Plays here · episode file' + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div>'
+    return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">Plays here · episode file' + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div>'
       + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '')
-      + (t.hasText && t.textUrl ? readButton(t, key) : '<div class="notavail">Not available in the app yet</div>') + '</div></div></div>';
+      + (t.hasText && t.textUrl ? readButton(t, key) : '<div class="notavail">Not available in the app yet</div>') + '</div>');
   }
   return '<div class="card" data-card="' + esc(key) + '"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) : '') + '</div><div class="notavail">Not available in the app yet</div>'
     + (t.hasText && t.textUrl ? readButton(t, key) : '')
@@ -1074,10 +1107,14 @@ function extSwapCard(slot) {
   tmp.innerHTML = st.state === 'downloading' ? extDownloadingCard(slot) : (st.state === 'loading' ? extPlaceholderCard(slot) : trackCard(extSlotTrack(slot, st)));
   var fresh = tmp.firstChild;
   old.replaceWith(fresh);
-  var btn = fresh.querySelector('[data-playkey]');
-  if (btn) btn.addEventListener('click', function () {
-    var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === slot.slotId; })[0];
-    if (d) playTrack(d);
+  // v338 §2.7(5): a settled slot card can carry TWO play buttons
+  // (the panel's intro button + the prayer's own) — wire each by
+  // its OWN data-playkey against the descriptor list.
+  fresh.querySelectorAll('[data-playkey]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b.getAttribute('data-playkey'); })[0];
+      if (d) playTrack(d);
+    });
   });
   if (state.current && state.current.episodeId === slot.slotId) markPlaying(slot.slotId);
 }
@@ -1103,10 +1140,13 @@ function extInsertCards(day, standing) {
       tmp.innerHTML = st && st.state === 'present' ? trackCard(extSlotTrack(slot, st)) : extPlaceholderCard(slot);
       var el = tmp.firstChild;
       view.insertBefore(el, anchor);
-      var btn = el.querySelector('[data-playkey]');
-      if (btn) btn.addEventListener('click', function () {
-        var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === slot.slotId; })[0];
-        if (d) playTrack(d);
+      // v338 §2.7(5): wire each play button by its own key (a
+      // combined-row card carries the panel's button too).
+      el.querySelectorAll('[data-playkey]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b.getAttribute('data-playkey'); })[0];
+          if (d) playTrack(d);
+        });
       });
     });
   });
@@ -1115,17 +1155,21 @@ function extRebuildDescs(day) {
   // The queue rule (§2.5): descriptors are built from what stands
   // resolved at tap time — own tracks in payload order, each
   // block's resolved externals after its own tracks.
+  // v338 §2.3(2)/(5): every descriptor flows through expandDescs —
+  // a slot's intro descriptor stands immediately before the slot's
+  // descriptor when the slot resolved present and its intro
+  // stands; an unresolved/missing slot emits NO intro.
   var descs = [];
   (day.blocks || []).forEach(function (b) {
-    (b.tracks || []).forEach(function (t) { descs.push(trackDesc(Object.assign({}, t, { _block: b.block }))); });
+    (b.tracks || []).forEach(function (t) { expandDescs(Object.assign({}, t, { _block: b.block }), day).forEach(function (d) { descs.push(d); }); });
     (state.extStanding || []).filter(function (s) { return s.block === b.block; })
       .sort(function (a, c) { return (a.sortOrder || 0) - (c.sortOrder || 0); })
       .forEach(function (slot) {
         var st = state.extSlots[slot.slotId];
-        if (st) descs.push(trackDesc(extSlotTrack(slot, st)));
+        if (st) expandDescs(extSlotTrack(slot, st), day).forEach(function (d) { descs.push(d); });
       });
   });
-  (day.episodes || []).forEach(function (t) { descs.push(trackDesc(t)); });
+  (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { descs.push(d); }); });
   state.dayDescs = descs;
   return descs;
 }
@@ -1373,13 +1417,17 @@ function renderPrayers() {
   api('/api/player/day').then(function (day) {
     state.storedDay = day.storedDay || day.date || null;
     state.dateLabel = day.dateLabel || '';
+    // v338 §2.7(5): trackCard consults the day payload's intros map
+    // from state, uniformly for both families.
+    state.dayPayload = day;
     // The whole-day queue, built once from payload order: block order,
     // then push order inside the block, then the unblocked group.
+    // v338 §2.3(2): through the expandDescs seam, like every build.
     var allDescs = [];
     (day.blocks || []).forEach(function (b) {
-      (b.tracks || []).forEach(function (t) { var tt = Object.assign({}, t, { _block: b.block }); allDescs.push(trackDesc(tt)); });
+      (b.tracks || []).forEach(function (t) { var tt = Object.assign({}, t, { _block: b.block }); expandDescs(tt, day).forEach(function (d) { allDescs.push(d); }); });
     });
-    (day.episodes || []).forEach(function (t) { allDescs.push(trackDesc(t)); });
+    (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { allDescs.push(d); }); });
     // v318 T9: the Read view's lookup — payload tracks by episode id,
     // and the day's descriptors for its play/pause control.
     state.dayDescs = allDescs;
