@@ -1,0 +1,191 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<rss xmlns:ns0="http://www.w3.org/2005/Atom" xmlns:ns1="http://purl.org/rss/1.0/modules/syndication/" xmlns:ns2="http://www.itunes.com/dtds/podcast-1.0.dtd" xmlns:ns3="https://podcastindex.org/namespace/1.0" xmlns:ns4="https://blubrry.com/developer/rawvoice-rss/" version="2.0"><channel><title>Divine Office – Liturgy of the Hours of the Roman Catholic Church (Breviary)</title>
+	<ns0:link href="https://divineoffice.org/feed/podcast/" rel="self" type="application/rss+xml" />
+	<link>https://divineoffice.org</link>
+	<description>Daily scripture readings, psalms, and prayers that follow in the ancient traditions of the Church. Follow along using the session outlines at DivineOffice.org or by using the Divine Office iPhone, iPod, iPad app or Android app. From ancient times the Church has had the custom of celebrating each day the liturgy of the hours. In this way the Church fulfills the Lord’s precept to pray without ceasing, at once offering praise to God the Father and interceding for the salvation of the world. For this expressed purpose, the recordings of the Hours presented here are intended to expand awareness of this Liturgy, introduce and practice the structure of this prayer, and to assist in the recitation of the Liturgy in small groups, domestic prayer and where common celebration is not possible.</description>
+	<lastBuildDate>Mon, 09 Nov 2026 01:11:14 +0000</lastBuildDate>
+	<language>en</language>
+	<ns1:updatePeriod>hourly</ns1:updatePeriod>
+	<ns1:updateFrequency>1</ns1:updateFrequency>
+		<generator>https://wordpress.org/?v=7.1.4</generator>
+	<ns0:link rel="hub" href="https://pubsubhubbub.appspot.com/" />
+	<ns2:author>Divine Office (DivineOffice.org)</ns2:author>
+	<ns2:explicit>false</ns2:explicit>
+	<ns2:image href="https://divineoffice.org/wp-content/uploads/divine_audio_logo_2014.png" />
+	<ns2:type>serial</ns2:type>
+	<ns2:owner>
+		<ns2:name>Divine Office (DivineOffice.org)</ns2:name>
+		<ns2:email>admin@divineoffice.org</ns2:email>
+	</ns2:owner>
+	<copyright>Copyright 2006-2025, Surgeworks</copyright>
+	<ns3:license>Copyright 2006-2025, Surgeworks</ns3:license>
+	<ns3:medium>podcast</ns3:medium>
+	<image>
+		<title>Divine Office – Liturgy of the Hours of the Roman Catholic Church (Breviary)</title>
+		<url>https://divineoffice.org/wp-content/uploads/divine_audio_logo_2014.png</url>
+		<link>https://divineoffice.org</link>
+	</image>
+	<ns2:category text="Religion &amp; Spirituality">
+		<ns2:category text="Christianity" />
+	</ns2:category>
+	<ns2:category text="Religion &amp; Spirituality" />
+	<ns2:category text="Religion &amp; Spirituality">
+		<ns2:category text="Spirituality" />
+	</ns2:category>
+	<ns4:rating>TV-G</ns4:rating>
+	<ns4:donate href="https://divineoffice.org/contribute/" />
+	<ns3:funding url="https://divineoffice.org/contribute/" />
+	<ns3:podping usesPodping="true" />
+	<ns3:guid>8c644073-decc-5e64-a9b7-14b240a764c8</ns3:guid>
+	<ns4:subscribe feed="https://divineoffice.org/feed/podcast/" itunes="https://itunes.apple.com/us/podcast/divine-office-liturgy-hours/id294319197?mt=2" spotify="https://open.spotify.com/show/70ydTdzunoqWAsvutFIkHM" />
+	<item>
+		<title>November 7th, 2026 – Vespers with the Dominicans: All Saints at San Esteban  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/vespers-with-the-dominicans-all-saints-at-san-esteban/?prayer=Announce&amp;date=20261107&amp;episode=202611071</link>
+		<pubDate>Sat, 07 Nov 2026 22:34:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/vespers-with-the-dominicans-all-saints-at-san-esteban/?prayer=Announce&amp;date=20261107&amp;episode=202611071</guid>
+		</item>
+	<item>
+		<title>November 7th, 2026 – This Week: All Saints, All Souls and Saint Charles Borromeo  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/this-week-all-saints-all-souls-and-saint-charles-borromeo/?prayer=Announce&amp;date=20261107&amp;episode=202611072</link>
+		<pubDate>Sat, 07 Nov 2026 22:24:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/this-week-all-saints-all-souls-and-saint-charles-borromeo/?prayer=Announce&amp;date=20261107&amp;episode=202611072</guid>
+		</item>
+	<item>
+		<title>November 7th, 2026 – Evening Prayer I  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/ord-w32-sun-ep1/?prayer=EveningPrayer&amp;date=20261107&amp;episode=202611079</link>
+		<pubDate>Sat, 07 Nov 2026 21:14:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/ord-w32-sun-ep1/?prayer=EveningPrayer&amp;date=20261107&amp;episode=202611079</guid>
+		<enclosure url="https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-ep1.mp3?prayer=EveningPrayer&amp;date=20261107&amp;episode=202611079" length="13363041" type="audio/mpeg" />
+<ns2:duration>19:27</ns2:duration>
+	</item>
+	<item>
+		<title>November 7th, 2026 – Second Edition Update: Digital Licensing Opens in 2027  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261107&amp;episode=2026110711</link>
+		<pubDate>Sat, 07 Nov 2026 20:54:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261107&amp;episode=2026110711</guid>
+		</item>
+	<item>
+		<title>November 8th, 2026 – This Week: The Lateran Basilica, Saint Leo, Saint Martin and Saint Frances Cabrini  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/this-week-the-lateran-basilica-saint-leo-saint-martin-and-saint-frances-cabrini/?prayer=Announce&amp;date=20261108&amp;episode=202611081</link>
+		<pubDate>Sat, 07 Nov 2026 20:44:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/this-week-the-lateran-basilica-saint-leo-saint-martin-and-saint-frances-cabrini/?prayer=Announce&amp;date=20261108&amp;episode=202611081</guid>
+		</item>
+	<item>
+		<title>November 8th, 2026 – Invitatory  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/ip-ord-w02-w04-sun/?prayer=Invitatory&amp;date=20261108&amp;episode=202611082</link>
+		<pubDate>Sat, 07 Nov 2026 20:34:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/ip-ord-w02-w04-sun/?prayer=Invitatory&amp;date=20261108&amp;episode=202611082</guid>
+		<enclosure url="https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ip-ord-w02-w04-sun.mp3?prayer=Invitatory&amp;date=20261108&amp;episode=202611082" length="4270940" type="audio/mpeg" />
+<ns2:duration>4:56</ns2:duration>
+	</item>
+	<item>
+		<title>November 8th, 2026 – Office of Readings  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/ord-w32-sun-or/?prayer=OfficeOfReadings&amp;date=20261108&amp;episode=202611083</link>
+		<pubDate>Sat, 07 Nov 2026 20:24:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/ord-w32-sun-or/?prayer=OfficeOfReadings&amp;date=20261108&amp;episode=202611083</guid>
+		<enclosure url="https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-or.mp3?prayer=OfficeOfReadings&amp;date=20261108&amp;episode=202611083" length="37640477" type="audio/mpeg" />
+<ns2:duration>29:57</ns2:duration>
+	</item>
+	<item>
+		<title>November 8th, 2026 – Morning Prayer  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/ord-w32-sun-mp/?prayer=MorningPrayer&amp;date=20261108&amp;episode=202611084</link>
+		<pubDate>Sat, 07 Nov 2026 20:14:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/ord-w32-sun-mp/?prayer=MorningPrayer&amp;date=20261108&amp;episode=202611084</guid>
+		<enclosure url="https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-mp.mp3?prayer=MorningPrayer&amp;date=20261108&amp;episode=202611084" length="28358685" type="audio/mpeg" />
+<ns2:duration>23:38</ns2:duration>
+	</item>
+	<item>
+		<title>November 8th, 2026 – Midmorning Prayer  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/ord-w32-sun-dp1-comp/?prayer=MidmorningPrayer&amp;date=20261108&amp;episode=202611085</link>
+		<pubDate>Sat, 07 Nov 2026 20:04:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/ord-w32-sun-dp1-comp/?prayer=MidmorningPrayer&amp;date=20261108&amp;episode=202611085</guid>
+		<enclosure url="https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-dp1.mp3?prayer=MidmorningPrayer&amp;date=20261108&amp;episode=202611085" length="11299324" type="audio/mpeg" />
+<ns2:duration>8:00</ns2:duration>
+	</item>
+	<item>
+		<title>November 8th, 2026 – Midday Prayer  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/ord-w32-sun-dp2-current/?prayer=MiddayPrayer&amp;date=20261108&amp;episode=202611086</link>
+		<pubDate>Sat, 07 Nov 2026 19:54:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/ord-w32-sun-dp2-current/?prayer=MiddayPrayer&amp;date=20261108&amp;episode=202611086</guid>
+		<enclosure url="https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-dp2.mp3?prayer=MiddayPrayer&amp;date=20261108&amp;episode=202611086" length="14208104" type="audio/mpeg" />
+<ns2:duration>10:26</ns2:duration>
+	</item>
+	<item>
+		<title>November 8th, 2026 – Midafternoon Prayer  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/ord-w32-sun-dp3-comp/?prayer=MidafternoonPrayer&amp;date=20261108&amp;episode=202611087</link>
+		<pubDate>Sat, 07 Nov 2026 19:44:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/ord-w32-sun-dp3-comp/?prayer=MidafternoonPrayer&amp;date=20261108&amp;episode=202611087</guid>
+		<enclosure url="https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-dp3.mp3?prayer=MidafternoonPrayer&amp;date=20261108&amp;episode=202611087" length="11928353" type="audio/mpeg" />
+<ns2:duration>8:32</ns2:duration>
+	</item>
+	<item>
+		<title>November 8th, 2026 – Evening Prayer II  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/ord-w32-sun-ep2/?prayer=EveningPrayer&amp;date=20261108&amp;episode=202611088</link>
+		<pubDate>Sat, 07 Nov 2026 19:34:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/ord-w32-sun-ep2/?prayer=EveningPrayer&amp;date=20261108&amp;episode=202611088</guid>
+		<enclosure url="https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-w32-sun-ep2.mp3?prayer=EveningPrayer&amp;date=20261108&amp;episode=202611088" length="25898474" type="audio/mpeg" />
+<ns2:duration>21:35</ns2:duration>
+	</item>
+	<item>
+		<title>November 8th, 2026 – Night Prayer  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/ord-sun-np2-w2-w4/?prayer=NightPrayer&amp;date=20261108&amp;episode=202611089</link>
+		<pubDate>Sat, 07 Nov 2026 19:24:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/ord-sun-np2-w2-w4/?prayer=NightPrayer&amp;date=20261108&amp;episode=202611089</guid>
+		<enclosure url="https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ord-sun-np2.w2-w4.mp3?prayer=NightPrayer&amp;date=20261108&amp;episode=202611089" length="8806504" type="audio/mpeg" />
+<ns2:duration>11:51</ns2:duration>
+	</item>
+	<item>
+		<title>November 8th, 2026 – Second Edition Update: Digital Licensing Opens in 2027  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261108&amp;episode=2026110810</link>
+		<pubDate>Sat, 07 Nov 2026 19:14:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261108&amp;episode=2026110810</guid>
+		</item>
+	<item>
+		<title>November 9th, 2026 – Second Edition Update: Digital Licensing Opens in 2027  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261109&amp;episode=2026110911</link>
+		<pubDate>Sat, 07 Nov 2026 17:24:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261109&amp;episode=2026110911</guid>
+		</item>
+	<item>
+		<title>November 10th, 2026 – Second Edition Update: Digital Licensing Opens in 2027  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261110&amp;episode=2026111011</link>
+		<pubDate>Sat, 07 Nov 2026 15:34:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261110&amp;episode=2026111011</guid>
+		</item>
+	<item>
+		<title>November 11th, 2026 – Second Edition Update: Digital Licensing Opens in 2027  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261111&amp;episode=2026111111</link>
+		<pubDate>Sat, 07 Nov 2026 13:44:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261111&amp;episode=2026111111</guid>
+		</item>
+	<item>
+		<title>November 12th, 2026 – Second Edition Update: Digital Licensing Opens in 2027  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261112&amp;episode=2026111211</link>
+		<pubDate>Sat, 07 Nov 2026 11:54:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261112&amp;episode=2026111211</guid>
+		</item>
+	<item>
+		<title>November 13th, 2026 – Second Edition Update: Digital Licensing Opens in 2027  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261113&amp;episode=2026111311</link>
+		<pubDate>Sat, 07 Nov 2026 10:04:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261113&amp;episode=2026111311</guid>
+		</item>
+	<item>
+		<title>November 14th, 2026 – Second Edition Update: Digital Licensing Opens in 2027  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261114&amp;episode=2026111410</link>
+		<pubDate>Sat, 07 Nov 2026 08:24:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261114&amp;episode=2026111410</guid>
+		</item>
+	<item>
+		<title>November 15th, 2026 – Second Edition Update: Digital Licensing Opens in 2027  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261115&amp;episode=202611159</link>
+		<pubDate>Sat, 07 Nov 2026 06:54:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261115&amp;episode=202611159</guid>
+		</item>
+	<item>
+		<title>November 16th, 2026 – Second Edition Update: Digital Licensing Opens in 2027  – Divine Office: Liturgy of the Hours</title>
+		<link>https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261116&amp;episode=2026111610</link>
+		<pubDate>Sat, 07 Nov 2026 05:14:14 +0000</pubDate>
+		<guid isPermaLink="false">https://divineoffice.org/loth-second-edition-what-we-know-so-far/?prayer=Other&amp;date=20261116&amp;episode=2026111610</guid>
+		</item>
+	</channel></rss>

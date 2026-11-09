@@ -434,6 +434,16 @@ function trackCard(t) {
     if (!t.available) return '<div class="card intentions-card" data-card="' + esc(key) + '"><h3>Intentions</h3><div class="notavail">Not available in the app yet — today&rsquo;s segment has not been generated.</div></div>';
     return '<div class="card intentions-card" data-card="' + esc(key) + '"><div class="row"><button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>Intentions</h3><div class="meta">Plays here · segment file · generated nightly</div></div></div></div>';
   }
+  if (t.kind === 'external') {
+    // v324 §2.9: an external track names its source in the meta line
+    // (D5); a miss stands as "Not available today". No Read control —
+    // externals carry no text (the payload's hasText is false), and a
+    // present external carries no not-available line.
+    if (t.available) {
+      return '<div class="card" data-card="' + esc(key) + '"><div class="row"><button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">Plays here · ' + esc(t.source || '') + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div></div></div></div>';
+    }
+    return '<div class="card" data-card="' + esc(key) + '"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) : '') + '</div><div class="notavail">Not available today</div></div>';
+  }
   if (t.available) {
     return '<div class="card" data-card="' + esc(key) + '"><div class="row"><button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">Plays here · episode file' + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div>'
       + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '')
