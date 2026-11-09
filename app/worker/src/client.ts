@@ -6,7 +6,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', playerDate: null, examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1 };
+var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, dateLabel: '', pendingResume: null };
 
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function todayChicago() {
@@ -14,7 +14,6 @@ function todayChicago() {
   var p = {}; parts.forEach(function (x) { p[x.type] = x.value; });
   return p.year + '-' + p.month + '-' + p.day;
 }
-function shiftDate(date, days) { var d = new Date(date + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + days); return d.toISOString().slice(0, 10); }
 function api(path, opts) {
   return fetch(path, opts || {}).then(function (r) {
     return r.json().catch(function () { return {}; }).then(function (j) {
@@ -24,32 +23,158 @@ function api(path, opts) {
   });
 }
 function post(path, body) { return api(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }); }
-function play(url, btn) {
-  if (!url) return;
-  if (state.playingUrl === url && !audioEl.paused) { audioEl.pause(); markPlaying(null); return; }
-  state.playingUrl = url; state.queue = []; state.queueIdx = -1;
-  audioEl.src = url; audioEl.play().catch(function () {}); markPlaying(url);
-}
-function playQueue(urls, btn) {
-  if (!urls.length) return;
-  if (state.queue.length && state.queueIdx >= 0 && !audioEl.paused) { audioEl.pause(); markPlaying(null); state.queue = []; return; }
-  state.queue = urls.slice(); state.queueIdx = 0;
-  state.playingUrl = urls[0]; audioEl.src = urls[0]; audioEl.play().catch(function () {}); markPlaying(urls[0]);
-}
-function markPlaying(url) {
-  document.querySelectorAll('[data-play]').forEach(function (b) {
-    var on = url && b.getAttribute('data-play') === url;
-    b.classList.toggle('playing', !!on);
+/* ---------------- Playback engine (v312 E5/E6) ----------------
+   One queue builder serves both Play All shapes. A descriptor is
+   {episodeId, title, url, available}; the queue holds ALL descriptors
+   in payload order, missing ones included — a missing descriptor is
+   passed over only at the moment the queue reaches it, and its card
+   (with its not-available line) is flashed as the reason. Queue and
+   audio state live in this shell scope; no render resets them, so
+   switching tabs never stops or resets playback. */
+function fmtDur(s) { s = Math.max(0, Math.round(Number(s) || 0)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); }
+function markPlaying(id) {
+  document.querySelectorAll('[data-playkey]').forEach(function (b) {
+    var on = !!id && b.getAttribute('data-playkey') === id;
+    b.classList.toggle('playing', on);
     if (b.classList.contains('playbtn')) b.innerHTML = on ? '&#10073;&#10073;' : '&#9654;';
   });
+  state.playingUrl = state.current ? state.current.url : null;
 }
-audioEl.addEventListener('ended', function () {
-  if (state.queue.length && state.queueIdx + 1 < state.queue.length) {
-    state.queueIdx++; state.playingUrl = state.queue[state.queueIdx];
-    audioEl.src = state.playingUrl; audioEl.play().catch(function () {}); markPlaying(state.playingUrl);
-  } else { state.queue = []; state.queueIdx = -1; markPlaying(null); }
+function markSkipped(id) {
+  var card = document.querySelector('[data-card="' + id + '"]');
+  if (!card) return;
+  card.style.outline = '2px solid #8a4b2a';
+  setTimeout(function () { card.style.outline = ''; }, 2400);
+}
+function saveResume() {
+  if (!state.current || !state.storedDay) return;
+  try {
+    localStorage.setItem('opn-resume-v312', JSON.stringify({
+      date: state.storedDay, episodeId: state.current.episodeId,
+      positionS: audioEl.currentTime || 0, savedAt: new Date().toISOString(),
+    }));
+  } catch (e) {}
+}
+function readResume() {
+  try { return JSON.parse(localStorage.getItem('opn-resume-v312') || 'null'); } catch (e) { return null; }
+}
+function setMediaSessionFor(desc) {
+  if (!('mediaSession' in navigator)) return;
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: desc.title, artist: 'Ora Pro Nobis',
+      album: 'Ora Pro Nobis — ' + (state.dateLabel || state.storedDay || ''),
+      artwork: [{ src: '/logo.png', sizes: '288x288', type: 'image/png' }],
+    });
+  } catch (e) {}
+}
+function updatePositionState() {
+  if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
+  var d = audioEl.duration;
+  if (!isFinite(d) || d <= 0) return;
+  try {
+    navigator.mediaSession.setPositionState({ duration: d, playbackRate: audioEl.playbackRate || 1, position: Math.min(audioEl.currentTime || 0, d) });
+  } catch (e) {}
+}
+function startDesc(desc) {
+  state.current = desc;
+  setMediaSessionFor(desc);
+  audioEl.src = desc.url;
+  audioEl.play().catch(function () {});
+  markPlaying(desc.episodeId);
+}
+function playTrack(desc) {
+  if (!desc || !desc.available || !desc.url) return;
+  if (state.current && state.current.episodeId === desc.episodeId && !audioEl.paused) { audioEl.pause(); return; }
+  state.queue = []; state.queueIdx = -1;
+  startDesc(desc);
+}
+function play(url, btn) {
+  // Legacy single-play (the Intentions audio bar): a bare URL becomes
+  // a one-off descriptor outside any queue.
+  if (!url) return;
+  playTrack({ episodeId: 'url:' + url, title: 'Intentions', url: url, available: true });
+}
+function startQueue(descs) {
+  if (!descs.length) return;
+  if (state.queue.length && state.queueIdx >= 0 && state.current && !audioEl.paused) { audioEl.pause(); return; }
+  state.queue = descs.slice();
+  var idx = -1;
+  for (var i = 0; i < state.queue.length; i++) {
+    if (!state.queue[i].available) { markSkipped(state.queue[i].episodeId); continue; }
+    idx = i; break;
+  }
+  if (idx < 0) { state.queue = []; state.queueIdx = -1; return; }
+  state.queueIdx = idx;
+  startDesc(state.queue[idx]);
+}
+function advanceQueue(dir) {
+  if (!state.queue.length) return false;
+  var i = state.queueIdx + dir;
+  while (i >= 0 && i < state.queue.length) {
+    var d = state.queue[i];
+    if (!d.available) { if (dir > 0) markSkipped(d.episodeId); i += dir; continue; }
+    state.queueIdx = i;
+    startDesc(d);
+    return true;
+  }
+  if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; markPlaying(null); updatePositionState(); }
+  return false;
+}
+function loadResume(desc, positionS) {
+  state.queue = []; state.queueIdx = -1;
+  state.current = desc;
+  setMediaSessionFor(desc);
+  state.pendingResume = { episodeId: desc.episodeId, positionS: positionS };
+  audioEl.src = desc.url;
+  audioEl.load(); // preload="none": an explicit load is what brings metadata (and the pending position) in
+  markPlaying(desc.episodeId);
+  // Stands paused at the position (set on loadedmetadata); the app
+  // never autoplays sound on open.
+}
+audioEl.addEventListener('loadedmetadata', function () {
+  if (state.pendingResume && state.current && state.pendingResume.episodeId === state.current.episodeId) {
+    try { audioEl.currentTime = state.pendingResume.positionS || 0; } catch (e) {}
+    state.pendingResume = null;
+  }
+  updatePositionState();
 });
-audioEl.addEventListener('pause', function () { if (!state.queue.length) markPlaying(null); });
+audioEl.addEventListener('ended', function () {
+  if (state.queue.length) { advanceQueue(1); return; }
+  state.current = null; markPlaying(null);
+});
+audioEl.addEventListener('pause', function () { saveResume(); if (!state.queue.length) markPlaying(state.current ? state.current.episodeId : null); });
+var lastResumeSave = 0;
+audioEl.addEventListener('timeupdate', function () {
+  updatePositionState();
+  var now = Date.now();
+  if (now - lastResumeSave > 5000) { lastResumeSave = now; saveResume(); }
+});
+audioEl.addEventListener('seeked', updatePositionState);
+function setupMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  var handlers = {
+    play: function () { audioEl.play().catch(function () {}); },
+    pause: function () { audioEl.pause(); },
+    previoustrack: function () { if (state.queue.length) advanceQueue(-1); },
+    nexttrack: function () { if (state.queue.length) advanceQueue(1); },
+    seekto: function (details) {
+      if (details.seekTime == null) return;
+      if (details.fastSeek && typeof audioEl.fastSeek === 'function') audioEl.fastSeek(details.seekTime);
+      else audioEl.currentTime = details.seekTime;
+    },
+    seekforward: function (details) { audioEl.currentTime = Math.min((audioEl.duration || 0), (audioEl.currentTime || 0) + ((details && details.seekOffset) || 10)); },
+    seekbackward: function (details) { audioEl.currentTime = Math.max(0, (audioEl.currentTime || 0) - ((details && details.seekOffset) || 10)); },
+  };
+  Object.keys(handlers).forEach(function (a) {
+    try { navigator.mediaSession.setActionHandler(a, handlers[a]); } catch (e) {}
+  });
+  // Harness hook (E9 check 8): Media Session handlers are not readable
+  // back from navigator.mediaSession, so the registered handler table
+  // is exposed for the gate's agent-side evidence. John's phone check
+  // at Review remains the binding criterion.
+  window.__opnMediaHandlers = handlers;
+}
 
 function setTab(tab) {
   state.tab = tab;
@@ -139,52 +264,84 @@ function openIntentionEditor(it) {
 }
 
 /* ---------------- Prayers (the player) ---------------- */
+function trackDesc(t) {
+  return { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, available: !!t.available };
+}
 function trackCard(t) {
-  var inner = '';
+  var key = t.episodeId || ('seg:' + (t._block || ''));
   if (t.intentionsCard) {
-    inner = '<div class="card intentions-card"><div class="row"><button class="playbtn" data-play="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>Intentions</h3><div class="meta">Plays here · segment file · generated nightly</div></div></div></div>';
-    if (!t.available) inner = '<div class="card intentions-card"><h3>Intentions</h3><div class="notavail">Not available in the app yet — today&rsquo;s segment has not been generated.</div></div>';
-    return inner;
+    if (!t.available) return '<div class="card intentions-card" data-card="' + esc(key) + '"><h3>Intentions</h3><div class="notavail">Not available in the app yet — today&rsquo;s segment has not been generated.</div></div>';
+    return '<div class="card intentions-card" data-card="' + esc(key) + '"><div class="row"><button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>Intentions</h3><div class="meta">Plays here · segment file · generated nightly</div></div></div></div>';
   }
   if (t.available) {
-    inner = '<div class="card"><div class="row"><button class="playbtn" data-play="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">Plays here · ' + (t.kind === 'rss' ? 'podcast RSS' : 'segment file') + '</div>'
+    return '<div class="card" data-card="' + esc(key) + '"><div class="row"><button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">Plays here · episode file' + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div>'
       + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '') + '</div></div></div>';
-  } else {
-    inner = '<div class="card"><h3>' + esc(t.title) + '</h3><div class="notavail">Not available in the app yet.</div>'
-      + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '') + '</div>';
   }
-  return inner;
+  return '<div class="card" data-card="' + esc(key) + '"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) : '') + '</div><div class="notavail">Not available in the app yet</div>'
+    + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '') + '</div>';
 }
 function renderPrayers() {
-  var date = state.playerDate || todayChicago();
-  state.playerDate = date;
   view.innerHTML = '<h1 class="screen">Listen</h1><p class="sub">the day&rsquo;s prayers</p><p class="meta">Loading...</p>';
-  api('/api/player/day?date=' + date).then(function (day) {
-    var html = '<h1 class="screen">Listen</h1><p class="sub">the day&rsquo;s prayers</p>';
-    html += '<div class="daynav"><button class="btn ghost" id="d-prev">&#8249;</button><div class="dlabel">' + (date === todayChicago() ? 'Today — ' : '') + esc(day.dateLabel || date) + '</div><button class="btn ghost" id="d-next">&#8250;</button></div>';
-    html += '<div class="row"><span class="meta grow">filter by day</span><input type="date" id="d-pick" value="' + date + '" style="width:auto"></div>';
+  api('/api/player/day').then(function (day) {
+    state.storedDay = day.storedDay || day.date || null;
+    state.dateLabel = day.dateLabel || '';
+    // The whole-day queue, built once from payload order: block order,
+    // then push order inside the block, then the unblocked group.
+    var allDescs = [];
+    (day.blocks || []).forEach(function (b) {
+      (b.tracks || []).forEach(function (t) { var tt = Object.assign({}, t, { _block: b.block }); allDescs.push(trackDesc(tt)); });
+    });
+    (day.episodes || []).forEach(function (t) { allDescs.push(trackDesc(t)); });
+    var resumeRec = readResume();
+    if (resumeRec && resumeRec.date !== state.storedDay) {
+      try { localStorage.removeItem('opn-resume-v312'); } catch (e) {}
+      resumeRec = null;
+    }
+    var resumeDesc = resumeRec ? allDescs.filter(function (d) { return d.episodeId === resumeRec.episodeId && d.available; })[0] : null;
+    var html = '<h1 class="screen">Listen</h1><p class="sub">' + esc(day.dateLabel || 'the day&rsquo;s prayers') + '</p>';
+    html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span></div>';
+    if (resumeDesc) {
+      html += '<div class="card"><div class="row"><div class="grow"><h3>Resume</h3><div class="meta">' + esc(resumeDesc.title) + ' · at ' + fmtDur(resumeRec.positionS) + '</div></div><button class="btn ghost small" id="resume-btn">Resume</button></div></div>';
+    }
+    (day.blocks || []).forEach(function (b) {
+      html += '<div class="blockhead"><h2>' + esc((b.label || b.block).toUpperCase()) + '</h2><span class="meta grow">' + esc(b.caption || '') + ' · ' + (b.trackCount != null ? b.trackCount : (b.tracks || []).length) + ' tracks</span>'
+        + (b.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(b.spotifyUrl) + '">Open in Spotify</a>' : '')
+        + '<button class="playbtn" data-queue="' + esc(b.block) + '">&#9654;</button></div>';
+      html += (b.tracks || []).map(function (t) { return trackCard(Object.assign({}, t, { _block: b.block })); }).join('');
+    });
     if ((day.episodes || []).length) {
       html += '<h2 style="color:var(--navy);font-weight:normal;letter-spacing:1px;font-size:16px;margin:16px 0 8px">FROM TODAY&rsquo;S PODCAST</h2>';
       html += day.episodes.map(trackCard).join('');
     }
-    (day.blocks || []).forEach(function (b) {
-      html += '<div class="blockhead"><h2>' + esc((b.label || b.block).toUpperCase()) + '</h2><span class="meta grow">' + esc(b.caption || '') + '</span>'
-        + (b.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(b.spotifyUrl) + '">Open in Spotify</a>' : '')
-        + '<button class="playbtn" data-queue="' + esc(b.block) + '">&#9654;</button></div>';
-      html += (b.tracks || []).map(trackCard).join('');
-    });
     view.innerHTML = html;
-    document.getElementById('d-prev').addEventListener('click', function () { state.playerDate = shiftDate(date, -1); renderPrayers(); });
-    document.getElementById('d-next').addEventListener('click', function () { state.playerDate = shiftDate(date, 1); renderPrayers(); });
-    document.getElementById('d-pick').addEventListener('change', function (e) { state.playerDate = e.target.value; renderPrayers(); });
-    view.querySelectorAll('[data-play]').forEach(function (btn) { btn.addEventListener('click', function () { play(btn.getAttribute('data-play'), btn); }); });
+    document.getElementById('play-all').addEventListener('click', function () { startQueue(allDescs); });
+    var rb = document.getElementById('resume-btn');
+    if (rb && resumeDesc) rb.addEventListener('click', function () { loadResume(resumeDesc, resumeRec.positionS || 0); });
+    if (resumeDesc) {
+      var card = view.querySelector('[data-card="' + resumeDesc.episodeId + '"] .grow');
+      // The matching card itself carries the Resume affordance (E5).
+      var host = view.querySelector('[data-card="' + resumeDesc.episodeId + '"]');
+      if (host) {
+        var btn = document.createElement('button');
+        btn.className = 'btn ghost small'; btn.textContent = 'Resume at ' + fmtDur(resumeRec.positionS);
+        btn.addEventListener('click', function () { loadResume(resumeDesc, resumeRec.positionS || 0); });
+        host.appendChild(btn);
+      }
+    }
+    view.querySelectorAll('[data-playkey]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var d = allDescs.filter(function (x) { return x.episodeId === btn.getAttribute('data-playkey'); })[0];
+        if (d) playTrack(d);
+      });
+    });
     view.querySelectorAll('[data-queue]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var b = (day.blocks || []).filter(function (x) { return x.block === btn.getAttribute('data-queue'); })[0];
-        var urls = (b.tracks || []).filter(function (t) { return t.available && t.streamUrl; }).map(function (t) { return t.streamUrl; });
-        playQueue(urls, btn);
+        var descs = (b.tracks || []).map(function (t) { return trackDesc(Object.assign({}, t, { _block: b.block })); });
+        startQueue(descs);
       });
     });
+    if (state.current) markPlaying(state.current.episodeId);
   }).catch(function (e) { view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
 }
 
@@ -348,6 +505,7 @@ function openGuideEditor(guide) {
   });
 }
 
-setTab('intentions');
+setupMediaSession();
+setTab('prayers');
 if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js').catch(function () {}); }
 `;
