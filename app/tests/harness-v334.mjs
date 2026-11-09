@@ -301,10 +301,19 @@ try {
     for (const [k, v] of Object.entries(window.state.extSlots || {})) out[k] = { state: v.state, source: v.source, enclosureUrl: v.enclosureUrl || null };
     return out;
   });
-  const waitExt = (page, pred, ms = 25000) => page.waitForFunction((p) => {
-    const slots = window.state.extSlots || {};
-    return p(Object.fromEntries(Object.entries(slots).map(([k, v]) => [k, v.state])));
-  }, pred, { timeout: ms }).catch(() => false);
+  const waitExt = async (page, pred, ms = 30000) => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < ms) {
+      const s = await page.evaluate(() => {
+        const o = {};
+        for (const [k, v] of Object.entries(window.state.extSlots || {})) o[k] = v.state;
+        return o;
+      }).catch(() => ({}));
+      if (pred(s)) return true;
+      await sleep(400);
+    }
+    return false;
+  };
 
   // ---- context A: the full fixture day (legs 1, 3, 6, 11) ----
   const ctxA = await browser.newContext();
@@ -317,9 +326,9 @@ try {
     }).catch((e) => { window.__fetchLog.push([String(u).slice(0, 80), "ERR:" + e.message]); throw e; });
   });
   const { page: pageA, errors: errorsA } = await openPrayers(ctxA);
-  const settledA = await waitExt(pageA, (s) => SLOT_ORDER.every((id) => s[id] === "present" || s[id] === "missing"));
+  const settledA = await waitExt(pageA, (s) => SLOT_ORDER.every((id) => s[id] === "present" || s[id] === "missing"), 60000);
   const stateA = await extState(pageA);
-  if (!SLOT_ORDER.every((id) => { const o = oracleById[id], c = stateA[id]; return c && (o.audio_state === "present") === (c.state === "present") && (o.audio_state !== "present" || (o.source === c.source && o.stream_url === c.enclosureUrl)); })) {
+  if (!settledA || !SLOT_ORDER.every((id) => { const o = oracleById[id], c = stateA[id]; return c && (o.audio_state === "present") === (c.state === "present") && (o.audio_state !== "present" || (o.source === c.source && o.stream_url === c.enclosureUrl)); })) {
     console.log("PARITY DEBUG stateA:", JSON.stringify(stateA));
     console.log("PARITY DEBUG oracle:", JSON.stringify(Object.fromEntries(Object.entries(oracleById).map(([k, v]) => [k, { state: v.audio_state, source: v.source, url: v.stream_url }]))));
   }

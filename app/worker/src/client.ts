@@ -1062,10 +1062,17 @@ function resolveExternals(day) {
     var missingSt = function (slot, source) {
       return { state: 'missing', title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle(null, extMatchBibleDayN(date)) : slot.title, source: source || 'Divine Office' };
     };
-    var uncached = function (slot) { return state.extSlots[slot.slotId].state !== 'present'; };
+    var cachedIds = {};
+    if (cacheValid) Object.keys(rec.slots || {}).forEach(function (k) { if (rec.slots[k].state === 'present') cachedIds[k] = rec.slots[k]; });
+    var uncached = function (slot) { return !cachedIds[slot.slotId]; };
     var doSlots = standing.filter(function (s) { return s.slotId !== 'ext-bible-in-a-year'; });
     var bibleSlot = standing.filter(function (s) { return s.slotId === 'ext-bible-in-a-year'; })[0];
-    // Courier leg (Divine Office) — only if some DO slot is uncached.
+    // Courier leg (Divine Office) — only if some DO slot is not
+    // carried by the day cache (§2.8 leg 3: a fully cached source
+    // issues no network work). When it does run, a cached slot
+    // whose enclosure the courier confirms is left to the cache
+    // restore; a cached slot the courier contradicts is re-settled
+    // from the courier's word.
     var courierP;
     if (doSlots.some(uncached)) {
       courierP = api('/api/player/externals/live?date=' + encodeURIComponent(date)).then(function (res) {
@@ -1073,9 +1080,12 @@ function resolveExternals(day) {
         (res.slots || []).forEach(function (e) { byId[e.slotId] = e; });
         doSlots.forEach(function (slot) {
           var e = byId[slot.slotId];
+          var c = cachedIds[slot.slotId];
           if (e && e.state === 'present') {
+            if (c && c.streamUrl === e.streamUrl) return; // the cache restore owns this slot
             settleMeta(slot, { title: e.title, enclosureUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: 'Divine Office' });
           } else if (e) {
+            if (c) return; // cache stands over a same-open courier miss (§2.4: the record stands for the day)
             settle(slot, missingSt(slot, 'Divine Office'));
           } else if (uncached(slot)) {
             settle(slot, missingSt(slot, 'Divine Office'));
