@@ -64,6 +64,19 @@ body.dock-on .view { padding-bottom: calc(96px + var(--dockh, 60px)); }
 h1.screen { font-size:22px; color:var(--navy); margin:2px 0 2px; font-weight:normal; }
 .sub { color:#6d6353; font-size:15px; margin:0 0 12px; }
 .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:0 0 10px; }
+/* v344 §2.5: the played marker — a quiet state dot. The button
+   box holds the 44px one-hand target (Principle 3); the visible
+   circle is 12px, drawn as an ::after so the box itself stays
+   invisible. UNPLAYED = the hollow ring; PLAYED = the same
+   circle filled gold. No checkmark glyph exists anywhere in the
+   app — the NO CHECKLIST rule (v305) binds this surface too. */
+.played-dot { flex:0 0 44px; width:44px; height:44px; margin:-10px -12px -10px 0; padding:0; background:none; border:0; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.played-dot::after { content:''; width:12px; height:12px; border-radius:50%; border:1px solid var(--line); background:transparent; }
+.played-dot.on::after { background:var(--gold); border-color:var(--gold); }
+/* The played row's second, quieter signal: the title steps down
+   to the standing meta tone (#6d6353) — a tone change, like the
+   ring-to-fill change, not a trophy mark. */
+.card h3.heard { color:#6d6353; }
 .card h3 { margin:0 0 4px; font-size:17px; color:var(--navy); font-weight:normal; }
 .meta { font-size:14px; color:#6d6353; }
 button.btn { font-family:inherit; background:var(--navy); color:var(--cream); border:none; border-radius:8px; padding:9px 14px; font-size:15px; cursor:pointer; }
@@ -168,7 +181,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v343-1";
+var CACHE = "ora-pro-nobis-v344-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

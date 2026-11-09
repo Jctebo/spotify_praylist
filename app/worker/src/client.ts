@@ -6,7 +6,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, dateLabel: '', pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {} };
+var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {}, playedCache: null };
 
 /* ---------------- Playback speed (v336) ----------------
    One rate for the one audio element: a listener preference in
@@ -98,6 +98,76 @@ function saveResume() {
 function readResume() {
   try { return JSON.parse(localStorage.getItem('opn-resume-v312') || 'null'); } catch (e) { return null; }
 }
+/* ---------------- Played state (v344) ----------------
+   Playback memory, not a checklist (the v305 rule stands): the
+   store remembers what the ear has already heard so the listener
+   can find his place. ONE device-local store, keyed by CANONICAL
+   EPISODE ID first and PRESENTED DATE second — the id the stored
+   payload and the podcast feed share (v342's keying, verified in
+   §3), so a novena's nine days accumulate under one key across
+   rollovers and the server retention never sees any of it. The
+   date is the day the listener experienced (presentedDay), never
+   the stored day. No checkmark glyph anywhere; counts read as
+   position ("heard", "prayed"), never as scores. */
+var PLAYED_KEY = 'opn-played-v344';
+function readPlayed() {
+  try {
+    var v = JSON.parse(localStorage.getItem(PLAYED_KEY) || 'null');
+    return (v && typeof v === 'object' && !Array.isArray(v)) ? v : {};
+  } catch (e) { return {}; }
+}
+function playedMap() {
+  if (!state.playedCache) state.playedCache = readPlayed();
+  return state.playedCache;
+}
+function presentedDateStr() {
+  return state.presentedDay || (state.dayPayload && (state.dayPayload.presentedDay || state.dayPayload.date)) || null;
+}
+function isPlayed(episodeId, dateStr) {
+  if (!episodeId || !dateStr) return false;
+  var byDate = playedMap()[episodeId];
+  return !!(byDate && byDate[dateStr]);
+}
+function writePlayed(episodeId, dateStr, via) {
+  writePlayedQuiet(episodeId, dateStr, via);
+  refreshPlayedChrome();
+}
+function writePlayedQuiet(episodeId, dateStr, via) {
+  if (!episodeId || !dateStr) return;
+  var map = playedMap();
+  // Prune on write: date entries older than 120 days before the
+  // presented date drop (novena windows are 9 days; a season of
+  // history is ample), and ids left with no dates drop with them.
+  var cutoffMs = Date.parse(dateStr + 'T00:00:00Z') - 120 * 86400000;
+  var cutoff = isFinite(cutoffMs) ? new Date(cutoffMs).toISOString().slice(0, 10) : null;
+  Object.keys(map).forEach(function (id) {
+    var byDate = map[id];
+    if (!byDate || typeof byDate !== 'object') { delete map[id]; return; }
+    if (cutoff) Object.keys(byDate).forEach(function (ds) { if (ds < cutoff) delete byDate[ds]; });
+    if (!Object.keys(byDate).length) delete map[id];
+  });
+  if (via) {
+    if (!map[episodeId]) map[episodeId] = {};
+    map[episodeId][dateStr] = { playedAt: new Date().toISOString(), via: via };
+  } else if (map[episodeId]) {
+    delete map[episodeId][dateStr];
+    if (!Object.keys(map[episodeId]).length) delete map[episodeId];
+  }
+  state.playedCache = map;
+  try { localStorage.setItem(PLAYED_KEY, JSON.stringify(map)); } catch (e) {}
+}
+function markCompleted(desc) {
+  // §2.3: the ONLY completion writer, called once at the top of
+  // the ended handler. The intro descriptor never marks (twenty
+  // seconds of intention is not the prayer — the pair shares the
+  // PRAYER's record). The rule is the event itself: no duration
+  // or percentage test stands anywhere in the mark path.
+  if (!desc || desc.kind === 'intention') return;
+  if (!desc.episodeId || desc.episodeId.indexOf('intro:') === 0) return;
+  var d = presentedDateStr();
+  if (!d) return;
+  writePlayed(desc.episodeId, d, 'played');
+}
 function setMediaSessionFor(desc) {
   if (!('mediaSession' in navigator)) return;
   try {
@@ -152,6 +222,31 @@ function queueLiveDesc(d) {
   var live = trackDesc(extSlotTrack(slot, st));
   return live.available ? live : null;
 }
+function unplayedOnly(descs) {
+  // v344 §2.4: the played filter — build time, at the two queue
+  // call sites only. Descriptors are never mutated and expandDescs
+  // is untouched; the filter selects from the standing build.
+  // Grouping: an intro descriptor belongs to the prayer descriptor
+  // that follows it — a played prayer takes its intro out with it
+  // (no orphan intro). Availability is NOT this function's
+  // question: unavailable descriptors pass through untouched and
+  // queueLiveDesc answers for them at advance time, exactly as
+  // before — the filter answers "played?", queueLiveDesc answers
+  // "available now?", and neither does the other's job. A played
+  // slot still downloading at tap time is excluded here, so no
+  // advance can ever start it.
+  var d = presentedDateStr();
+  if (!d) return descs.slice();
+  var out = [];
+  var pendingIntro = null;
+  descs.forEach(function (x) {
+    if (x.kind === 'intention') { pendingIntro = x; return; }
+    if (isPlayed(x.episodeId, d)) { pendingIntro = null; return; }
+    if (pendingIntro) { out.push(pendingIntro); pendingIntro = null; }
+    out.push(x);
+  });
+  return out;
+}
 function startQueue(descs) {
   if (!descs.length) return;
   if (state.queue.length && state.queueIdx >= 0 && state.current && !audioEl.paused) { audioEl.pause(); return; }
@@ -201,6 +296,14 @@ audioEl.addEventListener('loadedmetadata', function () {
   updatePositionState();
 });
 audioEl.addEventListener('ended', function () {
+  // v344 §2.3: ONE mark call at the top of the handler — every
+  // natural end passes this point exactly once, before the sleep
+  // divert, before the queue advance (so a queued track stands
+  // marked before the queue moves past it), and before the
+  // single-play end-clear. The paths that must NOT mark never
+  // reach here: the minutes-mode sleep stop is a pause, skips are
+  // transport calls, and a partial play fires no ended event.
+  markCompleted(state.current);
   if (state.sleep && state.sleep.mode === 'track') { sleepTrackEnd(); return; }
   if (state.queue.length) { advanceQueue(1); return; }
   state.current = null; markPlaying(null);
@@ -805,6 +908,137 @@ function wireExpand(root) {
   });
 }
 window.addEventListener('resize', function () { armAllEllipses(); });
+/* ---------------- Played chrome (v344) ----------------
+   The marker, the Continue card, and the one re-apply path.
+   refreshPlayedChrome() owns ALL played chrome: it runs after
+   every store write (via writePlayed) and at the end of
+   renderPrayers; no other code writes played chrome. */
+function playedDotHtml(t) {
+  // §2.5: the state dot IS the mark-as control — a real button
+  // (44px box, 12px circle drawn by CSS) standing as the last
+  // element of the card's row, at the card's RIGHT edge on the
+  // prayer side — clear of the intention panel and its ellipsis
+  // (left, 25%): two controls, two sides, two jobs. UNPLAYED =
+  // the hollow ring; PLAYED = the same circle filled gold (the
+  // .on class) with the title stepped to the meta tone (.heard).
+  var id = t.episodeId;
+  if (!id) return '';
+  var on = isPlayed(id, presentedDateStr());
+  return '<button class="played-dot' + (on ? ' on' : '') + '" data-markplayed="' + esc(id) + '" aria-label="' + (on ? 'Mark as unplayed' : 'Mark as played') + '"></button>';
+}
+function heardCls(t) {
+  return isPlayed(t.episodeId, presentedDateStr()) ? ' class="heard"' : '';
+}
+function novenaInfo(episodeId, title) {
+  // §2.7: N parses from the track TITLE's standing "Day N" — the
+  // words the payload already carries. No match, or N outside
+  // 1–9, renders NO line — never a guessed number.
+  if (!episodeId || episodeId.indexOf('novena-') !== 0) return null;
+  var m = /\bDay\s+(\d{1,2})\b/.exec(String(title || ''));
+  if (!m) return null;
+  var n = Number(m[1]);
+  if (!(n >= 1 && n <= 9)) return null;
+  var d = presentedDateStr();
+  if (!d) return null;
+  var byDate = playedMap()[episodeId] || {};
+  // M counts the played dates at or before the presented date,
+  // capped at the N most recent — a later re-run of the same
+  // novena can never inflate the count past its own window.
+  var dates = Object.keys(byDate).filter(function (x) { return x <= d; }).sort();
+  return { n: n, m: Math.min(dates.length, n) };
+}
+function novenaLineText(episodeId, title) {
+  var info = novenaInfo(episodeId, title);
+  if (!info) return '';
+  if (info.m === 0) return info.n === 1 ? 'Day 1 of 9 · not yet prayed' : 'Day ' + info.n + ' of 9 · no days prayed yet';
+  return 'Day ' + info.n + ' of 9 · prayed ' + info.m + ' of ' + info.n + ' days';
+}
+function novenaSpanHtml(t) {
+  var txt = novenaLineText(t.episodeId, t.title);
+  if (!txt) return '';
+  return '<span data-novline="' + esc(t.episodeId) + '"> · ' + esc(txt) + '</span>';
+}
+function blockPlayedCounts(block) {
+  // The block's available PRAYER descriptors from the standing
+  // day build (intros excluded — they are not separate prayers;
+  // unavailable excluded — nothing to play, nothing to mark).
+  var d = presentedDateStr();
+  var total = 0, played = 0;
+  (state.dayDescs || []).forEach(function (x) {
+    if (x.kind === 'intention' || !x.available || x.block !== block) return;
+    total++;
+    if (d && isPlayed(x.episodeId, d)) played++;
+  });
+  return { total: total, played: played };
+}
+function refreshPlayedChrome() {
+  var d = presentedDateStr();
+  if (!d || !view) return;
+  view.querySelectorAll('[data-markplayed]').forEach(function (btn) {
+    var id = btn.getAttribute('data-markplayed');
+    var on = isPlayed(id, d);
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-label', on ? 'Mark as unplayed' : 'Mark as played');
+    var card = btn.closest('[data-card]');
+    if (card) {
+      var h = card.querySelector('h3');
+      if (h) h.classList.toggle('heard', on);
+    }
+  });
+  view.querySelectorAll('[data-novline]').forEach(function (sp) {
+    var id = sp.getAttribute('data-novline');
+    var t = state.readTracks[id];
+    var card = sp.closest('[data-card]');
+    var title = t ? t.title : (card && card.querySelector('h3') ? card.querySelector('h3').textContent : '');
+    var txt = novenaLineText(id, title);
+    sp.textContent = txt ? ' · ' + txt : '';
+  });
+  view.querySelectorAll('[data-bprayed]').forEach(function (sp) {
+    var c = blockPlayedCounts(sp.getAttribute('data-bprayed'));
+    sp.textContent = c.total ? ' · ' + c.played + ' prayed' : '';
+  });
+  view.querySelectorAll('[data-markblock]').forEach(function (btn) {
+    var c = blockPlayedCounts(btn.getAttribute('data-markblock'));
+    btn.textContent = (c.total && c.played === c.total) ? 'Mark all unplayed' : 'Mark all played';
+  });
+  paintContinue();
+}
+function wirePlayed(root) {
+  // v344: the marker + block mark-all wiring, at the same render
+  // paths that wire [data-playkey] (initial build, insert, swap).
+  // Per-element and idempotent, like wireExpand. The dot tap
+  // NEVER starts or stops audio — its own handler, no play wiring.
+  (root || view).querySelectorAll('[data-markplayed]').forEach(function (btn) {
+    if (btn.getAttribute('data-played-wired')) return;
+    btn.setAttribute('data-played-wired', '1');
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-markplayed');
+      var d = presentedDateStr();
+      if (!id || !d) return;
+      if (isPlayed(id, d)) writePlayed(id, d, null);
+      else writePlayed(id, d, 'marked');
+    });
+  });
+  (root || view).querySelectorAll('[data-markblock]').forEach(function (btn) {
+    if (btn.getAttribute('data-played-wired')) return;
+    btn.setAttribute('data-played-wired', '1');
+    btn.addEventListener('click', function () {
+      var block = btn.getAttribute('data-markblock');
+      var d = presentedDateStr();
+      if (!block || !d) return;
+      var c = blockPlayedCounts(block);
+      var unmark = c.total > 0 && c.played === c.total;
+      (state.dayDescs || []).forEach(function (x) {
+        if (x.kind === 'intention' || !x.available || x.block !== block) return;
+        // Unavailable tracks are never written, either way; one
+        // tap writes the block's whole available set.
+        if (unmark) { if (isPlayed(x.episodeId, d)) writePlayedQuiet(x.episodeId, d, null); }
+        else if (!isPlayed(x.episodeId, d)) writePlayedQuiet(x.episodeId, d, 'marked');
+      });
+      refreshPlayedChrome();
+    });
+  });
+}
 function trackCard(t) {
   var key = t.episodeId || ('seg:' + (t._block || ''));
   // v338 §2.7(1)/(5): the combined row stands iff the payload's
@@ -819,9 +1053,13 @@ function trackCard(t) {
   // descriptor-first, the payload map as its named fallback.
   var intro = t.available ? introForTrack(t) : null;
   var wrap = function (rowInner) {
-    if (!intro) return '<div class="card" data-card="' + esc(key) + '"><div class="row">' + rowInner + '</div></div>';
+    // v344 §2.5: wrap serves the AVAILABLE branches only (the
+    // unavailable cards return their own shapes below and carry
+    // NO marker) — the played dot stands as the row's last
+    // element, after the .grow column, for both families alike.
+    if (!intro) return '<div class="card" data-card="' + esc(key) + '"><div class="row">' + rowInner + playedDotHtml(t) + '</div></div>';
     var expanded = !!(state.expandedIntros && state.expandedIntros[t.episodeId]);
-    return '<div class="card intro-row' + (expanded ? ' expanded' : '') + '" data-card="' + esc(key) + '"><div class="row">' + intentionPanelHtml(t, intro) + rowInner + '</div></div>';
+    return '<div class="card intro-row' + (expanded ? ' expanded' : '') + '" data-card="' + esc(key) + '"><div class="row">' + intentionPanelHtml(t, intro) + rowInner + playedDotHtml(t) + '</div></div>';
   };
   if (t.kind === 'external') {
     // v324 §2.9: an external track names its source in the meta line
@@ -829,12 +1067,12 @@ function trackCard(t) {
     // externals carry no text (the payload's hasText is false), and a
     // present external carries no not-available line.
     if (t.available) {
-      return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">Plays here · ' + esc(t.source || '') + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div></div>');
+      return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">Plays here · ' + esc(t.source || '') + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div></div>');
     }
     return '<div class="card" data-card="' + esc(key) + '"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) : '') + '</div><div class="notavail">Not available today</div></div>';
   }
   if (t.available) {
-    return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3>' + esc(t.title) + '</h3><div class="meta">Plays here · episode file' + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + '</div>'
+    return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">Plays here · episode file' + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + novenaSpanHtml(t) + '</div>'
       + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '')
       + (t.hasText && t.textUrl ? readButton(t, key) : '<div class="notavail">Not available in the app yet</div>') + '</div>');
   }
@@ -1275,6 +1513,10 @@ function extSwapCard(slot) {
   // v343 §2.4: the swap path arms the ellipsis like every other.
   wireExpand(fresh);
   armEllipsis(fresh);
+  // v344: the settled card's marker wires here too, and the
+  // played chrome re-applies over the swap.
+  wirePlayed(fresh);
+  refreshPlayedChrome();
   if (state.current && state.current.episodeId === slot.slotId) markPlaying(slot.slotId);
 }
 function extInsertCards(day, standing) {
@@ -1310,8 +1552,11 @@ function extInsertCards(day, standing) {
       // v343 §2.4: the insert path arms the ellipsis too.
       wireExpand(el);
       armEllipsis(el);
+      // v344: inserted cards wire their markers the same way.
+      wirePlayed(el);
     });
   });
+  refreshPlayedChrome();
 }
 function extRebuildDescs(day) {
   // The queue rule (§2.5): descriptors are built from what stands
@@ -1454,9 +1699,12 @@ function ownInsertCards(day) {
         // v343 §2.4: the own insert path arms the ellipsis too.
         wireExpand(el);
         armEllipsis(el);
+        // v344: inserted own cards wire their markers too.
+        wirePlayed(el);
       });
     });
   });
+  refreshPlayedChrome();
 }
 function ownSwapRow(row, day) {
   // Selection is by the row's own identity (data-own-row), never
@@ -1493,7 +1741,10 @@ function ownSwapRow(row, day) {
     // v343 §2.4: the own swap path arms the ellipsis too.
     wireExpand(el);
     armEllipsis(el);
+    // v344: the re-rendered card wires its marker here too.
+    wirePlayed(el);
   });
+  refreshPlayedChrome();
   olds.forEach(function (o) { o.remove(); });
   (st.tracks || []).forEach(function (m) {
     if (state.current && state.current.episodeId === m.episodeId) markPlaying(m.episodeId);
@@ -1520,30 +1771,87 @@ function updateBlockCounts(day) {
     el.textContent = (blk && blk.caption ? blk.caption : '') + ' · ' + (counts[b] || 0) + ' tracks';
   });
 }
-function paintResume(day) {
-  if (state.resumePainted) return;
-  state.resumePainted = true;
+function paintContinue() {
+  // v344 §2.6: the Resume card is REPLACED by the Continue card —
+  // one card, one place (the #continue-slot standing under the
+  // Play All row). It re-renders from the store + the standing
+  // day build on every call: the resolution pass calls it as
+  // descriptors settle, and refreshPlayedChrome calls it after
+  // every played-state write, so a mark is reflected in place —
+  // scroll and playback are never disturbed.
+  var slot = document.getElementById('continue-slot');
+  if (!slot) return;
+  view.querySelectorAll('[data-resumeat]').forEach(function (b) { b.remove(); });
+  var d = presentedDateStr();
+  var prayers = (state.dayDescs || []).filter(function (x) { return x.kind !== 'intention' && x.available; });
+  var playedN = 0, firstUnplayed = null;
+  prayers.forEach(function (x) {
+    if (d && isPlayed(x.episodeId, d)) playedN++;
+    else if (!firstUnplayed) firstUnplayed = x;
+  });
+  // The standing resume record, under its standing stored-day
+  // check (a stale record retires, as before).
   var resumeRec = readResume();
   if (resumeRec && resumeRec.date !== state.storedDay) {
     try { localStorage.removeItem('opn-resume-v312'); } catch (e) {}
     resumeRec = null;
   }
-  if (!resumeRec) return;
-  var resumeDesc = (state.dayDescs || []).filter(function (d) { return d.episodeId === resumeRec.episodeId && d.available; })[0];
-  if (!resumeDesc) { state.resumePainted = false; return; }
-  var pa = document.getElementById('play-all');
-  if (!pa || !pa.parentNode || !pa.parentNode.parentNode) return;
-  var tmp = document.createElement('div');
-  tmp.innerHTML = '<div class="card"><div class="row"><div class="grow"><h3>Resume</h3><div class="meta">' + esc(resumeDesc.title) + ' · at ' + fmtDur(resumeRec.positionS) + '</div></div><button class="btn ghost small" id="resume-btn">Resume</button></div></div>';
-  var card = tmp.firstChild;
-  pa.parentNode.parentNode.insertBefore(card, pa.parentNode.nextSibling);
-  document.getElementById('resume-btn').addEventListener('click', function () { loadResume(resumeDesc, resumeRec.positionS || 0); });
-  var host = view.querySelector('[data-card="' + resumeDesc.episodeId + '"]');
-  if (host) {
-    var btn = document.createElement('button');
-    btn.className = 'btn ghost small'; btn.textContent = 'Resume at ' + fmtDur(resumeRec.positionS);
-    btn.addEventListener('click', function () { loadResume(resumeDesc, resumeRec.positionS || 0); });
-    host.appendChild(btn);
+  var resumeDesc = null;
+  if (resumeRec) resumeDesc = prayers.filter(function (x) { return x.episodeId === resumeRec.episodeId; })[0] || null;
+  // Gate: the card stands iff something stands played with
+  // something left to hear, OR the resume record resolves — and
+  // only while an unplayed track stands to name (a fully-played
+  // day shows NO card; Play All replays it in full, §2.4).
+  if (!firstUnplayed || !(playedN > 0 || resumeDesc)) { slot.innerHTML = ''; return; }
+  var named = firstUnplayed;
+  // The merge rules: the two records merge, never compete. The
+  // position carries only when the resume record points at the
+  // first unplayed track itself; a record pointing at a PLAYED
+  // track stands down entirely (no resume offer on a finished
+  // prayer); a record pointing at a later unplayed track leaves
+  // the naming to play order and keeps its own in-card button.
+  var carry = !!(resumeDesc && resumeDesc.episodeId === named.episodeId);
+  var blk = ((state.dayPayload && state.dayPayload.blocks) || []).filter(function (b) { return b.block === named.block; })[0];
+  var blockLabel = blk ? (blk.label || blk.block) : named.block;
+  slot.innerHTML = '<div class="card"><div class="row"><div class="grow"><h3>Continue</h3>'
+    + '<div class="meta">Continue — ' + esc(blockLabel) + ' · ' + esc(named.title) + '</div>'
+    + '<div class="meta">' + playedN + ' of ' + prayers.length + ' heard today</div></div>'
+    + '<button class="btn gold small" id="continue-btn">Continue</button></div>'
+    + '<div style="margin-top:6px"><a href="#" id="continue-all">Play everything instead</a></div></div>';
+  document.getElementById('continue-btn').addEventListener('click', function () {
+    var full = extRebuildDescs(state.dayPayload);
+    var filtered = unplayedOnly(full);
+    if (carry && resumeRec) {
+      var idx = -1;
+      for (var i = 0; i < filtered.length; i++) {
+        if (filtered[i].kind !== 'intention' && filtered[i].episodeId === resumeDesc.episodeId) { idx = i; break; }
+      }
+      if (idx >= 0) {
+        // The queue is the filtered build rotated to start at
+        // that descriptor; the position rides the standing
+        // pendingResume mechanism (set before the start; the
+        // loadedmetadata handler seeks), and playback starts —
+        // Continue is a play action, unlike loadResume's pause.
+        state.pendingResume = { episodeId: resumeDesc.episodeId, positionS: resumeRec.positionS || 0 };
+        startQueue(filtered.slice(idx));
+        return;
+      }
+    }
+    startQueue(filtered.length ? filtered : full);
+  });
+  document.getElementById('continue-all').addEventListener('click', function (ev) {
+    ev.preventDefault();
+    startQueue(extRebuildDescs(state.dayPayload));
+  });
+  if (resumeDesc && !carry && d && !isPlayed(resumeDesc.episodeId, d)) {
+    var host = view.querySelector('[data-card="' + resumeDesc.episodeId + '"]');
+    if (host) {
+      var btn = document.createElement('button');
+      btn.className = 'btn ghost small'; btn.setAttribute('data-resumeat', '1');
+      btn.textContent = 'Resume at ' + fmtDur(resumeRec.positionS);
+      btn.addEventListener('click', function () { loadResume(resumeDesc, resumeRec.positionS || 0); });
+      host.appendChild(btn);
+    }
   }
 }
 // Downloads for own + intention audio (§2.3): the enclosure host
@@ -1611,7 +1919,7 @@ function ownResolveFeed(day, needed) {
         else ownSettleMissing(day, row);
       });
     });
-    paintResume(day);
+    paintContinue(day);
   };
   var consumeItem = function (xml) {
     var items = [];
@@ -2008,7 +2316,7 @@ function resolveExternals(day) {
       else (ownNeeded[row.episodeId] = ownNeeded[row.episodeId] || []).push(row);
     });
     if (Object.keys(ownNeeded).length) ownResolveFeed(day, ownNeeded);
-    else paintResume(day);
+    else paintContinue(day);
     // Own watchdog: a row still unresolved after 9 s stands named
     // missing for this open (the resolve watchdog's posture).
     setTimeout(function () {
@@ -2016,7 +2324,7 @@ function resolveExternals(day) {
         var st = state.ownSlots[row.sourceKey];
         if (st && st.state === 'loading') ownSettleMissing(day, row);
       });
-      paintResume(day);
+      paintContinue(day);
     }, 9000);
     // §2.8 ruling 3 completion: when the intros map lands, the
     // already-settled cards re-render with their panels and the
@@ -2031,7 +2339,7 @@ function resolveExternals(day) {
         if (st && st.state === 'present') ownSwapRow(row, day);
       });
       extRebuildDescs(day);
-      paintResume(day);
+      paintContinue(day);
     });
     var missingSt = function (slot, source) {
       return { state: 'missing', title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle(null, extMatchBibleDayN(date)) : slot.title, source: source || slot.source || 'Divine Office' };
@@ -2165,6 +2473,11 @@ function renderPrayers() {
     // v342 §2.5: the shell carries no storedDay — the resume key
     // is the PRESENTED day (the same day key v337 set).
     state.storedDay = day.presentedDay || day.date || null;
+    // v344 §2.2: the presented date is held for the played store
+    // (keyed by the day the listener experienced, never the
+    // stored day), and the store snapshot loads at render.
+    state.presentedDay = day.presentedDay || day.date || null;
+    state.playedCache = readPlayed();
     state.dateLabel = day.dateLabel || '';
     // v338 §2.7(5): trackCard consults the day payload's intros map
     // from state, uniformly for both families.
@@ -2190,14 +2503,18 @@ function renderPrayers() {
     state.readTracks = {};
     (day.blocks || []).forEach(function (b) { (b.tracks || []).forEach(function (t) { if (t.episodeId) state.readTracks[t.episodeId] = t; }); });
     (day.episodes || []).forEach(function (t) { if (t.episodeId) state.readTracks[t.episodeId] = t; });
-    // v342: the Resume card paints from paintResume() once the
+    // v342: the Resume card paints from paintContinue() once the
     // resolution pass has descriptors to point at — the shell's
     // own list is empty at first render by design.
     var html = '<h1 class="screen">Listen</h1><p class="sub">' + esc(day.dateLabel || 'the day&rsquo;s prayers') + '</p>';
     html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span><button class="btn ghost" id="sleep-btn">' + esc(sleepLabel()) + '</button></div>';
+    // v344 §2.6: the Continue card's standing place — the slot
+    // under the Play All row where the Resume card stood.
+    html += '<div id="continue-slot"></div>';
     (day.blocks || []).forEach(function (b) {
-      html += '<div class="blockhead"><h2>' + esc((b.label || b.block).toUpperCase()) + '</h2><span class="meta grow" data-bcount="' + esc(b.block) + '">' + esc(b.caption || '') + ' · ' + (b.trackCount != null ? b.trackCount : (b.tracks || []).length) + ' tracks</span>'
+      html += '<div class="blockhead"><h2>' + esc((b.label || b.block).toUpperCase()) + '</h2><span class="meta grow" data-bcount="' + esc(b.block) + '">' + esc(b.caption || '') + ' · ' + (b.trackCount != null ? b.trackCount : (b.tracks || []).length) + ' tracks</span><span class="meta" data-bprayed="' + esc(b.block) + '"></span>'
         + (b.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(b.spotifyUrl) + '">Open in Spotify</a>' : '')
+        + '<button class="btn ghost small" data-markblock="' + esc(b.block) + '">Mark all played</button>'
         + '<button class="playbtn" data-queue="' + esc(b.block) + '">&#9654;</button></div>';
       html += (b.tracks || []).map(function (t) { return trackCard(Object.assign({}, t, { _block: b.block })); }).join('');
     });
@@ -2206,7 +2523,14 @@ function renderPrayers() {
       html += day.episodes.map(trackCard).join('');
     }
     view.innerHTML = html;
-    document.getElementById('play-all').addEventListener('click', function () { startQueue(extRebuildDescs(day)); });
+    document.getElementById('play-all').addEventListener('click', function () {
+      // v344 §2.4: Play All skips played — the build passes the
+      // played filter; a fully-played day plays in full (the
+      // fallback stands by construction, never a dead button).
+      var full = extRebuildDescs(day);
+      var filtered = unplayedOnly(full);
+      startQueue(filtered.length ? filtered : full);
+    });
     document.getElementById('sleep-btn').addEventListener('click', openSleepSheet);
     view.querySelectorAll('[data-playkey]').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -2224,17 +2548,25 @@ function renderPrayers() {
       btn.addEventListener('click', function () {
         var blockName = btn.getAttribute('data-queue');
         var descs = extRebuildDescs(day).filter(function (d) { return d.block === blockName; });
-        startQueue(descs);
+        // v344 §2.4: per-block play skips played the same way,
+        // with the same fully-played fallback.
+        var filtered = unplayedOnly(descs);
+        startQueue(filtered.length ? filtered : descs);
       });
     });
     // v343 §2.4: the initial build arms every combined row in the
     // view — wiring for the expand controls, then the arm pass.
     wireExpand(view);
     armAllEllipses();
+    // v344: the marker wiring rides the same initial build.
+    wirePlayed(view);
     if (state.current) markPlaying(state.current.episodeId);
     // v334: externals resolve at open, in place, after the day has
     // rendered — the resolve never blocks the day's own episodes.
     resolveExternals(day);
+    // v344 §2.6: the played chrome's standing pass at render end
+    // (the resolution callbacks re-apply it as cards settle).
+    refreshPlayedChrome();
   }).catch(function (e) { view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
 }
 
