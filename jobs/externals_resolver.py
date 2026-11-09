@@ -198,7 +198,7 @@ def _match_divine_office(items, target: datetime.date):
 
 
 def _match_bible(items, target: datetime.date):
-    """Port of bible_in_a_year_for_today (L566) with the current-year
+    r"""Port of bible_in_a_year_for_today (L566) with the current-year
     pin: candidates match \bDay\s*0*N\b and carry an enclosure; a
     candidate's year (max 20\d\d in the title, else its pubDate year
     — the contract's episode_year rule) must equal the target year.
