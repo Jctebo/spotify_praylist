@@ -61,3 +61,126 @@ John approved grooming-review recommendation #9 in the main chat on 2026-11-08: 
 
 - **Recommendation: Through Review (level 4)** — the chain stops before Ship, and Plan seats only after v312 is Live (the hard precondition above).
 - **Reason:** the change is small and client-only, but its one real proof is a behavior on John's phone at night — the v312 pattern (agent evidence plus his verdict) is the right gate, and Ship, which also sequences the cache bump onto his installed app, stays a separate word. Plain "approve" sets this level.
+
+## 2 · Plan
+
+- **Agent:** Plan Agent (v320) — Plan claim record 1109, claimed 2026-11-09 01:55:46 UTC (19:55 CT); time contract 30
+- **Level in force:** Autonomous to Ship (John's blanket, 2026-11-08 19:41 CT) — this Plan's pass runs the chain on to Implement without another word. §1's recommended level (Through Review) was superseded by that blanket; the Review phone check §1 named still stands as a Review criterion (§2.11).
+- **Precondition check:** §1's hard precondition is MET — v312 shipped Live 2026-11-08 (trunk merge 5460a2e, Worker 2586e412, phone check waived by John's "Push it" order and recorded in v312's §4/§5). This Plan was written against the shipped player, not the Review candidate.
+- **Inputs read:** §1 of this document · the shipped v312 player on the standing trunk line (`muse-draft-week` at 9347be4, which carries merge 5460a2e) — `app/worker/src/client.ts` (511 lines, read in full), `app/worker/src/ui.ts` (the CSS floor and the SW cache line), `app/tests/harness-v312.mjs` (the harness mold)
+
+### 2.1 — State model (pinned)
+
+- One addition to the shell-scope `state` object in client.ts: `state.sleep`, exactly one of `{ mode: 'off' }` · `{ mode: 'minutes', presetMin: <n>, deadlineMs: <epoch ms> }` · `{ mode: 'track' }`. It lives and dies in shell scope like the queue itself; no render resets it (§1 item 6).
+- All code lands in `app/worker/src/client.ts` plus the one cache-name line in `app/worker/src/ui.ts` (§2.12). No change to index.ts, any Worker route, D1, R2, the door, or the job sheet — client-only, as scoped.
+
+### 2.2 — The control: placement and states (pinned)
+
+- **Placement:** inside the standing Play All row in `renderPrayers` (the `<div class="row">` that carries `#play-all`), after the "the whole day, in order" meta span: one button, `id="sleep-btn"`, standing classes `btn ghost`. Nothing else in the row changes; no control is added to any other tab (§1 item 1: the control's home is the Prayers transport area; the timer still governs while other tabs stand open, per §1 item 6).
+- **Label = state, at a glance** (§1 item 1): Off → `Sleep · Off` · minutes armed → `Sleep · M:SS` (remaining time, rounded up to the next second) · End of track armed → `Sleep · End of track`. Standing classes only — `btn` text is 15px, `meta` 14px, body 17px (ui.ts); no new font size is introduced anywhere, so the v312 font floor holds by construction.
+- **The sheet:** tapping the button opens a sheet in the app's standing pattern (`div.sheet > div.inner`, as the Intention editor uses), titled "Sleep timer", holding one button per choice in the exact §1 order — **Off · 5 · 10 · 15 · 30 · 45 · 60 minutes · End of track** — with the currently armed choice carrying the standing `active` treatment (as the Examination chips do) and a Close button that dismisses without change. One tap on a choice arms it and closes the sheet (§1 item 2: one tap arms; choosing Off disarms). No confirm step, no second screen.
+- **Label upkeep:** every `renderPrayers` call derives the button's label from `state.sleep` at render time, so a re-render can never lose or reset an arm; between renders, the countdown tick (§2.3) updates `#sleep-btn`'s text in place when it exists. The button is re-wired on each render with the row's other controls.
+
+### 2.3 — Countdown mechanics (pinned)
+
+- **Deadline-based, never a decrementing counter:** arming a minute preset stores `deadlineMs = Date.now() + presetMin * 60000`. Remaining time is always recomputed from the deadline, so interval throttling cannot stretch the timer — it can only delay the fire check (bounded in §2.7).
+- **Two check paths, one function:** a single 1-second `setInterval` lives in shell scope from boot, and the standing `timeupdate` handler gains one call; both call the same `sleepTick()`. `sleepTick()`: if mode is not `minutes`, return · compute `remaining = deadlineMs - Date.now()` · update the label · if `remaining <= 15000` and the fade has not started, start the fade (§2.6) · if `remaining <= 0`, fire the timed stop (§2.4).
+- **Idle-at-deadline edge:** if at the deadline the element is already paused, or nothing is loaded, firing is a disarm only — no pause call, no resume write, no dialog; the fade restore (§2.6) still runs so a mid-fade manual pause cannot strand a lowered volume past the deadline.
+
+### 2.4 — Timed stop (pinned)
+
+Exactly §1 item 3, in this order: (1) `audioEl.pause()` — the standing `pause` handler saves the resume point through `saveResume()`; the timer adds **no** save of its own and no second resume logic (§1 finding 2) · (2) disarm (`state.sleep = { mode: 'off' }`) · (3) fade restore (§2.6) · (4) label → `Sleep · Off`. `state.queue`, `state.queueIdx`, and `state.current` are not touched — the queue stands **held, not cleared**, indistinguishable from a manual pause mid-queue. No sound, no dialog, no mark on any card.
+
+### 2.5 — End of track (pinned) — the one `ended`-handler change
+
+- In the standing `ended` handler, before the queue advance: if `state.sleep.mode` is `'track'`, run the end-of-track stop below. **The arm disarms as it fires in every sub-case**, so exactly one track end is ever suppressed; the next natural end advances normally.
+  - **(a) Queue with a next available descriptor — hold at the next track's head:** advance `queueIdx` to the next available descriptor using `advanceQueue`'s own skip rule (unavailable descriptors passed over with `markSkipped`) **without playing it**: set `state.current` to that descriptor, `setMediaSessionFor(desc)`, `audioEl.src = desc.url`, `audioEl.load()` (the explicit-load rule from v312's resume work — the element is `preload="none"`, so `src` alone loads nothing), `markPlaying(desc.episodeId)`, then an explicit `saveResume()` — which writes `{ date: storedDay, episodeId: <next track>, positionS: audioEl.currentTime = 0 }`. Ordering argument: whether the element's own `pause` event lands before or after this handler, the final stored record is the next track at 0 — the pause handler saves whatever `state.current` then is, and this handler's save runs after `state.current` changes. Playback stands paused at the next track's head; resuming is a plain play of that head track (its card button or Media Session play) — no special path. This is §1 criterion 2's exact end state.
+  - **(b) Queue exhausted (no next available descriptor):** exactly the standing queue-end path — queue cleared, `current` null, `markPlaying(null)` — nothing added; the arm simply reads Off (§1's moot note).
+  - **(c) No queue (a single track via `playTrack`/`play`):** exactly the standing path (`current` null, `markPlaying(null)`); disarm only.
+- **Interaction with manual controls:** the arm is a player state, **not bound to a track**. Media Session next/previous, seek, a new `startQueue`, or a single-track `playTrack` while armed change which track is current; an end-of-track arm fires at the end of whatever track is then playing, and a minute arm's deadline never moves (§1 item 6: changing the queue keeps an armed timer armed). A pause from any surface (Media Session, card toggle, `startQueue`'s toggle-pause) never disarms either mode. Only firing, choosing Off, or an app restart disarms.
+
+### 2.6 — Fade decision: IN, probed, with pinned restores
+
+- **Decision: IN.** §1 item 5 leaves the call to Plan. Reason: the fade is the difference between a gentle stop and a hard cut mid-prayer in the feature's whole setting — a listener falling asleep at Night Prayer — and §1 names it wanted. The platform risk §1 flagged (volume restore unreliable) is contained by construction: **the fade never owns the stop** (the stop is `pause()`, independent of volume), and every volume write is paired with a pinned restore point below.
+- **Shape:** when a minutes timer first reaches `remaining <= 15000` in `sleepTick()`, record `fadeBase = audioEl.volume` and start the ramp: on each tick, `audioEl.volume = fadeBase * max(0, remaining / 15000)`. The volume is recomputed from the remaining time on every tick, never accumulated — a manual pause mid-fade followed by play cannot compound it, and the ramp simply resumes from the then-remaining time.
+- **Capability probe:** after the first ramp write, read the value back. If it did not move (platforms where element volume is not settable — iOS Safari is the known case), mark the fade unsupported for this run and make no further volume writes; the stop proceeds without a fade, silently. No error, no label change, no criterion depends on it.
+- **Restore points (exhaustive — every play path in this one file):** (1) immediately after the timed stop's `pause()` · (2) at the top of `startDesc` — the single funnel every playback start passes through (`startQueue`, `advanceQueue`, `playTrack`) · (3) in the Media Session `play` handler — the one play path that bypasses `startDesc`. Restore = `audioEl.volume = fadeBase` (1 when no fade ran) and fade state cleared. `loadResume` never plays, so it needs no restore and never starts a fade.
+- **End-of-track mode has no fade** (§1 ties the fade to the minute timer's last ~15 s; a track's own ending is already a natural ending). The fade is judged by ear in Review's phone check (§2.11), never by the harness alone.
+
+### 2.7 — Background playback and autoplay-next (pinned)
+
+- **Autoplay-next:** untouched, except the single suppressed advance in §2.5(a). A minute timer never blocks, delays, or alters an advance; tracks change under it freely.
+- **Media Session:** no new handlers, no handler changes — the stop is an internal `pause()`, so lock-screen state follows the element to paused on its own, and the metadata of the held/current track stands as the handlers already set it.
+- **Background/locked honesty bound:** the timer is a wall-clock deadline in the page — no WakeLock, no worker thread, no notification. While audio plays, `timeupdate` keeps arriving and keeps the deadline honest; if the platform freezes the page outright, the stop lands at the first check after the deadline when the page resumes. That bound is named, not hidden: Review's phone check on John's own phone is where the §1 assumption is proven, exactly as §1's Concerns assigned it.
+
+### 2.8 — Restart reset (pinned exactly)
+
+- `state.sleep` initializes to `{ mode: 'off' }` at boot and is **never written anywhere**: no new localStorage key, no cookie, no store field. The app's only localStorage key remains `opn-resume-v312`, byte shape unchanged — the timer adds no persistence of any kind (§1 item 6).
+- **Resets** on app restart, page reload, or a service-worker-update reload: the arm (either mode), the deadline, the fade state, and the element volume (a fresh element starts at the platform default).
+- **Does not reset:** the resume record, the stored day, anything server-side. The queue itself is shell-scope in v312 and already resets the same way; the timer adds nothing to that surface.
+
+### 2.9 — Branch and build handling (pinned)
+
+- `release/v320` stands on a pre-v312 trunk base (its §1 commit 2494c74 predates the v312 landing — §1 was written against the player as built, before it shipped). Before writing code, Implement **rebases `release/v320` onto `muse-draft-week`** (HEAD 9347be4 at this Plan; re-read at Implement start). The branch carries only this document, so the rebase is conflict-free by construction; the Scope record's commit hash stands as history, and the Ship section records the landed hashes.
+- All work happens in the `~/workspace/.worktrees/v320` worktree. Harness runs follow the v312 hard guard: scratch instances inside that worktree, never the shared checkout — the harness refuses a shared-checkout path itself.
+- **Files touched, exhaustively:** `app/worker/src/client.ts` (state, control + sheet, tick, the `ended` branch, fade, harness hook) and `app/worker/src/ui.ts` (one line: the cache name, §2.12). Nothing else in the monorepo.
+
+### 2.10 — Harness seam (pinned)
+
+Mirroring v312's `window.__opnMediaHandlers` precedent, the client exposes `window.__opnSleep` = `{ state(), armMinutes(n), armTrack(), disarm() }`: `state()` returns a copy of `state.sleep` plus `remainingMs`; `armMinutes(n)` accepts any positive number, fractional allowed (the harness arms at seconds scale through it; the production sheet passes only the §1 presets). The hook and the sheet call the **same** arm/disarm functions, so the hook cannot drift from the shipped behavior; the harness also drives the real sheet by taps (checks 3–4), so the UI path itself is gated.
+
+### 2.11 — harness-v320 check list (pinned)
+
+In the v312 mold: Playwright real-browser boot against a scratch instance inside the worktree, ffmpeg tone fixtures (short tracks where a track end is needed), numbered ok/not-ok lines, tallies read from the COMPLETE log. The harness file is `app/tests/harness-v320.mjs`, written by Implement.
+
+1. **Parse + boot:** the served client parses, the app boots, zero page errors (the standing pin).
+2. **Control:** the sleep button stands in the Prayers transport row beside Play All; its label reads `Sleep · Off` at boot.
+3. **Sheet:** tapping the button opens the sheet; the choices stand in the exact order Off · 5 · 10 · 15 · 30 · 45 · 60 · End of track; one tap arms and closes the sheet.
+4. **Real-path arm:** arming 5 through the sheet — two successive label reads decrease, and `__opnSleep.state()` agrees with the label.
+5. **Timed fire (§1 criterion 1 + 3):** hook-armed at seconds scale against a playing queue — at expiry ±2 s the element stands paused; queue length, `queueIdx`, and `current` are unchanged (**held, not cleared**); the label reads Off; the resume record names the playing track at the stop position (±1 s).
+6. **Disarm (§1 criterion 4):** arm, choose Off before expiry — playback continues past the would-be deadline untouched; the timer stands Off.
+7. **Deadline invariance:** arm at seconds scale, `advanceQueue(1)` mid-arm — the stop fires at the original deadline, against the new track.
+8. **End of track in a queue (§1 criterion 2):** arm End of track against a short fixture track mid-queue — the track finishes; the next track does **not** start (element paused); `state.current` is the next track; `audioEl.src` is the next track's URL; `currentTime` is 0; the resume record names the next track at 0; the label reads Off.
+9. **Exactly one suppression:** after check 8, play the held track and let it end — it advances normally.
+10. **End of track at the queue's last track:** the standing queue-end state stands (queue cleared, `current` null); the label reads Off.
+11. **End of track on a single track (no queue):** the standing end state stands; the label reads Off.
+12. **Fade branch:** where element volume is settable in the harness browser — inside the fade window the volume reads below `fadeBase`, and reads `fadeBase` again after the stop and after the next `startDesc`. Where it is not settable, the probe reports unsupported and the stop still fires on time. The check records which branch ran; neither branch may fail the gate.
+13. **Restart reset:** arm (either mode), reload the page — the label reads Off, `__opnSleep.state()` reports mode `off`; the resume record stands byte-identical to its pre-arm shape.
+14. **No new storage:** after arming and firing, the localStorage key set is exactly what stood at boot (the resume key only, beyond the harness's own seeds).
+15. **Nothing else moves (§1 criterion 5):** Play All toggle, per-block queue, card play/pause toggle, and the Media Session handler table (read via `__opnMediaHandlers`) behave as harness-v312's corresponding checks found them.
+16. **Regression:** harness-v312 runs green on the same tree; its complete-log tally is quoted in §3.
+
+**Review phone check (one item, per §1):** John sets a short timer at night on his own phone — playback stops on its own, and the morning resume offers the place where listening stopped; the fade is judged by ear in the same check. One verdict, actor John, folded as v312's phone check set the pattern. Ship waits on that verdict under the standing Review gate; the Autonomous-to-Ship directive then carries it through without another word.
+
+### 2.12 — Service-worker cache bump (pinned)
+
+ui.ts line 117: `var CACHE = "ora-pro-nobis-v312-1"` → `"ora-pro-nobis-v320-1"` — the standing v312 E7 rule, so the new client actually reaches John's installed app. No other ui.ts change; no CSS change of any kind.
+
+### 2.13 — Rollback shape (pinned)
+
+Client-only, so rollback is a **pure redeploy**: redeploy the pre-v320 Worker build (v312's Ship build, Worker 2586e412) or revert the v320 trunk merge and redeploy. There is no migration to unwind (none exists), no data shape changes, and the resume record is untouched by construction — a rolled-back app reads it exactly as v312 left it. The cache name returns with the reverted client. A post-Ship rollback is a fix-forward decision recorded in §5, never a data event.
+
+### 2.14 — Ship proof list (pinned)
+
+1. harness-v320 complete-log tally and the harness-v312 regression tally, both on the merged trunk tree (tallies from complete logs, never truncated output).
+2. The trunk merge commit and the deployed Worker version id.
+3. Production read-backs: the production-served client carries the sleep control and the `__opnSleep` hook, and its cache name reads `ora-pro-nobis-v320-1`; the served bytes parse and boot (the standing parse pin, executed against the production-served client).
+4. The flip pieces, each read back: the release row Live + `shipped_at` + `whats_new_id` · the shipped record · the What's New entry · the Ship phase record passed · §5 appended and this document republished at the merge commit.
+5. Nothing else moved: the `/api/player/day` payload shape is unchanged (spot-read against v312's §5 record); no route, store, or job-sheet diff rides the merge.
+
+### Acceptance-criteria mapping (§1 → this Plan)
+
+- §1 criterion 1 (timed stop, held queue, reads Off, silent) → harness checks 5 (+ 3–4 for the arming path)
+- §1 criterion 2 (end-of-track, resume at the next track unstarted) → harness check 8 (+ 9–11 for the edges)
+- §1 criterion 3 (resume offers the exact stop position) → harness check 5
+- §1 criterion 4 (Off before expiry = untouched) → harness check 6
+- §1 criterion 5 (nothing else moves; parse + boot clean) → harness checks 1, 15, 16
+- The fade (wanted, not a criterion) → harness check 12 (mechanics) + Review phone check (by ear)
+
+### Concerns and Information Needs
+
+- **Facts:** every engine fact above was verified first-hand in the shipped client at trunk 9347be4 — the `ended` handler's advance, the `pause` handler's `saveResume()`, `advanceQueue`'s skip-and-clear rules, the `preload="none"` explicit-load trap (v312's own finding, honored in §2.5(a)), the Play All row's markup, the ui.ts font sizes, and the cache line. No timer code exists to conflict with (grep over the shipped tree returns nothing).
+- **Assumptions:** the §1 background-timer assumption (a backgrounded/locked PWA playing audio keeps its checks honest at minute scale) is carried unchanged — Plan cannot retire it from a desk; §2.7 names the honest bound and Review's phone check is its proof surface. If the phone check shows the timer firing late in the background, the item returns to Scope with that evidence rather than shipping a timer that fires late.
+- **Uncertainties:** the `pause`-event ordering against the `ended` handler (§2.5(a)) is argued, not assumed — both orders land on the same stored record, and harness check 8 verifies the end state itself, not the order. The fade's feel (15 s ramp from full volume) is a by-ear judgment reserved to the phone check; the ramp length is §1's own figure.
+- **Decision impact:** one decision was Plan's to make and is made — the fade is IN (§2.6), with the probe and restores that contain its risk. The preset set is confirmed against §1 exactly: **Off · 5 · 10 · 15 · 30 · 45 · 60 · End of track** — no addition, no removal. No decision is open for John inside this Plan.
+- **First source to check:** `app/worker/src/client.ts` on `muse-draft-week` (the shipped engine this rides) and harness-v312.mjs (the mold §2.11 follows).
