@@ -718,6 +718,326 @@ function openRead(t) {
     if (body) body.textContent = 'Not available in the app yet';
   });
 }
+/* ---------------- Externals at open (v334) ----------------
+   The day renders from /api/player/day at once (own episodes only —
+   the payload no longer carries stored externals); the nine
+   external slots then resolve live, in place: Bible in a Year and
+   Sing the Hours by direct feed reads in this client, Divine
+   Office through the Worker courier (its feed forbids browser
+   reads). Source settings are read at open and applied identically
+   to every leg. Resolved present slots are kept in the device-local
+   day cache (opn-ext-cache-v1): valid only for the same stored day
+   and the same settings version; only present slots are written,
+   so a missing slot re-checks on the next open. No audio is ever
+   cached — slots hold links and metadata only. */
+var EXT_SLOTS = [
+  { slotId: 'ext-invitatory', title: 'Invitatory' },
+  { slotId: 'ext-morning-prayer', title: 'Morning Prayer', fallbackToken: 'Lauds' },
+  { slotId: 'ext-bible-in-a-year', title: null },
+  { slotId: 'ext-midmorning-prayer', title: 'Midmorning Prayer' },
+  { slotId: 'ext-midday-prayer', title: 'Midday Prayer' },
+  { slotId: 'ext-midafternoon-prayer', title: 'Midafternoon Prayer' },
+  { slotId: 'ext-office-of-readings', title: 'Office of Readings' },
+  { slotId: 'ext-evening-prayer', title: 'Evening Prayer', fallbackToken: 'Vespers' },
+  { slotId: 'ext-night-prayer', title: 'Night Prayer' }
+];
+var EXT_TOKENS = {
+  'ext-invitatory': ['Invitatory', 'Invitatory Psalm'],
+  'ext-morning-prayer': ['Morning Prayer'],
+  'ext-midmorning-prayer': ['Midmorning Prayer'],
+  'ext-midday-prayer': ['Midday Prayer'],
+  'ext-midafternoon-prayer': ['Midafternoon Prayer'],
+  'ext-office-of-readings': ['Office of Readings'],
+  'ext-evening-prayer': ['Evening Prayer', 'Vespers'],
+  'ext-night-prayer': ['Night Prayer', 'Compline']
+};
+var EXT_BIAY_URL = 'https://feeds.fireside.fm/bibleinayear/rss';
+var EXT_STH_URL = 'https://feeds.castos.com/x8g54';
+function extWeekdayMon0(dateStr) {
+  var p = dateStr.split('-').map(Number);
+  return (new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay() + 6) % 7;
+}
+function extDayRulePasses(rule, wd) {
+  if (rule === 'daily') return true;
+  if (rule === 'weekdays') return wd < 5;
+  if (rule === 'weekends') return wd >= 5;
+  if (rule === 'sundays') return wd === 6;
+  if (rule === 'fridays') return wd === 4;
+  return false;
+}
+function extDayRuleFills(rule, wd) { return rule === 'fallback-only' ? true : extDayRulePasses(rule, wd); }
+function extParseDuration(raw) {
+  if (!raw) return 0;
+  var t = String(raw).trim();
+  if (t.indexOf(':') >= 0) {
+    var secs = 0; var parts = t.split(':');
+    for (var i = 0; i < parts.length; i++) secs = secs * 60 + Number(parts[i]);
+    return isFinite(secs) ? Math.trunc(secs) : 0;
+  }
+  var v = Number(t);
+  return isFinite(v) ? Math.trunc(v) : 0;
+}
+function extParseFeed(text) {
+  var doc = new DOMParser().parseFromString(text, 'text/xml');
+  if (doc.querySelector('parsererror')) throw new Error('feed parse failed');
+  var items = [];
+  doc.querySelectorAll('item').forEach(function (it) {
+    var titleEl = it.querySelector('title');
+    var enc = it.querySelector('enclosure');
+    var pubEl = it.querySelector('pubDate');
+    var durEl = it.getElementsByTagName('itunes:duration')[0] || null;
+    var pubMs = pubEl ? Date.parse(pubEl.textContent.trim()) : NaN;
+    items.push({
+      title: (titleEl ? titleEl.textContent : '').replace(/\s+/g, ' ').trim(),
+      url: enc ? (enc.getAttribute('url') || '') : '',
+      length: enc && /^\d+$/.test(enc.getAttribute('length') || '') ? Number(enc.getAttribute('length')) : 0,
+      pubMs: isFinite(pubMs) ? pubMs : null,
+      durationS: extParseDuration(durEl ? durEl.textContent : null)
+    });
+  });
+  return items;
+}
+var EXT_MONTHS_FULL = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+var EXT_MONTHS_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function extDateRe(month, day) {
+  return new RegExp('(?:^|[^A-Za-z])' + month + '\\s*[-,]*\\s*0?' + day + '(?:st|nd|rd|th)?(?:\\s*,?\\s*\\d{4})?(?!\\w)', 'i');
+}
+function extMatchesMonthDay(title, mo, d) {
+  return extDateRe(EXT_MONTHS_FULL[mo - 1], d).test(title) || extDateRe(EXT_MONTHS_ABBR[mo - 1], d).test(title);
+}
+function extMatchBible(items, dateStr) {
+  // The resolver's Bible matcher ported: Day N (day-of-year, capped
+  // 365) + enclosure + current year only; newest pubDate wins.
+  var p = dateStr.split('-').map(Number);
+  var doy = Math.floor((Date.UTC(p[0], p[1] - 1, p[2]) - Date.UTC(p[0], 0, 0)) / 86400000);
+  var n = doy > 365 ? 365 : doy;
+  var pat = new RegExp('\\bDay\\s*0*' + n + '\\b', 'i');
+  var best = null;
+  items.forEach(function (it) {
+    if (!it.url || !pat.test(it.title)) return;
+    var years = it.title.match(/\b(20\d{2})\b/g);
+    var year = years ? Math.max.apply(null, years.map(Number)) : (it.pubMs != null ? new Date(it.pubMs).getUTCFullYear() : null);
+    if (year !== p[0]) return;
+    if (!best || (it.pubMs || -Infinity) > (best.pubMs || -Infinity)) best = it;
+  });
+  return { item: best, dayN: n };
+}
+function extBibleTitle(item, n) {
+  var base = 'Bible in a Year — Day ' + n;
+  if (!item) return base;
+  var sub = item.title.replace(/^Day\s*\d+\s*:\s*/, '').replace(/\s*\(\d{4}\)\s*$/, '').trim();
+  return sub ? base + ': ' + sub : base;
+}
+function extMatchSth(items, dateStr, token) {
+  var p = dateStr.split('-').map(Number);
+  var prefix = p[1] + '.' + p[2] + '.' + String(p[0]).slice(2);
+  for (var i = 0; i < items.length; i++) {
+    var it = items[i];
+    if (it.url && it.title.indexOf(prefix) >= 0 && it.title.toLowerCase().indexOf(token.toLowerCase()) >= 0) return it;
+  }
+  return null;
+}
+function extFetchText(url) {
+  var ctl = new AbortController();
+  var timer = setTimeout(function () { ctl.abort(); }, 8000);
+  return fetch(url, { signal: ctl.signal }).then(function (r) {
+    clearTimeout(timer);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text();
+  }).catch(function (e) { clearTimeout(timer); throw e; });
+}
+function extCacheRead() {
+  try {
+    var raw = localStorage.getItem('opn-ext-cache-v1');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+function extCacheWrite(rec) {
+  try { localStorage.setItem('opn-ext-cache-v1', JSON.stringify(rec)); } catch (e) { /* degrades to session memory (§2.4) */ }
+}
+function extPlaceholderCard(slot) {
+  return '<div class="card" data-card="' + esc(slot.slotId) + '"><h3>' + esc(slot.title || 'Bible in a Year') + '</h3><div class="meta">Loading&hellip;</div></div>';
+}
+function extSlotTrack(slot, st) {
+  return {
+    episodeId: slot.slotId, title: st.title, kind: 'external', source: st.source,
+    available: st.state === 'present', streamUrl: st.state === 'present' ? st.streamUrl : null,
+    durationS: st.durationSec || 0, sizeBytes: st.sizeBytes || 0, hasText: false, textUrl: null, _block: slot.block
+  };
+}
+function extSwapCard(slot) {
+  var st = state.extSlots[slot.slotId];
+  var old = view.querySelector('[data-card="' + slot.slotId + '"]');
+  if (!old || !st) return;
+  var tmp = document.createElement('div');
+  tmp.innerHTML = trackCard(extSlotTrack(slot, st));
+  var fresh = tmp.firstChild;
+  old.replaceWith(fresh);
+  var btn = fresh.querySelector('[data-playkey]');
+  if (btn) btn.addEventListener('click', function () {
+    var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === slot.slotId; })[0];
+    if (d) playTrack(d);
+  });
+  if (state.current && state.current.episodeId === slot.slotId) markPlaying(slot.slotId);
+}
+function extInsertCards(day, standing) {
+  // Placeholders (or cached cards) stand after the block's own
+  // tracks, in settings sort order within the block. Block sections
+  // are flat siblings: blockhead, then its cards, then the next
+  // blockhead — insertion goes before the next blockhead (or before
+  // the unblocked heading / at the end).
+  var heads = view.querySelectorAll('.blockhead');
+  (day.blocks || []).forEach(function (b, bi) {
+    var mine = standing.filter(function (s) { return s.block === b.block; })
+      .sort(function (a, c) { return (a.sortOrder || 0) - (c.sortOrder || 0); });
+    if (!mine.length || !heads[bi]) return;
+    var anchor = heads[bi + 1] || null;
+    if (!anchor) {
+      var h2s = view.querySelectorAll('h2');
+      for (var i = 0; i < h2s.length; i++) { if (h2s[i].textContent.indexOf('FROM TODAY') === 0) { anchor = h2s[i]; break; } }
+    }
+    mine.forEach(function (slot) {
+      var st = state.extSlots[slot.slotId];
+      var tmp = document.createElement('div');
+      tmp.innerHTML = st && st.state === 'present' ? trackCard(extSlotTrack(slot, st)) : extPlaceholderCard(slot);
+      var el = tmp.firstChild;
+      view.insertBefore(el, anchor);
+      var btn = el.querySelector('[data-playkey]');
+      if (btn) btn.addEventListener('click', function () {
+        var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === slot.slotId; })[0];
+        if (d) playTrack(d);
+      });
+    });
+  });
+}
+function extRebuildDescs(day) {
+  // The queue rule (§2.5): descriptors are built from what stands
+  // resolved at tap time — own tracks in payload order, each
+  // block's resolved externals after its own tracks.
+  var descs = [];
+  (day.blocks || []).forEach(function (b) {
+    (b.tracks || []).forEach(function (t) { descs.push(trackDesc(Object.assign({}, t, { _block: b.block }))); });
+    (state.extStanding || []).filter(function (s) { return s.block === b.block; })
+      .sort(function (a, c) { return (a.sortOrder || 0) - (c.sortOrder || 0); })
+      .forEach(function (slot) {
+        var st = state.extSlots[slot.slotId];
+        if (st) descs.push(trackDesc(extSlotTrack(slot, st)));
+      });
+  });
+  (day.episodes || []).forEach(function (t) { descs.push(trackDesc(t)); });
+  state.dayDescs = descs;
+  return descs;
+}
+function resolveExternals(day) {
+  var date = day.storedDay || day.date;
+  if (!date) return;
+  state.extSlots = {};
+  state.extStanding = [];
+  api('/api/player/source-settings').then(function (settings) {
+    var wd = extWeekdayMon0(date);
+    var prim = {}, fb = {};
+    (settings.sources || []).forEach(function (s) {
+      if (s.family !== 'external' || !s.slotId) return;
+      if (s.role === 'fallback') fb[s.slotId] = s; else prim[s.slotId] = s;
+    });
+    var standing = [];
+    EXT_SLOTS.forEach(function (s) {
+      var row = prim[s.slotId];
+      if (!row || row.enabled !== 1 || !extDayRulePasses(row.dayRule || 'daily', wd)) return;
+      standing.push({ slotId: s.slotId, title: s.title, fallbackToken: s.fallbackToken, block: row.block || 'Morning', sortOrder: row.sortOrder, fbRow: fb[s.slotId] || null });
+    });
+    state.extStanding = standing;
+    // Day cache: valid only for this date AND this settings version.
+    var cache = extCacheRead();
+    var cacheValid = !!cache && cache.date === date && cache.settingsVersion === settings.version && cache.slots;
+    if (cache && !cacheValid) { try { localStorage.removeItem('opn-ext-cache-v1'); } catch (e) {} cache = null; }
+    var rec = cacheValid ? cache : { date: date, settingsVersion: settings.version, savedAt: new Date().toISOString(), slots: {} };
+    standing.forEach(function (slot) {
+      var c = cacheValid ? rec.slots[slot.slotId] : null;
+      if (c && c.state === 'present') {
+        state.extSlots[slot.slotId] = { state: 'present', title: c.title, streamUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source };
+      } else {
+        state.extSlots[slot.slotId] = { state: 'loading', title: slot.title || 'Bible in a Year' };
+      }
+    });
+    extInsertCards(day, standing);
+    extRebuildDescs(day);
+    var writeCache = function () {
+      standing.forEach(function (slot) {
+        var st = state.extSlots[slot.slotId];
+        if (st && st.state === 'present') {
+          rec.slots[slot.slotId] = { state: 'present', title: st.title, streamUrl: st.streamUrl, durationSec: st.durationSec, sizeBytes: st.sizeBytes, source: st.source, block: slot.block, sortOrder: slot.sortOrder };
+        }
+      });
+      rec.savedAt = new Date().toISOString();
+      extCacheWrite(rec);
+    };
+    var settle = function (slot, st) {
+      state.extSlots[slot.slotId] = st;
+      extSwapCard(slot);
+      extRebuildDescs(day);
+      writeCache();
+    };
+    var missingSt = function (slot, source) {
+      return { state: 'missing', title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle(null, extMatchBibleDayN(date)) : slot.title, source: source || 'Divine Office' };
+    };
+    var uncached = function (slot) { return state.extSlots[slot.slotId].state !== 'present'; };
+    var doSlots = standing.filter(function (s) { return s.slotId !== 'ext-bible-in-a-year'; });
+    var bibleSlot = standing.filter(function (s) { return s.slotId === 'ext-bible-in-a-year'; })[0];
+    // Courier leg (Divine Office) — only if some DO slot is uncached.
+    var courierP;
+    if (doSlots.some(uncached)) {
+      courierP = api('/api/player/externals/live?date=' + encodeURIComponent(date)).then(function (res) {
+        var byId = {};
+        (res.slots || []).forEach(function (e) { byId[e.slotId] = e; });
+        doSlots.forEach(function (slot) {
+          var e = byId[slot.slotId];
+          if (e && e.state === 'present') {
+            settle(slot, { state: 'present', title: e.title, streamUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: 'Divine Office' });
+          } else if (e) {
+            settle(slot, missingSt(slot, 'Divine Office'));
+          } else if (uncached(slot)) {
+            settle(slot, missingSt(slot, 'Divine Office'));
+          }
+        });
+      }).catch(function () {
+        doSlots.forEach(function (slot) { if (uncached(slot)) settle(slot, missingSt(slot, 'Divine Office')); });
+      });
+    } else {
+      courierP = Promise.resolve();
+    }
+    // Bible in a Year direct leg.
+    if (bibleSlot && uncached(bibleSlot)) {
+      extFetchText(EXT_BIAY_URL).then(function (text) {
+        var m = extMatchBible(extParseFeed(text), date);
+        if (m.item) settle(bibleSlot, { state: 'present', title: extBibleTitle(m.item, m.dayN), streamUrl: m.item.url, durationSec: m.item.durationS, sizeBytes: m.item.length, source: 'Bible in a Year' });
+        else settle(bibleSlot, { state: 'missing', title: extBibleTitle(null, m.dayN), source: 'Bible in a Year' });
+      }).catch(function () { settle(bibleSlot, { state: 'missing', title: extBibleTitle(null, extMatchBibleDayN(date)), source: 'Bible in a Year' }); });
+    }
+    // Sing the Hours fallback — only after the courier settles, and
+    // only for a Morning/Evening primary that stands missing.
+    courierP.then(function () {
+      var need = standing.filter(function (s) {
+        return s.fallbackToken && s.fbRow && s.fbRow.enabled === 1 && extDayRuleFills(s.fbRow.dayRule || 'daily', wd)
+          && state.extSlots[s.slotId] && state.extSlots[s.slotId].state === 'missing';
+      });
+      if (!need.length) return;
+      extFetchText(EXT_STH_URL).then(function (text) {
+        var items = extParseFeed(text);
+        need.forEach(function (slot) {
+          var it = extMatchSth(items, date, slot.fallbackToken);
+          if (it) settle(slot, { state: 'present', title: slot.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: 'Sing the Hours' });
+        });
+      }).catch(function () { /* the slots stand named missing */ });
+    });
+  }).catch(function () { /* settings read failed: own episodes stand; no external slots stand this open */ });
+}
+function extMatchBibleDayN(dateStr) {
+  var p = dateStr.split('-').map(Number);
+  var doy = Math.floor((Date.UTC(p[0], p[1] - 1, p[2]) - Date.UTC(p[0], 0, 0)) / 86400000);
+  return doy > 365 ? 365 : doy;
+}
+
 function renderPrayers() {
   view.innerHTML = '<h1 class="screen">Listen</h1><p class="sub">the day&rsquo;s prayers</p><p class="meta">Loading...</p>';
   api('/api/player/day').then(function (day) {
@@ -758,7 +1078,7 @@ function renderPrayers() {
       html += day.episodes.map(trackCard).join('');
     }
     view.innerHTML = html;
-    document.getElementById('play-all').addEventListener('click', function () { startQueue(allDescs); });
+    document.getElementById('play-all').addEventListener('click', function () { startQueue(extRebuildDescs(day)); });
     document.getElementById('sleep-btn').addEventListener('click', openSleepSheet);
     var rb = document.getElementById('resume-btn');
     if (rb && resumeDesc) rb.addEventListener('click', function () { loadResume(resumeDesc, resumeRec.positionS || 0); });
@@ -787,12 +1107,15 @@ function renderPrayers() {
     });
     view.querySelectorAll('[data-queue]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var b = (day.blocks || []).filter(function (x) { return x.block === btn.getAttribute('data-queue'); })[0];
-        var descs = (b.tracks || []).map(function (t) { return trackDesc(Object.assign({}, t, { _block: b.block })); });
+        var blockName = btn.getAttribute('data-queue');
+        var descs = extRebuildDescs(day).filter(function (d) { return d.block === blockName; });
         startQueue(descs);
       });
     });
     if (state.current) markPlaying(state.current.episodeId);
+    // v334: externals resolve at open, in place, after the day has
+    // rendered — the resolve never blocks the day's own episodes.
+    resolveExternals(day);
   }).catch(function (e) { view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
 }
 

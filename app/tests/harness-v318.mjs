@@ -305,7 +305,7 @@ print("HELPER-V318: PASS")
   let parses = true; try { new vm.Script(appJs); } catch { parses = false; }
   ok(parses, "the served /app.js parses (vm.Script)");
   const sw = (await api(BASE, "GET", "/sw.js")).text;
-  ok(sw.includes("ora-pro-nobis-v328-1"), "the SW cache name reads ora-pro-nobis-v328-1 (v328 Implement named update, §2.5: the pin follows the landed trunk's cache rename, v328's — the T9 bump's successor)");
+  ok(sw.includes("ora-pro-nobis-v334-1"), "the SW cache name reads ora-pro-nobis-v334-1 (v334 Implement named update: the pin follows the landed trunk's cache rename, v334's — superseding v328's)");
   ok(pageErrors.length === 0, `the browser boot ran with zero page errors${pageErrors.length ? " — " + pageErrors.join(" | ") : ""}`);
 } catch (e) {
   n++; fails++; console.log(`not ok ${n} - harness crashed: ${e.message}`);

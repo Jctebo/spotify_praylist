@@ -19,6 +19,12 @@ replace-day commit. The morning mode `--externals-only` (no other
 args) re-resolves the stored day's external rows through the
 externals-only door route and prints the "Externals re-resolve
 (v324)" field.
+v334 §2.7: BOTH legs are retired in code — the push no longer
+carries external entries in the replace-day commit (the app
+resolves externals at open), and the `--externals-only` mode is
+gone with the door route it posted to. The resolver import and
+apply_settings_to_externals stand for check-v328-consumption,
+which exercises them as the settings-consumption oracle.
 
 Inputs: the run's report.json (the manifest: episodes dict keyed by
 the short episode id, each with title / file / duration_s / bytes /
@@ -386,57 +392,8 @@ def resolve_text(rundir: Path, episode_id: str):
     return data
 
 
-def externals_only() -> int:
-    """v324 §2.8 — the morning re-resolve leg (the 05:40 watchdog):
-    re-resolve the STORED day's nine external rows and swap only
-    those, through the externals-only door route. A stored day that
-    is absent or not the current Chicago date is a named no-op; a
-    resolver or feed failure leaves the rows exactly as they stand
-    (nothing is posted) and is named."""
-    status, stored = door.call("GET", "/api/agent/player/stored-day")
-    stored_date = stored.get("storedDate") if status == 200 else None
-    today = datetime.datetime.now(ZoneInfo("America/Chicago")).date().isoformat()
-    if not stored_date or stored_date != today:
-        print(f"Externals re-resolve (v324): stored day is {stored_date or 'none'} — re-resolve skipped")
-        return 0
-    target = datetime.date.fromisoformat(stored_date)
-    entries, error, failed_feeds = resolver.resolve_externals_detailed(target)
-    if error or failed_feeds:
-        why = error or f"feed failure: {', '.join(sorted(failed_feeds))}"
-        print(f"Externals re-resolve (v324): FAILED — {why} · rows stand as pushed")
-        return 1
-    # v328 §2.4 steps 1+5+7: the morning leg consumes the settings
-    # the same way the nightly push does — one read, the same
-    # governance; the suffix names the leg on the re-resolve line,
-    # and a settings exclusion that lands a slot missing is named.
-    settings, set_version, set_label = load_settings()
-    ext_stood = []
-    if settings is not None:
-        _by_key, slot_prim, slot_fb = settings_maps(settings)
-        entries, ext_stood = apply_settings_to_externals(entries, target, slot_prim, slot_fb)
-    status, reply = door.call("POST", "/api/agent/player/externals",
-                              {"date": stored_date, "tracks": entries})
-    if status != 200 or not reply.get("ok"):
-        print(f"Externals re-resolve (v324): FAILED — externals route refused ({status}): {reply} · rows stand as pushed")
-        return 1
-    status, after = door.call("GET", "/api/agent/player/stored-day")
-    if status != 200 or after.get("externalsPresent") != reply.get("externalsPresent") \
-            or after.get("externalsMissing") != reply.get("externalsMissing"):
-        raise SystemExit(f"externals read-back mismatch ({status}): {after} vs route {reply}")
-    filled = reply.get("filled") or []
-    still = [t["episode_id"] for t in reply.get("perSlot", []) if t["audio_state"] == "missing"]
-    print(f"Externals re-resolve (v324): {reply['externalsPresent']}/9 present · "
-          f"filled: {', '.join(filled) or 'none'} · still missing: {', '.join(still) or 'none'}"
-          f"{settings_suffix(settings, set_version, set_label)}")
-    if ext_stood:
-        print(stood_out_line(ext_stood, []))
-    return 0
-
-
 def main() -> int:
     args = sys.argv[1:]
-    if "--externals-only" in args:
-        return externals_only()
     report_path = None
     rundir = None
     i = 0
@@ -506,21 +463,7 @@ def main() -> int:
                 **text_fields,
             })
 
-    # v324 §2.7 — step 4C stage: resolve the day's nine external
-    # slots and append them to the manifest; the replace-day commit
-    # stays the day's single write path. Externals never block the
-    # own-episode commit (§2.6): a resolver failure degrades all nine
-    # to missing and is named in the field below.
-    ext_entries, ext_error, _ext_failed = resolver.resolve_externals_detailed(
-        datetime.date.fromisoformat(date))
-    # v328 §2.4 step 5: the settings govern the externals' blocks,
-    # positions, and standing (a resolver failure already degraded
-    # all nine to missing entries, which the settings then place).
-    if settings is not None and ext_entries:
-        ext_entries, ext_stood = apply_settings_to_externals(
-            ext_entries, target_date, slot_prim, slot_fb)
-        stood += ext_stood
-    combined = manifest + ext_entries
+    combined = manifest
 
     status, commit = door.call("POST", "/api/agent/player/day", {"date": date, "episodes": combined})
     if status != 200 or not commit.get("ok"):
@@ -535,14 +478,12 @@ def main() -> int:
     texts_present = sum(1 for m in manifest if m["text_state"] == "present")
     texts_missing = len(manifest) - texts_present
     texts_verified = sum(1 for t in commit.get("perTrack", []) if t.get("text") == "verified" and t.get("episode_id") in own_ids)
-    ext_present = sum(1 for e in ext_entries if e["audio_state"] == "present")
     if commit.get("storedDate") != date or commit.get("rowCount") != len(combined) or verified != present or texts_verified != texts_present:
         raise SystemExit(f"commit read-back mismatch: {commit} vs manifest {len(combined)} ({present} present, texts {texts_present} present)")
 
     status, stored = door.call("GET", "/api/agent/player/stored-day")
     if status != 200 or stored.get("storedDate") != date or stored.get("episodeCount") != len(combined) \
-            or stored.get("textsPresent") != texts_present or stored.get("textsMissing") != texts_missing + len(ext_entries) \
-            or stored.get("externalsPresent") != ext_present or stored.get("externalsMissing") != len(ext_entries) - ext_present:
+            or stored.get("textsPresent") != texts_present or stored.get("textsMissing") != texts_missing:
         raise SystemExit(f"stored-day read-back mismatch ({status}): {stored}")
     print(f"App push (v312): date pushed {date} · episodes {len(manifest)} "
           f"({present} present / {missing} missing) · per-track audio verified {verified} · "
@@ -554,13 +495,6 @@ def main() -> int:
     # read failure through the suffix above and 'none' here unless
     # the settings leg itself stood something out).
     print(stood_out_line(stood, unmapped))
-    if ext_error:
-        print(f"Externals (v324): RESOLVER FAILED — {ext_error} · all slots stand missing")
-    else:
-        ext_missing_ids = [e["episode_id"] for e in ext_entries if e["audio_state"] == "missing"]
-        ext_present_fmt = ", ".join(f"{e['episode_id']}={e['source']}" for e in ext_entries if e["audio_state"] == "present")
-        print(f"Externals (v324): {ext_present}/9 present · {ext_present_fmt} · "
-              f"missing: {', '.join(ext_missing_ids) or 'none'}")
     return 0
 
 

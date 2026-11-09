@@ -23,7 +23,7 @@
 //     served / carries the gear; renderSettings against the
 //     instance's own data renders 23 rows in the seed's sections
 //     and order.
-//   8 the served /sw.js names ora-pro-nobis-v328-1.
+//   8 the served /sw.js names ora-pro-nobis-v334-1 (v334 Implement named update — v328's own check expected its own name; the pin follows the trunk's rename).
 // Runs against THIS worktree's app only (own wrangler dev + own
 // miniflare state under /tmp). The shared checkout is never a
 // wrangler cwd.
@@ -265,7 +265,7 @@ try {
 
   // ---------- leg 8: the service worker name ----------
   const sw = await (await fetch(BASE + "/sw.js")).text();
-  ok("leg8: the served /sw.js names ora-pro-nobis-v328-1", sw.includes("ora-pro-nobis-v328-1"));
+  ok("leg8: the served /sw.js names ora-pro-nobis-v334-1", sw.includes("ora-pro-nobis-v334-1"));
 } finally {
   // Kill the whole process GROUP: wrangler's workerd grandchildren
   // survive a plain proc.kill and hold the port as orphans.

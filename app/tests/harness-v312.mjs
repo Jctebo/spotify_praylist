@@ -412,7 +412,7 @@ try {
   let parses = true; try { new vm.Script(appJs); } catch { parses = false; }
   ok(parses, "check 11: the served /app.js parses (vm.Script)");
   const sw = (await api(BASE, "GET", "/sw.js")).text;
-  ok(sw.includes('ora-pro-nobis-v328-1'), "check 11: the SW cache name reads ora-pro-nobis-v328-1 (v328 Implement named update, §2.5: the pin follows the landed trunk's cache rename, v328's)");
+  ok(sw.includes('ora-pro-nobis-v334-1'), "check 11: the SW cache name reads ora-pro-nobis-v334-1 (v334 Implement named update: the pin follows the landed trunk's cache rename, v334's — superseding v328's)");
   let swParses = true; try { new vm.Script(sw); } catch { swParses = false; }
   ok(swParses && css.length > 100, "check 11: /sw.js parses and /styles.css serves");
   ok(pageErrors.length === 0, `check 11: the browser boot ran with zero page errors${pageErrors.length ? " — " + pageErrors.join(" | ") : ""}`);

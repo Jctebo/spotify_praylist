@@ -22,6 +22,11 @@ export interface Env {
   // deterministic per (date, item) so the gate can assert the
   // weighted distribution exactly (the DevOps LOCAL_DEV precedent).
   LOCAL_DEV?: string;
+  // v334 harness seam ONLY: overrides the Divine Office feed URL the
+  // courier fetches, so the gate can replay fixture feeds through
+  // the real route. Production leaves it unset and the courier uses
+  // the pinned resolver URL (EXT_DO_FEED_URL below).
+  EXT_DO_FEED_URL?: string;
 }
 
 import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
@@ -319,7 +324,11 @@ async function playerDayPayload(env: Env) {
   const date = dayRow.date;
   const audio = await prayerAudioMap(env, date);
   const rows = await env.DB.prepare("SELECT * FROM player_episodes WHERE date=? ORDER BY sort, episode_id").bind(date).all<PlayerEpisodeRow>();
-  const eps = rows.results ?? [];
+  // v334 §2.6: stored external rows never reach the client — the
+  // Prayers screen builds its externals solely from the at-open
+  // resolve + the device day cache. The rows stand untouched in D1
+  // and age out by the one-day retention at the next replace-day.
+  const eps = (rows.results ?? []).filter((r) => r.kind !== "external");
   const blocks = PRAYER_BLOCKS.map((block) => {
     const tracks: unknown[] = eps.filter((r) => r.block === block).map(episodeTrackShape);
     const hasAudio = audio.has(block);
@@ -478,6 +487,171 @@ async function sourceSettingsPayload(env: Env) {
       slotId: s.slot_id, role: s.role,
     })),
   };
+}
+
+// ---- Client-side externals (v334) ----------------------------------
+// The TypeScript port of jobs/externals_resolver.py's matchers (the
+// Python file stays the oracle; harness-v334 leg 1 proves parity).
+// The courier leg exists for ONE reason: the Divine Office feed
+// sends no CORS header, so the browser may not read it; the Worker
+// fetches it at open, matches in-request, and stores nothing — no
+// D1 write, no KV, no retained state (§2.2).
+const EXT_DO_FEED_URL = "https://divineoffice.org/feed/podcast/";
+const EXT_TOKENS: Record<string, string[]> = {
+  DO_INVITATORY: ["Invitatory", "Invitatory Psalm"],
+  DO_MORNING: ["Morning Prayer"],
+  DO_OFFICE: ["Office of Readings"],
+  DO_MIDMORNING: ["Midmorning Prayer"],
+  DO_MIDDAY: ["Midday Prayer"],
+  DO_MIDAFTERNOON: ["Midafternoon Prayer"],
+  DO_EVENING: ["Evening Prayer", "Vespers"],
+  DO_NIGHT_ANY: ["Night Prayer", "Compline"],
+};
+// (slotId, resolver display title, token key) in resolver slot order.
+const EXT_DO_SLOTS: { slotId: string; title: string; tokenKey: string }[] = [
+  { slotId: "ext-invitatory", title: "Invitatory", tokenKey: "DO_INVITATORY" },
+  { slotId: "ext-morning-prayer", title: "Morning Prayer", tokenKey: "DO_MORNING" },
+  { slotId: "ext-midmorning-prayer", title: "Midmorning Prayer", tokenKey: "DO_MIDMORNING" },
+  { slotId: "ext-midday-prayer", title: "Midday Prayer", tokenKey: "DO_MIDDAY" },
+  { slotId: "ext-midafternoon-prayer", title: "Midafternoon Prayer", tokenKey: "DO_MIDAFTERNOON" },
+  { slotId: "ext-office-of-readings", title: "Office of Readings", tokenKey: "DO_OFFICE" },
+  { slotId: "ext-evening-prayer", title: "Evening Prayer", tokenKey: "DO_EVENING" },
+  { slotId: "ext-night-prayer", title: "Night Prayer", tokenKey: "DO_NIGHT_ANY" },
+];
+interface ExtFeedItem { title: string; url: string; length: number; pubMs: number | null; durationS: number }
+function extXmlText(raw: string): string {
+  return raw
+    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
+    .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'").replace(/&#(\d+);/g, (_m, n) => String.fromCharCode(Number(n)))
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ").trim();
+}
+function extParseDuration(raw: string | null): number {
+  if (!raw) return 0;
+  const t = raw.trim();
+  try {
+    if (t.includes(":")) {
+      let secs = 0;
+      for (const p of t.split(":")) secs = secs * 60 + Number(p);
+      return Number.isFinite(secs) ? Math.trunc(secs) : 0;
+    }
+    const v = Number(t);
+    return Number.isFinite(v) ? Math.trunc(v) : 0;
+  } catch { return 0; }
+}
+function extParseFeed(xml: string): ExtFeedItem[] {
+  if (!/<channel[\s>]/.test(xml) || !/<item[\s>]/.test(xml)) throw new Error("feed parse failed");
+  const items: ExtFeedItem[] = [];
+  const itemRe = /<item(?:\s[^>]*)?>([\s\S]*?)<\/item>/g;
+  let m: RegExpExecArray | null;
+  while ((m = itemRe.exec(xml))) {
+    const body = m[1];
+    const titleM = /<title>([\s\S]*?)<\/title>/.exec(body);
+    const encM = /<enclosure\b([^>]*?)\/?>/.exec(body);
+    let url = "", length = 0;
+    if (encM) {
+      const um = /url="([^"]*)"/.exec(encM[1]);
+      if (um) url = extXmlText(um[1]);
+      const lm = /length="(\d+)"/.exec(encM[1]);
+      if (lm) length = Number(lm[1]);
+    }
+    const pubM = /<pubDate>([\s\S]*?)<\/pubDate>/.exec(body);
+    const pubMs = pubM ? Date.parse(pubM[1].trim()) : NaN;
+    const durM = /<[A-Za-z0-9_.-]*:?duration>([^<]*)</.exec(body);
+    items.push({
+      title: titleM ? extXmlText(titleM[1]) : "",
+      url, length,
+      pubMs: Number.isFinite(pubMs) ? pubMs : null,
+      durationS: extParseDuration(durM ? durM[1] : null),
+    });
+  }
+  return items;
+}
+const EXT_MONTHS_FULL = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const EXT_MONTHS_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function extDateRe(month: string, day: number): RegExp {
+  const esc = month.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?:^|[^A-Za-z])${esc}\\s*[-,]*\\s*0?${day}(?:st|nd|rd|th)?(?:\\s*,?\\s*\\d{4})?(?!\\w)`, "i");
+}
+function extMatchesMonthDay(title: string, y: number, mo: number, d: number): boolean {
+  return extDateRe(EXT_MONTHS_FULL[mo - 1], d).test(title) || extDateRe(EXT_MONTHS_ABBR[mo - 1], d).test(title);
+}
+function extMatchDivineOffice(items: ExtFeedItem[], y: number, mo: number, d: number): Map<string, ExtFeedItem> {
+  // The resolver's matcher ported: term at a non-letter boundary,
+  // title-date == target, enclosure required, first in feed order
+  // wins, one item consumed by one slot only.
+  const out = new Map<string, ExtFeedItem>();
+  const consumed = new Set<number>();
+  for (const slot of EXT_DO_SLOTS) {
+    const pats = EXT_TOKENS[slot.tokenKey].map((t) => new RegExp(`(?<![A-Za-z])${t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i"));
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      if (consumed.has(i) || !it.url) continue;
+      if (pats.some((p) => p.test(it.title)) && extMatchesMonthDay(it.title, y, mo, d)) {
+        out.set(slot.slotId, it);
+        consumed.add(i);
+        break;
+      }
+    }
+  }
+  return out;
+}
+function extDayRulePasses(rule: string, weekdayMon0: number): boolean {
+  // The push helper's day_rule_passes, ported: 'fallback-only' on a
+  // primary row never passes.
+  if (rule === "daily") return true;
+  if (rule === "weekdays") return weekdayMon0 < 5;
+  if (rule === "weekends") return weekdayMon0 >= 5;
+  if (rule === "sundays") return weekdayMon0 === 6;
+  if (rule === "fridays") return weekdayMon0 === 4;
+  return false;
+}
+async function externalsLivePayload(env: Env, date: string): Promise<{ slots: unknown[]; settingsVersion: number; error?: string }> {
+  const settings = await sourceSettingsPayload(env);
+  const prim = new Map<string, SourceSettingRow & { sourceKey: string }>();
+  for (const s of settings.sources) {
+    if (s.family === "external" && s.slotId && s.role !== "fallback") {
+      prim.set(s.slotId, { source_key: s.sourceKey, name: s.name, family: s.family, block: s.block, day_rule: s.dayRule, sort_order: s.sortOrder, enabled: s.enabled, slot_id: s.slotId, role: s.role });
+    }
+  }
+  const [y, mo, d] = date.split("-").map(Number);
+  const weekdayMon0 = (new Date(Date.UTC(y, mo - 1, d)).getUTCDay() + 6) % 7;
+  const standing = EXT_DO_SLOTS.filter((slot) => {
+    const row = prim.get(slot.slotId);
+    return !!row && row.enabled === 1 && extDayRulePasses(row.day_rule || "daily", weekdayMon0);
+  });
+  const mkMissing = (slot: { slotId: string; title: string }) => {
+    const row = prim.get(slot.slotId)!;
+    return { slotId: slot.slotId, state: "missing", title: slot.title, streamUrl: null, durationSec: 0, sizeBytes: 0, block: row.block || EXTERNAL_SLOTS[slot.slotId], sortOrder: row.sort_order };
+  };
+  let items: ExtFeedItem[] | null = null;
+  let error: string | undefined;
+  try {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 8000);
+    let res: Response;
+    try {
+      res = await fetch(env.EXT_DO_FEED_URL || EXT_DO_FEED_URL, {
+        headers: { "user-agent": "ora-pro-nobis-externals-resolver/1.0" }, signal: ctl.signal,
+      });
+    } finally { clearTimeout(timer); }
+    if (!res.ok) throw new Error(`feed fetch failed: HTTP ${res.status}`);
+    items = extParseFeed(await res.text());
+  } catch (e) {
+    error = e instanceof Error && e.name === "AbortError" ? "feed fetch timed out" : (e instanceof Error ? e.message : "feed fetch failed");
+  }
+  if (!items) {
+    return { settingsVersion: settings.version, error, slots: standing.map(mkMissing) };
+  }
+  const matches = extMatchDivineOffice(items, y, mo, d);
+  const slots = standing.map((slot) => {
+    const it = matches.get(slot.slotId);
+    if (!it) return mkMissing(slot);
+    const row = prim.get(slot.slotId)!;
+    return { slotId: slot.slotId, state: "present", title: slot.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS[slot.slotId], sortOrder: row.sort_order };
+  });
+  return { settingsVersion: settings.version, slots };
 }
 
 // ---- Router ----------------------------------------------------------------
@@ -653,72 +827,6 @@ export default {
           segmentsHeld: rb.segmentBlocks,
         });
       }
-      if (seg[2] === "player" && seg[3] === "externals" && request.method === "POST") {
-        // v324 §2.5 — the morning re-resolve write path: rewrites
-        // ONLY the stored day's nine external rows. Every guard is a
-        // named refusal that writes nothing; the swap is 9-for-9, so
-        // player_day.episode_count never moves.
-        const body = await request.json().catch(() => ({})) as {
-          date?: string;
-          tracks?: { episode_id?: string; title?: string; block?: string; sort?: number; duration_s?: number; size_bytes?: number; audio_state?: string; source?: string; stream_url?: string }[];
-        };
-        const date = String(body.date ?? "");
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
-        const dayRow = await env.DB.prepare("SELECT date FROM player_day WHERE id=1").first<{ date: string }>();
-        if (!dayRow || dayRow.date !== date) return err(409, `externals date ${date} is not the stored day ${dayRow?.date ?? "none"}`);
-        if (!Array.isArray(body.tracks)) return err(400, "tracks array required");
-        const pinned = Object.keys(EXTERNAL_SLOTS);
-        const ids = body.tracks.map((t) => String(t.episode_id ?? ""));
-        const missingIds = pinned.filter((id) => !ids.includes(id));
-        const extraIds = ids.filter((id) => !pinned.includes(id));
-        if (missingIds.length || extraIds.length || new Set(ids).size !== ids.length) {
-          return err(400, `externals track set must be exactly the nine pinned slots (missing: ${missingIds.join(", ") || "none"}; extra: ${extraIds.join(", ") || "none"})`);
-        }
-        const tracks: { episode_id: string; title: string; block: string; sort: number; duration_s: number; size_bytes: number; audio_state: string; source: string; stream_url: string }[] = [];
-        const validBlocks = new Set<string>([...PRAYER_BLOCKS, "unblocked"]);
-        for (const t of body.tracks) {
-          const id = String(t.episode_id ?? "");
-          // v328 §2.2: the block is validated as data and taken from
-          // the posted track (the slot-set check above still pins
-          // WHICH ids may stand here).
-          if (!validBlocks.has(t.block ?? "")) return err(400, `bad block for ${id}`);
-          if (!["present", "missing"].includes(t.audio_state ?? "")) return err(400, `bad audio_state for ${id}`);
-          tracks.push({
-            episode_id: id, title: String(t.title ?? id), block: t.block!,
-            sort: Number(t.sort ?? 0), duration_s: Number(t.duration_s ?? 0),
-            size_bytes: Number(t.size_bytes ?? 0), audio_state: t.audio_state!,
-            source: String(t.source ?? ""), stream_url: String(t.stream_url ?? ""),
-          });
-        }
-        // The swap's before-state, for the reply's filled list (the
-        // morning report names what the re-resolve landed).
-        const beforeRows = await env.DB.prepare("SELECT episode_id, audio_state FROM player_episodes WHERE date=? AND kind='external'").bind(date).all<{ episode_id: string; audio_state: string }>();
-        const before = new Map((beforeRows.results ?? []).map((r) => [r.episode_id, r.audio_state]));
-        const pushedAt = nowISO();
-        const stmts: D1PreparedStatement[] = [
-          env.DB.prepare("DELETE FROM player_episodes WHERE date=? AND kind='external'").bind(date),
-        ];
-        for (const t of tracks) {
-          stmts.push(env.DB.prepare(
-            `INSERT INTO player_episodes (date, episode_id, title, block, sort, duration_s, r2_key, size_bytes, audio_state, pushed_at, text_state, text_r2_key, kind, source, stream_url)
-             VALUES (?, ?, ?, ?, ?, ?, '', ?, ?, ?, 'missing', '', 'external', ?, ?)`,
-          ).bind(date, t.episode_id, t.title, t.block, t.sort, t.duration_s,
-            t.size_bytes, t.audio_state, pushedAt, t.source,
-            t.audio_state === "present" ? t.stream_url : ""));
-        }
-        await env.DB.batch(stmts);
-        const perSlot = tracks
-          .slice()
-          .sort((a, b) => a.sort - b.sort)
-          .map((t) => ({ episode_id: t.episode_id, audio_state: t.audio_state, source: t.source }));
-        return json({
-          ok: true, storedDate: date,
-          externalsPresent: tracks.filter((t) => t.audio_state === "present").length,
-          externalsMissing: tracks.filter((t) => t.audio_state === "missing").length,
-          perSlot,
-          filled: tracks.filter((t) => t.audio_state === "present" && before.get(t.episode_id) !== "present").map((t) => t.episode_id),
-        });
-      }
       if (seg[2] === "player" && seg[3] === "stored-day" && request.method === "GET") {
         const rb = await storedDayReadback(env);
         return json({ ok: true, ...rb });
@@ -887,6 +995,23 @@ export default {
           }
           if (stmts.length) await env.DB.batch(stmts);
           return json({ ok: true });
+        }
+        if (seg[2] === "externals" && seg[3] === "live" && request.method === "GET") {
+          // v334 §2.2 — the courier: session-only (this whole surface
+          // stands behind johnOnly), fetches the Divine Office feed
+          // at this moment, matches in-request, stores nothing. The
+          // stored day is the only resolvable day. Cache-Control is
+          // HTTP response reuse on the device (300 s), not a
+          // server-side cache: the server keeps nothing.
+          const date = url.searchParams.get("date") ?? "";
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+          const dayRow = await env.DB.prepare("SELECT date FROM player_day WHERE id=1").first<{ date: string }>();
+          if (!dayRow || dayRow.date !== date) return err(400, `date ${date} is not the stored day ${dayRow?.date ?? "none"}`);
+          const payload = await externalsLivePayload(env, date);
+          return new Response(JSON.stringify({ ok: true, date, ...payload }), {
+            status: 200,
+            headers: { "content-type": "application/json", "cache-control": "private, max-age=300" },
+          });
         }
         if (seg[2] === "source-settings" && request.method === "GET") {
           // v328 §2.2 route 1 — the Settings screen's read: the

@@ -203,7 +203,7 @@ try {
   let parses = true; try { new vm.Script(appJs); } catch { parses = false; }
   ok(parses, "check 1: the served /app.js parses (vm.Script)");
   const sw = (await api(BASE, "GET", "/sw.js")).text;
-  ok(sw.includes("ora-pro-nobis-v328-1"), "check 1: the SW cache name reads ora-pro-nobis-v328-1 (v328 Implement named update, §2.5: the pin follows the landed trunk's cache rename — v328's rename supersedes v326's)");
+  ok(sw.includes("ora-pro-nobis-v334-1"), "check 1: the SW cache name reads ora-pro-nobis-v334-1 (v334 Implement named update: the pin follows the landed trunk's cache rename — v334's rename supersedes v328's)");
   ok(pageErrors.length === 0, `check 1: the browser boot ran with zero page errors${pageErrors.length ? " — " + pageErrors.join(" | ") : ""}`);
   const keysAtBoot = await ev(() => Object.keys(localStorage).sort());
   ok(keysAtBoot.length === 0, "check 14 (early): localStorage stands empty at boot (no harness seeds)");
