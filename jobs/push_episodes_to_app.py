@@ -25,17 +25,21 @@ the short episode id, each with title / file / duration_s / bytes /
 status) and the built MP3 files standing in the run directory.
 
 What it does:
-  1. Resolves each episode's block AT PUSH TIME (Scope §1's rule):
+  1. Resolves each episode's block AT PUSH TIME. v328: the authority
+     is the app's source-mapping settings, read ONCE through the
+     agent door (GET /api/agent/player/settings) — each episode
+     family takes its governing row's block, day rule, on/off, and
+     order, and the committed sort derives from the settings order
+     (§2.4's formula). A failed read falls back to the last-known
+     cache, and before any cache stands, to the standing resolution:
      mapped player_sources titles first (when readable), then the
      day's prayer-item names from the app's own day payload — longest
      name that the episode's title carries as its head wins, so
      "Daily Rosary - Sorrowful Mysteries - ..." resolves to the
-     Morning block's "Daily Rosary". Unmatched -> 'unblocked'.
-     The v331 SEED_PLACEMENT table is consulted first: it carries
-     the placement for the producers the name-match cannot place
-     (novenas -> Midmorning, the Marian Antiphon -> Morning) until
-     v328's settings read supersedes it.
-     Sort = manifest order.
+     Morning block's "Daily Rosary"; unmatched -> 'unblocked'; sort
+     = manifest order. Every leg is named in the report field, and
+     any source that stood out (off, day-ruled, unmapped) is named
+     in the companion "Settings (v328)" line.
   2. Stages each built episode's audio: POST
      /api/agent/player/episodes/audio (R2 only, no D1 write).
   2B. (v318 T8) Stages each episode's text: the run directory's
@@ -78,28 +82,219 @@ _rspec.loader.exec_module(resolver)
 
 DATE_SUFFIX = re.compile(r" - [A-Z][a-z]+ \d{1,2}, \d{4}$")
 
-# v331 seed placement — DATA, not logic: the v328 seed rows for the
-# producers the name-match below cannot place (no prayer item is named
-# for the novenas or the Marian Antiphon, so both fell to 'unblocked'
-# and rendered under "FROM TODAY'S PODCAST", outside the blocks).
-# (match, block): "prefix" matches an episode-id prefix, "exact" the
-# whole id. v328's settings read supersedes this table when it lands;
-# until then this is the placement of record for these producers.
-SEED_PLACEMENT = [
-    ("prefix", "novena-", "Midmorning"),
-    ("exact", "marian-antiphon-angelus", "Morning"),
+# ---- v328: the source-mapping settings (Plan §2.4) -----------------
+# Family matchers (mechanics, code constants — matching is not a
+# setting; Scope §1's line): (match kind, episode-id pattern, settings
+# source_key). The 2026-11-08 manifest's keys are the families'
+# evidence. v331's SEED_PLACEMENT table is absorbed and DELETED: its
+# two placements (novenas -> Midmorning, the Marian Antiphon ->
+# Morning) are seed rows in the settings now.
+FAMILY_MATCH = [
+    ("exact", "morning-prayer", "morning-prayer"),
+    ("exact", "daily-rosary", "daily-rosary"),
+    ("exact", "marian-antiphon-angelus", "marian-antiphon"),
+    ("prefix", "novena-", "novenas"),
+    ("exact", "auxilium-christianorum", "auxilium-christianorum"),
+    ("exact", "daily-reflection", "daily-reflection"),
 ]
 
+BLOCK_ORDINAL = {"Morning": 1, "Midmorning": 2, "Midday": 3, "Afternoon": 4,
+                 "Evening": 5, "Night": 6, "unblocked": 7}
 
-def seed_block(episode_id: str):
-    """The seed block for an episode id, or None when the seed does
-    not name it (the episode then resolves by name-match as before)."""
-    for kind, match, block in SEED_PLACEMENT:
+# The last-known cache (D4): outside the per-date run dirs, so it
+# survives across nights. OPN_SETTINGS_CACHE overrides it (the
+# consumption check's seam); production never sets the override.
+SETTINGS_CACHE = Path(
+    __import__("os").environ.get(
+        "OPN_SETTINGS_CACHE",
+        str(Path.home() / "workspace/ora-runner-runs/app-settings-cache.json")))
+
+
+def family_of(episode_id: str):
+    """The settings source_key governing an episode id, or None."""
+    for kind, match, key in FAMILY_MATCH:
         if kind == "prefix" and episode_id.startswith(match):
-            return block
+            return key
         if kind == "exact" and episode_id == match:
-            return block
+            return key
     return None
+
+
+def load_settings():
+    """One versioned door read (D4) -> (settings, version, label).
+    Success: the cache is rewritten and the label is 'live read'.
+    Any failure: the cache governs when it stands ('last-known
+    cache'); before any cache stands, (None, None, 'standing
+    fallback') and the standing resolution below governs."""
+    try:
+        status, body = door.call("GET", "/api/agent/player/settings")
+        if status != 200 or not isinstance(body, dict) \
+                or not isinstance(body.get("sources"), list) \
+                or not isinstance(body.get("version"), int):
+            raise ValueError(f"settings read malformed ({status})")
+        try:
+            SETTINGS_CACHE.parent.mkdir(parents=True, exist_ok=True)
+            tmp = SETTINGS_CACHE.with_name(SETTINGS_CACHE.name + ".tmp")
+            tmp.write_text(json.dumps({
+                "version": body["version"],
+                "fetched_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "sources": body["sources"],
+            }))
+            tmp.replace(SETTINGS_CACHE)
+        except Exception:
+            pass  # a cache-write failure never fails the read
+        return body, body["version"], "live read"
+    except Exception:
+        pass
+    try:
+        cache = json.loads(SETTINGS_CACHE.read_text())
+        if isinstance(cache.get("sources"), list) and isinstance(cache.get("version"), int):
+            return {"version": cache["version"], "sources": cache["sources"]}, cache["version"], "last-known cache"
+    except Exception:
+        pass
+    return None, None, "standing fallback"
+
+
+def day_rule_passes(rule: str, target: datetime.date) -> bool:
+    """The stored day-rule vocabulary against the target date
+    (§2.4 step 4). 'fallback-only' on the row being evaluated as a
+    play candidate never passes: on a primary row it means the row
+    never plays; a fallback row's gate is day_rule_fills()."""
+    if rule == "daily":
+        return True
+    if rule == "weekdays":
+        return target.weekday() < 5
+    if rule == "weekends":
+        return target.weekday() >= 5
+    if rule == "sundays":
+        return target.weekday() == 6
+    if rule == "fridays":
+        return target.weekday() == 4
+    return False
+
+
+def day_rule_fills(rule: str, target: datetime.date) -> bool:
+    """A fallback row's own day-rule gate (§2.4 step 5): the seed's
+    'fallback-only' states the row's ROLE, not a day restriction —
+    it fills whenever its primary misses; the calendar rules gate
+    the days as usual."""
+    if rule == "fallback-only":
+        return True
+    return day_rule_passes(rule, target)
+
+
+def settings_maps(settings: dict):
+    """-> (by_key, by_slot_primary, by_slot_fallback)."""
+    by_key, prim, fb = {}, {}, {}
+    for r in settings.get("sources", []):
+        by_key[r.get("sourceKey")] = r
+        slot = r.get("slotId")
+        if slot:
+            if r.get("role") == "fallback":
+                fb[slot] = r
+            else:
+                prim[slot] = r
+    return by_key, prim, fb
+
+
+def _settings_sort(block: str, sort_order, intra: int = 0) -> int:
+    """§2.4 step 6's formula: blockOrdinal x 100000 + sort_order x
+    100 + intra-family index — the payload reads ORDER BY sort,
+    episode_id, so the intra index is what keeps a family's episodes
+    in manifest order instead of alphabetical."""
+    return BLOCK_ORDINAL.get(block, 7) * 100000 + (sort_order or 0) * 100 + intra
+
+
+def resolve_own_with_settings(episodes: dict, target: datetime.date, by_key: dict):
+    """-> (placed, excluded, unmapped). placed: key -> (block, sort)
+    for every episode that stands in the day; excluded: [(name,
+    reason)] for family episodes the settings stand out (NOT pushed
+    as tracks, §1 in-scope 3); unmapped: [keys] the settings do not
+    name — committed as 'unblocked' in manifest order (§2.4 step
+    3(c)), sorted after the block-mapped unblocked rows."""
+    placed, excluded, unmapped = {}, [], []
+    intra = {}
+    for idx, key in enumerate(episodes):
+        fam = family_of(key)
+        n = intra.get(fam, 0) if fam else 0
+        if fam:
+            intra[fam] = n + 1
+        row = by_key.get(fam) if fam else None
+        if row is None:
+            unmapped.append(key)
+            placed[key] = ("unblocked", BLOCK_ORDINAL["unblocked"] * 100000 + 50000 + idx)
+            continue
+        if not row.get("enabled"):
+            excluded.append((row.get("name") or key, "off"))
+            continue
+        if not day_rule_passes(row.get("dayRule") or "daily", target):
+            excluded.append((row.get("name") or key, f"day rule: {row.get('dayRule')}"))
+            continue
+        block = row.get("block") or "unblocked"
+        placed[key] = (block, _settings_sort(block, row.get("sortOrder"), n))
+    return placed, excluded, unmapped
+
+
+def _external_missing(entry: dict, block: str, sort: int) -> dict:
+    e = dict(entry)
+    e.update({"block": block, "sort": sort, "audio_state": "missing",
+              "stream_url": "", "size_bytes": 0, "duration_s": 0})
+    return e
+
+
+def apply_settings_to_externals(entries: list, target: datetime.date, prim: dict, fb: dict):
+    """§2.4 step 5: the slot's primary row governs block + position
+    + on/off. Primary off or day-ruled out -> the entry stands
+    missing at the primary row's position and the fallback is NOT
+    consulted. A Sing the Hours fill stands only while its fallback
+    row is enabled and its day rule lets it fill. -> (entries,
+    stood_out [(name, reason)])."""
+    out, stood = [], []
+    for e in entries:
+        slot = e["episode_id"]
+        row = prim.get(slot)
+        if row is None:
+            out.append(e)  # no governing row: the resolver's entry stands
+            continue
+        block = row.get("block") or "unblocked"
+        sort = _settings_sort(block, row.get("sortOrder"))
+        if not row.get("enabled"):
+            stood.append((row.get("name") or slot, "off"))
+            out.append(_external_missing(e, block, sort))
+            continue
+        if not day_rule_passes(row.get("dayRule") or "daily", target):
+            stood.append((row.get("name") or slot, f"day rule: {row.get('dayRule')}"))
+            out.append(_external_missing(e, block, sort))
+            continue
+        e2 = dict(e)
+        e2.update({"block": block, "sort": sort})
+        if e["audio_state"] == "present" and e.get("source") == "Sing the Hours":
+            frow = fb.get(slot)
+            if frow is not None and (not frow.get("enabled")
+                                     or not day_rule_fills(frow.get("dayRule") or "daily", target)):
+                if not frow.get("enabled"):
+                    stood.append((frow.get("name") or slot, "off"))
+                else:
+                    stood.append((frow.get("name") or slot, f"day rule: {frow.get('dayRule')}"))
+                out.append(_external_missing(e, block, sort))
+                continue
+        out.append(e2)
+    return out, stood
+
+
+def settings_suffix(settings, version, label) -> str:
+    """§2.4 step 7's suffix, exact forms."""
+    if settings is None:
+        return " · settings: standing fallback (read failed)"
+    return f" · settings v{version} ({label})"
+
+
+def stood_out_line(stood: list, unmapped: list) -> str:
+    """The always-printed companion line (§2.4 step 7): its absence
+    from a run report is itself a failure signal."""
+    parts = [f"{name} ({reason})" for name, reason in stood]
+    parts += [f"{key} (unmapped)" for key in unmapped]
+    return f"Settings (v328): stood out — {' · '.join(parts) if parts else 'none'}"
 
 
 def strip_date(title: str) -> str:
@@ -107,7 +302,11 @@ def strip_date(title: str) -> str:
 
 
 def resolve_blocks(report_date: str, episodes: dict) -> dict:
-    """episode key -> block name (or 'unblocked')."""
+    """episode key -> block name (or 'unblocked') — the STANDING
+    resolution (v328 §2.4 step 2's fallback): the pre-v328 ladder
+    minus v331's SEED_PLACEMENT, which the settings absorb. It
+    governs only when no settings read and no cache stand, and the
+    push names that leg in its report."""
     name_to_block = {}
     # Mapped player_sources titles first (Scope §1's push-time rule).
     try:
@@ -127,10 +326,6 @@ def resolve_blocks(report_date: str, episodes: dict) -> dict:
     names = sorted(name_to_block, key=len, reverse=True)
     out = {}
     for key, ep in episodes.items():
-        seeded = seed_block(key)
-        if seeded is not None:
-            out[key] = seeded
-            continue
         title = strip_date(ep.get("title", ""))
         block = "unblocked"
         for name in names:
@@ -210,6 +405,15 @@ def externals_only() -> int:
         why = error or f"feed failure: {', '.join(sorted(failed_feeds))}"
         print(f"Externals re-resolve (v324): FAILED — {why} · rows stand as pushed")
         return 1
+    # v328 §2.4 steps 1+5+7: the morning leg consumes the settings
+    # the same way the nightly push does — one read, the same
+    # governance; the suffix names the leg on the re-resolve line,
+    # and a settings exclusion that lands a slot missing is named.
+    settings, set_version, set_label = load_settings()
+    ext_stood = []
+    if settings is not None:
+        _by_key, slot_prim, slot_fb = settings_maps(settings)
+        entries, ext_stood = apply_settings_to_externals(entries, target, slot_prim, slot_fb)
     status, reply = door.call("POST", "/api/agent/player/externals",
                               {"date": stored_date, "tracks": entries})
     if status != 200 or not reply.get("ok"):
@@ -222,7 +426,10 @@ def externals_only() -> int:
     filled = reply.get("filled") or []
     still = [t["episode_id"] for t in reply.get("perSlot", []) if t["audio_state"] == "missing"]
     print(f"Externals re-resolve (v324): {reply['externalsPresent']}/9 present · "
-          f"filled: {', '.join(filled) or 'none'} · still missing: {', '.join(still) or 'none'}")
+          f"filled: {', '.join(filled) or 'none'} · still missing: {', '.join(still) or 'none'}"
+          f"{settings_suffix(settings, set_version, set_label)}")
+    if ext_stood:
+        print(stood_out_line(ext_stood, []))
     return 0
 
 
@@ -250,9 +457,22 @@ def main() -> int:
     if not episodes:
         raise SystemExit("report carries no episodes — nothing to push")
 
-    blocks = resolve_blocks(date, episodes)
+    # v328 §2.4 step 1: ONE settings read per push, taken before any
+    # resolution; every leg below is governed by what it returns.
+    settings, set_version, set_label = load_settings()
+    target_date = datetime.date.fromisoformat(date)
+    slot_prim = slot_fb = None
+    stood, unmapped = [], []
+    if settings is not None:
+        by_key, slot_prim, slot_fb = settings_maps(settings)
+        placed, stood, unmapped = resolve_own_with_settings(episodes, target_date, by_key)
+        order = [(key, placed[key][0], placed[key][1]) for key in episodes if key in placed]
+    else:
+        blocks = resolve_blocks(date, episodes)
+        order = [(key, blocks[key], i + 1) for i, key in enumerate(episodes)]
     manifest = []
-    for sort, (key, ep) in enumerate(episodes.items(), start=1):
+    for key, block, sort in order:
+        ep = episodes[key]
         f = rundir / (ep.get("file") or "")
         built = ep.get("status") == "built" and ep.get("file") and f.exists()
         # v318 T8: the text resolves for every manifest episode,
@@ -272,7 +492,7 @@ def main() -> int:
                 raise SystemExit(f"audio staging failed for {key}: {res}")
             manifest.append({
                 "episode_id": key, "title": strip_date(ep.get("title", key)),
-                "block": blocks[key], "sort": sort,
+                "block": block, "sort": sort,
                 "duration_s": ep.get("duration_s", 0),
                 "size_bytes": f.stat().st_size, "audio_state": "present",
                 **text_fields,
@@ -280,7 +500,7 @@ def main() -> int:
         else:
             manifest.append({
                 "episode_id": key, "title": strip_date(ep.get("title", key)),
-                "block": blocks[key], "sort": sort,
+                "block": block, "sort": sort,
                 "duration_s": ep.get("duration_s", 0),
                 "size_bytes": 0, "audio_state": "missing",
                 **text_fields,
@@ -293,6 +513,13 @@ def main() -> int:
     # to missing and is named in the field below.
     ext_entries, ext_error, _ext_failed = resolver.resolve_externals_detailed(
         datetime.date.fromisoformat(date))
+    # v328 §2.4 step 5: the settings govern the externals' blocks,
+    # positions, and standing (a resolver failure already degraded
+    # all nine to missing entries, which the settings then place).
+    if settings is not None and ext_entries:
+        ext_entries, ext_stood = apply_settings_to_externals(
+            ext_entries, target_date, slot_prim, slot_fb)
+        stood += ext_stood
     combined = manifest + ext_entries
 
     status, commit = door.call("POST", "/api/agent/player/day", {"date": date, "episodes": combined})
@@ -319,7 +546,14 @@ def main() -> int:
         raise SystemExit(f"stored-day read-back mismatch ({status}): {stored}")
     print(f"App push (v312): date pushed {date} · episodes {len(manifest)} "
           f"({present} present / {missing} missing) · per-track audio verified {verified} · "
-          f"stored date after push {stored['storedDate']} · texts {texts_present} / {texts_missing}")
+          f"stored date after push {stored['storedDate']} · texts {texts_present} / {texts_missing}"
+          f"{settings_suffix(settings, set_version, set_label)}")
+    # §2.4 step 7: the companion line ALWAYS prints — in the
+    # standing-fallback leg too (its counts describe the settings'
+    # view, which that leg did not apply; the line still names the
+    # read failure through the suffix above and 'none' here unless
+    # the settings leg itself stood something out).
+    print(stood_out_line(stood, unmapped))
     if ext_error:
         print(f"Externals (v324): RESOLVER FAILED — {ext_error} · all slots stand missing")
     else:

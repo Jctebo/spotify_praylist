@@ -242,10 +242,13 @@ async function prayerDayPayload(env: Env, date: string) {
 // deleted, not bypassed: what the nightly run published is what the
 // player shows, and a day the run did not publish reads as a named
 // missing day.
-// v324 §2.2: the nine external slots, fixed — slot id -> pinned
-// block. Slot-neutral ids (the fallback can change who fills a slot);
-// the commit route and the externals route both validate against
-// this one table.
+// v324 §2.2: the nine external slots, fixed — slot id -> the seed's
+// block. Slot-neutral ids (the fallback can change who fills a
+// slot). v328 §2.2: this table is demoted to the slot-id REGISTRY —
+// an external episode_id must still be one of the nine — while the
+// block is validated as data (one of PRAYER_BLOCKS or 'unblocked')
+// and taken from the posted entry, because under the source-mapping
+// settings an external's block is John's configuration, not a pin.
 const EXTERNAL_SLOTS: Record<string, string> = {
   "ext-invitatory": "Morning",
   "ext-morning-prayer": "Morning",
@@ -443,6 +446,40 @@ async function confessionPayload(env: Env) {
   };
 }
 
+// ---- Source-mapping settings (v328 §2.1/§2.2) ----------------------
+// The mapping as data: one row per source in player_source_settings,
+// seeded once by migration 0010 (the seed of record — the Worker
+// carries no seed constant), plus the player_settings_meta version.
+// The session surface reads and writes it (John's edits); the agent
+// door reads it only (the nightly push's consumption leg). One
+// payload shape serves both reads.
+const DAY_RULES = ["daily", "weekdays", "weekends", "sundays", "fridays", "fallback-only"] as const;
+interface SourceSettingRow {
+  source_key: string; name: string; family: string; block: string; day_rule: string;
+  sort_order: number | null; enabled: number; slot_id: string | null; role: string;
+}
+async function sourceSettingsPayload(env: Env) {
+  const meta = await env.DB.prepare("SELECT version FROM player_settings_meta WHERE id=1").first<{ version: number }>();
+  const r = await env.DB.prepare("SELECT * FROM player_source_settings").all<SourceSettingRow>();
+  const blockRank = (b: string) => {
+    const i = (PRAYER_BLOCKS as readonly string[]).indexOf(b);
+    return b === "" ? PRAYER_BLOCKS.length : (i < 0 ? PRAYER_BLOCKS.length + 1 : i);
+  };
+  const rows = (r.results ?? []).slice().sort((a, b2) =>
+    blockRank(a.block) - blockRank(b2.block)
+    || (a.sort_order ?? Number.MAX_SAFE_INTEGER) - (b2.sort_order ?? Number.MAX_SAFE_INTEGER)
+    || a.name.localeCompare(b2.name));
+  return {
+    ok: true,
+    version: meta?.version ?? 0,
+    sources: rows.map((s) => ({
+      sourceKey: s.source_key, name: s.name, family: s.family, block: s.block,
+      dayRule: s.day_rule, sortOrder: s.sort_order, enabled: s.enabled,
+      slotId: s.slot_id, role: s.role,
+    })),
+  };
+}
+
 // ---- Router ----------------------------------------------------------------
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -541,13 +578,13 @@ export default {
           // v324 §2.4: kind/source/stream_url ride the same way —
           // absent kind is an own episode (the v312 helper shape
           // keeps committing); an external entry must name one of
-          // the nine pinned slots and its pinned block.
+          // the nine registered slots. v328 §2.2: its block is
+          // validated as data (the validBlocks check above already
+          // ran) and taken from the entry — the settings govern it.
           const kind = e.kind ?? "episode";
           if (!["episode", "external"].includes(kind)) return err(400, `bad kind for ${e.episode_id}`);
           if (kind === "external") {
-            const slotBlock = EXTERNAL_SLOTS[e.episode_id];
-            if (!slotBlock) return err(400, `external episode_id ${e.episode_id} is not a pinned slot`);
-            if ((e.block ?? "") !== slotBlock) return err(400, `external block for ${e.episode_id} must be ${slotBlock}`);
+            if (!(e.episode_id in EXTERNAL_SLOTS)) return err(400, `external episode_id ${e.episode_id} is not a registered slot`);
           }
           eps.push({
             episode_id: e.episode_id, title: String(e.title ?? e.episode_id), block: e.block!,
@@ -638,12 +675,16 @@ export default {
           return err(400, `externals track set must be exactly the nine pinned slots (missing: ${missingIds.join(", ") || "none"}; extra: ${extraIds.join(", ") || "none"})`);
         }
         const tracks: { episode_id: string; title: string; block: string; sort: number; duration_s: number; size_bytes: number; audio_state: string; source: string; stream_url: string }[] = [];
+        const validBlocks = new Set<string>([...PRAYER_BLOCKS, "unblocked"]);
         for (const t of body.tracks) {
           const id = String(t.episode_id ?? "");
-          if ((t.block ?? "") !== EXTERNAL_SLOTS[id]) return err(400, `external block for ${id} must be ${EXTERNAL_SLOTS[id]}`);
+          // v328 §2.2: the block is validated as data and taken from
+          // the posted track (the slot-set check above still pins
+          // WHICH ids may stand here).
+          if (!validBlocks.has(t.block ?? "")) return err(400, `bad block for ${id}`);
           if (!["present", "missing"].includes(t.audio_state ?? "")) return err(400, `bad audio_state for ${id}`);
           tracks.push({
-            episode_id: id, title: String(t.title ?? id), block: EXTERNAL_SLOTS[id],
+            episode_id: id, title: String(t.title ?? id), block: t.block!,
             sort: Number(t.sort ?? 0), duration_s: Number(t.duration_s ?? 0),
             size_bytes: Number(t.size_bytes ?? 0), audio_state: t.audio_state!,
             source: String(t.source ?? ""), stream_url: String(t.stream_url ?? ""),
@@ -681,6 +722,12 @@ export default {
       if (seg[2] === "player" && seg[3] === "stored-day" && request.method === "GET") {
         const rb = await storedDayReadback(env);
         return json({ ok: true, ...rb });
+      }
+      if (seg[2] === "player" && seg[3] === "settings" && request.method === "GET") {
+        // v328 §2.2 route 3 — the door read the push consumes: the
+        // settings + version, read-only. No door write route exists;
+        // writes are John's, session-only.
+        return json(await sourceSettingsPayload(env));
       }
       return err(404, "unknown agent route");
     }
@@ -840,6 +887,58 @@ export default {
           }
           if (stmts.length) await env.DB.batch(stmts);
           return json({ ok: true });
+        }
+        if (seg[2] === "source-settings" && request.method === "GET") {
+          // v328 §2.2 route 1 — the Settings screen's read: the
+          // identical body to the door read.
+          return json(await sourceSettingsPayload(env));
+        }
+        if (seg[2] === "source-settings" && request.method === "PUT") {
+          // v328 §2.2 route 2 — John's whole-table write, in the
+          // sources-PUT idiom (one D1 batch). Every validation is a
+          // named 400 that writes nothing. name, family, slot_id,
+          // and role are server-owned and never taken from the body;
+          // sort_order is renumbered gapless per block following the
+          // body's array order (A1.2's renumber pin).
+          const body = await request.json().catch(() => ({})) as {
+            sources?: { sourceKey?: string; block?: string; dayRule?: string; enabled?: number }[];
+          };
+          if (!Array.isArray(body.sources)) return err(400, "sources required");
+          const cur = await env.DB.prepare("SELECT source_key FROM player_source_settings").all<{ source_key: string }>();
+          const stored = new Set((cur.results ?? []).map((r) => r.source_key));
+          const seen = new Set<string>();
+          for (const s of body.sources) {
+            const key = String(s.sourceKey ?? "");
+            if (!stored.has(key)) return err(400, `unknown sourceKey ${key || "(empty)"}`);
+            if (seen.has(key)) return err(400, `duplicate sourceKey ${key}`);
+            seen.add(key);
+            if (!(s.block === "" || (PRAYER_BLOCKS as readonly string[]).includes(s.block ?? ""))) return err(400, `bad block for ${key}`);
+            if (!(DAY_RULES as readonly string[]).includes(s.dayRule ?? "")) return err(400, `bad dayRule for ${key}`);
+            if (s.enabled !== 0 && s.enabled !== 1) return err(400, `bad enabled for ${key}`);
+          }
+          if (seen.size !== stored.size) return err(400, "the row set must be exactly the stored set (no creates, no deletes)");
+          const counters = new Map<string, number>();
+          const ts = nowISO();
+          const stmts: D1PreparedStatement[] = [];
+          for (const s of body.sources) {
+            const key = String(s.sourceKey ?? "");
+            const placed = s.enabled === 1 && (s.block ?? "") !== "";
+            let sortOrder: number | null = null;
+            if (placed) {
+              const n = (counters.get(s.block!) ?? 0) + 1;
+              counters.set(s.block!, n);
+              sortOrder = n;
+            }
+            stmts.push(env.DB.prepare(
+              "UPDATE player_source_settings SET block=?, day_rule=?, enabled=?, sort_order=?, updated_at=? WHERE source_key=?",
+            ).bind(s.block ?? "", s.dayRule ?? "daily", s.enabled ?? 0, sortOrder, ts, key));
+          }
+          stmts.push(env.DB.prepare(
+            "UPDATE player_settings_meta SET version = version + 1, updated_at = ? WHERE id = 1",
+          ).bind(ts));
+          await env.DB.batch(stmts);
+          const meta = await env.DB.prepare("SELECT version FROM player_settings_meta WHERE id=1").first<{ version: number }>();
+          return json({ ok: true, version: meta?.version ?? 0 });
         }
         return err(404, "unknown player route");
       }

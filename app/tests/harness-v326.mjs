@@ -14,7 +14,7 @@
 // sheets and the Read view cover the dock (z-order) · Intentions
 // chip plays raise the dock titled "Intentions" with next disabled ·
 // the clearance arithmetic is measured, not constant · the SW name
-// reads ora-pro-nobis-v326-1 · the served client parses and boots.
+// reads ora-pro-nobis-v328-1 (v328 Implement named update, §2.5: the header pin follows the trunk's cache rename) · the served client parses and boots.
 // Tallies read from the COMPLETE log. Regression suites (v312/v318/
 // v320/v325/v327) run as their own processes; their tallies are
 // quoted in the release document §3.
@@ -224,7 +224,7 @@ try {
 
   // check 20/21 groundwork: served files before any navigation.
   const swText = await (await fetch(BASE + "/sw.js")).text();
-  ok(swText.includes("ora-pro-nobis-v326-1"), "check 20: the served /sw.js reads ora-pro-nobis-v326-1 (v326's bump)");
+  ok(swText.includes("ora-pro-nobis-v328-1"), "check 20: the served /sw.js reads ora-pro-nobis-v328-1 (v328's bump, named update §2.5 — the pin follows the landed trunk's cache rename)");
   const appJs = await (await fetch(BASE + "/app.js")).text();
   let parses = true; try { new vm.Script(appJs); } catch { parses = false; }
 

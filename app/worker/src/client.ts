@@ -432,6 +432,149 @@ document.getElementById('dock').addEventListener('click', function (ev) {
 window.addEventListener('resize', measureBars);
 measureBars();
 
+/* ---------------- Settings (v328) ----------------
+   The source-mapping screen, reached by the brand-bar gear (it
+   stands on every screen); it is not a tab — no tab stands active
+   while it shows, and tapping any tab leaves it. One row per
+   source: name, a family meta line, and the four knobs (on/off,
+   block, day rule, order). The displayed order IS the order of
+   record: the rows stand in settings order inside their sections,
+   and Save sends the full array in displayed order — the server
+   renumbers each block's sequence gapless from that order and
+   increments the settings version. The Intentions card is not a
+   settings row and never appears here (A1.2a). */
+var settingsRows = [];
+var settingsVersion = null;
+var settingsNote = '';
+var SET_BLOCKS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
+var SET_SECTIONS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'No block', 'Off'];
+var DAY_RULE_LABELS = { 'daily': 'Daily', 'weekdays': 'Weekdays only', 'weekends': 'Weekends only', 'sundays': 'Sundays only', 'fridays': 'Fridays only', 'fallback-only': 'Fallback only' };
+function settingsFamilyLabel(row) {
+  if (row.sourceKey === 'saint-of-the-day') return 'Spotify-side today — this row governs from the day a source leg brings this source into the app.';
+  if (row.family === 'own') return 'Own podcast';
+  if (row.family === 'spotify') return 'Spotify-side today';
+  if (row.family === 'unplaced') return 'Not placed — no app leg yet.';
+  var base = row.name.split(' — ')[0];
+  return row.role === 'fallback' ? base + ' — fallback only' : base;
+}
+function settingsSectionOf(row) {
+  if (!row.enabled) return 'Off';
+  if (!row.block) return 'No block';
+  return row.block;
+}
+function settingsSections() {
+  var out = {};
+  SET_SECTIONS.forEach(function (s) { out[s] = []; });
+  settingsRows.forEach(function (r) { out[settingsSectionOf(r)].push(r); });
+  return out;
+}
+function renderSettings() {
+  state.tab = 'settings';
+  document.querySelectorAll('#tabbar .tab').forEach(function (b) { b.classList.remove('active'); });
+  view.innerHTML = '<h1 class="screen">Settings</h1><p class="sub">Source mapping</p><p class="meta">Loading...</p>';
+  api('/api/player/source-settings').then(function (res) {
+    settingsRows = res.sources || [];
+    settingsVersion = res.version;
+    settingsNote = '';
+    paintSettings();
+  }).catch(function (e) {
+    view.innerHTML = '<h1 class="screen">Settings</h1><p class="err">' + esc(e.message) + '</p>';
+  });
+}
+function paintSettings() {
+  var html = '<h1 class="screen">Settings</h1>';
+  html += '<p class="sub">Source mapping — which podcast plays in which block, on which days, in which order. Changes apply from the next nightly push.</p>';
+  html += '<p class="meta">Settings version ' + settingsVersion + '</p>';
+  if (settingsNote) html += '<p class="meta">' + esc(settingsNote) + '</p>';
+  html += '<p class="err" id="set-err"></p>';
+  var secs = settingsSections();
+  SET_SECTIONS.forEach(function (sec) {
+    var rows = secs[sec];
+    if (!rows.length) return;
+    html += '<div class="blockhead"><h2>' + esc(sec.toUpperCase()) + '</h2></div>';
+    rows.forEach(function (row, idx) {
+      html += '<div class="setrow" data-setkey="' + esc(row.sourceKey) + '">';
+      html += '<div class="setname">' + esc(row.name) + '</div>';
+      html += '<div class="meta">' + esc(settingsFamilyLabel(row)) + '</div>';
+      if (row.sourceKey === 'marian-antiphon') {
+        html += '<div class="meta">One antiphon episode is produced each day and stands here, in Morning. The day also carries Midday and Afternoon antiphon prayer slots, which no produced episode fills.</div>';
+      }
+      html += '<div class="setcontrols">';
+      html += '<button class="settoggle' + (row.enabled ? ' on' : '') + '" data-setact="toggle">' + (row.enabled ? 'On' : 'Off') + '</button>';
+      html += '<select data-setfield="block">' + [''].concat(SET_BLOCKS).map(function (b) {
+        return '<option value="' + esc(b) + '"' + (row.block === b ? ' selected' : '') + '>' + (b || 'No block') + '</option>';
+      }).join('') + '</select>';
+      html += '<select data-setfield="dayRule">' + Object.keys(DAY_RULE_LABELS).map(function (r) {
+        return '<option value="' + esc(r) + '"' + (row.dayRule === r ? ' selected' : '') + '>' + DAY_RULE_LABELS[r] + '</option>';
+      }).join('') + '</select>';
+      html += '<button class="mvbtn" data-setact="up" aria-label="Move up"' + (idx === 0 ? ' disabled' : '') + '>&#9650;</button>';
+      html += '<button class="mvbtn" data-setact="down" aria-label="Move down"' + (idx === rows.length - 1 ? ' disabled' : '') + '>&#9660;</button>';
+      html += '</div></div>';
+    });
+  });
+  html += '<div class="row" style="margin-top:12px"><button class="btn gold" id="set-save">Save mapping</button><button class="btn ghost" id="set-back">&lsaquo; Back</button></div>';
+  view.innerHTML = html;
+  view.querySelectorAll('[data-setkey]').forEach(function (el) {
+    var key = el.getAttribute('data-setkey');
+    var row = settingsRows.filter(function (r) { return r.sourceKey === key; })[0];
+    el.querySelector('[data-setact="toggle"]').addEventListener('click', function () {
+      row.enabled = row.enabled ? 0 : 1;
+      settingsRebuildOrder();
+      paintSettings();
+    });
+    el.querySelector('[data-setfield="block"]').addEventListener('change', function (ev) {
+      row.block = ev.target.value;
+      settingsRebuildOrder();
+      paintSettings();
+    });
+    el.querySelector('[data-setfield="dayRule"]').addEventListener('change', function (ev) {
+      row.dayRule = ev.target.value;
+    });
+    el.querySelector('[data-setact="up"]').addEventListener('click', function () { settingsMove(row, -1); });
+    el.querySelector('[data-setact="down"]').addEventListener('click', function () { settingsMove(row, 1); });
+  });
+  document.getElementById('set-save').addEventListener('click', saveSettings);
+  document.getElementById('set-back').addEventListener('click', function () { setTab('prayers'); });
+}
+function settingsRebuildOrder() {
+  // After a structural change (toggle, block move) the row stands
+  // at the end of its new section: rebuild the array as the
+  // sections concatenated, so displayed order is always sent order.
+  var secs = settingsSections();
+  var out = [];
+  SET_SECTIONS.forEach(function (s) { secs[s].forEach(function (r) { out.push(r); }); });
+  settingsRows = out;
+}
+function settingsMove(row, dir) {
+  var secs = settingsSections();
+  var list = secs[settingsSectionOf(row)];
+  var i = list.indexOf(row);
+  var j = i + dir;
+  if (j < 0 || j >= list.length) return;
+  list[i] = list[j]; list[j] = row;
+  var out = [];
+  SET_SECTIONS.forEach(function (s) { secs[s].forEach(function (r) { out.push(r); }); });
+  settingsRows = out;
+  paintSettings();
+}
+function saveSettings() {
+  var errEl = document.getElementById('set-err');
+  var body = { sources: settingsRows.map(function (r) { return { sourceKey: r.sourceKey, block: r.block, dayRule: r.dayRule, enabled: r.enabled }; }) };
+  api('/api/player/source-settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    .then(function (res) {
+      settingsVersion = res.version;
+      settingsNote = 'Saved — settings version ' + res.version + '. The next nightly push uses it.';
+      return api('/api/player/source-settings');
+    })
+    .then(function (res) {
+      settingsRows = res.sources || [];
+      settingsVersion = res.version;
+      paintSettings();
+    })
+    .catch(function (e) { if (errEl) errEl.textContent = e.message; });
+}
+document.getElementById('gearbtn').addEventListener('click', renderSettings);
+
 /* ---------------- Intentions (the pool) ---------------- */
 function intentionRow(it) {
   var hist = it.drawnCount ? ('drawn ' + it.drawnCount + (it.drawnCount === 1 ? ' time' : ' times') + (it.lastDrawn ? ' · last ' + it.lastDrawn : '')) : 'not drawn yet';

@@ -23,6 +23,7 @@ export const SHELL_HTML = `<!DOCTYPE html>
     <div class="wordmark">ORA PRO NOBIS</div>
     <div class="tagline">A Daily Catholic Prayer Podcast</div>
   </div>
+  <button class="gearbtn" id="gearbtn" aria-label="Settings">&#9881;</button>
 </header>
 <main id="view" class="view"></main>
 <audio id="audio" preload="none"></audio>
@@ -112,6 +113,15 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .count { font-size:14px; color:var(--gold); }
 .err { color:#8a2a2a; font-size:15px; }
 .about { margin-top:22px; font-size:14px; color:#8b8172; line-height:1.6; }
+.gearbtn { margin-left:auto; background:none; border:none; color:#e9d9ae; font-size:22px; line-height:1; cursor:pointer; padding:8px 6px; flex:none; }
+.setrow { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:0 0 8px; }
+.setrow .setname { font-size:17px; color:var(--navy); }
+.setcontrols { display:flex; align-items:center; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.setcontrols select { width:auto; flex:1; min-width:110px; }
+.setcontrols .mvbtn { font-family:inherit; font-size:15px; border:1px solid var(--line); background:#fff; border-radius:8px; padding:8px 10px; cursor:pointer; flex:none; }
+.setcontrols .mvbtn:disabled { opacity:.35; cursor:default; }
+.settoggle { font-family:inherit; font-size:14px; border:1px solid var(--gold); color:var(--gold); background:#fff; border-radius:20px; padding:6px 12px; cursor:pointer; flex:none; white-space:nowrap; }
+.settoggle.on { background:var(--gold); color:#fff; }
 `;
 
 export const MANIFEST_JSON = JSON.stringify({
@@ -127,7 +137,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v326-1";
+var CACHE = "ora-pro-nobis-v328-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
