@@ -282,3 +282,9 @@ Criteria 1–7 are judged MET on first-hand agent evidence, the one §3 deviatio
 - **Uncertainties:** the fade's feel (the 15 s ramp) and the locked/background stop timing on the Z Fold 8 — exactly what the phone check exists to learn. On iOS-class platforms the probe would stand the fade down silently; John's phone is Android, where element volume is settable (the harness's Chromium branch agrees), but the by-ear judgment is his.
 - **Decision impact:** one judgment is reserved to John — the phone check, as a verdict. Nothing else in this section needs his input; no return to Implement stands on agent evidence.
 - **First source to check:** `app/tests/harness-v320-review.log` (Review's 61/0 run) and this section's candidate read-backs.
+
+### Amendment — 2026-11-09 (Ship pass, on John's verdict)
+
+- **Phone check (criterion 8): PASSED BY JOHN'S VERDICT.** John checked the v320-review candidate on his phone and answered in the Ora Pro Nobis thread, 2026-11-08 20:30 CT: "Approved. Ship it." The verdict stands recorded on the v320 registry row (actor John, verdict pass, recorded 2026-11-09T02:31:13Z). Unlike v312, nothing here is waived: the phone criterion closes as passed on his word.
+- With criterion 8 closed, criteria 1–7 stand MET per the verdicts above, the one §3 deviation stands accepted, and **Review record 1115 PASSES** on this amendment. The standing §4 text above is not rewritten; this amendment is appended only, per the phase rule.
+- The Autonomous-to-Ship directive now carries the release through Ship without another word.
