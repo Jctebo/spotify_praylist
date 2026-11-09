@@ -281,3 +281,66 @@ New file `app/tests/harness-v325.mjs` on the harness-v312 mold (in-worktree scra
 - **For Ship — harness-v312 check 11's cache-name pin (§3's flag, carried and confirmed):** check 11 asserts the served SW cache name `ora-pro-nobis-v312-1`; it passes on this build base (Review's own run, log line 51) because nothing here renames the cache, as §2.2 pins. When v320 lands, its `ui.ts` cache rename rides with it, so on the rebased tree Ship re-runs this harness on, check 11's pin will fail against the successor name unless Ship gives it the §2.5 named-update treatment — harness-only, named in §5, re-run to green. **Ship: meet this as a named step in the §2.8 proof, not a surprise; do not land on the red pin and do not edit it silently.**
 - **The Ship wait is the pinned order, not a stall** (§2.6, restated from §2/§3): Ship stands until v320 is Live and v318's app half has landed (or the §1 fallback holds), then rebases onto the precondition head, re-runs harness-v325 + harness-v312 there, merges, deploys, and runs the §2.5 regressions on the merged tree. If the rebase conflicts on the splice line, Ship stops and reports (§2.1).
 - **Information need — none outstanding for Review.** No phone criterion stands for this release (§1/§2: an order change creates none; the shipped player itself is the surface, and the production read-back is Ship's §2.8 proof).
+
+## 5 · Ship
+
+- **Agent:** Ship Agent (v325) — Ship claim record 1132, claimed 2026-11-09 04:18:12 UTC (2026-11-08 22:18 CT) · time contract 55 (expectations: "v325 landed and Worker deployed" by 04:55 UTC — **met 04:30:05 UTC** · "Ship flip complete" by 05:10 UTC — met at the flip below)
+- **Run Directive:** Autonomous to Ship — John's direct order (2026-11-08 20:02 CT). No hold stood at this gate.
+
+### Precondition evidence (§2.6 — primary form, not the fallback)
+
+1. **v320 Live:** door read shows the v320 row **Live**, shipped_at 2026-11-09T02:36:21Z, What's New 39; its merge stands on the trunk.
+2. **v318's app half landed:** the trunk log carries v318's app merge 7f903dd ("Merge branch 'release/v318-app' into muse-draft-week") under its Ship §5 commit 1d677a4; the v318 row reads **Live**, shipped_at 2026-11-09T04:16:21Z, What's New 42. Both preconditions stood met before the claim; the §1 fallback was not used.
+
+### Rebase + the production line
+
+- release/v325 rebased onto muse-draft-week @ **1d677a4** — five commits replayed, **conflict-free**, as §2.1 predicted (v320 touched no server code; v318-app's hunks never touched the splice).
+- The production diff on the rebased tree is still exactly one line, verified first-hand: `app/worker/src/index.ts`, `playerDayPayload` — `tracks.splice(tracks.length ? 1 : 0, 0, card);` → `tracks.splice(0, 0, card);`. No client, ui, store, migration, push, or job-sheet change (§1 criterion 6 holds on the landed tree).
+
+### Gates on the rebased tree (tallies from complete logs)
+
+- **harness-v325: 31 ok / 0 FAIL** (log `app/tests/harness-v325-ship.log`).
+- **harness-v312: 59 ok / 0 FAIL** (log `app/tests/harness-v312-on-v325.log`), with the **check-11 named update** §4 flagged: check 11's SW cache-name pin stood at `ora-pro-nobis-v312-1`, the name the build base carried; the rebased tree carries `ora-pro-nobis-v318-1` (v318's rename, landed after v320's). The pin now reads `ora-pro-nobis-v318-1`, the assertion text names the update, and the re-run is green (log line 51). Harness-only; no other harness-v312 check was touched.
+
+### Merge + §2.5 regressions on the merged tree
+
+- **Merge 6277dc3** (`--no-ff`) into muse-draft-week in a clean ship worktree (the shared checkout carried the nightly pipeline's uncommitted state and was not merged in); trunk advanced to the ship line, whose head at deploy was a2a0e05. The merged tree carries the new splice at index.ts line 299.
+- **harness-v318: 32 ok / 0 FAIL** (log `app/tests/harness-v318-v325-ship-regression.log`) — no order-sensitive expectation stood in it.
+- **harness-v320: 60 ok / 1 FAIL** across three complete runs on the merged tree (final log `app/tests/harness-v320-ship.log`), with **named updates of the §2.5 pattern**, all harness-only:
+  - *Check 1 cache pin:* `ora-pro-nobis-v320-1` → `ora-pro-nobis-v318-1` — the same superseded-pin class as check 11 above; the failure pre-exists v325 on the trunk (control evidence below).
+  - *Checks 5 + 7 waits:* both waited for `current === "ep-long-a"` within 15 s of Play All. Under Intentions-first, the day queue opens with the Morning Intentions segment — a 30 s fixture tone — ahead of ep-long-a. The waits now span 45 s so the same standing track anchors both checks; every downstream assertion is unchanged.
+  - *Check 8 expectation:* after ep-short-a in the Midday queue, next/afterNext re-derived — `ep-short-b` → `ep-long-c` (the segment stands at the block's head now, not after ep-short-a). The hold mechanics assertions are dynamic off the snapshot and stand; check 9's advance target follows (ep-long-c).
+  - *Check 10 expectation:* the Evening queue's last descriptor is now `ep-short-c` (the segment stands at its head); the queue-end assertions stand.
+  - With those updates, every order-sensitive leg of harness-v320 is green in two consecutive complete runs.
+- **The one standing FAIL — check 4's label leg, judged and named:** "two successive label reads decrease ('Sleep · 5:00' -> 'Sleep · 5:00')" failed identically in all three merged-tree runs. It is **not a v325 effect**, on this evidence: (a) the leg exercises only the sleep sheet's countdown label at boot — client code that is **byte-identical** between base and merged trees (v325's entire production delta is the one server line; the rebase diff proves client.ts/ui.ts untouched); (b) a **control run of the unmodified harness-v320 on the pre-v325 trunk (1d677a4)** in the same environment scored **48 ok / 2 FAIL and crashed** at assertion 50 (a 20 s selector timeout) — the suite is timing-fragile in this environment independent of v325, and the stale check-1 pin is one of its two base failures; (c) the label's own math is proven live in the same runs (check 4's state-agreement legs pass; the rendered text lags the per-second tick under this machine's load). The leg stands as an **estate follow-on** (a timing-marginal assertion: widen the read gap or derive the expected label from `__opnSleep.state()`), filed in the Curator note — it does not block this landing, because the regression v325 could cause is fully green and the failing leg cannot be reached by v325's change. If the Coordinator judges otherwise, the rollback below is a pure redeploy.
+
+### Deploy + production proof
+
+- **Deploy:** connector-surrogate wrangler from the merged tree's `app/` (dry-run first, exit 0; token transient, never printed or filed). **Worker `ora-pro-nobis-app` version 9f2a2d02** (deployed 2026-11-09 ~04:29 UTC). **Rollback target: f0b3fb13** (v318's deploy) — rollback is a pure redeploy of that version (§2.7); no migration or data shape stands to unwind.
+- **Production proof (door-equivalent read, method stated per the standing rule):** `GET /api/player/day` refuses the agent door (403, by design — confirmed post-deploy). The proof is the prayer door's stored-day read + the deployed builder's splice rule, read first-hand in the deployed source: `playerDayPayload` builds each block's tracks from the stored `player_episodes` rows (`ORDER BY sort, episode_id`) and executes `tracks.splice(0, 0, card)` — the Intentions card stands at **index 0 of every block by construction**, over whatever rows are stored. Post-deploy stored-day read-back: **2026-11-08 · 17 episodes · 17 present / 0 missing · segment audio in all six blocks** (unchanged by the deploy, as expected — the push path is untouched). The stored rows (D1 read) distribute Morning 2 · Afternoon 1 · Night 1 · unblocked 13 · Midmorning/Midday/Evening 0, so the served payload reads:
+  - **Morning:** Intentions at 0, then 2 episodes · **Midmorning:** Intentions at 0 (only track) · **Midday:** Intentions at 0 (only track) · **Afternoon:** Intentions at 0, then 1 episode · **Evening:** Intentions at 0 (only track) · **Night:** Intentions at 0, then 1 episode · **Unblocked group:** 13 episodes, no card (unchanged).
+  - Against the v327-era picture (Intentions at index 1 in Morning/Afternoon/Night, 0 in the episode-less blocks), exactly the head position changed — §1's rule now holds in production on the standing stored day. harness-v325's legs (payload head, DOM head, queue heads on a fixture day against this same builder) are the behavioral half of the proof.
+
+### The flip — all four pieces, read back
+
+- **Release row:** v325 **Live** · shipped_at 2026-11-09T04:31:00Z · whats_new_id **43** (full-field upsert built from the live detail read; scope, directive, and slug preserved — read back after the write).
+- **Shipped record:** id **403** (title + camelCase shippedAt/whatsNewId accepted; read back in the shipped list).
+- **What's New:** id **43** — "Intentions first in every prayer block".
+- **Ship phase record:** 1132, passed at this gate's close.
+
+### Standing consequences (named for the Coordinator; not seated by this pass)
+
+- **v324's landing sequence is complete** (v318 → v325 both Live): v324's Implement may seat under its own approval (Through Review) when the Coordinator calls it.
+- **v326's Plan precondition stands met** (v318 + v325 Live): v326's Plan may seat under its Autonomous-to-Ship directive when the Coordinator calls it.
+
+### Raw notes for the Curator (no skill edits)
+
+- The superseded-pin class has now bitten three times in one evening (harness-v312 check 11 at v320's rename, again at v318's rename; harness-v320 check 1 at v318's rename). A cache-name pin in a sibling harness is a standing trap on every rename; the estate fix is a pin that reads the expected name from the tree's ui.ts instead of a literal.
+- harness-v320's check 4 label leg is timing-marginal in this environment (three identical failures on the merged tree; the base-tree control crashed elsewhere) — the estate follow-on named above.
+- The first merge attempt in the fresh ship worktree died on a transient "stash failed" (an autostash hiccup with a clean tree); `--no-autostash` merged cleanly. No content was affected; worth a line in the ship playbook if it recurs.
+
+### Concerns and Information Needs
+
+- **harness-v320 check 4's label leg stands red in this environment** on the evidence above — judged not a v325 effect and filed as an estate follow-on; it is the one item in this pass a later reader should re-verify on a quieter machine before treating harness-v320 as fully green again.
+- **Texts on the standing stored day read 0/17** (the v318 read-back shape): the stored day predates v318's first text push; tonight's 00:00 CT run is v318's post-ship verification, unchanged by this release — the order fix and the text surface are independent, as §1 pinned.
+- **Information need — none outstanding for Ship.** The §2.6 precondition stood in its primary form; no fallback judgment was needed.
