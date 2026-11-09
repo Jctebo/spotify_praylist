@@ -83,6 +83,7 @@ function startDesc(desc) {
   audioEl.src = desc.url;
   audioEl.play().catch(function () {});
   markPlaying(desc.episodeId);
+  updateDock();
 }
 function playTrack(desc) {
   if (!desc || !desc.available || !desc.url) return;
@@ -119,7 +120,7 @@ function advanceQueue(dir) {
     startDesc(d);
     return true;
   }
-  if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; markPlaying(null); updatePositionState(); }
+  if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; markPlaying(null); updatePositionState(); updateDock(); }
   return false;
 }
 function loadResume(desc, positionS) {
@@ -130,6 +131,7 @@ function loadResume(desc, positionS) {
   audioEl.src = desc.url;
   audioEl.load(); // preload="none": an explicit load is what brings metadata (and the pending position) in
   markPlaying(desc.episodeId);
+  updateDock();
   // Stands paused at the position (set on loadedmetadata); the app
   // never autoplays sound on open.
 }
@@ -144,16 +146,92 @@ audioEl.addEventListener('ended', function () {
   if (state.sleep && state.sleep.mode === 'track') { sleepTrackEnd(); return; }
   if (state.queue.length) { advanceQueue(1); return; }
   state.current = null; markPlaying(null);
+  updateDock();
 });
 audioEl.addEventListener('pause', function () { saveResume(); if (!state.queue.length) markPlaying(state.current ? state.current.episodeId : null); });
+audioEl.addEventListener('play', function () { updateDock(); });
+audioEl.addEventListener('pause', function () { updateDock(); });
 var lastResumeSave = 0;
 audioEl.addEventListener('timeupdate', function () {
   sleepTick();
   updatePositionState();
+  updateDockProgress();
   var now = Date.now();
   if (now - lastResumeSave > 5000) { lastResumeSave = now; saveResume(); }
 });
 audioEl.addEventListener('seeked', updatePositionState);
+
+/* ---------------- Docked player (v326) ----------------
+   A shell-level mini-player: one element in SHELL_HTML above the
+   tab bar, rendered once at boot and updated in place, never part
+   of any tab's render. Visibility is DERIVED, no new flag: the
+   dock stands exactly while state.current is set (D1), and
+   updateDock() is its only sync path — hooked into startDesc,
+   the element's own play/pause events (these two cover every
+   path, Media Session included), advanceQueue's end-clear, the
+   ended handler, sleepTrackEnd, loadResume, and the Read view's
+   post-open point. The dock's play button carries its own id and
+   NO data-playkey, so markPlaying's document-wide sweep never
+   owns the dock's glyph. Transport drives the standing paths —
+   playTrack(state.current), advanceQueue(1) — so the dock can
+   never disagree with the cards. The progress line is
+   display-only (D2): no click, drag, or key handler seeks it;
+   seek stays on the lock screen. The dock's stack position is
+   measured, not hardcoded: --tabh from the tab bar's own height
+   (safe-area padding included) sets its bottom offset, and
+   --dockh from its own height sets the view's added clearance
+   while it stands (body.dock-on); hidden, the standing 96px pad
+   is exactly what stands. */
+function measureBars() {
+  var tb = document.getElementById('tabbar');
+  if (tb) document.documentElement.style.setProperty('--tabh', tb.offsetHeight + 'px');
+  var dk = document.getElementById('dock');
+  if (dk && state.current) document.documentElement.style.setProperty('--dockh', dk.offsetHeight + 'px');
+}
+function updateDockProgress() {
+  var f = document.getElementById('dock-progress-fill');
+  if (!f) return;
+  var d = audioEl.duration;
+  f.style.width = (isFinite(d) && d > 0) ? ((audioEl.currentTime / d) * 100) + '%' : '0%';
+}
+function updateDock() {
+  var dock = document.getElementById('dock');
+  if (!dock) return;
+  var cur = state.current;
+  if (!cur) {
+    dock.classList.add('hidden');
+    document.body.classList.remove('dock-on');
+    return;
+  }
+  document.getElementById('dock-title').textContent = cur.title || '';
+  document.getElementById('dock-meta').textContent = cur.block || state.dateLabel || '';
+  document.getElementById('dock-play').innerHTML = audioEl.paused ? '&#9654;' : '&#10073;&#10073;';
+  document.getElementById('dock-next').disabled = !state.queue.length;
+  dock.classList.remove('hidden');
+  document.body.classList.add('dock-on');
+  measureBars();
+  updateDockProgress();
+}
+function dockJump() {
+  if (!state.current) return;
+  var id = state.current.episodeId;
+  if (!id || id.indexOf('url:') === 0) return; // an Intentions chip play has no card (§2.4 no-op)
+  setTab('prayers');
+  // renderPrayers re-renders on its day fetch, so the card may not
+  // stand on the first frame — retry briefly until it does. The
+  // jump never touches playback, position, queue, or sleep state.
+  var tries = 0;
+  (function attempt() {
+    var card = document.querySelector('[data-card="' + id + '"]');
+    if (card) {
+      card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      card.classList.add('dockjump');
+      setTimeout(function () { card.classList.remove('dockjump'); }, 1800);
+      return;
+    }
+    if (++tries < 20) setTimeout(attempt, 100);
+  })();
+}
 
 /* ---------------- Sleep timer (v320) ----------------
    A player state, not bound to a track: state.sleep is exactly one of
@@ -253,16 +331,19 @@ function sleepTrackEnd() {
       markPlaying(next.episodeId);
       saveResume();
       updateSleepLabel();
+      updateDock();
       return;
     }
     // (b) queue exhausted: exactly the standing queue-end path.
     state.queue = []; state.queueIdx = -1; state.current = null; markPlaying(null); updatePositionState();
     updateSleepLabel();
+    updateDock();
     return;
   }
   // (c) no queue (a single track): exactly the standing end path.
   state.current = null; markPlaying(null);
   updateSleepLabel();
+  updateDock();
 }
 function openSleepSheet() {
   var choices = [
@@ -342,6 +423,14 @@ function setTab(tab) {
 document.querySelectorAll('#tabbar .tab').forEach(function (b) {
   b.addEventListener('click', function () { setTab(b.getAttribute('data-tab')); });
 });
+document.getElementById('dock-play').addEventListener('click', function () { if (state.current) playTrack(state.current); });
+document.getElementById('dock-next').addEventListener('click', function () { advanceQueue(1); });
+document.getElementById('dock').addEventListener('click', function (ev) {
+  if (ev.target && ev.target.closest && (ev.target.closest('#dock-play') || ev.target.closest('#dock-next'))) return;
+  dockJump();
+});
+window.addEventListener('resize', measureBars);
+measureBars();
 
 /* ---------------- Intentions (the pool) ---------------- */
 function intentionRow(it) {
@@ -420,7 +509,7 @@ function openIntentionEditor(it) {
 
 /* ---------------- Prayers (the player) ---------------- */
 function trackDesc(t) {
-  return { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, available: !!t.available };
+  return { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, available: !!t.available, block: t._block || '' };
 }
 function readButton(t, key) {
   // v318 T9: the Read control. A track with no text carries NO Read
@@ -474,6 +563,7 @@ function openRead(t) {
     if (d) playTrack(d);
   });
   if (state.current && state.current.episodeId === t.episodeId) markPlaying(t.episodeId);
+  updateDock();
   fetch(t.textUrl).then(function (r) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     return r.text();

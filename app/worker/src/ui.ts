@@ -26,6 +26,7 @@ export const SHELL_HTML = `<!DOCTYPE html>
 </header>
 <main id="view" class="view"></main>
 <audio id="audio" preload="none"></audio>
+<div id="dock" class="dock hidden"><img class="dockthumb" src="/logo.png" alt=""><div class="docktext"><div class="docktitle" id="dock-title"></div><div class="dockmeta" id="dock-meta"></div></div><button id="dock-play" class="playbtn" aria-label="Play or pause"></button><button id="dock-next" class="docknext" aria-label="Next track">&#9197;</button><div class="dockprogress"><i id="dock-progress-fill"></i></div></div>
 <nav class="tabbar" id="tabbar">
   <button data-tab="prayers" class="tab"><span class="tabicon">&#10022;</span><span>Prayers</span></button>
   <button data-tab="intentions" class="tab"><span class="tabicon">&#9829;</span><span>Intentions</span></button>
@@ -49,6 +50,17 @@ html, body { margin:0; padding:0; background:var(--cream); color:var(--ink); fon
 .tab { flex:1; background:none; border:none; color:#b9c4d4; font-family:inherit; font-size:13px; padding:8px 2px 10px; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; }
 .tab .tabicon { font-size:19px; line-height:1; }
 .tab.active { color:#e9d9ae; box-shadow: inset 0 2px 0 var(--gold); }
+.dock { position: fixed; left:0; right:0; bottom: var(--tabh, 0px); z-index: 40; display:flex; align-items:center; gap:10px; background:var(--navy); color:var(--cream); padding:7px 12px 10px; border-top:2px solid var(--gold); cursor:pointer; }
+.dockthumb { width:42px; height:42px; border-radius:8px; flex:none; }
+.docktext { flex:1; min-width:0; }
+.docktitle { font-size:17px; color:var(--cream); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.dockmeta { font-size:14px; color:#b9c4d4; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
+.docknext { background:none; border:none; color:#e9d9ae; font-family:inherit; font-size:19px; cursor:pointer; flex:none; padding:10px 6px; }
+.docknext:disabled { opacity:.35; cursor:default; }
+.dockprogress { position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(250,245,236,.18); }
+.dockprogress i { display:block; height:100%; width:0; background:var(--gold); }
+body.dock-on .view { padding-bottom: calc(96px + var(--dockh, 60px)); }
+.card.dockjump { outline:2px solid var(--gold); outline-offset:2px; }
 h1.screen { font-size:22px; color:var(--navy); margin:2px 0 2px; font-weight:normal; }
 .sub { color:#6d6353; font-size:15px; margin:0 0 12px; }
 .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:0 0 10px; }
@@ -115,7 +127,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v324-1";
+var CACHE = "ora-pro-nobis-v326-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
