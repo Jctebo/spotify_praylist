@@ -245,14 +245,21 @@ async function prayerDayPayload(env: Env, date: string) {
 interface PlayerEpisodeRow {
   date: string; episode_id: string; title: string; block: string; sort: number;
   duration_s: number; r2_key: string; size_bytes: number; audio_state: string; pushed_at: string;
+  text_state: string; text_r2_key: string;
 }
 function episodeTrackShape(row: PlayerEpisodeRow) {
   const present = row.audio_state === "present";
+  const hasText = row.text_state === "present";
   return {
     episodeId: row.episode_id, title: row.title, kind: "episode",
     available: present,
     streamUrl: present ? `/api/player/audio/${row.date}/${encodeURIComponent(row.episode_id)}` : null,
     durationS: row.duration_s, sizeBytes: row.size_bytes,
+    // v318 T9: the read-along text, the streamUrl pattern — present
+    // rows carry their text route, missing rows carry null and no
+    // Read control stands on their card.
+    hasText,
+    textUrl: hasText ? `/api/player/text/${row.date}/${encodeURIComponent(row.episode_id)}` : null,
   };
 }
 async function playerDayPayload(env: Env) {
@@ -307,7 +314,9 @@ async function playerDayPayload(env: Env) {
 // every other date's objects. A failed push leaves the prior stored
 // day fully intact and named as the stored day.
 async function sweepOtherDates(env: Env, keepDate: string): Promise<void> {
-  for (const prefix of ["episodes/", "segments/"]) {
+  // v318 T8: texts/ joins the sweep — the one-day rule takes
+  // yesterday's texts with yesterday's rows and audio in one commit.
+  for (const prefix of ["episodes/", "segments/", "texts/"]) {
     let cursor: string | undefined = undefined;
     do {
       const listed: R2Objects = await env.AUDIO.list({ prefix, cursor, limit: 1000 });
@@ -322,14 +331,18 @@ async function sweepOtherDates(env: Env, keepDate: string): Promise<void> {
 }
 async function storedDayReadback(env: Env) {
   const dayRow = await env.DB.prepare("SELECT * FROM player_day WHERE id=1").first<{ date: string; episode_count: number }>();
-  if (!dayRow) return { storedDate: null, episodeCount: 0, tracksPresent: 0, tracksMissing: 0, segmentBlocks: [] as string[] };
-  const rows = await env.DB.prepare("SELECT audio_state FROM player_episodes WHERE date=?").bind(dayRow.date).all<{ audio_state: string }>();
+  if (!dayRow) return { storedDate: null, episodeCount: 0, tracksPresent: 0, tracksMissing: 0, textsPresent: 0, textsMissing: 0, segmentBlocks: [] as string[] };
+  const rows = await env.DB.prepare("SELECT audio_state, text_state FROM player_episodes WHERE date=?").bind(dayRow.date).all<{ audio_state: string; text_state: string }>();
   const segs = await env.DB.prepare("SELECT block FROM prayer_audio WHERE date=? ORDER BY block").bind(dayRow.date).all<{ block: string }>();
   const list = rows.results ?? [];
   return {
     storedDate: dayRow.date, episodeCount: list.length,
     tracksPresent: list.filter((r) => r.audio_state === "present").length,
     tracksMissing: list.filter((r) => r.audio_state === "missing").length,
+    // v318 T8: the day's texts counted beside its tracks — a missing
+    // text is named and counted, never silently absent.
+    textsPresent: list.filter((r) => r.text_state === "present").length,
+    textsMissing: list.filter((r) => r.text_state === "missing").length,
     segmentBlocks: (segs.results ?? []).map((r) => r.block),
   };
 }
@@ -456,25 +469,44 @@ export default {
         await env.AUDIO.put(key, bytes, { httpMetadata: { contentType: "audio/mpeg" } });
         return json({ ok: true, date, episodeId, size: bytes.length });
       }
+      if (seg[2] === "player" && seg[3] === "episodes" && seg[4] === "text" && request.method === "POST") {
+        // v318 T8 — text staging, the audio route's twin: writes the
+        // R2 object only, no D1 row, so a push that fails partway
+        // leaves the prior stored day intact (v312's failure rule).
+        const date = request.headers.get("x-episode-date") ?? "";
+        const episodeId = request.headers.get("x-episode-id") ?? "";
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "X-Episode-Date must be YYYY-MM-DD");
+        if (!/^[A-Za-z0-9][A-Za-z0-9\-]*$/.test(episodeId)) return err(400, "bad X-Episode-Id");
+        const bytes = new Uint8Array(await request.arrayBuffer());
+        if (!bytes.length) return err(400, "empty body");
+        const key = `texts/${date}/${episodeId}.txt`;
+        await env.AUDIO.put(key, bytes, { httpMetadata: { contentType: "text/plain; charset=utf-8" } });
+        return json({ ok: true, date, episodeId, size: bytes.length });
+      }
       if (seg[2] === "player" && seg[3] === "day" && request.method === "POST") {
         // E2 route 2 — the replace-day commit.
         const body = await request.json().catch(() => ({})) as {
           date?: string;
-          episodes?: { episode_id?: string; title?: string; block?: string; sort?: number; duration_s?: number; size_bytes?: number; audio_state?: string }[];
+          episodes?: { episode_id?: string; title?: string; block?: string; sort?: number; duration_s?: number; size_bytes?: number; audio_state?: string; text_state?: string; text_size_bytes?: number }[];
         };
         const date = String(body.date ?? "");
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
         if (!Array.isArray(body.episodes)) return err(400, "episodes array required");
         const validBlocks = new Set<string>([...PRAYER_BLOCKS, "unblocked"]);
-        const eps: { episode_id: string; title: string; block: string; sort: number; duration_s: number; size_bytes: number; audio_state: string }[] = [];
+        const eps: { episode_id: string; title: string; block: string; sort: number; duration_s: number; size_bytes: number; audio_state: string; text_state: string; text_size_bytes: number }[] = [];
         for (const e of body.episodes) {
           if (!e.episode_id || !/^[A-Za-z0-9][A-Za-z0-9\-]*$/.test(e.episode_id)) return err(400, "bad episode_id in manifest");
           if (!validBlocks.has(e.block ?? "")) return err(400, `bad block for ${e.episode_id}`);
           if (!["present", "missing"].includes(e.audio_state ?? "")) return err(400, `bad audio_state for ${e.episode_id}`);
+          // v318 T8: the text fields ride beside v312's; a manifest
+          // that omits them (the pre-v318 helper) reads text missing.
+          const textState = e.text_state ?? "missing";
+          if (!["present", "missing"].includes(textState)) return err(400, `bad text_state for ${e.episode_id}`);
           eps.push({
             episode_id: e.episode_id, title: String(e.title ?? e.episode_id), block: e.block!,
             sort: Number(e.sort ?? 0), duration_s: Number(e.duration_s ?? 0),
             size_bytes: Number(e.size_bytes ?? 0), audio_state: e.audio_state!,
+            text_state: textState, text_size_bytes: Number(e.text_size_bytes ?? 0),
           });
         }
         // (i) Verify every staged object against the manifest — any
@@ -485,6 +517,13 @@ export default {
           if (!head) return err(409, `staged audio missing for ${e.episode_id}`);
           if (head.size !== e.size_bytes) return err(409, `staged size mismatch for ${e.episode_id}: manifest ${e.size_bytes}, staged ${head.size}`);
         }
+        // (i-bis, v318 T8) The same verify for staged texts.
+        for (const e of eps) {
+          if (e.text_state !== "present") continue;
+          const head = await env.AUDIO.head(`texts/${date}/${e.episode_id}.txt`);
+          if (!head) return err(409, `staged text missing for ${e.episode_id}`);
+          if (head.size !== e.text_size_bytes) return err(409, `staged text size mismatch for ${e.episode_id}: manifest ${e.text_size_bytes}, staged ${head.size}`);
+        }
         // (ii) One D1 batch: other dates out, this day in, the
         // stored-day singleton written last.
         const pushedAt = nowISO();
@@ -494,14 +533,16 @@ export default {
         ];
         for (const e of eps) {
           stmts.push(env.DB.prepare(
-            `INSERT INTO player_episodes (date, episode_id, title, block, sort, duration_s, r2_key, size_bytes, audio_state, pushed_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `INSERT INTO player_episodes (date, episode_id, title, block, sort, duration_s, r2_key, size_bytes, audio_state, pushed_at, text_state, text_r2_key)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
              ON CONFLICT(date, episode_id) DO UPDATE SET title=excluded.title, block=excluded.block, sort=excluded.sort,
                duration_s=excluded.duration_s, r2_key=excluded.r2_key, size_bytes=excluded.size_bytes,
-               audio_state=excluded.audio_state, pushed_at=excluded.pushed_at`,
+               audio_state=excluded.audio_state, pushed_at=excluded.pushed_at,
+               text_state=excluded.text_state, text_r2_key=excluded.text_r2_key`,
           ).bind(date, e.episode_id, e.title, e.block, e.sort, e.duration_s,
             e.audio_state === "present" ? `episodes/${date}/${e.episode_id}.mp3` : "",
-            e.size_bytes, e.audio_state, pushedAt));
+            e.size_bytes, e.audio_state, pushedAt,
+            e.text_state, e.text_state === "present" ? `texts/${date}/${e.episode_id}.txt` : ""));
         }
         stmts.push(env.DB.prepare(
           `INSERT INTO player_day (id, date, episode_count, pushed_at) VALUES (1, ?, ?, ?)
@@ -514,7 +555,7 @@ export default {
         const rb = await storedDayReadback(env);
         return json({
           ok: true, storedDate: rb.storedDate, rowCount: rb.episodeCount,
-          perTrack: eps.map((e) => ({ episode_id: e.episode_id, audio: e.audio_state === "present" ? "verified" : "missing" })),
+          perTrack: eps.map((e) => ({ episode_id: e.episode_id, audio: e.audio_state === "present" ? "verified" : "missing", text: e.text_state === "present" ? "verified" : "missing" })),
           segmentsHeld: rb.segmentBlocks,
         });
       }
@@ -648,6 +689,21 @@ export default {
           }
           headers["content-length"] = String(obj.size);
           return new Response(obj.body, { headers });
+        }
+        if (seg[2] === "text" && request.method === "GET") {
+          // v318 T9: the episode's read-along text, served from the
+          // app store only — a named 404 when the row or the object
+          // is absent, never a silent empty body.
+          const date = seg[3] ?? "";
+          const episodeId = decodeURIComponent(seg[4] ?? "");
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !episodeId) return err(400, "bad text path");
+          const row = await env.DB.prepare("SELECT text_r2_key, text_state FROM player_episodes WHERE date=? AND episode_id=?")
+            .bind(date, episodeId).first<{ text_r2_key: string; text_state: string }>();
+          if (!row) return err(404, "no episode for that date and id");
+          if (row.text_state !== "present" || !row.text_r2_key) return err(404, "episode text not available in the app yet");
+          const obj = await env.AUDIO.get(row.text_r2_key);
+          if (!obj) return err(404, "episode text missing from the store");
+          return new Response(obj.body, { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "private, max-age=3600" } });
         }
         if (seg[2] === "sources" && request.method === "GET") {
           const r = await env.DB.prepare("SELECT * FROM player_sources ORDER BY sort, id").all();
