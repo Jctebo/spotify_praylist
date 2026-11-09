@@ -226,3 +226,41 @@ Read, stated so he can correct it: a persistent mini-player bar docked at the bo
 ### Concerns and Information Needs
 
 - **Concerns and Information Needs:** the phone check stands WAIVED by John's blanket prod approval (2026-11-08 23:00 CT) — recorded as waived, never as passed; the candidate remains standing until its post-flip teardown, so the check stays runnable on his word · the Android Auto drive closure is John's real-drive report (door note `android-auto-verification-2026-11-08`), outside agent evidence by nature · Review's harness runs ran from a detached guard worktree at 23ae8bf on the harness's own local instances (ports per suite), never the shared tree · first source to check: `app/tests/harness-v326-review.log` (Review's 62/0 run) and `app/tests/harness-v312-review-v326.log` lines 37–42 (the Media Session evidence).
+
+## 5 · Ship
+
+- **Agent:** Ship Agent (v326, same pass as Review) — Ship claim record 1159, claimed 2026-11-09T05:22:30Z · time contract 78 ("Ship flip complete" ASAP, hard deadline 2026-11-09T06:45:00Z).
+- **Verify-first reads:** Review record 1148 PASSED (§4, commit 1b8a669) · the registry row stood at Ship under the Autonomous-to-Ship directive · no migration rides this release (client-only) · production stood on v324's Worker 05d8d564 (rollback target — see below) · What's New max stood at 47 (v324's flip had landed in parallel), so this flip takes **48**.
+
+### Landing under drift (v324 + v333 shipped during this pass)
+
+- While Review ran, the trunk moved twice: **v324 shipped** (merge c3bd75e — externals in the player; client.ts +10, ui.ts SW rename to `ora-pro-nobis-v324-1`, and the same three harness pins updated to v324's name) and **v333 shipped** (merge a99c608), bringing the trunk to 29643a9. This is §2.10's named drift case (v324 landing first): release/v326 was **rebased onto 29643a9** and the full gate was re-run on the rebased tree before landing, per the drift rule.
+- **Rebase conflicts — exactly the predicted seam:** the SW cache line in ui.ts and the one-string pin in each of harness-v312/v318/v320 (HEAD read `ora-pro-nobis-v324-1`, the branch read `ora-pro-nobis-v326-1`). Resolved to **`ora-pro-nobis-v326-1`** throughout — v326 ships last, so its cache name is the served name and the pins follow it (the §2.5/§2.6 superseded-pin pattern, applied across the two renames in order). The dock build itself (client.ts) merged clean over v324's externals rendering.
+- **Gate re-run on the rebased tree** (detached guard worktree at the rebased head, tallies from the complete logs): **harness-v326: 62 ok / 0 FAIL** (`app/tests/harness-v326-ship.log`) · **harness-v312: 59 ok / 0 FAIL** (`harness-v312-ship-v326.log`) · **harness-v324: 29/29 ok** (`harness-v324-ship-v326.log` — v324's own worker harness green with the dock landed over it). The §4 regression family stood green from Review's runs on the pre-v324 tree; the three suites above are the ones the drift touched.
+- **Merge:** the rebased branch fast-forwarded the trunk (the rebase made it a direct descendant): `muse-draft-week` **29643a9 → 3b774f5** by update-ref from the clean snapshot worktree (the shared checkout carries unrelated standing modifications and was not touched). HARD GUARD re-checked at deploy: snapshot tree clean, HEAD = the reviewed + re-gated trunk commit 3b774f5. (The branch-side history stands as the §3/§4 commits e4848b1 / 3b774f5; no separate merge commit exists on a fast-forward landing — the §5 commit below is the trunk's closing record.)
+
+### Deploy + production proof
+
+- **Deploy:** the prayer app's own route — connector-surrogate wrangler from the snapshot worktree (`~/workspace/.worktrees/v326-ship/app`, production `wrangler.toml`). **Production Worker `ora-pro-nobis-app` version `0f77908a-1eb2-47fe-8577-01cee6096201`**, read back from the deployments API at **100%** (created 2026-11-09T05:25:49Z). No migration, no secret change, no Access change on production.
+- **Served surface:** the deployed source is the verified trunk tree — its SW names **`ora-pro-nobis-v326-1`** (ui.ts line 130 on the deployed tree) and its ship-side diff against the post-v324 trunk is exactly this release's two files (client.ts +94 · ui.ts +14). The stored-day payload answers through the production door (GET /api/agent/player/stored-day → 200: storedDate 2026-11-08 · 26 episodes, 26 present / 0 missing · the 9 v324 externals present · Intentions segments held in all six blocks).
+- **Android Auto (production statement, per John's 2026-11-08 23:04 CT ask, platform corrected 23:07 CT):** the Media Session surface Android Auto reads stands in the deployed client exactly as §4 proved it — metadata set with the track's title from the standing start paths, all seven action handlers registered (play · pause · previoustrack · nexttrack · seekto · seekforward · seekbackward), exercised on this tree in Review's harness-v312 check 8; v324's merged client changes do not touch those functions, and the merged tree was grep-verified to carry them. **No gap found.** The drive closure remains John's real-drive report (door note `android-auto-verification-2026-11-08`).
+- **Phone check:** criterion 9 stands **WAIVED** by John's blanket prod approval (2026-11-08 23:00 CT) — recorded as waived in §4, not passed; nothing in this Ship re-marks it.
+
+### The flip (four pieces, read back)
+
+- **What's New 48** (entry created 2026-11-09T05:26:17Z, "Docked player").
+- **Shipped record 408** — POST with camelCase `shippedAt` + `whatsNewId` + title; read back: shipped_at 2026-11-09T05:25:49Z · whats_new_id 48.
+- **Release row 598: Live** — read back status Live · derivedStatus Live · shipped_at 2026-11-09T05:25:49Z · whats_new_id 48 (the upsert replayed the row's full fields; `run_directive` preserved).
+- **Ship phase record 1159** passed with this section's commit; **Curator note `ship-v326-2026-11-08`** filed (201).
+
+### Candidate teardown (this pass, per the Ship instruction)
+
+- The v326-review candidate is **torn down in full**: Worker `ora-pro-nobis-app-v326-review` deleted · Access application 39ad875a deleted · D1 `ora-pro-nobis-app-v326-review` (dff8358c) deleted · R2 bucket `ora-pro-nobis-audio-v326-review` emptied (the 8 seeded objects) and deleted — each verified by read-back. **The still-standing `ora-pro-nobis-app-v320-review` deployment was NOT touched** — its teardown remains v320's own owed item, as briefed.
+
+### Rollback
+
+- Pure redeploy of the prior production Worker. Note the target moved during this pass: the pre-v326 production version is **v324's `05d8d564`** (not v325's 9f2a2d02, which §2.10 named before v324 landed). No data or migration rollback exists to perform.
+
+### Concerns and Information Needs
+
+- **Concerns and Information Needs:** the phone check stands WAIVED (John's blanket word), never passed — the candidate that would have hosted it is torn down; a future check would stand a fresh candidate or run on production directly · the landing is a fast-forward (rebase-shaped), so the trunk carries no merge commit for v326 — the §4 commit 3b774f5 is the landing head and this §5 commit closes the record · raw notes for the Curator ride in note `ship-v326-2026-11-08` (the full-field upsert rule · the branch-doc stale flag until push · sequential harness launches) · first source to check: `app/tests/harness-v326-ship.log` (the re-gated 62/0 on the merged base) and the deployments read-back for Worker 0f77908a.
