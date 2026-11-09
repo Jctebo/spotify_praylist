@@ -120,3 +120,20 @@ The helper resolves an episode's audio file as `<rundir>/<file>`, and the standi
 
 - Review: judge the diff by `git diff c59a32b..HEAD -- app/worker/src/` — it must show exactly the two regex lines. The harness tallies above are reproducible from the committed logs.
 - Ship: the production push needs `--rundir ~/workspace/ora-runner-runs/2026-11-08/out` alongside the pinned `--report` (see §3.4); report the "App push (v312)" field verbatim in §5 either way.
+
+## 4 · Review
+
+- **Agent:** Review Agent (v327) — Review claim record 1124, claimed 2026-11-09T03:06:29Z; time contract 46
+- **Verdict: PASS** — the release lands on this verdict; Ship proceeds under the Autonomous-to-Ship directive.
+
+### 4.1 — Criterion verdicts
+
+1. **Diff is ONLY the pattern widening at the enumerated sites — MET.** `git diff c59a32b..release/v327 -- app/worker/src/` shows exactly two changed lines in `app/worker/src/index.ts` (line 452 staging header check, line 471 commit manifest check), each `\-` → `\-_` and nothing else. The full-branch diff adds only the release document and the harness files/logs. No client change, no cache rename, no migration, no helper or manifest change.
+2. **Push leg — MET, independently re-run.** From a detached guard worktree at the Implement head (ae5aae8): harness-v327 **10 ok / 0 FAIL** (log `app/tests/harness-v327-review.log`), tally-identical to Implement. The real helper (byte-identical in both trees, md5 0758fb27…) committed the real Nov 8 manifest: 17 episodes, 17 present / 0 missing, all 12 underscore ids stored, stored-day 2026-11-08 with the manifest's counts.
+3. **Regression — MET with the named exception.** Guard re-run of harness-v312: **58 ok / 1 FAIL** (log `app/tests/harness-v312-review-on-v327.log`), tally-identical to Implement. The single FAIL is check 11's SW cache-name pin, superseded by v320's §2.12 rename — §3.3's ruling stands: a pre-ruled pin exception, not an effect of this diff.
+4. **§3.4 rundir observation — CONFIRMED as reported.** The helper's `<rundir>/<file>` resolution vs the reports' run-root `rundir` and the `out/` file location are as §3.4 states, verified against both standing reports (2026-11-08, 2026-11-10). It is correctly NOT folded into this fix; Ship runs the production push with the helper's own `--rundir` flag and §5 reports the field verbatim.
+
+### Concerns and Information Needs
+
+- Ship proof stands as pinned in §2.4: the production push's "App push (v312)" field, the stored-day read-back, and the per-block Intentions positions in the session payload (v312 splice positions — the reordering remains v325's).
+- The standing follow-on from §3.4 (runner report `rundir` vs `out/`) goes to the Curator note so it is scoped separately, not lost.

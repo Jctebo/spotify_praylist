@@ -1,0 +1,60 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 3 - locked instance up (no LOCAL_DEV)
+ok 4 - check 1: episode audio staging POSTs accepted, sizes read back
+ok 5 - check 1: commit returns storedDate = D1, rowCount 8
+ok 6 - check 1: per-track verified/missing exactly as the manifest
+ok 7 - check 1: commit read-back names all six Intentions segments held for D1
+ok 8 - check 1: a commit whose staged audio is missing aborts 409 naming the track, writes nothing
+ok 9 - check 1: stored-day read-back — D1, 8 episodes (7 present / 1 missing)
+ok 10 - check 4: payload names the stored day
+ok 11 - check 4: payload = manifest track-for-track (ids, titles, blocks incl. unblocked, durations, sort order)
+ok 12 - check 4: each block's trackCount includes its missing row and its Intentions card
+ok 13 - check 5: the missing episode stands named in its block and order, available:false, streamUrl:null
+ok 14 - check 2: D2 commit lands (rowCount 3)
+ok 15 - check 2: player_episodes holds only D2 rows after the replace-day commit
+ok 16 - check 2: the prior day's episode audio is gone (404)
+ok 17 - check 2: the prior day's Intentions segment rows are gone (404)
+ok 18 - check 2: prayer_audio holds only the stored date (D1 segments swept, none for D2 yet)
+ok 19 - check 2: a staged-but-uncommitted D3 object does not disturb the stored day
+ok 20 - check 2: re-committing the same day is idempotent
+ok 21 - check 2: the next commit swept the staged D3 object (its commit now fails 409)
+ok 22 - check 2: D2's segments land by the standing push and stand held
+ok 23 - check 3: the full stored day serves with the feed address unreachable
+ok 24 - check 3: the feed server recorded zero hits across the whole run (0)
+ok 25 - check 3: static grep of the Worker source finds no FEED_DEFAULT / feedEpisodes / feedCache
+ok 26 - check 7: a fresh boot lands on the Prayers tab
+ok 27 - check 7: the served Prayers screen carries no .daynav element
+ok 28 - check 7: the Play All (whole day) control stands at the top
+ok 29 - check 7: block headers carry their 'N tracks' counts
+ok 30 - check 5 (browser): the missing track renders named in place with the not-available line
+ok 31 - check 6: the whole-day queue built by Play All equals the payload order (d2-a,seg:Morning,d2-m,seg:Midmorning,d2-b,seg:Midday,seg:Afternoon,seg:Evening,seg:Night)
+ok 32 - check 6: Play All starts at the day's first track
+ok 33 - check 6: autoplay-next crossed a block boundary and passed over the missing track at reach
+ok 34 - check 6: the missing track never becomes the playing track
+ok 35 - check 6: per-block queue is the block slice (exercised below via the block button)
+ok 36 - check 6: per-block Play All builds exactly that block's slice (d2-b,seg:Midday)
+ok 37 - check 8: all Media Session handlers registered (play,pause,previoustrack,nexttrack,seekto,seekforward,seekbackward)
+ok 38 - check 8: media metadata carries the track title + 'Ora Pro Nobis'
+ok 39 - check 8: a seekto moves currentTime (0.40s)
+ok 40 - check 8: nexttrack moves within the active queue (seg:Midday)
+ok 41 - check 8: previoustrack moves back within the active queue (d2-b)
+ok 42 - check 8: a ranged GET on the episode route returns 206 + Content-Range (bytes 10-19/3571)
+ok 43 - check 9: reopening on the same stored day offers Resume
+ok 44 - check 9: the resumed track stands paused — no autoplay on open
+ok 45 - check 9: the resumed position matches the remembered one (0.50s vs 0.50s, within 2s)
+ok 46 - check 9: after a new day's push, the prior day's position is not offered
+ok 47 - check 9: the stored day after the push is the newly pushed day
+ok 48 - check 10: no font-size below 13px in the served CSS (min 13px)
+ok 49 - check 10: .tab 13px · .tagline 13px · .meta 14px · body 17px read back from the served CSS
+ok 50 - check 11: the served /app.js parses (vm.Script)
+not ok 51 - check 11: the SW cache name reads ora-pro-nobis-v312-1
+ok 52 - check 11: /sw.js parses and /styles.css serves
+ok 53 - check 11: the browser boot ran with zero page errors
+ok 54 - check 12: the Intentions card carries spotifyUrl:null in every block
+ok 55 - check 12: the four tab ids and their order are unchanged
+ok 56 - check 12: player_sources holds the six playlist rows; the rss row is gone (migration 0007)
+ok 57 - check 12: Access refusal stands — no identity, no shell (locked instance)
+ok 58 - check 12: Access refusal stands — Pam's identity refused, no Pam path
+ok 59 - check 12: John's identity is admitted on the locked instance
+TALLY: 58 ok / 1 FAIL (59 checks)
