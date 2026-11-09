@@ -132,13 +132,35 @@ function playTrack(desc) {
   state.queue = []; state.queueIdx = -1;
   startDesc(desc);
 }
+function queueLiveDesc(d) {
+  // v338 defect fix (John's report, 2026-11-09 11:17 CT — a block's
+  // play button played one prayer and stopped): a queue is a
+  // tap-time snapshot, and a slot descriptor in it froze
+  // available:false while its download was still in flight; the
+  // skip loop then passed it over at its turn, minutes later, long
+  // after the download had landed. At every queue decision the
+  // descriptor is re-checked against LIVE slot state: a slot that
+  // stands 'present' NOW is substituted with its fresh descriptor
+  // (current streamUrl, available) and plays. Own tracks and intros
+  // keep their snapshot descriptor — their availability is a
+  // payload fact, not a download state.
+  if (d.available) return d;
+  var st = state.extSlots && state.extSlots[d.episodeId];
+  if (!st || st.state !== 'present') return null;
+  var slot = (state.extStanding || []).filter(function (s) { return s.slotId === d.episodeId; })[0];
+  if (!slot) return null;
+  var live = trackDesc(extSlotTrack(slot, st));
+  return live.available ? live : null;
+}
 function startQueue(descs) {
   if (!descs.length) return;
   if (state.queue.length && state.queueIdx >= 0 && state.current && !audioEl.paused) { audioEl.pause(); return; }
   state.queue = descs.slice();
   var idx = -1;
   for (var i = 0; i < state.queue.length; i++) {
-    if (!state.queue[i].available) { markSkipped(state.queue[i].episodeId); continue; }
+    var live = queueLiveDesc(state.queue[i]);
+    if (!live) { markSkipped(state.queue[i].episodeId); continue; }
+    state.queue[i] = live;
     idx = i; break;
   }
   if (idx < 0) { state.queue = []; state.queueIdx = -1; return; }
@@ -149,10 +171,11 @@ function advanceQueue(dir) {
   if (!state.queue.length) return false;
   var i = state.queueIdx + dir;
   while (i >= 0 && i < state.queue.length) {
-    var d = state.queue[i];
-    if (!d.available) { if (dir > 0) markSkipped(d.episodeId); i += dir; continue; }
+    var live = queueLiveDesc(state.queue[i]);
+    if (!live) { if (dir > 0) markSkipped(state.queue[i].episodeId); i += dir; continue; }
+    state.queue[i] = live;
     state.queueIdx = i;
-    startDesc(d);
+    startDesc(live);
     return true;
   }
   if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; markPlaying(null); updatePositionState(); updateDock(); }
