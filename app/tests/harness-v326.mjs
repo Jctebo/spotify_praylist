@@ -184,7 +184,6 @@ try {
 
   for (const b of ["Morning", "Midday"]) await pushSegment(D, b, audio.seg30);
   await pushSegment(D, "Night", audio.seg3);
-  await pushSegment(TODAY, "Morning", audio.seg30); // the Intentions-tab chip bar reads the real today
   let stageOk = true;
   for (const e of EPS) { if (e.missing) continue; const r = await stageEpisode(D, e.episode_id, audio[e.file]); if (r.status !== 200) stageOk = false; }
   ok(stageOk, "fixture: episode audio staged for the fixture day");
@@ -192,6 +191,11 @@ try {
   ok(tr.status === 200 && tr.body.size === Buffer.byteLength(TEXT_ALPHA), "fixture: ep-alpha's text staged");
   let r = await api(BASE, "POST", "/api/agent/player/day", { token: TOKEN, json: { date: D, episodes: manifestOf(EPS, audio) } });
   ok(r.status === 200 && r.body.storedDate === D && r.body.rowCount === 6, "fixture: day commit lands (rowCount 6)");
+  // The Intentions-tab chip bar reads the real today — pushed AFTER
+  // the day commit on purpose: the commit prunes every other date's
+  // segment rows (the one-stored-day sweep), so a today segment
+  // pushed before it would be deleted by the commit itself.
+  await pushSegment(TODAY, "Morning", audio.seg30);
   r = await api(BASE, "GET", "/api/player/day");
   const morning = r.body.blocks.find((b) => b.block === "Morning");
   const mSlice = morning.tracks.map((t) => t.episodeId || ("seg:" + morning.block));
@@ -256,7 +260,7 @@ try {
     "check 3: dock shows the paused glyph while the card keeps its playing (current-track) mark");
   await page.click('[data-playkey="ep-alpha"]');
   ok(await ff(() => !document.getElementById("audio").paused), "check 4: card play resumes");
-  ok((await dockGlyph()) === "❚❚", "check 4: dock glyph follows the card back to the playing mark");
+  ok((await dockGlyph()) === "❙❙", "check 4: dock glyph follows the card back to the playing mark (the app's own &#10073; pair, identical to the cards')");
   await page.click('[data-playkey="ep-alpha"]');
   ok((await ff(() => document.getElementById("audio").paused)) && (await dockGlyph()) === "▶",
     "check 4: card pause reflects in the dock (agreement both directions)");
@@ -383,7 +387,8 @@ try {
   ok(z15.sheetZ === "50" && z15.dockZ === "40", "check 15: the Read view covers the dock too (z 50 over 40)");
   const wasPaused = await paused();
   await page.click('.readsheet [data-playkey="ep-alpha"]');
-  ok((await ff(() => document.getElementById("audio").paused === !wasPaused)) && (await cur()) === "ep-alpha",
+  const flipped = await page.waitForFunction((want) => document.getElementById("audio").paused === want, !wasPaused, { timeout: 8000 }).then(() => true).catch(() => false);
+  ok(flipped && (await cur()) === "ep-alpha",
     "check 15: the Read view's own play button drives the same track (play state flips, current unchanged)");
   await page.click("[data-readclose]");
   await sleep(400);
