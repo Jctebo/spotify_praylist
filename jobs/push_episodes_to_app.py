@@ -24,6 +24,10 @@ What it does:
      name that the episode's title carries as its head wins, so
      "Daily Rosary - Sorrowful Mysteries - ..." resolves to the
      Morning block's "Daily Rosary". Unmatched -> 'unblocked'.
+     The v331 SEED_PLACEMENT table is consulted first: it carries
+     the placement for the producers the name-match cannot place
+     (novenas -> Midmorning, the Marian Antiphon -> Morning) until
+     v328's settings read supersedes it.
      Sort = manifest order.
   2. Stages each built episode's audio: POST
      /api/agent/player/episodes/audio (R2 only, no D1 write).
@@ -59,6 +63,29 @@ spec.loader.exec_module(door)
 
 DATE_SUFFIX = re.compile(r" - [A-Z][a-z]+ \d{1,2}, \d{4}$")
 
+# v331 seed placement — DATA, not logic: the v328 seed rows for the
+# producers the name-match below cannot place (no prayer item is named
+# for the novenas or the Marian Antiphon, so both fell to 'unblocked'
+# and rendered under "FROM TODAY'S PODCAST", outside the blocks).
+# (match, block): "prefix" matches an episode-id prefix, "exact" the
+# whole id. v328's settings read supersedes this table when it lands;
+# until then this is the placement of record for these producers.
+SEED_PLACEMENT = [
+    ("prefix", "novena-", "Midmorning"),
+    ("exact", "marian-antiphon-angelus", "Morning"),
+]
+
+
+def seed_block(episode_id: str):
+    """The seed block for an episode id, or None when the seed does
+    not name it (the episode then resolves by name-match as before)."""
+    for kind, match, block in SEED_PLACEMENT:
+        if kind == "prefix" and episode_id.startswith(match):
+            return block
+        if kind == "exact" and episode_id == match:
+            return block
+    return None
+
 
 def strip_date(title: str) -> str:
     return DATE_SUFFIX.sub("", title or "").strip()
@@ -85,6 +112,10 @@ def resolve_blocks(report_date: str, episodes: dict) -> dict:
     names = sorted(name_to_block, key=len, reverse=True)
     out = {}
     for key, ep in episodes.items():
+        seeded = seed_block(key)
+        if seeded is not None:
+            out[key] = seeded
+            continue
         title = strip_date(ep.get("title", ""))
         block = "unblocked"
         for name in names:
