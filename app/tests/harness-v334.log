@@ -31,7 +31,7 @@ RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
 ok - leg 14: a missing slot writes no cache record and downloads nothing
 FAIL - leg 4: the missing slot is re-resolved at the next open and fills when its feed recovers (cached slots were not re-fetched)
 REQFAIL: https://feeds.fireside.fm/bibleinayear/rss net::ERR_ABORTED
-ok - leg 8: the hanging Bible leg stands named-missing after the timeout (21 ms) while own episodes stand rendered and playable
+ok - leg 8: the hanging Bible leg stands named-missing after the timeout (18 ms) while own episodes stand rendered and playable
 RESP: 200 https://feeds.fireside.fm/bibleinayear/rss
 RESP: 200 https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b81
 RESP: 200 https://feeds.castos.com/x8g54

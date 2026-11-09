@@ -1052,12 +1052,21 @@ function resolveExternals(day) {
       var c = rec.slots[slot.slotId];
       var meta = { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source };
       if (!('caches' in window)) { extDownload(slot, meta); return; }
+      // A cache read issued in the same moment the service worker
+      // is settling a fresh page can stall without ever settling;
+      // the fallback timer turns a stalled read into a re-download
+      // (the download path is independent of the read).
+      var done = false;
+      var fallback = setTimeout(function () { if (!done) { done = true; extDownload(slot, meta); } }, 3000);
       caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(slot.slotId); }).then(function (resp) {
-        if (!resp) { extDownload(slot, meta); return; }
+        if (done) return;
+        if (!resp) { done = true; clearTimeout(fallback); extDownload(slot, meta); return; }
         resp.blob().then(function (blob) {
+          if (done) return;
+          done = true; clearTimeout(fallback);
           settle(slot, { state: 'present', title: meta.title, streamUrl: URL.createObjectURL(blob), enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source });
         });
-      }).catch(function () { extDownload(slot, meta); });
+      }).catch(function () { if (!done) { done = true; clearTimeout(fallback); extDownload(slot, meta); } });
     };
     var missingSt = function (slot, source) {
       return { state: 'missing', title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle(null, extMatchBibleDayN(date)) : slot.title, source: source || 'Divine Office' };
@@ -1105,6 +1114,19 @@ function resolveExternals(day) {
         else settle(bibleSlot, { state: 'missing', title: extBibleTitle(null, m.dayN), source: 'Bible in a Year' });
       }).catch(function () { settle(bibleSlot, { state: 'missing', title: extBibleTitle(null, extMatchBibleDayN(date)), source: 'Bible in a Year' }); });
     }
+    // Resolve watchdog: no slot may spin forever. A leg or restore
+    // that has produced nothing after 9 s is treated as failed —
+    // a cached slot re-downloads from its recorded enclosure, an
+    // uncached slot stands named missing for this open.
+    setTimeout(function () {
+      standing.forEach(function (slot) {
+        var st = state.extSlots[slot.slotId];
+        if (!st || (st.state !== 'loading' && st.state !== 'downloading')) return;
+        var c = cachedIds[slot.slotId];
+        if (c) extDownload(slot, { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source });
+        else settle(slot, missingSt(slot, slot.slotId === 'ext-bible-in-a-year' ? 'Bible in a Year' : 'Divine Office'));
+      });
+    }, 9000);
     // Sing the Hours fallback — only after the courier settles, and
     // only for a Morning/Evening primary that stands missing.
     courierP.then(function () {

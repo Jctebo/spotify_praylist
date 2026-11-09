@@ -415,6 +415,21 @@ try {
   const pageA2 = await again(ctxA);
   const settledA2 = await waitExt(pageA2, (s) => SLOT_ORDER.every((id) => s[id] === "present" || s[id] === "missing"), 15000);
   const stateA2 = await extState(pageA2);
+  console.log("LEG3 DEBUG:", JSON.stringify({ settledA2, stateA2, doDelta: feedHits.do - doHitsBefore }));
+  console.log("LEG3 VIS:", await pageA2.evaluate(() => document.visibilityState), "| pageA:", await pageA.evaluate(() => document.visibilityState));
+  const cacheProbe = await pageA2.evaluate(async () => {
+    const race = (p, tag) => Promise.race([p.then((v) => tag + ":ok").catch((e) => tag + ":err:" + e.message), new Promise((r) => setTimeout(() => r(tag + ":TIMEOUT"), 5000))]);
+    const opened = await race(caches.open("opn-ext-audio-v1"), "open");
+    const c = await caches.open("opn-ext-audio-v1");
+    const matched = await race(c.match("ext-invitatory").then((m) => !!m), "match");
+    const fetchSettled = await race(fetch("/api/player/source-settings").then((r) => r.status), "fetch");
+    const c2 = await caches.open("opn-ext-audio-v1");
+    const resp = await c2.match("ext-invitatory");
+    const blobbed = await race(resp.blob().then((b) => b.size), "blob");
+    const dl = await race(fetch("https://media.blubrry.com/divineoffice/traffic.libsyn.com/divineoffice/divine-ip-ord-w02-w04-sun.mp3?prayer=Invitatory&date=20261108&episode=202611082").then((r) => r.blob()).then((b) => b.size), "dl");
+    return { opened, matched, fetchSettled, blobbed, dl };
+  }).catch((e) => ({ evalError: String(e) }));
+  console.log("LEG3 CACHE PROBE:", JSON.stringify(cacheProbe));
   ok(settledA2 && SLOT_ORDER.every((id) => stateA2[id] && stateA2[id].state === "present")
     && feedHits.do === doHitsBefore,
     "leg 3: second open with dead feeds renders every cached slot present and issues no courier fetch for a fully cached source");
@@ -450,6 +465,8 @@ try {
   biayMode = "full";
   const pageD2 = await again(ctxD);
   const filledD = await waitExt(pageD2, (s) => s["ext-bible-in-a-year"] === "present");
+  console.log("LEG4 DEBUG:", JSON.stringify({ filledD, state: await extState(pageD2) }));
+  console.log("LEG4 VIS:", await pageD2.evaluate(() => document.visibilityState));
   ok(!!filledD, "leg 4: the missing slot is re-resolved at the next open and fills when its feed recovers (cached slots were not re-fetched)");
 
   // ---- leg 8: a hanging leg times out to named-missing; the day stays whole ----
