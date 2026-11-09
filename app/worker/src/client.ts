@@ -247,6 +247,20 @@ function unplayedOnly(descs) {
   });
   return out;
 }
+function queueBuild(descs) {
+  // §2.4's fallback, at the same build-time seam: the filtered
+  // build stands UNLESS it holds nothing playable — no descriptor
+  // whose snapshot stands available (an unavailable descriptor
+  // passes the filter untouched by design, so a fully-played
+  // block with an unavailable slot standing would otherwise read
+  // "non-empty" and start silence: a dead button, the one shape
+  // §2.4 forbids). Availability stays queueLiveDesc's question at
+  // advance time; this checks only the snapshot flag the filter
+  // itself already reads, to decide which build to hand over.
+  var filtered = unplayedOnly(descs);
+  for (var i = 0; i < filtered.length; i++) if (filtered[i].available) return filtered;
+  return descs;
+}
 function startQueue(descs) {
   if (!descs.length) return;
   if (state.queue.length && state.queueIdx >= 0 && state.current && !audioEl.paused) { audioEl.pause(); return; }
@@ -929,12 +943,16 @@ function playedDotHtml(t) {
 function heardCls(t) {
   return isPlayed(t.episodeId, presentedDateStr()) ? ' class="heard"' : '';
 }
+var BS_CH = String.fromCharCode(92);
 function novenaInfo(episodeId, title) {
   // §2.7: N parses from the track TITLE's standing "Day N" — the
   // words the payload already carries. No match, or N outside
-  // 1–9, renders NO line — never a guessed number.
+  // 1–9, renders NO line — never a guessed number. The pattern is
+  // built from BS_CH, the standing construction (extMatchBible's):
+  // this client ships inside a template literal, where a written
+  // backslash cooks — a literal regex would arrive broken.
   if (!episodeId || episodeId.indexOf('novena-') !== 0) return null;
-  var m = /\bDay\s+(\d{1,2})\b/.exec(String(title || ''));
+  var m = new RegExp(BS_CH + 'bDay' + BS_CH + 's+(' + BS_CH + 'd{1,2})' + BS_CH + 'b').exec(String(title || ''));
   if (!m) return null;
   var n = Number(m[1]);
   if (!(n >= 1 && n <= 9)) return null;
@@ -1820,11 +1838,11 @@ function paintContinue() {
     + '<div style="margin-top:6px"><a href="#" id="continue-all">Play everything instead</a></div></div>';
   document.getElementById('continue-btn').addEventListener('click', function () {
     var full = extRebuildDescs(state.dayPayload);
-    var filtered = unplayedOnly(full);
+    var build = queueBuild(full);
     if (carry && resumeRec) {
       var idx = -1;
-      for (var i = 0; i < filtered.length; i++) {
-        if (filtered[i].kind !== 'intention' && filtered[i].episodeId === resumeDesc.episodeId) { idx = i; break; }
+      for (var i = 0; i < build.length; i++) {
+        if (build[i].kind !== 'intention' && build[i].episodeId === resumeDesc.episodeId) { idx = i; break; }
       }
       if (idx >= 0) {
         // The queue is the filtered build rotated to start at
@@ -1833,11 +1851,11 @@ function paintContinue() {
         // loadedmetadata handler seeks), and playback starts —
         // Continue is a play action, unlike loadResume's pause.
         state.pendingResume = { episodeId: resumeDesc.episodeId, positionS: resumeRec.positionS || 0 };
-        startQueue(filtered.slice(idx));
+        startQueue(build.slice(idx));
         return;
       }
     }
-    startQueue(filtered.length ? filtered : full);
+    startQueue(build);
   });
   document.getElementById('continue-all').addEventListener('click', function (ev) {
     ev.preventDefault();
@@ -2527,9 +2545,7 @@ function renderPrayers() {
       // v344 §2.4: Play All skips played — the build passes the
       // played filter; a fully-played day plays in full (the
       // fallback stands by construction, never a dead button).
-      var full = extRebuildDescs(day);
-      var filtered = unplayedOnly(full);
-      startQueue(filtered.length ? filtered : full);
+      startQueue(queueBuild(extRebuildDescs(day)));
     });
     document.getElementById('sleep-btn').addEventListener('click', openSleepSheet);
     view.querySelectorAll('[data-playkey]').forEach(function (btn) {
@@ -2550,8 +2566,7 @@ function renderPrayers() {
         var descs = extRebuildDescs(day).filter(function (d) { return d.block === blockName; });
         // v344 §2.4: per-block play skips played the same way,
         // with the same fully-played fallback.
-        var filtered = unplayedOnly(descs);
-        startQueue(filtered.length ? filtered : descs);
+        startQueue(queueBuild(descs));
       });
     });
     // v343 §2.4: the initial build arms every combined row in the
