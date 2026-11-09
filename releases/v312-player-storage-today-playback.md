@@ -359,3 +359,10 @@ Criteria 1–5, 7, and 8 are judged MET on first-hand agent evidence, and all fi
 - **Uncertainties:** whether the Z Fold 8 honors `seekto` and position state from this surface — exactly what check item 4 exists to learn · background playback is sampled by item 5 over minutes; a full ~23-minute Rosary in the background is proven only by a real day's use — a post-Ship watch note belongs in §5 (per §2), not as a Review blocker beyond John's verdict.
 - **Decision impact:** one judgment is reserved to John — the six-item phone check, as a verdict. Nothing else in this section needs his input; no return to Implement stands on agent evidence.
 - **First source to check:** the complete re-run logs (harness-v312: 59/0 · harness-v305: 30/6 with the crash in its own retired section · stubbed v305: 56/1, the one failure being the E4 boot casualty) and this section's candidate read-backs.
+
+### Amendment to §4 — 2026-11-08 (Ship pass; the section above stands unrewritten)
+
+- **The phone check is WAIVED, not passed.** John ordered "Push it" (2026-11-08 19:45 CT), under his 19:41 CT blanket "Ship everything", which also lifted this release's run directive to Autonomous to Ship. Criterion 6 (background play + lock-screen/media controls) and the Amendment 1 font condition therefore stand **WAIVED by John's direct order** — they were never verified on his phone, and this amendment does not record them as passed.
+- **John's verdict is on the v312 row** (app verdict route, actor John, recorded 2026-11-09T01:47Z by the Ship pass at his order), with the waiver stated in the verdict note verbatim.
+- **Consequence:** background play and the font floor verify in production use after this ship; any failure is fixed forward as a new fix, not as a reopened Review. The standing watch note (§2) applies: a full day's background playback is proven only by real use.
+- On this basis Review passes: criteria 1–5, 7, 8 MET on agent evidence (§4 above), criterion 6 + the font condition WAIVED by John's order. The chain proceeds to Ship in the same pass.
