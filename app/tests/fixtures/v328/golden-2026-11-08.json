@@ -1,0 +1,104 @@
+{
+  "blocks": {
+    "morning-prayer": "Morning",
+    "daily-rosary": "Morning",
+    "marian-antiphon-angelus": "Morning",
+    "auxilium-christianorum": "Afternoon",
+    "daily-reflection": "Night",
+    "novena-dedication_of_the_lateran_basilica": "Midmorning",
+    "novena-pope_st_leo_the_great": "Midmorning",
+    "novena-st_andrew_avellino": "Midmorning",
+    "novena-st_martin_of_tours": "Midmorning",
+    "novena-josaphat_kuntsevych_bishop": "Midmorning",
+    "novena-st_frances_xavier_cabrini": "Midmorning",
+    "novena-st_homobonus": "Midmorning",
+    "novena-st_albert_the_great": "Midmorning",
+    "novena-st_gertrude_prayer": "Midmorning",
+    "novena-st_giuseppe_moscati": "Midmorning",
+    "novena-st_margaret_of_scotland": "Midmorning",
+    "novena-st_elizabeth_of_hungary": "Midmorning"
+  },
+  "sequences": {
+    "Morning": [
+      "morning-prayer",
+      "daily-rosary",
+      "marian-antiphon-angelus"
+    ],
+    "Afternoon": [
+      "auxilium-christianorum"
+    ],
+    "Night": [
+      "daily-reflection"
+    ],
+    "Midmorning": [
+      "novena-dedication_of_the_lateran_basilica",
+      "novena-pope_st_leo_the_great",
+      "novena-st_andrew_avellino",
+      "novena-st_martin_of_tours",
+      "novena-josaphat_kuntsevych_bishop",
+      "novena-st_frances_xavier_cabrini",
+      "novena-st_homobonus",
+      "novena-st_albert_the_great",
+      "novena-st_gertrude_prayer",
+      "novena-st_giuseppe_moscati",
+      "novena-st_margaret_of_scotland",
+      "novena-st_elizabeth_of_hungary"
+    ]
+  },
+  "externals": [
+    {
+      "episode_id": "ext-invitatory",
+      "block": "Morning",
+      "source": "Divine Office",
+      "audio_state": "present"
+    },
+    {
+      "episode_id": "ext-morning-prayer",
+      "block": "Morning",
+      "source": "Divine Office",
+      "audio_state": "present"
+    },
+    {
+      "episode_id": "ext-bible-in-a-year",
+      "block": "Morning",
+      "source": "Bible in a Year",
+      "audio_state": "present"
+    },
+    {
+      "episode_id": "ext-midmorning-prayer",
+      "block": "Midmorning",
+      "source": "Divine Office",
+      "audio_state": "present"
+    },
+    {
+      "episode_id": "ext-midday-prayer",
+      "block": "Midday",
+      "source": "Divine Office",
+      "audio_state": "present"
+    },
+    {
+      "episode_id": "ext-midafternoon-prayer",
+      "block": "Afternoon",
+      "source": "Divine Office",
+      "audio_state": "present"
+    },
+    {
+      "episode_id": "ext-office-of-readings",
+      "block": "Evening",
+      "source": "Divine Office",
+      "audio_state": "present"
+    },
+    {
+      "episode_id": "ext-evening-prayer",
+      "block": "Evening",
+      "source": "Divine Office",
+      "audio_state": "present"
+    },
+    {
+      "episode_id": "ext-night-prayer",
+      "block": "Night",
+      "source": "Divine Office",
+      "audio_state": "present"
+    }
+  ]
+}
