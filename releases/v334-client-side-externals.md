@@ -338,3 +338,47 @@ Gate design per the standing pins: every gate **parses and executes the served c
 - **The failure may be environment-shaped, and that does not clear it.** §3's evidence says every Cache Storage primitive passes on the re-opened page itself, and fresh-context opens restore cleanly; the failing shape is specifically the same-tab reload — which is also the dominant real-world phone pattern (re-open = reload of the standing tab). Until a run proves the restore in that shape, the release's core promise ("the day cache carries the day") is unproven where it matters most. John's waived phone check is the other evidence that can settle it; it stands available to him, not required.
 - Leg 8's pass in this run recorded a 17 ms timeout settle, which reads as the slot already standing missing rather than the hang path being exercised; noted for the next Review's log read, not treated as a failure of the leg as written.
 - Contract 90 expectation 2 ("Full gate complete") is recorded BLOCKED, not met: the complete harness-v334 run stands, but the gate sequence stopped at the D5 return rule before the regression re-verification. Expectation 1 (legs 3–4 verdict) met at ~12:13Z, ahead of its 12:35Z deadline; expectation 3 (verdict recorded) met by this section and the phase return.
+
+### Review amendment — 2026-11-09 (second seating)
+
+- **Agent:** Review Agent (v334 second seating) — Review claim record 1172 (re-claimed from returned 2026-11-09T12:23:14Z) · time contract 92 · run level Autonomous to Ship (on this pass, Ship seats at once; this seat does not ship).
+- **Verdict: PASSED.** The §4 return conditions stand met in full: the two causes were isolated (not timer-mitigated), legs 3, 4, and 11 are green on this seat's own complete run, and the first Review's deferred work — the §3 D7 regression rulings verified first-hand — is done, with every ruling confirmed and no product regression found.
+
+#### First duty — legs 3, 4, 11 on the exact reviewed tree: GREEN
+
+- **Environment:** the exact reviewed tree (release/v334 @ cf82639, verified by `git rev-parse` before the run; the only commits since the first Review's c192d83 are the §4 commit 4f98778, the rework fix cdedca7, and the §3 amendment cf82639) · no wrangler/workerd processes standing and harness ports 8974/8975/8977 verified free before the start · no edit to the reviewed tree.
+- **Evidence (complete log only):** `app/tests/harness-v334-review2.log` — the run completed end to end, RESULT **harness-v334 30/30 ok**. The three returned legs, verbatim: leg 3 — "second open with dead feeds renders every cached slot present and issues no courier fetch for a fully cached source" ok · leg 4 — "the missing slot is re-resolved at the next open and fills when its feed recovers (cached slots were not re-fetched)" ok · leg 11 — "every resolved slot's AUDIO stands in the device cache (keys: ext-bible-in-a-year, ext-invitatory, …)" ok, all nine keys standing with `ext-bible-in-a-year` first, playback/seek from the local blob copy ok, zero page errors. Live smoke in the same run: courier vs the live Divine Office bytes matches the resolver, the direct Bible leg agrees, resolver on live feeds 9/9 present. Combined with the rework's two consecutive 30/30 runs, D5 stands closed on three consecutive complete green runs across two seats.
+- **Cause confirmation:** §3's rework amendment names two causes and this seat verified the fixes in the code (below); the green legs are the behavior those causes predicted — the restore now runs on the same-profile re-open, and BIAY's audio now survives activation.
+
+#### The D7 regression rulings — verified first-hand (the first Review's deferred work)
+
+Each harness re-run by this seat on the exact head cf82639, complete logs in `app/tests/*-review2.log`; every tally is identical to §3's record and every failing check is the same check:
+
+- **harness-v324 Worker 7/12** (`harness-v324-review2.log`) — FAIL check 16 ×2 (the externals route writes `kind='external'` rows → 404, the retired door route of §2.7; external rows render in the payload — §2.6's filter retires exactly that) · FAIL check 18 ×2 (payload order including externals — §2.6) · the run then ends in the same harness error (the harness dereferences a payload external that §2.6 no longer serves). Every failure names a retired surface. **Ruling VERIFIED.**
+- **harness-v325 29/31** (`harness-v325-review2.log`) — checks 5–6: the observed per-block queues carry the external descriptor (seg:Midday, fx-c, ext-midday-prayer · seg:Afternoon, fx-d1, fx-d2, ext-midafternoon-prayer) where the pre-externals strict equality expects it absent; under §2.5's queue rule a missing external descriptor stands in the list as unavailable and is passed over by the queue skip — the §2.6/§2.5 consequence, not a regression. **Ruling VERIFIED.**
+- **harness-v312 58/59** (`harness-v312-review2.log`) — check 6 identical to §3's record (the block Play All slice carries the external at its configured place as a named-missing descriptor in that feed-less harness — §2.6). **Ruling VERIFIED.**
+- **harness-v326 62 checks, 0 FAIL** (`harness-v326-review2.log`) — stands in full. **VERIFIED.**
+- **check-v328-consumption 21/22** (`check-v328-consumption-review2.log`) — the only failure is b2 (expects the push helper's commit to carry the moved Bible row — §2.7 retires externals from the helper commit); the other 21 checks pass, so the settings-consumption proof stands on them and on harness-v334 leg 5. **Ruling VERIFIED.**
+- **No failing check in any of the five names a live product behavior.** The named harness updates (v312/v324/v325/v328 suites pinned to the retired shapes) remain follow-on work for whoever next touches those harnesses, as §3 D7 records — they are not Ship blockers.
+
+#### Code spot-check — the two fixes are what §3's amendment claims
+
+- `git log`/`git diff` c192d83..cf82639: the only production-code changes are commit cdedca7's two hunks (client.ts +9/−3 net, ui.ts +6/−1, comments included); everything else is gate/regression logs and this document. Nothing else in the client or the service worker changed.
+- **Fix 1 (client.ts):** the restore loop (`standing.forEach(… extRestoreCached …)` for slots standing `downloading`) stood before the assignment and now stands immediately after the `var extRestoreCached = function …` assignment completes, with the comment naming the trap. Verified in the diff and in the standing source.
+- **Fix 2 (ui.ts):** the SW `activate` purge filter now reads `k !== CACHE && k !== "opn-ext-audio-v1"` — the audio cache spared by name, with the comment naming the race; the SW cache name constant itself is untouched (the byte change drives the update), exactly as §3 records.
+
+#### Phone check
+
+- **WAIVED, not passed** — under John's blanket pattern and his 2026-11-09 04:18 CT "Approved all the way to ship" word. No verdict written. The Ship candidate stands for his optional check after Ship, per §2.8.
+
+### Ship conditions carried forward (they bind the Ship pass, unchanged from §2.7/§2.8)
+
+- Nightly sheet `ora-pro-nobis-nightly-run`: step 4C EXTERNALS (v324) and its mandatory "Externals (v324)" report field come OUT at Ship, with read-backs.
+- Watchdog sheet `publish-audio-watchdog`: step 2C EXTERNALS RE-RESOLVE comes OUT at Ship, with read-backs.
+- Four-piece flip + production proofs as §2.8 carries them; the Review candidate for John's optional phone check and its teardown remain Ship follow-ons (with the standing v320/v324/v328 candidates' footing).
+
+### Concerns and Information Needs
+
+- **Leg 8's nuance repeats and is still not a failure of the leg as written:** this run's leg 8 also settled in 18 ms, reading as the slot already standing missing rather than the hang path being exercised (the first Review recorded 17 ms). The timeout machinery itself stands proven by the D4 watchdog evidence and the leg's own fixture history; named here so the pattern is on the record across both Review seats.
+- **The published-document section parser does not surface §3:** the door detail read for this release parses sections on the bare `## N · <Phase>` headings, and §3's heading as committed reads `## 3. Implement` — the published §3 therefore reads "not present" in the parsed view even though the section stands in the document and its phase record passed. §3 is a passed section and this seat does not rewrite it; named for the Curator — a heading-shape fix belongs to whoever next amends the document standard or the parser, and Ship's four-piece flip should not treat the parsed absence as a missing section.
+- Contract 92: expectation 1 (harness-v334 complete verdict) met at ~12:29Z, ahead of its 12:55Z deadline · expectation 2 (D7 rulings verified) met at ~12:38Z, ahead of its 13:10Z deadline · expectation 3 (verdict recorded) met by this amendment, the publication, and the phase pass.

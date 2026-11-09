@@ -1,0 +1,32 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (port 8941) and the answering server is this instance (child alive)
+ok 3 - check 2: with no stored day the payload is the named empty shape (storedDay null, no episodes)
+ok 4 - check 2: every block is [card] exactly as today — one not-available Intentions card, trackCount 1
+ok 5 - setup: episode audio staging POSTs accepted, sizes read back
+ok 6 - setup: F1 commit lands (rowCount 8) and its read-back names this harness's own fixture ids — the instance is this harness's
+ok 7 - check 1: payload names the stored fixture day, six blocks
+ok 8 - check 1: every block's tracks[0] is the Intentions card — multi-episode, single-episode, and no-episode blocks alike
+ok 9 - check 1: the multi-episode block reads [card, fx-a1, fx-a2] — episode order after the head is the standing sort order
+ok 10 - check 1: the no-episode block is [card] alone, as before
+ok 11 - check 1: every block's episode order after the head equals the manifest sort order, unchanged
+ok 12 - check 6: the segment-absent block reads [card, fx-d1, fx-d2] — the missing first episode stands named in place after the card
+ok 13 - check 6: the head card stands not-available (available:false, streamUrl:null) when its segment audio is absent
+ok 14 - check 6: the missing first episode stands named after the card, available:false, streamUrl:null
+ok 15 - check 7: trackCounts equal the pre-fix payload's on the same fixture (manifest episodes per block + the one card)
+ok 16 - check 7: the unblocked group is identical — same episode, same shape, no card created
+ok 17 - check 7: against the pre-fix order (the retired splice rule) only the card's position changed — same tracks, same episode order, in every block
+ok 18 - check 3: the first card under each block header in the rendered DOM is that block's Intentions card (Morning=seg:Morning, Midmorning=seg:Midmorning, Midday=seg:Midday, Afternoon=seg:Afternoon, Evening=seg:Evening, Night=seg:Night)
+ok 19 - check 4: the whole-day queue equals the rendered day order, as before
+ok 20 - check 4: the whole-day queue head is seg:Morning (seg:Morning)
+ok 21 - check 4: the playing track after Play All starts is the Morning Intentions
+ok 22 - check 5: per-block Play All (Midday) starts playing the block's Intentions segment
+not ok 23 - check 5: the per-block queue is ["seg:Midday", "fx-c"] — the segment heads its block's episodes (seg:Midday,fx-c,ext-midday-prayer)
+not ok 24 - check 6: the Afternoon queue holds the not-available head and the missing episode in place (seg:Afternoon,fx-d1,fx-d2,ext-midafternoon-prayer)
+ok 25 - check 6: the queue reached past the not-available card and the missing episode to the first available track (fx-d2 playing)
+ok 26 - check 7: reopening on the same stored day offers Resume, as before
+ok 27 - check 7: the resumed track stands paused — no autoplay on open
+ok 28 - check 7: the resumed position matches the remembered one (0.50s vs 0.50s, within 2s)
+ok 29 - check 7: the next day's push lands (F2) for the resume-retirement leg
+ok 30 - check 7: after a new day's push, the prior day's position is not offered — resume unchanged
+ok 31 - check 7: the browser boot ran with zero page errors
+TALLY: 29 ok / 2 FAIL (31 checks)
