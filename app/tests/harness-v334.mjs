@@ -308,6 +308,14 @@ try {
 
   // ---- context A: the full fixture day (legs 1, 3, 6, 11) ----
   const ctxA = await browser.newContext();
+  await ctxA.addInitScript(() => {
+    window.__fetchLog = [];
+    const orig = window.fetch.bind(window);
+    window.fetch = (u, o) => orig(u, o).then((r) => {
+      window.__fetchLog.push([String(u).slice(0, 80), r.status]);
+      return r;
+    }).catch((e) => { window.__fetchLog.push([String(u).slice(0, 80), "ERR:" + e.message]); throw e; });
+  });
   const { page: pageA, errors: errorsA } = await openPrayers(ctxA);
   const settledA = await waitExt(pageA, (s) => SLOT_ORDER.every((id) => s[id] === "present" || s[id] === "missing"));
   const stateA = await extState(pageA);
@@ -316,6 +324,30 @@ try {
     console.log("PARITY DEBUG oracle:", JSON.stringify(Object.fromEntries(Object.entries(oracleById).map(([k, v]) => [k, { state: v.audio_state, source: v.source, url: v.stream_url }]))));
   }
   console.log("ROUTE COUNTS after ctxA:", JSON.stringify(routeCounts), "feedHits:", JSON.stringify(feedHits));
+  console.log("FETCH LOG ctxA:", JSON.stringify(await pageA.evaluate(() => window.__fetchLog)));
+  const putProbe = await pageA.evaluate(async () => {
+    const url = "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/4d9299e9-97dc-42f3-9aaf-d1230fb16210.mp3";
+    try {
+      const r = await fetch(url);
+      const c = await caches.open("opn-ext-audio-v1");
+      await c.put("ext-bible-in-a-year", r.clone());
+      const blob = await r.blob();
+      return { put: "ok", blobSize: blob.size, match: !!(await c.match("ext-bible-in-a-year")) };
+    } catch (e) { return { error: String(e) }; }
+  }).catch((e) => ({ evalError: String(e) }));
+  console.log("PUT PROBE:", JSON.stringify(putProbe));
+  const concProbe = await pageA.evaluate(async () => {
+    const urls = {
+      "ext-bible-in-a-year": "https://dts.podtrac.com/redirect.mp3/aphid.fireside.fm/d/1437767933/c6354d0d-bd10-4eed-b811-1bb569d46efd/4d9299e9-97dc-42f3-9aaf-d1230fb16210.mp3",
+    };
+    for (const [k, v] of Object.entries(window.state.extSlots || {})) if (v.enclosureUrl) urls[k] = v.enclosureUrl;
+    const one = (slotId, u) => fetch(u).then((r) => {
+      const put = caches.open("opn-ext-audio-v1").then((c) => c.put(slotId, r.clone())).catch(() => {});
+      return put.then(() => r.blob());
+    }).then((b) => [slotId, "ok:" + b.size]).catch((e) => [slotId, "ERR:" + e.message]);
+    return Object.fromEntries(await Promise.all(Object.entries(urls).map(([k, u]) => one(k, u))));
+  }).catch((e) => ({ evalError: String(e) }));
+  console.log("CONC PROBE:", JSON.stringify(concProbe));
   const legProbe = await pageA.evaluate(async () => {
     try {
       const xml = await extFetchText(EXT_BIAY_URL);

@@ -1011,22 +1011,30 @@ function resolveExternals(day) {
     var extDownload = function (slot, meta) {
       // Amendment A1 routes: direct from the enclosure host where
       // its chain allows the read (Divine Office, Bible in a Year);
-      // the Worker pass-through where it does not (Sing the Hours),
-      // and as the single retry when a direct download fails.
+      // the Worker pass-through where it does not (Sing the Hours).
+      // Any failure in a route's whole chain (fetch, body read, or
+      // cache write) retries once on the other route: a download
+      // that starts before the service worker claims the page can
+      // have its stream torn by the claim, and the retry — issued
+      // after the claim settles — is the heal. The body is
+      // materialized to a Blob BEFORE the cache write, so no
+      // stream clone is ever raced.
       var passthrough = '/api/player/externals/audio?date=' + encodeURIComponent(date) + '&slot=' + encodeURIComponent(slot.slotId);
-      var first = meta.source === 'Sing the Hours' ? passthrough : meta.enclosureUrl;
-      var attempt = function (u) {
-        return fetch(u).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r; });
+      var routes = meta.source === 'Sing the Hours' ? [passthrough, meta.enclosureUrl] : [meta.enclosureUrl, passthrough];
+      var tryRoute = function (u) {
+        return fetch(u).then(function (r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.blob();
+        }).then(function (blob) {
+          var put = ('caches' in window)
+            ? caches.open('opn-ext-audio-v1').then(function (c) {
+                return c.put(slot.slotId, new Response(blob, { headers: { 'Content-Type': 'audio/mpeg' } }));
+              }).catch(function () {})
+            : Promise.resolve();
+          return put.then(function () { return blob; });
+        });
       };
-      attempt(first).catch(function () {
-        if (first !== passthrough) return attempt(passthrough);
-        throw new Error('download failed');
-      }).then(function (resp) {
-        var put = ('caches' in window)
-          ? caches.open('opn-ext-audio-v1').then(function (c) { return c.put(slot.slotId, resp.clone()); }).catch(function () {})
-          : Promise.resolve();
-        return put.then(function () { return resp.blob(); });
-      }).then(function (blob) {
+      tryRoute(routes[0]).catch(function () { return tryRoute(routes[1]); }).then(function (blob) {
         settle(slot, { state: 'present', title: meta.title, streamUrl: URL.createObjectURL(blob), enclosureUrl: meta.enclosureUrl, durationSec: meta.durationSec, sizeBytes: meta.sizeBytes, source: meta.source });
       }).catch(function () {
         settle(slot, { state: 'missing', title: meta.title, source: meta.source });
