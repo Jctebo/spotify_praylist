@@ -203,7 +203,7 @@ try {
   let parses = true; try { new vm.Script(appJs); } catch { parses = false; }
   ok(parses, "check 1: the served /app.js parses (vm.Script)");
   const sw = (await api(BASE, "GET", "/sw.js")).text;
-  ok(sw.includes("ora-pro-nobis-v320-1"), "check 1: the SW cache name reads ora-pro-nobis-v320-1 (§2.12)");
+  ok(sw.includes("ora-pro-nobis-v318-1"), "check 1: the SW cache name reads ora-pro-nobis-v318-1 (v325 Ship named update, §2.5 pattern: the pin follows the landed trunk's cache rename — v318's rename superseded v320's §2.12 name)");
   ok(pageErrors.length === 0, `check 1: the browser boot ran with zero page errors${pageErrors.length ? " — " + pageErrors.join(" | ") : ""}`);
   const keysAtBoot = await ev(() => Object.keys(localStorage).sort());
   ok(keysAtBoot.length === 0, "check 14 (early): localStorage stands empty at boot (no harness seeds)");
@@ -250,7 +250,10 @@ try {
   // ---------- Check 5: timed fire — queue held ----------
   await reload();
   await page.click("#play-all");
-  await page.waitForFunction(() => window.state?.current?.episodeId === "ep-long-a" && !document.getElementById("audio").paused, null, { timeout: 15000 });
+  // v325 Ship named update (§2.5): the day queue now opens with the Morning
+  // Intentions segment (30 s fixture tone) ahead of ep-long-a — the wait
+  // spans the segment so the same standing track anchors the check.
+  await page.waitForFunction(() => window.state?.current?.episodeId === "ep-long-a" && !document.getElementById("audio").paused, null, { timeout: 45000 });
   const snap5 = await ev(() => ({ q: window.state.queue.map((d) => d.episodeId), idx: window.state.queueIdx, cur: window.state.current.episodeId }));
   await ev(() => window.__opnSleep.armMinutes(0.05)); // 3 s
   await page.waitForFunction(() => document.getElementById("audio").paused, null, { timeout: 9000 });
@@ -280,7 +283,9 @@ try {
   // ---------- Check 7: deadline invariance across an advance ----------
   await reload();
   await page.click("#play-all");
-  await page.waitForFunction(() => window.state?.current?.episodeId === "ep-long-a" && !document.getElementById("audio").paused, null, { timeout: 15000 });
+  // v325 Ship named update (§2.5): same head change as check 5 — the wait
+  // spans the 30 s Morning Intentions segment ahead of ep-long-a.
+  await page.waitForFunction(() => window.state?.current?.episodeId === "ep-long-a" && !document.getElementById("audio").paused, null, { timeout: 45000 });
   const t7 = await ev(() => { window.__opnSleep.armMinutes(0.08); return Date.now(); }); // 4.8 s
   await sleep(1200);
   const next7 = await ev(() => window.state.queue[window.state.queueIdx + 1]?.episodeId || null);
@@ -307,8 +312,8 @@ try {
     const i = window.state.queueIdx;
     return { qlen: window.state.queue.length, next: window.state.queue[i + 1]?.episodeId || null, nextUrl: window.state.queue[i + 1]?.url || null, afterNext: window.state.queue[i + 2]?.episodeId || null };
   });
-  ok(snap8.next === "seg:Midday" && snap8.afterNext === "ep-short-b",
-    `check 8: in payload order the descriptor after ep-short-a is the block's Intentions segment and ep-short-b follows it (${snap8.next} -> ${snap8.afterNext}) — the hold lands on whatever stands next`);
+  ok(snap8.next === "ep-short-b" && snap8.afterNext === "ep-long-c",
+    `check 8: in payload order the descriptor after ep-short-a is ep-short-b and ep-long-c follows it (${snap8.next} -> ${snap8.afterNext}) — the hold lands on whatever stands next (v325 Ship named update, §2.5: the block's Intentions segment now stands at the head of the Midday queue, ahead of ep-short-a, instead of after it)`);
   await ev(() => window.__opnSleep.armTrack());
   ok((await label()) === "Sleep · End of track", "check 8: the label reads 'Sleep · End of track' while armed");
   await page.waitForFunction((id) => {
@@ -329,16 +334,16 @@ try {
   await ev(() => window.__opnMediaHandlers.play({})); // Media Session play: resume the held head track
   await page.waitForFunction((id) => !document.getElementById("audio").paused && window.state?.current?.episodeId === id, snap8.next, { timeout: 8000 });
   await page.waitForFunction((id) => window.state?.current?.episodeId === id && !document.getElementById("audio").paused, snap8.afterNext, { timeout: 20000 });
-  ok(true, "check 9: the held track plays out and its end advances normally to ep-short-b — exactly one suppression");
+  ok(true, "check 9: the held track plays out and its end advances normally to ep-long-c — exactly one suppression (v325 Ship named update, §2.5: follows check 8's re-derived afterNext)");
   await ev(() => document.getElementById("audio").pause());
 
   // ---------- Check 10: end of track at the queue's last track ----------
   await reload();
   await page.click('[data-queue="Evening"]');
   await page.waitForFunction(() => window.state?.queue?.length > 0 && window.state.current, null, { timeout: 15000 });
-  await ev(() => window.advanceQueue(1)); // to the last descriptor (the 2.5 s Evening segment)
+  await ev(() => window.advanceQueue(1)); // to the last descriptor (ep-short-c; v325 Ship named update, §2.5: the Evening Intentions segment now stands at the queue head, so the last descriptor is the block's episode)
   const lastId = await ev(() => window.state.current?.episodeId);
-  ok(lastId === "seg:Evening", `check 10: the queue's last track stands playing (${lastId})`);
+  ok(lastId === "ep-short-c", `check 10: the queue's last track stands playing (${lastId})`);
   await ev(() => window.__opnSleep.armTrack());
   await page.waitForFunction(() => window.state && window.state.queue.length === 0 && window.state.current === null, null, { timeout: 12000 });
   ok(true, "check 10: at the last track's end the standing queue-end state stands (queue cleared, current null)");
