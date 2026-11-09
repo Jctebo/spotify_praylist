@@ -1090,7 +1090,17 @@ function trackCard(t) {
     return '<div class="card" data-card="' + esc(key) + '"><h3>' + esc(t.title) + '</h3><div class="meta">' + (t.durationS ? fmtDur(t.durationS) : '') + '</div><div class="notavail">Not available today</div></div>';
   }
   if (t.available) {
-    return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">Plays here · episode file' + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + novenaSpanHtml(t) + '</div>'
+    // v344 gate correction (harness-v343 clip guard, leg 20's
+    // named gate): §2.7's novena line appended to the FULL standing
+    // meta wraps the combined row's meta to three lines and the
+    // row's content stands 144px against v343's 136px uniform row
+    // (the guard's ≤137) — the only rows that overflow. On a
+    // novena row the meta's "episode file" segment (unpinned,
+    // the row's least informative words) gives way to the pinned
+    // line: meta = "Plays here" + duration + the §2.7 span, two
+    // lines, content 128px. Non-novena metas are byte-identical.
+    var novSpan = novenaSpanHtml(t);
+    return wrap('<button class="playbtn" data-playkey="' + esc(key) + '" data-url="' + esc(t.streamUrl) + '">&#9654;</button><div class="grow"><h3' + heardCls(t) + '>' + esc(t.title) + '</h3><div class="meta">Plays here' + (novSpan ? '' : ' · episode file') + (t.durationS ? ' · ' + fmtDur(t.durationS) : '') + novSpan + '</div>'
       + (t.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(t.spotifyUrl) + '">Open in Spotify</a>' : '')
       + (t.hasText && t.textUrl ? readButton(t, key) : '<div class="notavail">Not available in the app yet</div>') + '</div>');
   }
