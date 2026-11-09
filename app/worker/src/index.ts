@@ -27,6 +27,8 @@ export interface Env {
   // the real route. Production leaves it unset and the courier uses
   // the pinned resolver URL (EXT_DO_FEED_URL below).
   EXT_DO_FEED_URL?: string;
+  EXT_BIAY_FEED_URL?: string;
+  EXT_STH_FEED_URL?: string;
 }
 
 import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
@@ -1073,7 +1075,7 @@ export default {
           let item: ExtFeedItem | null = null;
           try {
             if (slotId === "ext-bible-in-a-year") {
-              item = extMatchBible(await extFetchFeedItems(EXT_BIAY_FEED_URL), yy, mm, dd);
+              item = extMatchBible(await extFetchFeedItems(env.EXT_BIAY_FEED_URL || EXT_BIAY_FEED_URL), yy, mm, dd);
             } else {
               const doSlot = EXT_DO_SLOTS.find((s) => s.slotId === slotId);
               if (doSlot) {
@@ -1083,7 +1085,7 @@ export default {
                   const fbRow = settings.sources.find((s) => s.family === "external" && s.slotId === slotId && s.role === "fallback");
                   const token = slotId === "ext-morning-prayer" ? "Lauds" : slotId === "ext-evening-prayer" ? "Vespers" : null;
                   const fills = fbRow && fbRow.enabled === 1 && (fbRow.dayRule === "fallback-only" || extDayRulePasses(fbRow.dayRule || "daily", wdMon0));
-                  if (token && fills) item = extMatchSth(await extFetchFeedItems(EXT_STH_FEED_URL), yy, mm, dd, token);
+                  if (token && fills) item = extMatchSth(await extFetchFeedItems(env.EXT_STH_FEED_URL || EXT_STH_FEED_URL), yy, mm, dd, token);
                 }
               }
             }
