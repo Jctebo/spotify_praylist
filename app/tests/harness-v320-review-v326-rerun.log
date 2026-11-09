@@ -1,0 +1,62 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 3 - fixture: episode audio staged for the fixture day
+ok 4 - fixture: day commit lands (rowCount 6)
+ok 5 - fixture: Midday slice serves (seg:Midday,ep-short-a,ep-short-b,ep-long-c)
+ok 6 - check 1: the served /app.js parses (vm.Script)
+ok 7 - check 1: the SW cache name reads ora-pro-nobis-v326-1 (v326 Implement named update, §2.6: the pin follows the landed trunk's cache rename — v326's rename supersedes v318's)
+ok 8 - check 1: the browser boot ran with zero page errors
+ok 9 - check 14 (early): localStorage stands empty at boot (no harness seeds)
+ok 10 - check 2: the sleep button stands on the Prayers screen
+ok 11 - check 2: the button stands in the Play All transport row, classes 'btn ghost'
+ok 12 - check 2: the label reads 'Sleep · Off' at boot
+ok 13 - check 3: the choices stand in the exact order Off · 5 · 10 · 15 · 30 · 45 · 60 · End of track (off,5,10,15,30,45,60,track)
+ok 14 - check 3: the first and last choices read 'Off' and 'End of track'
+ok 15 - check 3: Close dismisses the sheet without change
+ok 16 - check 3: dismissing the sheet leaves the timer Off
+ok 17 - check 4: one tap arms and closes the sheet
+ok 18 - check 4: __opnSleep.state() agrees with the sheet arm (mode minutes, preset 5, remaining 300s)
+ok 19 - check 4: two successive label reads decrease ('Sleep · 5:00' -> 'Sleep · 4:59')
+ok 20 - check 4: the label and state() agree on the remaining time
+ok 21 - check 5: at expiry the element stands paused
+ok 22 - check 5: queue length, queueIdx, and current are unchanged — held, not cleared
+ok 23 - check 5: the label reads Off after the stop
+ok 24 - check 5: the resume record names the playing track at the stop position (ep-long-a @ 2.89s vs element 2.89s, ±1s)
+ok 25 - check 6: playback continues past the would-be deadline untouched
+ok 26 - check 6: the timer stands Off
+ok 27 - check 7: advanceQueue(1) mid-arm moves to the next track in payload order (ep-long-b)
+ok 28 - check 7: the stop fires at the original deadline (4.9s for a 4.8s arm, not re-armed by the advance)
+ok 29 - check 7: the stop lands against the new track
+ok 30 - check 8: the short track stands playing in the Midday queue
+ok 31 - check 8: in payload order the descriptor after ep-short-a is ep-short-b and ep-long-c follows it (ep-short-b -> ep-long-c) — the hold lands on whatever stands next (v325 Ship named update, §2.5: the block's Intentions segment now stands at the head of the Midday queue, ahead of ep-short-a, instead of after it)
+ok 32 - check 8: the label reads 'Sleep · End of track' while armed
+ok 33 - check 8: after the track ends, the next track does NOT start (element paused)
+ok 34 - check 8: audioEl.src is the next track's URL
+ok 35 - check 8: currentTime stands at the head (0.00s)
+ok 36 - check 8: the resume record names the next track at 0 (ep-short-b @ 0.00s)
+ok 37 - check 8: the queue itself stands intact (held at the head)
+ok 38 - check 8: the label reads Off; the arm fired exactly once
+ok 39 - check 9: the held track plays out and its end advances normally to ep-long-c — exactly one suppression (v325 Ship named update, §2.5: follows check 8's re-derived afterNext)
+ok 40 - check 10: the queue's last track stands playing (ep-short-c)
+ok 41 - check 10: at the last track's end the standing queue-end state stands (queue cleared, current null)
+ok 42 - check 10: the label reads Off
+ok 43 - check 11: the single track ends into the standing end state (current null, element paused)
+ok 44 - check 11: the label reads Off
+ok 45 - check 12: a sample lands inside the fade window
+ok 46 - check 12: SETTABLE branch — inside the window the volume reads 0.73, at/below the ramp value for 11s remaining (fadeBase 1)
+ok 47 - check 12: the stop fires on time at the deadline
+ok 48 - check 12: the volume reads fadeBase (1) again after the stop (1)
+ok 49 - check 12: the volume reads fadeBase after the next startDesc
+ok 50 - check 13: a resume record stands before the arm
+ok 51 - check 13: the timer stands armed before the reload
+ok 52 - check 13: after reload the timer stands reset (label Off, mode off)
+ok 53 - check 13: the resume record stands byte-identical to its pre-arm shape
+ok 54 - check 14: after arming and firing, the localStorage key set is exactly the resume key (opn-resume-v312)
+ok 55 - check 15: Play All still toggles to pause while playing
+ok 56 - check 15: Play All restarts playback after the toggle
+ok 57 - check 15: the per-block queue is exactly the block slice (seg:Midday,ep-short-a,ep-short-b,ep-long-c)
+ok 58 - check 15: the card play/pause toggle still pauses the playing track
+ok 59 - check 15: the card toggle plays again
+ok 60 - check 15: the Media Session handler table is unchanged (nexttrack,pause,play,previoustrack,seekbackward,seekforward,seekto)
+ok 61 - check 15: zero page errors across the whole run
+TALLY: 61 ok / 0 FAIL (61 checks)
