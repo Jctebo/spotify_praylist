@@ -161,3 +161,47 @@ The edit is applied at Ship (never at Plan or Implement) by `cron.update` on job
 - **Uncertainties:** the Nov 5 fault's seat (canonical vs pre-redirect) was never isolated — P2 covers both seats, as §1 directs · a morning where the nightly run is merely late (publishes after 05:40) reads STALE for one morning and fresh the next; that is the monitor working as §1 specifies (the threshold is one full cycle), not a false alarm to soften.
 - **Decision impact:** none open for John — the level is set (Autonomous to Ship), the seat is settled (P1), and every line shape is pinned above.
 - **First source to check:** the revised job body read back at Ship (`cron.view publish-audio-watchdog`) against P7, and the first live morning's delivered line.
+
+## 3 · Implement
+
+- **Agent:** Implement Agent (v315) — Implement claim record 1083, claimed 2026-11-09 00:02 UTC (18:02 CT)
+- **Level in force: Autonomous to Ship (level 6)** — this pass owns Implement only and stops at the Implement pass. The live job-sheet edit is the Ship step (§2 P7, drafted in full); nothing in this section touches the live sheet, any endpoint, or the ledger.
+- **Built (commit 523c08e on release/v315):** the step 2B procedure as a runnable script — `releases/fixtures/v315/check_feed_freshness.py` (stdlib-only Python; the same procedure shape the Ship step carries into the job sheet as prose: redirect probe with a no-follow GET on the github.io address, intact only on a 3xx whose Location is exactly the canonical address · canonical GET · every item's pubDate → America/Chicago calendar date, newest = max, N = items dated newest · verdicts FRESH / STALE / CHECK FAILED / ANOMALY per §2 P3's table · §2 P4's exact report lines, the canonical link on STALE / CHECK FAILED / ANOMALY only · the script has no ledger code path at all — independence is structural, not promised) — plus the two fixtures §2 P6 names: `feed-fresh.xml` (3 items, newest date D = 2026-11-15 on two items) and `feed-stale.xml` (the same file, every pubDate shifted −3 days). The third P6 fixture is no file by design (the unroutable-address case, below).
+
+### Rehearsal — produced lines verbatim, beside §2 P6's required outputs
+
+All fixture runs state check date **2026-11-13**, so expected = 2026-11-15. The fixture body substitutes for the canonical fetch (status 200); the redirect leg is rehearsed against the live chain (case 4), per P6.
+
+**Case 1 — feed-fresh.xml.** Required: the FRESH line with date D and N = items dated D. Produced:
+```
+RSS feed: fresh — newest 2026-11-15 (2 items)
+```
+Match — no link on the fresh line, per P4.
+
+**Case 2 — feed-stale.xml.** Required: the STALE line naming both dates, plus the canonical link. Produced:
+```
+RSS feed: STALE — newest 2026-11-12, expected 2026-11-15
+https://orapronobis.media/podcast.xml
+```
+Match.
+
+**Case 3 — canonical fetch pointed at the reserved unroutable address `https://192.0.2.1/podcast.xml`.** Required: the CHECK FAILED line naming the address — expressly **not** a STALE line. Produced:
+```
+RSS feed: CHECK FAILED — https://192.0.2.1/podcast.xml — the fetch could not complete (RemoteDisconnected: Remote end closed connection without response)
+https://orapronobis.media/podcast.xml
+```
+Match — P3's distinction proven: a read that cannot complete is a check failure, never stale content.
+
+**Case 4 — the live chain, read-only (check date 2026-11-08, expected 2026-11-10).** The redirect probe against the real pre-redirect address returned **HTTP 301** with **Location: https://orapronobis.media/podcast.xml** — intact, exactly the canonical address. The full live run (real probe + real canonical GET) produced:
+```
+RSS feed: fresh — newest 2026-11-10 (16 items)
+```
+Match with the standing facts (§1: the Nov 10 drop carries 16 episodes). GETs only — no repair, no write of any kind.
+
+### Deviation — one, named exactly
+
+- **Rehearsal-script defect, found and fixed inside this pass (not a §1 defect, not a P7 draft defect):** the script's first case-3 run printed the *substituted fetch address* (`https://192.0.2.1/podcast.xml`) as the line following the CHECK FAILED line. §2 P4 pins that following line as **the canonical link** — a constant, not whatever address a rehearsal substitutes. The script now pins the link to the standing canonical address regardless of the fetch target; case 3 was re-run and produced the correct line (recorded above), and cases 1–2 were re-run as regression (both lines unchanged and correct). The P7 job-sheet draft already reads "plus the link https://orapronobis.media/podcast.xml" — no Plan amendment arises.
+
+### Read-only confirmation
+
+Every fetch in this pass was a GET against the two public addresses (plus the one deliberate GET against the reserved unroutable address). No job sheet was edited (the `publish-audio-watchdog` body stands exactly as §2 read it), no ledger was read by the check or written by anyone, no endpoint, feed file, R2 object, or GitHub state changed. The only writes are this branch's commits and the app documents-store publication of this document.
