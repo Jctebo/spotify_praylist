@@ -61,7 +61,6 @@ html, body { margin:0; padding:0; background:var(--cream); color:var(--ink); fon
 .dockprogress { position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(250,245,236,.18); }
 .dockprogress i { display:block; height:100%; width:0; background:var(--gold); }
 body.dock-on .view { padding-bottom: calc(96px + var(--dockh, 60px)); }
-.card.dockjump { outline:2px solid var(--gold); outline-offset:2px; }
 h1.screen { font-size:22px; color:var(--navy); margin:2px 0 2px; font-weight:normal; }
 .sub { color:#6d6353; font-size:15px; margin:0 0 12px; }
 .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:0 0 10px; }
@@ -122,6 +121,19 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .setcontrols .mvbtn:disabled { opacity:.35; cursor:default; }
 .settoggle { font-family:inherit; font-size:14px; border:1px solid var(--gold); color:var(--gold); background:#fff; border-radius:20px; padding:6px 12px; cursor:pointer; flex:none; white-space:nowrap; }
 .settoggle.on { background:var(--gold); color:#fff; }
+/* Now Playing (v336) */
+.np-art { text-align:center; margin:20px 0 12px; }
+.np-art img { width:150px; height:150px; border-radius:14px; }
+.np-title { text-align:center; }
+.np-meta { text-align:center; }
+.np-seekrow { display:flex; align-items:center; gap:10px; margin:22px 0 6px; font-size:13px; color:#6d6353; }
+.np-seekrow input[type=range] { flex:1; accent-color:var(--gold); height:28px; cursor:pointer; }
+.np-seekrow input[type=range]:disabled { cursor:default; opacity:.5; }
+.np-transport { display:flex; align-items:center; justify-content:center; gap:26px; margin:16px 0 20px; }
+.np-tbtn { background:none; border:none; color:var(--navy); font-family:inherit; font-size:26px; cursor:pointer; padding:10px; }
+.np-tbtn:disabled { opacity:.35; cursor:default; }
+.np-play { width:58px; height:58px; font-size:21px; }
+.np-controls { justify-content:center; flex-wrap:wrap; }
 `;
 
 export const MANIFEST_JSON = JSON.stringify({
@@ -137,7 +149,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v334-1";
+var CACHE = "ora-pro-nobis-v336-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

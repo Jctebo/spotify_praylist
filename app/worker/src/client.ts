@@ -8,6 +8,46 @@ var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
 var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, dateLabel: '', pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [] };
 
+/* ---------------- Playback speed (v336) ----------------
+   One rate for the one audio element: a listener preference in
+   shell scope, persisted on this device only under the client's
+   own key, applied at exactly three points — boot (here, beside
+   the element binding), every startDesc (no path can inherit a
+   stale element rate), and setRate() on change. Nothing is sent
+   to the server; no payload or route knows the rate exists. */
+var SPEED_SET = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+function readStoredRate() {
+  try {
+    var r = Number(localStorage.getItem('opn-speed-v336'));
+    return SPEED_SET.indexOf(r) >= 0 ? r : 1;
+  } catch (e) { return 1; }
+}
+state.rate = readStoredRate();
+audioEl.playbackRate = state.rate;
+function setRate(r) {
+  if (SPEED_SET.indexOf(r) < 0) return;
+  state.rate = r;
+  audioEl.playbackRate = r;
+  try { localStorage.setItem('opn-speed-v336', String(r)); } catch (e) {}
+  updatePositionState();
+  updateNowPlaying();
+  var ss = document.querySelector('.speedsheet');
+  if (ss) ss.querySelectorAll('[data-rate]').forEach(function (b) { b.classList.toggle('active', Number(b.getAttribute('data-rate')) === r); });
+}
+function openSpeedSheet() {
+  var old = document.querySelector('.speedsheet');
+  if (old) old.remove();
+  var sheet = document.createElement('div'); sheet.className = 'sheet speedsheet';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">Playback speed</h1><button class="btn ghost" id="sp-close">Close</button></div>'
+    + '<p class="meta">One speed for everything the app plays — the day&rsquo;s prayers, the downloaded shows, and Intentions alike. It is remembered on this device.</p>'
+    + '<div class="chips">' + SPEED_SET.map(function (r) { return '<button class="chip' + (r === state.rate ? ' active' : '') + '" data-rate="' + r + '">' + r + '&times;</button>'; }).join('') + '</div></div>';
+  document.body.appendChild(sheet);
+  sheet.querySelector('#sp-close').addEventListener('click', function () { sheet.remove(); });
+  sheet.querySelectorAll('[data-rate]').forEach(function (b) {
+    b.addEventListener('click', function () { setRate(Number(b.getAttribute('data-rate'))); });
+  });
+}
+
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function todayChicago() {
   var parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
@@ -81,6 +121,7 @@ function startDesc(desc) {
   state.current = desc;
   setMediaSessionFor(desc);
   audioEl.src = desc.url;
+  audioEl.playbackRate = state.rate; // v336: re-asserted on every start — no stale element rate
   audioEl.play().catch(function () {});
   markPlaying(desc.episodeId);
   updateDock();
@@ -156,6 +197,7 @@ audioEl.addEventListener('timeupdate', function () {
   sleepTick();
   updatePositionState();
   updateDockProgress();
+  updateNpSeek();
   var now = Date.now();
   if (now - lastResumeSave > 5000) { lastResumeSave = now; saveResume(); }
 });
@@ -201,6 +243,7 @@ function updateDock() {
   if (!cur) {
     dock.classList.add('hidden');
     document.body.classList.remove('dock-on');
+    updateNowPlaying(); // v336: the surface's visibility derives from state.current, like the dock's
     return;
   }
   document.getElementById('dock-title').textContent = cur.title || '';
@@ -211,27 +254,9 @@ function updateDock() {
   document.body.classList.add('dock-on');
   measureBars();
   updateDockProgress();
+  updateNowPlaying();
 }
-function dockJump() {
-  if (!state.current) return;
-  var id = state.current.episodeId;
-  if (!id || id.indexOf('url:') === 0) return; // an Intentions chip play has no card (§2.4 no-op)
-  setTab('prayers');
-  // renderPrayers re-renders on its day fetch, so the card may not
-  // stand on the first frame — retry briefly until it does. The
-  // jump never touches playback, position, queue, or sleep state.
-  var tries = 0;
-  (function attempt() {
-    var card = document.querySelector('[data-card="' + id + '"]');
-    if (card) {
-      card.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      card.classList.add('dockjump');
-      setTimeout(function () { card.classList.remove('dockjump'); }, 1800);
-      return;
-    }
-    if (++tries < 20) setTimeout(attempt, 100);
-  })();
-}
+
 
 /* ---------------- Sleep timer (v320) ----------------
    A player state, not bound to a track: state.sleep is exactly one of
@@ -259,8 +284,12 @@ function sleepLabel() {
   return 'Sleep · Off';
 }
 function updateSleepLabel() {
+  // v336: one sleep state, two label surfaces — the Play All row's
+  // button and Now Playing's, each refreshed when it stands.
   var b = document.getElementById('sleep-btn');
   if (b) b.textContent = sleepLabel();
+  var nb = document.getElementById('np-sleep');
+  if (nb) nb.textContent = sleepLabel();
 }
 function armSleepMinutes(n) {
   if (fade.started) fadeRestore();
@@ -427,7 +456,7 @@ document.getElementById('dock-play').addEventListener('click', function () { if 
 document.getElementById('dock-next').addEventListener('click', function () { advanceQueue(1); });
 document.getElementById('dock').addEventListener('click', function (ev) {
   if (ev.target && ev.target.closest && (ev.target.closest('#dock-play') || ev.target.closest('#dock-next'))) return;
-  dockJump();
+  openNowPlaying(); // v336 (D5, approved): the dock tap opens Now Playing — the v326 jump-to-card is retired
 });
 window.addEventListener('resize', measureBars);
 measureBars();
@@ -652,7 +681,10 @@ function openIntentionEditor(it) {
 
 /* ---------------- Prayers (the player) ---------------- */
 function trackDesc(t) {
-  return { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, available: !!t.available, block: t._block || '' };
+  // v336 P6: source + durationS ride along additively — the one seam
+  // both queue builds flow through, so Now Playing's meta line and
+  // seek bar see them on every family's descriptor alike.
+  return { episodeId: t.episodeId || ('seg:' + (t._block || '')), title: t.title || 'Intentions', url: t.streamUrl || null, available: !!t.available, block: t._block || '', source: t.source || '', durationS: t.durationS || t.durationSec || 0 };
 }
 function readButton(t, key) {
   // v318 T9: the Read control. A track with no text carries NO Read
@@ -717,6 +749,115 @@ function openRead(t) {
     var body = sheet.querySelector('.readtext');
     if (body) body.textContent = 'Not available in the app yet';
   });
+}
+/* ---------------- Now Playing (v336) ----------------
+   The full-screen player, opened by the dock tap (D5). Built on
+   the Read view's construction discipline: a JS-built .sheet,
+   appended to body, removed whole. It carries no state of its
+   own — updateNowPlaying() syncs it from inside updateDock()
+   (the dock's own sync path) and updateNpSeek() rides the
+   standing timeupdate handler, so the sheet can never disagree
+   with the dock or the element. Its visibility is derived from
+   state.current exactly as the dock's is: when the current track
+   clears (queue end, a lone track's end), updateDock's sync
+   removes it. Minimizing removes the sheet and nothing else —
+   playback, position, queue, and sleep are never touched by the
+   surface's open or close (the Read view's standing rule). No
+   swipe: the .sheet pattern carries no gesture machinery
+   anywhere in the estate, and D4 committed the button route. */
+var npScrubbing = false;
+function npDuration() {
+  var d = audioEl.duration;
+  if (isFinite(d) && d > 0) return d;
+  var cur = state.current;
+  if (cur && cur.durationS > 0) return cur.durationS;
+  return 0;
+}
+function openNowPlaying() {
+  var old = document.querySelector('.np-sheet');
+  if (old) old.remove();
+  if (!state.current) return;
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet np-sheet';
+  sheet.innerHTML = '<div class="inner">'
+    + '<div class="row"><span class="grow"></span><button class="btn ghost" id="np-min" aria-label="Minimize">&#8964;</button></div>'
+    + '<div class="np-art"><img src="/logo.png" alt="Ora Pro Nobis logo"></div>'
+    + '<h1 class="screen np-title" id="np-title"></h1>'
+    + '<p class="sub np-meta" id="np-meta"></p>'
+    + '<div class="np-seekrow"><span id="np-elapsed">0:00</span><input type="range" id="np-seek" min="0" max="1000" value="0" aria-label="Seek"><span id="np-remain">--:--</span></div>'
+    + '<div class="np-transport"><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button></div>'
+    + '<div class="row np-controls"><button class="btn ghost" id="np-speed"></button><button class="btn ghost" id="np-sleep"></button><button class="btn ghost" id="np-read">Read</button></div>'
+    + '</div>';
+  document.body.appendChild(sheet);
+  sheet.querySelector('#np-min').addEventListener('click', function () { sheet.remove(); });
+  sheet.querySelector('#np-play').addEventListener('click', function () { if (state.current) playTrack(state.current); });
+  sheet.querySelector('#np-prev').addEventListener('click', function () { advanceQueue(-1); });
+  sheet.querySelector('#np-next').addEventListener('click', function () { advanceQueue(1); });
+  sheet.querySelector('#np-speed').addEventListener('click', function () { openSpeedSheet(); });
+  sheet.querySelector('#np-sleep').addEventListener('click', function () { openSleepSheet(); });
+  sheet.querySelector('#np-read').addEventListener('click', function () {
+    var t = state.current && state.readTracks[state.current.episodeId];
+    if (t && t.hasText && t.textUrl) openRead(t); // stacks over this sheet; closing Read returns here
+  });
+  var bar = sheet.querySelector('#np-seek');
+  bar.addEventListener('input', function () {
+    // The thumb follows the user's finger, not the player: the
+    // scrubbing flag holds the timeupdate fill off until commit.
+    npScrubbing = true;
+    var dur = npDuration();
+    if (dur > 0) {
+      var pos = dur * Number(bar.value) / 1000;
+      sheet.querySelector('#np-elapsed').textContent = fmtDur(pos);
+      sheet.querySelector('#np-remain').textContent = '-' + fmtDur(Math.max(0, dur - pos));
+    }
+  });
+  bar.addEventListener('change', function () {
+    npScrubbing = false;
+    var dur = audioEl.duration;
+    if (isFinite(dur) && dur > 0) {
+      var target = dur * Number(bar.value) / 1000;
+      audioEl.currentTime = Math.max(0, Math.min(dur, target));
+    }
+    updateNpSeek();
+  });
+  updateNowPlaying();
+}
+function updateNowPlaying() {
+  var sheet = document.querySelector('.np-sheet');
+  if (!sheet) return;
+  var cur = state.current;
+  if (!cur) { sheet.remove(); return; }
+  sheet.querySelector('#np-title').textContent = cur.title || '';
+  var meta = cur.block || '';
+  if (cur.source) meta = meta ? meta + ' · ' + cur.source : cur.source;
+  if (!meta) meta = state.dateLabel || '';
+  sheet.querySelector('#np-meta').textContent = meta;
+  sheet.querySelector('#np-play').innerHTML = audioEl.paused ? '&#9654;' : '&#10073;&#10073;';
+  sheet.querySelector('#np-prev').disabled = !state.queue.length || state.queueIdx <= 0;
+  sheet.querySelector('#np-next').disabled = !state.queue.length;
+  sheet.querySelector('#np-speed').textContent = state.rate + '×';
+  sheet.querySelector('#np-sleep').textContent = sleepLabel();
+  var rt = state.readTracks[cur.episodeId];
+  sheet.querySelector('#np-read').style.display = (rt && rt.hasText && rt.textUrl) ? '' : 'none';
+  updateNpSeek();
+}
+function updateNpSeek() {
+  var sheet = document.querySelector('.np-sheet');
+  if (!sheet || npScrubbing) return;
+  var bar = sheet.querySelector('#np-seek');
+  var dur = npDuration();
+  var pos = audioEl.currentTime || 0;
+  if (dur > 0) {
+    bar.disabled = false;
+    bar.value = String(Math.round(1000 * Math.min(pos, dur) / dur));
+    sheet.querySelector('#np-elapsed').textContent = fmtDur(pos);
+    sheet.querySelector('#np-remain').textContent = '-' + fmtDur(Math.max(0, dur - pos));
+  } else {
+    bar.disabled = true;
+    bar.value = '0';
+    sheet.querySelector('#np-elapsed').textContent = fmtDur(pos);
+    sheet.querySelector('#np-remain').textContent = '--:--';
+  }
 }
 /* ---------------- Externals at open (v334) ----------------
    The day renders from /api/player/day at once (own episodes only —
