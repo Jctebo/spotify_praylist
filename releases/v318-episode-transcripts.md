@@ -319,3 +319,58 @@ v318 transcript fixture: ALL CHECKS PASSED
 - **Assumptions:** none load-bearing beyond §3's — the production R2 binding accepts the `texts/` prefix on the same shapes the harness's local R2 proved; the first live exercise is this half's Ship, under the standing Autonomous-to-Ship level once Part 2 completes Review.
 - **Uncertainties:** none open for the app half. The release's remaining uncertainty is entirely the feed half's Part 2 evidence + John's verdict.
 - **Decision impact:** none open for John in this half.
+
+## 5 · Ship
+
+- **Agent:** Ship Agent (v318) — Ship claim record 1131, claimed 2026-11-09 04:13 UTC (22:13 CT), time contract 54. Level: Autonomous to Ship (John's blanket lift, 2026-11-08), executed tonight under his direct order below.
+
+### The reframe — John's direction, and the Review pass
+
+- **John's direction (voice call, 2026-11-08 22:11 CT):** "318 is the code to write transcripts. It's not the transcripts themselves. Can't you push it — when it runs at 12, it runs with transcripts?" **Decision: Review Part 2's drop read-back is reframed from a pre-Ship gate to a POST-SHIP verification.** Ship ran tonight, before the 00:00 CT run, so the midnight run executes with the full v318 surface. Filed at the door as note `v318-part2-reframed-2026-11-08` before the pass.
+- **Review record 1087 PASSED** at this Ship (2026-11-09 04:12 UTC) on the §4 verdict — feed half Part 1 sound on code + fixture evidence, the app half PASSED in §4's addendum — plus this reframe. The criterion-2 substitution stands from 2026-11-08 20:35 CT: the show is not listed on Apple Podcasts, so no Apple verdict exists to wait for; the drop read-back is the verification. **The read-back is owed tonight as a post-ship verification, not cancelled** — see the closing block of this section.
+
+### Landing
+
+- **Merge `7f903dd`** (--no-ff) into the trunk line `muse-draft-week`: `release/v318-app` (head `408ba40`) onto `8ff8222` (post-v327). Two conflicts, both expected: `app/worker/src/client.ts` — the shell state object, resolved as the UNION of v320's `sleep` field and v318's `readTracks`/`dayDescs` fields; `app/worker/src/ui.ts` — the service-worker cache pin, resolved to this release's T9 bump `ora-pro-nobis-v318-1` (the named-update pattern: the successor name stands asserted by harness-v318 check 31). The production checkout's standing dirty set is byte-for-byte unchanged by the merge (18 entries before and after, compared).
+- All deploy and harness work ran from a detached snapshot worktree at `7f903dd` (`~/workspace/.worktrees/v318-ship`) — never the shared checkout.
+
+### Job sheet (step 4B enactment, §3's draft — land the helper + insert the sentence)
+
+- The helper half landed with the merge (`jobs/push_episodes_to_app.py` on the trunk now stages texts under the T1 rule and carries the `· texts <present> / <missing>` clause in the mandatory field).
+- `cron.view` read first · `cron.update` applied with the complete revised body · read back on the regenerated definition: step 4B of `ora-pro-nobis-nightly-run` now carries, word-for-word after its first sentence: **"Each episode's script (script-<episode_id>.txt) is staged to the app beside its audio under the same rule, and the commit carries its text state — a missing text is named and counted, never silently absent."** The 2026-11-08 `--rundir` leg and every other instruction stand unchanged; next run Mon 2026-11-09 00:00 CST.
+
+### Migration 0008 (production D1 `ora-pro-nobis-app`)
+
+- Step 0 read: `player_episodes` carried 10 columns, no text columns, 17 rows. Applied the file's two ALTERs in order via the Cloudflare connector. Read-back: cid 10 `text_state` TEXT NOT NULL DEFAULT 'missing' · cid 11 `text_r2_key` TEXT NOT NULL DEFAULT '' — column-for-column as the migration file — and the row count stands unchanged at 17, every row reading `text_state='missing'` by design (the stored day predates this surface).
+
+### Deploy
+
+- Connector-surrogate wrangler from the snapshot worktree's `app/`, dry-run first (exit 0, bindings DB `ora-pro-nobis-app` + AUDIO `ora-pro-nobis-audio`): **Worker `f0b3fb13-52e2-4196-a09a-d90720f8627c`** at 100%. Rollback = pure redeploy of Worker `514e133f` (v327's production build).
+
+### Production proof
+
+- `GET /api/agent/player/stored-day` through the app door: **200** — `storedDate 2026-11-08 · episodeCount 17 · tracksPresent 17 · tracksMissing 0 · textsPresent 0 · textsMissing 17` · all six segment blocks. The text fields stand in the deployed shape; zero present is the expected read for the pre-v318 stored day — its texts land with tonight's push cycle. `/sw.js` refuses the agent door ("access sign-in required", a session route by design); the cache name `ora-pro-nobis-v318-1` is proven by harness check 31 on the deployed tree and by the deploy itself.
+
+### Gates (tallies from COMPLETE logs, run on the merged tree)
+
+- **harness-v318: 32 ok / 0 FAIL** (`app/tests/harness-v318-ship.log`, committed with this section).
+- **harness-v312 regression: 58 ok / 1 FAIL** (`app/tests/harness-v312-v318-ship-regression.log`, committed with this section). The single FAIL is check 11's service-worker cache-name pin (`ora-pro-nobis-v312-1`) — the pin superseded by §2 T9's own mandated bump, ruled ACCEPTED at §4 (deviation D1); the successor name is asserted green by harness-v318 check 31. Every other v312 check passes whole against the merged tree, v320's sleep behavior included (the state union above).
+
+### The flip (all four pieces, read back)
+
+- Release row **Live** — shipped_at `2026-11-09T04:16:21Z`, whats_new_id 42 (read back from the registry).
+- Shipped record **402** · What's New entry **42** ("Episode transcripts in the feed and in the app").
+- Phase records: Scope 1067 · Plan 1077 · Implement 1082 · Review 1087 · Ship 1131 — all passed (Ship passed with this section's commit).
+- Curator note `ship-v318-2026-11-08` filed at the door.
+
+### Post-ship verification — OWED TONIGHT (owner: the nightly run's Review Part 2 check, executed by the main seat after the drop)
+
+After tonight's 2026-11-09 00:00 CT drop (target Nov 11): read the published feed back against the saved pre-publish snapshot `hidden_files/v318/feed-pre-publish-2026-11-08.xml` (SHA-256 `6d82d463…`, 2,804 items, zero transcript tags) — new items carry the `<podcast:transcript>` tag with the exact URL and type · one transcript file fetches 200 with opening words equal to the script's · standing items byte-identical (the root-tag namespace insertion is the one sanctioned non-item change) · the drop's **"Transcripts (v318)"** report field quoted · the app push's stored day shows its texts present/missing counts. The result is recorded at the door when it lands; **a failure is a fix-forward incident, named to John in the Ora thread** (the revert path identified at Implement — one commit `git revert 34bf931` on the trunk for the feed half — stands ready if the feed evidence fails).
+
+### Concerns and Information Needs
+
+- **Facts:** the release stands fully shipped before the midnight run by John's direct order; every production surface (Worker, migration, job sheet, helper) is live and read back · the stored day's texts arrive with tonight's scheduled push — nothing about the pre-v318 day was backfilled, by design · v325 (Intentions-first) named this Ship as its second precondition — it stands met from this flip.
+- **Assumptions:** tonight's run exercises the real R2 `.txt` PUT and the texts staging against production for the first time; both failure modes abort loudly before their commits (publish) or name the miss (push), per the built shapes.
+- **Uncertainties:** the post-ship verification above is the release's one open evidence leg; it resolves with tonight's drop, one way or the other, and its result is recorded either way.
+- **Decision impact:** none open — the ship was John's word, given twice (the blanket lift and tonight's direct order).
+- **Raw notes for the Curator:** the Review record for a two-half release could not be split by half (record 1087 carried both) — the pass at Ship on a reframed gate is the shape that resulted; the harness port-collision class from §4 did not recur (ports verified free before both ship harness runs); a merge conflict on the SW cache pin is now a three-release pattern (v318 · v320 · v325) — the named-update treatment each time, never a silent pick.
