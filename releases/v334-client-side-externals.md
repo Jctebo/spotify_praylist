@@ -287,3 +287,42 @@ Gate design per the standing pins: every gate **parses and executes the served c
 - Review re-runs legs 3–4 of harness-v334 first (D5) — the pass/fail of the restore on a same-profile re-open is the one behavior this seat could not deterministically prove in the sandbox.
 - The v320/v324/v325/v328 harness named updates in D7 belong to whoever next touches those harnesses; until then their tallies will keep showing the ruled failures.
 - Ship's sheet edits (nightly step 4C + watchdog step 2C retirements) are NOT in this pass, per §2.7 — they land at Ship with read-backs.
+
+## 4 · Review
+
+- **Agent:** Review Agent (v334) — Review claim record 1172, claimed 2026-11-09T12:05:49Z · time contract 90 · run level Autonomous to Ship (on a pass, Ship seats at once; this is not a pass).
+- **Verdict: RETURNED to Implement.** The named open risk (D5) failed again on this seat's independent run. No §4 pass; the chain bounces to Implement. Ship does not seat.
+
+### First duty — legs 3–4 re-run (D5), verdict: FAIL
+
+- **Environment:** the exact reviewed tree (release/v334 @ c192d83, verified by `git rev-parse` before the run) · orphaned wrangler/workerd processes checked and none standing · harness ports (8974/8975/8977, pinned inside harness-v334.mjs) verified free before the start, so the run stood in a clean environment on the harness's own ports with no edit to the reviewed tree · fresh browser contexts per leg, as the harness builds them.
+- **Evidence (complete log only):** `app/tests/harness-v334-review.log` — the run completed end to end, RESULT **harness-v334 27/30 ok**. Failures, verbatim from the complete log:
+  - `FAIL - leg 11: every resolved slot's AUDIO stands in the device cache (keys: ext-invitatory, ext-morning-prayer, ext-midmorning-prayer, ext-midday-prayer, ext-midafternoon-prayer, ext-office-of-readings, ext-evening-prayer, ext-night-prayer)` — eight of nine keys standing; **ext-bible-in-a-year's audio was not in the device cache** when the leg read it, while its slot state stood present.
+  - `FAIL - leg 3: second open with dead feeds renders every cached slot present and issues no courier fetch for a fully cached source`
+  - `FAIL - leg 4: the missing slot is re-resolved at the next open and fills when its feed recovers (cached slots were not re-fetched)`
+- **Pattern across seats:** Implement's three complete runs read 28/30 · 27/30 · 28/30 with legs 3–4 failing in each; this Review run reads 27/30 with legs 3–4 failing again, plus leg 11's download-landing check. Four complete runs, two seats, one conclusion: the same-profile re-open restore (legs 3–4) is **not green**, and the download/cache family around it is not deterministic in this environment. Per D5's own ask and the Review brief's rule, that is a return, not a pass on the D4 mitigations.
+- **What stood green around the failure** (same complete log): setup ×3 · leg 1 matcher parity + in-place swap · leg 2 courier honesty (resolver parity, stores nothing — stored-day episode rows equal across calls, `Cache-Control: private, max-age=300`, non-stored date 400, non-John session 403, retired door POST 404) · leg 5 invalidation on BOTH triggers (settings edit bumps the version and re-places the moved slot; stored-day roll discards and re-resolves) · leg 6 fallback-only · leg 7 Bible current-year pin · leg 8 failure isolation · leg 9 stored externals never served · leg 10 no Divine Office feed URL in the shipped client · leg 11 playback/seek from the local blob copy + zero page errors · leg 12 settings-change discard drops the audio · leg 13 the blocked host (Sing the Hours) fills through the pass-through and the Worker stores nothing · leg 14 a missing slot writes no record and downloads nothing · live smoke: courier vs the live Divine Office bytes matches the resolver, the direct Bible leg agrees with the resolver, resolver on live feeds 9/9 present, no failed feeds. The courier honesty legs, the stored-externals exclusion (§2.6), and the settings consumption (version captured per open; leg 5) are therefore verified first-hand. The unverified ground is exactly the re-open/download family named above.
+
+### Sequence note — what this Review did not do
+
+- The gate sequence stopped at the first duty, as the brief orders: the contested regression rulings (v312 58/59 · v325 29/31 · v324 Worker 7/12 · check-v328-consumption 21/22, each ruled in §3 D7) were **not** independently re-verified, and v326 62/0 was not re-run. D7's rulings stand as Implement's record, neither confirmed nor overturned by this seat; they are first work for the next Review seating, after legs 3–4 stand green.
+- **Phone check: WAIVED, not passed** — under John's blanket pattern and his 2026-11-09 04:18 CT "Approved all the way to ship" word. No verdict written. No candidate deployment was stood up; the waiver needs none.
+
+### Return conditions — what the next Implement seating must show
+
+1. Legs 3 and 4 green on complete harness-v334 runs — the same-profile re-open restore carrying the cached day with dead feeds, and the missing slot re-checking and filling at the next open. One green run is a start; two consecutive complete green runs close D5.
+2. Leg 11's download-landing check green in the same runs (every resolved slot's audio standing in the device cache, Bible in a Year included).
+3. The cause isolated, not only mitigated: §3's instrumentation finding (the re-opened document's restore path recording zero Cache API calls) is the named starting point. A fix that only lengthens the D4 fallback/watchdog timers without isolating why the restore does not run does not meet this condition.
+4. On the next Review: legs 3–4 re-run first again, then the full gate, then the D7 regression rulings verified first-hand (v312 · v325 · v324 Worker · check-v328-consumption · v326 62/0).
+
+### Ship conditions carried forward (dormant — they bind the eventual Ship, unchanged from §2.7)
+
+- Nightly sheet `ora-pro-nobis-nightly-run`: step 4C EXTERNALS (v324) and its mandatory "Externals (v324)" report field come OUT at Ship, with read-backs.
+- Watchdog sheet `publish-audio-watchdog`: step 2C EXTERNALS RE-RESOLVE comes OUT at Ship, with read-backs.
+- Four-piece flip + production proofs as §2.8 carries them; the Review candidate for John's optional phone check and its teardown remain Ship follow-ons.
+
+### Concerns and Information Needs
+
+- **The failure may be environment-shaped, and that does not clear it.** §3's evidence says every Cache Storage primitive passes on the re-opened page itself, and fresh-context opens restore cleanly; the failing shape is specifically the same-tab reload — which is also the dominant real-world phone pattern (re-open = reload of the standing tab). Until a run proves the restore in that shape, the release's core promise ("the day cache carries the day") is unproven where it matters most. John's waived phone check is the other evidence that can settle it; it stands available to him, not required.
+- Leg 8's pass in this run recorded a 17 ms timeout settle, which reads as the slot already standing missing rather than the hang path being exercised; noted for the next Review's log read, not treated as a failure of the leg as written.
+- Contract 90 expectation 2 ("Full gate complete") is recorded BLOCKED, not met: the complete harness-v334 run stands, but the gate sequence stopped at the D5 return rule before the regression re-verification. Expectation 1 (legs 3–4 verdict) met at ~12:13Z, ahead of its 12:35Z deadline; expectation 3 (verdict recorded) met by this section and the phase return.
