@@ -34,6 +34,7 @@ from jobs.playlist.refresh_playlist import (
 
 SITE_DIR = ROOT / "config" / "site"
 PODCAST_FEED = ROOT / "docs" / "podcast.xml"
+INTENTIONS_FEED = ROOT / "docs" / "intentions.xml"
 PODCAST_COVER = ROOT / "docs" / "images" / "logo_ora_pro_nobis.png"
 TIMEZONE = ZoneInfo("America/Chicago")
 
@@ -190,6 +191,13 @@ def build_artifact(
     feed_target = output_dir / "podcast.xml"
     feed_target.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(PODCAST_FEED, feed_target)
+    # v342: the intentions feed is committed beside the podcast
+    # feed by the nightly publish leg; stage it the same way or
+    # the deployed site 404s it (the first live publish,
+    # 2026-11-09, committed + deployed green and still 404'd).
+    # Guarded: the file exists only once a publish has landed.
+    if INTENTIONS_FEED.exists():
+        shutil.copy2(INTENTIONS_FEED, output_dir / "intentions.xml")
     image_target = image_dir / "logo_ora_pro_nobis.png"
     shutil.copy2(PODCAST_COVER, image_target)
     if wallpaper_bytes is not None:
