@@ -33,6 +33,7 @@ RSS_CHANNEL_DESCRIPTION = dedent(
 RSS_CHANNEL_LANGUAGE = "en-us"
 RSS_AUDIO_MIME = "audio/mpeg"
 RSS_ITUNES_NAMESPACE = "http://www.itunes.com/dtds/podcast-1.0.dtd"
+RSS_PODCAST_NAMESPACE = "https://github.com/Podcastindex-org/podcast-namespace/blob/main/docs/1.0.md"
 RSS_CHANNEL_AUTHOR = "John Thibeaux"
 RSS_CHANNEL_EMAIL = "john.thibeaux@gmail.com"
 RSS_CHANNEL_SUMMARY = (
@@ -44,6 +45,7 @@ PODCAST_TIMEZONE = ZoneInfo("America/Chicago")
 
 
 ET.register_namespace("itunes", RSS_ITUNES_NAMESPACE)
+ET.register_namespace("podcast", RSS_PODCAST_NAMESPACE)
 
 
 
@@ -312,6 +314,17 @@ def build_rss_feed(
         )
         if not enclosure.get("url"):
             enclosure.set("url", enclosure_url)
+        # v318: a job carrying transcript_url gains the Podcasting 2.0
+        # transcript tag on its item (creator transcript, plain text).
+        # Jobs without one are serialized exactly as before.
+        transcript_url = str(job.get("transcript_url", "")).strip()
+        if transcript_url:
+            ET.SubElement(
+                item,
+                f"{{{RSS_PODCAST_NAMESPACE}}}transcript",
+                url=transcript_url,
+                type="text/plain",
+            )
 
     return ET.tostring(root, encoding="unicode")
 

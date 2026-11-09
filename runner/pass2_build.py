@@ -93,6 +93,12 @@ TRIM = (
 )
 LOUDNORM_CFG = {"loudness_normalization": {"enabled": True, "integrated_lufs": -16, "true_peak_db": -1.5, "lra": 11}}
 AUDIO_PUBLIC_BASE = "https://audio.orapronobis.media"
+# v318: Podcasting 2.0 namespace (the live feed's root tag gains the
+# declaration at the first tagged publish) + transcript staging rules.
+PODCAST_NS = "https://github.com/Podcastindex-org/podcast-namespace/blob/main/docs/1.0.md"
+TRANSCRIPT_CONTENT_TYPE = "text/plain; charset=utf-8"
+_TRANSCRIPT_GUARD_CHARS = ("[", "{", "<")
+_RSS_ROOT_RE = re.compile(r"<rss(?:\s[^>]*)?>")
 LIVE_FEED_URL = "https://jctebo.github.io/spotify_praylist/podcast.xml"
 GH_REPO = "Jctebo/spotify_praylist"
 CF_ACCOUNT = "19135db329e6018b318b33b72aa6e3f3"
@@ -489,6 +495,13 @@ def render_report_md(report: dict, plan: dict) -> str:
         f"- **Total spoken chars:** {t['spoken_chars']:,}",
         f"- **Fragments:** {rs['unique_fragments']} unique, {rs['rendered']} rendered, "
         f"{rs['cache_hits']} cache hits, {rs['failures']} failures",
+    ]
+    # v318: the publish step's computed closing-report field, when this
+    # report carries a publish block with transcripts.
+    tfield = ((report.get("publish") or {}).get("transcripts") or {}).get("field")
+    if tfield:
+        lines += [f"- **{tfield}**"]
+    lines += [
         "",
         "## Flags and notes",
         "",
@@ -870,11 +883,174 @@ def _upload_to_r2(files: list[Path], upload_names: set[str] | None = None) -> No
         raise SystemExit(f"R2 verification failed; missing keys: {missing}")
 
 
-def _build_new_items(rundir: Path, plan: dict, date_iso: str, only_episode_ids: set[str] | None = None):
+# ------------------------------------------------------- v318 transcripts --
+def _ensure_podcast_namespace(feed_text: str) -> str:
+    """Ensure the feed document's root <rss> tag carries the Podcasting 2.0
+    namespace declaration. Idempotent presence check on the root tag only:
+    a feed that already declares it is returned byte-identical, so repeat
+    publishes and reconcile re-runs never duplicate the declaration. No
+    item bytes are touched — the declaration lives in the channel header."""
+    m = _RSS_ROOT_RE.search(feed_text)
+    if m is None:
+        raise SystemExit("FEED NAMESPACE ABORTED: no <rss> root tag in the live feed.")
+    if "xmlns:podcast" in m.group(0):
+        return feed_text
+    new_tag = m.group(0)[:-1].rstrip() + f' xmlns:podcast="{PODCAST_NS}">'
+    return feed_text[: m.start()] + new_tag + feed_text[m.end():]
+
+
+def _transcript_plan(rundir: Path, plan: dict, only_episode_ids: set[str] | None = None):
+    """v318 T1, the local half: resolve each episode's transcript from the
+    run directory's script-<episode_id>.txt. Publish is VERBATIM — the words
+    are never edited; the only normalization is trailing whitespace folded
+    to a single final newline. The withholding guard: a script containing
+    '[', '{' or '<' (production markup), an undecodable script, or a
+    missing script marks THAT episode's transcript missing — withheld and
+    named, never edited into compliance. Purely local: no uploads.
+    Returns (staged, missing): staged maps episode_id -> publish bytes;
+    missing is a plan-ordered list of {"episode_id", "reason"}."""
+    staged: dict[str, bytes] = {}
+    missing: list[dict] = []
+    for ep in plan["episodes"]:
+        ep_id = ep["episode_id"]
+        if only_episode_ids is not None and ep_id not in only_episode_ids:
+            continue
+        src = rundir / f"script-{ep_id}.txt"
+        if not src.exists():
+            missing.append({"episode_id": ep_id, "reason": "no script file in the run directory"})
+            continue
+        try:
+            text = src.read_bytes().decode("utf-8")
+        except UnicodeDecodeError:
+            missing.append({"episode_id": ep_id, "reason": "script is not valid UTF-8"})
+            continue
+        hit = next((c for c in _TRANSCRIPT_GUARD_CHARS if c in text), None)
+        if hit is not None:
+            missing.append({"episode_id": ep_id, "reason": f"guard: script contains {hit!r}"})
+            continue
+        staged[ep_id] = (text.rstrip() + "\n").encode("utf-8")
+    return staged, missing
+
+
+def _upload_transcripts(staged: dict[str, bytes]) -> None:
+    """v318 T2, the upload half: each staged transcript goes to the public
+    bucket under <episode_id>.txt beside its MP3, content-type text/plain.
+    Keyed and idempotent — re-uploading the same key with the same bytes
+    is a no-op in effect, so the reconcile tail re-runs it safely. Any
+    failure raises SystemExit BEFORE the graft, exactly as an audio
+    failure does: no item is ever published pointing at a missing file."""
+    for ep_id, data in staged.items():
+        key = f"{ep_id}.txt"
+        res = _cf_r2_put(key, data, TRANSCRIPT_CONTENT_TYPE)
+        if not res.get("success"):
+            raise SystemExit(f"R2 transcript upload failed for {key}: {json.dumps(res)[:300]}")
+    if staged:
+        bucket_keys = set(_cf_r2_list())
+        absent = [f"{ep_id}.txt" for ep_id in staged if f"{ep_id}.txt" not in bucket_keys]
+        if absent:
+            raise SystemExit(f"R2 transcript verification failed; missing keys: {absent}")
+
+
+def _publish_transcripts(rundir: Path, plan: dict, only_episode_ids: set[str] | None = None) -> dict:
+    """v318 T1+T2: plan the day's transcripts and upload the staged files.
+    Returns the drop's transcript info: {"uploaded": [episode_id, ...]
+    (plan order), "missing": [{"episode_id", "reason"}], "staged":
+    {episode_id: bytes}}."""
+    staged, missing = _transcript_plan(rundir, plan, only_episode_ids)
+    _upload_transcripts(staged)
+    return {
+        "uploaded": [ep["episode_id"] for ep in plan["episodes"] if ep["episode_id"] in staged],
+        "missing": missing,
+        "staged": staged,
+    }
+
+
+def _transcript_urls(info: dict) -> dict[str, str]:
+    """The public transcript URL per uploaded episode — the value the new
+    items' <podcast:transcript> tags point at."""
+    return {ep_id: f"{AUDIO_PUBLIC_BASE}/{ep_id}.txt" for ep_id in info["uploaded"]}
+
+
+def _opening_words(text: str, count: int = 5) -> str:
+    return " ".join(text.split()[:count])
+
+
+def _verify_transcripts(plan: dict, info: dict) -> str:
+    """v318 T4: the publish verification extension, run inside the publish
+    step after the live-feed check. Reads the LIVE feed back: every new
+    item whose transcript stands uploaded must carry its
+    <podcast:transcript> tag with the exact public URL; an episode whose
+    transcript was withheld must carry NO tag (never a tag pointing at a
+    missing file). Then one transcript fetch — the first tagged new item's
+    URL — must return 200 with opening words equal to the script's.
+    Returns "" on success, else a failure string naming the episode."""
+    import xml.etree.ElementTree as ET
+
+    staged: dict[str, bytes] = info["staged"]
+    try:
+        feed_text = urllib.request.urlopen(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
+        root = ET.fromstring(feed_text)
+    except Exception as exc:  # noqa: BLE001 - named in the failure string
+        return f"live feed read-back failed ({exc})"
+    by_url = {}
+    for item in root.find("channel").findall("item"):
+        enc = item.find("enclosure")
+        if enc is not None and enc.get("url"):
+            by_url[enc.get("url")] = item
+    first_tagged = None
+    for ep in plan["episodes"]:
+        ep_id = ep["episode_id"]
+        item = by_url.get(f"{AUDIO_PUBLIC_BASE}/{ep_id}.mp3")
+        if item is None:
+            return f"{ep_id}: item not found in the live feed"
+        tag = item.find(f"{{{PODCAST_NS}}}transcript")
+        if ep_id in staged:
+            expected = f"{AUDIO_PUBLIC_BASE}/{ep_id}.txt"
+            if tag is None:
+                return f"{ep_id}: transcript tag missing from the live item"
+            if tag.get("url") != expected:
+                return f"{ep_id}: transcript tag url {tag.get('url')!r} != {expected!r}"
+            if tag.get("type") != "text/plain":
+                return f"{ep_id}: transcript tag type {tag.get('type')!r} != 'text/plain'"
+            if first_tagged is None:
+                first_tagged = (ep_id, expected)
+        elif tag is not None:
+            return f"{ep_id}: transcript tag present but the transcript was withheld"
+    if first_tagged is not None:
+        ep_id, url = first_tagged
+        try:
+            with urllib.request.urlopen(url, timeout=60) as resp:
+                if resp.status != 200:
+                    return f"{ep_id}: transcript fetch returned status {resp.status}"
+                body = resp.read().decode("utf-8")
+        except Exception as exc:  # noqa: BLE001 - named in the failure string
+            return f"{ep_id}: transcript fetch failed ({exc})"
+        if _opening_words(body) != _opening_words(staged[ep_id].decode("utf-8")):
+            return f"{ep_id}: transcript opening words do not match the script"
+    return ""
+
+
+def _transcripts_field(episodes_published: int, info: dict, readback: str) -> str:
+    """v318 T5: the closing report's mandatory field, computed by the
+    publish step from its own counts. (The job-sheet insertion of the
+    field into the nightly closing report is a Ship step; this is the
+    computation it will quote.)"""
+    missing = ", ".join(m["episode_id"] for m in info["missing"]) or "none"
+    return (
+        f"Transcripts (v318): episodes published {episodes_published} · "
+        f"transcripts uploaded {len(info['uploaded'])} · missing {missing} · "
+        f"tag read-back {readback}"
+    )
+
+
+def _build_new_items(rundir: Path, plan: dict, date_iso: str, only_episode_ids: set[str] | None = None,
+                     transcript_urls: dict[str, str] | None = None):
     """Publish step (3), item side: build the day's RSS item blocks with the
     repo RSS code, from the out/ sidecars. Returns (jobs, new_items). With
     only_episode_ids, only those episodes' items are built (reconcile's
-    partial graft)."""
+    partial graft). transcript_urls (v318) maps episode_id -> public
+    transcript URL for the episodes whose transcript file stands uploaded;
+    those items gain a <podcast:transcript> tag, the rest gain none."""
     from jobs.publish.rss import build_rss_feed
 
     outdir = rundir / "out"
@@ -892,6 +1068,7 @@ def _build_new_items(rundir: Path, plan: dict, date_iso: str, only_episode_ids: 
                 "published_date": date_iso,
                 "content_hash": side["content_hash"],
                 "rss_guid": side["rss_guid"],
+                "transcript_url": (transcript_urls or {}).get(ep["episode_id"], ""),
                 "audio_url": f"{AUDIO_PUBLIC_BASE}/{ep['episode_id']}.mp3",
                 "audio_length": side["audio_length"],
                 # Real local path: rss._audio_length_bytes stats it. An empty
@@ -993,9 +1170,19 @@ def publish_drop(rundir: Path, report: dict) -> dict:
     # (1)+(2) R2 uploads + manifest reconciliation (merged manifest LAST).
     _upload_to_r2(files)
 
+    # (2b) v318 transcripts: upload the day's staged transcript files
+    # INSIDE the same reconciliation, before the graft — a grafted item
+    # never points at a file that is not yet there. An upload failure
+    # aborts the publish here, before any feed write.
+    tinfo = _publish_transcripts(rundir, plan)
+
     # (3) Feed graft: build ONLY the new items with repo RSS code, insert them
     # at the top of the CURRENT live feed; live items stay byte-identical.
-    _jobs, new_items = _build_new_items(rundir, plan, date_iso)
+    # v318: the working feed copy gains the Podcasting 2.0 namespace
+    # declaration on its root tag (channel header only, idempotent); the
+    # backup above keeps the untouched pre-drop feed.
+    live_feed = _ensure_podcast_namespace(live_feed)
+    _jobs, new_items = _build_new_items(rundir, plan, date_iso, transcript_urls=_transcript_urls(tinfo))
     new_feed = graft_items(live_feed, new_items)
 
     # (4) Commit docs/podcast.xml (+ site wallpaper) to main via the Git
@@ -1008,6 +1195,15 @@ def publish_drop(rundir: Path, report: dict) -> dict:
     verification = _verify_live_feed(plan, date_iso)
     if not verification:
         raise SystemExit("Live feed verification failed: new items not on top after deploy.")
+
+    # (6b) v318 T4: transcript read-back — the new items' tags + one
+    # transcript fetch (200 + opening words). A failure fails the step
+    # loudly into the reconcile tail, before the ledger flip.
+    tfail = _verify_transcripts(plan, tinfo)
+    tfield = _transcripts_field(len(plan["episodes"]), tinfo, "ok" if not tfail else f"failed: {tfail}")
+    print(tfield)
+    if tfail:
+        raise SystemExit(f"Transcript verification failed: {tfail}")
 
     # (7) Flip the ledger.
     ledger[date_iso] = {
@@ -1026,6 +1222,11 @@ def publish_drop(rundir: Path, report: dict) -> dict:
         "uploaded_objects": len(files),
         "site_wallpaper": site_wallpaper["source"] if site_wallpaper else None,
         "site_wallpaper_composited": site_wallpaper["composited"] if site_wallpaper else None,
+        "transcripts": {
+            "uploaded": tinfo["uploaded"],
+            "missing": tinfo["missing"],
+            "field": tfield,
+        },
     }
 
 
@@ -1229,6 +1430,7 @@ def reconcile_drop(rundir: Path, ledger_path: Path) -> int:
     commit_sha = entry.get("feed_commit", "")
     deploy_run_url = entry.get("deploy_run", "")
     verification = ""
+    tfield = None
     try:
         # Tail step 1: R2 upload (missing objects only) + manifest reconciliation.
         if not r2_ok:
@@ -1237,10 +1439,25 @@ def reconcile_drop(rundir: Path, ledger_path: Path) -> int:
             print(f"DONE R2: uploaded {len(r2_bad)} missing/mismatched object(s); manifest reconciled "
                   "over the full set; bucket listing verified.")
         # Tail step 2: graft the missing items only + commit + deploy + verify.
+        # v318: the missing items' transcripts upload BEFORE their graft
+        # (an upload failure aborts the tail here, caught below), and the
+        # transcript read-back runs in both branches — in the else branch
+        # it is exactly the resume case (a publish that died after its
+        # graft, during verification). The field is computed from the FULL
+        # day's transcript plan in both branches.
+        tfull_staged, tfull_missing = _transcript_plan(rundir, plan)
+        tinfo_full = {
+            "uploaded": [ep["episode_id"] for ep in plan["episodes"] if ep["episode_id"] in tfull_staged],
+            "missing": tfull_missing,
+            "staged": tfull_staged,
+        }
         if not feed_ok:
             live_feed = urllib.request.urlopen(LIVE_FEED_URL, timeout=120).read().decode("utf-8")
             _backup_feed_once(live_feed, date_iso)
-            _jobs, new_items = _build_new_items(rundir, plan, date_iso, only_episode_ids=set(missing_eps))
+            tsub = _publish_transcripts(rundir, plan, only_episode_ids=set(missing_eps))
+            live_feed = _ensure_podcast_namespace(live_feed)
+            _jobs, new_items = _build_new_items(rundir, plan, date_iso, only_episode_ids=set(missing_eps),
+                                                transcript_urls=_transcript_urls(tsub))
             new_feed = graft_items(live_feed, new_items)
             commit_sha, _site_wallpaper = _commit_feed(new_feed, date_iso)
             deploy_run_url = _dispatch_deploy(commit_sha)
@@ -1251,10 +1468,26 @@ def reconcile_drop(rundir: Path, ledger_path: Path) -> int:
                 print("RECONCILE FAILED: live feed verification failed after the graft/deploy; "
                       "the ledger was NOT flipped. Re-run --reconcile to resume.")
                 return 1
+            tfail = _verify_transcripts(plan, tinfo_full)
+            tfield = _transcripts_field(len(plan["episodes"]), tinfo_full,
+                                         "ok" if not tfail else f"failed: {tfail}")
+            print(tfield)
+            if tfail:
+                print(f"RECONCILE FAILED: transcript verification failed ({tfail}); "
+                      "the ledger was NOT flipped. Re-run --reconcile to resume.")
+                return 1
         else:
             _p, _m, total_now, _t = _feed_state(rundir, plan)
             verification = (f"Live feed verified: {total_now} items, {date_iso} episodes present "
                             "with R2 enclosures (GUID/enclosure match).")
+            tfail = _verify_transcripts(plan, tinfo_full)
+            tfield = _transcripts_field(len(plan["episodes"]), tinfo_full,
+                                         "ok" if not tfail else f"failed: {tfail}")
+            print(tfield)
+            if tfail:
+                print(f"RECONCILE FAILED: transcript verification failed ({tfail}); "
+                      "the ledger was NOT flipped. Re-run --reconcile to resume.")
+                return 1
         # Tail step 3: ledger flip LAST.
         if not ledger_done:
             if not commit_sha:
@@ -1284,6 +1517,8 @@ def reconcile_drop(rundir: Path, ledger_path: Path) -> int:
                     "uploaded_objects": len(files),
                     "reconciled": True,
                 }
+                if tfield is not None:
+                    report["publish"]["transcripts"] = {"field": tfield}
                 (rundir / "report.json").write_text(json.dumps(report, indent=1))
                 (rundir / "report.md").write_text(render_report_md(report, plan))
     except SystemExit as exc:
