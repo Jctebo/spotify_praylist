@@ -137,3 +137,37 @@ The helper resolves an episode's audio file as `<rundir>/<file>`, and the standi
 
 - Ship proof stands as pinned in §2.4: the production push's "App push (v312)" field, the stored-day read-back, and the per-block Intentions positions in the session payload (v312 splice positions — the reordering remains v325's).
 - The standing follow-on from §3.4 (runner report `rundir` vs `out/`) goes to the Curator note so it is scoped separately, not lost.
+
+## 5 · Ship
+
+- **Agent:** Ship Agent (v327) — Ship claim record 1125, claimed 2026-11-09T03:07:47Z; time contract 47, all expectations met
+- **Result: SHIPPED LIVE** — flip 2026-11-09T03:10:20Z
+
+### 5.1 — Landing + deploy
+
+- Merge **53dc63f** (--no-ff, release/v327 → muse-draft-week @ c59a32b). The shared tree's standing unrelated modifications were verified byte-identical before and after the merge (path-disjoint).
+- Deploy via the connector-surrogate wrangler route (dry-run first): Worker **514e133f-5999-4a3f-8013-1fb1b0d8ce57** at 100%. No migration. Rollback stands as a pure redeploy of Worker 92a258ef.
+
+### 5.2 — Production push (the ship proof)
+
+Command (helper unmodified; `--rundir` added per §3.4 so the built MP3s resolve): `python3 jobs/push_episodes_to_app.py --report ~/workspace/ora-runner-runs/2026-11-08/report.json --rundir ~/workspace/ora-runner-runs/2026-11-08/out`
+
+- Output field, verbatim: **App push (v312): date pushed 2026-11-08 · episodes 17 (17 present / 0 missing) · per-track audio verified 17 · stored date after push 2026-11-08**
+- Stored-day read-back (production, after the push): `{"storedDate":"2026-11-08","episodeCount":17,"tracksPresent":17,"tracksMissing":0,"segmentBlocks":["Afternoon","Evening","Midday","Midmorning","Morning","Night"]}` — all six blocks hold their Intentions segment.
+- Session payload: `GET /api/player/day` refuses the agent door (403, Access session required — John's session is the live read). Positions below are the door-equivalent read: the committed block assignment (the helper's own push-time resolution against production data) + the deployed payload builder's splice rule + the stored-day segment proof.
+  - Morning: Intentions card at index 1 of 3 tracks, available · Afternoon: index 1 of 2, available · Night: index 1 of 2, available · Midmorning, Midday, Evening: no episodes resolved to the block, card at index 0 of 1, available.
+  - 13 episodes (the 12 novenas + Daily Reflection) resolved to the unblocked group under the helper's standing title-head rule (their titles do not head-match a prayer-item name for the date) — standing helper behavior, unchanged by this fix, named here for the record; the Intentions cards John's sighting concerned stand in every block.
+- Pre-v325 order stands as expected: the card sits at the v312 splice position (index 1 where a block has episodes). The Intentions-first reordering remains v325's.
+
+### 5.3 — Flip (all four pieces, read back)
+
+- Release row 599: **Live**, shipped_at 2026-11-09T03:10:20Z, whats_new_id **41**, derivedStatus Live.
+- Shipped record **401** (title carried, shipped_at + whats_new_id 41).
+- What's New **41** — "Player fix: the daily episodes load again" (id read at flip time; 40 was v323's).
+- Phase records: Scope 1121 · Plan 1122 · Implement 1123 · Review 1124 · Ship 1125 — all passed. Time contracts 43–47 judged as they closed.
+- Curator note `ship-v327-2026-11-08` filed (carries the §3.4 rundir follow-on + the unblocked-resolution observation).
+
+### Concerns and Information Needs
+
+- Tonight's scheduled 00:00 CT run pushes Nov 11's day under the fixed build; its "App push (v312)" field is the standing confirmation that the fix holds in the unattended flow. Note the nightly job sheet's step 4B invokes the helper with `--report` only — under §3.4's finding that push would land its episodes as missing unless the run's report `rundir` points at the built files by then; the follow-on item owns that fix.
+- John's phone remains the human acceptance check for the player (cards visible, audio plays).
