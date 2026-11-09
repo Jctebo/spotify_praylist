@@ -1,0 +1,51 @@
+ok - setup: candidate app boots
+ok - setup: the day's draw stands
+ok - setup: every paired item drew an intention
+ok - 12 shell shape: no own tracks in any block, no intros join, no storedDay
+ok - 12 shell carries presentedDay + settings version + the introTexts map (privacy: texts ride the shell, not the feed)
+ok - 12 the shell answered with player_episodes EMPTY (no stored day exists in this instance)
+ok - 17 served build parses and carries the own + intentions resolution through the standing seam
+FAIL - 17 SW pin ora-pro-nobis-v342-1 with the opn-ext-audio-v1 purge exemption verbatim
+ok - 1 own resolution: every standing family resolved present from the feed
+ok - 1 Antiphon ×3: one feed item stands as a card in Morning, Midday, and Evening
+ok - 1 placement by settings block: rosary in Morning, auxilium in Afternoon, reflection in Night
+ok - 2 novenas: both canonical ids stand, in feed order, inside Midmorning's descriptor run
+ok - 4 the client-built intros map is byte-equal to the v338 payload-built map for the same day
+ok - 4 expandDescs pairs: each present track's intro descriptor stands immediately before it
+ok - 4 treatment A stands on a feed-resolved own row (panel first ~25%, its own play control)
+ok - 5 intentions segments resolve by (block, presented date) into state — and no presentation is built
+ok - 7 downloads land via the Worker pass-through (browser-direct audio was aborted; the device cache still gains track + intro)
+ok - 7 the downloaded copy plays and seeks on the device (blob URL after download)
+ok - 7 playback streams direct: at settle the descriptor's URL is the enclosure itself (download swaps in later)
+ok - 8 cache record: own section carries present families with enclosure URLs; intentions section carries the built map (no texts)
+ok - 8 second open restores own + intentions from the day cache (no podcast re-fetch)
+ok - 8 a pre-v342 cache record reads as sections-empty: no crash, families resolve fresh, sections are gained
+ok - setup: the settings PUT bumps the version
+ok - 9 a settingsVersion change invalidates the record whole: the stale own entry never stands; families re-resolve
+ok - 3 date discipline: a pubDate/stem disagreement names the family missing; an adjacent-date-only family is never placed
+ok - 6 a family absent from the feed stands named-missing (its settings title on the card)
+ok - 6 an absent intro leaves the prayer standing panel-free (no placeholder, the prayer plays)
+ok - 6 an unreachable intentions feed degrades INTENTIONS ONLY: the day renders whole, own episodes present, no panels
+ok - 10 settings govern: a disabled family does not resolve; a user block move wins; Antiphon follows its enabled rows only (2 of 3)
+ok - 14 streaming measure: against a ~2,901-item feed the early stop fires — bytes consumed are a small fraction of the file, and the day still resolves
+ok - 11 publish-tail app-text staging runs (one withheld script named, not staged)
+ok - 11 the staged text serves byte-identical at the existence-gate route with player_episodes EMPTY
+ok - 11 an absent text answers the standing named 404
+ok - setup: pre-v342 bed boots
+ok - 15 rollback bed: the pre-v342 build accepts the heal push (stored-day commit)
+ok - 15 rollback bed: stored-day serving answers as before the flip (storedDay stands, tracks ride the payload)
+ok - 13 additive run exits 0 with the push half standing (Segments field: intros standing, none missing)
+ok - 13 additive mode's push behavior unchanged: the intros stand at 'current' in the pre-v342 app (23 rows)
+ok - 18 the helper in publish mode prints ruling 7's field exactly (segments clause on a dual-compose night)
+ok - 13 the regenerated intentions.xml carries today's 23 intros + 6 segments, GUID-keyed, audio only (no drawn text anywhere)
+ok - 13 the 7-day window holds in the feed: day-6 item kept, day-7 item pruned
+ok - 13 audio published + pruned in the same step: today's files stand, day-7 audio deleted, day-6 audio kept
+ok - 13 a second publish regenerates rather than duplicates (idempotent by GUID)
+ok - 18 ruling 8's both-dates sentence stands verbatim in the sheet fixture the harness carries, with ruling 7's field shape
+ok - 15 flip-back state: the candidate's shell answers while the bed's stored day stands; the retired push/serving routes are gone from the candidate
+
+leg 16 (regressions v339 · v338 · v337 · v335 · v334) runs separately — tallies in §3.
+
+harness-v342: 44 passed, 1 failed
+failures: 17 SW pin ora-pro-nobis-v342-1 with the opn-ext-audio-v1 purge exemption verbatim
+EXIT=1
