@@ -108,3 +108,34 @@
 
 - Ship sequencing against v324 stands as §1 records: this merge takes the standing trunk head, and v324's Ship rebases onto it for the prayer Worker deploy order (v333 first).
 - The one-rundir helper shape stays a sheet-level concern (the step-4B staging copy), unchanged by this release; a helper-side two-root resolution is a follow-on candidate for the Curator, not part of this fix.
+
+## 5 · Ship
+
+- **Agent:** Emergency Chain Agent (v333, 2026-11-08) — Ship claim record 1158, claimed 2026-11-09T05:15:57Z · time contract 77 (all three expectations met, each ahead of its deadline)
+- **Result: SHIPPED LIVE** — flip 2026-11-09T05:18:30Z
+
+### 5.1 — Landing + deploy
+
+- Merge **48fc112** (--no-ff, release/v333 → muse-draft-week @ 9f91183; trunk head checked at merge time — v324 had not landed, and its Ship rebases onto this merge for its own deploy, per the §1 sequencing). The shared tree's standing unrelated modifications are path-disjoint from this branch's files and were left exactly as found.
+- Deploy via the connector-surrogate wrangler route (dry-run first, clean): production Worker **fc47c9af-e8d0-4b19-a8c3-5107b66d2abb** at 100%, deployed 2026-11-09T05:19Z. No migration. Rollback stands as a pure redeploy of the prior production Worker 9f2a2d02.
+
+### 5.2 — Production re-push (the ship proof)
+
+Command (exactly as the sheet runs it, from the landed trunk): `cp ~/workspace/ora-runner-runs/2026-11-08/script-*.txt ~/workspace/ora-runner-runs/2026-11-08/out/` then `python3 jobs/push_episodes_to_app.py --report ~/workspace/ora-runner-runs/2026-11-08/report.json --rundir ~/workspace/ora-runner-runs/2026-11-08/out`
+
+- Output field, verbatim: **App push (v312): date pushed 2026-11-08 · episodes 17 (17 present / 0 missing) · per-track audio verified 17 · stored date after push 2026-11-08 · texts 17 / 0**
+- Production D1 read-back (date 2026-11-08): one group — **text_state = "present" AND audio_state = "present" on all 17 rows**. Before this release the same read showed text_state = "missing" on all 17. No exceptions.
+- Tonight's midnight run (target Nov 11) inherits the fixed route: its step-4B push stages novena texts through line 479's widened pattern, and its commit can no longer abort on an underscore id.
+
+### 5.3 — Flip (all four pieces, read back)
+
+- Release row 610: **Live**, shipped_at 2026-11-09T05:18:30Z, whats_new_id **46**, scope and run directive intact (the shipped POST alone did not flip the row — the standing lesson — so the row was flipped by a full-field upsert replaying every stored field; read-back confirms both text fields intact).
+- Shipped record **406** (title carried, shipped_at + whats_new_id 46).
+- What's New **46** — "Episode texts now land in the app — Read view texts arrive with every push, novenas included" (live global max read first: 45, v330's; no racing ship took 46).
+- Phase records: Scope 1154 · Plan 1155 · Implement 1156 · Review 1157 · Ship 1158 — all passed. Time contract 77 — every expectation met.
+- Curator note `ship-v333-2026-11-08` filed.
+
+### Concerns and Information Needs
+
+- The episode-id shape class is closed: all three enforcement sites (lines 465 · 479 · 498) now carry the identical pattern. The class's history — v327 fixed the two sites in its failure path; v318's text route, added after, kept the old class and failed silently until the first real text push — is the Curator's lesson: a new route that twins an existing one must be swept against the twin's standing fixes.
+- John's phone remains the human acceptance check (a novena's Read view showing its text in the app).
