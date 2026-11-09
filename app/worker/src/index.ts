@@ -34,6 +34,13 @@ export interface Env {
   // them unset; the pinned feed URLs below govern.
   EXT_DGE_FEED_URL?: string;
   EXT_SAINT_FEED_URL?: string;
+  // v339 harness seams, same rule: fixture-feed overrides for the
+  // Mass and Homilies block's four sources. Production leaves them
+  // unset; the pinned feed URLs below govern.
+  EXT_USCCB_FEED_URL?: string;
+  EXT_TVMASS_FEED_URL?: string;
+  EXT_FRMIKE_FEED_URL?: string;
+  EXT_BARRON_FEED_URL?: string;
 }
 
 import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
@@ -88,9 +95,14 @@ function logo(): Uint8Array {
 // date (High=4, Medium=2, Low=1, persisted, fill-missing only),
 // per-day completions (data only in this app — no behavior is built
 // on them), and the day addendum.
-const PRAYER_BLOCKS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"] as const;
+const PRAYER_BLOCKS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night", "Mass and Homilies"] as const;
 const PRAYER_BLOCK_START: Record<string, number> = {
-  Morning: 0, Midmorning: 9, Midday: 12, Afternoon: 15, Evening: 18, Night: 21,
+  // v339: "Mass and Homilies" carries no hour of its own — it is
+  // the day's closing listening block, not a time-of-day office.
+  // 24 keeps it out of the current-block derivation entirely (the
+  // ?? 0 fallback would have made it "current" at every hour, as
+  // the last block in iteration order).
+  Morning: 0, Midmorning: 9, Midday: 12, Afternoon: 15, Evening: 18, Night: 21, "Mass and Homilies": 24,
 };
 const PRAYLIST_URL: Record<string, string> = {
   Morning: "https://open.spotify.com/playlist/0sy9eBsySKuCppI0PxXRJN",
@@ -103,6 +115,8 @@ const PRAYLIST_URL: Record<string, string> = {
 const BLOCK_CAPTION: Record<string, string> = {
   Morning: "from midnight", Midmorning: "from 9 AM", Midday: "from 12 PM",
   Afternoon: "from 3 PM", Evening: "from 6 PM", Night: "from 9 PM",
+  // v339: the block is the day's close, not an hour office.
+  "Mass and Homilies": "the day's Mass and the week's homilies",
 };
 
 interface PrayerItemRow {
@@ -291,6 +305,11 @@ const EXTERNAL_SLOTS: Record<string, string> = {
   "ext-office-of-readings": "Evening",
   "ext-evening-prayer": "Evening",
   "ext-night-prayer": "Night",
+  // v339 §2.1: the Mass and Homilies block's four slots.
+  "ext-usccb-readings": "Mass and Homilies",
+  "ext-daily-tv-mass": "Mass and Homilies",
+  "ext-fr-mike-homily": "Mass and Homilies",
+  "ext-barron-sermon": "Mass and Homilies",
 };
 interface PlayerEpisodeRow {
   date: string; episode_id: string; title: string; block: string; sort: number;
@@ -365,6 +384,13 @@ const INTRO_PAIRING: Record<string, string> = {
   "ext-bible-in-a-year": "Bible in a Year",
   "ext-gospel-exegesis": "Daily Gospel Exegesis",
   "ext-saint-of-the-day": "Saint of the Day",
+  // v339 §2.5: the block's four slots pair to the Mass item — the
+  // same drawn intention renders four intro files, one per slot
+  // (the Novenas precedent: one item's draw, per-track files).
+  "ext-usccb-readings": "Mass",
+  "ext-daily-tv-mass": "Mass",
+  "ext-fr-mike-homily": "Mass",
+  "ext-barron-sermon": "Mass",
 };
 function introPairingFor(trackId: string): string | null {
   if (trackId in INTRO_PAIRING) return INTRO_PAIRING[trackId];
@@ -843,14 +869,73 @@ function extMatchSaint(items: ExtFeedItem[], y: number, mo: number, d: number): 
   const prefix = `${String(mo).padStart(2, "0")}/${String(d).padStart(2, "0")}`;
   return it.title.startsWith(prefix) ? it : null;
 }
-async function extFetchFeedItems(url: string): Promise<ExtFeedItem[]> {
+const EXT_BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
+async function extFetchFeedItems(url: string, userAgent?: string): Promise<ExtFeedItem[]> {
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), 15000);
   try {
-    const res = await fetch(url, { headers: { "user-agent": "ora-pro-nobis-externals-resolver/1.0" }, signal: ctl.signal });
+    const res = await fetch(url, { headers: { "user-agent": userAgent || "ora-pro-nobis-externals-resolver/1.0" }, signal: ctl.signal });
     if (!res.ok) throw new Error(`feed fetch failed: HTTP ${res.status}`);
     return extParseFeed(await res.text());
   } finally { clearTimeout(timer); }
+}
+// v339 §2.3: the Mass and Homilies block's sources.
+const EXT_USCCB_FEED_URL = "https://feeds.feedburner.com/usccb/zhqs";
+const EXT_TVMASS_FEED_URL = "https://feeds.buzzsprout.com/949645.rss";
+const EXT_FRMIKE_FEED_URL = "https://feeds.fireside.fm/fathermikehomilies/rss";
+const EXT_BARRON_FEED_URL = "https://www.wordonfire.org/videos/sermons/feed/";
+function extMatchUsccb(items: ExtFeedItem[], y: number, mo: number, d: number): ExtFeedItem | null {
+  // v339 §2.3: the bundle contract's USCCB matcher ported — the
+  // title-date match for the PRESENTED day in an ahead-publishing
+  // feed (items through month-end stand in it; "latest" would pick
+  // a future day's readings). The bundle's latest-by-release
+  // fallback fires ONLY when no dated item matches. Enclosure
+  // required (the standing RSS pin). jobs/externals_resolver.py
+  // is the Python oracle.
+  for (const it of items) {
+    if (it.url && extMatchesMonthDay(it.title, y, mo, d)) return it;
+  }
+  return extMatchLatestByDate(items, y, mo, d);
+}
+function extMatchTvMass(items: ExtFeedItem[], y: number, mo: number, d: number): ExtFeedItem | null {
+  // v339 §2.3: the builder's title/date matching — the item whose
+  // title names the presented day ("Daily TV Mass <Weekday>
+  // <Month> <D>, <YYYY>"); title term + title date, enclosure
+  // required. The Python oracle's match_daily_tv_mass.
+  for (const it of items) {
+    if (it.url && it.title.includes("Daily TV Mass") && extMatchesMonthDay(it.title, y, mo, d)) return it;
+  }
+  return null;
+}
+// The courier-class slots (v339 §2.3): feeds the browser may not
+// read (no ACAO), served by /externals/live. matcher 'usccb' is
+// the title-date port; 'latest' is latest_by_release_date. The
+// Barron fetch sends a browser user-agent (a bare resolver UA
+// drew 403 from Word on Fire — §1's probe).
+const EXT_COURIER_SLOTS: { slotId: string; title: string; feed: (env: Env) => string; matcher: "usccb" | "latest"; browserUa?: boolean }[] = [
+  { slotId: "ext-usccb-readings", title: "USCCB Daily Readings", feed: (env) => env.EXT_USCCB_FEED_URL || EXT_USCCB_FEED_URL, matcher: "usccb" },
+  { slotId: "ext-fr-mike-homily", title: "Fr. Mike Sunday Homily", feed: (env) => env.EXT_FRMIKE_FEED_URL || EXT_FRMIKE_FEED_URL, matcher: "latest" },
+  { slotId: "ext-barron-sermon", title: "Bp. Barron Sunday Sermon", feed: (env) => env.EXT_BARRON_FEED_URL || EXT_BARRON_FEED_URL, matcher: "latest", browserUa: true },
+];
+function extMatchCourierSlot(slot: (typeof EXT_COURIER_SLOTS)[number], items: ExtFeedItem[], y: number, mo: number, d: number): ExtFeedItem | null {
+  return slot.matcher === "usccb" ? extMatchUsccb(items, y, mo, d) : extMatchLatestByDate(items, y, mo, d);
+}
+async function extCourierSlotsPayload(env: Env, prim: Map<string, SourceSettingRow & { sourceKey: string }>, y: number, mo: number, d: number, weekdayMon0: number): Promise<unknown[]> {
+  // v339 §2.3: each courier-class slot fetched and matched
+  // in-request, per-source; a failed feed leaves ITS slot
+  // named-missing and touches nothing else.
+  const out: unknown[] = [];
+  for (const cs of EXT_COURIER_SLOTS) {
+    const row = prim.get(cs.slotId);
+    if (!row || row.enabled !== 1 || !extDayRulePasses(row.day_rule || "daily", weekdayMon0)) continue;
+    let it: ExtFeedItem | null = null;
+    try {
+      it = extMatchCourierSlot(cs, await extFetchFeedItems(cs.feed(env), cs.browserUa ? EXT_BROWSER_UA : undefined), y, mo, d);
+    } catch { it = null; }
+    if (!it) { out.push({ slotId: cs.slotId, state: "missing", title: cs.title, streamUrl: null, durationSec: 0, sizeBytes: 0, block: row.block || EXTERNAL_SLOTS[cs.slotId], sortOrder: row.sort_order }); continue; }
+    out.push({ slotId: cs.slotId, state: "present", title: cs.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS[cs.slotId], sortOrder: row.sort_order });
+  }
+  return out;
 }
 function extDayRulePasses(rule: string, weekdayMon0: number): boolean {
   // The push helper's day_rule_passes, ported: 'fallback-only' on a
@@ -897,7 +982,8 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
     error = e instanceof Error && e.name === "AbortError" ? "feed fetch timed out" : (e instanceof Error ? e.message : "feed fetch failed");
   }
   if (!items) {
-    return { settingsVersion: settings.version, error, slots: standing.map(mkMissing) };
+    const courierSlots = await extCourierSlotsPayload(env, prim, y, mo, d, weekdayMon0);
+    return { settingsVersion: settings.version, error, slots: [...standing.map(mkMissing), ...courierSlots] };
   }
   const matches = extMatchDivineOffice(items, y, mo, d);
   const slots = standing.map((slot) => {
@@ -906,6 +992,7 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
     const row = prim.get(slot.slotId)!;
     return { slotId: slot.slotId, state: "present", title: slot.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS[slot.slotId], sortOrder: row.sort_order };
   });
+  slots.push(...(await extCourierSlotsPayload(env, prim, y, mo, d, weekdayMon0)) as typeof slots);
   return { settingsVersion: settings.version, slots };
 }
 
@@ -1435,6 +1522,23 @@ export default {
             } else if (slotId === "ext-saint-of-the-day") {
               // v337 §2.8: pass-through parity for the Saint port.
               item = extMatchSaint(await extFetchFeedItems(env.EXT_SAINT_FEED_URL || EXT_SAINT_FEED_URL), yy, mm, dd);
+            } else if (slotId === "ext-usccb-readings") {
+              // v339 §2.3: pass-through parity for the Readings
+              // port — the same title-date pick the courier makes.
+              item = extMatchUsccb(await extFetchFeedItems(env.EXT_USCCB_FEED_URL || EXT_USCCB_FEED_URL), yy, mm, dd);
+            } else if (slotId === "ext-daily-tv-mass") {
+              // v339 §2.3: pass-through parity for the TV Mass
+              // port — the same title/date pick the client makes.
+              item = extMatchTvMass(await extFetchFeedItems(env.EXT_TVMASS_FEED_URL || EXT_TVMASS_FEED_URL), yy, mm, dd);
+            } else if (slotId === "ext-fr-mike-homily") {
+              // v339 §2.3: pass-through parity — latest by
+              // release date, Sunday's item standing Mon–Sat.
+              item = extMatchLatestByDate(await extFetchFeedItems(env.EXT_FRMIKE_FEED_URL || EXT_FRMIKE_FEED_URL), yy, mm, dd);
+            } else if (slotId === "ext-barron-sermon") {
+              // v339 §2.3: pass-through parity — latest by
+              // release date; the feed fetch sends the browser
+              // user-agent (a bare resolver UA drew 403).
+              item = extMatchLatestByDate(await extFetchFeedItems(env.EXT_BARRON_FEED_URL || EXT_BARRON_FEED_URL, EXT_BROWSER_UA), yy, mm, dd);
             } else {
               const doSlot = EXT_DO_SLOTS.find((s) => s.slotId === slotId);
               if (doSlot) {
@@ -1450,7 +1554,10 @@ export default {
             }
           } catch { return err(502, "feed fetch failed"); }
           if (!item || !item.url) return err(404, "no episode resolved for that slot today");
-          const fwd: Record<string, string> = { "user-agent": "ora-pro-nobis-externals-resolver/1.0" };
+          // v339 §2.3: the Barron enclosure fetch carries the
+          // browser user-agent too (the same source family that
+          // refused the bare UA on the feed).
+          const fwd: Record<string, string> = { "user-agent": slotId === "ext-barron-sermon" ? EXT_BROWSER_UA : "ora-pro-nobis-externals-resolver/1.0" };
           const range = request.headers.get("range");
           if (range) fwd["range"] = range;
           let audioRes: Response;

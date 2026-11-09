@@ -492,8 +492,8 @@ measureBars();
 var settingsRows = [];
 var settingsVersion = null;
 var settingsNote = '';
-var SET_BLOCKS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night'];
-var SET_SECTIONS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'No block', 'Off'];
+var SET_BLOCKS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Mass and Homilies'];
+var SET_SECTIONS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Mass and Homilies', 'No block', 'Off'];
 var DAY_RULE_LABELS = { 'daily': 'Daily', 'weekdays': 'Weekdays only', 'weekends': 'Weekends only', 'sundays': 'Sundays only', 'fridays': 'Fridays only', 'fallback-only': 'Fallback only' };
 function settingsFamilyLabel(row) {
   if (row.sourceKey === 'saint-of-the-day') return 'Spotify-side today — this row governs from the day a source leg brings this source into the app.';
@@ -950,7 +950,11 @@ var EXT_SLOTS = [
   { slotId: 'ext-midafternoon-prayer', title: 'Midafternoon Prayer' },
   { slotId: 'ext-office-of-readings', title: 'Office of Readings' },
   { slotId: 'ext-evening-prayer', title: 'Evening Prayer', fallbackToken: 'Vespers' },
-  { slotId: 'ext-night-prayer', title: 'Night Prayer' }
+  { slotId: 'ext-night-prayer', title: 'Night Prayer' },
+  { slotId: 'ext-usccb-readings', title: 'USCCB Daily Readings', source: 'USCCB', courier: true, download: 'direct-first' },
+  { slotId: 'ext-daily-tv-mass', title: 'Daily TV Mass', source: 'Daily TV Mass', feedUrl: 'https://feeds.buzzsprout.com/949645.rss', matcher: 'title-date', download: 'direct-first' },
+  { slotId: 'ext-fr-mike-homily', title: 'Fr. Mike Sunday Homily', source: 'Fr. Mike Schmitz', courier: true, download: 'direct-first' },
+  { slotId: 'ext-barron-sermon', title: 'Bp. Barron Sunday Sermon', source: 'Word on Fire', courier: true, download: 'direct-first' }
 ];
 var EXT_TOKENS = {
   'ext-invitatory': ['Invitatory', 'Invitatory Psalm'],
@@ -1076,6 +1080,37 @@ function extMatchLatestByDate(items, dateStr) {
     if (!best || it.pubMs > best.pubMs) best = it;
   });
   return best;
+}
+var EXT_MONTHS_FULL_C = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+var EXT_MONTHS_ABBR_C = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function extTitleNamesDate(title, dateStr) {
+  // String-ops month/day title check (no backslash patterns may
+  // stand in APP_JS — the template-cooking rule): "<Month> <D>"
+  // with a non-digit after the day, so Nov 9 never matches Nov 19
+  // and Nov 2 never matches Nov 29.
+  var p = dateStr.split('-').map(Number);
+  var names = [EXT_MONTHS_FULL_C[p[1] - 1], EXT_MONTHS_ABBR_C[p[1] - 1]];
+  for (var i = 0; i < names.length; i++) {
+    var needle = names[i] + ' ' + p[2];
+    var at = title.indexOf(needle);
+    while (at >= 0) {
+      var after = title.charAt(at + needle.length);
+      if (after < '0' || after > '9') return true;
+      at = title.indexOf(needle, at + 1);
+    }
+  }
+  return false;
+}
+function extMatchTvMass(items, dateStr) {
+  // v339 §2.3: the builder's title/date matching — the item whose
+  // title names the presented day; title term + title date,
+  // enclosure required. The Worker pass-through proves parity.
+  var found = null;
+  items.forEach(function (it) {
+    if (found || !it.url) return;
+    if (it.title.indexOf('Daily TV Mass') >= 0 && extTitleNamesDate(it.title, dateStr)) found = it;
+  });
+  return found;
 }
 function extMatchSaint(items, dateStr) {
   // v337 §2.8: latest_by_release_date with the title's MM/DD prefix
@@ -1215,7 +1250,7 @@ function resolveExternals(day) {
     EXT_SLOTS.forEach(function (s) {
       var row = prim[s.slotId];
       if (!row || row.enabled !== 1 || !extDayRulePasses(row.dayRule || 'daily', wd)) return;
-      standing.push({ slotId: s.slotId, title: s.title, fallbackToken: s.fallbackToken, block: row.block || 'Morning', sortOrder: row.sortOrder, fbRow: fb[s.slotId] || null, source: s.source || 'Divine Office', feedUrl: s.feedUrl || null, matcher: s.matcher || null, download: s.download || null });
+      standing.push({ slotId: s.slotId, title: s.title, fallbackToken: s.fallbackToken, block: row.block || 'Morning', sortOrder: row.sortOrder, fbRow: fb[s.slotId] || null, source: s.source || 'Divine Office', feedUrl: s.feedUrl || null, matcher: s.matcher || null, download: s.download || null, courier: s.courier || null });
     });
     state.extStanding = standing;
     // Day cache: valid only for this date AND this settings version.
@@ -1333,35 +1368,41 @@ function resolveExternals(day) {
     if (cacheValid) Object.keys(rec.slots || {}).forEach(function (k) { if (rec.slots[k].state === 'present') cachedIds[k] = rec.slots[k]; });
     var uncached = function (slot) { return !cachedIds[slot.slotId]; };
     var doSlots = standing.filter(function (s) { return !!EXT_TOKENS[s.slotId]; });
+    // v339 §2.3: the courier leg generalizes to the courier-class
+    // slots (USCCB Readings · Fr. Mike · Barron) — same route, same
+    // settle rules; each slot's own source labels its settle.
+    var courierSlots = standing.filter(function (s) { return !!EXT_TOKENS[s.slotId] || !!s.courier; });
     var bibleSlot = standing.filter(function (s) { return s.slotId === 'ext-bible-in-a-year'; })[0];
     var exegesisSlot = standing.filter(function (s) { return s.slotId === 'ext-gospel-exegesis'; })[0];
     var saintSlot = standing.filter(function (s) { return s.slotId === 'ext-saint-of-the-day'; })[0];
-    // Courier leg (Divine Office) — only if some DO slot is not
-    // carried by the day cache (§2.8 leg 3: a fully cached source
-    // issues no network work). When it does run, a cached slot
-    // whose enclosure the courier confirms is left to the cache
-    // restore; a cached slot the courier contradicts is re-settled
-    // from the courier's word.
+    var tvMassSlot = standing.filter(function (s) { return s.slotId === 'ext-daily-tv-mass'; })[0];
+    // Courier leg (Divine Office + the v339 courier class) — only
+    // if some courier slot is not carried by the day cache (§2.8
+    // leg 3: a fully cached source issues no network work). When
+    // it does run, a cached slot whose enclosure the courier
+    // confirms is left to the cache restore; a cached slot the
+    // courier contradicts is re-settled from the courier's word.
     var courierP;
-    if (doSlots.some(uncached)) {
+    if (courierSlots.some(uncached)) {
       courierP = api('/api/player/externals/live?date=' + encodeURIComponent(date)).then(function (res) {
         var byId = {};
         (res.slots || []).forEach(function (e) { byId[e.slotId] = e; });
-        doSlots.forEach(function (slot) {
+        courierSlots.forEach(function (slot) {
           var e = byId[slot.slotId];
           var c = cachedIds[slot.slotId];
+          var src = slot.courier ? slot.source : 'Divine Office';
           if (e && e.state === 'present') {
             if (c && c.streamUrl === e.streamUrl) return; // the cache restore owns this slot
-            settleMeta(slot, { title: e.title, enclosureUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: 'Divine Office' });
+            settleMeta(slot, { title: e.title, enclosureUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: src });
           } else if (e) {
             if (c) return; // cache stands over a same-open courier miss (§2.4: the record stands for the day)
-            settle(slot, missingSt(slot, 'Divine Office'));
+            settle(slot, missingSt(slot, src));
           } else if (uncached(slot)) {
-            settle(slot, missingSt(slot, 'Divine Office'));
+            settle(slot, missingSt(slot, src));
           }
         });
       }).catch(function () {
-        doSlots.forEach(function (slot) { if (uncached(slot)) settle(slot, missingSt(slot, 'Divine Office')); });
+        courierSlots.forEach(function (slot) { if (uncached(slot)) settle(slot, missingSt(slot, slot.courier ? slot.source : 'Divine Office')); });
       });
     } else {
       courierP = Promise.resolve();
@@ -1397,6 +1438,17 @@ function resolveExternals(day) {
         if (it) settleMeta(saintSlot, { title: it.title || saintSlot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: saintSlot.source });
         else settle(saintSlot, { state: 'missing', title: saintSlot.title, source: saintSlot.source });
       }).catch(function () { settle(saintSlot, { state: 'missing', title: saintSlot.title, source: saintSlot.source }); });
+    }
+    // Daily TV Mass direct leg (v339 §2.3): the Buzzsprout feed is
+    // client-readable (ACAO *); the pick is the title/date match
+    // for the presented day; the download is direct-first with
+    // the Worker pass-through as fallback (the slot's pin).
+    if (tvMassSlot && uncached(tvMassSlot)) {
+      extFetchText(tvMassSlot.feedUrl).then(function (text) {
+        var it = extMatchTvMass(extParseFeed(text), date);
+        if (it) settleMeta(tvMassSlot, { title: it.title || tvMassSlot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: tvMassSlot.source });
+        else settle(tvMassSlot, { state: 'missing', title: tvMassSlot.title, source: tvMassSlot.source });
+      }).catch(function () { settle(tvMassSlot, { state: 'missing', title: tvMassSlot.title, source: tvMassSlot.source }); });
     }
     // Resolve watchdog: no slot may spin forever. A leg or restore
     // that has produced nothing after 9 s is treated as failed —

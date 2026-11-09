@@ -149,6 +149,15 @@ SLOT_PAIRING = {
     "ext-bible-in-a-year": "Bible in a Year",
     "ext-gospel-exegesis": "Daily Gospel Exegesis",
     "ext-saint-of-the-day": "Saint of the Day",
+    # v339 §2.5: the Mass and Homilies block's four slots pair to
+    # the Mass item — each renders its OWN intro file from the
+    # Mass item's drawn intention (the Novenas precedent). This
+    # table and the Worker's INTRO_PAIRING mirror are one contract
+    # in two places: a change lands in both or neither.
+    "ext-usccb-readings": "Mass",
+    "ext-daily-tv-mass": "Mass",
+    "ext-fr-mike-homily": "Mass",
+    "ext-barron-sermon": "Mass",
 }
 
 

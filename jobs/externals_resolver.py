@@ -280,6 +280,48 @@ def match_saint_of_the_day(items, target: datetime.date):
     return it if it["title"].startswith(target.strftime("%m/%d")) else None
 
 
+def match_usccb_readings(items, target: datetime.date):
+    """Contract daily-mass-readings (resolver USCCB) — v339 §2.3:
+    the title-date match for the target day in an ahead-publishing
+    feed; the bundle's latest-by-release fallback fires ONLY when
+    no dated item matches. Enclosure required. This function is
+    the Python ORACLE for the Worker port (extMatchUsccb);
+    harness-v339 proves the port against it."""
+    if items is None:
+        return None
+    for it in items:
+        if it["url"] and matches_month_day(it["title"], target):
+            return it
+    return _latest_by_release_date(items, target)
+
+
+def match_daily_tv_mass(items, target: datetime.date):
+    """v339 §2.3: the builder's title/date matching — the item
+    whose title names the target day ("Daily TV Mass <Weekday>
+    <Month> <D>, <YYYY>"); title term + title date, enclosure
+    required. ORACLE for the client + Worker ports."""
+    if items is None:
+        return None
+    for it in items:
+        if it["url"] and "Daily TV Mass" in it["title"] and matches_month_day(it["title"], target):
+            return it
+    return None
+
+
+def match_fr_mike_homily(items, target: datetime.date):
+    """Contract fr-mike-sunday-homily (resolver SUNDAY_FRMIKE) =
+    latest_by_release_date — Sunday's item stands through the
+    week (v339 §2.3)."""
+    return _latest_by_release_date(items, target)
+
+
+def match_barron_sermon(items, target: datetime.date):
+    """Contract barron-sunday-sermon (resolver SUNDAY_BARRON) =
+    latest_by_release_date — Sunday's item stands through the
+    week (v339 §2.3)."""
+    return _latest_by_release_date(items, target)
+
+
 def _bible_title(item, target: datetime.date) -> str:
     n = day_of_year_1_to_365(target)
     base = f"Bible in a Year — Day {n}"
