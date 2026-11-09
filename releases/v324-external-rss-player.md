@@ -401,3 +401,52 @@ Review judges §1's six acceptance criteria on the evidence, plus:
   - **Candidate texts read 0/17 — an artifact of this seat's push invocation, flagged for the Coordinator, not a v324 finding:** the helper resolves audio under `<rundir>/` (the MP3s stand in the run's `out/`) and episode texts under the same `<rundir>/script-*.txt` (the scripts stand in the run **root** — 17 there, 0 in `out/`). One `--rundir` value cannot satisfy both as the run directory is currently laid out; the candidate was pushed with `--rundir …/out`, so its own episodes carry no text (external tracks are unaffected — `hasText false` by design). Whether the enacted step-4B invocation shape resolves both legs on a real nightly run is a v318-surface question this Review does not judge; it is recorded so it is checked, not discovered.
   - The candidate deployment (Worker `ora-pro-nobis-app-v324-review` + its D1, R2, and Access app 596ceb4f) is **left standing** for John's phone check and owed a teardown after the verdict, like the v320-review candidate before it; it holds only the 2026-11-08 day, six synthetic segment tones, and its own door token.
   - Static assets on the candidate could not be fetched through its session gate from this seat (the Worker answers "access sign-in required" to the service-token path, the production behavior); the served-client parse+boot evidence stands on the harness browser leg against the identical build, and the deployed Worker version was taken from the deploy of this branch's tree.
+
+## 5 · Ship
+
+- **Agent:** Ship Agent (v324) — Ship claim record **1153**, claimed 2026-11-09T05:09:37Z · time contract **76** (sheets expectation met ahead of time · flip expectation met 23:55 CT · the merge/migration/deploy expectation stands **blocked** on the record — see the sequencing note below; the blocker was named before its deadline and the work completed inside it).
+- **Run Directive:** Autonomous to Ship — lifted from Through Review by John's blanket prod approval (2026-11-08 23:00 CT: "Across the board. I approve everything to go to prod except for the test 2.user board"), read back on row 590 at this seating.
+
+### Criterion 6 — WAIVED, not passed
+
+§1 criterion 6 (John's phone check on the Review candidate) stands **WAIVED by John's blanket word** under the row's directive ("if the phone item blocks, record it and ship on the blanket word, noting the waiver"). It is not recorded as passed and no verdict was written. Review record **1145** was passed by this seat at 05:09Z with the waiver named, on §4's evidence (criteria 1–5 MET on the Review seat's independent runs). The candidate deployment (`ora-pro-nobis-app-v324-review` + its D1/R2/Access app 596ceb4f) is **left standing** so John can still run the phone check when he wakes; its teardown remains owed after his verdict, with the v320-review candidate's.
+
+### Sequencing — the v333 hold (recorded per the main seat's order)
+
+At 23:12 CT the main seat held this pass's production DEPLOY for emergency release **v333** (the episode-text route's X-Episode-Id pattern missing the underscore — the same defect class as v327, one surface over; an unpatched route would have aborted tonight's midnight app push at the first novena id). This pass proceeded with everything else (Review pass · Ship claim · contract · migration · both job sheets) and deployed only after v333's merge **48fc112** stood on the trunk. v333's own §5 commit (**a99c608**, doc-only) landed while this pass's first merge stood ready, so the landing merge was re-cut on the current head: **c3bd75e**. Trunk head at this pass's close is the §5 commit below.
+
+### Landing, migration, deploy
+
+- **Merge c3bd75e** (`--no-ff`) of `release/v324` into `muse-draft-week` in a clean ship worktree (the shared checkout carries the nightly pipeline's uncommitted state and was not merged in). The merged tree's app/jobs delta is exactly v324's build (§3's commits) over the v333 head.
+- **Gate on the merged tree:** harness-v324 Worker/client leg **29/29 ok** (log `tests/v324-gate-ship.log`, this seat's run on the merged tree, per the hold's order; the resolver leg and the full regression set stand on §4's independent runs — harness-v312 59/59 · v325 31/31 · v318 32/32 · v327 10/10). One orphaned harness instance from a killed first run held the fixture port (8962) and was killed before the clean re-run — the port-collision class §4 named, absorbed.
+- **Migration 0009 applied to the production D1** (`ora-pro-nobis-app`): before — `player_episodes` ends at cid 11 (`text_r2_key`), 17 rows; after — `kind` cid 12 (TEXT, default 'episode') · `source` cid 13 (default '') · `stream_url` cid 14 (default ''), row count unchanged at 17, all 17 rows reading the defaults. Additive-with-defaults per §2.3; no rebuild, no backfill.
+- **Deploy:** connector-surrogate wrangler from the merged tree's `app/` (dry-run first, clean; token transient, never printed or filed). **Worker `ora-pro-nobis-app` version 05d8d564-79a1-41b9-9328-f5f226befa0c**, deployed 2026-11-09 ~05:47Z. **Rollback target: fc47c9af** (v333's deploy, live at 100% immediately before) — rollback is a pure redeploy of that version plus one re-run of the pre-v324 push helper (§2.13); migration 0009's columns stay.
+
+### Job sheets — enacted and read back
+
+- **Nightly sheet (`ora-pro-nobis-nightly-run`):** new step **4C EXTERNALS (v324)** after step 4B, in §3's drafted form, plus the mandatory report field **"Externals (v324): <p>/9 present · … · missing: …"** in step 6's field list. The complete body was carried through `cron.update` with everything else preserved verbatim — including the main seat's 23:10 CT step-4B text-staging fix — and verified by read-back of the projected sheet (4C present once · the field present in both places · the 4B staging fix intact).
+- **Watchdog sheet (`publish-audio-watchdog`, 05:40 CT):** new step **2C EXTERNALS RE-RESOLVE (v324)** after step 2B, in §3's drafted form (`jobs/push_episodes_to_app.py --externals-only` from the fork; the report carries the "Externals re-resolve (v324)" field verbatim). Verified by read-back.
+- Tonight's midnight run (00:00 CT, target Nov 11) is the first run under both sheets; its step-4B push rides the merged helper, so the Nov 11 day commits with its nine external rows (expected 8/9 at midnight, Bible in a Year filled by the 05:40 leg).
+
+### Production proof
+
+- **Externals resolve against production** (this seat, post-deploy, from the merged tree): `push_episodes_to_app.py --externals-only` printed `Externals re-resolve (v324): 9/9 present · filled: ext-invitatory, ext-morning-prayer, ext-bible-in-a-year, ext-midmorning-prayer, ext-midday-prayer, ext-midafternoon-prayer, ext-office-of-readings, ext-evening-prayer, ext-night-prayer · still missing: none` — the production route (§2.5) accepted the swap and the resolver filled every slot for the stored day.
+- **D1 read-back (production):** the 2026-11-08 day now holds 17 own episodes + **9 external rows** — sorts 901–909 in their pinned blocks (Morning 901–903 · Midmorning 904 · Midday 905 · Afternoon 906 · Evening 907–908 · Night 909), sources named (Divine Office ×8 · Bible in a Year ×1), `stream_url` set on every row, `r2_key` '' on every external row, own rows untouched. No external audio object stands in R2 (no staging call exists for external rows; §4's candidate scan read 0).
+
+### The flip — all four pieces, read back
+
+- **Release row:** v324 **Live** · shipped_at 2026-11-09T05:52:00Z · whats_new_id **47** (the shipped POST alone did not flip the row; the flip landed by full-field upsert replaying scope/title/slug/directive — read back intact — and the date/id fields took a second upsert in camelCase after the snake_case fields were silently dropped; both lessons already stand in the estate's record and bit again here).
+- **Shipped record:** id **407** (title + camelCase shippedAt/whatsNewId accepted; read back in the shipped list).
+- **What's New:** id **47** — "External podcasts now play in the player" (the live max was read first across all three projects: 46, v333's — never assumed).
+- **Ship phase record:** 1153, passed.
+
+### Raw notes for the Curator (no skill edits)
+
+- The releases upsert drops snake_case `shipped_at`/`whats_new_id` silently while accepting camelCase — the same field-shape trap as the shipped POST, now proven on the upsert route too; a door-wide camelCase pin would retire the class.
+- The /tmp harness-deps directory Implement used (v324-deps) did not survive to this pass; the estate's standing installs (wrangler-env + pwtest) covered the gate after reassembly. Harness setup that depends on /tmp state is fragile across passes.
+- §4's Divine Office fetch intermittency stands as the named follow-on candidate (one retry inside the resolver's Divine Office fetch); tonight's production resolve read 9/9 on the first attempt.
+
+- **Concerns and Information Needs:**
+  - Criterion 6's phone check remains John's to run on the standing candidate (play an external · lock-screen crossing · seek on a Divine Office track · Bible in a Year after a morning fill-in); a failure comes back as a fix-forward against this Live release or a return to Implement at the Coordinator's word — it was waived for shipping, not judged.
+  - The v324-review candidate teardown is owed after John's verdict, alongside the still-standing v320-review candidate.
+  - The first full production cycle (midnight push with step 4C + the 05:40 re-resolve) completes tonight/tomorrow morning under the two enacted sheets; the nightly report's "Externals (v324)" field is the evidence to read.
