@@ -1,0 +1,28 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 3 - fixture: episode audio staged for the fixture day
+ok 4 - fixture: day commit lands (rowCount 6)
+ok 5 - fixture: Midday slice serves (seg:Midday,ep-short-a,ep-short-b,ep-long-c)
+ok 6 - check 1: the served /app.js parses (vm.Script)
+ok 7 - check 1: the SW cache name reads ora-pro-nobis-v326-1 (v326 Implement named update, §2.6: the pin follows the landed trunk's cache rename — v326's rename supersedes v318's)
+ok 8 - check 1: the browser boot ran with zero page errors
+ok 9 - check 14 (early): localStorage stands empty at boot (no harness seeds)
+ok 10 - check 2: the sleep button stands on the Prayers screen
+ok 11 - check 2: the button stands in the Play All transport row, classes 'btn ghost'
+ok 12 - check 2: the label reads 'Sleep · Off' at boot
+ok 13 - check 3: the choices stand in the exact order Off · 5 · 10 · 15 · 30 · 45 · 60 · End of track (off,5,10,15,30,45,60,track)
+ok 14 - check 3: the first and last choices read 'Off' and 'End of track'
+ok 15 - check 3: Close dismisses the sheet without change
+ok 16 - check 3: dismissing the sheet leaves the timer Off
+ok 17 - check 4: one tap arms and closes the sheet
+ok 18 - check 4: __opnSleep.state() agrees with the sheet arm (mode minutes, preset 5, remaining 300s)
+ok 19 - check 4: two successive label reads decrease ('Sleep · 5:00' -> 'Sleep · 4:59')
+ok 20 - check 4: the label and state() agree on the remaining time
+ok 21 - check 5: at expiry the element stands paused
+ok 22 - check 5: queue length, queueIdx, and current are unchanged — held, not cleared
+ok 23 - check 5: the label reads Off after the stop
+ok 24 - check 5: the resume record names the playing track at the stop position (ep-long-a @ 2.84s vs element 2.84s, ±1s)
+ok 25 - check 6: playback continues past the would-be deadline untouched
+ok 26 - check 6: the timer stands Off
+not ok 27 - harness crashed: page.waitForFunction: Timeout 45000ms exceeded.
+TALLY: 26 ok / 1 FAIL (27 checks)
