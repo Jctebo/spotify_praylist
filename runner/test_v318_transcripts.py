@@ -175,7 +175,11 @@ def build_rundir(root: Path) -> Path:
         "date": DATE,
         "context": {"music_season": "ordinary-time"},
         "episodes": [
-            {"episode_id": e, "entry_id": e, "key": e, "kind": "publish", "title": f"Title {e}"}
+            # Real run directories: the plan KEY differs from the full
+            # episode_id, and pass 1 names scripts script-<key>.txt — the
+            # 2026-11-09 regression shape (the resolver once looked for
+            # script-<episode_id>.txt and missed every real script).
+            {"episode_id": e, "entry_id": e, "key": f"key-{e}", "kind": "publish", "title": f"Title {e}"}
             for e in EPS
         ],
     }
@@ -192,7 +196,7 @@ def build_rundir(root: Path) -> Path:
             "audio_length": len(mp3),
         }
         (rd / "out" / f"{e}.json").write_text(json.dumps(side))
-        report_eps[e] = {
+        report_eps[f"key-{e}"] = {  # report episodes are keyed by plan key
             "status": "built",
             "decode_ok": True,
             "bytes": len(mp3),
@@ -211,8 +215,8 @@ def build_rundir(root: Path) -> Path:
         "flags": [],
     }
     (rd / "report.json").write_text(json.dumps(report))
-    (rd / "script-clean-ep.txt").write_text(CLEAN_SCRIPT)
-    (rd / "script-poison-ep.txt").write_text(POISON_SCRIPT)
+    (rd / "script-key-clean-ep.txt").write_text(CLEAN_SCRIPT)
+    (rd / "script-key-poison-ep.txt").write_text(POISON_SCRIPT)
     # novid-ep deliberately has NO script file.
     return rd
 

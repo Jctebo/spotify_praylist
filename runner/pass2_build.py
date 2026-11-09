@@ -901,12 +901,19 @@ def _ensure_podcast_namespace(feed_text: str) -> str:
 
 def _transcript_plan(rundir: Path, plan: dict, only_episode_ids: set[str] | None = None):
     """v318 T1, the local half: resolve each episode's transcript from the
-    run directory's script-<episode_id>.txt. Publish is VERBATIM — the words
-    are never edited; the only normalization is trailing whitespace folded
-    to a single final newline. The withholding guard: a script containing
-    '[', '{' or '<' (production markup), an undecodable script, or a
-    missing script marks THAT episode's transcript missing — withheld and
-    named, never edited into compliance. Purely local: no uploads.
+    run directory's script-<key>.txt — pass 1 / pass 1b name the script for
+    the plan episode's KEY (script-morning-prayer.txt), never for its full
+    episode_id (script-morning-prayer-elevenlabs-2026-11-11.txt does not
+    exist). The episode_id name is tried as a fallback for hand-built run
+    directories. (2026-11-09 fix: resolving by episode_id alone marked
+    every transcript of the 2026-11-11 drop missing while its scripts
+    stood in the run directory under their keys.) Publish is VERBATIM —
+    the words are never edited; the only normalization is trailing
+    whitespace folded to a single final newline. The withholding guard: a
+    script containing '[', '{' or '<' (production markup), an undecodable
+    script, or a missing script marks THAT episode's transcript missing —
+    withheld and named, never edited into compliance. Purely local: no
+    uploads.
     Returns (staged, missing): staged maps episode_id -> publish bytes;
     missing is a plan-ordered list of {"episode_id", "reason"}."""
     staged: dict[str, bytes] = {}
@@ -915,7 +922,9 @@ def _transcript_plan(rundir: Path, plan: dict, only_episode_ids: set[str] | None
         ep_id = ep["episode_id"]
         if only_episode_ids is not None and ep_id not in only_episode_ids:
             continue
-        src = rundir / f"script-{ep_id}.txt"
+        src = rundir / f"script-{ep.get('key') or ep_id}.txt"
+        if not src.exists():
+            src = rundir / f"script-{ep_id}.txt"
         if not src.exists():
             missing.append({"episode_id": ep_id, "reason": "no script file in the run directory"})
             continue
