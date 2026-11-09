@@ -36,7 +36,9 @@ import { APP_JS } from "./client";
 import { LOGO_PNG_B64 } from "./logo";
 
 const JOHN_EMAILS = new Set(["john@thibeaux.com", "john.thibeaux@gmail.com"]);
-const SUITE_AUDIO_BASE = "https://devotional-suite.john-thibeaux.workers.dev/audio";
+// v335: the Devotional Suite audio fallback constant is deleted — a
+// segment the app does not hold reads as missing (segmentAudioUrl
+// null), never as a Suite URL wearing the app's name (§1 part 3, §2.5).
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -179,15 +181,20 @@ async function prayerDrawForDate(env: Env, date: string): Promise<Map<number, nu
   if (stmts.length) await env.DB.batch(stmts);
   return map;
 }
-async function prayerAudioMap(env: Env, date: string): Promise<Map<string, { size: number }>> {
-  const r = await env.DB.prepare("SELECT block, size_bytes FROM prayer_audio WHERE date=?").bind(date).all<{ block: string; size_bytes: number }>();
+// v335 §2.3: the splice reads the STANDING segment rows (sentinel
+// date 'current') for every payload — one standing segment per block
+// under the same name always, replaced in place on refresh. Dated
+// rows are no longer consumed by any payload.
+async function prayerAudioMap(env: Env): Promise<Map<string, { size: number }>> {
+  const r = await env.DB.prepare("SELECT block, size_bytes FROM prayer_audio WHERE date='current'").all<{ block: string; size_bytes: number }>();
   return new Map((r.results ?? []).map((row) => [row.block, { size: row.size_bytes }]));
 }
 // The day payload: field-identical in shape to the board module's
 // (the midnight job repoints by door target only), plus this app's
 // own audio record: each block's segmentAudioUrl points at the app's
-// audio route when the app holds that block's segment, and the
-// payload names the blocks whose segment is missing (audioMissing).
+// standing audio name when the app holds that block's standing
+// segment (v335), and is null when it does not — a missing segment
+// reads as missing everywhere.
 async function prayerDayPayload(env: Env, date: string) {
   const { date: today, hour } = prayerChicagoNow();
   const items = await prayerGetItems(env);
@@ -199,7 +206,7 @@ async function prayerDayPayload(env: Env, date: string) {
   const addRow = await env.DB.prepare("SELECT text FROM prayer_addenda WHERE date=?").bind(date).first<{ text: string }>();
   const labelRows = await env.DB.prepare("SELECT block, label FROM prayer_block_labels").all<{ block: string; label: string }>();
   const labels = new Map((labelRows.results ?? []).map((r) => [r.block, r.label]));
-  const audio = await prayerAudioMap(env, date);
+  const audio = await prayerAudioMap(env);
 
   const blocks = PRAYER_BLOCKS.map((block) => {
     const blockItems = items.filter((i) => i.block === block && i.enabled);
@@ -209,8 +216,8 @@ async function prayerDayPayload(env: Env, date: string) {
       label: labels.get(block) ?? block,
       due: prayerBlockDue(date, block, today, hour),
       praylistUrl: PRAYLIST_URL[block],
-      segmentAudioUrl: hasAudio ? `/api/prayer/audio/${date}/${encodeURIComponent(block)}` : `${SUITE_AUDIO_BASE}/${date}/${encodeURIComponent(block)}`,
-      audio: { available: hasAudio, url: hasAudio ? `/api/prayer/audio/${date}/${encodeURIComponent(block)}` : null, sizeBytes: hasAudio ? audio.get(block)!.size : null },
+      segmentAudioUrl: hasAudio ? `/api/prayer/audio/current/${encodeURIComponent(block)}` : null,
+      audio: { available: hasAudio, url: hasAudio ? `/api/prayer/audio/current/${encodeURIComponent(block)}` : null, sizeBytes: hasAudio ? audio.get(block)!.size : null },
       devotions: blockItems.map((i) => ({
         id: i.id, name: i.name, sub: i.sub, kind: i.kind, color: i.color,
         openingPrayer: i.opening_prayer, closingPrayer: i.closing_prayer,
@@ -324,7 +331,7 @@ async function playerDayPayload(env: Env) {
     return { ok: true, date: null, dateLabel: "", storedDay: null, episodes: [], blocks, audioMissing: [...PRAYER_BLOCKS] };
   }
   const date = dayRow.date;
-  const audio = await prayerAudioMap(env, date);
+  const audio = await prayerAudioMap(env);
   const rows = await env.DB.prepare("SELECT * FROM player_episodes WHERE date=? ORDER BY sort, episode_id").bind(date).all<PlayerEpisodeRow>();
   // v334 §2.6: stored external rows never reach the client — the
   // Prayers screen builds its externals solely from the at-open
@@ -337,7 +344,7 @@ async function playerDayPayload(env: Env) {
     const card = {
       title: "Intentions", kind: "segment", intentionsCard: true,
       available: hasAudio,
-      streamUrl: hasAudio ? `/api/prayer/audio/${date}/${encodeURIComponent(block)}` : null,
+      streamUrl: hasAudio ? `/api/prayer/audio/current/${encodeURIComponent(block)}` : null,
       spotifyUrl: null,
     };
     tracks.splice(0, 0, card);
@@ -366,7 +373,10 @@ async function sweepOtherDates(env: Env, keepDate: string): Promise<void> {
       const listed: R2Objects = await env.AUDIO.list({ prefix, cursor, limit: 1000 });
       const stale = listed.objects.map((o) => o.key).filter((k) => {
         const d = k.slice(prefix.length).split("/")[0];
-        return d !== keepDate;
+        // v335 §2.4: the standing segment family (segments/current/…)
+        // is invisible to the dated rotation — kept alongside keepDate.
+        // No 'current' family exists under episodes/ or texts/.
+        return d !== keepDate && !(prefix === "segments/" && d === "current");
       });
       if (stale.length) await env.AUDIO.delete(stale);
       cursor = listed.truncated ? listed.cursor : undefined;
@@ -377,7 +387,9 @@ async function storedDayReadback(env: Env) {
   const dayRow = await env.DB.prepare("SELECT * FROM player_day WHERE id=1").first<{ date: string; episode_count: number }>();
   if (!dayRow) return { storedDate: null, episodeCount: 0, tracksPresent: 0, tracksMissing: 0, textsPresent: 0, textsMissing: 0, externalsPresent: 0, externalsMissing: 0, segmentBlocks: [] as string[] };
   const rows = await env.DB.prepare("SELECT audio_state, text_state, kind FROM player_episodes WHERE date=?").bind(dayRow.date).all<{ audio_state: string; text_state: string; kind: string }>();
-  const segs = await env.DB.prepare("SELECT block FROM prayer_audio WHERE date=? ORDER BY block").bind(dayRow.date).all<{ block: string }>();
+  // v335 §2.3: segmentBlocks names the blocks whose STANDING segment
+  // exists (date='current') — the fact the nightly report prints.
+  const segs = await env.DB.prepare("SELECT block FROM prayer_audio WHERE date='current' ORDER BY block").all<{ block: string }>();
   const list = rows.results ?? [];
   const externals = list.filter((r) => r.kind === "external");
   return {
@@ -728,7 +740,10 @@ export default {
         // job-sheet change stays mechanical.
         const date = request.headers.get("x-prayer-date") ?? "";
         const block = request.headers.get("x-prayer-block") ?? "";
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "X-Prayer-Date must be YYYY-MM-DD");
+        // v335 §2.2: the only widening — the literal 'current' names
+        // the standing segment; key derivation and upsert unchanged,
+        // so a standing push is a dated push whose date is 'current'.
+        if (!/^(\d{4}-\d{2}-\d{2}|current)$/.test(date)) return err(400, "X-Prayer-Date must be YYYY-MM-DD or current");
         if (!PRAYER_BLOCKS.includes(block as typeof PRAYER_BLOCKS[number])) return err(400, "bad block");
         const bytes = new Uint8Array(await request.arrayBuffer());
         if (!bytes.length) return err(400, "empty body");
@@ -829,7 +844,9 @@ export default {
         const pushedAt = nowISO();
         const stmts: D1PreparedStatement[] = [
           env.DB.prepare("DELETE FROM player_episodes WHERE date <> ?").bind(date),
-          env.DB.prepare("DELETE FROM prayer_audio WHERE date <> ?").bind(date),
+          // v335 §2.4: standing rows (date='current') are never in the
+          // dated delete's reach; dated segment rows keep their rule.
+          env.DB.prepare("DELETE FROM prayer_audio WHERE date <> ? AND date <> 'current'").bind(date),
         ];
         for (const e of eps) {
           stmts.push(env.DB.prepare(
@@ -949,7 +966,9 @@ export default {
         if (seg[2] === "audio" && request.method === "GET") {
           const date = seg[3] ?? "";
           const block = decodeURIComponent(seg[4] ?? "");
-          if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !PRAYER_BLOCKS.includes(block as typeof PRAYER_BLOCKS[number])) return err(400, "bad audio path");
+          // v335 §2.3: the standing name /api/prayer/audio/current/<Block>
+          // is served by the same widened pattern; dated serving stands.
+          if (!/^(\d{4}-\d{2}-\d{2}|current)$/.test(date) || !PRAYER_BLOCKS.includes(block as typeof PRAYER_BLOCKS[number])) return err(400, "bad audio path");
           const row = await env.DB.prepare("SELECT r2_key FROM prayer_audio WHERE date=? AND block=?").bind(date, block).first<{ r2_key: string }>();
           if (!row) return err(404, "no segment for that block and date");
           const obj = await env.AUDIO.get(row.r2_key);
