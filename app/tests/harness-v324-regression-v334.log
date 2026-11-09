@@ -1,0 +1,15 @@
+ok - setup: the Worker bundles clean (esbuild) — migration 0009's tree compiles
+ok - setup: app up on local wrangler (port 8961), this instance answering
+ok - own-instance proof: the empty stored-day shape carries the v324 externals counts at 0
+ok - check 16: a v312-shaped manifest (no kind fields) still commits (200)
+ok - check 16: the committed row reads back kind 'episode' (the 0009 default)
+FAIL - check 16: migration 0009 stands — the externals route writes kind='external' rows (404)
+FAIL - check 16: the external rows render in the payload with kind 'external'
+ok - check 17: a day whose external rows carry NO staged objects commits (200)
+ok - check 17: an own episode claiming a wrong staged size still refuses the whole commit 409, nothing written (409, stored 2026-11-13)
+FAIL - check 18: Morning order — Intentions card, own episodes, externals in slot order (card,f2-morning)
+FAIL - check 18: Midmorning order — Intentions card, own, external (card,f2-mid)
+HARNESS ERROR: TypeError: Cannot read properties of undefined (reading 'kind')
+    at file:///home/hatch/workspace/.worktrees/v334/app/tests/harness-v324.mjs:238:10
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+RESULT harness-v324-worker 7/12 ok

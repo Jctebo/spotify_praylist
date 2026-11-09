@@ -19,3 +19,42 @@ ok 18 - check 2: prayer_audio holds only the stored date (D1 segments swept, non
 ok 19 - check 2: a staged-but-uncommitted D3 object does not disturb the stored day
 ok 20 - check 2: re-committing the same day is idempotent
 ok 21 - check 2: the next commit swept the staged D3 object (its commit now fails 409)
+ok 22 - check 2: D2's segments land by the standing push and stand held
+ok 23 - check 3: the full stored day serves with the feed address unreachable
+ok 24 - check 3: the feed server recorded zero hits across the whole run (0)
+ok 25 - check 3: static grep of the Worker source finds no FEED_DEFAULT / feedEpisodes / feedCache
+ok 26 - check 7: a fresh boot lands on the Prayers tab
+ok 27 - check 7: the served Prayers screen carries no .daynav element
+ok 28 - check 7: the Play All (whole day) control stands at the top
+ok 29 - check 7: block headers carry their 'N tracks' counts
+ok 30 - check 5 (browser): the missing track renders named in place with the not-available line
+ok 31 - check 6: the whole-day queue built by Play All equals the payload order (seg:Morning,d2-a,ext-invitatory,ext-morning-prayer,ext-bible-in-a-year,seg:Midmorning,d2-m,ext-midmorning-prayer,seg:Midday,d2-b,ext-midday-prayer,seg:Afternoon,ext-midafternoon-prayer,seg:Evening,ext-office-of-readings,ext-evening-prayer,seg:Night,ext-night-prayer)
+ok 32 - check 6: Play All starts at the day's first track (v325: the Morning Intentions segment)
+ok 33 - check 6: autoplay-next crossed a block boundary and passed over the missing track at reach
+ok 34 - check 6: the missing track never becomes the playing track
+ok 35 - check 6: per-block queue is the block slice (exercised below via the block button)
+not ok 36 - check 6: per-block Play All builds exactly that block's slice (seg:Midday,d2-b,ext-midday-prayer)
+ok 37 - check 8: all Media Session handlers registered (play,pause,previoustrack,nexttrack,seekto,seekforward,seekbackward)
+ok 38 - check 8: media metadata carries the track title + 'Ora Pro Nobis'
+ok 39 - check 8: a seekto moves currentTime (0.40s)
+ok 40 - check 8: previoustrack moves within the active queue (seg:Midday)
+ok 41 - check 8: nexttrack moves back within the active queue (d2-b)
+ok 42 - check 8: a ranged GET on the episode route returns 206 + Content-Range (bytes 10-19/3571)
+ok 43 - check 9: reopening on the same stored day offers Resume
+ok 44 - check 9: the resumed track stands paused — no autoplay on open
+ok 45 - check 9: the resumed position matches the remembered one (0.50s vs 0.50s, within 2s)
+ok 46 - check 9: after a new day's push, the prior day's position is not offered
+ok 47 - check 9: the stored day after the push is the newly pushed day
+ok 48 - check 10: no font-size below 13px in the served CSS (min 13px)
+ok 49 - check 10: .tab 13px · .tagline 13px · .meta 14px · body 17px read back from the served CSS
+ok 50 - check 11: the served /app.js parses (vm.Script)
+ok 51 - check 11: the SW cache name reads ora-pro-nobis-v334-1 (v334 Implement named update: the pin follows the landed trunk's cache rename, v334's — superseding v328's)
+ok 52 - check 11: /sw.js parses and /styles.css serves
+ok 53 - check 11: the browser boot ran with zero page errors
+ok 54 - check 12: the Intentions card carries spotifyUrl:null in every block
+ok 55 - check 12: the four tab ids and their order are unchanged
+ok 56 - check 12: player_sources holds the six playlist rows; the rss row is gone (migration 0007)
+ok 57 - check 12: Access refusal stands — no identity, no shell (locked instance)
+ok 58 - check 12: Access refusal stands — Pam's identity refused, no Pam path
+ok 59 - check 12: John's identity is admitted on the locked instance
+TALLY: 58 ok / 1 FAIL (59 checks)

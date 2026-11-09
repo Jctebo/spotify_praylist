@@ -1,0 +1,31 @@
+ok 1 - leg1: migrations 0001-0010 applied clean to a fresh D1 (before boot)
+ok 2 - leg1: exactly 23 seed rows
+ok 3 - leg1: every seed row equal to §2.1 on every field
+ok 4 - leg1: meta version stands at 1 (the untouched seed)
+ok 5 - leg2: door read without a token -> 403
+ok 6 - leg2: door read with a wrong token -> 403
+ok 7 - leg2: door read -> 200 {version: 1, sources: 23}
+ok 8 - leg2: door payload equals the seed fixture on every field
+ok 9 - leg2: payload order = block order, then sort_order, then name
+ok 10 - leg3: session GET body identical to the door GET
+ok 11 - leg4: bad block -> 400, naming the fault
+ok 12 - leg4: bad dayRule -> 400
+ok 13 - leg4: unknown sourceKey -> 400
+ok 14 - leg4: a missing row -> 400 (the set must be exact)
+ok 15 - leg4: refused PUTs wrote nothing — version still 1, rows still the seed
+ok 16 - leg4: a lawful edit answers {ok, version: 2}
+ok 17 - leg4: Bible in a Year stands in Evening; Morning and Evening sort_order both gapless
+ok 18 - leg4: name/family/slotId/role are server-owned — a rename attempt changes none of them
+ok 19 - leg5: reordering the sent array reorders the read-back (Rosary 1, Morning Prayer 2)
+ok 20 - leg5: no Intentions-card row exists in the settings
+ok 21 - leg5: an Intentions row cannot be created (unknown sourceKey -> 400)
+ok 22 - leg6: replace-day commit with the external in Evening -> 200 (the lawful edit no longer 400s)
+FAIL 23 - leg6: externals-route block swap -> 200 404 {"error":"unknown agent route"}
+ok 24 - leg6: an unknown external id still -> 400
+ok 25 - leg6: block 'bogus' still -> 400
+ok 26 - leg7: the served /app.js parses
+ok 27 - leg7: the served shell carries the brand-bar gear
+ok 28 - leg7: renderSettings renders all 23 rows
+ok 29 - leg7: sections stand in the standing order with the seed's first rows, and the Antiphon flag shows
+ok 30 - leg8: the served /sw.js names ora-pro-nobis-v334-1
+harness-v328: 29 ok / 1 FAIL
