@@ -1,0 +1,23 @@
+=== harness-v305 ===
+harness-v305 exit=1 :: TALLY: 30 ok / 6 FAIL (36 checks)
+=== harness-v312 ===
+harness-v312 exit=0 :: TALLY: 59 ok / 0 FAIL (59 checks)
+=== harness-v318 ===
+harness-v318 exit=0 :: TALLY: 32 ok / 0 FAIL (32 checks)
+=== harness-v320 ===
+harness-v320 exit=1 :: TALLY: 60 ok / 1 FAIL (61 checks)
+=== harness-v324 ===
+harness-v324 exit=0 :: RESULT harness-v324-worker 29/29 ok
+=== harness-v325 ===
+harness-v325 exit=0 :: TALLY: 31 ok / 0 FAIL (31 checks)
+=== harness-v326 ===
+harness-v326 exit=0 :: # harness-v326: 62 checks, 0 FAIL
+=== harness-v327 ===
+harness-v327 exit=0 :: RESULT: 10 ok / 0 FAIL
+=== harness-v333 ===
+harness-v333 exit=0 :: RESULT: 13 ok / 0 FAIL
+=== harness-v328 ===
+harness-v328 exit=0 :: harness-v328: 30 ok / 0 FAIL
+resolver-leg-v324 exit=0 :: RESULT harness-v324-resolver 15/15 ok
+check-v328-consumption exit=0 :: check-v328-consumption: 22 ok / 0 FAIL
+SUITE DONE
