@@ -205,3 +205,33 @@ Match with the standing facts (§1: the Nov 10 drop carries 16 episodes). GETs o
 ### Read-only confirmation
 
 Every fetch in this pass was a GET against the two public addresses (plus the one deliberate GET against the reserved unroutable address). No job sheet was edited (the `publish-audio-watchdog` body stands exactly as §2 read it), no ledger was read by the check or written by anyone, no endpoint, feed file, R2 object, or GitHub state changed. The only writes are this branch's commits and the app documents-store publication of this document.
+
+## 5 · Ship
+
+- **Agent:** Ship Agent (v315) — Ship claim record 1086, claimed 2026-11-09 00:04 UTC (18:04 CT)
+- **Level in force: Autonomous to Ship (level 6).**
+- **Custom order (§1 · §2 P7):** this release ships BEFORE its Review. The job-sheet step lands now; **Review stands after Ship** — it seats after the first live 05:40 run (Mon 2026-11-09) and judges the sheet diff below plus that run's delivered `RSS feed:` line. The watchdog job was NOT run manually in this pass; the first live run is the scheduled one.
+
+### Trunk landing
+
+- release/v315 fast-forwarded onto the trunk line: **3e1763b → c46266a** (523c08e rehearsal script + fixtures · c46266a §3). The four landed files stand under `releases/` in the production checkout; the checkout's uncommitted production files were untouched (the merge set and the dirty set do not intersect).
+- **Deviation, named:** the landing first went, inside a scratch worktree, onto the local branch named `main` — which is stale in this repo (it sat at e72c1e3, origin parity, while the release line descends from 3e1763b). Caught from the branch topology before anything consumed it: `main` was restored to e72c1e3 byte-identical, the scratch worktree removed, and the landing redone as the fast-forward above. No state outside the scratch worktree was ever affected.
+
+### Job-sheet edit — applied as §2 P7 drafts it
+
+- `cron.update` on **publish-audio-watchdog** with the complete revised body; the schedule (daily 05:40 America/Chicago), the delivery, and every unrelated instruction preserved.
+- Step **2B inserted verbatim** from the §2 draft (1,338 chars — the verification extracts the draft text from §2 and finds it byte-present in the live body).
+- Delivery rule line replaced with P7's verbatim text: "ALWAYS report every check, one short line per verdict (Publish audio · RSS feed); include the link only on failure."
+- Step 5 amendment: P7 specifies this change by content rather than verbatim text; it was applied by appending P7's own clause to the standing sentence — "— the append carries both result lines (the Publish audio: line and the RSS feed: line)" — the original sentence otherwise untouched.
+- **Read-back verification:** `cron.view` after the update, cross-checked against the saved definition: the live body is byte-equal to the constructed revision · step 2B verbatim ✓ · delivery line verbatim ✓ · step-5 clause present ✓ · schedule, ledger steps, Decide step, report-only step 4, and the BOARD CHECK-OFF section unchanged ✓.
+
+### The flip (verified through the door)
+
+- **What's New entry id 32** — "Public RSS feed freshness monitor — a stale feed is caught the same morning" (exactly one v315 entry stands; read back after the POST — no retry duplicate).
+- **Shipped record id 390** · shipped_at **2026-11-09T00:06:57Z** · whats_new_id 32.
+- Release row 574: status **Live**, shipped_at + whats_new_id set, run_directive "Autonomous to Ship" and slug preserved (door read-back; derivedStatus Live).
+- Phase records: Scope 1065 passed · Plan 1075 passed · Implement 1083 passed · **Ship 1086 passed** (claimed 00:04:21Z · passed 00:07:23Z). **Review: no record stands — unclaimed, by this release's design** (the arrangement above).
+
+### Curator raw notes
+
+Filed through the door, key **ship-v315-2026-11-08**: (1) the stale-`main` trunk trap — a future Ship brief for this repo should name the checkout line as the trunk, not `main`; (2) the step-5 amendment's content-specified rendering; (3) no door-retry duplicate occurred in this pass — claim, What's New, shipped, upsert, and pass each landed first-leg and read back clean; (4) the Review-after-Ship arrangement.
