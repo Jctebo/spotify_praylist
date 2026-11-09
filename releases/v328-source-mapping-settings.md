@@ -165,3 +165,62 @@ Two structure notes: (1) **Daily Gospel Exegesis** (Midmorning) and the Liturgy-
 ### Notes for the Curator
 
 - Raw notes: the mapping's real state was worse than its reputation — the table built in v305 to hold it was emptied by v312's (correct) retirement of the read path, the push's read of it was never possible (session-only route, silently swallowed), and the name match left standing resolves a quarter of a real day's episodes to blocks. Three individually reasonable changes composed into a mapping that exists nowhere. The class: when a data store is retired, name the successor authority in the same release — v312 named the push-time rule but the rule was a heuristic, and no gate ever re-measured it against a real manifest until this pass ran the resolver by hand. Running the standing code against the newest real input, as a Scope discovery step, produced this release's single most decision-relevant fact (4 of 16).
+
+---
+
+## Amendment A1 — 2026-11-08 21:17 CT · Order is part of the scope
+
+- **Directed:** John, Ora Pro Nobis thread, 2026-11-08 21:17 CT (verbatim): **"Include order in the scope. Not just mapping but order."**
+- **Standing of this amendment:** §1 above stands as passed (Scope record 1126) and is not edited. §1 already carried "order within the block" as one of D2's knobs and as a field the Settings screen shows; this amendment makes order a first-class, numbered part of the item in three places — the seed (A1.1), the knob set (A1.2), and the consumption reading (A1.3). Where this amendment and §1 differ in emphasis, this amendment governs. The item remains HELD at Scope; John's approval, when it lands, covers mapping AND order together.
+
+### A1.1 The seed carries ORDER — the per-block sequences
+
+Table A gains an **Order** column: every placed source carries its playback sequence number within its block, composed from the standing rules — the Intentions card first (position 0, the v325 rule) · the block's own episodes in seed order (Table A's order, which is the push-manifest order §1 executed against) · the external slots after, in v324 §2.2's slot order (slots 1–9). Fallback sources carry **the number of the slot they fill**, not a number of their own — a fallback plays in its primary's position, on the days it plays at all. **Sources seeded OFF (the not-placed set) carry no number**: an OFF source has no position. When John places one from the Settings, it takes the next open position at the end of that block's source list until he moves it (Plan pins the write shape). A source John sets to NO BLOCK likewise stands outside the block sequences while it is unplaced, and takes the next open position when he gives it a block.
+
+| Block | Order | Source | Standing |
+|-------|-------|--------|----------|
+| Morning | 0 | Intentions card † | v325 rule — not a settings row |
+| Morning | 1 | Morning Prayer (the podcast's own) | today |
+| Morning | 2 | Daily Rosary | today |
+| Morning | 3 | Marian Antiphon — Angelus | today |
+| Morning | 4 | Divine Office — Invitatory | v324 slot 1 |
+| Morning | 5 | Divine Office — Morning Prayer | v324 slot 2 · Sing the Hours — Lauds fills THIS position as fallback |
+| Morning | 6 | Bible in a Year | v324 slot 3 |
+| Midmorning | 0 | Intentions card † | v325 rule — not a settings row |
+| Midmorning | 1 | Novenas | today |
+| Midmorning | 2 | Divine Office — Midmorning Prayer | v324 slot 4 |
+| Midday | 0 | Intentions card † | v325 rule — not a settings row |
+| Midday | 1 | Divine Office — Midday Prayer | v324 slot 5 |
+| Afternoon | 0 | Intentions card † | v325 rule — not a settings row |
+| Afternoon | 1 | Auxilium Christianorum | today |
+| Afternoon | 2 | Saint of the Day ‡ | Spotify-side only today |
+| Afternoon | 3 | Divine Office — Midafternoon Prayer | v324 slot 6 |
+| Evening | 0 | Intentions card † | v325 rule — not a settings row |
+| Evening | 1 | Divine Office — Office of Readings | v324 slot 7 |
+| Evening | 2 | Divine Office — Evening Prayer | v324 slot 8 · Sing the Hours — Vespers fills THIS position as fallback |
+| Night | 0 | Intentions card † | v325 rule — not a settings row |
+| Night | 1 | Daily Reflection | today |
+| Night | 2 | Divine Office — Night Prayer | v324 slot 9 |
+
+† **Position 0 is NOT a settings row.** The Intentions card stands outside the settings entirely (§1, and sub-decision A1.2a below): no setting stores its position, and no edit moves it. It is shown in every block's sequence so the seed states each block's whole playback order, and its 0 is the standing v325 rule (John, 2026-11-08 20:02 CT: "Start with intentions at the top"), not a value in the settings store.
+
+‡ Saint of the Day carries its settings order of record — Afternoon 2, after Auxilium, in Table A's order. It reaches the app on no current leg (Spotify-side only today), so the number orders nothing in the player yet; it governs from the day a source leg brings the source into the app, so the seed never has to be re-argued for it.
+
+### A1.2 D2 amended — REORDER is a first-class knob
+
+**Amendment to D2** (D2's text in §1 stands; this amendment extends it): the knob set is **on/off · block · day rule · ORDER (reorder)**. §1's "order within the block… seeded as today's order" described a placement fact; as amended, order is an editable control of the same standing as block and day rule — John can **reorder the sources within a block** from the Settings, and the settings hold the **one order of record**: the push reads it, and the player plays it (A1.3). Reorder is **within a block**; moving a source to another block is the block knob, and the row then stands in its new block at the order position the settings sequence gives it (Plan pins how a block's sequence renumbers on such a move — one gapless sequence per block, in displayed order).
+
+**Sub-decision A1.2a — the bounds of reorder (for John's approval with the rest; recommendations marked):**
+
+- **An external source may be moved ahead of the podcast's own episodes — YES (recommended).** An order that cannot cross the own/external line is two half-orders, not one order, and John's direction reads as the whole block sequence being his to arrange. The seed keeps today's composition (own episodes first, externals after); a reorder that interleaves them is his edit, stored and reported like any other.
+- **The Intentions card may NOT be moved, and nothing may be placed ahead of it (recommended).** The card stands **outside the reorderable set**. Grounds: its first position is John's own standing order rule (the v325 rule, directed 2026-11-08 20:02 CT), and §1 already places the Intentions segments outside the settings entirely — "no setting moves, hides, or reorders them." A settings value that could outrank that rule would make the rule repealable by accident, mid-edit, from a phone screen. If John ever wants the card's position configurable, that is a change to the v325 rule itself, directed as such — never a settings value.
+
+### A1.3 Consumption consequence — the stored order reaches the player through `sort`, and nothing else changes
+
+Confirmed against the code this pass: the stored order reaches the payload through the standing `sort` column, and no ordering mechanics change. The push helper already writes a `sort` on every episode row it commits (`jobs/push_episodes_to_app.py` — today the manifest's enumeration; v324's externals ride the same commit in their 901–909 band), and the payload builder already reads `SELECT * FROM player_episodes WHERE date=? ORDER BY sort, episode_id` and takes each block's tracks in that order (`app/worker/src/index.ts`, `playerDayPayload`), with the Intentions card spliced at the block's head (the v325 form of that splice). Under this release the push derives the `sort` values from the **settings order** instead of the manifest enumeration — own episodes and external slots alike take their sorts from the one per-block sequence the settings hold (Plan pins the numeric scheme; where a reorder interleaves the two families, the settings-order derivation supersedes v324's fixed 900-band). **What this amendment changes is therefore exactly two things: the seed (it now carries the numbers, A1.1) and the settings write shape (each row stores its order; an edit rewrites its block's sequence).** The player's ordering mechanics — the query, the per-block ordering, the card splice — are untouched by this amendment and this release. One acceptance reading joins §1's criteria: under the untouched seed, a pushed day's per-block track order equals A1.1's sequences exactly, Intentions first; and criterion 2's edit-reflection leg extends to order — a reorder made on the Review candidate is the order the next push against that candidate writes, named by the new settings version.
+
+### Amendment record
+
+- **Phase record:** Scope record 1126 stands PASSED — not re-claimed, not re-passed; this amendment lands as a dated amendment per the standing pattern (a passed section is never rewritten).
+- **Package:** ~/workspace/your_files/v328-scope-package.html re-issued with this amendment — marked AMENDED 2026-11-08 21:17 CT, the seed table carrying the ORDER column, the Settings mockup showing the seed's true order numbers, and sub-decision A1.2a with its recommendations.
+- **Door note:** `amendment-v328-order-2026-11-08` filed through the app door with this amendment.
