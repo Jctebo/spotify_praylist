@@ -142,3 +142,99 @@ Verified this pass: the settings payload (`sourceSettingsPayload`) is served by 
 
 - Raw note: the deviation-callout rule (John, 2026-11-09 04:10 CT) was applied at its first seating — the courier leg is flagged in §1, the HTML package, and the chat summary, his original beside the proposal. The rule caught a real case: the recommendation contains a server fetch inside a "client-side" item, and unflagged it would have read as compliance.
 - Raw note: v324's design failure mode is worth naming in the record — a stored-state design made a nightly job a single point of failure for a surface the user opens in the morning; the self-healing property (heals on next open) is the actual requirement John was naming, and it only exists in the resolve-at-open shape.
+
+## 2 · Plan
+
+- **Agent:** Plan Agent (v334) — Plan claim record 1167, claimed 2026-11-09T10:26:09Z · time contract 85 · Plan writes NO production code.
+- **Approval of record:** John, Ora thread, 2026-11-09 04:18 CT — "Approved all the way to ship" (run level TO SHIP, Autonomous to Ship), expressly covering the §1 bold-flagged Divine Office courier deviation. Cache decision: John, Ora thread, 2026-11-09 04:20 CT (pinned in §2.4). Traceability: every step below traces to §1 B–G, the acceptance criteria, or the 04:20 cache decision; no scope gap found, nothing absorbed beyond §1.
+
+### 2.1 Base, files, and shape of the build
+
+- **Base:** branch `release/v334` from muse-draft-week @ c4923ab (§1 commit ce9946c stands on it). Drift note: the fork trunk gained the transcript-resolver fix a74833c after the branch was cut (runner `pass2_build.py` only, no app overlap); Implement rebases onto the trunk head at seating and re-runs the gate set on the rebased tree.
+- **No migration. No data-model change. No new store of any kind** (no D1 table, no KV) — the only persistence added is device-local (§2.4).
+- **Files to change:**
+  - `app/worker/src/client.ts` — the direct-leg matchers (Bible in a Year + Sing the Hours, TypeScript port), the at-open resolve orchestration, the day cache (§2.4), the in-place slot UI (§2.5), and the queue rule (§2.5).
+  - `app/worker/src/index.ts` — the new courier route (§2.2), the stored-externals payload filter (§2.6), retirement of the agent-door externals POST (§2.7).
+  - `jobs/push_episodes_to_app.py` — stops carrying external entries in the replace-day commit (§2.7). `jobs/externals_resolver.py` is NOT touched (diagnostic + matcher oracle).
+  - `app/tests/harness-v334.mjs` — new gate (§2.8). SW cache name bumps per the standing pattern (Implement pins the new name in §3).
+
+### 2.2 The courier route (Divine Office) — pinned
+
+- **Route:** `GET /api/player/externals/live?date=<YYYY-MM-DD>` — session-only, behind the standing session gate (the same gate as `/api/player/day` and the settings session GET). No agent-door variant. A `date` that does not equal the stored day's date is refused 400 (the stored day is the only resolvable day, per §1C target-date rule).
+- **Behavior:** on each request the Worker fetches the Divine Office feed by GET (exactly as the Python resolver does), parses it, runs the §1C Divine Office matcher (TypeScript port, oracle = `jobs/externals_resolver.py`), applies the current source-settings rows (enabled · block · day rule · sort_order) read from D1 in that request, and replies with matched entries only (§1 D2 stands): `{date, settingsVersion, slots: [{slotId, state: "present"|"missing", title, streamUrl, durationSec, sizeBytes, block, sortOrder}]}` — one entry per enabled, day-ruled-in Divine Office slot.
+- **Stores nothing:** no D1 write, no KV write, no log of resolved state; when the request ends nothing remains on the server. Implement proves this by D1 row-count equality around the harness's courier legs (§2.8 leg 2).
+- **Response reuse, stated expressly:** the reply carries `Cache-Control: private, max-age=300`. That header is **HTTP response reuse** — the device may reuse the identical reply for 300 seconds instead of re-asking. It is **not** a server-side cache and stores no resolution state: the server keeps nothing between requests, and the first request after the window re-fetches and re-matches fresh. This is the §1 D1 300-second TTL, and it reconciles with John's 04:20 "no server-side cache" ruling on those exact terms: nothing is stored server-side; reuse lives on the device, like the day cache.
+- **Failure shape:** feed fetch error, non-200, parse failure, or the pinned 8-second fetch timeout (§2.5) → the reply still returns 200 with every Divine Office slot `state: "missing"` and an `error` field naming the failure class — never a 500 to the client (the named-missing honesty rule governs the surface, §1B.5).
+
+### 2.3 Settings at open — pinned
+
+- At Prayers open the client issues the session `GET /api/player/source-settings` (the read the Settings screen already uses; identical payload to the door read) and captures two things: the rows (enabled · block · dayRule · sortOrder · slotId · family/source) and the **settings version** (the `player_settings_meta` version the v328 payload carries).
+- Application, identical for direct and courier sources: an OFF or day-ruled-out source's slots do not stand at all (configuration, not a miss); block and sortOrder place each resolved slot after the block's own episodes, the Intentions card first untouched (v325 splice is in the day payload, not the resolve).
+- **Implement step 0 verification (not a John question):** confirm the exact version field name in the served settings payload and pin the cache comparison (§2.4) on it; if the payload carries no version, the fallback compare is a hash of the canonical rows JSON computed client-side, and §3 records which one shipped. The behavior — any settings change invalidates — is pinned either way.
+
+### 2.4 The day cache — John's 2026-11-09 04:20 CT decision, pinned as buildable spec
+
+- **Where:** device-local only, `localStorage`, exactly one record under the single key `opn-ext-cache-v1`. Not IndexedDB, not the service-worker cache, not the server. One record total — a new stored day replaces it wholesale.
+- **Record shape:** `{date, settingsVersion, savedAt, slots: { <slotId>: {state: "present", title, streamUrl, durationSec, sizeBytes, source, block, sortOrder} } }`. **Only present slots are ever written.** A missing slot is absent from the record — absence IS the not-final marker; there is no negative entry.
+- **Validity check at every Prayers open, before any fetch:** the record is used only if BOTH hold — (a) `record.date` equals the stored day's date as returned by that open's `GET /api/player/day`, and (b) `record.settingsVersion` equals the settings version from that open's fresh session settings GET (§2.3). Either mismatch → the whole record is discarded and the open resolves fresh. These are the only two invalidation triggers (date change · source-settings change), exactly per John's ruling; there is no time-based expiry inside a valid day.
+- **Both routes write it:** direct-leg results (Bible in a Year, Sing the Hours fallback fills) and courier results (Divine Office) merge into the same record per slot, written through as each slot resolves (a mid-resolve exit keeps the slots already resolved). Settings-derived placement fields (block, sortOrder) are stored with the slot so a cached slot renders without recompute; validity (b) guarantees they are never stale against the settings they were placed under.
+- **Per-slot resolution at open:** slots present in a valid record render from the record with **no fetch for their source**. Slots absent from the record (never resolved, or missing last open) resolve live at this open — **missing slots re-check on the next open**, per John's ruling. If a live fetch for a missing slot also returns fresh data for an already-cached slot of the same source, the fresh result refreshes that slot's record entry (never the reverse: cache never overwrites a fresher live result).
+- **Fallback interplay:** a Sing the Hours fill, when present, is cached like any present slot. "Primary matched, fallback not consulted" is never cached as a state — on any open where the Divine Office primary slot is absent from the record, the fallback evaluation runs as §1C pins (fallback fetched only on a primary miss).
+- **No audio, ever:** the record holds links and metadata strings only. No enclosure byte is fetched for caching, and no service-worker runtime caching of enclosure URLs is added (§1: offline saving out of scope).
+- **Failure of the cache itself:** a `localStorage` throw (private mode, quota) degrades to §1 D1 session-memory behavior for that open and never blocks or fails the resolve.
+
+### 2.5 Resolve orchestration, in-place UI, and the queue rule — pinned
+
+- **Order at open:** render the day from `/api/player/day` at once (own episodes interactive, §1F) → read settings (§2.3) → check the day cache (§2.4) → stand every uncached external slot in its configured position as the discreet "Loading…" meta-line placeholder (§1 D4) → resolve the three legs in parallel: courier (one call), Bible in a Year direct, and Sing the Hours **only if** a Divine Office Morning/Evening primary is uncached-and-unresolved or resolves missing.
+- **Timeouts:** each leg carries an 8-second fetch timeout; a timeout is a leg failure → that leg's slots swap in place to named "Not available today" (acceptance criterion 9). No leg blocks another; no full-screen spinner at any point.
+- **In-place swap:** a resolved slot's placeholder is replaced by its card at the same position; a missing slot's placeholder is replaced by the standing named-missing card. No layout shift beyond the card's own meta line.
+- **Queue rule (pins §1F against the v326 queue builder):** Play All and per-block Play All build descriptors from what stands resolved **at tap time** — a present slot (cached or just-resolved) joins with its streamUrl; a still-loading or missing slot enters the descriptor list as unavailable and is passed over by the standing queue skip, exactly as a missing stored track is today. A slot that resolves after the tap does **not** retro-insert into a playing queue; it is available to the next Play All. Media Session metadata/handlers (v312/v326) are untouched; a resolved external is an ordinary queue entry (§1G).
+
+### 2.6 Stored external rows — the payload treatment §1E left to Plan
+
+- **Pinned: server-side filter.** `playerDayPayload` excludes `kind='external'` rows from the `/api/player/day` reply from this release on. The client therefore never receives a stored external and cannot double-render one; the client builds its external rows solely from the resolve + day cache. Stored rows themselves are untouched in D1 and age out by the standing one-day retention at the next replace-day commit (§1 D3 stands). This is a Plan choice inside §1's pin remit, not a deviation: §1 settled the outcome (client ignores stored externals); the filter is its mechanism.
+
+### 2.7 Retirements — what lands in this release vs at Ship
+
+- **In the build (this release's code):** the agent-door externals POST (`/api/agent/player/externals`, v324 §2.5) is removed from the Worker; the push helper stops sending external entries in the replace-day commit (step 4C's mechanism dies in code here).
+- **At the Ship pass (sheet edits, named so they are not lost):** nightly sheet `ora-pro-nobis-nightly-run` loses step 4C EXTERNALS (v324) and its mandatory "Externals (v324)" report field; watchdog sheet `publish-audio-watchdog` loses step 2C EXTERNALS RE-RESOLVE. Both edits are read back at Ship, as at prior ships.
+- **`jobs/externals_resolver.py` stays** in the repo as diagnostic + matcher oracle (§1E); deleting it is out of scope.
+
+### 2.8 Test matrix — harness-v334 and regressions
+
+Gate design per the standing pins: every gate **parses and executes the served client**, and tallies are read from **complete log files** only. `app/tests/harness-v334.mjs` proves, as numbered legs:
+
+1. **Matcher parity:** the TypeScript matchers (client direct legs + courier) and the Python resolver return identical slot outcomes on the whole standing v324 fixture set, plus a live-feed capture taken at Implement replayed through both.
+2. **Courier honesty:** the route returns matched entries for a fixture Divine Office feed; D1 row counts are identical before and after the leg (stores nothing); a date other than the stored day is refused 400; an unauthenticated call is refused by the session gate.
+3. **Cache hit:** first open resolves and writes the record; second open with all three feeds stubbed to fail still renders the cached present slots and issues **no fetch** for a fully cached source.
+4. **Missing-slot re-check:** a slot missing at open 1 (absent from the record) is re-resolved at open 2 and fills when its feed recovers — while open 1's cached present slots are not re-fetched.
+5. **Cache invalidation, both triggers:** (a) the stored day rolls → full re-resolve; (b) a settings edit bumps the settings version → full re-resolve, and the edited placement applies (§2.3 / acceptance criterion 6, block move + OFF + order change, direct and courier alike).
+6. **Fallback-only:** with both Divine Office primaries matching, the Sing the Hours feed fetch count is 0; with a primary missing, the fallback is fetched and fills only that slot (criterion 4).
+7. **Bible current-year pin:** a fixture whose newest Day N is prior-year stands named-missing, never presented (criterion 5).
+8. **Failure isolation + timeout:** one leg stubbed to hang → its slots stand named-missing after the timeout, the rest of the day renders complete and interactive, own episodes playable throughout (criteria 3 + 9).
+9. **Stored externals ignored:** a day payload fixture carrying stored `kind='external'` rows serves none of them in `/api/player/day` (§2.6) and the screen renders no stored-external card or duplicate.
+10. **Direct-read boundary:** the shipped client contains no fetch of the Divine Office feed URL (static check of the served client) — criterion 2's mechanism.
+
+- **Live smoke at Implement:** the courier leg runs once against the live Divine Office feed from the candidate Worker (§1 Concerns' named first proof), and the client legs against the live Bible in a Year + Sing the Hours feeds.
+- **Regressions (scoped set, risk class client + Worker route):** harness-v312 · harness-v318 · harness-v320 · harness-v325 · harness-v326 · harness-v324 (resolver + Worker legs as they stand) · check-v328-consumption. **Full runnable app harness set at Implement** (the v328 pattern), because the change touches the shared day-payload path; that is this release's catch-up position.
+- **Review criteria (carried forward):** Review re-runs harness-v334 + the regression set independently, exercises the candidate end-to-end (fresh open with an empty push, settings edit at next open, feed-failure day), and rules on §1's nine acceptance criteria. **Criterion on John's phone check: WAIVED** — under John's blanket pattern and his 04:18 "all the way to ship" word, the phone check is recorded **waived, not passed**, no verdict written; the Review candidate stands for his optional check after Ship, and its teardown is a Ship follow-on (with the standing v320/v324/v328 candidates' footing). Ship then executes §2.7's sheet retirements with read-backs, deploys, and completes the four-piece flip.
+
+### 2.9 Rollback / fix-forward
+
+- Defects fix forward on the trunk line, per standing policy. Rollback proper is Worker-only and clean: redeploy the prior production Worker (the client is Worker-served; no migration or stored state was created by this release — the day cache lives on the device and a rolled-back client simply never reads it). If rollback happens after Ship's sheet edits, the Ship agent's §5 names the two sheet legs (nightly 4C · watchdog 2C) as the restore text, since the push helper's externals mechanism will have stopped in code — a rollback past Ship therefore also needs the helper leg restored from the pre-release commit; named here so the cost is visible before Ship, not discovered after.
+
+### 2.10 Implement sequence (ordered)
+
+1. Step 0 verifications: settings version field (§2.3) · trunk rebase · fixture set + live captures staged.
+2. Worker: courier route + payload filter + door-POST removal.
+3. Client: matchers + orchestration + day cache + in-place UI + queue rule.
+4. Push helper: externals out of the replace-day commit.
+5. harness-v334 legs 1–10 + live smoke; full regression set; gate logs complete.
+6. §3 written against the landed tree; Review seats on the Coordinator's word (run level TO SHIP stands).
+
+### Concerns and Information Needs
+
+- **Deviations from John's words: none in this Plan.** The cache design (§2.4) is John's 04:20 decision pinned verbatim in effect — device-local, both routes, present-only, date/settings invalidation, no audio, no server store. The one reconciliation §1 left open — the courier's 300-second header vs "no server-side cache" — is settled expressly in §2.2: response reuse on the device, nothing stored on the server.
+- **Plan-level choice, named:** §2.6's server-side payload filter is the mechanism for §1's settled "client ignores stored externals" outcome (§1E assigned the exact treatment to Plan). It changes no behavior John sees beyond what §1 settled.
+- **Carried risks:** matcher-port drift (mitigated by leg 1 parity against the Python oracle, re-run at Review) · Divine Office changing its CORS posture (courier leg retires by follow-on, §1) · the settings-version field verification (§2.3 step 0 — behavior pinned under either outcome, so it cannot become a mid-Implement stall).
+- **Open points for John: none.** The phone check stands waived per §2.8; nothing in this Plan needs a decision from him.
