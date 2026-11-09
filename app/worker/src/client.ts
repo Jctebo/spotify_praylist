@@ -968,6 +968,35 @@ var EXT_TOKENS = {
 };
 var EXT_BIAY_URL = 'https://feeds.fireside.fm/bibleinayear/rss';
 var EXT_STH_URL = 'https://feeds.castos.com/x8g54';
+/* v342 §2.1/§2.2: the podcast-style pull. Own episodes resolve
+   from the SAME podcast feed the runner publishes (the client
+   fetches the canonical host directly — the runner's
+   jctebo.github.io URL 301-redirects to it and the client does
+   not chase the redirect); intentions resolve from the rolling
+   intentions feed on the same host. Both feeds send ACAO * — the
+   XML fetches direct; the AUDIO host sends no ACAO, so downloads
+   route through the Worker feed-audio pass-through while
+   playback streams direct (the v334 posture, §2.3). */
+var OWN_FEED_URL = 'https://orapronobis.media/podcast.xml';
+var INTRO_FEED_URL = 'https://orapronobis.media/intentions.xml';
+// The canonical episode ids are the stems both models share —
+// descriptor ids are NEVER re-keyed (the v344 keying pin).
+// 'novenas' is the one multi-item family: its canonical ids are
+// per-saint (novena-<slug>), resolved from the item stems.
+var OWN_ROW_EPISODE = {
+  'morning-prayer': 'morning-prayer', 'daily-rosary': 'daily-rosary',
+  'marian-antiphon': 'marian-antiphon-angelus', 'marian-antiphon-midday': 'marian-antiphon-angelus',
+  'marian-antiphon-evening': 'marian-antiphon-angelus', 'novenas': 'novenas',
+  'auxilium-christianorum': 'auxilium-christianorum', 'daily-reflection': 'daily-reflection'
+};
+var OWN_STEM_TO_ID = {
+  'morning-prayer-elevenlabs': 'morning-prayer', 'daily-rosary': 'daily-rosary',
+  'marian-antiphon-angelus': 'marian-antiphon-angelus',
+  'auxilium-christianorum': 'auxilium-christianorum', 'daily-reflection': 'daily-reflection'
+};
+// Gate surface (§2.11 leg 14): the streaming measure reads the
+// bytes the own parse actually consumed.
+window.__opnV342 = { ownFeedBytes: function () { return state.ownFeedBytes || 0; } };
 function extWeekdayMon0(dateStr) {
   var p = dateStr.split('-').map(Number);
   return (new Date(Date.UTC(p[0], p[1] - 1, p[2])).getUTCDay() + 6) % 7;
@@ -1218,8 +1247,25 @@ function extRebuildDescs(day) {
   // descriptor when the slot resolved present and its intro
   // stands; an unresolved/missing slot emits NO intro.
   var descs = [];
+  var date = day.presentedDay || day.date;
   (day.blocks || []).forEach(function (b) {
     (b.tracks || []).forEach(function (t) { expandDescs(Object.assign({}, t, { _block: b.block }), day).forEach(function (d) { descs.push(d); }); });
+    // v342: the block's own tracks stand after any payload tracks
+    // and before its externals — settings order within the block
+    // (Antiphon follows its enabled rows only, §2.1 ruling 4). A
+    // settled-missing family emits its one named-missing
+    // descriptor; an unresolved row emits nothing yet.
+    (state.ownStanding || []).filter(function (r) { return r.block === b.block; })
+      .sort(function (a, c) { return (a.sortOrder || 0) - (c.sortOrder || 0); })
+      .forEach(function (row) {
+        var st = state.ownSlots[row.sourceKey];
+        if (!st) return;
+        if (st.state === 'present') {
+          st.tracks.forEach(function (m) { expandDescs(ownSlotTrack(row, m, date), day).forEach(function (d) { descs.push(d); }); });
+        } else if (st.state === 'missing') {
+          expandDescs(ownSlotTrack(row, { episodeId: row.episodeId, title: row.title, state: 'missing' }, date), day).forEach(function (d) { descs.push(d); });
+        }
+      });
     (state.extStanding || []).filter(function (s) { return s.block === b.block; })
       .sort(function (a, c) { return (a.sortOrder || 0) - (c.sortOrder || 0); })
       .forEach(function (slot) {
@@ -1230,6 +1276,413 @@ function extRebuildDescs(day) {
   (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { descs.push(d); }); });
   state.dayDescs = descs;
   return descs;
+}
+/* ---------------- v342 own episodes + intentions --------------
+   Own resolution runs in the SAME at-open pass as the externals
+   (§2.1 ruling 3): the settings rows govern standing, the podcast
+   feed resolves by presented date, descriptors enter through the
+   standing trackDesc/expandDescs seam — no second seam. The
+   intentions feed builds day.intros in v338's exact shape before
+   any descriptor build (§2.8 ruling 3); intro TEXT comes from the
+   shell's introTexts (privacy decision), never the feed. */
+function ownChicagoDateStr(ms) {
+  if (ms == null || !isFinite(ms)) return null;
+  try {
+    var parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date(ms));
+    var o = {};
+    parts.forEach(function (p) { o[p.type] = p.value; });
+    return o.year + '-' + o.month + '-' + o.day;
+  } catch (e) { return null; }
+}
+function ownStemOf(url) {
+  var clean = String(url || '').split('?')[0].split('#')[0];
+  var base = clean.slice(clean.lastIndexOf('/') + 1);
+  return base.slice(-4) === '.mp3' ? base.slice(0, -4) : base;
+}
+function ownDateInStem(stem) {
+  var m = /[0-9]{4}-[0-9]{2}-[0-9]{2}/.exec(stem);
+  return m ? m[0] : null;
+}
+function ownFamilyOfStem(stem) {
+  // Returns { family, episodeId } — family is the canonical id for
+  // fixed families, 'novenas' for the novena family.
+  var d = ownDateInStem(stem);
+  if (!d) return null;
+  if (stem.indexOf(d) === 0) {
+    // <date>-<slug>-day-<n> — a novena item.
+    var rest = stem.slice(d.length + 1);
+    var dayAt = rest.lastIndexOf('-day-');
+    if (dayAt <= 0) return null;
+    return { family: 'novenas', episodeId: 'novena-' + rest.slice(0, dayAt) };
+  }
+  var base = stem.slice(-(d.length + 1)) === '-' + d ? stem.slice(0, -(d.length + 1)) : null;
+  if (!base || !OWN_STEM_TO_ID[base]) return null;
+  return { family: OWN_STEM_TO_ID[base], episodeId: OWN_STEM_TO_ID[base] };
+}
+function ownFeedTitle(title) {
+  // §2.1 ruling 1: the feed title minus its ' - <Month D, YYYY>'
+  // podcast display suffix.
+  var t = String(title || '');
+  var at = t.lastIndexOf(' - ');
+  if (at > 0) {
+    var tail = t.slice(at + 3);
+    if (/^(January|February|March|April|May|June|July|August|September|October|November|December) [0-9]{1,2}, [0-9]{4}$/.test(tail)) return t.slice(0, at);
+  }
+  return t;
+}
+function ownSlotTrack(row, meta, date) {
+  var present = !!meta && meta.state === 'present';
+  return {
+    episodeId: meta ? meta.episodeId : row.episodeId, title: meta ? meta.title : row.title, kind: 'episode',
+    available: present, streamUrl: present ? (meta.streamUrl || meta.enclosureUrl) : null,
+    enclosureUrl: meta ? meta.enclosureUrl : null,
+    durationS: meta ? (meta.durationS || 0) : 0, sizeBytes: meta ? (meta.sizeBytes || 0) : 0,
+    hasText: present, textUrl: present ? '/api/player/text/' + date + '/' + (meta ? meta.episodeId : row.episodeId) : null,
+    _block: row.block
+  };
+}
+function ownPlaceholderCard(row) {
+  return '<div class="card" data-card="' + esc(row.episodeId) + '"><h3>' + esc(row.title) + '</h3><div class="meta">Loading&hellip;</div></div>';
+}
+function ownInsertCards(day) {
+  var heads = view.querySelectorAll('.blockhead');
+  (day.blocks || []).forEach(function (b, bi) {
+    var mine = (state.ownStanding || []).filter(function (r) { return r.block === b.block; })
+      .sort(function (a, c) { return (a.sortOrder || 0) - (c.sortOrder || 0); });
+    if (!mine.length || !heads[bi]) return;
+    var ref = heads[bi].nextSibling;
+    mine.forEach(function (row) {
+      var st = state.ownSlots[row.sourceKey];
+      var tmp = document.createElement('div');
+      tmp.innerHTML = st && st.state === 'present' ? st.tracks.map(function (m) { return trackCard(ownSlotTrack(row, m, day.presentedDay || day.date)); }).join('') : ownPlaceholderCard(row);
+      // Insert the row's cards as a run, in order, before ref.
+      var nodes = [];
+      while (tmp.firstChild) nodes.push(tmp.removeChild(tmp.firstChild));
+      nodes.forEach(function (el) {
+        view.insertBefore(el, ref);
+        el.querySelectorAll('[data-playkey]').forEach(function (b2) {
+          b2.addEventListener('click', function () {
+            var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
+            if (d) playTrack(d);
+          });
+        });
+        el.querySelectorAll('[data-read]').forEach(function (b2) {
+          b2.addEventListener('click', function () {
+            var t = state.readTracks[b2.getAttribute('data-read')];
+            if (t) openRead(t);
+          });
+        });
+      });
+    });
+  });
+}
+function ownSwapRow(row, day) {
+  var key = row.episodeId;
+  var olds = view.querySelectorAll('[data-card="' + key + '"]');
+  if (!olds.length) return;
+  var st = state.ownSlots[row.sourceKey];
+  var html;
+  if (!st) return;
+  if (st.state === 'present') html = st.tracks.map(function (m) { return trackCard(ownSlotTrack(row, m, day.presentedDay || day.date)); }).join('');
+  else if (st.state === 'missing') html = trackCard(ownSlotTrack(row, { episodeId: row.episodeId, title: row.title, state: 'missing' }, day.presentedDay || day.date));
+  else html = ownPlaceholderCard(row);
+  var tmp = document.createElement('div');
+  tmp.innerHTML = html;
+  var nodes = [];
+  while (tmp.firstChild) nodes.push(tmp.removeChild(tmp.firstChild));
+  var first = olds[0];
+  nodes.forEach(function (el) {
+    first.parentNode.insertBefore(el, first);
+    el.querySelectorAll('[data-playkey]').forEach(function (b2) {
+      b2.addEventListener('click', function () {
+        var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
+        if (d) playTrack(d);
+      });
+    });
+    el.querySelectorAll('[data-read]').forEach(function (b2) {
+      b2.addEventListener('click', function () {
+        var t = state.readTracks[b2.getAttribute('data-read')];
+        if (t) openRead(t);
+      });
+    });
+  });
+  olds.forEach(function (o) { o.remove(); });
+  (st.tracks || []).forEach(function (m) {
+    if (state.current && state.current.episodeId === m.episodeId) markPlaying(m.episodeId);
+  });
+}
+function ownRegisterReadTracks() {
+  (state.ownStanding || []).forEach(function (row) {
+    var st = state.ownSlots[row.sourceKey];
+    if (!st || st.state !== 'present') return;
+    st.tracks.forEach(function (m) { state.readTracks[m.episodeId] = ownSlotTrack(row, m, state.storedDay); });
+  });
+}
+function updateBlockCounts(day) {
+  var counts = {};
+  (state.ownStanding || []).forEach(function (row) {
+    var st = state.ownSlots[row.sourceKey];
+    var n = (row.episodeId === 'novenas' && st && st.tracks && st.tracks.length) ? st.tracks.length : 1;
+    counts[row.block] = (counts[row.block] || 0) + n;
+  });
+  (state.extStanding || []).forEach(function (s) { counts[s.block] = (counts[s.block] || 0) + 1; });
+  view.querySelectorAll('[data-bcount]').forEach(function (el) {
+    var b = el.getAttribute('data-bcount');
+    var blk = (day.blocks || []).filter(function (x) { return x.block === b; })[0];
+    el.textContent = (blk && blk.caption ? blk.caption : '') + ' · ' + (counts[b] || 0) + ' tracks';
+  });
+}
+function paintResume(day) {
+  if (state.resumePainted) return;
+  state.resumePainted = true;
+  var resumeRec = readResume();
+  if (resumeRec && resumeRec.date !== state.storedDay) {
+    try { localStorage.removeItem('opn-resume-v312'); } catch (e) {}
+    resumeRec = null;
+  }
+  if (!resumeRec) return;
+  var resumeDesc = (state.dayDescs || []).filter(function (d) { return d.episodeId === resumeRec.episodeId && d.available; })[0];
+  if (!resumeDesc) { state.resumePainted = false; return; }
+  var pa = document.getElementById('play-all');
+  if (!pa || !pa.parentNode || !pa.parentNode.parentNode) return;
+  var tmp = document.createElement('div');
+  tmp.innerHTML = '<div class="card"><div class="row"><div class="grow"><h3>Resume</h3><div class="meta">' + esc(resumeDesc.title) + ' · at ' + fmtDur(resumeRec.positionS) + '</div></div><button class="btn ghost small" id="resume-btn">Resume</button></div></div>';
+  var card = tmp.firstChild;
+  pa.parentNode.parentNode.insertBefore(card, pa.parentNode.nextSibling);
+  document.getElementById('resume-btn').addEventListener('click', function () { loadResume(resumeDesc, resumeRec.positionS || 0); });
+  var host = view.querySelector('[data-card="' + resumeDesc.episodeId + '"]');
+  if (host) {
+    var btn = document.createElement('button');
+    btn.className = 'btn ghost small'; btn.textContent = 'Resume at ' + fmtDur(resumeRec.positionS);
+    btn.addEventListener('click', function () { loadResume(resumeDesc, resumeRec.positionS || 0); });
+    host.appendChild(btn);
+  }
+}
+// Downloads for own + intention audio (§2.3): the enclosure host
+// refuses browser reads, so the bytes come through the Worker
+// pass-through and land in the standing device audio cache; the
+// download key is the canonical episode id ('intro:<id>' for
+// intros) — one cache entry serves every placement of the track.
+function ownFetchAudio(cacheKey, enclosureUrl, done) {
+  state.ownAudioDl = state.ownAudioDl || {};
+  if (state.ownAudioDl[cacheKey]) { state.ownAudioDl[cacheKey].push(done); return; }
+  state.ownAudioDl[cacheKey] = [done];
+  var finish = function (objUrl) {
+    var cbs = state.ownAudioDl[cacheKey] || [];
+    cbs.forEach(function (cb) { try { cb(objUrl); } catch (e) {} });
+  };
+  var download = function () {
+    fetch('/api/player/feed-audio?url=' + encodeURIComponent(enclosureUrl)).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.blob();
+    }).then(function (blob) {
+      var put = ('caches' in window)
+        ? caches.open('opn-ext-audio-v1').then(function (c) { return c.put(cacheKey, new Response(blob, { headers: { 'Content-Type': 'audio/mpeg' } })); }).catch(function () {})
+        : Promise.resolve();
+      return put.then(function () { finish(URL.createObjectURL(blob)); });
+    }).catch(function () { finish(null); });
+  };
+  if (!('caches' in window)) { download(); return; }
+  // Cache restore first (the extRestoreCached posture, with its
+  // stall fallback): a stalled read becomes a fresh download.
+  var settled = false;
+  var fallback = setTimeout(function () { if (!settled) { settled = true; download(); } }, 3000);
+  caches.open('opn-ext-audio-v1').then(function (cache) { return cache.match(cacheKey); }).then(function (resp) {
+    if (settled) return;
+    if (!resp) { settled = true; clearTimeout(fallback); download(); return; }
+    resp.blob().then(function (blob) {
+      if (settled) return;
+      settled = true; clearTimeout(fallback);
+      finish(URL.createObjectURL(blob));
+    });
+  }).catch(function () { if (!settled) { settled = true; clearTimeout(fallback); download(); } });
+}
+// The streaming parse (§2.1 ruling 2): the feed is strictly
+// date-descending; read the body incrementally, resolve the
+// presented day's items as their <item> elements close, and STOP
+// once the presented day's block completes — the first item dated
+// BEFORE the presented day, after presented-day items were seen,
+// closes the block. Bytes consumed are exposed for the gate
+// (window.__opnV342).
+function ownResolveFeed(day, needed) {
+  var date = day.presentedDay || day.date;
+  var found = {};       // family -> [meta]
+  var seenPresent = false;
+  var finished = false;
+  state.ownFeedBytes = 0;
+  var finishAll = function () {
+    if (finished) return;
+    finished = true;
+    Object.keys(needed).forEach(function (fam) {
+      var row = needed[fam];
+      var items = found[fam] || [];
+      if (items.length) ownSettlePresent(day, row, fam === 'novenas' ? items : [items[0]]);
+      else ownSettleMissing(day, row);
+    });
+    paintResume(day);
+  };
+  var consumeItem = function (xml) {
+    var items = [];
+    try { items = extParseFeed('<rss version="2.0"><channel>' + xml + '</channel></rss>'); } catch (e) { return false; }
+    var it = items[0];
+    if (!it || !it.url) return false;
+    var pubDate = ownChicagoDateStr(it.pubMs);
+    if (!pubDate) return false;
+    if (pubDate < date) return seenPresent; // stop only after the block was seen
+    if (pubDate !== date) return false;
+    var stem = ownStemOf(it.url);
+    if (ownDateInStem(stem) !== date) return false; // disagreement: never placed (§2.1 ruling 1)
+    seenPresent = true;
+    var fam = ownFamilyOfStem(stem);
+    if (!fam || !needed[fam.family]) return false;
+    var meta = {
+      episodeId: fam.episodeId, title: ownFeedTitle(it.title), state: 'present',
+      enclosureUrl: it.url, streamUrl: null, durationS: it.durationS || 0, sizeBytes: it.length || 0
+    };
+    (found[fam.family] = found[fam.family] || []).push(meta);
+    if (fam.family !== 'novenas') {
+      var row = needed[fam.family];
+      delete needed[fam.family];
+      ownSettlePresent(day, row, [meta]);
+    }
+    return false;
+  };
+  fetch(OWN_FEED_URL).then(function (res) {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    if (!res.body || !res.body.getReader) {
+      return res.text().then(function (t) {
+        state.ownFeedBytes = t.length;
+        var parts = t.split('</item>');
+        for (var i = 0; i < parts.length - 1; i++) {
+          var at = parts[i].lastIndexOf('<item');
+          if (at >= 0 && consumeItem(parts[i].slice(at) + '</item>')) break;
+        }
+        finishAll();
+      });
+    }
+    var reader = res.body.getReader();
+    var dec = new TextDecoder();
+    var buf = '';
+    var pump = function () {
+      return reader.read().then(function (r) {
+        if (r.done) { finishAll(); return; }
+        if (r.value) state.ownFeedBytes += r.value.byteLength;
+        buf += dec.decode(r.value, { stream: true });
+        for (;;) {
+          var end = buf.indexOf('</item>');
+          if (end < 0) break;
+          var start = buf.lastIndexOf('<item', end);
+          if (start < 0) { buf = buf.slice(end + 7); continue; }
+          var chunk = buf.slice(start, end + 7);
+          buf = buf.slice(end + 7);
+          if (consumeItem(chunk)) {
+            try { reader.cancel(); } catch (e) {}
+            finishAll();
+            return;
+          }
+        }
+        return pump();
+      }).catch(function () { finishAll(); });
+    };
+    return pump();
+  }).catch(function () { finishAll(); });
+}
+function ownSettlePresent(day, row, metas) {
+  state.ownSlots[row.sourceKey] = { state: 'present', tracks: metas };
+  ownSwapRow(row, day);
+  ownRegisterReadTracks();
+  extRebuildDescs(day);
+  updateBlockCounts(day);
+  if (state.ownWriteCache) state.ownWriteCache();
+  // Background downloads (§2.3): the track plays by streaming
+  // from its enclosure now; the saved copy swaps in when it lands.
+  var seen = {};
+  metas.forEach(function (m) {
+    if (seen[m.episodeId]) return;
+    seen[m.episodeId] = true;
+    ownFetchAudio(m.episodeId, m.enclosureUrl, function (objUrl) {
+      if (!objUrl) return;
+      (state.ownStanding || []).forEach(function (r2) {
+        var st2 = state.ownSlots[r2.sourceKey];
+        if (!st2 || !st2.tracks) return;
+        var touched = false;
+        st2.tracks.forEach(function (t2) { if (t2.episodeId === m.episodeId) { t2.streamUrl = objUrl; touched = true; } });
+        if (touched) { ownSwapRow(r2, day); }
+      });
+      ownRegisterReadTracks();
+      extRebuildDescs(day);
+    });
+    var intro = day.intros && day.intros[m.episodeId];
+    if (intro && intro.streamUrl) {
+      ownFetchAudio('intro:' + m.episodeId, intro.streamUrl, function (objUrl) {
+        if (!objUrl || !day.intros[m.episodeId]) return;
+        day.intros[m.episodeId].streamUrl = objUrl;
+        (state.ownStanding || []).forEach(function (r2) {
+          var st2 = state.ownSlots[r2.sourceKey];
+          if (st2 && st2.tracks && st2.tracks.some(function (t2) { return t2.episodeId === m.episodeId; })) ownSwapRow(r2, day);
+        });
+        extRebuildDescs(day);
+      });
+    }
+  });
+}
+function ownSettleMissing(day, row) {
+  state.ownSlots[row.sourceKey] = { state: 'missing', tracks: [] };
+  ownSwapRow(row, day);
+  extRebuildDescs(day);
+  updateBlockCounts(day);
+}
+// The intentions feed (§2.2): items selected by GUID for the
+// presented day; the intros map is built in v338's exact shape —
+// text from the shell's introTexts (privacy), streamUrl the feed
+// enclosure. Segment items resolve into state.daySegments (shape
+// only — no presentation is built, §2.2 ruling 6). A feed failure
+// degrades INTENTIONS ONLY: the day renders whole without panels.
+function ownBuildIntentions(day, cachedRec) {
+  var date = day.presentedDay || day.date;
+  var texts = day.introTexts || {};
+  var applyRec = function (rec2) {
+    var intros = {};
+    Object.keys(rec2.intros || {}).forEach(function (id) {
+      var e = rec2.intros[id];
+      var text = texts[id] || (id.indexOf('novena-') === 0 ? texts['novenas'] : undefined);
+      if (!text) return;
+      intros[id] = { title: e.title, text: text, streamUrl: e.streamUrl, sizeBytes: e.sizeBytes || 0 };
+    });
+    day.intros = intros;
+    state.daySegments = rec2.segments || {};
+    state.introRec = rec2;
+  };
+  if (cachedRec) { applyRec(cachedRec); return Promise.resolve(); }
+  return extFetchText(INTRO_FEED_URL).then(function (text) {
+    var doc = new DOMParser().parseFromString(text, 'text/xml');
+    if (doc.querySelector('parsererror')) throw new Error('intentions feed parse failed');
+    var rec2 = { intros: {}, segments: {} };
+    doc.querySelectorAll('item').forEach(function (it) {
+      var guidEl = it.querySelector('guid');
+      var guid = guidEl ? guidEl.textContent.trim() : '';
+      var enc = it.querySelector('enclosure');
+      var url = enc ? (enc.getAttribute('url') || '') : '';
+      var lenRaw = enc ? (enc.getAttribute('length') || '') : '';
+      var len = lenRaw.trim() !== '' && !isNaN(Number(lenRaw)) ? Number(lenRaw) : 0;
+      var titleEl = it.querySelector('title');
+      var title = extWs(titleEl ? titleEl.textContent : '');
+      if (!url || guid.slice(-(date.length + 1)) !== '-' + date) return;
+      if (guid.indexOf('intentions-intro-') === 0) {
+        var id = guid.slice('intentions-intro-'.length, -(date.length + 1));
+        if (id) rec2.intros[id] = { title: title, streamUrl: url, sizeBytes: len };
+      } else if (guid.indexOf('intentions-segment-') === 0) {
+        var block = guid.slice('intentions-segment-'.length, -(date.length + 1));
+        if (block) rec2.segments[block] = { streamUrl: url, sizeBytes: len };
+      }
+    });
+    applyRec(rec2);
+    if (state.ownWriteCache) state.ownWriteCache();
+  }).catch(function () {
+    day.intros = {};
+    state.daySegments = {};
+    state.introRec = null;
+  });
 }
 function resolveExternals(day) {
   // v337 §2.4: resolution keys on the PRESENTED day (the payload's
@@ -1253,11 +1706,46 @@ function resolveExternals(day) {
       standing.push({ slotId: s.slotId, title: s.title, fallbackToken: s.fallbackToken, block: row.block || 'Morning', sortOrder: row.sortOrder, fbRow: fb[s.slotId] || null, source: s.source || 'Divine Office', feedUrl: s.feedUrl || null, matcher: s.matcher || null, download: s.download || null, courier: s.courier || null });
     });
     state.extStanding = standing;
+    // v342 §2.1 ruling 4: the eight family-'own' settings rows
+    // govern own standing — a family turned off in Settings does
+    // not resolve, and the app places by the row's block and sort,
+    // never the feed's order.
+    var ownStanding = [];
+    (settings.sources || []).forEach(function (s) {
+      if (s.family !== 'own' || !OWN_ROW_EPISODE[s.sourceKey]) return;
+      ownStanding.push({ sourceKey: s.sourceKey, episodeId: OWN_ROW_EPISODE[s.sourceKey], block: s.block || 'Morning', sortOrder: s.sortOrder, title: s.name, enabled: s.enabled });
+    });
+    ownStanding = ownStanding.filter(function (r) { return r.enabled === 1 && r.block; })
+      .sort(function (a, c) { return (a.sortOrder || 0) - (c.sortOrder || 0); });
+    state.ownStanding = ownStanding;
+    state.ownSlots = {};
+    ownStanding.forEach(function (row) { state.ownSlots[row.sourceKey] = { state: 'loading', tracks: [] }; });
     // Day cache: valid only for this date AND this settings version.
     var cache = extCacheRead();
     var cacheValid = !!cache && cache.date === date && cache.settingsVersion === settings.version && cache.slots;
     if (cache && !cacheValid) { extDiscardCaches(); cache = null; }
     var rec = cacheValid ? cache : { date: date, settingsVersion: settings.version, savedAt: new Date().toISOString(), slots: {} };
+    // v342 §2.3: the record gains own + intentions sections. A
+    // pre-v342 record (valid, but no such sections) reads as
+    // sections-empty: those families resolve fresh this open —
+    // no crash, no stale stand.
+    var ownCache = cacheValid && cache.own ? cache.own : {};
+    var intCache = cacheValid && cache.intentions ? cache.intentions : null;
+    ownStanding.forEach(function (row) {
+      var c = ownCache[row.sourceKey];
+      if (!c) return;
+      if (row.episodeId === 'novenas') {
+        if (c.items && c.items.length) {
+          state.ownSlots[row.sourceKey] = { state: 'present', tracks: c.items.map(function (m) { return { episodeId: m.episodeId, title: m.title, state: 'present', enclosureUrl: m.enclosureUrl, streamUrl: null, durationS: m.durationSec || 0, sizeBytes: m.sizeBytes || 0 }; }) };
+        }
+      } else if (c.episodeId) {
+        state.ownSlots[row.sourceKey] = { state: 'present', tracks: [{ episodeId: c.episodeId, title: c.title, state: 'present', enclosureUrl: c.enclosureUrl, streamUrl: null, durationS: c.durationSec || 0, sizeBytes: c.sizeBytes || 0 }] };
+      }
+    });
+    // §2.8 ruling 3: the intros map is built before any descriptor
+    // build consumes it — the intentions resolution starts now and
+    // the settled cards re-render when it lands.
+    var intP = ownBuildIntentions(day, intCache);
     standing.forEach(function (slot) {
       var c = cacheValid ? rec.slots[slot.slotId] : null;
       if (c && c.state === 'present') {
@@ -1267,6 +1755,8 @@ function resolveExternals(day) {
       }
     });
     extInsertCards(day, standing);
+    ownInsertCards(day);
+    updateBlockCounts(day);
     extRebuildDescs(day);
     var writeCache = function () {
       standing.forEach(function (slot) {
@@ -1275,9 +1765,27 @@ function resolveExternals(day) {
           rec.slots[slot.slotId] = { state: 'present', title: st.title, streamUrl: st.enclosureUrl || st.streamUrl, durationSec: st.durationSec, sizeBytes: st.sizeBytes, source: st.source, block: slot.block, sortOrder: slot.sortOrder };
         }
       });
+      // v342 §2.3: only PRESENT own items are cached; a missing
+      // family re-checks next open (it may simply not be published
+      // yet). The intentions section carries the enclosure URLs as
+      // built (never a device blob URL, never the drawn texts).
+      var ownRec = {};
+      ownStanding.forEach(function (row) {
+        var st = state.ownSlots[row.sourceKey];
+        if (!st || st.state !== 'present' || !st.tracks.length) return;
+        if (row.episodeId === 'novenas') {
+          ownRec[row.sourceKey] = { items: st.tracks.map(function (m) { return { episodeId: m.episodeId, title: m.title, enclosureUrl: m.enclosureUrl, durationSec: m.durationS, sizeBytes: m.sizeBytes }; }) };
+        } else {
+          var m0 = st.tracks[0];
+          ownRec[row.sourceKey] = { episodeId: m0.episodeId, title: m0.title, enclosureUrl: m0.enclosureUrl, durationSec: m0.durationS, sizeBytes: m0.sizeBytes };
+        }
+      });
+      rec.own = ownRec;
+      if (state.introRec) rec.intentions = state.introRec;
       rec.savedAt = new Date().toISOString();
       extCacheWrite(rec);
     };
+    state.ownWriteCache = writeCache;
     var settle = function (slot, st) {
       state.extSlots[slot.slotId] = st;
       extSwapCard(slot);
@@ -1360,6 +1868,41 @@ function resolveExternals(day) {
     // never started — legs 3-4 of harness-v334.)
     standing.forEach(function (slot) {
       if (state.extSlots[slot.slotId].state === 'downloading') extRestoreCached(slot);
+    });
+    // v342 own kick: cache-seeded rows settle present at once
+    // (their downloads restore cache-first inside ownFetchAudio);
+    // the rest resolve from the podcast feed in this same pass.
+    var ownNeeded = {};
+    ownStanding.forEach(function (row) {
+      var st = state.ownSlots[row.sourceKey];
+      if (st.state === 'present') ownSettlePresent(day, row, st.tracks);
+      else ownNeeded[row.episodeId] = row;
+    });
+    if (Object.keys(ownNeeded).length) ownResolveFeed(day, ownNeeded);
+    else paintResume(day);
+    // Own watchdog: a row still unresolved after 9 s stands named
+    // missing for this open (the resolve watchdog's posture).
+    setTimeout(function () {
+      ownStanding.forEach(function (row) {
+        var st = state.ownSlots[row.sourceKey];
+        if (st && st.state === 'loading') ownSettleMissing(day, row);
+      });
+      paintResume(day);
+    }, 9000);
+    // §2.8 ruling 3 completion: when the intros map lands, the
+    // already-settled cards re-render with their panels and the
+    // descriptor list rebuilds over the full map.
+    intP.then(function () {
+      standing.forEach(function (slot) {
+        var st = state.extSlots[slot.slotId];
+        if (st && st.state === 'present') extSwapCard(slot);
+      });
+      ownStanding.forEach(function (row) {
+        var st = state.ownSlots[row.sourceKey];
+        if (st && st.state === 'present') ownSwapRow(row, day);
+      });
+      extRebuildDescs(day);
+      paintResume(day);
     });
     var missingSt = function (slot, source) {
       return { state: 'missing', title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle(null, extMatchBibleDayN(date)) : slot.title, source: source || slot.source || 'Divine Office' };
@@ -1490,11 +2033,20 @@ function extMatchBibleDayN(dateStr) {
 function renderPrayers() {
   view.innerHTML = '<h1 class="screen">Listen</h1><p class="sub">the day&rsquo;s prayers</p><p class="meta">Loading...</p>';
   api('/api/player/day').then(function (day) {
-    state.storedDay = day.storedDay || day.date || null;
+    // v342 §2.5: the shell carries no storedDay — the resume key
+    // is the PRESENTED day (the same day key v337 set).
+    state.storedDay = day.presentedDay || day.date || null;
     state.dateLabel = day.dateLabel || '';
     // v338 §2.7(5): trackCard consults the day payload's intros map
     // from state, uniformly for both families.
     state.dayPayload = day;
+    // v342: the intros map is client-built by the resolution pass
+    // (ownBuildIntentions) before descriptors consume it; it
+    // starts empty so the shell's own tracks render panel-free
+    // until it lands.
+    day.intros = {};
+    state.daySegments = {};
+    state.resumePainted = false;
     // The whole-day queue, built once from payload order: block order,
     // then push order inside the block, then the unblocked group.
     // v338 §2.3(2): through the expandDescs seam, like every build.
@@ -1509,19 +2061,13 @@ function renderPrayers() {
     state.readTracks = {};
     (day.blocks || []).forEach(function (b) { (b.tracks || []).forEach(function (t) { if (t.episodeId) state.readTracks[t.episodeId] = t; }); });
     (day.episodes || []).forEach(function (t) { if (t.episodeId) state.readTracks[t.episodeId] = t; });
-    var resumeRec = readResume();
-    if (resumeRec && resumeRec.date !== state.storedDay) {
-      try { localStorage.removeItem('opn-resume-v312'); } catch (e) {}
-      resumeRec = null;
-    }
-    var resumeDesc = resumeRec ? allDescs.filter(function (d) { return d.episodeId === resumeRec.episodeId && d.available; })[0] : null;
+    // v342: the Resume card paints from paintResume() once the
+    // resolution pass has descriptors to point at — the shell's
+    // own list is empty at first render by design.
     var html = '<h1 class="screen">Listen</h1><p class="sub">' + esc(day.dateLabel || 'the day&rsquo;s prayers') + '</p>';
     html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span><button class="btn ghost" id="sleep-btn">' + esc(sleepLabel()) + '</button></div>';
-    if (resumeDesc) {
-      html += '<div class="card"><div class="row"><div class="grow"><h3>Resume</h3><div class="meta">' + esc(resumeDesc.title) + ' · at ' + fmtDur(resumeRec.positionS) + '</div></div><button class="btn ghost small" id="resume-btn">Resume</button></div></div>';
-    }
     (day.blocks || []).forEach(function (b) {
-      html += '<div class="blockhead"><h2>' + esc((b.label || b.block).toUpperCase()) + '</h2><span class="meta grow">' + esc(b.caption || '') + ' · ' + (b.trackCount != null ? b.trackCount : (b.tracks || []).length) + ' tracks</span>'
+      html += '<div class="blockhead"><h2>' + esc((b.label || b.block).toUpperCase()) + '</h2><span class="meta grow" data-bcount="' + esc(b.block) + '">' + esc(b.caption || '') + ' · ' + (b.trackCount != null ? b.trackCount : (b.tracks || []).length) + ' tracks</span>'
         + (b.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(b.spotifyUrl) + '">Open in Spotify</a>' : '')
         + '<button class="playbtn" data-queue="' + esc(b.block) + '">&#9654;</button></div>';
       html += (b.tracks || []).map(function (t) { return trackCard(Object.assign({}, t, { _block: b.block })); }).join('');
@@ -1533,19 +2079,6 @@ function renderPrayers() {
     view.innerHTML = html;
     document.getElementById('play-all').addEventListener('click', function () { startQueue(extRebuildDescs(day)); });
     document.getElementById('sleep-btn').addEventListener('click', openSleepSheet);
-    var rb = document.getElementById('resume-btn');
-    if (rb && resumeDesc) rb.addEventListener('click', function () { loadResume(resumeDesc, resumeRec.positionS || 0); });
-    if (resumeDesc) {
-      var card = view.querySelector('[data-card="' + resumeDesc.episodeId + '"] .grow');
-      // The matching card itself carries the Resume affordance (E5).
-      var host = view.querySelector('[data-card="' + resumeDesc.episodeId + '"]');
-      if (host) {
-        var btn = document.createElement('button');
-        btn.className = 'btn ghost small'; btn.textContent = 'Resume at ' + fmtDur(resumeRec.positionS);
-        btn.addEventListener('click', function () { loadResume(resumeDesc, resumeRec.positionS || 0); });
-        host.appendChild(btn);
-      }
-    }
     view.querySelectorAll('[data-playkey]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var d = allDescs.filter(function (x) { return x.episodeId === btn.getAttribute('data-playkey'); })[0];

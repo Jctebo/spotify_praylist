@@ -535,8 +535,8 @@ def _cf_open(req, raw=False):
             return {"success": False, "status": e.code, "raw": body[:500]}
 
 
-def _cf_r2_put(key: str, data: bytes, ctype: str) -> dict:
-    url = f"{CF_BASE}/accounts/{CF_ACCOUNT}/r2/buckets/{CF_BUCKET}/objects/{urllib.parse.quote(key, safe='')}"
+def _cf_r2_put(key: str, data: bytes, ctype: str, bucket: str = None) -> dict:
+    url = f"{CF_BASE}/accounts/{CF_ACCOUNT}/r2/buckets/{bucket or CF_BUCKET}/objects/{urllib.parse.quote(key, safe='')}"
     req = urllib.request.Request(url, data=data, headers={"content-type": ctype}, method="PUT")
     return _cf_open(req)
 
@@ -974,6 +974,46 @@ def _publish_transcripts(rundir: Path, plan: dict, only_episode_ids: set[str] | 
     }
 
 
+APP_TEXT_BUCKET = "ora-pro-nobis-audio"
+
+
+def _publish_app_texts(plan: dict, date_iso: str, tinfo: dict) -> dict:
+    """v342 §2.4 ruling 1: the app-side transcript staging. The push
+    helper's text leg retires with the push; in its place the publish
+    tail stages each produced episode's script into the APP bucket
+    (ora-pro-nobis-audio — a DIFFERENT bucket from this module's
+    CF_BUCKET; the credential's reach into it was verified by a
+    PUT/GET/DELETE probe at v342 Implement) under
+    texts/<TARGET>/<episode_id>.txt, where <episode_id> is the
+    CANONICAL id (the plan episode's key — the id the client's
+    textUrl is built from). The staged bytes are _publish_transcripts'
+    already-computed bytes (one staging computation: the T1 plan,
+    keyed there by the full stem episode_id), so the app's copy is
+    byte-identical to the podcast transcript file's content rule.
+    Withheld episodes (the T1 guard) stage nothing — the app's route
+    answers its named 404 and the withholding is named here. An
+    upload failure aborts the publish before the graft, exactly as
+    a transcript upload failure does."""
+    staged: dict[str, bytes] = tinfo["staged"]
+    uploaded, withheld = [], []
+    for ep in plan["episodes"]:
+        canonical = ep.get("key") or ep["episode_id"]
+        data = staged.get(ep["episode_id"])
+        if data is None:
+            withheld.append(canonical)
+            continue
+        key = f"texts/{date_iso}/{canonical}.txt"
+        res = _cf_r2_put(key, data, TRANSCRIPT_CONTENT_TYPE, bucket=APP_TEXT_BUCKET)
+        if not res.get("success"):
+            raise SystemExit(f"R2 app-text upload failed for {key}: {json.dumps(res)[:300]}")
+        uploaded.append(canonical)
+    if withheld:
+        print(f"App texts (v342): {len(uploaded)} staged for {date_iso}; withheld (named): {', '.join(withheld)}")
+    else:
+        print(f"App texts (v342): {len(uploaded)} staged for {date_iso}; withheld: none")
+    return {"uploaded": uploaded, "withheld": withheld}
+
+
 def _transcript_urls(info: dict) -> dict[str, str]:
     """The public transcript URL per uploaded episode — the value the new
     items' <podcast:transcript> tags point at."""
@@ -1184,6 +1224,12 @@ def publish_drop(rundir: Path, report: dict) -> dict:
     # never points at a file that is not yet there. An upload failure
     # aborts the publish here, before any feed write.
     tinfo = _publish_transcripts(rundir, plan)
+
+    # (2c) v342 §2.4: the same staged bytes land in the APP bucket
+    # under texts/<TARGET>/<canonical id>.txt — the app's existence
+    # gate serves them with the stored-day model retired. Same
+    # abort discipline: a failure here precedes any feed write.
+    _publish_app_texts(plan, date_iso, tinfo)
 
     # (3) Feed graft: build ONLY the new items with repo RSS code, insert them
     # at the top of the CURRENT live feed; live items stay byte-identical.

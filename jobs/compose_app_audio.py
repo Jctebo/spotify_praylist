@@ -290,10 +290,336 @@ def presented_tracks(date: str):
     return own, slots, titles
 
 
+# =====================================================================
+# v342 §2.2/§2.6: THE PUBLISH LEG. The intentions feed is a ROLLING
+# 7-DAY publication: intentions.xml (RSS 2.0) committed as
+# docs/intentions.xml in the SAME publish repo as docs/podcast.xml
+# (Jctebo/spotify_praylist), served at
+# https://orapronobis.media/intentions.xml; the audio rides the
+# same host under intentions/<date>/ in the PUBLIC audio bucket.
+# PRIVACY (John, 2026-11-09 11:24 CT): the feed carries AUDIO ONLY
+# — item descriptions hold no intention text; the drawn texts
+# travel inside the app's signed-in day data (the shell's
+# introTexts map). One publish step: audio PUTs first, then ONE
+# Git Data API commit of docs/intentions.xml + the Pages deploy
+# dispatch, then the out-of-window audio prune — any failure
+# before the commit aborts the step NAMED (a feed never points at
+# missing audio; audio without a feed is inert).
+# Modes: --publish = ADDITIVE (push as today AND publish; the
+# Step 0 precondition shape) · --publish-only = publish, no door
+# pushes (the post-Ship shape). Harness seams (never set in
+# production): OPN_PUB_CF_BASE / OPN_PUB_GH_BASE / OPN_PUB_SITE_BASE
+# / OPN_PUB_AUDIO_BASE retarget the transports at a local stub and
+# skip the credential surrogate for that transport;
+# OPN_PUB_POLL_S sets the deploy poll spacing.
+# =====================================================================
+import base64
+import urllib.error
+import urllib.parse
+import urllib.request
+from xml.sax.saxutils import escape as _xml_escape
+
+PUB_GH_REPO = "Jctebo/spotify_praylist"
+PUB_CF_ACCOUNT = "19135db329e6018b318b33b72aa6e3f3"
+PUB_CF_BUCKET = "orapronobis-audio"
+PUB_CF_BASE = os.environ.get("OPN_PUB_CF_BASE", "https://api.cloudflare.com/client/v4")
+PUB_GH_BASE = os.environ.get("OPN_PUB_GH_BASE", "https://api.github.com")
+PUB_SITE_BASE = os.environ.get("OPN_PUB_SITE_BASE", "https://orapronobis.media")
+PUB_AUDIO_BASE = os.environ.get("OPN_PUB_AUDIO_BASE", "https://audio.orapronobis.media")
+PUB_POLL_S = int(os.environ.get("OPN_PUB_POLL_S", "15"))
+
+
+class _PubNoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, *a):
+        raise RuntimeError("redirect refused")
+
+
+def _pub_cf_open(req, raw=False):
+    if not os.environ.get("OPN_PUB_CF_BASE"):
+        sys.path.insert(0, "/opt/muse/skills/custom-connector-setup/bin")
+        from dynamic_credentials import add_surrogate_to_request
+        add_surrogate_to_request(req, "custom.cloudflare", allowed_hosts=["api.cloudflare.com"])
+    opener = urllib.request.build_opener(_PubNoRedirect())
+    try:
+        with opener.open(req, timeout=180) as resp:
+            body = resp.read()
+            if raw:
+                return body
+            return json.loads(body.decode("utf-8", "replace"))
+    except urllib.error.HTTPError as e:
+        body = e.read()
+        if raw:
+            raise RuntimeError(f"Cloudflare API HTTP {e.code}: {body[:300]!r}") from e
+        try:
+            return json.loads(body.decode("utf-8", "replace"))
+        except Exception:
+            return {"success": False, "status": e.code, "raw": body[:500]}
+
+
+def _pub_r2_put(key: str, data: bytes, ctype: str) -> dict:
+    url = f"{PUB_CF_BASE}/accounts/{PUB_CF_ACCOUNT}/r2/buckets/{PUB_CF_BUCKET}/objects/{urllib.parse.quote(key, safe='')}"
+    req = urllib.request.Request(url, data=data, headers={"content-type": ctype}, method="PUT")
+    return _pub_cf_open(req)
+
+
+def _pub_r2_delete(key: str) -> dict:
+    url = f"{PUB_CF_BASE}/accounts/{PUB_CF_ACCOUNT}/r2/buckets/{PUB_CF_BUCKET}/objects/{urllib.parse.quote(key, safe='')}"
+    req = urllib.request.Request(url, method="DELETE")
+    return _pub_cf_open(req)
+
+
+def _pub_r2_list(prefix: str) -> list:
+    out, cursor = [], None
+    while True:
+        url = (f"{PUB_CF_BASE}/accounts/{PUB_CF_ACCOUNT}/r2/buckets/{PUB_CF_BUCKET}/objects"
+               f"?per_page=1000&prefix={urllib.parse.quote(prefix, safe='')}")
+        if cursor:
+            url += f"&cursor={urllib.parse.quote(cursor, safe='')}"
+        r = _pub_cf_open(urllib.request.Request(url, method="GET"))
+        result = r.get("result") or {}
+        for o in result.get("objects", []):
+            out.append(o["key"])
+        cursor = (result.get("result_info") or {}).get("cursor")
+        if not cursor:
+            return out
+
+
+def _pub_gh_request(method: str, path: str, payload=None):
+    url = f"{PUB_GH_BASE}{path}"
+    data = json.dumps(payload).encode() if payload is not None else None
+    req = urllib.request.Request(
+        url, data=data, method=method,
+        headers={"accept": "application/vnd.github+json", "content-type": "application/json"},
+    )
+    if not os.environ.get("OPN_PUB_GH_BASE"):
+        sys.path.insert(0, "/opt/muse/skills/custom-connector-setup/bin")
+        from dynamic_credentials import add_surrogate_to_request, read_json_response
+        add_surrogate_to_request(req, "custom.github", allowed_hosts=["api.github.com"])
+    opener = urllib.request.build_opener(_PubNoRedirect())
+    try:
+        with opener.open(req, timeout=120) as resp:
+            if resp.status == 204:
+                return {"status": 204}
+            return json.loads(resp.read().decode("utf-8", "replace"))
+    except urllib.error.HTTPError as e:
+        body = e.read().decode("utf-8", "replace")
+        raise RuntimeError(f"GitHub API {method} {path} -> HTTP {e.code}: {body[:400]}") from e
+
+
+def _pub_duration_s(mp3_path: Path):
+    """The rendered file's duration in whole seconds (ffprobe),
+    or None when unmeasurable — the element is then omitted from
+    the item rather than guessed (§2.2)."""
+    try:
+        r = subprocess.run(
+            ["ffprobe", "-v", "error", "-show_entries", "format=duration",
+             "-of", "default=noprint_wrappers=1:nokey=1", str(mp3_path)],
+            capture_output=True, text=True, timeout=30)
+        v = float((r.stdout or "").strip())
+        return int(round(v)) if v > 0 else None
+    except Exception:
+        return None
+
+
+def _pub_midnight_ct_rfc2822(date_iso: str) -> str:
+    d = datetime.date.fromisoformat(date_iso)
+    dt = datetime.datetime(d.year, d.month, d.day, 0, 0, 0, tzinfo=ZoneInfo("America/Chicago"))
+    return dt.strftime("%a, %d %b %Y %H:%M:%S %z")
+
+
+_PUB_ITEM_RE = re.compile(r"<item>.*?</item>", re.S)
+_PUB_GUID_RE = re.compile(r"<guid[^>]*>([^<]+)</guid>")
+
+
+def _pub_item_date(guid: str):
+    m = re.search(r"-([0-9]{4}-[0-9]{2}-[0-9]{2})$", guid)
+    return m.group(1) if m else None
+
+
+def publish_intentions(date: str, intro_files: list, segment_files: list) -> dict:
+    """One publish step for the consumption date. intro_files:
+    [(episode_id, track_title, Path)] · segment_files: [(block,
+    Path)]. Returns {intros: n, segments: n}. Raises RuntimeError
+    named on any failure before the commit lands."""
+    day = datetime.date.fromisoformat(date)
+    window = {(day - datetime.timedelta(days=k)).isoformat() for k in range(7)}
+
+    # (1) The live file's in-window items stand (except today's,
+    # which this step regenerates whole). 404 = first publication.
+    live_items = []
+    try:
+        req = urllib.request.Request(f"{PUB_SITE_BASE}/intentions.xml", method="GET")
+        with urllib.request.build_opener(_PubNoRedirect()).open(req, timeout=60) as resp:
+            live_xml = resp.read().decode("utf-8", "replace")
+        for m in _PUB_ITEM_RE.finditer(live_xml):
+            gm = _PUB_GUID_RE.search(m.group(0))
+            if not gm:
+                continue
+            idate = _pub_item_date(gm.group(1).strip())
+            if idate in window and idate != date:
+                live_items.append((idate, m.group(0)))
+    except urllib.error.HTTPError as e:
+        if e.code != 404:
+            raise RuntimeError(f"live intentions feed read failed: HTTP {e.code}") from e
+    except Exception as exc:
+        raise RuntimeError(f"live intentions feed read failed: {exc}") from exc
+
+    # (2) Today's items + their audio PUTs (audio first — a feed
+    # never points at missing audio).
+    today_items = []
+    for episode_id, title, f in intro_files:
+        r = _pub_r2_put(f"intentions/{date}/intro-{episode_id}.mp3", f.read_bytes(), "audio/mpeg")
+        if not r.get("success"):
+            raise RuntimeError(f"R2 PUT intro {episode_id}: {r}")
+        dur = _pub_duration_s(f)
+        dur_el = f"<itunes:duration>{dur}</itunes:duration>" if dur else ""
+        today_items.append(
+            f"<item><title>{_xml_escape('Intention — ' + title)}</title>"
+            f"<guid isPermaLink=\"false\">intentions-intro-{episode_id}-{date}</guid>"
+            f"<pubDate>{_pub_midnight_ct_rfc2822(date)}</pubDate>"
+            f"<description>Intention audio for {_xml_escape(title)}.</description>"
+            f"<enclosure url=\"{PUB_AUDIO_BASE}/intentions/{date}/intro-{episode_id}.mp3\" "
+            f"length=\"{f.stat().st_size}\" type=\"audio/mpeg\"/>{dur_el}</item>")
+    for block, f in segment_files:
+        r = _pub_r2_put(f"intentions/{date}/segment-{block}.mp3", f.read_bytes(), "audio/mpeg")
+        if not r.get("success"):
+            raise RuntimeError(f"R2 PUT segment {block}: {r}")
+        dur = _pub_duration_s(f)
+        dur_el = f"<itunes:duration>{dur}</itunes:duration>" if dur else ""
+        today_items.append(
+            f"<item><title>{_xml_escape('Intentions — ' + block)}</title>"
+            f"<guid isPermaLink=\"false\">intentions-segment-{block}-{date}</guid>"
+            f"<pubDate>{_pub_midnight_ct_rfc2822(date)}</pubDate>"
+            f"<description>Intentions segment audio for the {_xml_escape(block)} block.</description>"
+            f"<enclosure url=\"{PUB_AUDIO_BASE}/intentions/{date}/segment-{block}.mp3\" "
+            f"length=\"{f.stat().st_size}\" type=\"audio/mpeg\"/>{dur_el}</item>")
+
+    # (3) The regenerated file: newest day first, feed order kept
+    # within a day; committed in ONE Git Data API commit.
+    all_items = [(date, x) for x in today_items] + live_items
+    all_items.sort(key=lambda t: t[0], reverse=True)
+    items_xml = "".join(x for _, x in all_items)
+    feed_xml = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">\n'
+        "<channel>\n<title>Ora Pro Nobis — Intentions</title>\n"
+        f"<link>{PUB_SITE_BASE}/</link>\n"
+        "<description>Daily intention audio for the Ora Pro Nobis prayer app. "
+        "Intention texts are not published; this feed carries audio only.</description>\n"
+        "<language>en-us</language>\n"
+        f"{items_xml}\n</channel>\n</rss>\n")
+    ref = _pub_gh_request("GET", f"/repos/{PUB_GH_REPO}/git/ref/heads/main")
+    head_sha = ref["object"]["sha"]
+    head_commit = _pub_gh_request("GET", f"/repos/{PUB_GH_REPO}/git/commits/{head_sha}")
+    blob = _pub_gh_request(
+        "POST", f"/repos/{PUB_GH_REPO}/git/blobs",
+        {"content": base64.b64encode(feed_xml.encode("utf-8")).decode(), "encoding": "base64"})
+    tree = _pub_gh_request(
+        "POST", f"/repos/{PUB_GH_REPO}/git/trees",
+        {"base_tree": head_commit["tree"]["sha"],
+         "tree": [{"path": "docs/intentions.xml", "mode": "100644", "type": "blob", "sha": blob["sha"]}]})
+    commit = _pub_gh_request(
+        "POST", f"/repos/{PUB_GH_REPO}/git/commits",
+        {"message": f"Publish Ora Pro Nobis intentions {date} (Muse-run runner)",
+         "tree": tree["sha"], "parents": [head_sha]})
+    _pub_gh_request("PATCH", f"/repos/{PUB_GH_REPO}/git/refs/heads/main",
+                    {"sha": commit["sha"], "force": False})
+    # The Pages deploy dispatch (pass2's pattern; a failed deploy
+    # is named — the commit stands and the next publish re-points).
+    _pub_gh_request("POST", f"/repos/{PUB_GH_REPO}/actions/workflows/deploy_pages.yml/dispatches", {"ref": "main"})
+    deadline = time.time() + 900
+    deployed = False
+    while time.time() < deadline:
+        time.sleep(PUB_POLL_S)
+        runs = _pub_gh_request("GET", f"/repos/{PUB_GH_REPO}/actions/workflows/deploy_pages.yml/runs?per_page=5")
+        cands = [r for r in runs.get("workflow_runs", []) if r.get("head_sha") == commit["sha"]]
+        if not cands:
+            continue
+        run = cands[0]
+        if run.get("status") == "completed":
+            if run.get("conclusion") != "success":
+                raise RuntimeError(f"intentions deploy finished with conclusion={run.get('conclusion')}")
+            deployed = True
+            break
+    if not deployed:
+        raise RuntimeError("intentions deploy did not complete within 15 minutes")
+
+    # (4) Prune: out-of-window intentions/<date>/ audio, same step.
+    for key in _pub_r2_list("intentions/"):
+        parts = key.split("/")
+        if len(parts) >= 2 and re.fullmatch(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", parts[1]) and parts[1] not in window:
+            _pub_r2_delete(key)
+    return {"intros": len(intro_files), "segments": len(segment_files)}
+
+
+def feed_presented_tracks(date: str):
+    """The post-push-model presented set (§2.6 era): when the
+    player/day payload carries no own tracks (the v342 shell), the
+    presented own episodes resolve from the live podcast feed —
+    the same date discipline the client applies (pubDate's Chicago
+    date AND the stem's date both equal the presented date) — and
+    titles are the feed titles minus the date suffix. Returns
+    own_ids, titles (slots still come from the settings payload)."""
+    import email.utils
+    import xml.etree.ElementTree as ET
+    own, titles = [], {}
+    try:
+        req = urllib.request.Request(f"{PUB_SITE_BASE}/podcast.xml", method="GET")
+        with urllib.request.build_opener(_PubNoRedirect()).open(req, timeout=60) as resp:
+            root = ET.fromstring(resp.read())
+    except Exception as exc:
+        print(f"compose_app_audio: podcast feed read for presented set failed (named): {exc}")
+        return own, titles
+    ns = {"itunes": "http://www.itunes.com/dtds/podcast-1.0.dtd"}
+    for item in root.iter("item"):
+        enc = item.find("enclosure")
+        url = (enc.get("url") if enc is not None else "") or ""
+        if not url:
+            continue
+        stem = url.split("?")[0].rstrip("/").split("/")[-1]
+        stem = stem[:-4] if stem.endswith(".mp3") else stem
+        m = re.search(r"[0-9]{4}-[0-9]{2}-[0-9]{2}", stem)
+        if not m or m.group(0) != date:
+            continue
+        pub = item.findtext("pubDate") or ""
+        try:
+            pub_dt = email.utils.parsedate_to_datetime(pub)
+            pub_date = pub_dt.astimezone(ZoneInfo("America/Chicago")).date().isoformat()
+        except Exception:
+            continue
+        if pub_date != date:
+            continue
+        # Canonical id from the stem (the client's rule).
+        canon = None
+        if stem.index(date) == 0:
+            rest = stem[len(date) + 1:]
+            at = rest.rfind("-day-")
+            if at > 0:
+                canon = "novena-" + rest[:at]
+        else:
+            base = stem[: -(len(date) + 1)] if stem.endswith("-" + date) else None
+            canon = {"morning-prayer-elevenlabs": "morning-prayer",
+                     "daily-rosary": "daily-rosary",
+                     "marian-antiphon-angelus": "marian-antiphon-angelus",
+                     "auxilium-christianorum": "auxilium-christianorum",
+                     "daily-reflection": "daily-reflection"}.get(base or "")
+        if not canon:
+            continue
+        title = (item.findtext("title") or canon).strip()
+        tm = re.match(r"^(.*) - (?:January|February|March|April|May|June|July|August|September|October|November|December) [0-9]{1,2}, [0-9]{4}$", title)
+        if tm:
+            title = tm.group(1)
+        own.append(canon)
+        titles[canon] = title
+    return own, titles
+
+
 def main() -> int:
     args = sys.argv[1:]
     date = None
     intros_only = False
+    publish = False
+    publish_only = False
     i = 0
     while i < len(args):
         if args[i] == "--date":
@@ -305,8 +631,16 @@ def main() -> int:
             # as-built dual-compose — the standing sheet keeps
             # working until the Ship-time sheet switch lands.
             intros_only = True; i += 1
+        elif args[i] == "--publish":
+            # v342 §2.10 Step 0: ADDITIVE mode — push as today AND
+            # publish the intentions feed in the same run.
+            publish = True; i += 1
+        elif args[i] == "--publish-only":
+            # v342 §2.6: publish, no door pushes (the post-Ship
+            # shape; the push retires at Ship, never before).
+            publish = True; publish_only = True; i += 1
         else:
-            raise SystemExit(f"unknown arg {args[i]!r} — usage: compose_app_audio.py [--date YYYY-MM-DD] [--intros-only]")
+            raise SystemExit(f"unknown arg {args[i]!r} — usage: compose_app_audio.py [--date YYYY-MM-DD] [--intros-only] [--publish|--publish-only]")
     if date is None:
         date = datetime.datetime.now(ZoneInfo("America/Chicago")).date().isoformat()
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
@@ -317,6 +651,9 @@ def main() -> int:
 
     missing = []          # named shortfalls for the field
     failed_intros = []    # track titles whose intro render/push failed
+    pub_intro_files = []  # (episode_id, track title, file) rendered this run
+    pub_segment_files = []  # (block, file) rendered this run
+    seg_attempted = 0     # segment renders attempted (publish denominator)
 
     # ---- (1) the draw ------------------------------------------------
     draw = read_draw(date)
@@ -338,8 +675,13 @@ def main() -> int:
         else:
             for block in BLOCKS:
                 f = tmp / f"segment-{block}.mp3"
+                seg_attempted += 1
                 try:
                     render(composition[block], f)
+                    pub_segment_files.append((block, f))
+                    if publish_only:
+                        segments_ok += 1
+                        continue
                     status, res = door.push_audio("current", block, str(f))
                     if status != 200 or not res.get("ok"):
                         raise RuntimeError(f"push {status}: {res}")
@@ -349,6 +691,15 @@ def main() -> int:
 
     # ---- (3) intros ---------------------------------------------------
     own_ids, slot_ids, titles = presented_tracks(date)
+    if publish and not own_ids:
+        # The v342 shell payload carries no own tracks; the
+        # presented own set resolves from the podcast feed (the
+        # same date discipline the client applies).
+        f_own, f_titles = feed_presented_tracks(date)
+        if f_own:
+            own_ids = f_own
+            for k, v in f_titles.items():
+                titles.setdefault(k, v)
     presented = list(dict.fromkeys(own_ids + slot_ids))
     eligible, unpaired = [], 0
     for track in presented:
@@ -362,6 +713,10 @@ def main() -> int:
         f = tmp / f"intro-{track}.mp3"
         try:
             render(intro_text(draw[item]), f)
+            pub_intro_files.append((track, titles.get(track, track), f))
+            if publish_only:
+                intros_ok += 1
+                continue
             res = push_intro(track, f)
             if not res.get("ok"):
                 raise RuntimeError(f"push: {res}")
@@ -371,36 +726,66 @@ def main() -> int:
     if failed_intros:
         missing.append("intros failed: " + ", ".join(failed_intros))
     # Stale clear: an intro no longer presented does not survive.
-    try:
-        status, cur = door.call("GET", "/api/agent/prayer/intros")
-        if status == 200:
-            keep = {t for t, _ in eligible}
-            for row in cur.get("intros", []):
-                if row["episodeId"] not in keep:
-                    door.call("DELETE", f"/api/agent/prayer/intro?episode_id={row['episodeId']}")
-    except Exception as exc:
-        print(f"compose_app_audio: stale-intro clear failed (named, non-fatal): {exc}")
+    # (Push-family bookkeeping — skipped whole in publish-only
+    # mode; the feed's rolling window is its own retirement.)
+    if not publish_only:
+        try:
+            status, cur = door.call("GET", "/api/agent/prayer/intros")
+            if status == 200:
+                keep = {t for t, _ in eligible}
+                for row in cur.get("intros", []):
+                    if row["episodeId"] not in keep:
+                        door.call("DELETE", f"/api/agent/prayer/intro?episode_id={row['episodeId']}")
+        except Exception as exc:
+            print(f"compose_app_audio: stale-intro clear failed (named, non-fatal): {exc}")
 
-    # ---- (4) the report field -----------------------------------------
+    # ---- (4) the report fields ----------------------------------------
     print(f"compose_app_audio: presented {date} · paired tracks {len(eligible)} · unpaired {unpaired}")
     missing_txt = ", ".join(missing) if missing else "none"
-    if intros_only:
-        # v338 §2.10(4): the field NAME stands; the shape is
-        # intros-only (no segments clause).
-        if missing:
-            print(f"Segments (v337): MISSING — intros {intros_ok}/{len(eligible)} for presented {date} · "
-                  f"missing: {missing_txt}")
-            return 1
-        print(f"Segments (v337): standing — intros {intros_ok}/{len(eligible)} for presented {date} · "
-              f"missing: none")
-        return 0
-    if missing:
-        print(f"Segments (v337): MISSING — segments {segments_ok}/6 for presented {date} · "
-              f"intros {intros_ok}/{len(eligible)} for presented {date} · missing: {missing_txt}")
-        return 1
-    print(f"Segments (v337): standing — segments {segments_ok}/6 for presented {date} · "
-          f"intros {intros_ok}/{len(eligible)} for presented {date} · missing: none")
-    return 0
+    rc = 0
+    if not publish_only:
+        # The Segments field retires with the push at Ship; in
+        # publish-only mode it does not print at all.
+        if intros_only:
+            # v338 §2.10(4): the field NAME stands; the shape is
+            # intros-only (no segments clause).
+            if missing:
+                print(f"Segments (v337): MISSING — intros {intros_ok}/{len(eligible)} for presented {date} · "
+                      f"missing: {missing_txt}")
+                rc = 1
+            else:
+                print(f"Segments (v337): standing — intros {intros_ok}/{len(eligible)} for presented {date} · "
+                      f"missing: none")
+        elif missing:
+            print(f"Segments (v337): MISSING — segments {segments_ok}/6 for presented {date} · "
+                  f"intros {intros_ok}/{len(eligible)} for presented {date} · missing: {missing_txt}")
+            rc = 1
+        else:
+            print(f"Segments (v337): standing — segments {segments_ok}/6 for presented {date} · "
+                  f"intros {intros_ok}/{len(eligible)} for presented {date} · missing: none")
+    if publish:
+        # §2.6 ruling 7's field: the publish outcome — intros that
+        # reached the feed over the eligible set; the segments
+        # clause stands only on nights whose composed set includes
+        # segments (dual-compose nights).
+        pub_names = list(failed_intros)
+        pub_intros = 0
+        pub_segs = 0
+        try:
+            res = publish_intentions(date, pub_intro_files, pub_segment_files)
+            pub_intros = res["intros"]
+            pub_segs = res["segments"]
+        except Exception as exc:
+            pub_names.append(f"publish failed: {exc}")
+        seg_clause = "" if intros_only else f" · segments {pub_segs}/{seg_attempted}"
+        if pub_names:
+            print(f"Intentions feed (v342): MISSING — intros {pub_intros}/{len(eligible)} for presented {date}"
+                  f"{seg_clause} · missing: {', '.join(pub_names)}")
+            rc = 1
+        else:
+            print(f"Intentions feed (v342): published — intros {pub_intros}/{len(eligible)} for presented {date}"
+                  f"{seg_clause} · missing: none")
+    return rc
 
 
 if __name__ == "__main__":
