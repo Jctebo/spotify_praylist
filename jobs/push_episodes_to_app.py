@@ -27,11 +27,18 @@ What it does:
      Sort = manifest order.
   2. Stages each built episode's audio: POST
      /api/agent/player/episodes/audio (R2 only, no D1 write).
+  2B. (v318 T8) Stages each episode's text: the run directory's
+     script-<episode_id>.txt, published under the feed half's T1 rule —
+     a script carrying production markup ([, {, <), a script that is
+     not valid UTF-8, or no script at all enters text_state 'missing',
+     named and counted, never edited into shape. Staging is POST
+     /api/agent/player/episodes/text (R2 only, no D1 write), so a
+     failed push leaves the prior stored day intact.
   3. Commits the replace-day: POST /api/agent/player/day. The commit
-     verifies staged sizes, swaps the stored day in one D1 batch, and
-     sweeps every OTHER date's objects — it can never delete a
-     same-day Intentions segment, whether that segment arrives before
-     or after this push (Plan E8's pinned ordering).
+     verifies staged sizes (audio and text), swaps the stored day in
+     one D1 batch, and sweeps every OTHER date's objects — it can
+     never delete a same-day Intentions segment, whether that segment
+     arrives before or after this push (Plan E8's pinned ordering).
   4. Reads back GET /api/agent/player/stored-day and asserts the
      stored date and counts match the manifest; prints the mandatory
      closing-report field "App push (v312)". Any failed assert exits
@@ -104,6 +111,40 @@ def post_audio(date: str, episode_id: str, file_path: Path) -> dict:
         raise SystemExit(f"audio staging for {episode_id}: unparseable reply {r.stdout[:200]!r}")
 
 
+def post_text(date: str, episode_id: str, file_path: Path) -> dict:
+    headers = door._headers({
+        "X-Episode-Date": date,
+        "X-Episode-Id": episode_id,
+        "Content-Type": "text/plain; charset=utf-8",
+    })
+    cmd = ["curl", "-s", "-X", "POST", *headers,
+           "--data-binary", f"@{file_path}",
+           f"{door.BASE}/api/agent/player/episodes/text"]
+    r = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        return json.loads(r.stdout)
+    except Exception:
+        raise SystemExit(f"text staging for {episode_id}: unparseable reply {r.stdout[:200]!r}")
+
+
+def resolve_text(rundir: Path, episode_id: str):
+    """The episode's script bytes under the feed half's T1 rule, or
+    None when the text stands missing: no script file, a script that
+    is not valid UTF-8, or a script carrying production markup
+    ([, {, <). Bytes are returned verbatim — never edited."""
+    f = rundir / f"script-{episode_id}.txt"
+    if not f.exists():
+        return None
+    data = f.read_bytes()
+    if any(mark in data for mark in (b"[", b"{", b"<")):
+        return None
+    try:
+        data.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+    return data
+
+
 def main() -> int:
     args = sys.argv[1:]
     report_path = None
@@ -131,6 +172,17 @@ def main() -> int:
     for sort, (key, ep) in enumerate(episodes.items(), start=1):
         f = rundir / (ep.get("file") or "")
         built = ep.get("status") == "built" and ep.get("file") and f.exists()
+        # v318 T8: the text resolves for every manifest episode,
+        # independent of the audio's built state — the script stands
+        # in the run directory whether or not its audio rendered.
+        text_bytes = resolve_text(rundir, key)
+        if text_bytes is not None:
+            res = post_text(date, key, rundir / f"script-{key}.txt")
+            if not res.get("ok") or res.get("size") != len(text_bytes):
+                raise SystemExit(f"text staging failed for {key}: {res}")
+            text_fields = {"text_state": "present", "text_size_bytes": len(text_bytes)}
+        else:
+            text_fields = {"text_state": "missing", "text_size_bytes": 0}
         if built:
             res = post_audio(date, key, f)
             if not res.get("ok") or res.get("size") != f.stat().st_size:
@@ -140,6 +192,7 @@ def main() -> int:
                 "block": blocks[key], "sort": sort,
                 "duration_s": ep.get("duration_s", 0),
                 "size_bytes": f.stat().st_size, "audio_state": "present",
+                **text_fields,
             })
         else:
             manifest.append({
@@ -147,6 +200,7 @@ def main() -> int:
                 "block": blocks[key], "sort": sort,
                 "duration_s": ep.get("duration_s", 0),
                 "size_bytes": 0, "audio_state": "missing",
+                **text_fields,
             })
 
     status, commit = door.call("POST", "/api/agent/player/day", {"date": date, "episodes": manifest})
@@ -155,15 +209,19 @@ def main() -> int:
     present = sum(1 for m in manifest if m["audio_state"] == "present")
     missing = len(manifest) - present
     verified = sum(1 for t in commit.get("perTrack", []) if t.get("audio") == "verified")
-    if commit.get("storedDate") != date or commit.get("rowCount") != len(manifest) or verified != present:
-        raise SystemExit(f"commit read-back mismatch: {commit} vs manifest {len(manifest)} ({present} present)")
+    texts_present = sum(1 for m in manifest if m["text_state"] == "present")
+    texts_missing = len(manifest) - texts_present
+    texts_verified = sum(1 for t in commit.get("perTrack", []) if t.get("text") == "verified")
+    if commit.get("storedDate") != date or commit.get("rowCount") != len(manifest) or verified != present or texts_verified != texts_present:
+        raise SystemExit(f"commit read-back mismatch: {commit} vs manifest {len(manifest)} ({present} present, texts {texts_present} present)")
 
     status, stored = door.call("GET", "/api/agent/player/stored-day")
-    if status != 200 or stored.get("storedDate") != date or stored.get("episodeCount") != len(manifest):
+    if status != 200 or stored.get("storedDate") != date or stored.get("episodeCount") != len(manifest) \
+            or stored.get("textsPresent") != texts_present or stored.get("textsMissing") != texts_missing:
         raise SystemExit(f"stored-day read-back mismatch ({status}): {stored}")
     print(f"App push (v312): date pushed {date} · episodes {len(manifest)} "
           f"({present} present / {missing} missing) · per-track audio verified {verified} · "
-          f"stored date after push {stored['storedDate']}")
+          f"stored date after push {stored['storedDate']} · texts {texts_present} / {texts_missing}")
     return 0
 
 

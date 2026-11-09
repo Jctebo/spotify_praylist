@@ -80,6 +80,7 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .playbtn.playing { background:var(--navy); }
 .spot { display:inline-block; margin-top:5px; font-size:14px; color:var(--gold); }
 .notavail { font-size:14px; color:#8a4b2a; margin-top:4px; }
+.readtext { font-size:17px; line-height:1.7; white-space:pre-wrap; margin-top:10px; }
 .intentions-card { border-color:var(--gold); background:#fdf6e0; }
 .chips { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px; }
 .chip { font-family:inherit; font-size:14px; padding:6px 11px; border-radius:20px; border:1px solid var(--line); background:#fff; cursor:pointer; }
@@ -114,7 +115,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v320-1";
+var CACHE = "ora-pro-nobis-v318-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
