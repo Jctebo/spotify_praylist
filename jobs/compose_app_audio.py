@@ -86,7 +86,8 @@ stripped before joining, so the template's own "for" is never
 doubled. No saint line, no addendum, no per-prayer composition.
 
 Harness seams (never set in production): OPN_APP_BASE retargets the
-app door at a local wrangler dev · OPN_SEGMENTS_FILE names a JSON
+app door at a local wrangler dev · OPN_APP_TOKEN overrides the door's
+app token for that local instance · OPN_SEGMENTS_FILE names a JSON
 {Block: text} standing in for the board-notes composition read ·
 OPN_RETRY_DELAY_S sets the bounded-retry spacing (default 300) ·
 OPN_TTS_CMD sets the render command (default /opt/hatch/bin/tts).
@@ -115,6 +116,11 @@ def _load(name):
 door = _load("prayer_door")
 if os.environ.get("OPN_APP_BASE"):
     door.BASE = os.environ["OPN_APP_BASE"]
+if os.environ.get("OPN_APP_TOKEN"):
+    # Harness seam (never set in production): point the door's app
+    # token at the local instance under test.
+    door._app_token = lambda: os.environ["OPN_APP_TOKEN"]
+    door._cf = lambda: ("harness", "harness")
 board_door = _load("curl_door")
 
 BLOCKS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night"]
@@ -244,21 +250,26 @@ def read_composition(date: str) -> dict:
 
 
 def presented_tracks(date: str):
-    """-> (own_ids, slot_ids): the consumption date's player_episodes
-    rows with kind='episode' (read from the presented payload
-    through the door) PLUS the enabled external slots from the
-    settings payload (primaries; a fallback fill presents under its
-    slot's id and inherits its pairing)."""
-    own = []
+    """-> (own_ids, slot_ids, titles): the consumption date's
+    player_episodes rows with kind='episode' (read from the
+    presented payload through the door) PLUS the enabled external
+    slots from the settings payload (primaries; a fallback fill
+    presents under its slot's id and inherits its pairing). titles
+    maps every presented track to its display title (own tracks from
+    the payload; slots from their settings names) for the report
+    field's named failures."""
+    own, titles = [], {}
     status, payload = door.call("GET", "/api/agent/player/day")
     if status == 200:
         for block in payload.get("blocks", []):
             for t in block.get("tracks", []):
                 if t.get("kind") == "episode" and t.get("episodeId"):
                     own.append(t["episodeId"])
+                    titles[t["episodeId"]] = t.get("title") or t["episodeId"]
         for t in payload.get("episodes", []):
             if t.get("kind") == "episode" and t.get("episodeId"):
                 own.append(t["episodeId"])
+                titles[t["episodeId"]] = t.get("title") or t["episodeId"]
     slots = []
     status, settings = door.call("GET", "/api/agent/player/settings")
     if status == 200:
@@ -266,7 +277,8 @@ def presented_tracks(date: str):
             if s.get("family") == "external" and s.get("enabled") == 1 \
                     and s.get("role") != "fallback" and s.get("slotId"):
                 slots.append(s["slotId"])
-    return own, slots
+                titles[s["slotId"]] = s.get("name") or s["slotId"]
+    return own, slots, titles
 
 
 def main() -> int:
@@ -316,7 +328,7 @@ def main() -> int:
                 missing.append(f"segment {block}: {exc}")
 
     # ---- (3) intros ---------------------------------------------------
-    own_ids, slot_ids = presented_tracks(date)
+    own_ids, slot_ids, titles = presented_tracks(date)
     presented = list(dict.fromkeys(own_ids + slot_ids))
     eligible, unpaired = [], 0
     for track in presented:
@@ -335,7 +347,7 @@ def main() -> int:
                 raise RuntimeError(f"push: {res}")
             intros_ok += 1
         except Exception:
-            failed_intros.append(track)
+            failed_intros.append(titles.get(track, track))
     if failed_intros:
         missing.append("intros failed: " + ", ".join(failed_intros))
     # Stale clear: an intro no longer presented does not survive.
