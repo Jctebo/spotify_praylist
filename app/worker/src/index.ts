@@ -449,7 +449,7 @@ export default {
         const date = request.headers.get("x-episode-date") ?? "";
         const episodeId = request.headers.get("x-episode-id") ?? "";
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "X-Episode-Date must be YYYY-MM-DD");
-        if (!/^[A-Za-z0-9][A-Za-z0-9\-]*$/.test(episodeId)) return err(400, "bad X-Episode-Id");
+        if (!/^[A-Za-z0-9][A-Za-z0-9\-_]*$/.test(episodeId)) return err(400, "bad X-Episode-Id");
         const bytes = new Uint8Array(await request.arrayBuffer());
         if (!bytes.length) return err(400, "empty body");
         const key = `episodes/${date}/${episodeId}.mp3`;
@@ -468,7 +468,7 @@ export default {
         const validBlocks = new Set<string>([...PRAYER_BLOCKS, "unblocked"]);
         const eps: { episode_id: string; title: string; block: string; sort: number; duration_s: number; size_bytes: number; audio_state: string }[] = [];
         for (const e of body.episodes) {
-          if (!e.episode_id || !/^[A-Za-z0-9][A-Za-z0-9\-]*$/.test(e.episode_id)) return err(400, "bad episode_id in manifest");
+          if (!e.episode_id || !/^[A-Za-z0-9][A-Za-z0-9\-_]*$/.test(e.episode_id)) return err(400, "bad episode_id in manifest");
           if (!validBlocks.has(e.block ?? "")) return err(400, `bad block for ${e.episode_id}`);
           if (!["present", "missing"].includes(e.audio_state ?? "")) return err(400, `bad audio_state for ${e.episode_id}`);
           eps.push({
