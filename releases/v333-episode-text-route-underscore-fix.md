@@ -72,3 +72,23 @@
 4. Flip, four pieces, each read back: pass the Ship record · POST the shipped record (title required; camelCase shippedAt + whatsNewId) · What's New id = live max + 1, READ FIRST (v330 took 45; v324/v332 ships are racing) · release row Live (full-field upsert if the shipped POST alone does not flip it).
 5. §5 appended + published; Curator note `ship-v333-2026-11-08` via POST /api/agent/notes {noteKey, body}.
 6. Time contract 77 (ora-pro-nobis): "Fix committed on release/v333" ASAP, hard deadline 23:32 CT · "Production Worker deployed with the text route fixed" ASAP, hard deadline 23:45 CT · "Re-push verified + Ship flip complete" ASAP, hard deadline 23:55 CT — each closed met as it lands.
+
+## 3 · Implement
+
+- **Agent:** Emergency Chain Agent (v333, 2026-11-08) — Implement claim record 1156, claimed 2026-11-09T05:11:34Z
+
+### The change (all of it)
+
+- `app/worker/src/index.ts`, line 479 (text staging route, `POST /api/agent/player/episodes/text`): the `X-Episode-Id` pattern `/^[A-Za-z0-9][A-Za-z0-9\-]*$/` → `/^[A-Za-z0-9][A-Za-z0-9\-_]*$/`. `git diff` against the branch base: 1 file changed, 1 insertion, 1 deletion. No other product line changes; no client change, no SW cache rename.
+
+### Harness evidence (complete logs in app/tests/)
+
+- **harness-v333** (`harness-v333.log`): **13 ok / 0 FAIL**. The defect leg stands first-hand: a direct text staging POST for `novena-dedication_of_the_lateran_basilica` returns 200 with the exact byte size (35) — the same request returns 400 "bad X-Episode-Id" against production today. The REAL push helper, unmodified, pushes the real 2026-11-08 manifest into the local instance and exits 0; its field reads verbatim: `App push (v312): date pushed 2026-11-08 · episodes 17 (17 present / 0 missing) · per-track audio verified 17 · stored date after push 2026-11-08 · texts 17 / 0`. D1 read-back: all 17 stored rows read `text_state = "present"`; GET `/api/player/text/2026-11-08/novena-st_martin_of_tours` serves bytes exactly equal to the run's script file.
+- **Regressions on the fixed tree:** harness-v327 **10 ok / 0 FAIL** (`harness-v327-on-v333.log`) · harness-v312 **59 ok / 0 FAIL** (`harness-v312-on-v333.log`).
+- Pre-run check: none of the 17 real scripts trips the helper's T1 withholding guard (no `[`/`{`/`<` markup, all valid UTF-8), so 17/17 texts is the correct expectation, not an assumption.
+- Two harness-side defects were found and fixed during this pass, both in the new push leg, neither in product code: the token assignment landed redacted in the written file (SyntaxError), then `_app_token` proved to be a callable in the door module and takes a lambda. The harness was re-run in full after each fix; the green log above is the final complete run.
+
+### Concerns and Information Needs
+
+- The v327 regression instance reads texts 0/17 in its own stored-day line: its push leg loads the helper from the v327 worktree, whose helper predates the v318 text leg. Its own assertions (audio/commit) all pass; the text path is proven by harness-v333 against THIS trunk's helper. Named here so the tally is never misread as a v333 regression.
+- The defect class is now fully swept for episode ids: all three shape-enforcement sites in `app/worker/src/index.ts` (lines 465, 479, 498) carry the identical `\-_` class.

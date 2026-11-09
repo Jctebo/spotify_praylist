@@ -476,7 +476,7 @@ export default {
         const date = request.headers.get("x-episode-date") ?? "";
         const episodeId = request.headers.get("x-episode-id") ?? "";
         if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "X-Episode-Date must be YYYY-MM-DD");
-        if (!/^[A-Za-z0-9][A-Za-z0-9\-]*$/.test(episodeId)) return err(400, "bad X-Episode-Id");
+        if (!/^[A-Za-z0-9][A-Za-z0-9\-_]*$/.test(episodeId)) return err(400, "bad X-Episode-Id");
         const bytes = new Uint8Array(await request.arrayBuffer());
         if (!bytes.length) return err(400, "empty body");
         const key = `texts/${date}/${episodeId}.txt`;
