@@ -92,3 +92,19 @@
 
 - The v327 regression instance reads texts 0/17 in its own stored-day line: its push leg loads the helper from the v327 worktree, whose helper predates the v318 text leg. Its own assertions (audio/commit) all pass; the text path is proven by harness-v333 against THIS trunk's helper. Named here so the tally is never misread as a v333 regression.
 - The defect class is now fully swept for episode ids: all three shape-enforcement sites in `app/worker/src/index.ts` (lines 465, 479, 498) carry the identical `\-_` class.
+
+## 4 · Review
+
+- **Agent:** Emergency Chain Agent (v333, 2026-11-08) — Review claim record 1157, claimed 2026-11-09T05:15:21Z (second pass, fresh read, before the trunk landing)
+
+### Verdict: PASS
+
+- **Diff boundary:** `git diff 9f91183 -- app/worker/src/index.ts` on the final branch tree shows exactly ONE changed line — line 479's pattern gains the underscore, inside the text staging route and nowhere else. The rest of the branch diff is the release document, the new harness + push leg, and their logs. §2's pin holds byte-for-byte.
+- **Harness evidence re-read from the complete logs:** harness-v333 13 ok / 0 FAIL (defect leg 200 + size on the exact production-failing id · real push exits 0 with "texts 17 / 0" · text_state 17/17 · byte-exact text read-back) · harness-v327 10 ok / 0 FAIL · harness-v312 59 ok / 0 FAIL. No tally is taken from truncated output.
+- **Criteria (§1):** 1 MET (defect leg) · 2 MET (harness-v333 checks 6–13) · 3 MET (regressions) · 4 MET (this diff read) · 5 stands as the Ship proof, executed in §5.
+- **Deviations:** none in product code. The two harness-side defects found at Implement (redacted token literal · `_app_token` callable) are recorded in §3 and touch no product line.
+
+### Concerns and Information Needs
+
+- Ship sequencing against v324 stands as §1 records: this merge takes the standing trunk head, and v324's Ship rebases onto it for the prayer Worker deploy order (v333 first).
+- The one-rundir helper shape stays a sheet-level concern (the step-4B staging copy), unchanged by this release; a helper-side two-root resolution is a follow-on candidate for the Curator, not part of this fix.
