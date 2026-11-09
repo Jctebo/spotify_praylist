@@ -237,7 +237,12 @@ helper = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(helper)
 helper.door.BASE = BASE
 helper.door.call = local_call
-helper.door._headers = lambda extra: ["-H", "Authorization: Bearer " + TOKEN] + ["-H", f"{k}: {v}" for k, v in extra.items()]
+def _headers(extra):
+    out = ["-H", "Authorization: Bearer " + TOKEN]
+    for k, v in extra.items():
+        out += ["-H", f"{k}: {v}"]
+    return out
+helper.door._headers = _headers
 sys.argv = ["push_episodes_to_app.py", "--report", r"${path.join(rundir, "report.json")}"]
 rc = helper.main()
 assert rc == 0, f"helper exit {rc}"
