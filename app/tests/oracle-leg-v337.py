@@ -16,6 +16,7 @@ import importlib.util
 import sys
 from pathlib import Path
 import xml.etree.ElementTree as ET
+from email.utils import parsedate_to_datetime
 
 fork = Path(__file__).resolve().parents[2]
 
@@ -39,8 +40,8 @@ def items(xml_path):
         pd = it.findtext("pubDate")
         out.append({
             "title": (it.findtext("title") or "").strip(),
-            "pubdate": resolver._parse_pubdate(pd) if pd else None,
-            "enclosure_url": enc.get("url") if enc is not None else None,
+            "pubdate": parsedate_to_datetime(pd) if pd else None,
+            "url": enc.get("url") if enc is not None else "",
         })
     return out
 
@@ -51,9 +52,9 @@ def main():
     dge = resolver.match_gospel_exegesis(items(dge_xml), target)
     saint = resolver.match_saint_of_the_day(items(saint_xml), target)
     saint_bad = resolver.match_saint_of_the_day(items(saint_bad_xml), target)
-    print("ORACLE dge=" + (dge["enclosure_url"] if dge else "-"))
-    print("ORACLE saint=" + (saint["enclosure_url"] if saint else "-"))
-    print("ORACLE saint_bad=" + (saint_bad["enclosure_url"] if saint_bad else "-"))
+    print("ORACLE dge=" + (dge["url"] if dge else "-"))
+    print("ORACLE saint=" + (saint["url"] if saint else "-"))
+    print("ORACLE saint_bad=" + (saint_bad["url"] if saint_bad else "-"))
     print("ORACLE intro1=" + compose.intro_text("For the fixture join rule"))
     print("ORACLE intro2=" + compose.intro_text("perseverance in prayer"))
     print("ORACLE pair-antiphon=" + str(compose.pairing_for("marian-antiphon-angelus")))

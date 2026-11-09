@@ -371,7 +371,7 @@ async function playerDayPayload(env: Env) {
     const blocks = PRAYER_BLOCKS.map((block) => mkBlock(block, [{
       title: "Intentions", kind: "segment", intentionsCard: true, available: false, streamUrl: null, spotifyUrl: null,
     }], 1));
-    return { ok: true, date: presented, dateLabel: prayerDateLabel(presented), storedDay: null, presentedDay: presented, episodes: [], blocks, audioMissing: [...PRAYER_BLOCKS] };
+    return { ok: true, date: presented, dateLabel: prayerDateLabel(presented), storedDay: null, presentedDay: presented, presentedMissing: true, episodes: [], blocks, audioMissing: [...PRAYER_BLOCKS] };
   }
   const audio = await prayerAudioMap(env);
   const rows = await env.DB.prepare("SELECT * FROM player_episodes WHERE date=? ORDER BY sort, episode_id").bind(presented).all<PlayerEpisodeRow>();
@@ -430,7 +430,7 @@ async function playerDayPayload(env: Env) {
   const unblocked = eps.filter((r) => r.block === "unblocked").map(episodeTrackShape);
   return {
     ok: true, date: presented, dateLabel: prayerDateLabel(presented), storedDay: dayRow.date, presentedDay: presented,
-    episodes: unblocked, blocks,
+    presentedMissing: false, episodes: unblocked, blocks,
     audioMissing: PRAYER_BLOCKS.filter((b) => !audio.has(b)),
   };
 }

@@ -16,7 +16,7 @@ spec = importlib.util.spec_from_file_location(
 door = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(door)
 door.BASE = f"http://127.0.0.1:{port}"
-door._app_token = <redacted>
+door._app_token = lambda: "harness-token"
 door._cf = lambda: ("harness", "harness")
 
 fork = Path(__file__).resolve().parents[2]

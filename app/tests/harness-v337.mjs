@@ -324,7 +324,7 @@ async function main() {
     check(`7 ${label}: exegesis inserted external`, k["daily-gospel-exegesis"].family === "external" && k["daily-gospel-exegesis"].slot_id === "ext-gospel-exegesis" && k["daily-gospel-exegesis"].enabled === 1,
       JSON.stringify(k["daily-gospel-exegesis"]));
     check(`7 ${label}: antiphon rows stand own`, k["marian-antiphon-midday"].family === "own" && k["marian-antiphon-evening"].family === "own");
-    const meta = d1q(persist, "SELECT version FROM player_source_meta WHERE id = 1;");
+    const meta = d1q(persist, "SELECT version FROM player_settings_meta WHERE id = 1;");
     check(`7 ${label}: meta version bumped exactly +1 (1 -> 2)`, meta[0] && meta[0].version === 2, JSON.stringify(meta));
     const intros = d1q(persist, "SELECT name FROM sqlite_master WHERE type='table' AND name='prayer_intros';");
     check(`7 ${label}: prayer_intros table stands`, intros.length === 1);
@@ -344,7 +344,7 @@ async function main() {
       k["do-midday-prayer"].block === "Evening" && k["do-midday-prayer"].sort_order === 9, JSON.stringify(k["do-midday-prayer"]));
     check("7 moved D1: every unmoved row still aligns",
       k["novenas"].sort_order === 2 && k["saint-of-the-day"].sort_order === 1 && k["marian-antiphon"].sort_order === 6 &&
-      d1q(PERSIST7M, "SELECT version FROM player_source_meta WHERE id = 1;")[0].version === 2);
+      d1q(PERSIST7M, "SELECT version FROM player_settings_meta WHERE id = 1;")[0].version === 2);
   }
 
   // ================= main instances =================================
@@ -354,7 +354,7 @@ async function main() {
     `INSERT INTO prayer_audio (date, block, r2_key, size_bytes, pushed_at) VALUES ('current', '${b}', 'segments/current/${b}.mp3', 111, '2026-11-09T00:00:00.000Z');`).join("\n") +
     (withOld ? `\nINSERT INTO prayer_audio (date, block, r2_key, size_bytes, pushed_at) VALUES ('${OLD}', 'Morning', 'segments/${OLD}/Morning.mp3', 99, '2026-11-09T00:00:00.000Z');` : "");
   applyMigs(PERSIST, null, seedSql() + "\n" + [
-    `INSERT INTO player_day (id, date, pushed_at) VALUES (1, '${PLUS2}', '2026-11-09T00:00:00.000Z');`,
+    `INSERT INTO player_day (id, date, episode_count, pushed_at) VALUES (1, '${PLUS2}', 2, '2026-11-09T00:00:00.000Z');`,
     epRow(OLD, "ep-old", "OLD TITLE", "Morning", 100100),
     epRow(YDAY, "ep-yday", "YDAY TITLE", "Morning", 100100),
     epRow(TODAY, "morning-prayer", "Morning Prayer", "Morning", 100200),
@@ -366,43 +366,48 @@ async function main() {
     segRows(true),
   ].join("\n"));
   applyMigs(PERSIST2, null, seedSql() + "\n" + [
-    `INSERT INTO player_day (id, date, pushed_at) VALUES (1, '${PLUS2}', '2026-11-09T00:00:00.000Z');`,
+    `INSERT INTO player_day (id, date, episode_count, pushed_at) VALUES (1, '${PLUS2}', 2, '2026-11-09T00:00:00.000Z');`,
     epRow(PLUS2, "ep-plus2a", "PLUS2 TITLE A", "Morning", 100100),
     epRow(PLUS2, "ep-plus2b", "PLUS2 TITLE B", "Night", 600100),
     segRows(false),
   ].join("\n"));
+  // Sequential boot: two simultaneous wrangler dev spawns race on
+  // wrangler's shared local state and the second never listens
+  // (observed first-hand at this gate); boot one, wait, boot the next.
   const app1 = startApp(PORT, PERSIST);
-  const app2 = startApp(PORT2, PERSIST2);
+  let app2 = null;
   try {
-    await waitUp(BASE); await waitUp(BASE2);
+    await waitUp(BASE);
+    app2 = startApp(PORT2, PERSIST2);
+    await waitUp(BASE2);
 
     // ================= LEG 1 — presented-day selection ==============
     const day = (await api(BASE, "GET", "/api/player/day")).body;
     check("1 payload date == presentedDay == real Chicago today", day.date === TODAY && day.presentedDay === TODAY, `date=${day.date} presented=${day.presentedDay} today=${TODAY}`);
     check("1 storedDay stays the produced fact (+2)", day.storedDay === PLUS2, `storedDay=${day.storedDay}`);
     check("1 presentedMissing false on a standing day", day.presentedMissing === false);
-    const morningOwn = (day.blocks.find((b) => b.name === "Morning") || { tracks: [] }).tracks.filter((t) => t.kind === "episode").map((t) => t.title);
+    const morningOwn = (day.blocks.find((b) => b.block === "Morning") || { tracks: [] }).tracks.filter((t) => t.kind === "episode").map((t) => t.title);
     check("1 today's own rows served in Morning", JSON.stringify(morningOwn) === JSON.stringify(["Morning Prayer", "Daily Rosary", "Marian Antiphon — Angelus"]), JSON.stringify(morningOwn));
     const allTitles = JSON.stringify(day.blocks.flatMap((b) => b.tracks.map((t) => t.title || "")));
     check("1 no other date's title leaks into the payload", !/PLUS2 TITLE|PLUS1 TITLE|YDAY TITLE|OLD TITLE/.test(allTitles));
-    const oldPrayer = (await api(BASE, "GET", `/api/agent/prayer/day?date=${OLD}`, { token: TOKEN })).body;
-    const oldMorning = (oldPrayer.blocks || []).find((b) => b.name === "Morning") || {};
-    check("1 pre-commit: the dated segment shape for the old date stands", String(oldMorning.segmentAudioUrl || "").includes(OLD), JSON.stringify(oldMorning.segmentAudioUrl));
+    const oldAudioRows = d1q(PERSIST, `SELECT COUNT(*) AS n FROM prayer_audio WHERE date = '${OLD}';`);
+    check("1 pre-commit: the dated segment row for the old date stands in D1 (the floor leg's target)",
+      oldAudioRows[0] && oldAudioRows[0].n === 1, JSON.stringify(oldAudioRows));
 
     // ================= LEG 4 — failed-push presented day ============
     const day2 = (await api(BASE2, "GET", "/api/player/day")).body;
     check("4 presentedMissing true when the presented day has no rows", day2.presentedMissing === true && day2.presentedDay === TODAY && day2.storedDay === PLUS2,
       `missing=${day2.presentedMissing} presented=${day2.presentedDay} stored=${day2.storedDay}`);
     const missByBlock = {};
-    for (const b of day2.blocks) missByBlock[b.name] = b.tracks.filter((t) => t.audioState === "missing").map((t) => t.title);
+    for (const b of day2.blocks) missByBlock[b.block] = b.tracks.filter((t) => t.kind === "episode" && t.available === false).map((t) => t.title);
     check("4 Morning named-missing set", JSON.stringify(missByBlock.Morning) === JSON.stringify(["Morning Prayer", "Daily Rosary", "Marian Antiphon — Angelus"]), JSON.stringify(missByBlock.Morning));
     check("4 Antiphon named-missing in Midday and Evening too",
       (missByBlock.Midday || []).join() === "Marian Antiphon — Angelus" && (missByBlock.Evening || []).join() === "Marian Antiphon — Angelus",
       `midday=${JSON.stringify(missByBlock.Midday)} evening=${JSON.stringify(missByBlock.Evening)}`);
     check("4 novenas named-missing once in Midmorning", (missByBlock.Midmorning || []).some((t) => t === "Novenas"), JSON.stringify(missByBlock.Midmorning));
-    const morn2 = day2.blocks.find((b) => b.name === "Morning");
+    const morn2 = day2.blocks.find((b) => b.block === "Morning");
     check("4 Intentions card stands first in Morning from 'current'",
-      morn2.tracks[0] && morn2.tracks[0].kind === "segment" && String(morn2.tracks[0].audioUrl || "").includes("/current/"), JSON.stringify((morn2.tracks[0] || {}).audioUrl));
+      morn2.tracks[0] && morn2.tracks[0].kind === "segment" && String(morn2.tracks[0].streamUrl || "").includes("/current/"), JSON.stringify((morn2.tracks[0] || {}).streamUrl));
     check("4 no +2 title anywhere in the missing payload", !JSON.stringify(day2).includes("PLUS2 TITLE"));
 
     // ================= staging for the floor legs ===================
@@ -429,22 +434,28 @@ async function main() {
     ];
     for (const [key, , freq] of manifestEps) {
       fs.writeFileSync(path.join(rundir, "out", `${key}.mp3`), tone(`push-${key}.mp3`, freq, 1));
+      // The helper's rundir IS the out directory (the sheet's step 4B
+      // stages the scripts into it before pushing); the run-root copy
+      // stands as the manifest's home.
+      fs.writeFileSync(path.join(rundir, "out", `script-${key}.txt`), `Fixture script for ${key}.`);
       fs.writeFileSync(path.join(rundir, `script-${key}.txt`), `Fixture script for ${key}.`);
     }
     fs.writeFileSync(path.join(rundir, "report.json"), JSON.stringify({
-      target_date: TODAY,
-      episodes: manifestEps.map(([key, title]) => ({ key, title, file: `${key}.mp3`, duration_s: 60 })),
+      date: TODAY,
+      episodes: Object.fromEntries(manifestEps.map(([key, title]) => [key, { title, file: `${key}.mp3`, duration_s: 60, status: "built" }])),
     }));
-    const push = spawnSync("python3", [path.join(APP, "tests", "push-leg-v337.py"), String(PORT), path.join(rundir, "report.json"), rundir],
+    const push = spawnSync("python3", [path.join(APP, "tests", "push-leg-v337.py"), String(PORT), path.join(rundir, "report.json"), path.join(rundir, "out")],
       { cwd: FORK, encoding: "utf8", timeout: 240000 });
     const pushOut = push.stdout + push.stderr;
     check("9 real push helper exits 0", push.status === 0, pushOut.slice(-400));
-    check("9 manifest carries three Antiphon placements (7 entries)", /manifest: 7 entries/.test(pushOut), pushOut.split("\n").find((l) => l.includes("manifest")) || "");
-    check("9 stored read-back counts 7 placement rows", /stored read-back: 7 episode rows/.test(pushOut), pushOut.split("\n").find((l) => l.includes("read-back")) || "");
+    check("9 manifest carries three Antiphon placements (7 entries, all present)",
+      pushOut.includes("episodes 7 (7 present / 0 missing)"), pushOut.split("\n").find((l) => l.includes("App push")) || "");
+    check("9 the helper's own read-backs verify all 7 placement rows",
+      pushOut.includes("per-track audio verified 7") && pushOut.includes(`stored date after push ${TODAY}`), pushOut.split("\n").find((l) => l.includes("App push")) || "");
     const dayAfter = (await api(BASE, "GET", "/api/player/day")).body;
-    const antiphonBlocks = dayAfter.blocks.filter((b) => b.tracks.some((t) => t.episodeId === "marian-antiphon-angelus")).map((b) => b.name);
+    const antiphonBlocks = dayAfter.blocks.filter((b) => b.tracks.some((t) => t.episodeId === "marian-antiphon-angelus")).map((b) => b.block);
     check("9 payload lists the Antiphon in Morning, Midday, Evening", JSON.stringify(antiphonBlocks) === JSON.stringify(["Morning", "Midday", "Evening"]), JSON.stringify(antiphonBlocks));
-    const middayTracks = dayAfter.blocks.find((b) => b.name === "Midday").tracks.filter((t) => t.kind === "episode").map((t) => t.episodeId);
+    const middayTracks = dayAfter.blocks.find((b) => b.block === "Midday").tracks.filter((t) => t.kind === "episode").map((t) => t.episodeId);
     check("9 Midday's only episode is the Antiphon (contract slot 1)", JSON.stringify(middayTracks) === JSON.stringify(["marian-antiphon-angelus"]), JSON.stringify(middayTracks));
     const antAudio = await apiRaw(BASE, `/api/player/audio/${TODAY}/marian-antiphon-angelus`);
     check("9 the one R2 object serves under the placements", antAudio.status === 200 && antAudio.buf.length > 0, `status=${antAudio.status}`);
@@ -469,11 +480,11 @@ async function main() {
 
     // ================= LEG 8 (door half) — settings order ===========
     const settings = (await api(BASE, "GET", "/api/agent/player/settings", { token: TOKEN })).body;
-    const sByKey = Object.fromEntries(settings.sources.map((s) => [s.key, s]));
+    const sByKey = Object.fromEntries(settings.sources.map((s) => [s.sourceKey, s]));
     const morningSettings = settings.sources.filter((s) => s.block === "Morning" && s.role === "primary" && s.enabled === 1)
       .sort((a, b) => a.sortOrder - b.sortOrder).map((s) => s.name);
     check("8 Morning settings order is the contract list", JSON.stringify(morningSettings) === JSON.stringify(
-      ["Invitatory", "Morning Prayer", "Morning Prayer", "Daily Rosary", "Bible in a Year", "Marian Antiphon — Angelus"]), JSON.stringify(morningSettings));
+      ["Divine Office — Invitatory", "Morning Prayer", "Divine Office — Morning Prayer", "Daily Rosary", "Bible in a Year", "Marian Antiphon — Angelus"]), JSON.stringify(morningSettings));
     check("8 the StH fallback stands numbered at its slot's position",
       sByKey["sth-lauds"].sortOrder === sByKey["do-morning-prayer"].sortOrder && sByKey["sth-vespers"].sortOrder === sByKey["do-evening-prayer"].sortOrder,
       `lauds=${sByKey["sth-lauds"].sortOrder} domp=${sByKey["do-morning-prayer"].sortOrder}`);
@@ -542,6 +553,7 @@ if log:
     const segFile = path.join(TMPD, "segments-fixture.json");
     fs.writeFileSync(segFile, JSON.stringify(segFixture));
     const stubLog = path.join(TMPD, "tts-stub.log");
+    fs.rmSync(stubLog, { force: true });
     const composeEnv = (extra) => ({ ...process.env, OPN_APP_BASE: BASE, OPN_APP_TOKEN: TOKEN,
       OPN_SEGMENTS_FILE: segFile, OPN_TTS_CMD: ttsStub, OPN_RETRY_DELAY_S: "0", TTS_STUB_LOG: stubLog, ...extra });
     const runCompose = (extra) => spawnSync("python3", [path.join(FORK, "jobs", "compose_app_audio.py"), "--date", TODAY],
@@ -589,12 +601,19 @@ if log:
       `intros=${(intros2.intros || []).length}`);
 
     // ================= LEG 12 — overrides win =======================
-    const put = await api(BASE, "PUT", "/api/player/source-settings", { json: { updates: [{ key: "daily-rosary", block: "Morning", sortOrder: 5, enabled: true }] } });
-    check("12 session PUT accepted", put.status === 200 && put.body.ok === true, `status=${put.status}`);
+    const curSettings = (await api(BASE, "GET", "/api/agent/player/settings", { token: TOKEN })).body;
+    const putRows = curSettings.sources.map((x) => ({ sourceKey: x.sourceKey, block: x.block, dayRule: x.dayRule, enabled: x.enabled }));
+    const iR = putRows.findIndex((x) => x.sourceKey === "daily-rosary");
+    const iB = putRows.findIndex((x) => x.sourceKey === "bible-in-a-year");
+    [putRows[iR], putRows[iB]] = [putRows[iB], putRows[iR]];
+    const put = await api(BASE, "PUT", "/api/player/source-settings", { json: { sources: putRows } });
+    check("12 session PUT accepted (whole-table write)", put.status === 200 && put.body.ok === true, `status=${put.status} ${JSON.stringify(put.body).slice(0, 120)}`);
     const afterPut = (await api(BASE, "GET", "/api/agent/player/settings", { token: TOKEN })).body;
-    const rosaryAfter = afterPut.sources.find((s) => s.key === "daily-rosary");
-    check("12 the settings read-back reflects the move (version 3)", rosaryAfter.sortOrder === 5 && afterPut.version === 3,
-      `sort=${rosaryAfter.sortOrder} version=${afterPut.version}`);
+    const rosaryAfter = afterPut.sources.find((x) => x.sourceKey === "daily-rosary");
+    const bibleAfter = afterPut.sources.find((x) => x.sourceKey === "bible-in-a-year");
+    check("12 the settings read-back reflects the move (rosary renumbered after bible, version 3)",
+      rosaryAfter.sortOrder === 6 && bibleAfter.sortOrder === 5 && afterPut.version === 3,
+      `rosary=${rosaryAfter.sortOrder} bible=${bibleAfter.sortOrder} version=${afterPut.version}`);
 
     // ================= browser legs =================================
     const browser = await chromium.launch({ executablePath: CHROME, args: ["--no-sandbox"] });
@@ -619,7 +638,7 @@ if log:
         const done = await page.evaluate(() => {
           const s = window.state && window.state.extSlots;
           if (!s) return false;
-          return ["ext-gospel-exegesis", "ext-saint-of-the-day", "ext-invitatory"].every((k) => s[k] && s[k].settled);
+          return ["ext-gospel-exegesis", "ext-saint-of-the-day", "ext-bible-in-a-year"].every((k) => s[k] && (s[k].state === "present" || s[k].state === "missing"));
         }).catch(() => false);
         if (done) return true;
         await sleep(1000);
@@ -654,7 +673,7 @@ if log:
       check("11 Saint download takes the direct route (no pass-through request)", !passThrough.some((u) => u.includes("slot=ext-saint-of-the-day")), JSON.stringify(passThrough));
       const rec = await pageA.evaluate(() => JSON.parse(localStorage.getItem("opn-ext-cache-v1") || "null"));
       check("6 cache record keyed to the PRESENTED date + current settings version",
-        rec && rec.date === TODAY && rec.settingsVersion === currentVersion && rec.slots["ext-gospel-exegesis"].enclosureUrl === `${FEED}/audio/dge-today.mp3`,
+        rec && rec.date === TODAY && rec.settingsVersion === currentVersion && rec.slots["ext-gospel-exegesis"].streamUrl === `${FEED}/audio/dge-today.mp3`,
         JSON.stringify(rec && { date: rec.date, v: rec.settingsVersion }));
       const morningCards = await blockCards(pageA, "Morning");
       check("8 Morning cards: Intentions, own in contract order, externals after (v334 queue rule)",
@@ -709,8 +728,8 @@ if log:
     try {
       await waitUp(BASE);
       const afterRestart = (await api(BASE, "GET", "/api/agent/player/settings", { token: TOKEN })).body;
-      const rosaryFinal = afterRestart.sources.find((s) => s.key === "daily-rosary");
-      check("12 a Worker restart re-applies nothing — the user's move stands", rosaryFinal.sortOrder === 5, `sort=${rosaryFinal.sortOrder}`);
+      const rosaryFinal = afterRestart.sources.find((s) => s.sourceKey === "daily-rosary");
+      check("12 a Worker restart re-applies nothing — the user's move stands", rosaryFinal.sortOrder === 6, `sort=${rosaryFinal.sortOrder}`);
     } finally {
       app1b.kill("SIGTERM");
     }
@@ -721,11 +740,11 @@ if log:
     check("17 served client carries both new slots + the ported matchers",
       appJs.includes("ext-gospel-exegesis") && appJs.includes("ext-saint-of-the-day") && appJs.includes("extMatchLatestByDate") && appJs.includes("extMatchSaint"));
     check("17 SW pins ora-pro-nobis-v337-1 with the opn-ext-audio-v1 exemption verbatim",
-      swJs.includes("ora-pro-nobis-v337-1") && swJs.includes("k !== 'opn-ext-audio-v1'"), swJs.slice(0, 200));
+      swJs.includes("ora-pro-nobis-v337-1") && swJs.includes('k !== "opn-ext-audio-v1"'), swJs.slice(0, 200));
     console.log("note - leg 16 regressions run COMPLETE by the gate runner alongside this harness; tallies land in §3");
   } finally {
     try { app1.kill("SIGTERM"); } catch (e) {}
-    try { app2.kill("SIGTERM"); } catch (e) {}
+    try { if (app2) app2.kill("SIGTERM"); } catch (e) {}
     feedServer.close();
   }
   console.log(`RESULT harness-v337: ${passed} passed, ${failed} failed`);
