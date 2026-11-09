@@ -1,0 +1,17 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - schema + v312-mold seed applied to scratch D1
+ok 3 - app up on local wrangler (port 8944)
+ok 4 - real manifest: 17 episodes, 12 underscore ids (found 17/12)
+ok 5 - text staging accepts underscore id novena-dedication_of_the_lateran_basilica (got 200 {"ok":true,"date":"2026-11-08","episodeId":"novena-dedication_of_the_lateran_basilica","size":35})
+--- push helper output ---
+App push (v312): date pushed 2026-11-08 · episodes 17 (17 present / 0 missing) · per-track audio verified 17 · stored date after push 2026-11-08 · texts 17 / 0
+--------------------------
+ok 6 - push helper exits 0 (staging + replace-day commit accepted)
+ok 7 - App push field: 17 episodes, 17 present / 0 missing, stored date 2026-11-08
+ok 8 - stored episode ids are exactly the manifest's 17 ids
+ok 9 - every stored episode reads audio_state present
+ok 10 - all 12 underscore novena ids stored
+ok 11 - every stored episode reads text_state present (got 17/17)
+ok 12 - text route serves the exact script bytes for novena-st_martin_of_tours
+ok 13 - stored-day read-back: date 2026-11-08, 17 episodes, 17 present / 0 missing (got {"ok":true,"storedDate":"2026-11-08","episodeCount":17,"tracksPresent":17,"tracksMissing":0,"textsPresent":17,"textsMissing":0,"segmentBlocks":[]})
+RESULT: 13 ok / 0 FAIL
