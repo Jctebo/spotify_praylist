@@ -1129,7 +1129,7 @@ function novenaInfo(episodeId, title) {
   // §2.7: N parses from the track TITLE's standing "Day N" — the
   // words the payload already carries. No match, or N outside
   // 1–9, renders NO line — never a guessed number. The pattern is
-  // built from BS_CH, the standing construction (extMatchBible's):
+  // built from BS_CH, the standing construction (the Bible matcher's):
   // this client ships inside a template literal, where a written
   // backslash cooks — a literal regex would arrive broken.
   if (!episodeId || episodeId.indexOf('novena-') !== 0) return null;
@@ -1440,12 +1440,19 @@ function updateNpSeek() {
 /* ---------------- Externals at open (v334) ----------------
    The day renders from /api/player/day at once (own episodes only —
    the payload no longer carries stored externals); the external
-   slots then resolve live, in place: Bible in a Year and Sing the
-   Hours by direct feed reads in this client, Divine Office through
-   the Worker courier (its feed forbids browser reads), and — v337
+   slots then resolve live, in place: Sing the Hours by a direct
+   feed read in this client, Divine Office through the Worker
+   courier (its feed forbids browser reads), and — v337
    §2.8 — Daily Gospel Exegesis and Saint of the Day by direct feed
    reads with ported bundle matchers (their downloads follow each
    slot's probed posture: pass-through only, resp. direct-first).
+   v350: Bible in a Year resolves through the Worker courier too —
+   its on-device read of the 9.2 MB Fireside feed (8 s abort +
+   full DOM parse) was the app's most fragile leg and settled the
+   slot named-missing on any failure though the episode stood in
+   the feed (Day 314, 2026-11-10); the Worker resolves it with
+   the same matcher the audio pass-through uses. Its DOWNLOAD
+   keeps the direct-first posture below.
    Source settings are read at open and applied identically
    to every leg. Resolved present slots are kept in the device-local
    day cache (opn-ext-cache-v1): valid only for the same PRESENTED
@@ -1464,7 +1471,7 @@ function updateNpSeek() {
 var EXT_SLOTS = [
   { slotId: 'ext-invitatory', title: 'Invitatory' },
   { slotId: 'ext-morning-prayer', title: 'Morning Prayer', fallbackToken: 'Lauds' },
-  { slotId: 'ext-bible-in-a-year', title: null },
+  { slotId: 'ext-bible-in-a-year', title: null, source: 'Bible in a Year', courier: true },
   { slotId: 'ext-gospel-exegesis', title: 'Daily Gospel Exegesis', source: 'Logical Bible Study', feedUrl: 'https://anchor.fm/s/1025ef1c/podcast/rss', matcher: 'latest-by-release-date', download: 'passthrough', courier: true },
   { slotId: 'ext-midmorning-prayer', title: 'Midmorning Prayer' },
   { slotId: 'ext-midday-prayer', title: 'Midday Prayer' },
@@ -1488,7 +1495,6 @@ var EXT_TOKENS = {
   'ext-evening-prayer': ['Evening Prayer', 'Vespers'],
   'ext-night-prayer': ['Night Prayer', 'Compline']
 };
-var EXT_BIAY_URL = 'https://feeds.fireside.fm/bibleinayear/rss';
 var EXT_STH_URL = 'https://feeds.castos.com/x8g54';
 /* v342 §2.1/§2.2: the podcast-style pull. Own episodes resolve
    from the SAME podcast feed the runner publishes (the client
@@ -1575,24 +1581,6 @@ function extParseFeed(text) {
     });
   });
   return items;
-}
-function extMatchBible(items, dateStr) {
-  // The resolver's Bible matcher ported: Day N (day-of-year, capped
-  // 365) + enclosure + current year only; newest pubDate wins.
-  var p = dateStr.split('-').map(Number);
-  var doy = Math.floor((Date.UTC(p[0], p[1] - 1, p[2]) - Date.UTC(p[0], 0, 0)) / 86400000);
-  var n = doy > 365 ? 365 : doy;
-  var BS = String.fromCharCode(92);
-  var pat = new RegExp(BS + 'bDay' + BS + 's*0*' + n + BS + 'b', 'i');
-  var best = null;
-  items.forEach(function (it) {
-    if (!it.url || !pat.test(it.title)) return;
-    var years = it.title.match(new RegExp(BS + 'b(20' + BS + 'd{2})' + BS + 'b', 'g'));
-    var year = years ? Math.max.apply(null, years.map(Number)) : (it.pubMs != null ? new Date(it.pubMs).getUTCFullYear() : null);
-    if (year !== p[0]) return;
-    if (!best || (it.pubMs || -Infinity) > (best.pubMs || -Infinity)) best = it;
-  });
-  return { item: best, dayN: n };
 }
 function extBibleTitle(item, n) {
   // The resolver's strip via string operations only (no regex —
@@ -2575,7 +2563,6 @@ function resolveExternals(day) {
     // slots (USCCB Readings · Fr. Mike · Barron) — same route, same
     // settle rules; each slot's own source labels its settle.
     var courierSlots = standing.filter(function (s) { return !!EXT_TOKENS[s.slotId] || !!s.courier; });
-    var bibleSlot = standing.filter(function (s) { return s.slotId === 'ext-bible-in-a-year'; })[0];
     var saintSlot = standing.filter(function (s) { return s.slotId === 'ext-saint-of-the-day'; })[0];
     var tvMassSlot = standing.filter(function (s) { return s.slotId === 'ext-daily-tv-mass'; })[0];
     // Courier leg (Divine Office + the v339 courier class) — only
@@ -2595,7 +2582,10 @@ function resolveExternals(day) {
           var src = slot.courier ? slot.source : 'Divine Office';
           if (e && e.state === 'present') {
             if (c && c.streamUrl === e.streamUrl) return; // the cache restore owns this slot
-            settleMeta(slot, { title: e.title, enclosureUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: src });
+            // v350: the Bible entry carries the item's RAW title;
+            // the display title is built here by the standing
+            // extBibleTitle construction (one title rule).
+            settleMeta(slot, { title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle({ title: e.title }, extMatchBibleDayN(date)) : e.title, enclosureUrl: e.streamUrl, durationSec: e.durationSec, sizeBytes: e.sizeBytes, source: src });
           } else if (e) {
             if (c) return; // cache stands over a same-open courier miss (§2.4: the record stands for the day)
             settle(slot, missingSt(slot, src));
@@ -2609,14 +2599,11 @@ function resolveExternals(day) {
     } else {
       courierP = Promise.resolve();
     }
-    // Bible in a Year direct leg.
-    if (bibleSlot && uncached(bibleSlot)) {
-      extFetchText(EXT_BIAY_URL).then(function (text) {
-        var m = extMatchBible(extParseFeed(text), date);
-        if (m.item) settleMeta(bibleSlot, { title: extBibleTitle(m.item, m.dayN), enclosureUrl: m.item.url, durationSec: m.item.durationS, sizeBytes: m.item.length, source: 'Bible in a Year' });
-        else settle(bibleSlot, { state: 'missing', title: extBibleTitle(null, m.dayN), source: 'Bible in a Year' });
-      }).catch(function () { settle(bibleSlot, { state: 'missing', title: extBibleTitle(null, extMatchBibleDayN(date)), source: 'Bible in a Year' }); });
-    }
+    // Bible in a Year: NO direct leg since v350 — the slot is
+    // courier-resolved in the leg above (the Worker resolves the
+    // 9.2 MB Fireside feed server-side with the same matcher the
+    // audio pass-through uses). The download still runs
+    // direct-first from the enclosure via settleMeta/extDownload.
     // Saint of the Day direct leg (v337 §2.8): the Buzzsprout feed
     // is client-readable; latest-by-release-date with the MM/DD
     // title check; the download is direct-first with the Worker
@@ -2642,15 +2629,31 @@ function resolveExternals(day) {
     // Resolve watchdog: no slot may spin forever. A leg or restore
     // that has produced nothing after 9 s is treated as failed —
     // a cached slot re-downloads from its recorded enclosure, an
-    // uncached slot stands named missing for this open.
+    // uncached slot still waiting on its leg stands named missing
+    // for this open. v350: an uncached slot in 'downloading' is
+    // NOT settled here — its metadata landed and its download's
+    // own outcome is the verdict. A healthy download of a large
+    // enclosure (Bible in a Year: 31 MB) routinely outruns the
+    // 9 s mark and the card displayed "Not available today"
+    // while the download was in flight; the long-stop below
+    // bounds the download instead.
     setTimeout(function () {
       standing.forEach(function (slot) {
         var st = state.extSlots[slot.slotId];
         if (!st || (st.state !== 'loading' && st.state !== 'downloading')) return;
         var c = cachedIds[slot.slotId];
         if (c) extDownload(slot, { title: c.title, enclosureUrl: c.streamUrl, durationSec: c.durationSec, sizeBytes: c.sizeBytes, source: c.source });
-        else settle(slot, missingSt(slot, slot.slotId === 'ext-bible-in-a-year' ? 'Bible in a Year' : (slot.source || 'Divine Office')));
+        else if (st.state === 'loading') settle(slot, missingSt(slot, slot.slotId === 'ext-bible-in-a-year' ? 'Bible in a Year' : (slot.source || 'Divine Office')));
       });
+      // v350 long-stop: a download still in flight 75 s after
+      // the watchdog stands named missing — the no-spin rule
+      // holds, on a budget a real download can meet.
+      setTimeout(function () {
+        standing.forEach(function (slot) {
+          var st = state.extSlots[slot.slotId];
+          if (st && st.state === 'downloading' && !cachedIds[slot.slotId]) settle(slot, missingSt(slot, slot.slotId === 'ext-bible-in-a-year' ? 'Bible in a Year' : (slot.source || 'Divine Office')));
+        });
+      }, 75000);
     }, 9000);
     // Sing the Hours fallback — only after the courier settles, and
     // only for a Morning/Evening primary that stands missing.
