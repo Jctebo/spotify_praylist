@@ -4,7 +4,7 @@ ok 3 - app up on local wrangler (LOCAL_DEV harness mode)
 ok 4 - fixture: the presented day's draw stands (status=200)
 ok 5 - fixture: the served /app.js parses (vm.Script)
 ok 6 - SW pin: the served service worker carries CACHE 'ora-pro-nobis-v354-1'
-ok 7 - boot: the fixture pass reaches readiness (own settled + descriptors + intros) in 475 ms
+ok 7 - boot: the fixture pass reaches readiness (own settled + descriptors + intros) in 509 ms
 ok 8 - L2 setup: no liturgical record stands for the presented day yet (data-lit absent)
 ok 9 - L2 fallback: no record -> NO .np-litday line, the hero stands in the flat navy rgb(22, 40, 63), the title in #e9d9ae (debug={"hero":true,"litday":false,"bgColor":"rgb(22, 40, 63)","bgImage":"none","titleColor":"rgb(233, 217, 174)"})
 ok 10 - setup: the green liturgical record stands (door push)
@@ -26,7 +26,7 @@ ok 25 - L4: play/pause toggles the element and the glyph (playing -> paused -> p
 ok 26 - L4: prev stands disabled at the head of the queue
 ok 27 - L4: mid-queue, prev and next both stand enabled
 ok 28 - L4: jumping back to the Daily Rosary's row makes it current for the seek leg
-ok 29 - L4 seek: during input the fill follows the finger (elapsed 0:15) while the element stands uncommitted (ct=1.1s)
+ok 29 - L4 seek: during input the fill follows the finger (elapsed 0:15) while the element stands uncommitted (ct=1.2s)
 ok 30 - L4 seek: change commits currentTime to the scrub point (ct=15.3s of the 30s tone, remaining -0:15)
 ok 31 - L5: #np-speed names the standing rate (1×)
 ok 32 - L5: choosing 1.5x applies to the element at once, the label follows, no position jump (ct 15.3 -> 15.7)
@@ -39,7 +39,7 @@ ok 38 - L6: #np-read stands iff the current track has text (the standing rule, r
 ok 39 - L6: arming the sleep timer from Now Playing and the Play All row button agree ("Sleep · End of track" on both surfaces)
 ok 40 - L6 cleanup: the sleep timer stands disarmed
 ok 41 - L7 setup: the app wrote its queue snapshot record during play
-ok 42 - L7 restore: Now Playing opens on the restored track, paused, its queue list = the restored queue (5 rows); the mini-player shows the same track ("Daily Rosary")
+ok 42 - L7 restore: Now Playing opens on the restored track, paused, its queue list = the restored queue (5 rows, order preserved; re-resolution drops: ["intro:ext-bible-in-a-year"]); the mini-player shows the same track ("Daily Rosary")
 ok 43 - L8 white setup: re-boot ready with the white record standing
 ok 44 - L8 white: §2.5F outline — the accent discs on gradient zones carry the measured 2px bar-fg boundary (card "rgb(22, 40, 63) 0px 0px 0px 2px", head "rgb(22, 40, 63) 0px 0px 0px 2px")
 ok 45 - L8 white: ON THE HERO INSTANCE, --bar-fg/--bar-sub vs both gradient ends >= 4.5:1 (token min 4.88, measured min 4.88); title/meta/day-line compute to the audited pair

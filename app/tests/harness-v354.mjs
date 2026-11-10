@@ -669,8 +669,14 @@ async function main() {
     }));
     const recIds = recNow.ids.slice();
     const qIds = (await q()).q;
-    ok(rst && l7.paused && l7.npTitle === dockTitle && l7.rows === l7.qlen && JSON.stringify(qIds) === JSON.stringify(recIds),
-      `L7 restore: Now Playing opens on the restored track, paused, its queue list = the restored queue (${l7.rows} rows); the mini-player shows the same track ("${dockTitle}")`);
+    // v355 decision 2, stated precisely: identity re-resolved against
+    // the fresh day — the restored queue is an ORDER-PRESERVING
+    // subsequence of the snapshot; an entry whose descriptor cannot
+    // be rebuilt at restore time (an async ext intro) drops, by rule.
+    const subseq = qIds.every((id, i) => i === 0 || recIds.indexOf(id) > recIds.indexOf(qIds[i - 1])) && qIds.every((id) => recIds.includes(id));
+    const drops = recIds.filter((id) => !qIds.includes(id));
+    ok(rst && l7.paused && l7.npTitle === dockTitle && l7.rows === l7.qlen && subseq && qIds.includes("daily-rosary"),
+      `L7 restore: Now Playing opens on the restored track, paused, its queue list = the restored queue (${l7.rows} rows, order preserved; re-resolution drops: ${JSON.stringify(drops)}); the mini-player shows the same track ("${dockTitle}")`);
     await wipe();
 
     // ---- L8 · the audit, in-page, per color ---------------------------
@@ -747,9 +753,11 @@ async function main() {
         const txt = Array.from(el.childNodes).some((nd) => nd.nodeType === 3 && nd.textContent.trim().length > 0);
         if (txt) min = Math.min(min, parseFloat(getComputedStyle(el).fontSize));
       });
+      const litEl = document.querySelector(".np-litday");
+      const metaEl = document.getElementById("np-meta");
       return { body: parseFloat(getComputedStyle(document.body).fontSize),
-        litday: parseFloat(getComputedStyle(document.querySelector(".np-litday")).fontSize),
-        meta: parseFloat(getComputedStyle(document.getElementById("np-meta")).fontSize), min };
+        litday: litEl ? parseFloat(getComputedStyle(litEl).fontSize) : 0,
+        meta: metaEl ? parseFloat(getComputedStyle(metaEl).fontSize) : 0, min };
     });
     ok(l9.body === 17 && l9.litday >= 13 && l9.meta >= 13 && l9.min >= 13,
       `L9 floors: body computes 17px; the day line at ${l9.litday}px, hero meta at ${l9.meta}px, and NO text element on Now Playing under 13px (min ${l9.min}px)`);
