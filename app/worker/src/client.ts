@@ -225,6 +225,30 @@ function playTrack(desc) {
   state.queue = []; state.queueIdx = -1;
   startDesc(desc);
 }
+function tapPlay(d) {
+  // v351 §2.2: the prayer card tap's dispatch — the five standing
+  // [data-playkey] wiring sites call here instead of playTrack.
+  // A tap on a prayer in a block auto-queues that block's
+  // unplayed remainder behind the tapped pair (John's request,
+  // 2026-11-10). The descriptor handed over is used ONLY as
+  // identity: the build re-resolves in the fresh whole-day list
+  // (§2.1), never in the render-time snapshot.
+  if (!d) return;
+  var key = d.episodeId || '';
+  var prayerId = key.indexOf('intro:') === 0 ? key.slice(6) : key;
+  // §2.5(2): the same-unit toggle, at the granularity of the pair
+  // — tapping the prayer card while its intro plays pauses, and
+  // tapping the panel button while the prayer plays pauses.
+  if (state.current && !audioEl.paused && (state.current.episodeId === prayerId || state.current.episodeId === 'intro:' + prayerId)) { audioEl.pause(); return; }
+  if (!state.dayPayload) { playTrack(d); return; }
+  var build = sectionQueueFrom(extRebuildDescs(state.dayPayload), key);
+  // §2.7: a card in no block (the FROM TODAY'S PODCAST group)
+  // has no section to queue from — the standing single-play
+  // behavior stands for it, unchanged.
+  if (build === null) { playTrack(d); return; }
+  if (!build.length) return;
+  startQueue(build, true);
+}
 function resumeCurrent() {
   // v346 §2.4: the media-session play handler's seam — the app's
   // own resume path, queue- and position-preserving. It never
@@ -306,9 +330,42 @@ function queueBuild(descs) {
   for (var i = 0; i < filtered.length; i++) if (filtered[i].available) return filtered;
   return descs;
 }
-function startQueue(descs) {
+function sectionQueueFrom(all, tappedId) {
+  // v351 §2.1: the card tap's build. The tapped pair heads the
+  // queue UNFILTERED (§2.3 — John's tap wins, even on a played
+  // prayer; the intro rides with it, the pair traveling by the
+  // PRAYER's played state exactly as unplayedOnly groups it);
+  // the tail is the block's descriptors AFTER the tapped prayer
+  // through unplayedOnly (§2.4) — queueBuild is NOT used, so its
+  // full-replay fallback never applies here: the head guarantees
+  // a playable unit, and an all-played remainder correctly
+  // yields the tapped unit alone.
+  // Returns: the queue · [] when the pair cannot be resolved in
+  // the fresh list or the prayer stands unavailable (a no-op,
+  // §2.1(2) — the standing guard) · null when the prayer belongs
+  // to no block (§2.7's boundary — the caller falls back to
+  // playTrack's single play).
+  var prayerId = tappedId.indexOf('intro:') === 0 ? tappedId.slice(6) : tappedId;
+  var prayer = null;
+  for (var i = 0; i < all.length; i++) { if (all[i].episodeId === prayerId) { prayer = all[i]; break; } }
+  if (!prayer || !prayer.available) return [];
+  if (!prayer.block) return null;
+  var section = all.filter(function (x) { return x.block === prayer.block; });
+  var idx = section.indexOf(prayer);
+  if (idx < 0) return [];
+  var head = [prayer];
+  var prev = idx > 0 ? section[idx - 1] : null;
+  if (prev && prev.kind === 'intention' && prev.episodeId === 'intro:' + prayerId) head = [prev, prayer];
+  return head.concat(unplayedOnly(section.slice(idx + 1)));
+}
+function startQueue(descs, force) {
   if (!descs.length) return;
-  if (state.queue.length && state.queueIdx >= 0 && state.current && !audioEl.paused) { audioEl.pause(); return; }
+  // v351 §2.5(1): the pause toggle fires only when force is not
+  // set. Every standing call site calls with one argument and
+  // behaves byte-identically; only the card tap path (tapPlay)
+  // passes true — a tap REPLACES the standing queue (decision 3)
+  // instead of pausing it.
+  if (!force && state.queue.length && state.queueIdx >= 0 && state.current && !audioEl.paused) { audioEl.pause(); return; }
   state.queue = descs.slice();
   var idx = -1;
   for (var i = 0; i < state.queue.length; i++) {
@@ -1710,7 +1767,7 @@ function extSwapCard(slot) {
   fresh.querySelectorAll('[data-playkey]').forEach(function (b) {
     b.addEventListener('click', function () {
       var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b.getAttribute('data-playkey'); })[0];
-      if (d) playTrack(d);
+      if (d) tapPlay(d);
     });
   });
   // v343 §2.4: the swap path arms the ellipsis like every other.
@@ -1761,7 +1818,7 @@ function blockInsertCards(day, standing) {
           el.querySelectorAll('[data-playkey]').forEach(function (b2) {
             b2.addEventListener('click', function () {
               var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
-              if (d) playTrack(d);
+              if (d) tapPlay(d);
             });
           });
           el.querySelectorAll('[data-read]').forEach(function (b2) {
@@ -1785,7 +1842,7 @@ function blockInsertCards(day, standing) {
         el2.querySelectorAll('[data-playkey]').forEach(function (b2) {
           b2.addEventListener('click', function () {
             var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
-            if (d) playTrack(d);
+            if (d) tapPlay(d);
           });
         });
         wireExpand(el2);
@@ -1935,7 +1992,7 @@ function ownSwapRow(row, day) {
     el.querySelectorAll('[data-playkey]').forEach(function (b2) {
       b2.addEventListener('click', function () {
         var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
-        if (d) playTrack(d);
+        if (d) tapPlay(d);
       });
     });
     el.querySelectorAll('[data-read]').forEach(function (b2) {
@@ -2745,7 +2802,7 @@ function renderPrayers() {
     view.querySelectorAll('[data-playkey]').forEach(function (btn) {
       btn.addEventListener('click', function () {
         var d = allDescs.filter(function (x) { return x.episodeId === btn.getAttribute('data-playkey'); })[0];
-        if (d) playTrack(d);
+        if (d) tapPlay(d);
       });
     });
     view.querySelectorAll('[data-read]').forEach(function (btn) {
