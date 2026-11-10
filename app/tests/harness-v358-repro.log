@@ -1,0 +1,16 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 3 - fixture: the presented day's draw stands (status=200)
+ok 4 - fixture: the served /app.js parses (vm.Script)
+ok 5 - SW pin: the served service worker carries CACHE 'ora-pro-nobis-v351-1'
+R1 seq: []
+R1 stall: {"cur":null,"curKind":null,"curUrl":null,"curAvail":null,"paused":true,"dur":null,"rs":0,"ns":0,"err":null,"q":[],"idx":-1,"ext":{},"own":{}}
+not ok 6 - R1 Play All advances across >=2 pair boundaries (seq=[], stall={"cur":null,"paused":true,"rs":0,"ns":0,"err":null,"idx":-1,"qlen":0})
+R2 tap: no-card seq: []
+R2 stall: {"cur":null,"curKind":null,"curUrl":null,"curAvail":null,"paused":true,"dur":null,"rs":0,"ns":0,"err":null,"q":[],"idx":-1,"ext":{},"own":{}}
+not ok 7 - R2 tap queue advances across >=1 pair boundary past the tapped pair (seq=[], stall={"cur":null,"paused":true,"rs":0,"ns":0,"err":null,"idx":-1,"qlen":0})
+R3 blockplay: no-btn seq: []
+R3 stall: {"cur":null,"curKind":null,"curUrl":null,"curAvail":null,"paused":true,"dur":null,"rs":0,"ns":0,"err":null,"q":[],"idx":-1,"ext":{},"own":{}}
+not ok 8 - R3 block play advances across >=2 pair boundaries (seq=[], stall={"cur":null,"paused":true,"rs":0,"ns":0,"err":null,"idx":-1,"qlen":0})
+ok 9 - browser: no page errors across the v351 legs (errors=[])
+# harness-v358: 6/9 ok

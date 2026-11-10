@@ -556,6 +556,7 @@ function updatePositionState() {
 function startDesc(desc) {
   fadeRestore(); // v320 §2.6 restore point (2): every playback start passes through here
   state.current = desc;
+  state.lastStartAt = Date.now(); // v358: the error listener's window — a start's failure belongs to its start
   setMediaSessionFor(desc);
   audioEl.src = desc.url;
   audioEl.playbackRate = state.rate; // v336: re-asserted on every start — no stale element rate
@@ -627,9 +628,34 @@ function queueLiveDesc(d) {
   // after the download had landed. At every queue decision the
   // descriptor is re-checked against LIVE slot state: a slot that
   // stands 'present' NOW is substituted with its fresh descriptor
-  // (current streamUrl, available) and plays. Own tracks and intros
-  // keep their snapshot descriptor — their availability is a
-  // payload fact, not a download state.
+  // (current streamUrl, available) and plays.
+  // v358 defect fix (John's pinpoint, 2026-11-10 15:28 CT — the
+  // queue stands, one pair completes, then playback pauses): the
+  // v338 note's last sentence was wrong for own tracks and intros.
+  // Their snapshot URL is the RAW enclosure until the pass-through
+  // download lands and the blob URL swaps in (§2.3: the enclosure
+  // host refuses browser reads — the blob is the only playable
+  // form), so an own descriptor's URL is a download state exactly
+  // as a slot's availability is. A queue built while a later
+  // pair's download was still in flight advanced into the dead
+  // enclosure URL: play() failed, the rejection was swallowed, no
+  // 'ended' ever fired, and the queue stood dead with its entries
+  // unplayed. Own + intro descriptors therefore re-resolve against
+  // the fresh day build by (episodeId, block) — the v360
+  // occurrence discipline — at the same advance-time seam: the
+  // fresh descriptor (blob URL once landed) substitutes; a fresh
+  // descriptor standing unavailable (settled missing) passes over.
+  if (!d) return null;
+  var isExt = d.kind === 'external' || !!(state.extSlots && state.extSlots[d.episodeId]);
+  if (!isExt) {
+    var descs = state.dayDescs || [];
+    for (var i = 0; i < descs.length; i++) {
+      if (descs[i].episodeId === d.episodeId && (descs[i].block || '') === (d.block || '')) {
+        return descs[i].available ? descs[i] : null;
+      }
+    }
+    return d.available ? d : null;
+  }
   if (d.available) return d;
   var st = state.extSlots && state.extSlots[d.episodeId];
   if (!st || st.state !== 'present') return null;
@@ -989,6 +1015,60 @@ audioEl.addEventListener('loadedmetadata', function () {
   }
   updatePositionState();
 });
+/* ---------------- Autoplay (v358) ----------------
+   Continuous advance is the expected baseline (John's approval,
+   2026-11-10 15:30 CT): with autoplay ON — the default — a start
+   that reaches the end of its queue keeps going through the
+   presented day (the v358 §1 chaining scope; v351 decision 2's
+   block-end stop is superseded as the default). The toggle turns
+   that behavior OFF: OFF restores the standing stops exactly.
+   The setting is device-local, like the playback rate (§1
+   Decision 3): only an expressly stored 'off' reads OFF; a fresh
+   store reads ON. Autoplay never STARTS playback: it governs
+   only the natural end of a playing track. A restored queue
+   still stands paused (v355), and the sleep timer's stop is
+   final — the track-mode divert below stands ahead of every
+   advance and chain, and the minutes-mode stop is a pause that
+   never reaches this handler. */
+var AUTOPLAY_KEY = 'opn-autoplay-v358';
+function autoplayOn() {
+  try { return localStorage.getItem(AUTOPLAY_KEY) !== 'off'; } catch (e) { return true; }
+}
+function setAutoplay(on) {
+  try { localStorage.setItem(AUTOPLAY_KEY, on ? 'on' : 'off'); } catch (e) {}
+  syncAutoplayToggles();
+}
+function syncAutoplayToggles() {
+  var on = autoplayOn();
+  var label = on ? 'Autoplay On' : 'Autoplay Off';
+  var d = document.getElementById('dock-autoplay');
+  if (d) { d.textContent = label; d.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  var np = document.getElementById('np-autoplay');
+  if (np) { np.textContent = label; np.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  var st = document.getElementById('set-autoplay');
+  if (st) { st.textContent = on ? 'On' : 'Off'; st.classList.toggle('on', on); st.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+}
+function chainForward(fromDesc) {
+  // The chain: the fresh whole-day build past the ended track,
+  // filtered by the standing queue-build discipline (unplayedOnly
+  // — a played prayer and its intro pass over together), started
+  // as a fresh queue. The ended track is located by (episodeId,
+  // block) — the v360 occurrence discipline — so a repeated
+  // episode chains from its own daypart. A Play All queue already
+  // holds the whole day: its end IS the day's end and the tail
+  // stands empty. Returns whether a new queue stands playing.
+  if (!fromDesc || !state.dayPayload) return false;
+  var full = extRebuildDescs(state.dayPayload);
+  var pos = -1;
+  for (var i = 0; i < full.length; i++) {
+    if (full[i].episodeId === fromDesc.episodeId && (full[i].block || '') === (fromDesc.block || '')) { pos = i; break; }
+  }
+  if (pos < 0) return false;
+  var tail = unplayedOnly(full.slice(pos + 1));
+  if (!tail.length) return false;
+  startQueue(tail, true);
+  return state.queue.length > 0 && state.queueIdx >= 0;
+}
 audioEl.addEventListener('ended', function () {
   // v344 §2.3: ONE mark call at the top of the handler — every
   // natural end passes this point exactly once, before the sleep
@@ -997,11 +1077,66 @@ audioEl.addEventListener('ended', function () {
   // single-play end-clear. The paths that must NOT mark never
   // reach here: the minutes-mode sleep stop is a pause, skips are
   // transport calls, and a partial play fires no ended event.
+  var endedDesc = state.current;
   markCompleted(state.current);
   if (state.sleep && state.sleep.mode === 'track') { sleepTrackEnd(); return; }
-  if (state.queue.length) { advanceQueue(1); return; }
+  if (state.queue.length) {
+    if (advanceQueue(1)) return;
+    // The queue stands exhausted (advanceQueue has cleared to
+    // the standing stop): autoplay ON chains forward through the
+    // day; OFF keeps the stop exactly as it stood.
+    if (autoplayOn()) chainForward(endedDesc);
+    return;
+  }
+  // A single play's end: the same rule — autoplay ON chains from
+  // the ended track through the day; OFF stops, as before.
+  if (autoplayOn() && chainForward(endedDesc)) return;
   state.current = null; setPlaybackState('none'); markPlaying(null);
   updateDock();
+});
+function handleAudioError() {
+  // v358 defect fix, second half: a start whose URL cannot play
+  // (a refused enclosure read, a torn stream) fires 'error', never
+  // 'ended' — before this handler the queue died silently on the
+  // failed entry, its remaining entries standing unplayed. The
+  // standing entry re-resolves against the fresh build: a landed
+  // download substitutes its playable URL and the entry restarts
+  // on it. The same URL means the download may still be in flight
+  // (the previous pair's minutes are its usual budget) — wait and
+  // re-check on a bounded clock; only an entry that still cannot
+  // stand when the bound runs out passes over, as a missing entry
+  // passes over at advance time.
+  if (!state.current || !audioEl.error) return;
+  var cur = state.current;
+  var inQueue = !!(state.queue.length && state.queueIdx >= 0 && state.queue[state.queueIdx] && state.queue[state.queueIdx].episodeId === cur.episodeId);
+  var live = queueLiveDesc(inQueue ? state.queue[state.queueIdx] : cur);
+  if (live && live.url && live.url !== cur.url) {
+    if (inQueue) state.queue[state.queueIdx] = live;
+    state.errWaitKey = null; state.errWaitN = 0;
+    startDesc(live);
+    return;
+  }
+  var key = cur.episodeId + '@' + (inQueue ? state.queueIdx : 'single');
+  var tries = state.errWaitKey === key ? (state.errWaitN || 0) + 1 : 1;
+  state.errWaitKey = key; state.errWaitN = tries;
+  if (tries <= 20) {
+    var wantId = cur.episodeId, wantIdx = state.queueIdx;
+    setTimeout(function () {
+      if (state.current && state.current.episodeId === wantId && state.queueIdx === wantIdx && audioEl.error) handleAudioError();
+    }, 1500);
+    return;
+  }
+  state.errWaitKey = null; state.errWaitN = 0;
+  if (inQueue) { advanceQueue(1); return; }
+  state.current = null; setPlaybackState('none'); markPlaying(null);
+  updateDock();
+}
+audioEl.addEventListener('error', function () {
+  // Only a start's own failure belongs here (the window is the
+  // start's, recorded in startDesc); a paused load standing by
+  // (loadResume, the sleep hold) errors outside it and stands.
+  if (!state.current || !state.lastStartAt || Date.now() - state.lastStartAt > 4000) return;
+  handleAudioError();
 });
 audioEl.addEventListener('pause', function () { saveResume(); saveQueueSnapshot(); if (!state.queue.length) markPlaying(state.current ? state.current.episodeId : null); });
 audioEl.addEventListener('play', function () { setPlaybackState('playing'); updateDock(); });
@@ -1083,6 +1218,7 @@ function updateDock() {
   document.getElementById('dock-meta').textContent = cur.block || state.dateLabel || '';
   document.getElementById('dock-play').innerHTML = audioEl.paused ? '&#9654;' : '&#10073;&#10073;';
   document.getElementById('dock-next').disabled = !state.queue.length;
+  syncAutoplayToggles(); // v358: the dock toggle's label follows the store
   dock.classList.remove('hidden');
   document.body.classList.add('dock-on');
   measureBars();
@@ -1298,8 +1434,9 @@ document.querySelectorAll('#tabbar .tab').forEach(function (b) {
 });
 document.getElementById('dock-play').addEventListener('click', function () { if (!state.current) return; if (state.queue.length) { if (!audioEl.paused) audioEl.pause(); else resumeCurrent(); } else playTrack(state.current); });
 document.getElementById('dock-next').addEventListener('click', function () { advanceQueue(1); });
+document.getElementById('dock-autoplay').addEventListener('click', function () { setAutoplay(!autoplayOn()); });
 document.getElementById('dock').addEventListener('click', function (ev) {
-  if (ev.target && ev.target.closest && (ev.target.closest('#dock-play') || ev.target.closest('#dock-next'))) return;
+  if (ev.target && ev.target.closest && (ev.target.closest('#dock-play') || ev.target.closest('#dock-next') || ev.target.closest('#dock-autoplay'))) return;
   openNowPlaying(); // v336 (D5, approved): the dock tap opens Now Playing — the v326 jump-to-card is retired
 });
 window.addEventListener('resize', measureBars);
@@ -1356,6 +1493,16 @@ function renderSettings() {
 }
 function paintSettings() {
   var html = '<h1 class="screen">Settings</h1>';
+  // v358 §1 Decision 2: the Playback section stands above Source
+  // mapping — the autoplay choice lives in the app's standing
+  // settings home as well as on the dock and Now Playing. The
+  // setting is device-local (Decision 3); this control writes the
+  // device store, never the source-mapping save below.
+  html += '<h2 class="sectionhead">PLAYBACK</h2><div class="liblist"><div class="setrow">'
+    + '<div class="setname">Autoplay</div>'
+    + '<div class="meta">Keep playing through the day when a queue ends. Off restores the stop at the end of a block.</div>'
+    + '<div class="setcontrols"><button class="settoggle' + (autoplayOn() ? ' on' : '') + '" id="set-autoplay" aria-pressed="' + (autoplayOn() ? 'true' : 'false') + '">' + (autoplayOn() ? 'On' : 'Off') + '</button></div>'
+    + '</div></div>';
   html += '<p class="sub">Source mapping — which podcast plays in which block, on which days, in which order. Changes apply from the next nightly push.</p>';
   html += '<p class="meta">Settings version ' + settingsVersion + '</p>';
   if (settingsNote) html += '<p class="meta">' + esc(settingsNote) + '</p>';
@@ -1410,6 +1557,8 @@ function paintSettings() {
   });
   document.getElementById('set-save').addEventListener('click', saveSettings);
   document.getElementById('set-back').addEventListener('click', function () { setTab('prayers'); });
+  var apBtn = document.getElementById('set-autoplay');
+  if (apBtn) apBtn.addEventListener('click', function () { setAutoplay(!autoplayOn()); });
   fillPinSection();
 }
 /* ---------------- Settings \u2014 Confession PIN section (v356 \u00a72.6.4) ----------------
@@ -1962,7 +2111,7 @@ function openNowPlaying() {
     + '</div>'
     + '<div class="np-seekrow"><span id="np-elapsed">0:00</span><input type="range" id="np-seek" min="0" max="1000" value="0" aria-label="Seek"><span id="np-remain">--:--</span></div>'
     + '<div class="np-transport"><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button></div>'
-    + '<div class="row np-controls"><button class="btn ghost" id="np-speed"></button><button class="btn ghost" id="np-sleep"></button><button class="btn ghost" id="np-read">Read</button></div>'
+    + '<div class="row np-controls"><button class="btn ghost" id="np-speed"></button><button class="btn ghost" id="np-sleep"></button><button class="btn ghost" id="np-autoplay">Autoplay On</button><button class="btn ghost" id="np-read">Read</button></div>'
     + '<div class="npq-head"><span class="npq-heading">Queue</span><span class="meta" id="np-queue-pos"></span></div>'
     + '<div id="np-queue"></div>'
     + '</div>';
@@ -1973,6 +2122,7 @@ function openNowPlaying() {
   sheet.querySelector('#np-next').addEventListener('click', function () { advanceQueue(1); });
   sheet.querySelector('#np-speed').addEventListener('click', function () { openSpeedSheet(); });
   sheet.querySelector('#np-sleep').addEventListener('click', function () { openSleepSheet(); });
+  sheet.querySelector('#np-autoplay').addEventListener('click', function () { setAutoplay(!autoplayOn()); });
   sheet.querySelector('#np-read').addEventListener('click', function () {
     var t = state.current && state.readTracks[state.current.episodeId];
     if (t && t.hasText && t.textUrl) openRead(t); // stacks over this sheet; closing Read returns here
@@ -2017,6 +2167,7 @@ function updateNowPlaying() {
   sheet.querySelector('#np-next').disabled = !state.queue.length;
   sheet.querySelector('#np-speed').textContent = state.rate + '×';
   sheet.querySelector('#np-sleep').textContent = sleepLabel();
+  syncAutoplayToggles(); // v358: the Now Playing toggle's label follows the store
   var rt = state.readTracks[cur.episodeId];
   sheet.querySelector('#np-read').style.display = (rt && rt.hasText && rt.textUrl) ? '' : 'none';
   updateNpSeek();
