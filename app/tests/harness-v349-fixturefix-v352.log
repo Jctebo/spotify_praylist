@@ -1,0 +1,23 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - L8a migration: the standing 'novenas' settings row moves to block Novenas at sort 1 (row={"block":"Novenas","sort_order":1})
+ok 3 - L8c migration: the prayer_items 'Novenas' row moves to block Novenas (row={"block":"Novenas"})
+ok 4 - L8e migration: settings meta version increments by exactly 1 (3 -> 4)
+ok 5 - L8d migration: a second application matches zero guarded rows — both rows stand unchanged (settings={"block":"Novenas","sort_order":1}, item={"block":"Novenas"})
+ok 6 - L8b migration: a user-moved settings row FAILS the guard and stands untouched — the held override (row={"block":"Evening","sort_order":5}); the module item still moves ({"block":"Novenas"})
+ok 7 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 8 - fixture: the presented day's draw stands (status=200)
+ok 9 - fixture: the served /app.js parses (vm.Script)
+ok 10 - L4 player shell: block list ends [..., Night, Mass and Homilies, Novenas]; Novenas caption + Praylist URL stand (blocks=["Morning","Midmorning","Midday","Afternoon","Evening","Night","Mass and Homilies","Novenas"], caption=the day's novenas, url=https://open.spotify.com/playlist/2hclGC0JlP4tC51uohete6)
+ok 11 - L5 module payload: Novenas block stands LAST with the single Novenas item and a drawn intention; Midmorning's module block no longer carries it; the day still draws 35 items (blocks=["Morning","Midmorning","Midday","Afternoon","Evening","Night","Mass and Homilies","Novenas"], drawn="Synthetic intention H3", count=35)
+ok 12 - L6 intros: the shell introTexts map carries the "novenas" key with the Novenas item's drawn text, keyed by ITEM (introTexts.novenas="Synthetic intention H3", drawn="Synthetic intention H3")
+ok 13 - L11 segment dry leg: the step-7b composition form over the eight-block module payload yields eight scripts; the Novenas script draws only from the Novenas block; the Midmorning script contains no novena sentence (scripts=Morning,Midmorning,Midday,Afternoon,Evening,Night,Mass and Homilies,Novenas)
+ok 14 - L7 derivation: on the seven-block constants the max-start derivation equals the old list-order reduce at every hour 0-23; on the eight-block list it returns Midmorning 09-11 and Night 21-23, never Novenas or Mass and Homilies; BLOCK_START[Novenas]=9 in source; the shipped source carries the max-start form (starts={"Morning":0,"Midmorning":9,"Midday":12,"Afternoon":15,"Evening":18,"Night":21,"Mass and Homilies":24,"Novenas":9})
+ok 15 - L7 due: at the live Chicago hour 6, the module payload reads Novenas due=false (start 9) and Mass and Homilies due=false (start 24), exactly as before
+ok 16 - L10 settings surface: the served client carries Novenas in its settings block lists; the door settings read shows the novenas row under block Novenas (row={"sourceKey":"novenas","name":"Novenas","family":"own","block":"Novenas","dayRule":"daily","sortOrder":1,"enabled":1,"slotId":null,"role":"primary"})
+ok 17 - pristine app up for the settings comparison
+not ok 18 - L10 settings comparison: every settings row except 'novenas' is identical candidate vs pristine; the settings version stands exactly +1 (candidate=4, pristine=4)
+ok 19 - L9 browser blocks: the Novenas block renders LAST with its three novena cards and intro-paired descriptors; Midmorning renders Exegesis then Terce with no novena anywhere (heads=["MORNING","MIDMORNING","MIDDAY","AFTERNOON","EVENING","NIGHT","MASS AND HOMILIES","NOVENAS"], novCards=["novena-st-jude","novena-st-anne","novena-st-rita"], midCards=["ext-gospel-exegesis","ext-midmorning-prayer"], novDescs=["intro:novena-st-jude","novena-st-jude","intro:novena-st-anne","novena-st-anne","intro:novena-st-rita","novena-st-rita"], errors=0)
+ok 20 - L9 played + queue: pre-change opn-played-v344 marks for novena-st-jude/st-anne (track ids unchanged) still read as played; the Novenas block's own v347 queue builds ONLY the unplayed remainder — the two played novenas are skipped, intro paired (queue=["intro:novena-st-rita","novena-st-rita"], q1=true)
+ok 21 - L9 Midmorning queue: the Midmorning block builds its queue with NO novena entries (queue=["intro:ext-gospel-exegesis","ext-gospel-exegesis","ext-midmorning-prayer"])
+ok 22 - browser: no page errors across the v349 legs (errors=[])
+# harness-v349: 21/22 ok

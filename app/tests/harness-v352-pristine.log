@@ -1,0 +1,33 @@
+ok 1 - worker bundles clean (esbuild)
+not ok 2 - fixture: migration 0015 stands in the tree and applies to the test D1
+ok 3 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 4 - fixture: the presented day's draw stands (status=200)
+ok 5 - fixture: the served /app.js parses (vm.Script)
+not ok 6 - L1 route: a valid POST returns 200 {ok, date} (status=404)
+not ok 7 - L1 store: the row stands in prayer_liturgical_days (rows=[])
+not ok 8 - L1 upsert: a second POST for the same date overwrites name + color (rows=[])
+not ok 9 - L1 validation: color 'blue' refused 400 (status=404)
+not ok 10 - L1 validation: a non-ISO date refused 400 (status=404)
+not ok 11 - L1 validation: an empty dayName refused 400 (status=404)
+not ok 12 - L1 validation: a whitespace-only dayName refused 400 after trim (status=404)
+not ok 13 - L1 validation: a dayName over 160 chars refused 400 (status=404)
+not ok 14 - L1 validation: a dayName of exactly 160 chars stands (status=404)
+ok 15 - L1 door: no agent token → 403 (status=403)
+not ok 16 - L2 player payload: liturgicalDay stands exactly as pushed (got=undefined)
+not ok 17 - L2 prayer payload: liturgicalDay stands exactly as pushed (got=undefined)
+not ok 18 - L2 same-day pin: a record standing ONLY for tomorrow reads null on both of today's payloads — no leak across dates
+not ok 19 - L2 own-date keying: the prayer payload for tomorrow carries tomorrow's own record
+not ok 20 - L3 independence: one payload carries the private-fallback addendum AND the ferial liturgical name side by side — neither derives from the other in the app
+not ok 21 - L10 hygiene: player/day with vs without a record is identical except liturgicalDay
+not ok 22 - L10 hygiene: prayer/day with vs without a record is identical except liturgicalDay
+not ok 23 - L3 header: with a private-fallback addendum standing, the header shows the FERIAL liturgical name, never the private saint (text=null, data-lit=null)
+not ok 24 - L4 fallback: no record for today (yesterday's stands) → the header shows the plain date label, no data-lit, the bar is flat navy (text=null, label="Tuesday, November 10, 2026", attr=null, bg=rgb(22, 40, 63), img=none)
+not ok 25 - L-white theme: data-lit=null, header=null, playbtn=rgb(168, 134, 58), dock fill=rgb(168, 134, 58) (dock painted=true), blockhead border=rgb(168, 134, 58), bar gradient=false over solid var=; contrast fg=12.32/13.72 sub=4.88/5.43 · white leg: wordmark=rgb(233, 217, 174), litday=null, tabbar gradient=false, dock gradient=false, tab=rgb(185, 196, 212), tabActive=rgb(233, 217, 174), gold pairs REPORTED (brand exception): accent-on-cream=3.15, ink-on-accent=3.42
+not ok 26 - L-red theme: data-lit=null, header=null, playbtn=rgb(168, 134, 58), dock fill=rgb(168, 134, 58) (dock painted=true), blockhead border=rgb(168, 134, 58), bar gradient=false over solid var=; contrast fg=10.96/8.27 sub=7.31/5.51 accent-vs-ink=7.43 accent-vs-cream=6.84
+not ok 27 - L-green theme: data-lit=null, header=null, playbtn=rgb(168, 134, 58), dock fill=rgb(168, 134, 58) (dock painted=true), blockhead border=rgb(168, 134, 58), bar gradient=false over solid var=; contrast fg=9.01/6.95 sub=7.48/5.76 accent-vs-ink=5.07 accent-vs-cream=4.67
+not ok 28 - L-violet theme: data-lit=null, header=null, playbtn=rgb(168, 134, 58), dock fill=rgb(168, 134, 58) (dock painted=true), blockhead border=rgb(168, 134, 58), bar gradient=false over solid var=; contrast fg=10.98/9.02 sub=8.11/6.66 accent-vs-ink=6.80 accent-vs-cream=6.27
+not ok 29 - L-rose theme: data-lit=null, header=null, playbtn=rgb(168, 134, 58), dock fill=rgb(168, 134, 58) (dock painted=true), blockhead border=rgb(168, 134, 58), bar gradient=false over solid var=; contrast fg=8.03/5.87 sub=6.73/4.92 accent-vs-ink=5.67 accent-vs-cream=5.22
+not ok 30 - L10 floors: body computed font-size = 17px and #litday >= 13px under a theme (body=17, litday=0)
+ok 31 - L11 no-break: Examination, Confession, Intentions, and Settings render their standing forms under a white record, then a violet one (white={"examination":true,"confession":true,"intentions":true,"settings":true}, violet={"examination":true,"confession":true,"intentions":true,"settings":true})
+ok 32 - browser: no page errors across the v352 legs (errors=[])
+# harness-v352: 7/32 ok

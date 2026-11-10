@@ -1,0 +1,21 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 3 - fixture: the presented day's draw stands (status=200)
+ok 4 - fixture: the served /app.js parses (vm.Script)
+not ok 5 - SW pin: the served service worker carries CACHE 'ora-pro-nobis-v351-1'
+not ok 6 - harness exception: page.evaluate: TypeError: Cannot read properties of null (reading 'presentedDay')
+    at extRebuildDescs (http://127.0.0.1:8996/app.js:1885:18)
+    at eval (eval at evaluate (:370:30), <anonymous>:2:40)
+    at UtilityScript.evaluate (<anonymous>:372:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+page.evaluate: TypeError: Cannot read properties of null (reading 'presentedDay')
+    at extRebuildDescs (http://127.0.0.1:8996/app.js:1885:18)
+    at eval (eval at evaluate (:370:30), <anonymous>:2:40)
+    at UtilityScript.evaluate (<anonymous>:372:16)
+    at UtilityScript.<anonymous> (<anonymous>:1:44)
+    at ev (/home/hatch/workspace/.worktrees/v352/app/tests/harness-v351.mjs:356:34)
+    at expectedFor (/home/hatch/workspace/.worktrees/v352/app/tests/harness-v351.mjs:362:33)
+    at main (/home/hatch/workspace/.worktrees/v352/app/tests/harness-v351.mjs:391:44) {
+  log: []
+}
+# harness-v351: 4/6 ok
