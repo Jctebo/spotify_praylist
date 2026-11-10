@@ -188,3 +188,45 @@
 - The three §3.2 build deltas (repeated-swap atomicity · two more fragment consumers · the completion-guard re-point) are §2's own rules carried to the call sites §2 did not enumerate; each is harness-proven above.
 - `.playbtn.small` left standing as unused CSS (§3.2), against a silent removal.
 - **NOT deployed.** Ship is a later phase; production still stands at v358's Worker 1e1ef845.
+
+## 4 · Review
+
+- **Seat:** Review record 1304 · contract 204 (ASAP, hard deadline 2026-11-10T23:47:46Z) · **VERDICT: PASS.** The build is §2 as designed and John's approval as given (voice call 2026-11-10 ~16:23 CT): every track its own standard row · intention rows titled "Prayer Intention: <prayer name>" · no further distinction · the intention words as the row's second line, capped, with the ⋯ expand · To Ship. Review ran independently of Implement: the diff was read first-hand, the gate harness re-run by this seat, and the standing families' delta claims spot-checked against the committed complete logs.
+
+### 4.1 The seam, verified against §2 (diff 05b76e4 → e11e5a4, read in full)
+
+- **§2.1 title helper:** `prayerIntentionTitle(t, intro)` stands exactly as pinned — `"Prayer Intention: " + name`, fallback `t.title` → `intro.title` → the bare `"Prayer Intention"`, never a fabricated name. The queue form `prayerIntentionTitleForDesc` resolves the prayer from `state.dayDescs` by the stripped `intro:` id and applies the same chain.
+- **§2.2 the intention row:** `intentionRowCard` — `<div class="card intention-row" data-card="intro:<episodeId>">`, the STANDARD `.playbtn` carrying `data-playkey="intro:<episodeId>"` (v351 decision 5 untouched — the button selects the pair), the helper's `<h3>`, `.intention-text` as the second line, the `.ellipsis-btn` after it. No played dot, no label line, no Read control, no Spotify link.
+- **§2.3 the seam:** `trackCard`'s wrap returns `intentionRowCard + the plain prayer card` when an intro stands for an available track and the byte-identical plain card when none stands (the no-intro branch is textually the pre-v361 return). `intentionPanelHtml` is DELETED — grep over the served sources finds no live reference (the name survives only in historical comments). Unavailable branches unchanged; search hits remain prayer descriptors rendered as the pair.
+- **§2.4/§2.5 mechanics:** `armEllipsis` / `armAllEllipses` / `wireExpand` re-pointed to `.card.intention-row`; `renderQueueList` titles intro rows through the descriptor helper and the `Intention — ` prefix survives only in a comment naming its retirement.
+- **§2.6 CSS:** the 136px `.card.intro-row` rule, the 25% `.intention-panel` rule, `.intention-label`, and `.panel-foot` are gone from `ui.ts`; `.intention-text`'s clamp declarations are unchanged; the expanded rule stands re-scoped to `.card.intention-row.expanded`; the v353 exemption comment now records that the exemption lapsed. NO fixed row height stands anywhere in the new form. SW pin `ora-pro-nobis-v361-1` stands in the served service worker.
+- **NO migration** — the diff's file list carries zero migration files, and harness leg 2 proves the fixture set runs through 0015 with no 0016 standing. **§2.7's no-disturbance list holds:** the diff is confined to `client.ts`'s row seam + swap/insert paths + queue title (plus comment updates) and `ui.ts`'s §2.6 rules + pin; `ownSwapRow` is untouched (zero diff mentions), as §2.4 designed.
+
+### 4.2 The three §3.2 deviations — judged on their evidence
+
+1. **`extSwapCard` repeated-swap atomicity — ACCEPTED, necessary and correctly bounded.** The removal fires only when the old card's immediately preceding sibling carries `.intention-row` AND `data-card === 'intro:' + slot.slotId` — this slot's own intention row, nothing else. The defect it answers was caught live by the harness during Implement, and this seat's own re-run reproduces the fix: leg 38 reads exactly ONE intention row immediately before the prayer card "however many swaps run".
+2. **The fragment rule at `blockInsertCards` + `appendBlockSettingsCards` — ACCEPTED.** Both consumed `trackCard(...)` through `tmp.firstChild`; under the pair return, firstChild alone would have appended the intention row and stranded the prayer card in the fragment. Both now take all fragment children in order — §2.4's own rule at the call sites §2 did not enumerate.
+3. **`ownBuildIntentions` completion-guard re-point — ACCEPTED.** The old test (`card.querySelector('.intention-panel')`) could never match again after the panel's retirement, so the completion leg would have re-swapped every settled slot on every intros landing — the duplicate-row pressure deviation 1 then absorbs. The new test (the prayer card's immediately preceding sibling carries `.intention-row`) is the same completion rule in the pair form; a preceding sibling can only be this slot's intention row or another track's prayer card, so the test cannot false-positive.
+- **`.playbtn.small` standing unused:** named in §3.2 rather than silently kept or silently removed — accepted as documented residue; its removal is a cleanup candidate for the Curator, not a defect of this release.
+
+### 4.3 harness-v343 dispositions — judged under §2.8's rule
+
+- The committed family log reads **29 passed, 0 failed**, and the dispositions stand IN the harness file (header disposition block + per-leg markers), not only in §3.5's prose. Legs 2 and 8 are RETIRED **with premise replacements that execute**: leg 2's replacement asserts no `.card.intro-row` stands anywhere AND intention rows stand at natural heights (long-text row taller than short-text row); leg 8's asserts no `.intention-panel` / `.intention-label` / `.panel-foot` / `.playbtn.small` stands in the rendered page and the intention row's button measures the standard 42px. The surviving cap/expand/completion/settle semantics legs are re-pointed to the intention row and green. The v353-family navigation narrowing (legs open the block page their rows stand on) is named in-file and in §3.5. **No leg is silently failing, and none passes against the old DOM** — the retired legs' replacements actively assert the old form's ABSENCE. §2.8's rule is satisfied.
+
+### 4.4 Gate evidence — this seat's own runs and spot-checks
+
+- **harness-v361 re-run by this seat (complete log `app/tests/harness-v361-review.log`): 39/39 ok, exit 0** — identical to Implement's candidate tally. The pristine split (17/39; L1/L2/L6/L8 fail, L4/L5/L10 pass) stands as §2.8 predicted in §3.3's committed log: the harness tests the form, not the behavior.
+- **harness-v354: candidate 18/21 = pristine 18/21, failing sets byte-identical** (diffed by this seat) — zero v361 delta, proven, not asserted.
+- **harness-v347: candidate 17/19 = pristine 17/19, failing sets identical** — zero delta, including at §2.5's queue-title seam.
+- **harness-v360: 25/26** — the sole failure is its own SW-pin leg (`v360-1` expected); every occurrence-keying leg green on the new form.
+- **harness-v355 spot 20/29 · harness-v358 spot 14/15** (sole failure its SW-pin leg) — both match the standing deltas already on their records; zero v361 delta.
+- **harness-v353: 45/46 — the L10 exception is CONFIRMED first-hand as the named pre-existing artifact, not a v361 regression.** The mechanism: L10 reads `firstKey` from the FIRST `.liblist .setrow`'s `data-setkey`, then keys its second toggle off it. Since v358 the Settings list opens with the PLAYBACK section, whose Autoplay row is a `.setrow` with NO `data-setkey` (client.ts: the PLAYBACK row stands bare; every settings-store row carries `data-setkey`) — so `firstKey` is null and the follow-on click throws "Cannot read properties of null". The v361 diff does not touch Settings rendering. The exception aborts the family before L11/L12 execute: L11's behavior is covered by harness-v361 L7 (search renders the pair, green in this seat's re-run), and L12's surface is the `ui.ts` diff itself (§4.1). The L10 premise repair belongs to the harness-modernization family, as §3.4 named it.
+
+### 4.5 Served client — parsed and executed
+
+- The worker bundles clean (harness leg 1, esbuild), the app boots on local wrangler in the harness's served mode (leg 3), and a real browser drove the legs — block pages, swaps, expands, search, queue — with **zero page errors** (leg 39 of this seat's own run). The served client does not merely parse; it runs.
+
+### 4.6 Findings
+
+- **None blocking.** Two named residues ride forward, both already on the record: (a) `.playbtn.small` stands as unused CSS (§3.2; Curator cleanup candidate); (b) the harness-modernization family absorbs the v353 L10 premise repair and the v354/v347 bare-id seed updates (§3.4) — neither is a v361 defect.
+- **NOT deployed by this phase.** Production still stands at v358's Worker 1e1ef845. Ship is the next seat; John's phone verdict on the plain rows is the post-ship check.
