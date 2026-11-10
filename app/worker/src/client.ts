@@ -6,7 +6,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {}, playedCache: null, previewQueue: null, queuePreviewIdx: -1 };
+var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {}, playedCache: null, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false };
 
 /* ---------------- Liturgical day (v352) ----------------
    The brand bar carries the day's OFFICIAL liturgical name and
@@ -120,6 +120,79 @@ function saveResume() {
 }
 function readResume() {
   try { return JSON.parse(localStorage.getItem('opn-resume-v312') || 'null'); } catch (e) { return null; }
+}
+/* ---------------- Queue snapshot (v355) ----------------
+   The queue itself, device-local: ONE record under opn-queue-v355
+   holding identity only — the queue's descriptor ids in order,
+   the current entry's index + id, and its position in seconds —
+   keyed by the PRESENTED day (§2.1). Nothing else is stored: no
+   titles, no URLs, no sleep-timer state (§2.6 — the schema carries
+   no timer field, so a restored session starts with the timer off
+   by construction). The record stands only while a queue stands:
+   written by saveQueueSnapshot() from the five §2.2 triggers,
+   removed at the §2.5 clearing moments. A storage failure degrades
+   silently to the pre-v355 behavior — the queue does not restore —
+   and never throws into a playback path. */
+var QUEUE_KEY = 'opn-queue-v355';
+function removeQueueSnapshot() {
+  try { localStorage.removeItem(QUEUE_KEY); } catch (e) {}
+}
+function readQueueSnapshot() {
+  var raw = null;
+  try { raw = localStorage.getItem(QUEUE_KEY); } catch (e) { return null; }
+  if (!raw) return null;
+  var rec = null;
+  try { rec = JSON.parse(raw); } catch (e) { removeQueueSnapshot(); return null; }
+  if (!rec || typeof rec !== 'object' || rec.v !== 1 || typeof rec.date !== 'string'
+    || !Array.isArray(rec.ids) || !rec.ids.length) { removeQueueSnapshot(); return null; }
+  return rec;
+}
+function queueStartPos(desc) {
+  // The position a just-started track stands at: the pending
+  // resume's position when this start carries one (Continue's
+  // carry), else its start (0). Reading audioEl.currentTime here
+  // would race the previous track's position across the src swap.
+  return (state.pendingResume && desc && state.pendingResume.episodeId === desc.episodeId)
+    ? (state.pendingResume.positionS || 0) : 0;
+}
+function saveQueueSnapshot(posS) {
+  try {
+    if (!state.queue.length || !state.current) { localStorage.removeItem(QUEUE_KEY); return; }
+    var date = presentedDateStr();
+    if (!date) return;
+    localStorage.setItem(QUEUE_KEY, JSON.stringify({
+      v: 1, date: date,
+      ids: state.queue.map(function (d) { return d.episodeId; }),
+      idx: state.queueIdx, currentId: state.current.episodeId,
+      positionS: (posS !== undefined ? posS : (audioEl.currentTime || 0)),
+      savedAt: new Date().toISOString(),
+    }));
+  } catch (e) {}
+}
+function clearRestoredQueue() {
+  // §2.4's return path: the flag drops at the §2.5 clearing
+  // moments, and Continue re-paints through its standing refresh.
+  if (!state.restoredQueue) return;
+  state.restoredQueue = false;
+  refreshPlayedChrome();
+}
+function bootQueueSnapshot() {
+  // Amendment A1, Moment 1 (synchronous, at boot — renderPrayers
+  // invokes this immediately BEFORE resolveExternals): §2.3 steps
+  // 1–2 + step 8's flag. Read + shape check; a same-day record
+  // sets the §2.4 flag at once, so no paintContinue of the pass
+  // can raise the card — not even transiently — while the restore
+  // question stands open; a stale-day record is removed whole
+  // (decision 5: yesterday's queue never restores into today) and
+  // a malformed one likewise. No re-resolution happens here: the
+  // payload-success point holds no descriptors (A1's evidence) —
+  // the restore proper runs at readiness (standRestoredQueue,
+  // probed from the settings callback).
+  state.restoreProbe = null;
+  var rec = readQueueSnapshot();
+  if (!rec) return;
+  if (rec.date !== presentedDateStr()) { removeQueueSnapshot(); return; }
+  state.restoredQueue = true;
 }
 /* ---------------- Played state (v344) ----------------
    Playback memory, not a checklist (the v305 rule stands): the
@@ -241,11 +314,13 @@ function startDesc(desc) {
   setPlaybackState('playing');
   markPlaying(desc.episodeId);
   updateDock();
+  saveQueueSnapshot(queueStartPos(desc)); // v355 §2.2 trigger 2: the track-change funnel
 }
 function playTrack(desc) {
   if (!desc || !desc.available || !desc.url) return;
   if (state.current && state.current.episodeId === desc.episodeId && !audioEl.paused) { audioEl.pause(); return; }
   state.queue = []; state.queueIdx = -1;
+  clearRestoredQueue(); // v355 §2.5: a single play retires any restored queue with the queue it clears
   startDesc(desc);
 }
 function tapPlay(d) {
@@ -389,6 +464,7 @@ function startQueue(descs, force) {
   // passes true — a tap REPLACES the standing queue (decision 3)
   // instead of pausing it.
   if (!force && state.queue.length && state.queueIdx >= 0 && state.current && !audioEl.paused) { audioEl.pause(); return; }
+  clearRestoredQueue(); // v355 §2.5: a new queue replaces a restored one, flag with it
   state.queue = descs.slice();
   var idx = -1;
   for (var i = 0; i < state.queue.length; i++) {
@@ -397,9 +473,10 @@ function startQueue(descs, force) {
     state.queue[i] = live;
     idx = i; break;
   }
-  if (idx < 0) { state.queue = []; state.queueIdx = -1; return; }
+  if (idx < 0) { state.queue = []; state.queueIdx = -1; saveQueueSnapshot(); return; }
   state.queueIdx = idx;
   startDesc(state.queue[idx]);
+  saveQueueSnapshot(queueStartPos(state.queue[idx])); // v355 §2.2 trigger 1: every queue birth/replacement
 }
 function advanceQueue(dir) {
   if (!state.queue.length) return false;
@@ -412,7 +489,7 @@ function advanceQueue(dir) {
     startDesc(live);
     return true;
   }
-  if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; setPlaybackState('none'); markPlaying(null); updatePositionState(); updateDock(); }
+  if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; setPlaybackState('none'); markPlaying(null); updatePositionState(); updateDock(); saveQueueSnapshot(); clearRestoredQueue(); }
   return false;
 }
 function jumpQueueTo(i) {
@@ -531,6 +608,7 @@ function buildContinueQueue() {
 }
 function loadResume(desc, positionS) {
   state.queue = []; state.queueIdx = -1;
+  saveQueueSnapshot(); // v355 §2.1: the record stands only while a queue stands — this path clears it by design
   state.current = desc;
   setMediaSessionFor(desc);
   state.pendingResume = { episodeId: desc.episodeId, positionS: positionS };
@@ -542,9 +620,101 @@ function loadResume(desc, positionS) {
   // Stands paused at the position (set on loadedmetadata); the app
   // never autoplays sound on open.
 }
+function standRestoredQueue(day) {
+  // v355 §2.3 steps 3–7, run at Amendment A1's RESTORE-READINESS
+  // (the settings callback's probe fires this once per pass, when
+  // every own row stands settled and the intentions map has
+  // landed — the first moment the day's descriptors all stand).
+  // The record is re-read here: between Moment 1 and readiness it
+  // can only have been touched by the listener's own §2.2/§2.5
+  // discipline, and the probe's stand-down has already retired
+  // the case where his playback stands.
+  var rec = readQueueSnapshot();
+  if (!rec) { clearRestoredQueue(); return; }
+  if (rec.date !== presentedDateStr()) { removeQueueSnapshot(); clearRestoredQueue(); return; }
+  // Step 3: re-resolution against the fresh day, by the standing
+  // build method. An id the fresh day does not carry drops out;
+  // each entry resolves on its own id (a dropped prayer takes its
+  // intro only when the intro itself fails to resolve). An
+  // external slot still downloading at readiness resolves to its
+  // staged snapshot descriptor and KEEPS its place (A1 ruling
+  // (a)) — queueLiveDesc answers for it at advance time, exactly
+  // as in a live queue; it is never dropped at restore.
+  var fresh = extRebuildDescs(day);
+  var byId = {};
+  fresh.forEach(function (d) { if (!byId[d.episodeId]) byId[d.episodeId] = d; });
+  var survivors = [];
+  rec.ids.forEach(function (id, i) { var d = byId[id]; if (d) survivors.push({ desc: d, at: i }); });
+  // Step 5: nothing survived — the record dies, Continue governs.
+  if (!survivors.length) { removeQueueSnapshot(); clearRestoredQueue(); return; }
+  // Step 4: the standing current. The stored current, when it
+  // survives AND stands available, is current (its stored
+  // position applies). An unavailable survivor (a slot still
+  // resolving, an own row settled 'missing') keeps its queue
+  // place, but the current stands on the first AVAILABLE survivor
+  // at or after the stored index, at position 0; a dropped
+  // current follows the same at-or-after rule, and when no
+  // available survivor follows, the last available survivor
+  // stands (an unavailable entry can never be loaded — it keeps
+  // its place and the advance machinery answers it in turn).
+  var curAt = rec.ids.indexOf(rec.currentId);
+  if (curAt < 0) curAt = rec.idx || 0;
+  var exact = null, chosen = null, position = 0;
+  survivors.forEach(function (s) { if (s.at === curAt) exact = s; });
+  if (exact && exact.desc.available) { chosen = exact; position = rec.positionS || 0; }
+  else {
+    for (var i = 0; i < survivors.length; i++) {
+      if (survivors[i].at >= curAt && survivors[i].desc.available) { chosen = survivors[i]; break; }
+    }
+    if (!chosen) {
+      for (var j = survivors.length - 1; j >= 0; j--) {
+        if (survivors[j].desc.available) { chosen = survivors[j]; break; }
+      }
+    }
+    if (!chosen) { removeQueueSnapshot(); clearRestoredQueue(); return; }
+    position = 0;
+  }
+  // Step 7 (the pre-clamp): against the fresh descriptor's known
+  // duration, stand one second short of the end — a seek landing
+  // on the exact end would fire 'ended', advance the queue, and
+  // mark the track; a restore must never consume what it restores.
+  // The loadedmetadata handler carries the same guard for the
+  // unknown-duration case; in-range positions pass through both
+  // unchanged.
+  if (position > 0 && chosen.desc.durationS > 0) position = Math.max(0, Math.min(position, chosen.desc.durationS - 1));
+  // Step 6: stand the queue PAUSED. The loadResume MACHINERY (the
+  // pendingResume seek on the preload="none" element, the dock,
+  // the paused session declaration) — but never loadResume itself,
+  // whose first act clears the queue. Queue and index are set
+  // BEFORE the load, and the load does not touch them. No play()
+  // call stands anywhere in this path — one tap resumes through
+  // the standing resumeCurrent() seam.
+  state.queue = survivors.map(function (s) { return s.desc; });
+  state.queueIdx = survivors.indexOf(chosen);
+  state.current = chosen.desc;
+  setMediaSessionFor(chosen.desc);
+  state.pendingResume = position > 0 ? { episodeId: chosen.desc.episodeId, positionS: position } : null;
+  setPlaybackState('paused');
+  audioEl.src = chosen.desc.url;
+  audioEl.load();
+  markPlaying(chosen.desc.episodeId);
+  updateDock();
+  renderQueueList();
+}
 audioEl.addEventListener('loadedmetadata', function () {
   if (state.pendingResume && state.current && state.pendingResume.episodeId === state.current.episodeId) {
-    try { audioEl.currentTime = state.pendingResume.positionS || 0; } catch (e) {}
+    try {
+      // v355 §2.3 step 7 (the shared-seam guard): the seek target
+      // stands one second short of the element's real end — a seek
+      // landing on the exact end fires 'ended' and consumes the
+      // track. Identity for every in-range position, so the v312
+      // single-track path and Continue's carry path (which share
+      // pendingResume) behave exactly as before.
+      var target = state.pendingResume.positionS || 0;
+      var dur = audioEl.duration;
+      if (isFinite(dur) && dur > 0) target = Math.min(target, Math.max(0, dur - 1));
+      audioEl.currentTime = target;
+    } catch (e) {}
     state.pendingResume = null;
   }
   updatePositionState();
@@ -563,7 +733,7 @@ audioEl.addEventListener('ended', function () {
   state.current = null; setPlaybackState('none'); markPlaying(null);
   updateDock();
 });
-audioEl.addEventListener('pause', function () { saveResume(); if (!state.queue.length) markPlaying(state.current ? state.current.episodeId : null); });
+audioEl.addEventListener('pause', function () { saveResume(); saveQueueSnapshot(); if (!state.queue.length) markPlaying(state.current ? state.current.episodeId : null); });
 audioEl.addEventListener('play', function () { setPlaybackState('playing'); updateDock(); });
 audioEl.addEventListener('pause', function () { updateDock(); });
 audioEl.addEventListener('pause', function () {
@@ -574,11 +744,17 @@ audioEl.addEventListener('pause', function () {
   reassertMediaSession();
 });
 document.addEventListener('visibilitychange', function () {
+  // v355 §2.2 trigger 5: the freeze that precedes a discard is a
+  // last-chance snapshot write (the v346 re-assert below is
+  // untouched — the hook rides the same event, on the way out).
+  if (document.visibilityState === 'hidden') saveQueueSnapshot();
   // v346: return to the foreground (including a freeze/thaw) re-files
   // the session — metadata, handlers, state, position.
   if (document.visibilityState === 'visible') reassertMediaSession();
 });
+window.addEventListener('pagehide', function () { saveQueueSnapshot(); }); // v355 §2.2 trigger 5: the discard moment itself
 var lastResumeSave = 0;
+var lastQueueSave = 0;
 audioEl.addEventListener('timeupdate', function () {
   sleepTick();
   updatePositionState();
@@ -586,6 +762,7 @@ audioEl.addEventListener('timeupdate', function () {
   updateNpSeek();
   var now = Date.now();
   if (now - lastResumeSave > 5000) { lastResumeSave = now; saveResume(); }
+  if (now - lastQueueSave > 5000) { lastQueueSave = now; saveQueueSnapshot(); }
 });
 audioEl.addEventListener('seeked', updatePositionState);
 
@@ -746,12 +923,14 @@ function sleepTrackEnd() {
       audioEl.load();
       markPlaying(next.episodeId);
       saveResume();
+      saveQueueSnapshot(0); // v355: the held queue stands — the record follows it to the held track at its head
       updateSleepLabel();
       updateDock();
       return;
     }
     // (b) queue exhausted: exactly the standing queue-end path.
     state.queue = []; state.queueIdx = -1; state.current = null; setPlaybackState('none'); markPlaying(null); updatePositionState();
+    saveQueueSnapshot(); clearRestoredQueue(); // v355 §2.5: exhaustion clears, here as in advanceQueue
     updateSleepLabel();
     updateDock();
     return;
@@ -2069,6 +2248,14 @@ function paintContinue() {
   var slot = document.getElementById('continue-slot');
   if (!slot) return;
   view.querySelectorAll('[data-resumeat]').forEach(function (b) { b.remove(); });
+  // v355 §2.4 (decision 6): while a restored queue stands — the
+  // flag set at boot (A1 Moment 1) and held until the queue ends
+  // or is replaced — the slot renders EMPTY: no card, no button,
+  // no queue preview, whatever the played store or the v312
+  // record would otherwise show. buildContinueQueue and the
+  // card's own gate/merge logic below are not modified; they are
+  // simply not reached while the flag stands.
+  if (state.restoredQueue) { slot.innerHTML = ''; return; }
   var d = presentedDateStr();
   var prayers = (state.dayDescs || []).filter(function (x) { return x.kind !== 'intention' && x.available; });
   var playedN = 0, firstUnplayed = null;
@@ -2212,6 +2399,10 @@ function ownResolveFeed(day, needed) {
       });
     });
     paintContinue(day);
+    // v355 A1: the feed-settle tail is one of the two legs that can
+    // complete restore-readiness — probe it (the settings
+    // callback's closure, reached through state like ownWriteCache).
+    if (state.restoreProbe) state.restoreProbe();
   };
   var consumeItem = function (xml) {
     var items = [];
@@ -2471,6 +2662,32 @@ function resolveExternals(day) {
     // build consumes it — the intentions resolution starts now and
     // the settled cards re-render when it lands.
     var intP = ownBuildIntentions(day, intCache);
+    // v355 Amendment A1: the restore-readiness probe. Readiness =
+    // every standing own row settled (present/missing) AND the
+    // intentions promise settled — the first moment the readiness
+    // rebuild (extRebuildDescs) carries the whole day. The probe
+    // is invoked from exactly the legs that can complete readiness:
+    // ownResolveFeed's finishAll tail (through state.restoreProbe,
+    // the state.ownWriteCache pattern) and the intP.then leg below;
+    // the fired flag makes every later probe a no-op, and settle
+    // rebuilds after readiness never re-invoke it. Stand-down: if
+    // the listener started his own playback this pass, the restore
+    // retires silently and clears the flag — his action wins, and
+    // the record has already been replaced or removed by that
+    // action's own §2.2/§2.5 discipline.
+    var restoreFired = false, restoreIntrosDone = false;
+    var maybeRestoreQueue = function () {
+      if (restoreFired || !state.restoredQueue) return;
+      var ownReady = (state.ownStanding || []).every(function (row) {
+        var st = state.ownSlots[row.sourceKey];
+        return st && (st.state === 'present' || st.state === 'missing');
+      });
+      if (!ownReady || !restoreIntrosDone) return;
+      restoreFired = true;
+      if (state.current || state.queue.length) { state.restoredQueue = false; refreshPlayedChrome(); return; }
+      standRestoredQueue(day);
+    };
+    state.restoreProbe = function () { maybeRestoreQueue(); };
     standing.forEach(function (slot) {
       var c = cacheValid ? rec.slots[slot.slotId] : null;
       if (c && c.state === 'present') {
@@ -2607,7 +2824,7 @@ function resolveExternals(day) {
       else (ownNeeded[row.episodeId] = ownNeeded[row.episodeId] || []).push(row);
     });
     if (Object.keys(ownNeeded).length) ownResolveFeed(day, ownNeeded);
-    else { paintContinue(day); renderQueueList(); }
+    else { paintContinue(day); renderQueueList(); maybeRestoreQueue(); }
     // Own watchdog: a row still unresolved after 9 s stands named
     // missing for this open (the resolve watchdog's posture).
     setTimeout(function () {
@@ -2621,6 +2838,7 @@ function resolveExternals(day) {
     // already-settled cards re-render with their panels and the
     // descriptor list rebuilds over the full map.
     intP.then(function () {
+      restoreIntrosDone = true;
       standing.forEach(function (slot) {
         var st = state.extSlots[slot.slotId];
         if (st && st.state === 'present') extSwapCard(slot);
@@ -2632,6 +2850,7 @@ function resolveExternals(day) {
       extRebuildDescs(day);
       paintContinue(day);
       renderQueueList();
+      maybeRestoreQueue(); // v355 A1: the intentions leg can complete readiness second
     });
     var missingSt = function (slot, source) {
       return { state: 'missing', title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle(null, extMatchBibleDayN(date)) : slot.title, source: source || slot.source || 'Divine Office' };
@@ -2852,6 +3071,12 @@ function renderPrayers() {
     // v344: the marker wiring rides the same initial build.
     wirePlayed(view);
     if (state.current) markPlaying(state.current.episodeId);
+    // v355 Amendment A1, Moment 1: the queue snapshot's boot step
+    // (read + shape/date check + the §2.4 flag) runs synchronously
+    // here, immediately BEFORE the resolution pass is invoked —
+    // every paintContinue of the pass stands after it in program
+    // order.
+    bootQueueSnapshot();
     // v334: externals resolve at open, in place, after the day has
     // rendered — the resolve never blocks the day's own episodes.
     resolveExternals(day);
