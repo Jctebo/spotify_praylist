@@ -779,8 +779,10 @@ function openQueuePreview() {
   var sheet = document.createElement('div');
   sheet.className = 'sheet np-sheet np-preview';
   sheet.innerHTML = '<div class="inner">'
+    + '<div class="np-hero">'
     + '<div class="row"><span class="grow"></span><button class="btn ghost" id="np-min" aria-label="Minimize">&#8964;</button></div>'
     + '<div class="npq-head"><span class="npq-heading">Queue</span><span class="meta" id="np-queue-pos"></span></div>'
+    + '</div>'
     + '<div id="np-queue"></div>'
     + '</div>';
   document.body.appendChild(sheet);
@@ -1883,10 +1885,13 @@ function openNowPlaying() {
   var sheet = document.createElement('div');
   sheet.className = 'sheet np-sheet';
   sheet.innerHTML = '<div class="inner">'
+    + '<div class="np-hero">'
     + '<div class="row"><span class="grow"></span><button class="btn ghost" id="np-min" aria-label="Minimize">&#8964;</button></div>'
     + '<div class="np-art"><img src="/logo.png" alt="Ora Pro Nobis logo"></div>'
     + '<h1 class="screen np-title" id="np-title"></h1>'
     + '<p class="sub np-meta" id="np-meta"></p>'
+    + (state.liturgical && state.liturgical.name ? '<div class="np-litday" id="np-litday">' + esc(state.liturgical.name) + '</div>' : '')
+    + '</div>'
     + '<div class="np-seekrow"><span id="np-elapsed">0:00</span><input type="range" id="np-seek" min="0" max="1000" value="0" aria-label="Seek"><span id="np-remain">--:--</span></div>'
     + '<div class="np-transport"><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button></div>'
     + '<div class="row np-controls"><button class="btn ghost" id="np-speed"></button><button class="btn ghost" id="np-sleep"></button><button class="btn ghost" id="np-read">Read</button></div>'
@@ -1938,6 +1943,7 @@ function updateNowPlaying() {
   if (cur.source) meta = meta ? meta + ' · ' + cur.source : cur.source;
   if (!meta) meta = state.dateLabel || '';
   sheet.querySelector('#np-meta').textContent = meta;
+  var litEl = sheet.querySelector('#np-litday'); if (litEl) { var ln = (state.liturgical && state.liturgical.name) || ''; if (litEl.textContent !== ln) litEl.textContent = ln; }
   sheet.querySelector('#np-play').innerHTML = audioEl.paused ? '&#9654;' : '&#10073;&#10073;';
   sheet.querySelector('#np-prev').disabled = !state.queue.length || state.queueIdx <= 0;
   sheet.querySelector('#np-next').disabled = !state.queue.length;

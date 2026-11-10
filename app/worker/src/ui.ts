@@ -170,8 +170,26 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .settoggle { font-family:inherit; font-size:14px; border:1px solid var(--accent); color:var(--accent); background:#fff; border-radius:20px; padding:6px 12px; cursor:pointer; flex:none; white-space:nowrap; }
 .settoggle.on { background:var(--accent); color:var(--accent-ink); }
 /* Now Playing (v336) */
-.np-art { text-align:center; margin:20px 0 12px; }
-.np-art img { width:150px; height:150px; border-radius:14px; }
+/* v354 §2.1/§2.2/§2.7: the clone form — a liturgical-gradient hero
+   (.np-hero) over the standing cream zone. The hero reads the v352
+   token layer only: --bar-solid under --bar-bg (gradient-parse
+   insurance), the audited fg/sub pairs for title + meta + the day
+   line, and the accent as its bottom rule. No new variables. */
+.np-hero { margin:-14px -14px 0; padding:14px 14px 18px; background-color:var(--bar-solid); background:var(--bar-bg); border-bottom:2px solid var(--accent); }
+.np-hero .np-title { color:var(--bar-fg); font-size:24px; }
+.np-hero .np-meta { color:var(--bar-sub); }
+.np-litday { font-size:13px; letter-spacing:.4px; color:var(--bar-sub); text-align:center; margin-top:2px; }
+.np-hero .btn.ghost { color:var(--bar-fg); border-color:var(--bar-sub); }
+.np-preview .np-hero .npq-heading { color:var(--bar-fg); }
+.np-preview .np-hero #np-queue-pos { color:var(--bar-sub); }
+.np-art { text-align:center; margin:4px 0 0; }
+.np-art img { width:min(72vw, 340px); height:auto; border-radius:18px; box-shadow:0 10px 28px rgba(0,0,0,.28); }
+[data-lit="white"] .np-art img { box-shadow:0 10px 28px rgba(168,134,58,.25); }
+/* v354 §2.5F: the measured boundary for accent discs standing on a
+   gradient zone (v353's block-page Play All + home card play
+   buttons) — an outline in the bar-fg pair, >= 4.88:1 against both
+   gradient ends in every theme. */
+.blockpage-head .playbtn, .blockcard .playbtn { box-shadow:0 0 0 2px var(--bar-fg); }
 .np-title { text-align:center; }
 .np-meta { text-align:center; }
 .np-seekrow { display:flex; align-items:center; gap:10px; margin:22px 0 6px; font-size:13px; color:#6d6353; }
@@ -264,7 +282,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v353-1";
+var CACHE = "ora-pro-nobis-v354-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
