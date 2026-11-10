@@ -166,6 +166,18 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .np-tbtn:disabled { opacity:.35; cursor:default; }
 .np-play { width:58px; height:58px; font-size:21px; }
 .np-controls { justify-content:center; flex-wrap:wrap; }
+.npq-head { display:flex; align-items:baseline; gap:8px; margin:18px 0 8px; border-bottom:2px solid var(--gold); padding-bottom:4px; }
+.npq-heading { font-size:18px; letter-spacing:1.5px; color:var(--navy); }
+.npq-row { display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin:0 0 8px; font-family:inherit; font-size:17px; color:var(--ink); cursor:pointer; min-height:44px; }
+.npq-row:disabled { opacity:.55; cursor:default; }
+.npq-row.playing { border-color:var(--gold); box-shadow:inset 0 0 0 1px var(--gold); }
+.npq-row.npq-intro .npq-title { color:#6d6353; font-size:15px; }
+.npq-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.npq-title { color:var(--navy); }
+.npq-meta { font-size:14px; }
+.npq-dot.played-dot { flex:0 0 12px; width:12px; height:12px; margin:0; padding:0; cursor:default; }
+.npq-start { border-color:var(--gold); }
+
 `;
 
 export const MANIFEST_JSON = JSON.stringify({
@@ -181,7 +193,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v346";
+var CACHE = "ora-pro-nobis-v347-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

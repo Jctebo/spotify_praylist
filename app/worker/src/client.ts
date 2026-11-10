@@ -6,7 +6,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {}, playedCache: null };
+var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {}, playedCache: null, previewQueue: null, queuePreviewIdx: -1 };
 
 /* ---------------- Playback speed (v336) ----------------
    One rate for the one audio element: a listener preference in
@@ -335,6 +335,120 @@ function advanceQueue(dir) {
   if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; setPlaybackState('none'); markPlaying(null); updatePositionState(); updateDock(); }
   return false;
 }
+function jumpQueueTo(i) {
+  // v347 §2.4: jump inside the standing queue — never playTrack
+  // (it clears the queue), never startQueue (it re-copies and
+  // restarts at the first live entry). The array, its order, and
+  // every row before and after the target stand untouched.
+  if (i < 0 || i >= state.queue.length) return;
+  var desc = state.queue[i];
+  if (i === state.queueIdx && state.current && desc.episodeId === state.current.episodeId) {
+    if (!audioEl.paused) audioEl.pause(); else resumeCurrent();
+    return;
+  }
+  var live = queueLiveDesc(desc);
+  if (!live) { markSkipped(desc.episodeId); return; }
+  state.queue[i] = live;
+  state.queueIdx = i;
+  startDesc(live);
+}
+function renderQueueList() {
+  // v347 §2.3/§2.6: the queue list — a view of the standing array,
+  // read fresh on every call (no captured snapshot, the v343 rule).
+  var sheet = document.querySelector('.np-sheet');
+  if (!sheet) return;
+  var box = sheet.querySelector('#np-queue');
+  if (!box) return;
+  var posEl = sheet.querySelector('#np-queue-pos');
+  var preview = state.previewQueue || null;
+  var arr = preview || state.queue;
+  var scroll = box.scrollTop || 0;
+  if (!preview && !arr.length) {
+    if (posEl) posEl.textContent = '';
+    box.innerHTML = state.current ? '<p class="meta npq-empty">No queue \u2014 playing a single prayer.</p>' : '';
+    box.scrollTop = scroll;
+    return;
+  }
+  if (posEl) posEl.textContent = preview ? (arr.length + ' items remaining') : ('Track ' + (state.queueIdx + 1) + ' of ' + arr.length);
+  var dstr = presentedDateStr();
+  box.innerHTML = arr.map(function (desc, i) {
+    var isIntro = desc.kind === 'intention';
+    var isPlaying = !preview && i === state.queueIdx && state.current && desc.episodeId === state.current.episodeId;
+    var isStart = !!preview && i === state.queuePreviewIdx;
+    var title = desc.title || '';
+    if (isIntro && title.indexOf('Intention') !== 0) title = 'Intention \u2014 ' + title;
+    var metaParts = [];
+    if (desc.block) metaParts.push(esc(desc.block));
+    if (!isIntro && desc.durationS > 0) metaParts.push(fmtDur(desc.durationS));
+    if (!desc.available) metaParts.push('Not available');
+    var dot = '';
+    if (!isIntro) {
+      var on = dstr ? isPlayed(desc.episodeId, dstr) : false;
+      dot = '<span class="npq-dot played-dot' + (on ? ' on' : '') + '" aria-hidden="true"></span>';
+    }
+    return '<button type="button" class="npq-row' + (isPlaying ? ' playing' : '') + (isIntro ? ' npq-intro' : '') + (isStart ? ' npq-start' : '') + '" data-npq-index="' + i + '" data-npq-id="' + esc(desc.episodeId) + '"' + (isPlaying ? ' aria-current="true"' : '') + (!desc.available ? ' disabled' : '') + '>'
+      + '<span class="npq-main"><span class="npq-title">' + esc(title) + '</span>'
+      + (metaParts.length ? '<span class="meta npq-meta">' + metaParts.join(' \u00b7 ') + '</span>' : '')
+      + (isStart ? '<span class="meta npq-starthere">Starts here</span>' : '')
+      + '</span>' + dot + '</button>';
+  }).join('');
+  box.querySelectorAll('[data-npq-index]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var idx = Number(btn.getAttribute('data-npq-index'));
+      if (state.previewQueue) previewQueueTap(idx); else jumpQueueTo(idx);
+    });
+  });
+  box.scrollTop = scroll;
+}
+function previewQueueTap(i) {
+  var preview = state.previewQueue;
+  if (!preview || !preview.length || i < 0 || i >= preview.length) return;
+  var slice = preview.slice(i);
+  state.previewQueue = null; state.queuePreviewIdx = -1;
+  startQueue(slice);
+  var sheet = document.querySelector('.np-sheet');
+  if (sheet) sheet.remove();
+  if (state.current) openNowPlaying();
+}
+function openQueuePreview() {
+  var old = document.querySelector('.np-sheet');
+  if (old) old.remove();
+  var sheet = document.createElement('div');
+  sheet.className = 'sheet np-sheet np-preview';
+  sheet.innerHTML = '<div class="inner">'
+    + '<div class="row"><span class="grow"></span><button class="btn ghost" id="np-min" aria-label="Minimize">&#8964;</button></div>'
+    + '<div class="npq-head"><span class="npq-heading">Queue</span><span class="meta" id="np-queue-pos"></span></div>'
+    + '<div id="np-queue"></div>'
+    + '</div>';
+  document.body.appendChild(sheet);
+  sheet.querySelector('#np-min').addEventListener('click', function () { state.previewQueue = null; state.queuePreviewIdx = -1; sheet.remove(); });
+  renderQueueList();
+}
+function buildContinueQueue() {
+  // v347 §2.5: Continue's standing build, extracted — the remaining
+  // (unplayed-filtered) sequence with the full-replay fallback, and
+  // the carry index when the resume record points at the first
+  // unplayed track.
+  if (!state.dayPayload) return { build: [], carryIdx: -1 };
+  var full = extRebuildDescs(state.dayPayload);
+  var build = queueBuild(full);
+  var carryIdx = -1;
+  var resumeRec = readResume();
+  if (resumeRec && resumeRec.date !== state.storedDay) resumeRec = null;
+  if (resumeRec) {
+    var prayers = (state.dayDescs || []).filter(function (x) { return x.kind !== 'intention' && x.available; });
+    var d = presentedDateStr();
+    var firstUnplayed = null;
+    prayers.forEach(function (x) { if (!(d && isPlayed(x.episodeId, d)) && !firstUnplayed) firstUnplayed = x; });
+    var resumeDesc = prayers.filter(function (x) { return x.episodeId === resumeRec.episodeId; })[0] || null;
+    if (resumeDesc && firstUnplayed && resumeDesc.episodeId === firstUnplayed.episodeId) {
+      for (var i = 0; i < build.length; i++) {
+        if (build[i].kind !== 'intention' && build[i].episodeId === resumeDesc.episodeId) { carryIdx = i; break; }
+      }
+    }
+  }
+  return { build: build, carryIdx: carryIdx };
+}
 function loadResume(desc, positionS) {
   state.queue = []; state.queueIdx = -1;
   state.current = desc;
@@ -653,7 +767,7 @@ function setTab(tab) {
 document.querySelectorAll('#tabbar .tab').forEach(function (b) {
   b.addEventListener('click', function () { setTab(b.getAttribute('data-tab')); });
 });
-document.getElementById('dock-play').addEventListener('click', function () { if (state.current) playTrack(state.current); });
+document.getElementById('dock-play').addEventListener('click', function () { if (!state.current) return; if (state.queue.length) { if (!audioEl.paused) audioEl.pause(); else resumeCurrent(); } else playTrack(state.current); });
 document.getElementById('dock-next').addEventListener('click', function () { advanceQueue(1); });
 document.getElementById('dock').addEventListener('click', function (ev) {
   if (ev.target && ev.target.closest && (ev.target.closest('#dock-play') || ev.target.closest('#dock-next'))) return;
@@ -1087,6 +1201,7 @@ function refreshPlayedChrome() {
     btn.textContent = (c.total && c.played === c.total) ? 'Mark all unplayed' : 'Mark all played';
   });
   paintContinue();
+  renderQueueList();
 }
 function wirePlayed(root) {
   // v344: the marker + block mark-all wiring, at the same render
@@ -1245,10 +1360,12 @@ function openNowPlaying() {
     + '<div class="np-seekrow"><span id="np-elapsed">0:00</span><input type="range" id="np-seek" min="0" max="1000" value="0" aria-label="Seek"><span id="np-remain">--:--</span></div>'
     + '<div class="np-transport"><button class="np-tbtn" id="np-prev" aria-label="Previous track">&#9198;</button><button class="playbtn np-play" id="np-play" aria-label="Play or pause">&#9654;</button><button class="np-tbtn" id="np-next" aria-label="Next track">&#9197;</button></div>'
     + '<div class="row np-controls"><button class="btn ghost" id="np-speed"></button><button class="btn ghost" id="np-sleep"></button><button class="btn ghost" id="np-read">Read</button></div>'
+    + '<div class="npq-head"><span class="npq-heading">Queue</span><span class="meta" id="np-queue-pos"></span></div>'
+    + '<div id="np-queue"></div>'
     + '</div>';
   document.body.appendChild(sheet);
   sheet.querySelector('#np-min').addEventListener('click', function () { sheet.remove(); });
-  sheet.querySelector('#np-play').addEventListener('click', function () { if (state.current) playTrack(state.current); });
+  sheet.querySelector('#np-play').addEventListener('click', function () { if (!state.current) return; if (state.queue.length) { if (!audioEl.paused) audioEl.pause(); else resumeCurrent(); } else playTrack(state.current); });
   sheet.querySelector('#np-prev').addEventListener('click', function () { advanceQueue(-1); });
   sheet.querySelector('#np-next').addEventListener('click', function () { advanceQueue(1); });
   sheet.querySelector('#np-speed').addEventListener('click', function () { openSpeedSheet(); });
@@ -1283,6 +1400,7 @@ function openNowPlaying() {
 function updateNowPlaying() {
   var sheet = document.querySelector('.np-sheet');
   if (!sheet) return;
+  if (sheet.classList.contains('np-preview')) { renderQueueList(); return; }
   var cur = state.current;
   if (!cur) { sheet.remove(); return; }
   sheet.querySelector('#np-title').textContent = cur.title || '';
@@ -1298,11 +1416,13 @@ function updateNowPlaying() {
   var rt = state.readTracks[cur.episodeId];
   sheet.querySelector('#np-read').style.display = (rt && rt.hasText && rt.textUrl) ? '' : 'none';
   updateNpSeek();
+  renderQueueList();
 }
 function updateNpSeek() {
   var sheet = document.querySelector('.np-sheet');
   if (!sheet || npScrubbing) return;
   var bar = sheet.querySelector('#np-seek');
+  if (!bar) return;
   var dur = npDuration();
   var pos = audioEl.currentTime || 0;
   if (dur > 0) {
@@ -1912,15 +2032,12 @@ function paintContinue() {
     + '<div class="meta">Continue — ' + esc(blockLabel) + ' · ' + esc(named.title) + '</div>'
     + '<div class="meta">' + playedN + ' of ' + prayers.length + ' heard today</div></div>'
     + '<button class="btn gold small" id="continue-btn">Continue</button></div>'
-    + '<div style="margin-top:6px"><a href="#" id="continue-all">Play everything instead</a></div></div>';
+    + '<div style="margin-top:6px"><a href="#" id="continue-all">Play everything instead</a> &middot; <a href="#" id="continue-queue">See queue</a></div></div>';
   document.getElementById('continue-btn').addEventListener('click', function () {
-    var full = extRebuildDescs(state.dayPayload);
-    var build = queueBuild(full);
+    var res = buildContinueQueue();
+    var build = res.build;
     if (carry && resumeRec) {
-      var idx = -1;
-      for (var i = 0; i < build.length; i++) {
-        if (build[i].kind !== 'intention' && build[i].episodeId === resumeDesc.episodeId) { idx = i; break; }
-      }
+      var idx = res.carryIdx;
       if (idx >= 0) {
         // The queue is the filtered build rotated to start at
         // that descriptor; the position rides the standing
@@ -1937,6 +2054,14 @@ function paintContinue() {
   document.getElementById('continue-all').addEventListener('click', function (ev) {
     ev.preventDefault();
     startQueue(extRebuildDescs(state.dayPayload));
+  });
+  document.getElementById('continue-queue').addEventListener('click', function (ev) {
+    ev.preventDefault();
+    var res = buildContinueQueue();
+    if (!res.build.length) return;
+    state.previewQueue = res.build;
+    state.queuePreviewIdx = res.carryIdx;
+    openQueuePreview();
   });
   if (resumeDesc && !carry && d && !isPlayed(resumeDesc.episodeId, d)) {
     var host = view.querySelector('[data-card="' + resumeDesc.episodeId + '"]');
@@ -2411,7 +2536,7 @@ function resolveExternals(day) {
       else (ownNeeded[row.episodeId] = ownNeeded[row.episodeId] || []).push(row);
     });
     if (Object.keys(ownNeeded).length) ownResolveFeed(day, ownNeeded);
-    else paintContinue(day);
+    else { paintContinue(day); renderQueueList(); }
     // Own watchdog: a row still unresolved after 9 s stands named
     // missing for this open (the resolve watchdog's posture).
     setTimeout(function () {
@@ -2435,6 +2560,7 @@ function resolveExternals(day) {
       });
       extRebuildDescs(day);
       paintContinue(day);
+      renderQueueList();
     });
     var missingSt = function (slot, source) {
       return { state: 'missing', title: slot.slotId === 'ext-bible-in-a-year' ? extBibleTitle(null, extMatchBibleDayN(date)) : slot.title, source: source || slot.source || 'Divine Office' };
