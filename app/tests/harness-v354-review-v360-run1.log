@@ -1,0 +1,80 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - fixture: migrations stand through 0015 and NO 0016 exists (v354 claims none)
+ok 3 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 4 - fixture: the presented day's draw stands (status=200)
+ok 5 - fixture: the served /app.js parses (vm.Script)
+not ok 6 - SW pin: the served service worker carries CACHE 'ora-pro-nobis-v354-1'
+ok 7 - boot: the fixture pass reaches readiness (own settled + descriptors + intros) in 463 ms
+ok 8 - L2 setup: no liturgical record stands for the presented day yet (data-lit absent)
+ok 9 - L2 fallback: no record -> NO .np-litday line, the hero stands in the flat navy rgb(22, 40, 63), the title in #e9d9ae (debug={"hero":true,"litday":false,"bgColor":"rgb(22, 40, 63)","bgImage":"none","titleColor":"rgb(233, 217, 174)"})
+ok 10 - setup: the green liturgical record stands (door push)
+ok 11 - setup: re-boot presents the green day
+ok 12 - L1 hero form: .np-hero stands in the theme gradient; #np-title computes to --bar-fg (#e9d9ae), #np-meta to --bar-sub (#b7cdb9)
+ok 13 - L1: the artwork field measures >= 300px at the fixture viewport (w=309.6 of min(72vw, 340px) at 430px)
+ok 14 - L1: every standing NP id is present in the sheet; minimize/title/meta/day-line stand inside the hero
+ok 15 - L2: the hero's .np-litday carries the day's name exactly as pushed ("Fixture Memorial of Saint Fixture")
+not ok 16 - L1: minimize removes the sheet with playback, position, and current track untouched
+ok 17 - L3: the position line reads "Track N of M" and the list renders the standing queue (Track 2 of 6, 6 rows)
+ok 18 - L3: played dots match the seeded v344 store (seeded track on, unplayed track off)
+ok 19 - L3: a mid-list row tap jumps inside the standing queue — that track plays, the array and its order unchanged, the playing row marked + aria-current
+ok 20 - L3: no unavailable descriptor stands in this fixture's queue — the disabled-row rendering is asserted on the preview queue below / carried by harness-v347
+ok 21 - L3 preview: the preview sheet takes the SAME hero — heading in --bar-fg, position in --bar-sub (33 rows)
+ok 22 - L3: the unavailable preview row (index 11) renders disabled
+ok 23 - L3: a preview row tap starts there, closes the preview, and lands in the full Now Playing — in the new hero form
+ok 24 - L4 setup: the queue advances to the Daily Rosary (30s tone) as the current track
+ok 25 - L4: play/pause toggles the element and the glyph (playing -> paused -> playing, glyph "❙❙" -> "▶")
+ok 26 - L4: prev stands disabled at the head of the queue
+ok 27 - L4: mid-queue, prev and next both stand enabled
+ok 28 - L4: jumping back to the Daily Rosary's row makes it current for the seek leg
+ok 29 - L4 seek: during input the fill follows the finger (elapsed 0:15) while the element stands uncommitted (ct=1.1s)
+ok 30 - L4 seek: change commits currentTime to the scrub point (ct=15.3s of the 30s tone, remaining -0:15)
+ok 31 - L5: #np-speed names the standing rate (1×)
+ok 32 - L5: choosing 1.5x applies to the element at once, the label follows, no position jump (ct 15.3 -> 15.7)
+ok 33 - L5 setup: re-boot reaches readiness
+ok 34 - L5: the speed choice survives a reload (the standing persistence read back in the new form)
+ok 35 - L5 cleanup: the rate stands restored to 1x for the later legs
+ok 36 - L6 setup: the Daily Rosary stands current (it carries text)
+ok 37 - L6: Read stands for a track with text, stacks over Now Playing, and closing it returns here with playback untouched
+ok 38 - L6: #np-read stands iff the current track has text (the standing rule, read off the live map)
+ok 39 - L6: arming the sleep timer from Now Playing and the Play All row button agree ("Sleep · End of track" on both surfaces)
+ok 40 - L6 cleanup: the sleep timer stands disarmed
+ok 41 - L7 setup: the app wrote its queue snapshot record during play
+ok 42 - L7 restore: Now Playing opens on the restored track, paused, its queue list = the restored queue (5 rows, order preserved; re-resolution drops: ["intro:ext-bible-in-a-year"]); the mini-player shows the same track ("Daily Rosary")
+ok 43 - L8 white setup: re-boot ready with the white record standing
+ok 44 - L8 white: §2.5F outline — the accent discs on gradient zones carry the measured 2px bar-fg boundary (card "rgb(22, 40, 63) 0px 0px 0px 2px", head "rgb(22, 40, 63) 0px 0px 0px 2px")
+ok 45 - L8 white: ON THE HERO INSTANCE, --bar-fg/--bar-sub vs both gradient ends >= 4.5:1 (token min 4.88, measured min 4.88); title/meta/day-line compute to the audited pair
+ok 46 - L8 white: zone-2 pairs (queue title/meta on card, seek labels + transport glyphs on cream) >= 4.5:1 (min 5.43)
+ok 47 - L8 white: set B gold-on-cream 3.15 + set C white-on-gold 3.42 REPORTED under §2.6's decided gold exception (not asserted)
+ok 48 - L8 white: the hero title's computed color is the navy #16283f — no white/cream text on the pale field
+ok 49 - L8 red setup: re-boot ready with the red record standing
+ok 50 - L8 red: §2.5F outline — the accent discs on gradient zones carry the measured 2px bar-fg boundary (card "rgb(246, 232, 216) 0px 0px 0px 2px", head "rgb(246, 232, 216) 0px 0px 0px 2px")
+ok 51 - L8 red: ON THE HERO INSTANCE, --bar-fg/--bar-sub vs both gradient ends >= 4.5:1 (token min 5.51, measured min 5.51); title/meta/day-line compute to the audited pair
+ok 52 - L8 red: zone-2 pairs (queue title/meta on card, seek labels + transport glyphs on cream) >= 4.5:1 (min 5.43)
+ok 53 - L8 red: set B accent-on-cream 6.84 + set C white-on-accent 7.43, both >= 4.5:1
+ok 54 - L8 green setup: re-boot ready with the green record standing
+ok 55 - L8 green: §2.5F outline — the accent discs on gradient zones carry the measured 2px bar-fg boundary (card "rgb(233, 217, 174) 0px 0px 0px 2px", head "rgb(233, 217, 174) 0px 0px 0px 2px")
+ok 56 - L8 green: ON THE HERO INSTANCE, --bar-fg/--bar-sub vs both gradient ends >= 4.5:1 (token min 5.76, measured min 5.76); title/meta/day-line compute to the audited pair
+ok 57 - L8 green: zone-2 pairs (queue title/meta on card, seek labels + transport glyphs on cream) >= 4.5:1 (min 5.43)
+ok 58 - L8 green: set B accent-on-cream 4.67 + set C white-on-accent 5.07, both >= 4.5:1
+ok 59 - L8 violet setup: re-boot ready with the violet record standing
+ok 60 - L8 violet: §2.5F outline — the accent discs on gradient zones carry the measured 2px bar-fg boundary (card "rgb(233, 217, 174) 0px 0px 0px 2px", head "rgb(233, 217, 174) 0px 0px 0px 2px")
+ok 61 - L8 violet: ON THE HERO INSTANCE, --bar-fg/--bar-sub vs both gradient ends >= 4.5:1 (token min 6.66, measured min 6.66); title/meta/day-line compute to the audited pair
+ok 62 - L8 violet: zone-2 pairs (queue title/meta on card, seek labels + transport glyphs on cream) >= 4.5:1 (min 5.43)
+ok 63 - L8 violet: set B accent-on-cream 6.27 + set C white-on-accent 6.80, both >= 4.5:1
+ok 64 - L8 rose setup: re-boot ready with the rose record standing
+ok 65 - L8 rose: §2.5F outline — the accent discs on gradient zones carry the measured 2px bar-fg boundary (card "rgb(249, 233, 228) 0px 0px 0px 2px", head "rgb(249, 233, 228) 0px 0px 0px 2px")
+ok 66 - L8 rose: ON THE HERO INSTANCE, --bar-fg/--bar-sub vs both gradient ends >= 4.5:1 (token min 4.92, measured min 4.92); title/meta/day-line compute to the audited pair
+ok 67 - L8 rose: zone-2 pairs (queue title/meta on card, seek labels + transport glyphs on cream) >= 4.5:1 (min 5.43)
+ok 68 - L8 rose: set B accent-on-cream 5.22 + set C white-on-accent 5.67, both >= 4.5:1
+ok 69 - L9 setup: re-boot ready
+ok 70 - L9 floors: body computes 17px; the day line at 13px, hero meta at 15px, and NO text element on Now Playing under 13px (min 13px)
+ok 71 - L10 setup: a PIN stands set through the real Settings flow (v356's surface, untouched by C)
+ok 72 - L10 setup: re-boot ready, the PIN standing (gated tabs locked)
+ok 73 - L10: Now Playing opens from the dock over the prayers tab and paints its track
+ok 74 - L10: Now Playing opens from the dock over the intentions tab and paints its track
+ok 75 - L10: Now Playing opens from the dock over the examination tab and paints its track
+ok 76 - L10: Now Playing opens from the dock over the confession tab and paints its track
+ok 77 - L10: Now Playing — a player surface outside v356's gated families — plays normally while the PIN stands locked
+ok 78 - L10: while locked, NO /api/exam/* or /api/confession/* call was issued (gated tabs gate; requests seen: 0)
+ok 79 - browser: no page errors across the v354 legs (errors=[])
+# harness-v354: 77/79 ok

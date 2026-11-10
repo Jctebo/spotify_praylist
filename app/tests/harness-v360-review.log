@@ -1,0 +1,27 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - fixture: migration 0015 stands in the tree (the fixture set runs through it)
+ok 3 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 4 - fixture: the presented day's draw stands (status=200)
+ok 5 - fixture: the served /app.js parses (vm.Script)
+ok 6 - SW pin: the served service worker carries CACHE 'ora-pro-nobis-v360-1'
+ok 7 - boot: the fixture pass reaches readiness (own settled + descriptors + intros) in 482 ms
+ok 8 - L1 enumeration: state.repeatIds is exactly {marian-antiphon-angelus} and matches the descriptor-count computation; the Antiphon stands in Evening/Midday/Morning (repeatIds=["marian-antiphon-angelus"], computed=["marian-antiphon-angelus"], blocks=["Evening","Midday","Morning"])
+ok 9 - L1b guard: no novena id and no external slot id stands in the repeat set
+ok 10 - L2 acceptance 1: toggling the Morning Antiphon's dot writes ONLY the Morning occurrence key (click=ok, dots=[{"on":false,"block":"Morning"}], store=["marian-antiphon-angelus|Morning"], counts M 0->1 / Md 0->0 / E 0->0)
+ok 11 - L2b acceptance 1 (chrome): the Midday and Evening Antiphon dots read UNPLAYED after the Morning mark (Midday=[{"on":false,"block":"Midday"}], Evening=[{"on":false,"block":"Evening"}])
+ok 12 - L3 acceptance 2: completing the Midday Antiphon through the real 'ended' path marks ONLY the Midday occurrence; Morning's mark stands as L2 left it; Evening remains unplayed (store=["marian-antiphon-angelus|Morning","marian-antiphon-angelus|Midday"])
+ok 13 - L3b general rule: for every id in the repeat set, a mark in one block never reads as played in another (checked={"marian-antiphon-angelus@Morning":true,"marian-antiphon-angelus@Midday":true,"marian-antiphon-angelus@Evening":true})
+ok 14 - L4 toggle independence: toggling the Midday dot OFF removes only the Midday occurrence; Morning's mark stands (store=["marian-antiphon-angelus|Morning"])
+ok 15 - L5 mark-all isolation: Mark-all in Morning marks the whole Morning block INCLUDING its Antiphon occurrence — and no other block's Antiphon (counts={"total":6,"played":6}, antKeys=["marian-antiphon-angelus|Morning"])
+ok 16 - L6 filter: with Morning's Antiphon played, the Morning unplayed-only build drops it while Midday's build keeps Midday's Antiphon WITH its intention intro paired (={"mornHas":false,"midHas":true,"introPaired":true})
+ok 17 - L6b auto-queue (v351): tapping Midday's Antiphon card builds the pair first — intro, then the Midday occurrence (tap=ok, q=["intro:marian-antiphon-angelus","marian-antiphon-angelus"])
+ok 18 - L7 Continue: with only the Midday+Evening Antiphons unplayed, Continue names Midday's occurrence and counts 17/19; marking Midday moves it to Evening's occurrence at 18/19 — each occurrence counted separately (a="ContinueContinue — Midday · Marian Antiphon — Angelus17 of 19 heard todayContinuePlay everything instead · See queue", b="ContinueContinue — Evening · Marian Antiphon — Angelus18 of 19 heard todayContinuePlay everything instead · See queue")
+ok 19 - L8 queue dots: a queue holding two Antiphon occurrences paints each row's dot from its OWN occurrence (Morning on, Evening off) (rows=[{"on":true,"meta":"Marian Antiphon — AngelusMorning"},{"on":false,"meta":"Marian Antiphon — AngelusEvening"}] )
+ok 20 - L9a snapshot v2 save: the record carries v=2, blocks parallel to ids, currentBlock (rec={"v":2,"ids":["marian-antiphon-angelus","marian-antiphon-angelus"],"blocks":["Morning","Evening"],"currentBlock":"Morning"})
+ok 21 - L9 snapshot v2 round-trip: the two occurrences restore to their OWN dayparts, and completing the restored Evening entry credits Evening only (restored=["Morning","Evening"], credit=ok)
+ok 22 - L10 v1 fallback: an ids-only record restores first-match (both occurrences collapse to Morning's descriptor, the approved price) and the next save rewrites it as v2 (restored=["Morning","Morning"], rec={"v":2,"blocks":["Morning","Morning"],"currentBlock":"Morning"})
+ok 23 - L11 changeover A: a pre-seeded BARE Antiphon mark for today reads UNPLAYED at all three occurrences under the new build — the old entry is simply never read — while a pre-seeded singleton mark (daily-rosary) reads exactly as before (={"morn":false,"mid":false,"eve":false,"rosary":true})
+ok 24 - L12 novena guard: novenaInfo counts the two seeded dates under the BARE canonical id before and after (m=2 -> 2); completing a novena day writes the bare key only — no occurrence key ever stands for a novena id (keys=["novena-st-jude"])
+ok 25 - L13 singleton stability: marking Morning Prayer (and the Daily Rosary WITH a block in hand) writes the BARE canonical keys — no occurrence suffix stands anywhere for a non-repeated id (keys=["daily-rosary","morning-prayer"])
+ok 26 - browser: no page errors across the v360 legs (errors=[])
+# harness-v360: 26/26 ok
