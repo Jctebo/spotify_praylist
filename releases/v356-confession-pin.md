@@ -214,3 +214,69 @@ Modeled on the standing family shape (local wrangler + headless Chromium, `LOCAL
   - **harness-v355: 28 ok / 1 FAIL** — the SW pin succession leg only; the queue persistence/restore legs all pass with the PIN code standing in the same client.
 - **Not done by Implement (per §2.10):** migration 0014 was applied ONLY to the harness's test D1 — never to production; nothing was deployed. Ship applies 0014 to production D1 with read-backs, deploys from a clean ship worktree, and completes the four-piece flip. Review runs before that (data/auth-adjacent change), on the harness's test D1 as Plan directs.
 - **Concerns and Information Needs:** one item for Review — the harness-v352 L11 timing disposition in §3.3 (a Plan-specified lazy read vs a fixed 900 ms sample in an older harness): the build stands as Plan wrote it; if Review wants the older family's sample widened, that is a harness-modernization follow-on, not a change to this release. Nothing else open.
+
+## 4 · Review
+
+- **Agent:** Review agent (v356, 2026-11-10) — Review claim record 1278, claimed 2026-11-10T15:22:27Z · time contract 181 (expectation: Review passed — §4 published with harness re-run green, ASAP, hard deadline 16:07Z 2026-11-10). **Verdict: PASS.** Every check below was verified first-hand by this seat — code read in the tree at 2fdcdb9, tallies from complete logs of runs this seat executed; §3's word was trusted for nothing.
+- **§2 + §3 read in full before any check.** The build stands at trunk head 2fdcdb9 (20eeba4 build · 33b409c harness · 2fdcdb9 §3), exactly as §3 records.
+
+### 4.1 Migration 0014 — verified
+
+- The file is §2.1 verbatim: `pin_state` singleton (`id INTEGER PRIMARY KEY CHECK (id = 1)`, PIN + recovery hash/salt/iterations columns, `failed_attempts` + `next_allowed_at`), `pin_tokens` (`token_hash` PK, `issued_at`, `expires_at`) + the expires index. No seed rows, no changes to existing tables, no settings-meta increment.
+- Tokens at rest are SHA-256 hex only (`issuePinToken` inserts `sha256Hex(token)`; the raw token exists only in the issuance response). Credentials at rest are PBKDF2 hashes with hex salts — never plaintext (harness L2 asserts the D1 row contains neither the fixture PIN nor the code).
+- **Sequence honest:** the tree carries 0001–0013 + 0015 (v352) with 0014 in the gap, exactly as Plan claimed; production tracks migrations by name, so Ship's only pending file is 0014 (§4.6).
+
+### 4.2 The gate seam — verified in the dispatch
+
+- One check, one place: `index.ts:1579` — when `seg[1]` is `exam` or `confession`, `pinGate` runs and a refusal returns **before** the exam block (:1584) and the confession block (:1633) dispatch any handler. It stands after the `johnOnly` gate (:1088) and after the disjoint agent-door block (:1018). No route-by-route patching exists.
+- Reads AND writes are behind it (the check precedes both family blocks whole). A refused GET creates no `exam_runs` row and a refused write changes nothing — proven in the gate by harness L3 in this seat's own run, not merely read in code.
+- No `pin_state` row → `pinGate` returns null and both families proceed exactly as before this release (decision 6, the L1 floor).
+
+### 4.3 Credential mechanics — verified in code and in the gate
+
+- **Hashing:** `pbkdf2Hex` derives 256 bits via WebCrypto PBKDF2 with hash SHA-256; `PIN_ITERATIONS = 100000`; `hashCredential` draws a fresh 16-byte salt per credential and stores the iteration count beside it. Harness L2 reads both stored counts back from D1 as 100,000 — the runtime accepted Plan's number, no §2.1 substitution stands. Compares use the codebase's `timingSafeEqual` on both routes.
+- **One shared counter:** verify and recover both advance the singleton row through the single `registerPinFailure`; failures 1–4 answer 401 with `attemptsRemaining` 4·3·2·1; failure 5+ sets the wait `min(30 · 2^(n−5), 300)` = **30 · 60 · 120 · 240 · 300 s capped**. Harness L8 proves the sharing behaviorally (a wrong code advances the count a wrong PIN then continues).
+- **In-wait attempts:** verify and recover both check the wait BEFORE deriving anything and answer 429 — unevaluated (a correct PIN during a wait still waits) and uncounted (harness L4 reads D1: `failed_attempts` still 5 after a correct-PIN attempt inside the wait).
+- **Success resets:** verify calls `resetPinAttempts`; recover zeroes the counter in its own UPDATE. Change/remove do not touch the counter, per §2.2.2 (they ride on a proven unlock).
+
+### 4.4 Token lifecycle — verified
+
+- **Issuance:** `randomHex(32)` — 32 random bytes, returned once in the set/verify/change/recover response; only its SHA-256 stands in D1.
+- **Fixed 30-minute life:** `expires_at = issued + 30 min`; `pinTokenValid` never extends it — no sliding renewal anywhere. An expired row is deleted on lookup (harness L6, including the deletion delta).
+- **Revocation by deletion:** change and recover each `DELETE FROM pin_tokens` before issuing the fresh token; remove deletes `pin_state` and every token in one batch. The pre-change token 403s afterward (harness L9).
+- **Recovery keeps the content by construction:** the recover route reads and writes only `pin_state` + `pin_tokens` — this seat read the route whole; no exam or confession row is touched. It replaces the PIN hash, generates a NEW recovery code (the used code dies with its generation), resets the counter, revokes all tokens, and issues a fresh one. Fixture entries + confession stand intact after recovery (harness L8).
+- **Recovery code shape:** 12 chars from the Crockford alphabet (no I, L, O, U), rejection-sampled (256 is an exact multiple of 32 — the comment says so honestly), grouped `XXXX-XXXX-XXXX`, compare-normalized (dashes/spaces stripped, uppercased) at hash time and at compare.
+
+### 4.5 Client — verified
+
+- **Memory-only residence:** the token lives in ONE module-scope variable (`pinToken`, client.ts:109), set only from the four issuance responses, cleared on a `pin_required` refusal and on remove, merged into `api()`'s headers for `/api/` calls only. This seat grepped every `setItem` in the served client: all are pre-existing features (speed, resume, queue, played, externals cache) — none carries the token; there is no `sessionStorage` write at all. Harness check 73 sweeps the same ground in the gate and passes.
+- **Reload re-locks** (harness L7, this seat's run); within one session one unlock opens both tabs (L5/L7).
+- **No-PIN state is open and unmentioned:** `gatedTabRender` proceeds straight to content when the cached state read says no PIN; the Settings **Confession PIN** section (client.ts:1350) carries the three standing states (no-PIN / set+unlocked / set+locked) per §2.6.4; first set is offered there only — no modal anywhere.
+- **Lazy state read as Plan specified:** `/api/pin/state` is fetched at the first gated render or Settings open — no boot work added; v355's boot order untouched (§2.7).
+- The §3 build find stands fixed: both client PIN-format checks use `/^[0-9]{4,8}$/` (the cooked-`\d` defect), and the set flow passes in this seat's harness run.
+- **SW pin:** the served worker carries `ora-pro-nobis-v356-1` (ui.ts, read directly).
+
+### 4.6 Harness — this seat's own runs (tallies from COMPLETE logs)
+
+- **harness-v356 (candidate, this seat's re-run): 73 ok / 0 FAIL** — `app/tests/harness-v356-review.log`. Identical to §3's tally, independently obtained: all L1–L11 legs green, including bytes withheld with content absent, the timed ladder, recovery rolling the generation with content intact, reload re-locking, and the door unaffected with a PIN locked.
+- **Regression spot-checks (this seat's runs, complete logs):**
+  - **harness-v352: 31 ok / 2 FAIL** — `app/tests/harness-v352-regression-review.log`. The failure set is byte-identical to §3's: the SW pin succession leg + L11 (judged at §4.7). The run's own final leg records **zero page errors**.
+  - **harness-v347: 18 ok / 1 FAIL** — `app/tests/harness-v347-regression-review.log`. The single failure is the SW pin succession leg, exactly §3's disposition.
+  - The remaining families stand on §3's complete-log dispositions, which this seat read and found consistent in shape (v305/v349 stale-fixture classes proven against pristine in §3's paired logs; v344/v346/v350/v355 pin-succession only; v351's intermittent boot-stall crashing identically on pristine). No spot-check this seat ran contradicted any of them.
+
+### 4.7 The flagged item — harness-v352 L11: JUDGED ACCEPTABLE, not a defect
+
+- §3 flagged one candidate-only delta: v352's L11 samples each surface's text at a **fixed 900 ms** after a native tab click; on the candidate, Examination and Confession read false at that sample (both colors) while Intentions and Settings read true; on pristine the same leg passes.
+- **The mechanism is Plan's own design, not a build deviation:** §2.6.2/§2.7 put ONE lazy `/api/pin/state` read in front of the two gated renders and forbid boot work. A gated surface therefore makes two sequential round trips (state, then content) where the pristine surface makes one. In that harness's loaded multi-server box the second trip lands past a fixed 900 ms sample; the single-read surfaces land inside it. §3's isolated time-to-content measurement is 240 ms.
+- **The content renders, correctly, in every state:** this seat's harness-v356 run proves both gated surfaces with selector waits (the correct measurement) — locked gate, unlocked content, no-PIN content — 73/73. The v352 run itself reports no page errors. Nothing is withheld wrongly, lost, or left on screen after expiry; the worst case on a phone is the standing "Loading..." line for one extra small fetch on the first gated tap of a session.
+- **Ruling:** the build stands exactly as Plan wrote it; changing the product to satisfy an older harness's fixed sample would invert the Plan (adding boot work §2.7 forbids). The delta is recorded as a **harness-modernization follow-on** — convert v352 L11's fixed samples to selector waits — in the same standing class as the v349 fixture-cap follow-on. It does not block this release.
+
+### 4.8 Machine-flow safety — re-verified fork-wide by this seat
+
+- A repo-wide sweep for `api/exam` / `api/confession` outside `app/worker/src` finds only the app's own harnesses and the client — no job, runner script, nightly sheet step, or publish helper calls either family (the two textual hits in jobs/runner are prayer-content words — "examen" in a reflection prompt, "example.invalid" in a test — not routes). The agent door serves only its four prayer/player reads and gains NO pin route; harness L11 proves in the gate that all four answer identically with a PIN set and locked. **A night's run cannot be affected by this gate.** §2.4's finding stands, independently confirmed.
+
+### 4.9 Ship shape (§2.10) — sound
+
+- Review ran BEFORE any production migration, on the harness's test D1, as §2.10 directs for a credential-store change. Production carries 0015 already; **Ship applies migration 0014 only**, with read-backs (tables stand, zero rows — no PIN exists until John sets one).
+- **Rollback is sound both ways:** deploy rollback returns to the v355 production Worker, which ignores the two new tables entirely; and even forward, the shipped change is invisible until John sets a PIN — with no `pin_state` row, every surface behaves byte-identically to today (the L1 floor, proven). Ship deploys from a clean ship worktree, dry-run first, version read back, then the four-piece flip with What's New read live.
+- **Concerns and Information Needs:** the v352-L11 harness-modernization follow-on (§4.7) is the one carried item — a harness change, not a product change, and not a blocker. Nothing else open.
