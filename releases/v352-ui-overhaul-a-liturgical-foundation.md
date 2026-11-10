@@ -1,0 +1,187 @@
+## 1 · Scope
+
+- **Program (John, Ora thread, 2026-11-10 04:38 CT, via the interactive package's copied prompt; the package was rebuilt with embedded mockups + per-decision comment boxes before approval): the prayer app's UI overhaul — mostly a Spotify clone in structure and interaction, EXCEPT the theme follows the liturgical calendar** (the day's/season's liturgical color and character), and **the app header carries the liturgical day** (e.g. "Memorial of Saint Leo the Great", "Friday of the 32nd Week in Ordinary Time"). **APPROVED TO SHIP for the program**, split into three sequenced releases: **A (this release): liturgical foundation** · B (v353): clone structure · C (v354): Now Playing in clone form + seasonal depth + contrast audit. Registry row 665, slug v352-ui-overhaul-a-liturgical-foundation.
+- **The six program decisions (binding on all three releases):**
+  1. **Theme depth: seasonal theming THROUGHOUT** — liturgical color runs headers, accents, gradients; feast and martyr days carry their colors. (A builds the token layer + the five color treatments; C adds the seasonal-character depth.)
+  2. **Listen home: Spotify home form** — Continue row first, then the blocks as cards. (Release B's; A does not touch the Listen layout.)
+  3. **Examination / Confession keep both as their own tabs in the new clothing.** (Release B restyles; A must not break their surfaces and makes no structural change to them.)
+  4. **Liturgical-day source: the nightly devotional job's derivation from John's Devotion calendar** — WITH JOHN'S COMMENT at the gate, verbatim: **"Make sure to only grab the official day. Not devotions."** The header/source takes the OFFICIAL liturgical day only — no private devotions in the day name or theme. (§2.1 pins the derivation.)
+  5. **Preview route: SHIP EACH RELEASE STRAIGHT TO PRODUCTION** — John's choice over the recommended review-candidate route. The copied level text also carried the recommended clause "each release still stops at its candidate for my verdict"; the specific decision governs — **no candidate stop**; John's verdict comes on the shipped builds, recorded in §5 as his, pending — never as passed.
+  6. **Search: INCLUDED** over the day's prayers and blocks. (Release B's; not A's.)
+- **Release A contents (from the approved package):** (a) **the liturgical data path** — the nightly devotional job already derives the day's observance name + rank + saint + color from the Devotion calendar ICS and already pushes the color to the Goals Board and the Devotional Suite (its step 11); extend that push to the prayer app: `{date, day name, color}` via a small agent route beside the existing app addendum post, the app stores the day record, and the day payload carries it; (b) **the header carries the liturgical day name** — the name as the calendar derivation gives it, official day only; (c) **the theme token layer** — the day's color drives the brand-bar gradient, accents (primary buttons, progress fill, playing indicator), and header treatments ON THE CURRENT STRUCTURE; body text/background stay on fixed contrast pairs (a white day = gold-on-cream, never white-on-white); font floors stand (body ~17px, floor ~13px). **Fallback on a missed push: the plain date label, never a guessed day or color.**
+- **Sequencing:** the overhaul scopes against the post-v349/v351 end state (eight blocks, Novenas last; v350's courier fix; v351's auto-queue) — all landed before this Plan. Build order among the standing seats (registry note `sequencing-v355-v356-2026-11-10`, John's order): **v352 → v355 → v356 → v353 → v354** (§2.8).
+- **Untouched (named in the package):** playback engine, queue builder/contents, media-session (v346), speeds (v336), sleep timer (v320), resume (v312), played state (v344), NO CHECKLIST, same-day consumption (v337), all payload contracts except the one added field (the liturgical day), the four tabs' content.
+
+## 2 · Plan
+
+- **Agent:** Plan agent (v352 Plan, 2026-11-10) — Plan claim record 1263, claimed 2026-11-10T12:02:31Z · time contract 171 (expectation: Plan passed — §2 published, ASAP, hard deadline 07:30 CT 2026-11-10).
+- **Inputs read first-hand at Plan:** the registry row 665 + Scope record passed (holder: the Ora-thread interactive package) · fork trunk muse-draft-week @ 8b97de2 (v356 §2 head; production Worker 1bcbf6d0, the v351 build) · `app/worker/src/ui.ts` in full (shell :20–31, CSS :41–196, SW pin :196) · `app/worker/src/index.ts` (the agent door block :889–935, the prayer/day POST :896–912, `prayerDayPayload` :242–300, `playerDayPayload` :414–437, the session prayer/day GET :945–950) · `app/worker/src/client.ts` (state :9, the Listen render + dateLabel assignment :2741–2778, `renderIntentions` :987–990, boot :end) · `app/migrations/` 0001–0013 (0013 is the last applied; 0001 carries `prayer_addenda`, the shape §2.2 mirrors) · `releases/v356-confession-pin.md` §§1–2 (its migration claim + its chrome seams) · the registry rows for v353/v354/v355/v356 · **the saved `daily-devotional-artifact` job body in full** (steps 1, 2, 5, 6, 7a, 8, 11 are the derivation sources §2.1/§2.5 pin).
+- **Shape in one line:** one new D1 table (migration **0015**) holds one liturgical record per date; one new agent-door route beside the addendum post receives `{date, dayName, color}` from the devotional job's step 11; both day payloads gain one field, `liturgicalDay`; the client writes the name into one new line in the static brand bar and sets one `data-lit` attribute; a CSS token layer (`--accent`, `--bar-*`) re-points the standing accent and bar rules at five per-color treatments — layout, tabs, and every play path stand untouched.
+
+### 2.0 Code verification — the package's discovery against trunk 8b97de2
+
+Every load-bearing claim was re-read in the shipped code and the saved job body. **No contradiction found.** The particulars Plan pins:
+
+1. **The brand bar is static shell.** `SHELL_HTML` (ui.ts :20–27) renders logo + wordmark + tagline + gear, identically on every screen, with **no day name and no date anywhere in the header today**. The date label lives in screen sub-lines (Listen :2778, Examination :2851), fed by the payloads' `dateLabel`. The header gains the liturgical line by one added element (§2.6) — the shell itself never carries a day's data.
+2. **The CSS token set is six variables** (ui.ts :42): `--navy #16283f · --gold #a8863a · --cream #faf5ec · --ink #2a2620 · --line #ddd2ba · --card #fffdf7`. Accent-bearing rules today read `var(--gold)` directly (play buttons, dock progress fill, block-header rules, played-dot fill, seek accent-color, Now Playing queue outline); bar surfaces read `var(--navy)` (brand bar, tab bar, dock). §2.7's re-point list is exhaustive against this file.
+3. **The door's neighboring seam is the addendum post.** POST `/api/agent/prayer/day` (index.ts :896–912) upserts `prayer_addenda` (`INSERT … ON CONFLICT(date) DO UPDATE`, the estate idiom §2.2/§2.3 reuse) for the job's step 7a. The door serves exactly four reads/writes today (prayer/day GET + POST · prayer/intros GET · player/settings GET · player/day GET); the liturgical push is a fifth, beside prayer/day (§2.3).
+4. **Two day payloads, one presented-day rule.** `playerDayPayload` (:414) always presents the Chicago calendar day (v337: presented = today, never a production date); `prayerDayPayload` (:242) serves an explicit date (the Intentions payload). The liturgical field attaches to **both**, each keyed to its own payload's date (§2.4) — the brand bar stands over every tab, and either payload may be the one a given open loads first (boot calls `setTab('prayers')`, client.ts :end; Intentions reads prayer/day).
+5. **The job pushes for the consumption day.** The saved `daily-devotional-artifact` body opens: "Publish John's daily devotional for **TODAY (America/Chicago date)**" — it runs at 00:00 CT for the day it runs on, and its step 7a posts the addendum for that same date. The liturgical push inherits the dating exactly: one record per Chicago date, pushed in that date's own midnight run; the app reads only the presented date's row (§2.4). Same-day consumption holds end to end.
+6. **Migrations:** 0013 (v349) is the last applied to the app D1. **0014 is v356's** (pin_state + pin_tokens, claimed in its passed Plan). This release claims **0015** (§2.2, §2.8's numbering note).
+
+### 2.1 The official-day pin (Decision 4) — the derivation, resolved from the job's own text
+
+The job's body derives the day in separable pieces, and the pieces are NOT interchangeable. Read from the saved body:
+
+- **Step 1** takes the saint of the day from the **General Roman Calendar**: name + celebration rank.
+- **Step 2** parses the Devotion calendar ICS and keeps two distinct classes apart in its own text: **the Church observance line**, and entries **titled "(private devotion)"** (the 🔵 blue-circle class — John's private tridua, octaves, and devotions standing beside the official day).
+- **Step 5** fixes the day's liturgical color from **the Church observance event title's color-circle marker** (optional memorials count as primary). Private entries carry 🔵 — blue is never the day's liturgical color.
+- **Step 6** composes the addendum ("… pray for us") from **the Church observance entry**; ONLY if that entry names no saint does it fall back to the saint named by the day's private triduum/devotion entry, then to "Saint of the day".
+- **Step 11** pushes step 5's color to the board + suite: lowercase, purple → violet, accepted values exactly **white · red · green · violet · rose**; a color outside the set skips the push.
+
+**The pin for this release's push (Decision 4):**
+
+1. **`color` = step 11's value, unchanged** — the Church observance entry's marker color, mapped and validated by step 11's own rule. A private devotion can never supply it (its class marker is blue, outside the accepted set; where a day's official color fell outside the set, step 11 already skips — §2.5's step text inherits the skip for the app push too).
+2. **`dayName` = the official observance's name, with its rank folded in, in the calendar's own form** — the same name+rank pair steps 1–2 determine and step 8's Today tab states ("<Saint name> — <Rank>"): e.g. **"Memorial of Saint Leo the Great"** · a solemnity or feast likewise ("Solemnity of …", "Feast of …") · an optional memorial reads **"Memorial"**, never "Optional Memorial" (the standing rank-wording rule in step 8's text). **On a ferial day**, the Church observance entry is the ferial entry and **its title IS the day name** — the weekday-of-season form, e.g. **"Friday of the 32nd Week in Ordinary Time"** (in Advent/Lent, the weekday of that season, on the same terms).
+3. **Step 6's private fallback does NOT carry into this push.** The addendum may borrow a private entry's saint because a "pray for us" line needs a name; the liturgical day name never borrows one. If the Church observance names no saint, the day name is the ferial weekday-of-season name (rule 2) — **no private saint is ever substituted**, and no private devotion's title, focus, or monthly devotion ever enters `dayName` or `color`. The two fields are derived before, and independently of, step 6.
+4. **The app displays verbatim; it derives nothing.** The app holds no calendar, no ICS read, no rules table (the package's two rejected routes stand rejected: app-computed calendar · Worker-side rules). A name the job did not push does not exist for the app.
+
+### 2.2 Storage — migration 0015
+
+One new migration, `app/migrations/0015_liturgical_days.sql`, in the estate's commented style (header naming the release + §, what it does NOT do). It creates exactly one table and nothing else — no seed rows (the absence of a row IS the no-push state; the first push inserts), no changes to existing tables, no player-settings meta increment (the liturgical record is not a source-mapping row; the settings version stands, and the v334 device day-cache is not invalidated):
+
+```sql
+CREATE TABLE prayer_liturgical_days (
+  date TEXT PRIMARY KEY,
+  day_name TEXT NOT NULL,
+  color TEXT NOT NULL,
+  pushed_at TEXT NOT NULL
+);
+```
+
+- **Shape:** mirrors `prayer_addenda` (migration 0001) — one row per Chicago date, keyed by the date, upserted by the nightly push. Retention is unbounded by design (one small row per day; the payloads only ever read one date's row).
+- **The number:** **0015** — 0013 is v349's, 0014 is v356's claim under its passed Plan. A lands before v356 in build order (§2.8); the numbers follow the Plans as written, application is per-release at each Ship, and the tables are disjoint (`prayer_liturgical_days` vs `pin_state`/`pin_tokens`). Nobody renumbers either file.
+
+### 2.3 The push route — POST /api/agent/prayer/liturgical-day
+
+One new route in the agent-door block (index.ts :889–935), beside `prayer/day`, behind the standing `isAgent` check (the app's own AGENT_TOKEN — the same door the addendum post uses; no new credential, no session write path of any kind):
+
+- **Request:** `POST /api/agent/prayer/liturgical-day` with JSON `{ "date": "YYYY-MM-DD", "dayName": "<official day name>", "color": "<color>" }`.
+- **Validation (the standing `err(status, message)` shape):** `date` must match the door's standing date regex (else 400) · `dayName` must be a string, trimmed, 1–160 chars (else 400 — an empty name is a failed push, never a stored blank) · `color` must be one of `white · red · green · violet · rose` (else 400 — the step-11 set; blue is refused here even if a caller sends it).
+- **Write:** the addenda idiom — `INSERT INTO prayer_liturgical_days (date, day_name, color, pushed_at) VALUES (?, ?, ?, ?) ON CONFLICT(date) DO UPDATE SET day_name = excluded.day_name, color = excluded.color, pushed_at = excluded.pushed_at`, with `pushed_at` = the Worker's `nowISO()`. Re-push of the same date overwrites (the push is idempotent; a corrected calendar re-push heals the day).
+- **Response:** `{ ok: true, date }`.
+- **No GET route is added.** The read-back already exists: the door's GET `/api/agent/player/day` serves `playerDayPayload`, which carries the field (§2.4) — the job verifies its push through it, exactly as its step 9 verifies the draw through the prayer/day read.
+
+### 2.4 The payload field — `liturgicalDay`
+
+One helper beside the payload builders:
+
+```ts
+async function liturgicalDayFor(env: Env, date: string) {
+  const row = await env.DB.prepare(
+    "SELECT day_name, color FROM prayer_liturgical_days WHERE date=?",
+  ).bind(date).first<{ day_name: string; color: string }>();
+  return row ? { name: row.day_name, color: row.color } : null;
+}
+```
+
+- **`playerDayPayload`** gains `liturgicalDay: await liturgicalDayFor(env, presented)` — keyed to **presented**, the Chicago today the payload already computes (v337). The player can never read another date's record: there is no date parameter on this payload, so no other date's row can leak into a presented day.
+- **`prayerDayPayload`** gains `liturgicalDay: await liturgicalDayFor(env, date)` — keyed to **that payload's own date** (the Intentions payload serves explicit dates; each date presents its own record or null).
+- **Field shape:** `liturgicalDay: { name: string, color: "white" | "red" | "green" | "violet" | "rose" } | null`. Every other field of both payloads is byte-identical to today (harness L10 pins this).
+
+### 2.5 The devotional job edit — the exact step text (Ship applies; Plan does not edit the job)
+
+The edit is a **step 11 sibling**: a new sub-step appended inside step 11 of the saved `daily-devotional-artifact` body, after the Devotional Suite color push and its read-back, plus one clause in the closing summary template. Ship applies it with the v349 discipline — read the saved body first, `cron.update` with the complete revised body, read back and diff-check that ONLY these two insertions changed. The step text, verbatim as Ship inserts it:
+
+> **APP LITURGICAL PUSH (v352, 2026-11-10):** after the suite color push above verifies, push today's liturgical record to the Ora Pro Nobis app through the same app door helper as step 7a (prayer_door): `call("POST", "/api/agent/prayer/liturgical-day", {"date": "<today YYYY-MM-DD>", "dayName": "<the official day name>", "color": "<color>"})`. **OFFICIAL DAY ONLY (John's rule):** `dayName` and `color` come from the Church observance determination ONLY — steps 1 + 2's official observance and step 5/11's color. `dayName` is the official observance's name with its rank folded in, in the calendar's form (e.g. "Memorial of Saint Leo the Great"; an optional memorial reads "Memorial", never "Optional Memorial"; on a ferial day the Church observance entry's weekday-of-season title is the name, e.g. "Friday of the 32nd Week in Ordinary Time"). NEVER take the name or the color from an entry titled "(private devotion)": step 6's addendum fallback to a private entry's saint does NOT apply here — if the Church observance names no saint, the ferial name stands as the day name and no private saint is substituted. `color` is step 11's value for today (the Church observance marker, purple already mapped to violet); if the day's color fell outside the accepted set (step 11's skip case), skip this push too and note the skip in your run report. Verify by read-back: GET /api/agent/player/day through prayer_door and confirm the response's `liturgicalDay` carries today's name and color. If the POST or the read-back fails, retry once; if it fails again, note the failure in your report and continue — a missed push never blocks the run: the app falls back to the plain date label for the day.
+
+And the closing summary template gains, in its list of run outcomes, the clause: **"liturgical day pushed to the app (name + color), or the failure/skip named"** — placed beside the segment/subtask outcome clauses, in the same parenthetical style.
+
+- **Failure handling (as the step text states):** retry once, note, continue — the push is a sibling of the board/suite pushes and shares their non-blocking posture; a missed night degrades the app to the date label (§2.6), never to a wrong day.
+
+### 2.6 The client — the header line + one helper
+
+1. **The shell element (ui.ts `SHELL_HTML`):** inside `.brandtext`, under `.tagline`, one new line —
+   `<div class="litday" id="litday"></div>`.
+   The shell ships it **empty**: no day name, date, or color is ever baked into the shell (the shell is one static document for every day; the SW caches it — a baked name would be a wrong name by tomorrow).
+2. **The helper (client.ts):** one new function, `applyLiturgical(day)`, called from exactly two sites — `renderPrayers`' `/api/player/day` success path (beside the `state.dateLabel` assignment) and `renderIntentions`' `/api/prayer/day` success path. It holds one new state field (`state.liturgical`, beside `state.dateLabel` in the state object :9) and:
+   - if `day.liturgicalDay` stands → `#litday`.textContent = `day.liturgicalDay.name`; `document.documentElement.setAttribute('data-lit', day.liturgicalDay.color)`;
+   - if it is null → `#litday`.textContent = `day.dateLabel` (the payload's own plain date label — the package's fallback rule: the header falls back to the plain date, and the theme stays the standing default); `document.documentElement.removeAttribute('data-lit')`.
+   Both payloads already carry `dateLabel`, so the fallback needs no new field. Before either payload lands, the line stands empty (shell state) — the bar never shows a guessed or stale day.
+3. **Nothing else in the client changes.** No tab, render, player, queue, played-store, settings, examination, or confession code is touched; the Listen `.sub` keeps showing `dateLabel` exactly as today (the header line is additive — no standing date label is removed anywhere); boot order and `setTab` are untouched.
+
+### 2.7 The theme token layer (ui.ts `APP_CSS`)
+
+**New variables on `:root`** (defaults reproduce today's rendering exactly, pixel for pixel):
+
+| Variable | Default (no `data-lit`) | Drives |
+|---|---|---|
+| `--accent` | `var(--gold)` (#a8863a) | accent surfaces (below) |
+| `--accent-ink` | `#ffffff` | text/glyphs on `--accent` |
+| `--bar-bg` | `#16283f` (flat navy — today's exact bar) | bar backgrounds (a full background value; themes set gradients) |
+| `--bar-solid` | `#16283f` | `background-color` under `--bar-bg` (gradient-parse insurance) |
+| `--bar-fg` | `#e9d9ae` (today's wordmark tone) | primary text on bars |
+| `--bar-sub` | `#b9c4d4` (today's tagline/tab tone) | secondary text on bars |
+
+**Re-pointed rules (exhaustive — every rule A touches):**
+- `.brandbar { background-color: var(--bar-solid); background: var(--bar-bg); color: var(--bar-fg) }` · `.wordmark { color: var(--bar-fg) }` · `.tagline { color: var(--bar-sub) }` · `.gearbtn { color: var(--bar-fg) }` · **new** `.litday { font-size: 13px; letter-spacing: .4px; margin-top: 1px; color: var(--bar-fg) }` (13px = the standing floor; the name wraps rather than truncates — a truncated liturgical name is a wrong name).
+- `.tabbar { background-color: var(--bar-solid); background: var(--bar-bg) }` · `.tab { color: var(--bar-sub) }` · `.tab.active { color: var(--bar-fg); box-shadow: inset 0 2px 0 var(--accent) }`.
+- `.dock { background-color: var(--bar-solid); background: var(--bar-bg); color: var(--bar-fg); border-top-color: var(--accent) }` · `.docktitle { color: var(--bar-fg) }` · `.dockmeta { color: var(--bar-sub) }` · `.docknext { color: var(--bar-fg) }` · `.dockprogress i { background: var(--accent) }`.
+- **Accent surfaces:** `.playbtn { background: var(--accent); color: var(--accent-ink) }` · `button.btn.gold { background: var(--accent); color: var(--accent-ink) }` (the gold buttons are this app's primary-action buttons — Play All, the sheet saves) · `.blockhead { border-bottom-color: var(--accent) }` · `.npq-head { border-bottom-color: var(--accent) }` · `.npq-row.playing { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent) }` (the playing indicator) · `.played-dot.on::after { background: var(--accent); border-color: var(--accent) }` · `.np-seekrow input[type=range] { accent-color: var(--accent) }` · `.entry { border-left-color: var(--accent) }` · `.count { color: var(--accent) }` · `.spot { color: var(--accent) }` · `.pri { border-color: var(--accent); color: var(--accent) }` · `.pri.H { background: var(--accent); color: var(--accent-ink) }` · `.settoggle { border-color: var(--accent); color: var(--accent) }` · `.settoggle.on { background: var(--accent); color: var(--accent-ink) }`.
+- **Named untouched:** `button.btn` (navy — the app's structural ink, present in every theme), `.playbtn.playing` (navy state inversion), `.chip.active` / `.chipbtn.playing` (navy states), body background/text (`--cream`/`--ink` are NEVER themed), cards, headings (`h1.screen`, `.blockhead h2` keep navy), the manifest + `<meta name="theme-color">` (static navy; B/C may revisit), and every layout rule (no size, position, or spacing changes anywhere — `.litday` is the only new box, inside the existing bar).
+
+**The five color treatments** (`[data-lit="<color>"]` on `<html>`, set by §2.6):
+
+| Color | `--bar-bg` (gradient) | `--bar-solid` | `--bar-fg` | `--bar-sub` | `--accent` | `--accent-ink` |
+|---|---|---|---|---|---|---|
+| white | `linear-gradient(135deg, #f3e9cf, #faf5ec)` | `#f3e9cf` | `#16283f` | `#6d6353` | `#a8863a` | `#ffffff` |
+| red | `linear-gradient(135deg, #5d1616, #7d2121)` | `#5d1616` | `#f6e8d8` | `#dfb9a8` | `#9e2b25` | `#ffffff` |
+| green | `linear-gradient(135deg, #173a22, #1f4d2e)` | `#173a22` | `#e9d9ae` | `#b7cdb9` | `#2e7d46` | `#ffffff` |
+| violet | `linear-gradient(135deg, #2c1e40, #3d2a56)` | `#2c1e40` | `#e9d9ae` | `#c4b6dd` | `#6a4a9e` | `#ffffff` |
+| rose | `linear-gradient(135deg, #6d3441, #8a4453)` | `#6d3441` | `#f9e9e4` | `#e3bcc0` | `#a34a5f` | `#ffffff` |
+
+- **White is the gold-on-cream treatment** (the package's rule): pale-gold → cream bar, **navy wordmark and day name** — never white or cream text on the white bar. The tab bar and dock take the same treatment through the shared variables (a half-themed bar set is a defect; harness L5 checks all three).
+- **Contrast contract (pinned for A; the full audit is Release C's registered scope):** on every theme, `--bar-fg` and `--bar-sub` against BOTH gradient ends ≥ 4.5:1 (the bar carries 13px text — small-text ratio applies); the four NEW accents (red/green/violet/rose) with `--accent-ink` ≥ 4.5:1 and against `--cream` ≥ 4.5:1 where the accent carries text (`.spot`, `.count`, `.pri`, `.settoggle`). **The one named exception:** gold `#a8863a` (the default + white themes) is the app's standing brand accent — its pairings (gold on cream, white on gold) are the pre-existing brand pairs the package's white-day mockup itself specifies (gold-on-cream); they stand in A as-is and are Release C's audit subjects, named here so Review does not read them as an A defect or silently "fix" the brand.
+- **Font floors:** body stays 17px; `.litday` is 13px (the floor); no themed rule changes any font size.
+
+### 2.8 Sequencing + the seams the next seats read
+
+- **Build order: v352 lands FIRST** among the standing seats — then v355 (queue persistence), then v356 (Confession PIN), then v353 (B), then v354 (C) — per John's order recorded in the registry note `sequencing-v355-v356-2026-11-10`. Why A first: B's block pages and gradient headers build on this token layer; v355's persistence work reads the boot/header seams A settles (below) rather than a moving target; v356's PIN pad, built after A in the then-current chrome, takes its pad accent from `--accent` (the package mockup: PIN pad accent = the day's color).
+- **The token contract for later seats:** any new accent-bearing surface reads `var(--accent)` / `var(--accent-ink)` — never a hard-coded gold; any new bar-family surface reads the `--bar-*` set. (v356's pad + Settings section, v353's block-page headers, v354's Now Playing backdrop all inherit the day's theme by this one rule.)
+- **Seams A touches (v355's Plan reads exactly these):** `ui.ts` — `SHELL_HTML` (+1 element, `#litday`, inside `.brandtext`) and `APP_CSS` (the §2.7 variables + re-pointed rules) and the SW pin (§2.10); `client.ts` — the state object (+`liturgical` field), `applyLiturgical` (new), and its two call sites (`renderPrayers`' player/day path, `renderIntentions`' prayer/day path); `index.ts` — the door block (+1 route), both payload builders (+1 field each), one helper. **Boot order, `setTab`, the resume machinery (`loadResume`/`pendingResume`), the queue, and the played store are untouched** — v355 rebases onto precisely this list.
+- **v356 interaction:** none. A's route is door-only and prayer-family-adjacent; it touches neither gated family, so v356 §2.4's machine-flow finding stands unaffected. The exam/confession tabs pick up the bar theme and shared button accents automatically (shared classes), with no change to their code ahead of v356's gate or B's restyle.
+- **Migration numbering (restated from §2.2):** 0015 follows v356's 0014 by the Plans as written, though A lands first; per-release application at Ship; disjoint tables. Nobody renumbers.
+
+### 2.9 Harness plan — harness-v352
+
+Modeled on the standing family shape (local wrangler + headless Chromium, `LOCAL_DEV:1`, the worktree-only hard guard, a fresh test D1 per run; migration 0015 applies in setup; fixture liturgical records are pushed through the real door route against the test D1). Tallies read from COMPLETE log files. Legs:
+
+- **L1 — the route:** door POST a valid record → 200 `{ok, date}` and the row stands in the test D1; a second POST for the same date overwrites name + color (upsert); 400 on a bad color (`blue` named explicitly), a bad date, an empty `dayName`, a `dayName` over 160 chars; 403 without the agent token.
+- **L2 — the payloads:** with a record standing for the presented date, GET door `/api/agent/player/day` and the session `/api/prayer/day` both carry `liturgicalDay {name, color}` exactly as pushed; with a record standing ONLY for a different date, both read null for the presented date (the same-day pin — no leak across dates).
+- **L3 — official-day independence:** fixture a presented date whose addendum names a saint (the step-6 private-fallback shape) while its liturgical record carries a ferial weekday name → the header shows the **ferial name**; the addendum renders in the Intentions tab exactly as today. The liturgical record and the addendum are independent fields; neither derives from the other in the app. (The job-side derivation itself is pinned by §2.5's step text and proven at Ship by the first-night read-back — the app-side leg proves the app can never merge them.)
+- **L4 — the fallback:** no record for the presented date → `#litday` text = the payload's `dateLabel`; `<html>` carries NO `data-lit`; computed `.brandbar` background = flat navy (rgb(22, 40, 63)); a record standing for yesterday does not light today's bar.
+- **L5–L9 — one leg per color (white · red · green · violet · rose):** push the color's record, load, assert `data-lit` = the color, `#litday` text = the pushed name, computed `.playbtn` background = the theme accent, the dock progress fill = the accent (dock painted), `.blockhead` border color = the accent; in-page computed-contrast assertions: `--bar-fg` and `--bar-sub` against both gradient-end colors ≥ 4.5:1 (the four new accents per §2.7's contract; gold's pairs are the named brand exception and are REPORTED, not asserted). **White leg additionally:** wordmark + `#litday` computed color is the navy — never white/cream on the white bar; the tab bar and dock computed backgrounds are the cream treatment, with ink-family text (no half-themed bar set).
+- **L10 — floors + payload hygiene:** body computed font-size = 17px; `#litday` computed font-size ≥ 13px; deep-compare player/day with vs without a record — identical except `liturgicalDay`; prayer/day the same.
+- **L11 — no-break:** with a white record standing, then a violet one (two loads), the Examination, Confession, Intentions, and Settings surfaces render their standing forms (no PIN exists in the harness D1 — v356 not landed; the gated tabs render open, as today).
+- **Regression families on the candidate:** harness-v344 · v346 · v347 · v349 · v350 · v351 — complete runs, tallies from complete logs; the only expected failures are each family's own superseded SW-pin leg (A bumps the pin, §2.10); any other failure is dispositioned against the pristine tree before it is read as pre-existing (the estate's standing rule).
+- **Pristine comparison:** harness-v352 against the pristine trunk (8b97de2) fails the new-behavior legs (L1, L2, L3, L5–L9) in order — no route, no field, no tokens — while L4's fallback assertions describe today's behavior and pass there.
+
+### 2.10 Ship shape — straight to production (Decision 5)
+
+- **The standard five-phase shape to Ship**, with this program's Decision 5 applied: **no review-candidate stop exists** — Implement builds in its clean release worktree on the landed trunk and lands ff-only; Review verifies (a data-path + client change; the production migration is Ship's, so Review runs on the harness's test D1 — the standing pattern for migration releases); **Ship goes straight to production** and John's verdict comes on the shipped build.
+- **SW pin:** bump `CACHE` in ui.ts from `ora-pro-nobis-v351-1` to `ora-pro-nobis-v352-1` (the standing per-release pin discipline — the shell + CSS are SW-cached, so the new header line and tokens reach the phone only under the new pin).
+- **The Ship session, in order, all before the next 00:00 CT run:**
+  1. Apply **migration 0015** to the production D1, with read-backs (the table stands, 0 rows — no liturgical record exists until the first push).
+  2. Deploy the Worker from a clean ship worktree (dry-run first; version id read back; **rollback = 1bcbf6d0**, the v351 build).
+  3. Apply the **§2.5 job edit** (`cron.update`, complete body, diff-checked: only the step-11 sub-step + the summary clause changed — any other drift found in the diff is reported, not folded in; step 7e's older "goal 9" wording is a named pre-existing staleness and is NOT A's to fix here).
+  4. **Light the first day by hand:** one door POST for the ship date with the name + color **re-derived from the Devotion calendar ICS for that date** (Ship derives from the calendar, never from memory; expected shape on 2026-11-10: "Memorial of Saint Leo the Great", white) + the door player/day read-back showing `liturgicalDay` standing — the header lights on ship day instead of waiting for midnight, and tonight's run re-pushes the same record idempotently.
+  5. The **four-piece flip** (release row Live by full-field upsert · shipped record · What's New at the live max + 1 read at Ship time · phase records), then §5.
+- **First-night verification (named, not a gate):** tonight's 00:00 CT devotional run is the first under the edited sheet — its summary's app-push clause + the door read-back after it are the proof the push fires unattended.
+- **§5 records:** the migration read-backs, the deploy version + rollback, the job-edit diff result, the first-push read-back, the flip ids, and **John's verdict on the shipped build as his — pending, never passed**.
+
+### 2.11 Risks
+
+- **The white theme reaches the tab bar and dock too** (shared `--bar-*`): intended — Decision 1's theming runs throughout — and the L5 white leg checks all three bar surfaces so a half-themed set cannot slip through.
+- **Gradient as a variable value:** `--bar-bg` holds a whole background value; if a gradient failed to parse anywhere, the declaration drops — `.brandbar`/`.tabbar`/`.dock` therefore also set `background-color: var(--bar-solid)` beneath it (the theme's deep end), so the worst case is a flat themed bar, never a transparent one.
+- **Long day names** (solemnities with long titles) wrap inside the bar (`.litday` wraps by design, §2.7) — the bar grows a line rather than truncating the name.
+- **The job edit touches a live sheet:** the diff-check discipline in §2.10 step 3 is the guard — the edit lands only if the saved body differs by exactly A's two insertions.
