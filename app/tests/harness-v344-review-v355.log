@@ -1,0 +1,48 @@
+ok - setup: candidate app boots
+ok - setup: the day's draw stands
+ok - setup: candidate app re-boots after the draw re-point
+ok - setup: re-pointed draws carry the calibrated texts
+ok - 19 served build parses and carries the v344 seams (store key, markCompleted, unplayedOnly, paintContinue, refreshPlayedChrome)
+FAIL - 19 SW pin ora-pro-nobis-v344-1 with the opn-ext-audio-v1 purge exemption verbatim
+ok - 19 NO CHECKLIST source guard: no checkmark glyph in the served client or styles
+ok - 1 a corrupt stored value reads as empty — the day renders, dots stand hollow, no path throws
+ok - 1 the first write after a corrupt value lands a valid store (the degrade is total)
+ok - 1 store round-trip: a dot write lands the exact §2.2 shape (playedAt ISO + via) under episode id then presented date
+ok - 1 prune on write: the 121-day-old entry is gone, the 9-day-old entry stands
+ok - 12 fresh day: no Continue card stands (nothing played, no resume record)
+ok - 17 a plain no-intro own card carries the dot; a settled external card (extSwapCard path) carries it in its standing state
+ok - 17 an unavailable card carries NO dot
+ok - 8 tapping a hollow dot writes via:"marked" for the presented date, fills the dot, steps the title to meta — and starts no audio
+ok - 8 tapping the filled dot removes the record; dot and title revert
+ok - 9 the label reads "Mark all played" with unplayed standing; one tap marks exactly the block's available tracks (via marked), nothing else
+ok - 9 the label flips to "Mark all unplayed" on the fully-played block
+ok - 9 a second tap unmarks the block; the label returns
+ok - 12 after two tracks stand played the card stands, names the first unplayed in play order, and reads "N of M heard today" — position, no score, no percentage
+ok - 12 unmarking back to a fresh day retires the card (the gate re-evaluates on every write)
+ok - 2 (with leg 5) the queue's first intro ended into its prayer and wrote NOTHING for the prayer
+ok - 2 a queued track played to its end stands marked (via played, presented date) AND the queue has advanced — the next track stands started
+ok - 2 the completed track's dot stands filled in place
+FAIL - 5 the panel intro played to ITS end writes nothing for the prayer (intro alone does not mark) :: ["ext-invitatory","daily-rosary","ext-bible-in-a-year","marian-antiphon-angelus"]
+ok - 5 the prayer then played to its end stands marked (via played)
+ok - 3 a lone track played to its end stands marked as it clears (state.current null after the end)
+ok - 4 a track played part-way then skipped (dock next) stands unplayed
+ok - 4 a track paused part-way stands unplayed, and the resume record still holds its position
+ok - 18 the dock-skipped track marks nothing and stands in a later Continue queue
+ok - 6 with the timer armed to end-of-track, the playing track's natural end marks it played, and the next track stands held unstarted at its head (the standing v320 sleep shape: current = next, paused, queue intact)
+ok - 7 the minutes-mode stop fires mid-track as a pause: no played record, and the resume position stands saved
+ok - 10 Play All's queue is exactly the unplayed in payload order — played prayers and their intros out, unplayed intros riding before their prayers
+ok - 14 "Play everything instead" starts the FULL unfiltered day queue (played tracks included, payload order)
+ok - 10 a block's play button filters the same way (Morning: exact filtered block queue)
+ok - 11 a fully-played block plays in full from its button (the fallback, never a dead button)
+ok - 11 no Continue card stands on the fully-played day
+ok - 11 a fully-played day plays in full from Play All (the fallback)
+ok - 13 with only the rosary + reflection unplayed and the resume record on the rosary, Continue names the rosary
+ok - 13 Continue starts the named track at the saved position (±2s of 5s) and the queue continues with the remaining unplayed (the rosary first; the reflection follows with its intro riding; no played available prayer stands in it)
+harness-v344 crashed: page.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('#continue-btn')
+
+    at main (/home/hatch/workspace/.worktrees/v355-review/app/tests/harness-v344.mjs:813:16) {
+  log: [ "  - waiting for locator('#continue-btn')" ],
+  name: 'TimeoutError'
+}
