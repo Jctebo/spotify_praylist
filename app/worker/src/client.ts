@@ -6,7 +6,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {}, playedCache: null, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false };
+var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {}, playedCache: null, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '' };
 
 /* ---------------- Liturgical day (v352) ----------------
    The brand bar carries the day's OFFICIAL liturgical name and
@@ -1300,7 +1300,7 @@ function paintSettings() {
   SET_SECTIONS.forEach(function (sec) {
     var rows = secs[sec];
     if (!rows.length) return;
-    html += '<div class="blockhead"><h2>' + esc(sec.toUpperCase()) + '</h2></div>';
+    html += '<h2 class="sectionhead">' + esc(sec.toUpperCase()) + '</h2><div class="liblist">';
     rows.forEach(function (row, idx) {
       html += '<div class="setrow" data-setkey="' + esc(row.sourceKey) + '">';
       html += '<div class="setname">' + esc(row.name) + '</div>';
@@ -1320,6 +1320,7 @@ function paintSettings() {
       html += '<button class="mvbtn" data-setact="down" aria-label="Move down"' + (idx === rows.length - 1 ? ' disabled' : '') + '>&#9660;</button>';
       html += '</div></div>';
     });
+    html += '</div>';
   });
   html += '<div class="row" style="margin-top:12px"><button class="btn gold" id="set-save">Save mapping</button><button class="btn ghost" id="set-back">&lsaquo; Back</button></div>';
   html += '<div id="pin-section"></div>';
@@ -1359,7 +1360,7 @@ function fillPinSection() {
   fetchPinState().then(function (st) {
     var host2 = document.getElementById('pin-section');
     if (!host2) return;
-    var html = '<div class="blockhead pinsection"><h2>CONFESSION PIN</h2></div>';
+    var html = '<h2 class="sectionhead pinsection">CONFESSION PIN</h2>';
     if (!st.pinSet) {
       html += '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">No PIN is set. Confession and Examination open without a PIN.</p><button class="btn gold" id="pin-set-open">Set a PIN</button></div>';
       host2.innerHTML = html;
@@ -1453,7 +1454,7 @@ function intentionRow(it) {
   var actions = it.status === 'active'
     ? '<button class="btn ghost small" data-act="edit" data-id="' + it.id + '">Edit</button> <button class="btn ghost small" data-act="retire" data-id="' + it.id + '">Retire</button> <button class="btn ghost small" data-act="del" data-id="' + it.id + '">Delete</button>'
     : '<button class="btn ghost small" data-act="edit" data-id="' + it.id + '">Edit</button> <button class="btn ghost small" data-act="restore" data-id="' + it.id + '">Restore</button> <button class="btn ghost small" data-act="del" data-id="' + it.id + '">Delete</button>';
-  return '<div class="card"><div class="row"><div class="grow"><div>' + esc(it.text) + '</div><div class="meta">' + hist + '</div></div><span class="pri ' + it.priority + '">' + ({ H: 'High', M: 'Medium', L: 'Low' })[it.priority] + '</span></div><div style="margin-top:8px">' + actions + '</div></div>';
+  return '<div class="librow"><div class="row"><div class="grow"><div>' + esc(it.text) + '</div><div class="meta">' + hist + '</div></div><span class="pri ' + it.priority + '">' + ({ H: 'High', M: 'Medium', L: 'Low' })[it.priority] + '</span></div><div style="margin-top:8px">' + actions + '</div></div>';
 }
 function renderIntentions() {
   view.innerHTML = '<h1 class="screen">Intentions</h1><p class="sub">the pool</p><p class="meta">Loading...</p>';
@@ -1472,11 +1473,11 @@ function renderIntentions() {
     html += '<div class="stats"><div class="stat"><b>' + cnt.H + '</b><span>High</span></div><div class="stat"><b>' + cnt.M + '</b><span>Medium</span></div><div class="stat"><b>' + cnt.L + '</b><span>Low</span></div><div class="stat"><b>' + active.length + '</b><span>active</span></div></div>';
     [['H', 'High · weight 4'], ['M', 'Medium · weight 2'], ['L', 'Low · weight 1']].forEach(function (g) {
       var rows = active.filter(function (i) { return i.priority === g[0]; });
-      html += '<h2 style="color:var(--navy);font-weight:normal;letter-spacing:1px;font-size:16px;margin:16px 0 8px">' + g[1].toUpperCase() + '</h2>';
-      html += rows.length ? rows.map(intentionRow).join('') : '<p class="meta">None.</p>';
+      html += '<h2 class="sectionhead">' + g[1].toUpperCase() + '</h2>';
+      html += rows.length ? '<div class="liblist">' + rows.map(intentionRow).join('') + '</div>' : '<p class="meta">None.</p>';
     });
     if (retired.length) {
-      html += '<h2 style="color:var(--navy);font-weight:normal;letter-spacing:1px;font-size:16px;margin:16px 0 8px">RETIRED</h2>' + retired.map(intentionRow).join('');
+      html += '<h2 class="sectionhead">RETIRED</h2><div class="liblist">' + retired.map(intentionRow).join('') + '</div>';
     }
     html += '<div class="card"><h3>Add an intention</h3><label class="f">Text</label><input type="text" id="new-text" placeholder="For..."><label class="f">Priority</label><select id="new-pri"><option value="H">High</option><option value="M" selected>Medium</option><option value="L">Low</option></select><div style="margin-top:10px"><button class="btn gold" id="new-add">Add to the pool</button></div><p class="meta" style="margin-top:8px">Adding an intention only adds it — it first enters a draw at the next nightly fill.</p></div>';
     html += '<p class="about">Your intentions live only in this app. The nightly draw runs off this pool for the podcast and the prayer products; this screen tends the pool and does not stage the day.</p>';
@@ -2261,9 +2262,18 @@ function blockInsertCards(day, standing) {
   // extInsertCards used — so payload cards the shell already
   // rendered (the block's Intentions segment) keep their standing
   // place at the block's head, ahead of every settings row.
-  var heads = view.querySelectorAll('.blockhead');
-  (day.blocks || []).forEach(function (b, bi) {
-    if (!heads[bi]) return;
+  // v353 \u00a72.4 \u2014 the audit's one exception: the anchor indexing
+  // below (the next-.blockhead anchor) presumed the flat
+  // all-blocks paint, which B retires. Under DOM narrowing the
+  // block's rows stand only on its own page, so insertions land
+  // THERE, appended after the page's painted rows in the same
+  // merged order; on every other paint (home, search results,
+  // another block's page, another tab) nothing inserts \u2014 the
+  // descriptors stand in state and the page paint renders the
+  // settled state when the page opens (appendBlockSettingsCards).
+  (day.blocks || []).forEach(function (b) {
+    var head = view.querySelector('.blockpage-head');
+    if (!head || head.getAttribute('data-block') !== b.block) return;
     var entries = [];
     (state.ownStanding || []).filter(function (r) { return r.block === b.block; })
       .forEach(function (row) { entries.push({ sortOrder: row.sortOrder || 0, own: row }); });
@@ -2271,11 +2281,6 @@ function blockInsertCards(day, standing) {
       .forEach(function (slot) { entries.push({ sortOrder: slot.sortOrder || 0, ext: slot }); });
     if (!entries.length) return;
     entries.sort(function (a, c) { return a.sortOrder - c.sortOrder; });
-    var anchor = heads[bi + 1] || null;
-    if (!anchor) {
-      var h2s = view.querySelectorAll('h2');
-      for (var i = 0; i < h2s.length; i++) { if (h2s[i].textContent.indexOf('FROM TODAY') === 0) { anchor = h2s[i]; break; } }
-    }
     entries.forEach(function (e) {
       if (e.own) {
         var row = e.own;
@@ -2286,7 +2291,7 @@ function blockInsertCards(day, standing) {
         while (tmp.firstChild) nodes.push(tmp.removeChild(tmp.firstChild));
         nodes.forEach(function (el) {
           el.setAttribute('data-own-row', row.sourceKey);
-          view.insertBefore(el, anchor);
+          view.appendChild(el);
           el.querySelectorAll('[data-playkey]').forEach(function (b2) {
             b2.addEventListener('click', function () {
               var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
@@ -2310,7 +2315,7 @@ function blockInsertCards(day, standing) {
         tmp2.innerHTML = st2 && st2.state === 'present' ? trackCard(extSlotTrack(slot, st2)) : extPlaceholderCard(slot);
         var el2 = tmp2.firstChild;
         if (!el2) return;
-        view.insertBefore(el2, anchor);
+        view.appendChild(el2);
         el2.querySelectorAll('[data-playkey]').forEach(function (b2) {
           b2.addEventListener('click', function () {
             var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
@@ -3285,61 +3290,15 @@ function renderPrayers() {
     state.readTracks = {};
     (day.blocks || []).forEach(function (b) { (b.tracks || []).forEach(function (t) { if (t.episodeId) state.readTracks[t.episodeId] = t; }); });
     (day.episodes || []).forEach(function (t) { if (t.episodeId) state.readTracks[t.episodeId] = t; });
-    // v342: the Resume card paints from paintContinue() once the
-    // resolution pass has descriptors to point at — the shell's
-    // own list is empty at first render by design.
-    var html = '<h1 class="screen">Listen</h1><p class="sub">' + esc(day.dateLabel || 'the day&rsquo;s prayers') + '</p>';
-    html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span><button class="btn ghost" id="sleep-btn">' + esc(sleepLabel()) + '</button></div>';
-    // v344 §2.6: the Continue card's standing place — the slot
-    // under the Play All row where the Resume card stood.
-    html += '<div id="continue-slot"></div>';
-    (day.blocks || []).forEach(function (b) {
-      html += '<div class="blockhead"><h2>' + esc((b.label || b.block).toUpperCase()) + '</h2><span class="meta grow" data-bcount="' + esc(b.block) + '">' + esc(b.caption || '') + ' · ' + (b.trackCount != null ? b.trackCount : (b.tracks || []).length) + ' tracks</span><span class="meta" data-bprayed="' + esc(b.block) + '"></span>'
-        + (b.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(b.spotifyUrl) + '">Open in Spotify</a>' : '')
-        + '<button class="btn ghost small" data-markblock="' + esc(b.block) + '">Mark all played</button>'
-        + '<button class="playbtn" data-queue="' + esc(b.block) + '">&#9654;</button></div>';
-      html += (b.tracks || []).map(function (t) { return trackCard(Object.assign({}, t, { _block: b.block })); }).join('');
-    });
-    if ((day.episodes || []).length) {
-      html += '<h2 style="color:var(--navy);font-weight:normal;letter-spacing:1px;font-size:16px;margin:16px 0 8px">FROM TODAY&rsquo;S PODCAST</h2>';
-      html += day.episodes.map(trackCard).join('');
-    }
-    view.innerHTML = html;
-    document.getElementById('play-all').addEventListener('click', function () {
-      // v344 §2.4: Play All skips played — the build passes the
-      // played filter; a fully-played day plays in full (the
-      // fallback stands by construction, never a dead button).
-      startQueue(queueBuild(extRebuildDescs(day)));
-    });
-    document.getElementById('sleep-btn').addEventListener('click', openSleepSheet);
-    view.querySelectorAll('[data-playkey]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var d = allDescs.filter(function (x) { return x.episodeId === btn.getAttribute('data-playkey'); })[0];
-        if (d) tapPlay(d);
-      });
-    });
-    view.querySelectorAll('[data-read]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var t = state.readTracks[btn.getAttribute('data-read')];
-        if (t) openRead(t);
-      });
-    });
-    view.querySelectorAll('[data-queue]').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var blockName = btn.getAttribute('data-queue');
-        var descs = extRebuildDescs(day).filter(function (d) { return d.block === blockName; });
-        // v344 §2.4: per-block play skips played the same way,
-        // with the same fully-played fallback.
-        startQueue(queueBuild(descs));
-      });
-    });
-    // v343 §2.4: the initial build arms every combined row in the
-    // view — wiring for the expand controls, then the arm pass.
-    wireExpand(view);
-    armAllEllipses();
-    // v344: the marker wiring rides the same initial build.
-    wirePlayed(view);
-    if (state.current) markPlaying(state.current.episodeId);
+    // v353 §2.1: the fetch + state build above stands exactly
+    // where it stood; the PAINT is now a dispatch on
+    // state.prayersView — Listen home or one block page. The view
+    // resets to home HERE, in the fetch path (the §2.1.3 pin): a
+    // same-tab re-paint never loses the page, and a fresh render
+    // (tab return, reload) always lands home, search cleared.
+    state.prayersView = { kind: 'home' };
+    state.searchQuery = '';
+    paintPrayersView(day);
     // v355 Amendment A1, Moment 1: the queue snapshot's boot step
     // (read + shape/date check + the §2.4 flag) runs synchronously
     // here, immediately BEFORE the resolution pass is invoked —
@@ -3353,6 +3312,243 @@ function renderPrayers() {
     // (the resolution callbacks re-apply it as cards settle).
     refreshPlayedChrome();
   }).catch(function (e) { view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
+}
+
+/* ---------------- Listen home ⇄ block pages (v353) ----------------
+   The Prayers tab's two paints over the standing whole-day state.
+   Navigation is re-paint from state, never refetch (§2.1.3);
+   playback, queue, position, and sleep are never touched by
+   navigation (§2.3.3). Rows on every paint come through trackCard
+   byte-identically — B changes where rows stand, never what a
+   row is (§2.0.3). */
+function paintPrayersView(day) {
+  if (state.prayersView && state.prayersView.kind === 'block') paintBlockPage(day, state.prayersView.block);
+  else paintListenHome(day);
+  wirePrayersView(day);
+}
+function openBlockPage(block) {
+  state.prayersView = { kind: 'block', block: block };
+  paintPrayersView(state.dayPayload);
+  window.scrollTo(0, 0);
+}
+function goListenHome(fromBlock) {
+  state.prayersView = { kind: 'home' };
+  paintPrayersView(state.dayPayload);
+  // §2.1.4: Back restores the home scroll by anchor — the
+  // returning block's card scrolls into view; no scroll-position
+  // store is kept.
+  var card = fromBlock ? view.querySelector('[data-openblock="' + fromBlock + '"]') : null;
+  if (card) card.scrollIntoView({ block: 'start' });
+}
+function wirePrayersView(day) {
+  // The standing wiring passes, run after whichever paint stands
+  // (§2.1.2). The [data-playkey] lookup reads state.dayDescs —
+  // the same list the swap paths wire against.
+  view.querySelectorAll('[data-playkey]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === btn.getAttribute('data-playkey'); })[0];
+      if (d) tapPlay(d);
+    });
+  });
+  view.querySelectorAll('[data-read]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var t = state.readTracks[btn.getAttribute('data-read')];
+      if (t) openRead(t);
+    });
+  });
+  view.querySelectorAll('[data-queue]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var blockName = btn.getAttribute('data-queue');
+      var all = extRebuildDescs(day);
+      // The episodes page's Play All is the unblocked-group build:
+      // the descriptors carrying no block (§2.3.4).
+      var descs = blockName === '__episodes'
+        ? all.filter(function (d) { return !d.block; })
+        : all.filter(function (d) { return d.block === blockName; });
+      // v344 §2.4: play skips played, with the fully-played
+      // fallback — queueBuild stands as it stood.
+      startQueue(queueBuild(descs));
+    });
+  });
+  view.querySelectorAll('[data-openblock]').forEach(function (card) {
+    card.addEventListener('click', function (ev) {
+      // The card's own controls (its play button) are not
+      // navigation — a tap anywhere else opens the page (§2.2.5).
+      if (ev.target && ev.target.closest && ev.target.closest('button, a')) return;
+      openBlockPage(card.getAttribute('data-openblock'));
+    });
+  });
+  view.querySelectorAll('[data-back]').forEach(function (btn) {
+    btn.addEventListener('click', function () { goListenHome(btn.getAttribute('data-back')); });
+  });
+  // v343 §2.4: the expand wiring + arm pass ride every paint.
+  wireExpand(view);
+  armAllEllipses();
+  // v344: the marker wiring rides the same paints.
+  wirePlayed(view);
+  if (state.current) markPlaying(state.current.episodeId);
+}
+function blockCardHtml(b) {
+  // §2.2.5: the home block card — a liturgical-gradient face
+  // (the --bar-* set), the standing count spans (data-bcount /
+  // data-bprayed, written by the standing updaters unchanged),
+  // and a play button that queues WITHOUT navigating.
+  var n = b.trackCount != null ? b.trackCount : (b.tracks || []).length;
+  return '<div class="blockcard" data-openblock="' + esc(b.block) + '">'
+    + '<div class="blockcard-face"><div class="blockcard-name">' + esc((b.label || b.block).toUpperCase()) + '</div>'
+    + (b.caption ? '<div class="blockcard-cap">' + esc(b.caption) + '</div>' : '') + '</div>'
+    + '<div class="blockcard-meta"><span data-bcount="' + esc(b.block) + '">' + esc(b.caption || '') + ' · ' + n + ' tracks</span><span data-bprayed="' + esc(b.block) + '"></span></div>'
+    + '<button class="playbtn blockcard-play" data-queue="' + esc(b.block) + '" aria-label="Play ' + esc(b.label || b.block) + '">&#9654;</button></div>';
+}
+function episodesCardHtml(day) {
+  // §2.2.6: the unblocked group stands as one further card in
+  // the same grid when the day carries episodes.
+  return '<div class="blockcard" data-openblock="__episodes">'
+    + '<div class="blockcard-face"><div class="blockcard-name">FROM TODAY&rsquo;S PODCAST</div></div>'
+    + '<div class="blockcard-meta"><span>' + (day.episodes || []).length + ' tracks</span></div>'
+    + '<button class="playbtn blockcard-play" data-queue="__episodes" aria-label="Play the podcast episodes">&#9654;</button></div>';
+}
+function paintListenHome(day) {
+  var html = '<h1 class="screen">Listen</h1><p class="sub">' + esc(day.dateLabel || 'the day&rsquo;s prayers') + '</p>';
+  html += '<div class="row"><button class="btn gold" id="play-all">Play All</button><span class="meta grow">the whole day, in order</span><button class="btn ghost" id="sleep-btn">' + esc(sleepLabel()) + '</button></div>';
+  // §2.6.1: the search pill — typing re-paints the results region
+  // in place (the field itself never re-renders, so focus and the
+  // query stand); clearing restores the standing home body.
+  html += '<div class="searchpill"><input type="search" id="day-search" placeholder="Search today&rsquo;s prayers" aria-label="Search today&rsquo;s prayers" value="' + esc(state.searchQuery || '') + '"></div>';
+  html += '<div id="home-body">' + homeBodyHtml(day) + '</div>';
+  view.innerHTML = html;
+  // §2.4: the Play All + sleep wiring lives here — both elements
+  // exist only on home.
+  document.getElementById('play-all').addEventListener('click', function () {
+    // v344 §2.4: Play All skips played — the build passes the
+    // played filter; a fully-played day plays in full (the
+    // fallback stands by construction, never a dead button).
+    startQueue(queueBuild(extRebuildDescs(day)));
+  });
+  document.getElementById('sleep-btn').addEventListener('click', openSleepSheet);
+  var search = document.getElementById('day-search');
+  search.addEventListener('input', function () {
+    state.searchQuery = search.value;
+    var body = document.getElementById('home-body');
+    if (!body) return;
+    body.innerHTML = homeBodyHtml(day);
+    wirePrayersView(day);
+    // paintContinue runs on played writes + resolution settles;
+    // a fresh body needs its own call so the Continue card stands
+    // the moment a query is cleared back to the home body.
+    paintContinue();
+  });
+}
+function homeBodyHtml(day) {
+  // While a query stands, the home body is the results paint
+  // instead of the Continue row + cards (§2.2.3).
+  var q = (state.searchQuery || '').trim().toLowerCase();
+  if (q) return searchResultsHtml(day, q);
+  // v344 §2.6: the Continue card's standing place — the slot
+  // under the Play All row. Decision 2: the Continue row stands
+  // FIRST, then the blocks as cards.
+  var html = '<div id="continue-slot"></div>';
+  html += '<div class="blockgrid">';
+  (day.blocks || []).forEach(function (b) { html += blockCardHtml(b); });
+  if ((day.episodes || []).length) html += episodesCardHtml(day);
+  html += '</div>';
+  return html;
+}
+function searchResultsHtml(day, q) {
+  // §2.6.2: the closed corpus — the presented day only: block
+  // labels + captions, track titles across blocks + the episodes
+  // group, and the intro descriptors' intention texts.
+  var blocks = (day.blocks || []).filter(function (b) {
+    return (b.label || '').toLowerCase().indexOf(q) >= 0
+      || (b.block || '').toLowerCase().indexOf(q) >= 0
+      || (b.caption || '').toLowerCase().indexOf(q) >= 0;
+  });
+  var introHit = {};
+  (state.dayDescs || []).forEach(function (d) {
+    if (d.kind === 'intention' && d.intentionText && d.intentionText.toLowerCase().indexOf(q) >= 0) introHit[d.episodeId.slice(6)] = true;
+  });
+  var tracks = [];
+  (day.blocks || []).forEach(function (b) { (b.tracks || []).forEach(function (t) { tracks.push(Object.assign({}, t, { _block: b.block })); }); });
+  (day.episodes || []).forEach(function (t) { tracks.push(t); });
+  var hits = tracks.filter(function (t) { return (t.title || '').toLowerCase().indexOf(q) >= 0 || !!introHit[t.episodeId]; });
+  if (!blocks.length && !hits.length) return '<p class="meta" style="margin-top:14px">Nothing in today&rsquo;s prayers matches.</p>';
+  var html = '';
+  if (blocks.length) html += '<h2 class="sectionhead">Blocks</h2><div class="blockgrid">' + blocks.map(function (b) { return blockCardHtml(b); }).join('') + '</div>';
+  if (hits.length) html += '<h2 class="sectionhead">Prayers</h2>' + hits.map(function (t) { return trackCard(t); }).join('');
+  return html;
+}
+function paintBlockPage(day, block) {
+  if (block === '__episodes') { paintEpisodesPage(day); return; }
+  var b = (day.blocks || []).filter(function (x) { return x.block === block; })[0];
+  if (!b) { paintListenHome(day); return; }
+  var n = b.trackCount != null ? b.trackCount : (b.tracks || []).length;
+  // §2.3.1: the playlist-form header — full-bleed liturgical
+  // gradient, back row, the block name large, the meta line
+  // (the standing data-bcount / data-bprayed spans carry the
+  // settled counts), and the Play All row with the standing
+  // Mark-all-played + Spotify controls at its end.
+  var html = '<div class="blockpage-head" data-block="' + esc(b.block) + '">'
+    + '<div class="backrow"><button class="backbtn" data-back="' + esc(b.block) + '">&lsaquo; Listen</button></div>'
+    + '<div class="blockpage-title">' + esc((b.label || b.block).toUpperCase()) + '</div>'
+    + '<div class="blockpage-meta">' + esc(day.dateLabel || '') + ' · <span data-bcount="' + esc(b.block) + '">' + esc(b.caption || '') + ' · ' + n + ' tracks</span><span data-bprayed="' + esc(b.block) + '"></span></div>'
+    + '<div class="blockpage-playrow"><button class="playbtn big" data-queue="' + esc(b.block) + '" aria-label="Play all of ' + esc(b.label || b.block) + '">&#9654;</button><span class="blockpage-playlabel">Play All — ' + esc(b.label || b.block) + '</span><span class="grow"></span>'
+    + (b.spotifyUrl ? '<a class="spot" target="_blank" rel="noopener" href="' + esc(b.spotifyUrl) + '">Open in Spotify</a>' : '')
+    + '<button class="btn ghost small" data-markblock="' + esc(b.block) + '">Mark all played</button></div></div>';
+  // §2.3.2: the block's rows, rendered by trackCard exactly as
+  // the flat paint rendered them.
+  html += (b.tracks || []).map(function (t) { return trackCard(Object.assign({}, t, { _block: b.block })); }).join('');
+  view.innerHTML = html;
+  appendBlockSettingsCards(day, b);
+}
+function paintEpisodesPage(day) {
+  // §2.3.4: the unblocked group in the same page form — a paint
+  // target only: not a block, in no settings list, no data-bcount.
+  var eps = day.episodes || [];
+  var html = '<div class="blockpage-head" data-block="__episodes">'
+    + '<div class="backrow"><button class="backbtn" data-back="__episodes">&lsaquo; Listen</button></div>'
+    + '<div class="blockpage-title">FROM TODAY&rsquo;S PODCAST</div>'
+    + '<div class="blockpage-meta">' + esc(day.dateLabel || '') + ' · ' + eps.length + ' tracks</div>'
+    + '<div class="blockpage-playrow"><button class="playbtn big" data-queue="__episodes" aria-label="Play all of the podcast episodes">&#9654;</button><span class="blockpage-playlabel">Play All — From Today&rsquo;s Podcast</span></div></div>';
+  html += eps.map(function (t) { return trackCard(t); }).join('');
+  view.innerHTML = html;
+}
+function appendBlockSettingsCards(day, b) {
+  // The block's settings-row cards (own families + external
+  // slots), in the same merged settings order blockInsertCards
+  // inserts them (§2.4) — rendered from standing state when the
+  // page opens after the inserter's moment, each in the form its
+  // swap path would render (ownSwapRow / extSwapCard), so a later
+  // settle swaps them in place by their standing identities
+  // (data-own-row / data-card). Before the standing lists exist
+  // this appends nothing: blockInsertCards lands the cards when
+  // the pass runs, against the page that stands then.
+  var entries = [];
+  (state.ownStanding || []).filter(function (r) { return r.block === b.block; })
+    .forEach(function (row) { entries.push({ sortOrder: row.sortOrder || 0, own: row }); });
+  (state.extStanding || []).filter(function (s) { return s.block === b.block; })
+    .forEach(function (slot) { entries.push({ sortOrder: slot.sortOrder || 0, ext: slot }); });
+  if (!entries.length) return;
+  entries.sort(function (a, c) { return a.sortOrder - c.sortOrder; });
+  var date = day.presentedDay || day.date;
+  entries.forEach(function (e) {
+    if (e.own) {
+      var row = e.own;
+      var st = state.ownSlots[row.sourceKey];
+      var tmp = document.createElement('div');
+      if (st && st.state === 'present') tmp.innerHTML = st.tracks.map(function (m) { return trackCard(ownSlotTrack(row, m, date)); }).join('');
+      else if (st && st.state === 'missing') tmp.innerHTML = trackCard(ownSlotTrack(row, { episodeId: row.episodeId, title: row.title, state: 'missing' }, date));
+      else tmp.innerHTML = ownPlaceholderCard(row);
+      while (tmp.firstChild) { var el = tmp.removeChild(tmp.firstChild); el.setAttribute('data-own-row', row.sourceKey); view.appendChild(el); }
+    } else {
+      var slot = e.ext;
+      var st2 = state.extSlots[slot.slotId];
+      var tmp2 = document.createElement('div');
+      if (st2 && st2.state === 'downloading') tmp2.innerHTML = extDownloadingCard(slot);
+      else if (st2 && st2.state !== 'loading') tmp2.innerHTML = trackCard(extSlotTrack(slot, st2));
+      else tmp2.innerHTML = extPlaceholderCard(slot);
+      if (tmp2.firstChild) view.appendChild(tmp2.firstChild);
+    }
+  });
 }
 
 /* ---------------- Examination ---------------- */
@@ -3373,7 +3569,7 @@ function renderExaminationContent() {
     if (data.focusCategory) html += '<p class="meta">Tonight&rsquo;s focus in depth: <b>' + esc(data.focusCategory) + '</b> — the full short form stands every night.</p>';
     html += '<div class="chips">' + cats.map(function (c) { return '<button class="chip' + (c === state.examCat ? ' active' : '') + '" data-cat="' + esc(c) + '">' + esc(c.replace('Commandment ', '')) + '</button>'; }).join('') + '</div>';
     html += '<div class="modes"><button id="m-quick" class="' + (state.examMode === 'quick' ? 'active' : '') + '">Quick Review</button><button id="m-deep" class="' + (state.examMode === 'deep' ? 'active' : '') + '">Deep Reflection</button></div>';
-    html += '<h2 style="color:var(--navy);font-weight:normal;font-size:17px;margin:4px 0 8px">' + esc(state.examCat) + '</h2>';
+    html += '<h2 class="sectionhead">' + esc(state.examCat) + '</h2>';
     var dis = closed ? ' disabled' : '';
     if (state.examMode === 'deep') {
       if (state.deepIdx >= prompts.length) state.deepIdx = 0;
@@ -3464,10 +3660,10 @@ function renderConfessionContent() {
   api('/api/confession').then(function (c) {
     var html = '<div class="row"><div class="grow"><h1 class="screen">Confession</h1><p class="sub">preparation and guide</p></div><button class="btn ghost small" id="cf-gear">Guide</button></div>';
     html += '<div class="card"><h3>' + esc(c.elapsed || '') + '</h3>' + (c.lastConfession ? '<p class="meta">Last confession: ' + esc(c.lastConfession.date) + (c.lastConfession.note ? ' — ' + esc(c.lastConfession.note) : '') + '</p>' : '<p class="meta">No confession recorded yet in this app.</p>') + '</div>';
-    html += '<h2 style="color:var(--navy);font-weight:normal;letter-spacing:1px;font-size:16px;margin:16px 0 8px">THE GUIDE</h2>';
+    html += '<h2 class="sectionhead">THE GUIDE</h2>';
     html += (c.guide || []).map(function (g) { return '<div class="card"><h3>' + g.step_no + ' · ' + esc(g.title) + '</h3><p style="margin:0;line-height:1.55;font-size:15px">' + esc(g.body) + '</p></div>'; }).join('');
     var pen = c.penance;
-    html += '<h2 style="color:var(--navy);font-weight:normal;letter-spacing:1px;font-size:16px;margin:16px 0 8px">PENANCE</h2>';
+    html += '<h2 class="sectionhead">PENANCE</h2>';
     if (pen && pen.text && !pen.done_at) {
       html += '<div class="card"><h3>Your penance</h3><p style="margin:0 0 8px;line-height:1.55;font-size:15px">' + esc(pen.text) + '</p><button class="btn gold" id="pen-done">Penance complete</button></div>';
     } else if (pen && pen.text && pen.done_at) {
@@ -3475,7 +3671,7 @@ function renderConfessionContent() {
     } else {
       html += '<div class="card"><p class="meta">No penance stands open. After your next confession, record the penance here.</p><label class="f">Penance given</label><textarea id="pen-text" placeholder="The penance the priest assigned..."></textarea><div style="margin-top:8px"><button class="btn" id="pen-save">Save penance</button></div></div>';
     }
-    html += '<h2 style="color:var(--navy);font-weight:normal;letter-spacing:1px;font-size:16px;margin:16px 0 8px">PREPARATION — SINCE YOUR LAST CONFESSION</h2>';
+    html += '<h2 class="sectionhead">PREPARATION — SINCE YOUR LAST CONFESSION</h2>';
     var total = 0; (c.prep || []).forEach(function (g) { total += g.entries.length; });
     if (!total) html += '<p class="meta">Nothing stands in the preparation list. Entries from your nightly examinations gather here.</p>';
     html += (c.prep || []).map(function (g) {
@@ -3483,7 +3679,7 @@ function renderConfessionContent() {
     }).join('');
     html += '<div class="card"><h3>Confession made</h3><label class="f">Date</label><input type="date" id="cf-date" value="' + todayChicago() + '"><label class="f">Note (optional)</label><input type="text" id="cf-note" placeholder=""><div style="margin-top:10px"><button class="btn gold" id="cf-made">Confession made</button></div><p class="meta" style="margin-top:8px">The preparation list closes under this record and starts empty. Nothing is deleted; the history below keeps every record.</p></div>';
     if ((c.history || []).length) {
-      html += '<h2 style="color:var(--navy);font-weight:normal;letter-spacing:1px;font-size:16px;margin:16px 0 8px">HISTORY</h2>';
+      html += '<h2 class="sectionhead">HISTORY</h2>';
       html += c.history.map(function (h) { return '<div class="card"><div class="row"><div class="grow"><h3>' + esc(h.date) + '</h3><div class="meta">' + (h.note ? esc(h.note) + ' · ' : '') + h.entryCount + (h.entryCount === 1 ? ' entry' : ' entries') + (h.penance_text ? ' · penance recorded' : '') + '</div></div></div></div>'; }).join('');
     }
     html += '<p class="about">This app prepares for confession; it does not record the sacrament&rsquo;s ministry. Examination entries are never read by any job and never leave this app.</p>';

@@ -68,7 +68,8 @@ html, body { margin:0; padding:0; background:var(--cream); color:var(--ink); fon
 .tab { flex:1; background:none; border:none; color:var(--bar-sub); font-family:inherit; font-size:13px; padding:8px 2px 10px; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; }
 .tab .tabicon { font-size:19px; line-height:1; }
 .tab.active { color:var(--bar-fg); box-shadow: inset 0 2px 0 var(--accent); }
-.dock { position: fixed; left:0; right:0; bottom: var(--tabh, 0px); z-index: 40; display:flex; align-items:center; gap:10px; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:7px 12px 10px; border-top:2px solid var(--accent); cursor:pointer; }
+.dock { position: fixed; left:10px; right:10px; bottom: calc(var(--tabh, 0px) + 8px); z-index: 40; display:flex; align-items:center; gap:10px; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:7px 12px 10px; border:1px solid rgba(250,245,236,.25); border-radius:12px; overflow:hidden; cursor:pointer; }
+[data-lit="white"] .dock { border-color: var(--line); }
 .dockthumb { width:42px; height:42px; border-radius:8px; flex:none; }
 .docktext { flex:1; min-width:0; }
 .docktitle { font-size:17px; color:var(--bar-fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
@@ -80,7 +81,7 @@ html, body { margin:0; padding:0; background:var(--cream); color:var(--ink); fon
 body.dock-on .view { padding-bottom: calc(96px + var(--dockh, 60px)); }
 h1.screen { font-size:22px; color:var(--navy); margin:2px 0 2px; font-weight:normal; }
 .sub { color:#6d6353; font-size:15px; margin:0 0 12px; }
-.card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:0 0 10px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:0 0 10px; }
 /* v344 §2.5: the played marker — a quiet state dot. The button
    box holds the 44px one-hand target (Principle 3); the visible
    circle is 12px, drawn as an ::after so the box itself stays
@@ -116,8 +117,6 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .chipbtn { font-family:inherit; font-size:14px; border:1px solid var(--line); background:#fff; border-radius:20px; padding:6px 12px; cursor:pointer; }
 .chipbtn.playing { background:var(--navy); color:var(--cream); }
 .chipbtn.missing { opacity:.55; border-style:dashed; }
-.blockhead { display:flex; align-items:baseline; gap:8px; margin:18px 0 8px; border-bottom:2px solid var(--accent); padding-bottom:4px; }
-.blockhead h2 { margin:0; font-size:18px; letter-spacing:1.5px; color:var(--navy); font-weight:normal; }
 .playbtn { width:42px; height:42px; border-radius:50%; border:none; background:var(--accent); color:var(--accent-ink); font-size:16px; cursor:pointer; flex:none; }
 .playbtn.playing { background:var(--navy); }
 .spot { display:inline-block; margin-top:5px; font-size:14px; color:var(--accent); }
@@ -213,6 +212,41 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .shake { animation: pinshake .45s ease; }
 .recoverycode { font-size:26px; letter-spacing:2px; color:var(--navy); text-align:center; margin:16px 0; }
 .pinsection { margin-top:22px; }
+/* UI overhaul B (v353): the clone structure — Listen home block
+   cards, block pages in playlist form, the search pill, the
+   Library list language, and the shared section header. Gradient
+   surfaces read the --bar-* set (v352 §2.7's token contract);
+   accents read --accent/--accent-ink; body/cream/ink are never
+   themed. The combined-row family (.card.intro-row) is EXEMPT
+   from every geometry change here (v343's 136px is a contract). */
+.sectionhead { font-size:16px; letter-spacing:1.5px; color:var(--navy); font-weight:normal; text-transform:uppercase; margin:18px 0 8px; border-bottom:2px solid var(--accent); padding-bottom:4px; }
+.blockgrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 10px; }
+.blockcard { position:relative; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; cursor:pointer; }
+.blockcard-face { background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); padding:12px 12px 10px; min-height:76px; }
+.blockcard-name { font-size:17px; letter-spacing:1.2px; color:var(--bar-fg); }
+.blockcard-cap { font-size:13px; color:var(--bar-sub); margin-top:3px; }
+.blockcard-meta { font-size:13px; color:#6d6353; padding:8px 62px 12px 12px; }
+.blockcard-play { position:absolute; right:10px; bottom:10px; }
+.blockpage-head { margin:-14px -14px 12px; padding:12px 14px 14px; background-color:var(--bar-solid); background:var(--bar-bg); color:var(--bar-fg); }
+.backrow { margin:0 0 6px; }
+.backbtn { background:none; border:none; color:var(--bar-fg); font-family:inherit; font-size:15px; cursor:pointer; padding:6px 0; }
+.blockpage-title { font-size:28px; letter-spacing:1.5px; color:var(--bar-fg); }
+.blockpage-meta { font-size:14px; color:var(--bar-sub); margin-top:4px; }
+.blockpage-playrow { display:flex; align-items:center; gap:10px; margin-top:12px; }
+.blockpage-playlabel { font-size:16px; color:var(--bar-fg); }
+.playbtn.big { width:56px; height:56px; font-size:20px; }
+.blockpage-head .spot { color:var(--bar-fg); margin-top:0; }
+.blockpage-head .btn.ghost { color:var(--bar-fg); border-color:var(--bar-sub); }
+.searchpill { margin:0 0 12px; }
+.searchpill input { width:100%; height:44px; border-radius:999px; border:1px solid var(--line); background:var(--card); padding:0 16px; font-family:inherit; font-size:16px; color:var(--ink); -webkit-appearance:none; appearance:none; }
+.liblist { background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; margin:0 0 12px; }
+.librow { padding:10px 12px; }
+.librow + .librow { border-top:1px solid var(--line); }
+.liblist .setrow { border:none; border-radius:0; margin:0; background:none; }
+.liblist .setrow + .setrow { border-top:1px solid var(--line); }
+.stats { gap:0; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+.stat { background:none; border:none; border-radius:0; }
+.stat + .stat { border-left:1px solid var(--line); }
 
 
 `;
@@ -230,7 +264,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v356-1";
+var CACHE = "ora-pro-nobis-v353-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));
