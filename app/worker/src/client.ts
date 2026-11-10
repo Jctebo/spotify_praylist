@@ -174,9 +174,31 @@ function setMediaSessionFor(desc) {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: desc.title, artist: 'Ora Pro Nobis',
       album: 'Ora Pro Nobis — ' + (state.dateLabel || state.storedDay || ''),
-      artwork: [{ src: '/logo.png', sizes: '288x288', type: 'image/png' }],
+      artwork: [{ src: '/logo.png', sizes: '288x288', type: 'image/png' }, { src: '/logo-512.png', sizes: '512x512', type: 'image/png' }],
     });
   } catch (e) {}
+}
+/* ---------------- Media session focus (v346) ----------------
+   The session must stay an accurate, fresh claimant across a
+   pause: the system hands a lock-screen / car play press to the
+   session it counts as active, and a paused web session that
+   never declares its state loses that press to a native app
+   (Spotify). Three parts: playbackState kept true at the
+   standing seams (setPlaybackState), the session re-filed on
+   pause and on return to the foreground (reassertMediaSession),
+   and the session's own play handler resuming through the app's
+   path without disturbing the queue (resumeCurrent, below). */
+function setPlaybackState(v) {
+  if (!('mediaSession' in navigator)) return;
+  try { navigator.mediaSession.playbackState = v; } catch (e) {}
+}
+function reassertMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  if (!state.current) { setPlaybackState('none'); return; }
+  setMediaSessionFor(state.current);
+  registerMediaHandlers();
+  setPlaybackState(audioEl.paused ? 'paused' : 'playing');
+  updatePositionState();
 }
 function updatePositionState() {
   if (!('mediaSession' in navigator) || !navigator.mediaSession.setPositionState) return;
@@ -193,6 +215,7 @@ function startDesc(desc) {
   audioEl.src = desc.url;
   audioEl.playbackRate = state.rate; // v336: re-asserted on every start — no stale element rate
   audioEl.play().catch(function () {});
+  setPlaybackState('playing');
   markPlaying(desc.episodeId);
   updateDock();
 }
@@ -201,6 +224,28 @@ function playTrack(desc) {
   if (state.current && state.current.episodeId === desc.episodeId && !audioEl.paused) { audioEl.pause(); return; }
   state.queue = []; state.queueIdx = -1;
   startDesc(desc);
+}
+function resumeCurrent() {
+  // v346 §2.4: the media-session play handler's seam — the app's
+  // own resume path, queue- and position-preserving. It never
+  // routes through playTrack/startDesc (playTrack clears the
+  // queue and startDesc reloads src — either would drop the
+  // standing queue and restart the track at a system resume).
+  if (!state.current) { setPlaybackState('none'); return; }
+  if (!audioEl.paused) { reassertMediaSession(); return; }
+  fadeRestore(); // v320 §2.6 restore point (3) stands: exactly one fade restore per system resume
+  reassertMediaSession();
+  if (audioEl.currentSrc && !audioEl.ended) {
+    audioEl.play().catch(function () {});
+  } else {
+    // The element holds nothing for the standing track (e.g. the
+    // sleep-hold head, loaded on a preload="none" element): load
+    // the current track's URL under startDesc's rate discipline.
+    // The queue and queueIdx are not touched.
+    audioEl.src = state.current.url;
+    audioEl.playbackRate = state.rate;
+    audioEl.play().catch(function () {});
+  }
 }
 function queueLiveDesc(d) {
   // v338 defect fix (John's report, 2026-11-09 11:17 CT — a block's
@@ -287,7 +332,7 @@ function advanceQueue(dir) {
     startDesc(live);
     return true;
   }
-  if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; markPlaying(null); updatePositionState(); updateDock(); }
+  if (dir > 0) { state.queue = []; state.queueIdx = -1; state.current = null; setPlaybackState('none'); markPlaying(null); updatePositionState(); updateDock(); }
   return false;
 }
 function loadResume(desc, positionS) {
@@ -295,6 +340,7 @@ function loadResume(desc, positionS) {
   state.current = desc;
   setMediaSessionFor(desc);
   state.pendingResume = { episodeId: desc.episodeId, positionS: positionS };
+  setPlaybackState('paused');
   audioEl.src = desc.url;
   audioEl.load(); // preload="none": an explicit load is what brings metadata (and the pending position) in
   markPlaying(desc.episodeId);
@@ -320,12 +366,24 @@ audioEl.addEventListener('ended', function () {
   markCompleted(state.current);
   if (state.sleep && state.sleep.mode === 'track') { sleepTrackEnd(); return; }
   if (state.queue.length) { advanceQueue(1); return; }
-  state.current = null; markPlaying(null);
+  state.current = null; setPlaybackState('none'); markPlaying(null);
   updateDock();
 });
 audioEl.addEventListener('pause', function () { saveResume(); if (!state.queue.length) markPlaying(state.current ? state.current.episodeId : null); });
-audioEl.addEventListener('play', function () { updateDock(); });
+audioEl.addEventListener('play', function () { setPlaybackState('playing'); updateDock(); });
 audioEl.addEventListener('pause', function () { updateDock(); });
+audioEl.addEventListener('pause', function () {
+  // v346: the pause event declares the paused session (playbackState
+  // 'paused' while a current stands, else 'none') and re-files it —
+  // the session goes quiet exactly when it must stay declared.
+  setPlaybackState(state.current ? 'paused' : 'none');
+  reassertMediaSession();
+});
+document.addEventListener('visibilitychange', function () {
+  // v346: return to the foreground (including a freeze/thaw) re-files
+  // the session — metadata, handlers, state, position.
+  if (document.visibilityState === 'visible') reassertMediaSession();
+});
 var lastResumeSave = 0;
 audioEl.addEventListener('timeupdate', function () {
   sleepTick();
@@ -489,6 +547,7 @@ function sleepTrackEnd() {
       state.queueIdx = i;
       state.current = next;
       setMediaSessionFor(next);
+      setPlaybackState('paused');
       audioEl.src = next.url;
       audioEl.load();
       markPlaying(next.episodeId);
@@ -498,13 +557,13 @@ function sleepTrackEnd() {
       return;
     }
     // (b) queue exhausted: exactly the standing queue-end path.
-    state.queue = []; state.queueIdx = -1; state.current = null; markPlaying(null); updatePositionState();
+    state.queue = []; state.queueIdx = -1; state.current = null; setPlaybackState('none'); markPlaying(null); updatePositionState();
     updateSleepLabel();
     updateDock();
     return;
   }
   // (c) no queue (a single track): exactly the standing end path.
-  state.current = null; markPlaying(null);
+  state.current = null; setPlaybackState('none'); markPlaying(null);
   updateSleepLabel();
   updateDock();
 }
@@ -550,29 +609,37 @@ window.__opnSleep = {
 };
 setInterval(sleepTick, 1000);
 
+// v346: ONE module-level handler table, built once — boot and every
+// re-assert register this same object, so the table's identity (and
+// the harness hook's target) never drifts across a re-assert.
+var mediaHandlers = {
+  play: function () { resumeCurrent(); }, // v346 §2.4: the app's resume seam (carries the v320 §2.6 restore point (3) fade restore)
+  pause: function () { audioEl.pause(); },
+  previoustrack: function () { if (state.queue.length) advanceQueue(-1); },
+  nexttrack: function () { if (state.queue.length) advanceQueue(1); },
+  seekto: function (details) {
+    if (details.seekTime == null) return;
+    if (details.fastSeek && typeof audioEl.fastSeek === 'function') audioEl.fastSeek(details.seekTime);
+    else audioEl.currentTime = details.seekTime;
+  },
+  seekforward: function (details) { audioEl.currentTime = Math.min((audioEl.duration || 0), (audioEl.currentTime || 0) + ((details && details.seekOffset) || 10)); },
+  seekbackward: function (details) { audioEl.currentTime = Math.max(0, (audioEl.currentTime || 0) - ((details && details.seekOffset) || 10)); },
+};
+function registerMediaHandlers() {
+  if (!('mediaSession' in navigator)) return;
+  Object.keys(mediaHandlers).forEach(function (a) {
+    try { navigator.mediaSession.setActionHandler(a, mediaHandlers[a]); } catch (e) {}
+  });
+}
 function setupMediaSession() {
   if (!('mediaSession' in navigator)) return;
-  var handlers = {
-    play: function () { fadeRestore(); audioEl.play().catch(function () {}); }, // v320 §2.6 restore point (3): the one play path that bypasses startDesc
-    pause: function () { audioEl.pause(); },
-    previoustrack: function () { if (state.queue.length) advanceQueue(-1); },
-    nexttrack: function () { if (state.queue.length) advanceQueue(1); },
-    seekto: function (details) {
-      if (details.seekTime == null) return;
-      if (details.fastSeek && typeof audioEl.fastSeek === 'function') audioEl.fastSeek(details.seekTime);
-      else audioEl.currentTime = details.seekTime;
-    },
-    seekforward: function (details) { audioEl.currentTime = Math.min((audioEl.duration || 0), (audioEl.currentTime || 0) + ((details && details.seekOffset) || 10)); },
-    seekbackward: function (details) { audioEl.currentTime = Math.max(0, (audioEl.currentTime || 0) - ((details && details.seekOffset) || 10)); },
-  };
-  Object.keys(handlers).forEach(function (a) {
-    try { navigator.mediaSession.setActionHandler(a, handlers[a]); } catch (e) {}
-  });
+  registerMediaHandlers();
+  setPlaybackState('none');
   // Harness hook (E9 check 8): Media Session handlers are not readable
   // back from navigator.mediaSession, so the registered handler table
   // is exposed for the gate's agent-side evidence. John's phone check
   // at Review remains the binding criterion.
-  window.__opnMediaHandlers = handlers;
+  window.__opnMediaHandlers = mediaHandlers;
 }
 
 function setTab(tab) {

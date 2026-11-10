@@ -46,6 +46,7 @@ export interface Env {
 import { SHELL_HTML, APP_CSS, MANIFEST_JSON, SW_JS } from "./ui";
 import { APP_JS } from "./client";
 import { LOGO_PNG_B64 } from "./logo";
+import { LOGO512_PNG_B64 } from "./logo512";
 
 const JOHN_EMAILS = new Set(["john@thibeaux.com", "john.thibeaux@gmail.com"]);
 // v335: the Devotional Suite audio fallback constant is deleted — a
@@ -87,6 +88,16 @@ function logo(): Uint8Array {
     for (let i = 0; i < bin.length; i++) logoBytes[i] = bin.charCodeAt(i);
   }
   return logoBytes;
+}
+
+let logo512Bytes: Uint8Array | null = null;
+function logo512(): Uint8Array {
+  if (!logo512Bytes) {
+    const bin = atob(LOGO512_PNG_B64);
+    logo512Bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) logo512Bytes[i] = bin.charCodeAt(i);
+  }
+  return logo512Bytes;
 }
 
 // ---- Prayer module (ported behavior-identical from the board) --------
@@ -1337,6 +1348,7 @@ export default {
       if (path === "/manifest.json") return new Response(MANIFEST_JSON, { headers: { "content-type": "application/json" } });
       if (path === "/sw.js") return new Response(SW_JS, { headers: { "content-type": "text/javascript; charset=utf-8" } });
       if (path === "/logo.png") return new Response(logo(), { headers: { "content-type": "image/png", "cache-control": "private, max-age=86400" } });
+      if (path === "/logo-512.png") return new Response(logo512(), { headers: { "content-type": "image/png", "cache-control": "private, max-age=86400" } });
       return err(404, "not found");
     } catch (e) {
       return err(500, `worker error: ${(e as Error).message}`);
