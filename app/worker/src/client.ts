@@ -6,7 +6,7 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {}, playedCache: null, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '' };
+var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {}, playedCache: null, repeatIds: {}, previewQueue: null, queuePreviewIdx: -1, restoredQueue: false, prayersView: { kind: 'home' }, searchQuery: '' };
 
 /* ---------------- Liturgical day (v352) ----------------
    The brand bar carries the day's OFFICIAL liturgical name and
@@ -338,7 +338,12 @@ function readResume() {
    written by saveQueueSnapshot() from the five §2.2 triggers,
    removed at the §2.5 clearing moments. A storage failure degrades
    silently to the pre-v355 behavior — the queue does not restore —
-   and never throws into a playback path. */
+   and never throws into a playback path.
+   v360 §2.5-B: the record is v2 — a blocks array parallel to ids
+   plus currentBlock ride the identity, so a repeated episode's
+   occurrences restore to their own dayparts; a v1 record still
+   restores under the first-match-by-id rule and is rewritten as
+   v2 at the next save. */
 var QUEUE_KEY = 'opn-queue-v355';
 function removeQueueSnapshot() {
   try { localStorage.removeItem(QUEUE_KEY); } catch (e) {}
@@ -349,7 +354,7 @@ function readQueueSnapshot() {
   if (!raw) return null;
   var rec = null;
   try { rec = JSON.parse(raw); } catch (e) { removeQueueSnapshot(); return null; }
-  if (!rec || typeof rec !== 'object' || rec.v !== 1 || typeof rec.date !== 'string'
+  if (!rec || typeof rec !== 'object' || (rec.v !== 1 && rec.v !== 2) || typeof rec.date !== 'string'
     || !Array.isArray(rec.ids) || !rec.ids.length) { removeQueueSnapshot(); return null; }
   return rec;
 }
@@ -367,9 +372,11 @@ function saveQueueSnapshot(posS) {
     var date = presentedDateStr();
     if (!date) return;
     localStorage.setItem(QUEUE_KEY, JSON.stringify({
-      v: 1, date: date,
+      v: 2, date: date,
       ids: state.queue.map(function (d) { return d.episodeId; }),
+      blocks: state.queue.map(function (d) { return d.block || ''; }),
       idx: state.queueIdx, currentId: state.current.episodeId,
+      currentBlock: state.current.block || '',
       positionS: (posS !== undefined ? posS : (audioEl.currentTime || 0)),
       savedAt: new Date().toISOString(),
     }));
@@ -410,7 +417,18 @@ function bootQueueSnapshot() {
    rollovers and the server retention never sees any of it. The
    date is the day the listener experienced (presentedDay), never
    the stored day. No checkmark glyph anywhere; counts read as
-   position ("heard", "prayed"), never as scores. */
+   position ("heard", "prayed"), never as scores.
+   v360 §2.2: REPEAT-AWARE OCCURRENCE KEYING — an episode id the
+   day build carries in more than one descriptor (the repeat set,
+   state.repeatIds) keys per occurrence: the store key gains the
+   descriptor's block (episodeId + '|' + block). Every other id
+   keeps the bare canonical key — an id that occurs once has
+   exactly one occurrence, so the bare id already IS its
+   occurrence key (the novena family's cross-day accumulation
+   under the canonical id stands untouched). The store key and
+   shape do not change; under changeover A the old bare entry
+   for a repeated id is simply never read again and ages out
+   under the standing 120-day prune. */
 var PLAYED_KEY = 'opn-played-v344';
 function readPlayed() {
   try {
@@ -425,17 +443,42 @@ function playedMap() {
 function presentedDateStr() {
   return state.presentedDay || (state.dayPayload && (state.dayPayload.presentedDay || state.dayPayload.date)) || null;
 }
-function isPlayed(episodeId, dateStr) {
+function refreshRepeatIds() {
+  // v360 §2.2: the day's REPEAT SET — the episode ids carried by
+  // more than one prayer descriptor in state.dayDescs (intention
+  // intros excluded: never a played-state subject; availability
+  // does not matter, so the set is stable while slots settle).
+  // Recomputed wherever state.dayDescs is rebuilt.
+  var counts = {};
+  (state.dayDescs || []).forEach(function (x) {
+    if (!x || x.kind === 'intention' || !x.episodeId) return;
+    counts[x.episodeId] = (counts[x.episodeId] || 0) + 1;
+  });
+  var set = {};
+  Object.keys(counts).forEach(function (id) { if (counts[id] > 1) set[id] = true; });
+  state.repeatIds = set;
+}
+function playedKey(episodeId, block) {
+  // v360 §2.2: the one seam change. A repeated id with a block in
+  // hand keys per occurrence; '|' never appears in a canonical
+  // id, so an occurrence key can never collide with a bare key.
+  // A caller without a block reads/writes the bare key — the
+  // pre-v360 behavior, retained only as a defensive default.
+  if (episodeId && block && state.repeatIds && state.repeatIds[episodeId]) return episodeId + '|' + block;
+  return episodeId;
+}
+function isPlayed(episodeId, dateStr, block) {
   if (!episodeId || !dateStr) return false;
-  var byDate = playedMap()[episodeId];
+  var byDate = playedMap()[playedKey(episodeId, block)];
   return !!(byDate && byDate[dateStr]);
 }
-function writePlayed(episodeId, dateStr, via) {
-  writePlayedQuiet(episodeId, dateStr, via);
+function writePlayed(episodeId, dateStr, via, block) {
+  writePlayedQuiet(episodeId, dateStr, via, block);
   refreshPlayedChrome();
 }
-function writePlayedQuiet(episodeId, dateStr, via) {
+function writePlayedQuiet(episodeId, dateStr, via, block) {
   if (!episodeId || !dateStr) return;
+  var key = playedKey(episodeId, block);
   var map = playedMap();
   // Prune on write: date entries older than 120 days before the
   // presented date drop (novena windows are 9 days; a season of
@@ -449,11 +492,11 @@ function writePlayedQuiet(episodeId, dateStr, via) {
     if (!Object.keys(byDate).length) delete map[id];
   });
   if (via) {
-    if (!map[episodeId]) map[episodeId] = {};
-    map[episodeId][dateStr] = { playedAt: new Date().toISOString(), via: via };
-  } else if (map[episodeId]) {
-    delete map[episodeId][dateStr];
-    if (!Object.keys(map[episodeId]).length) delete map[episodeId];
+    if (!map[key]) map[key] = {};
+    map[key][dateStr] = { playedAt: new Date().toISOString(), via: via };
+  } else if (map[key]) {
+    delete map[key][dateStr];
+    if (!Object.keys(map[key]).length) delete map[key];
   }
   state.playedCache = map;
   try { localStorage.setItem(PLAYED_KEY, JSON.stringify(map)); } catch (e) {}
@@ -468,7 +511,7 @@ function markCompleted(desc) {
   if (!desc.episodeId || desc.episodeId.indexOf('intro:') === 0) return;
   var d = presentedDateStr();
   if (!d) return;
-  writePlayed(desc.episodeId, d, 'played');
+  writePlayed(desc.episodeId, d, 'played', desc.block);
 }
 function setMediaSessionFor(desc) {
   if (!('mediaSession' in navigator)) return;
@@ -614,7 +657,7 @@ function unplayedOnly(descs) {
   var pendingIntro = null;
   descs.forEach(function (x) {
     if (x.kind === 'intention') { pendingIntro = x; return; }
-    if (isPlayed(x.episodeId, d)) { pendingIntro = null; return; }
+    if (isPlayed(x.episodeId, d, x.block)) { pendingIntro = null; return; }
     if (pendingIntro) { out.push(pendingIntro); pendingIntro = null; }
     out.push(x);
   });
@@ -746,7 +789,7 @@ function renderQueueList() {
     if (!desc.available) metaParts.push('Not available');
     var dot = '';
     if (!isIntro) {
-      var on = dstr ? isPlayed(desc.episodeId, dstr) : false;
+      var on = dstr ? isPlayed(desc.episodeId, dstr, desc.block) : false;
       dot = '<span class="npq-dot played-dot' + (on ? ' on' : '') + '" aria-hidden="true"></span>';
     }
     return '<button type="button" class="npq-row' + (isPlaying ? ' playing' : '') + (isIntro ? ' npq-intro' : '') + (isStart ? ' npq-start' : '') + '" data-npq-index="' + i + '" data-npq-id="' + esc(desc.episodeId) + '"' + (isPlaying ? ' aria-current="true"' : '') + (!desc.available ? ' disabled' : '') + '>'
@@ -804,7 +847,7 @@ function buildContinueQueue() {
     var prayers = (state.dayDescs || []).filter(function (x) { return x.kind !== 'intention' && x.available; });
     var d = presentedDateStr();
     var firstUnplayed = null;
-    prayers.forEach(function (x) { if (!(d && isPlayed(x.episodeId, d)) && !firstUnplayed) firstUnplayed = x; });
+    prayers.forEach(function (x) { if (!(d && isPlayed(x.episodeId, d, x.block)) && !firstUnplayed) firstUnplayed = x; });
     var resumeDesc = prayers.filter(function (x) { return x.episodeId === resumeRec.episodeId; })[0] || null;
     if (resumeDesc && firstUnplayed && resumeDesc.episodeId === firstUnplayed.episodeId) {
       for (var i = 0; i < build.length; i++) {
@@ -851,8 +894,19 @@ function standRestoredQueue(day) {
   var fresh = extRebuildDescs(day);
   var byId = {};
   fresh.forEach(function (d) { if (!byId[d.episodeId]) byId[d.episodeId] = d; });
+  // v360 §2.5-B: a v2 record resolves each entry on its (id,
+  // block) PAIR — first occurrence winning per pair — so two
+  // occurrences of one repeated id restore to their own
+  // dayparts' descriptors; a v1 record (ids only) restores under
+  // the standing first-match-by-id rule above.
+  var pairMode = rec.v === 2 && Array.isArray(rec.blocks);
+  var byPair = {};
+  if (pairMode) fresh.forEach(function (d) { var k = d.episodeId + '|' + (d.block || ''); if (!byPair[k]) byPair[k] = d; });
   var survivors = [];
-  rec.ids.forEach(function (id, i) { var d = byId[id]; if (d) survivors.push({ desc: d, at: i }); });
+  rec.ids.forEach(function (id, i) {
+    var d = pairMode ? byPair[id + '|' + (rec.blocks[i] || '')] : byId[id];
+    if (d) survivors.push({ desc: d, at: i });
+  });
   // Step 5: nothing survived — the record dies, Continue governs.
   if (!survivors.length) { removeQueueSnapshot(); clearRestoredQueue(); return; }
   // Step 4: the standing current. The stored current, when it
@@ -865,7 +919,15 @@ function standRestoredQueue(day) {
   // available survivor follows, the last available survivor
   // stands (an unavailable entry can never be loaded — it keeps
   // its place and the advance machinery answers it in turn).
-  var curAt = rec.ids.indexOf(rec.currentId);
+  var curAt = -1;
+  if (pairMode) {
+    // v360 §2.5-B: the stored current stands on the entry whose
+    // pair matches (currentId, currentBlock).
+    for (var ci = 0; ci < rec.ids.length; ci++) {
+      if (rec.ids[ci] === rec.currentId && (rec.blocks[ci] || '') === (rec.currentBlock || '')) { curAt = ci; break; }
+    }
+  }
+  if (curAt < 0) curAt = rec.ids.indexOf(rec.currentId);
   if (curAt < 0) curAt = rec.idx || 0;
   var exact = null, chosen = null, position = 0;
   survivors.forEach(function (s) { if (s.at === curAt) exact = s; });
@@ -1650,11 +1712,16 @@ function playedDotHtml(t) {
   // .on class) with the title stepped to the meta tone (.heard).
   var id = t.episodeId;
   if (!id) return '';
-  var on = isPlayed(id, presentedDateStr());
-  return '<button class="played-dot' + (on ? ' on' : '') + '" data-markplayed="' + esc(id) + '" aria-label="' + (on ? 'Mark as unplayed' : 'Mark as played') + '"></button>';
+  // v360 §2.3.2: the dot carries its occurrence's block beside
+  // the id (tracks carry it as _block, descriptors as block);
+  // refreshPlayedChrome and the toggle repaint/write from the
+  // button's own pair of attributes.
+  var block = t.block || t._block || '';
+  var on = isPlayed(id, presentedDateStr(), block);
+  return '<button class="played-dot' + (on ? ' on' : '') + '" data-markplayed="' + esc(id) + '" data-playedblock="' + esc(block) + '" aria-label="' + (on ? 'Mark as unplayed' : 'Mark as played') + '"></button>';
 }
 function heardCls(t) {
-  return isPlayed(t.episodeId, presentedDateStr()) ? ' class="heard"' : '';
+  return isPlayed(t.episodeId, presentedDateStr(), t.block || t._block || '') ? ' class="heard"' : '';
 }
 var BS_CH = String.fromCharCode(92);
 function novenaInfo(episodeId, title) {
@@ -1698,7 +1765,7 @@ function blockPlayedCounts(block) {
   (state.dayDescs || []).forEach(function (x) {
     if (x.kind === 'intention' || !x.available || x.block !== block) return;
     total++;
-    if (d && isPlayed(x.episodeId, d)) played++;
+    if (d && isPlayed(x.episodeId, d, x.block)) played++;
   });
   return { total: total, played: played };
 }
@@ -1707,7 +1774,7 @@ function refreshPlayedChrome() {
   if (!d || !view) return;
   view.querySelectorAll('[data-markplayed]').forEach(function (btn) {
     var id = btn.getAttribute('data-markplayed');
-    var on = isPlayed(id, d);
+    var on = isPlayed(id, d, btn.getAttribute('data-playedblock') || '');
     btn.classList.toggle('on', on);
     btn.setAttribute('aria-label', on ? 'Mark as unplayed' : 'Mark as played');
     var card = btn.closest('[data-card]');
@@ -1745,10 +1812,11 @@ function wirePlayed(root) {
     btn.setAttribute('data-played-wired', '1');
     btn.addEventListener('click', function () {
       var id = btn.getAttribute('data-markplayed');
+      var block = btn.getAttribute('data-playedblock') || '';
       var d = presentedDateStr();
       if (!id || !d) return;
-      if (isPlayed(id, d)) writePlayed(id, d, null);
-      else writePlayed(id, d, 'marked');
+      if (isPlayed(id, d, block)) writePlayed(id, d, null, block);
+      else writePlayed(id, d, 'marked', block);
     });
   });
   (root || view).querySelectorAll('[data-markblock]').forEach(function (btn) {
@@ -1764,8 +1832,8 @@ function wirePlayed(root) {
         if (x.kind === 'intention' || !x.available || x.block !== block) return;
         // Unavailable tracks are never written, either way; one
         // tap writes the block's whole available set.
-        if (unmark) { if (isPlayed(x.episodeId, d)) writePlayedQuiet(x.episodeId, d, null); }
-        else if (!isPlayed(x.episodeId, d)) writePlayedQuiet(x.episodeId, d, 'marked');
+        if (unmark) { if (isPlayed(x.episodeId, d, x.block)) writePlayedQuiet(x.episodeId, d, null, x.block); }
+        else if (!isPlayed(x.episodeId, d, x.block)) writePlayedQuiet(x.episodeId, d, 'marked', x.block);
       });
       refreshPlayedChrome();
     });
@@ -2383,6 +2451,7 @@ function extRebuildDescs(day) {
   });
   (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { descs.push(d); }); });
   state.dayDescs = descs;
+  refreshRepeatIds(); // v360 §2.2: the repeat set follows the day build
   return descs;
 }
 /* ---------------- v342 own episodes + intentions --------------
@@ -2540,7 +2609,7 @@ function paintContinue() {
   var prayers = (state.dayDescs || []).filter(function (x) { return x.kind !== 'intention' && x.available; });
   var playedN = 0, firstUnplayed = null;
   prayers.forEach(function (x) {
-    if (d && isPlayed(x.episodeId, d)) playedN++;
+    if (d && isPlayed(x.episodeId, d, x.block)) playedN++;
     else if (!firstUnplayed) firstUnplayed = x;
   });
   // The standing resume record, under its standing stored-day
@@ -2602,7 +2671,7 @@ function paintContinue() {
     state.queuePreviewIdx = res.carryIdx;
     openQueuePreview();
   });
-  if (resumeDesc && !carry && d && !isPlayed(resumeDesc.episodeId, d)) {
+  if (resumeDesc && !carry && d && !isPlayed(resumeDesc.episodeId, d, resumeDesc.block)) {
     var host = view.querySelector('[data-card="' + resumeDesc.episodeId + '"]');
     if (host) {
       var btn = document.createElement('button');
@@ -3293,6 +3362,7 @@ function renderPrayers() {
     // v318 T9: the Read view's lookup — payload tracks by episode id,
     // and the day's descriptors for its play/pause control.
     state.dayDescs = allDescs;
+    refreshRepeatIds(); // v360 §2.2: the repeat set follows the day build
     state.readTracks = {};
     (day.blocks || []).forEach(function (b) { (b.tracks || []).forEach(function (t) { if (t.episodeId) state.readTracks[t.episodeId] = t; }); });
     (day.episodes || []).forEach(function (t) { if (t.episodeId) state.readTracks[t.episodeId] = t; });
