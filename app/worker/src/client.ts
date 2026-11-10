@@ -3467,14 +3467,17 @@ function searchResultsHtml(day, q) {
   (state.dayDescs || []).forEach(function (d) {
     if (d.kind === 'intention' && d.intentionText && d.intentionText.toLowerCase().indexOf(q) >= 0) introHit[d.episodeId.slice(6)] = true;
   });
-  var tracks = [];
-  (day.blocks || []).forEach(function (b) { (b.tracks || []).forEach(function (t) { tracks.push(Object.assign({}, t, { _block: b.block })); }); });
-  (day.episodes || []).forEach(function (t) { tracks.push(t); });
-  var hits = tracks.filter(function (t) { return (t.title || '').toLowerCase().indexOf(q) >= 0 || !!introHit[t.episodeId]; });
+  // Track hits read the RESOLVED descriptor list — the presented
+  // day as it stands on its pages (payload tracks, the episodes
+  // group, and the settings families' slot tracks alike), never
+  // the raw payload alone: the Daily Rosary stands on the Morning
+  // page through its settings card, and a search that cannot find
+  // it has not searched the day.
+  var hits = (state.dayDescs || []).filter(function (d) { return d.kind !== 'intention' && ((d.title || '').toLowerCase().indexOf(q) >= 0 || !!introHit[d.episodeId]); });
   if (!blocks.length && !hits.length) return '<p class="meta" style="margin-top:14px">Nothing in today&rsquo;s prayers matches.</p>';
   var html = '';
-  if (blocks.length) html += '<h2 class="sectionhead">Blocks</h2><div class="blockgrid">' + blocks.map(function (b) { return blockCardHtml(b); }).join('') + '</div>';
-  if (hits.length) html += '<h2 class="sectionhead">Prayers</h2>' + hits.map(function (t) { return trackCard(t); }).join('');
+  if (blocks.length) html += '<h2 class="sectionhead">BLOCKS</h2><div class="blockgrid">' + blocks.map(function (b) { return blockCardHtml(b); }).join('') + '</div>';
+  if (hits.length) html += '<h2 class="sectionhead">PRAYERS</h2>' + hits.map(function (t) { return trackCard(t); }).join('');
   return html;
 }
 function paintBlockPage(day, block) {
