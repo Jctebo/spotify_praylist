@@ -13,6 +13,16 @@
 // surfaces. Mold = harness-v355 (local wrangler + fixture feeds + HTTPS site
 // server on https://orapronobis.media). Ports: app 8993, feed 8953, persist
 // .wrangler-test-v353. SW pin ora-pro-nobis-v353-1.
+//
+// v361 AMENDMENT (2026-11-10, per v361 §2.8's judgment rule —
+// the same rule as harness-v343's): v353's byte-identical-
+// trackCard premise is SUPERSEDED for intro-carrying tracks
+// only (non-intro rows remain byte-identical). L3's combined-
+// row legs are re-pointed to the pair form: the 136px/panel
+// geometry leg is RETIRED (replaced by the pair-structure
+// premise), the cap/ellipsis/dot legs re-point to the
+// intention row + prayer card, and the SW pin leg re-points
+// to the standing pin (ora-pro-nobis-v361-1).
 import fs from "node:fs";
 import http from "node:http";
 import https from "node:https";
@@ -341,7 +351,7 @@ async function main() {
     let parses = true; try { new vm.Script(appJs); } catch { parses = false; }
     ok(parses, "fixture: the served /app.js parses (vm.Script)");
     const swJs = (await api(BASE, "GET", "/sw.js")).text;
-    ok(swJs.includes("ora-pro-nobis-v353-1"), "SW pin: the served service worker carries CACHE 'ora-pro-nobis-v353-1'");
+    ok(swJs.includes("ora-pro-nobis-v361-1"), "SW pin: the served service worker carries CACHE 'ora-pro-nobis-v361-1' (v361 re-point)");
 
     // ============ browser ========================================
     const browserEnv = { ...process.env };
@@ -462,26 +472,27 @@ async function main() {
     // ---- L3 · rows intact on the page ------------------------------
     await page.click('.blockcard[data-openblock="Morning"] .blockcard-face');
     const l3 = await ev(() => {
-      const row = document.querySelector('.card.intro-row[data-card="daily-rosary"]');
-      if (!row) return null;
-      const panel = row.querySelector(".intention-panel");
-      const txt = row.querySelector(".intention-text");
-      const ell = row.querySelector(".ellipsis-btn");
-      const prayerBtn = row.querySelector('[data-playkey="daily-rosary"]');
-      const pr = panel.getBoundingClientRect(), br = prayerBtn.getBoundingClientRect();
+      // v361 re-point: the pair form — the intention row stands
+      // immediately before the prayer card; no panel stands.
+      const intro = document.querySelector('[data-card="intro:daily-rosary"]');
+      const prayer = document.querySelector('[data-card="daily-rosary"]');
+      if (!intro || !prayer) return null;
+      const txt = intro.querySelector(".intention-text");
+      const ell = intro.querySelector(".ellipsis-btn");
       return {
-        h: row.offsetHeight, panelFirst: pr.right <= br.left + 1, panelW: pr.width / row.getBoundingClientRect().width,
-        panelPlay: !!row.querySelector('[data-playkey="intro:daily-rosary"]'),
+        pair: intro.nextElementSibling === prayer,
+        panel: !!prayer.querySelector(".intention-panel"),
+        introPlay: !!intro.querySelector('[data-playkey="intro:daily-rosary"]'),
         clamped: txt.scrollHeight > txt.clientHeight + 1, ellStands: ell.classList.contains("stands"),
-        dot: !!row.querySelector('[data-markplayed="daily-rosary"]'),
+        dot: !!prayer.querySelector('[data-markplayed="daily-rosary"]'),
       };
     });
-    ok(l3 && Math.abs(l3.h - 136) <= 1 && l3.panelFirst && l3.panelW > 0.2 && l3.panelW < 0.3 && l3.panelPlay,
-      `L3: the combined row measures 136px, panel FIRST at ~25% with its own play button (h=${l3 && l3.h}, panelW=${l3 && l3.panelW.toFixed(3)})`);
+    ok(l3 && l3.pair && !l3.panel && l3.introPlay,
+      "L3 RE-POINTED (v361; the 136px/panel geometry leg is RETIRED with the combined row): the intention row stands immediately before its prayer card, no panel stands, and the row carries its own play button");
     ok(l3 && l3.clamped && l3.ellStands && l3.dot,
-      "L3: the intention text is capped at two lines and the ellipsis stands because it is clamped; the played dot stands");
-    const exp3 = await ev(() => { document.querySelector('.card.intro-row[data-card="daily-rosary"] .ellipsis-btn').click(); return document.querySelector('.card.intro-row[data-card="daily-rosary"]').classList.contains("expanded"); });
-    ok(exp3, "L3: the ellipsis expands the row in place");
+      "L3 RE-POINTED (v361): the intention text is capped at two lines and the ellipsis stands because it is clamped; the played dot stands on the prayer card");
+    const exp3 = await ev(() => { document.querySelector('[data-card="intro:daily-rosary"] .ellipsis-btn').click(); return document.querySelector('[data-card="intro:daily-rosary"]').classList.contains("expanded"); });
+    ok(exp3, "L3 RE-POINTED (v361): the ellipsis expands the intention row in place");
     await ev(() => document.querySelector('[data-markplayed="daily-rosary"]').click());
     const dotOn = await ev(() => document.querySelector('[data-markplayed="daily-rosary"]').classList.contains("on"));
     await ev(() => document.querySelector('[data-markplayed="daily-rosary"]').click());
@@ -497,7 +508,7 @@ async function main() {
       const r = await ev((blk) => { window.openBlockPage(blk); return !!document.querySelector(".notavail"); }, b);
       if (r) { unavail3 = b; break; }
     }
-    ok(!!unavail3, `L3: an unavailable track shows its standing panel-free form (first found on ${unavail3 || "none"})`);
+    ok(!!unavail3, `L3: an unavailable track shows its standing intro-free form (first found on ${unavail3 || "none"})`);
     await ev(() => window.goListenHome());
 
     // ---- L4 · play paths -------------------------------------------
@@ -532,11 +543,11 @@ async function main() {
       `L5: a mid-block tap queues from that track inclusive, intention intro first, stopping at the block's end (head=${JSON.stringify(s5.q.slice(0, 2))})`);
     ok((await qblocks()).every((b) => b === "Morning"), "L5: the tap queue stays inside the block");
     await stopQ();
-    const tap5b = await tapBtn("daily-rosary", "intro:daily-rosary");
+    const tap5b = await tapBtn("intro:daily-rosary", "intro:daily-rosary");
     await sleep(600);
     const s5b = await q();
     ok(tap5b === "ok" && s5b.q[0] === "intro:daily-rosary" && s5b.q[1] === "daily-rosary",
-      "L5: tapping the intention panel's own play button starts the pair");
+      "L5 RE-POINTED (v361): tapping the intention row's own play button starts the pair");
     await stopQ();
 
     // ---- L6 · mini-player -------------------------------------------
@@ -729,8 +740,8 @@ async function main() {
     await stopQ();
     await page.fill("#day-search", "Synthetic intention");
     await sleep(400);
-    const s11e = await ev(() => document.querySelectorAll(".card.intro-row").length);
-    ok(s11e > 0, `L11: an intention-text word paints the combined rows whose intros carry it (${s11e} rows)`);
+    const s11e = await ev(() => document.querySelectorAll(".card.intention-row").length);
+    ok(s11e > 0, `L11 RE-POINTED (v361): an intention-text word paints the intention rows whose intros carry it (${s11e} rows)`);
     await page.fill("#day-search", "zzzqqq-nothing");
     await sleep(400);
     ok(await ev(() => document.body.innerText.includes("Nothing in today\u2019s prayers matches.")), "L11: a query with no matches paints the one plain line");

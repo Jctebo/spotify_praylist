@@ -586,7 +586,7 @@ function tapPlay(d) {
   var prayerId = key.indexOf('intro:') === 0 ? key.slice(6) : key;
   // §2.5(2): the same-unit toggle, at the granularity of the pair
   // — tapping the prayer card while its intro plays pauses, and
-  // tapping the panel button while the prayer plays pauses.
+  // tapping the intention row's button while the prayer plays pauses.
   if (state.current && !audioEl.paused && (state.current.episodeId === prayerId || state.current.episodeId === 'intro:' + prayerId)) { audioEl.pause(); return; }
   if (!state.dayPayload) { playTrack(d); return; }
   var build = sectionQueueFrom(extRebuildDescs(state.dayPayload), key);
@@ -808,7 +808,10 @@ function renderQueueList() {
     var isPlaying = !preview && i === state.queueIdx && state.current && desc.episodeId === state.current.episodeId;
     var isStart = !!preview && i === state.queuePreviewIdx;
     var title = desc.title || '';
-    if (isIntro && title.indexOf('Intention') !== 0) title = 'Intention \u2014 ' + title;
+    // v361 §2.5: an intro row carries the same title its block
+    // row carries — §2.1's helper in its descriptor form; the
+    // v347 'Intention — ' prefix rule retires.
+    if (isIntro) title = prayerIntentionTitleForDesc(desc);
     var metaParts = [];
     if (desc.block) metaParts.push(esc(desc.block));
     if (!isIntro && desc.durationS > 0) metaParts.push(fmtDur(desc.durationS));
@@ -1768,30 +1771,62 @@ function readButton(t, key) {
   // (readLine below), never a dead button.
   return '<div style="margin-top:6px"><button class="btn ghost small" data-read="' + esc(key) + '">Read</button></div>';
 }
-function intentionPanelHtml(t, intro) {
-  // v338 §2.7(2)/(3): the intention panel — FIRST in the combined
-  // row, subordinate by construction (meta tone, hairline divider,
-  // no card of its own, no gold). Contents: the Intention label,
-  // the intention TEXT (the very words the intro speaks), and the
-  // panel's OWN small play button (John's amendment — the intro is
-  // playable from its own panel), wired exactly as the standing
-  // card buttons through playTrack on the intro descriptor. No
-  // seek bar, no speed control, no Read control stand in the panel.
-  // v343 §2.4: the two controls stand in a new .panel-foot row —
-  // the play button, then the ellipsis (⋯) that expands the capped
-  // text in place. The ellipsis stands only when the text is
-  // actually clamped — a rendered measurement armed after
-  // insertion by armEllipsis; an expanded row's button always
-  // stands (it is the collapse control). The expand state is
-  // per-row and session-only (state.expandedIntros), re-rendered
-  // in expanded form when its id stands in the set.
+function prayerIntentionTitle(t, intro) {
+  // v361 §2.1: the intention row's title — "Prayer Intention: " +
+  // the PRAYER's name (John's specified form: the title itself is
+  // the distinction). The name is the prayer track's own title —
+  // the track standing at the render seam, for BOTH families
+  // alike (the Bible in a Year slot's t.title is its matched
+  // episode title by render time). Fallback chain, in order,
+  // never a fabricated name: t.title → the intro's own title
+  // (intro.title, the feed item's title as the payload carries
+  // it) → the bare "Prayer Intention" with no suffix.
+  var name = (t && t.title) || (intro && intro.title) || '';
+  return name ? 'Prayer Intention: ' + name : 'Prayer Intention';
+}
+function prayerIntentionTitleForDesc(desc) {
+  // v361 §2.1/§2.5: the descriptor form of the helper, for the
+  // queue — the intro descriptor's prayer is resolved from
+  // state.dayDescs by stripping the intro: prefix; the same
+  // fallback chain applies (prayer descriptor title → the intro
+  // descriptor's own title → the bare "Prayer Intention").
+  var pid = desc && desc.episodeId && desc.episodeId.indexOf('intro:') === 0 ? desc.episodeId.slice('intro:'.length) : null;
+  var p = pid ? (state.dayDescs || []).filter(function (x) { return x.episodeId === pid; })[0] : null;
+  var name = (p && p.title) || (desc && desc.title) || '';
+  return name ? 'Prayer Intention: ' + name : 'Prayer Intention';
+}
+function intentionRowCard(t, intro) {
+  // v361 §2.2: the intention intro as its OWN standard card — the
+  // v338/v343 combined row's panel half, promoted to a full row
+  // (v361 retires intentionPanelHtml and the 25/75 split). Form:
+  // the standard .playbtn (NOT the panel's small variant —
+  // uniform form is the point) carrying data-playkey=
+  // "intro:<episodeId>", wired exactly as every row button wires,
+  // so v351 decision 5 stands untouched: the button selects the
+  // pair (intro, then its prayer), exactly as the panel's button
+  // did. Then a .grow column: the <h3> title from §2.1's helper,
+  // and the intention TEXT (the very words the intro speaks) as
+  // the row's second line — the standing .intention-text element
+  // under its two-line clamp, with the ⋯ ellipsis button after
+  // it under the standing rule (a rendered measurement arms it —
+  // armEllipsis, re-pointed to this row in §2.4; an expanded
+  // row's button always stands as the collapse control; the
+  // expand state is per-row and session-only, state.expandedIntros,
+  // re-rendered in expanded form when its id stands in the set).
+  // No played dot (the v347 queue precedent: played state belongs
+  // to the prayer), no "Intention" label line (Decision 1: the
+  // title alone carries the distinction), no Read control, no
+  // Spotify link, no meta line beyond the text itself.
   var expanded = !!(state.expandedIntros && state.expandedIntros[t.episodeId]);
-  return '<div class="intention-panel"><div class="intention-label">Intention</div><div class="intention-text">' + esc(intro.text) + '</div>'
-    + '<div class="panel-foot"><button class="playbtn small" data-playkey="intro:' + esc(t.episodeId) + '" aria-label="Play the intention">&#9654;</button>'
-    + '<button class="ellipsis-btn' + (expanded ? ' stands' : '') + '" data-expand="' + esc(t.episodeId) + '" aria-label="Show the full intention" aria-expanded="' + (expanded ? 'true' : 'false') + '">&#8943;</button></div></div>';
+  return '<div class="card intention-row' + (expanded ? ' expanded' : '') + '" data-card="intro:' + esc(t.episodeId) + '"><div class="row">'
+    + '<button class="playbtn" data-playkey="intro:' + esc(t.episodeId) + '" aria-label="Play the intention">&#9654;</button>'
+    + '<div class="grow"><h3>' + esc(prayerIntentionTitle(t, intro)) + '</h3>'
+    + '<div class="intention-text">' + esc(intro.text) + '</div>'
+    + '<button class="ellipsis-btn' + (expanded ? ' stands' : '') + '" data-expand="' + esc(t.episodeId) + '" aria-label="Show the full intention" aria-expanded="' + (expanded ? 'true' : 'false') + '">&#8943;</button>'
+    + '</div></div></div>';
 }
 function introForTrack(t) {
-  // v343 §2.5(1): the panel's intro for a track, descriptor-first.
+  // v343 §2.5(1): the intro for a track, descriptor-first.
   // The intro descriptor standing in state.dayDescs (built by
   // expandDescs at every rebuild, carrying intentionText) is the
   // freshest source — a card rendered from it no longer depends on
@@ -1801,7 +1836,7 @@ function introForTrack(t) {
   // instant before a rebuild has run. Availability stays the
   // caller's standing rule: expandDescs emits no intro descriptor
   // for an unavailable prayer, and trackCard asks only for
-  // available tracks — no available prayer, no panel, both ways.
+  // available tracks — no available prayer, no intro row, both ways.
   if (!t || !t.episodeId) return null;
   var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === 'intro:' + t.episodeId; })[0];
   if (d && d.intentionText) return { text: d.intentionText, title: d.title, streamUrl: d.url };
@@ -1815,7 +1850,7 @@ function armEllipsis(cardEl) {
   // (scrollHeight > clientHeight + 1), never a length derivation.
   // The exact-fit two-line text reads equal and stands no ellipsis
   // (nothing is hidden). An expanded row's button always stands.
-  if (!cardEl || !cardEl.classList || !cardEl.classList.contains('intro-row')) return;
+  if (!cardEl || !cardEl.classList || !cardEl.classList.contains('intention-row')) return;
   var btn = cardEl.querySelector('.ellipsis-btn');
   var txt = cardEl.querySelector('.intention-text');
   if (!btn || !txt) return;
@@ -1823,7 +1858,7 @@ function armEllipsis(cardEl) {
   else btn.classList.remove('stands');
 }
 function armAllEllipses() {
-  view.querySelectorAll('.card.intro-row').forEach(armEllipsis);
+  view.querySelectorAll('.card.intention-row').forEach(armEllipsis);
 }
 function wireExpand(root) {
   // v343 §2.4: the expand control is wired at the same render
@@ -1835,7 +1870,7 @@ function wireExpand(root) {
     btn.setAttribute('data-expand-wired', '1');
     btn.addEventListener('click', function () {
       var id = btn.getAttribute('data-expand');
-      var card = btn.closest('.card.intro-row');
+      var card = btn.closest('.card.intention-row');
       if (!card || !id) return;
       var on = card.classList.toggle('expanded');
       btn.setAttribute('aria-expanded', on ? 'true' : 'false');
@@ -1854,9 +1889,10 @@ window.addEventListener('resize', function () { armAllEllipses(); });
 function playedDotHtml(t) {
   // §2.5: the state dot IS the mark-as control — a real button
   // (44px box, 12px circle drawn by CSS) standing as the last
-  // element of the card's row, at the card's RIGHT edge on the
-  // prayer side — clear of the intention panel and its ellipsis
-  // (left, 25%): two controls, two sides, two jobs. UNPLAYED =
+  // element of the prayer card's row, at the card's RIGHT edge.
+  // (v361: the intention intro is its own card standing above —
+  // it carries no dot; played state belongs to the prayer.)
+  // UNPLAYED =
   // the hollow ring; PLAYED = the same circle filled gold (the
   // .on class) with the title stepped to the meta tone (.heard).
   var id = t.episodeId;
@@ -1990,25 +2026,33 @@ function wirePlayed(root) {
 }
 function trackCard(t) {
   var key = t.episodeId || ('seg:' + (t._block || ''));
-  // v338 §2.7(1)/(5): the combined row stands iff the payload's
-  // intros map carries this track AND the track is available —
-  // consulted UNIFORMLY by track id from the day payload in state,
-  // for both families (own tracks and external slots render through
-  // this one seam; extSwapCard's re-render takes the panel with the
-  // settled card). No intro standing → the plain standing card,
-  // byte-identical to the pre-v338 shape (§2.7(4)); an unavailable
-  // prayer renders its standing unavailable card, panel-free.
-  // v343 §2.5(1): the lookup now runs through introForTrack —
+  // v338 §2.7(1)/(5), as REPLACED by v361 §2.3: an intro stands
+  // for this track iff the intros map carries it AND the track is
+  // available — consulted UNIFORMLY by track id from the day
+  // payload in state, for both families (own tracks and external
+  // slots render through this one seam). Where v338 fused the
+  // intro INTO this card as a 25% panel (uniformed at 136px by
+  // v343), v361 renders it as its OWN standard card standing
+  // immediately before the prayer card: wrap returns
+  // intentionRowCard + the plain prayer card, two sibling cards
+  // from the one call, so every list caller that joins trackCard
+  // output emits the pair with zero caller changes. No intro
+  // standing → the return is byte-identical to today's plain
+  // card; an unavailable prayer renders its standing unavailable
+  // card, intro-free (the unavailable branches never carried an
+  // intro and do not change).
+  // v343 §2.5(1): the lookup runs through introForTrack —
   // descriptor-first, the payload map as its named fallback.
   var intro = t.available ? introForTrack(t) : null;
   var wrap = function (rowInner) {
     // v344 §2.5: wrap serves the AVAILABLE branches only (the
     // unavailable cards return their own shapes below and carry
-    // NO marker) — the played dot stands as the row's last
+    // NO marker) — the played dot stands as the prayer row's last
     // element, after the .grow column, for both families alike.
-    if (!intro) return '<div class="card" data-card="' + esc(key) + '"><div class="row">' + rowInner + playedDotHtml(t) + '</div></div>';
-    var expanded = !!(state.expandedIntros && state.expandedIntros[t.episodeId]);
-    return '<div class="card intro-row' + (expanded ? ' expanded' : '') + '" data-card="' + esc(key) + '"><div class="row">' + intentionPanelHtml(t, intro) + rowInner + playedDotHtml(t) + '</div></div>';
+    // v361 §2.3: the prayer card itself is always the plain card;
+    // a standing intro prepends its own intention row card.
+    var card = '<div class="card" data-card="' + esc(key) + '"><div class="row">' + rowInner + playedDotHtml(t) + '</div></div>';
+    return intro ? intentionRowCard(t, intro) + card : card;
   };
   if (t.kind === 'external') {
     // v324 §2.9: an external track names its source in the meta line
@@ -2457,23 +2501,46 @@ function extSwapCard(slot) {
   if (!old || !st) return;
   var tmp = document.createElement('div');
   tmp.innerHTML = st.state === 'downloading' ? extDownloadingCard(slot) : (st.state === 'loading' ? extPlaceholderCard(slot) : trackCard(extSlotTrack(slot, st)));
-  var fresh = tmp.firstChild;
-  old.replaceWith(fresh);
-  // v338 §2.7(5): a settled slot card can carry TWO play buttons
-  // (the panel's intro button + the prayer's own) — wire each by
-  // its OWN data-playkey against the descriptor list.
-  fresh.querySelectorAll('[data-playkey]').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b.getAttribute('data-playkey'); })[0];
-      if (d) tapPlay(d);
+  // v361 §2.4: the fragment can carry TWO nodes — the intention
+  // row + the prayer card, when an intro stands (one node when
+  // none does; the placeholder and downloading cards stand
+  // single, unchanged). Take ALL of the fragment's children and
+  // replace the old card with them in order, so the intention
+  // row lands immediately before the prayer card and the pair
+  // replaces atomically.
+  // The pair replaces atomically on REPEATED swaps too: a
+  // standing intention row for THIS slot (the old card's
+  // immediately preceding sibling) is part of the pair being
+  // replaced and is removed with it — otherwise a second swap
+  // (the settle swap, then the intros-landing completion leg,
+  // in either order) would strand the first swap's intention
+  // row and the slot would stand with two.
+  var prevIntro = null;
+  var prev = old.previousElementSibling;
+  if (prev && prev.classList && prev.classList.contains('intention-row') && prev.getAttribute('data-card') === 'intro:' + slot.slotId) prevIntro = prev;
+  var nodes = [];
+  while (tmp.firstChild) nodes.push(tmp.removeChild(tmp.firstChild));
+  nodes.forEach(function (n) { old.parentNode.insertBefore(n, old); });
+  old.remove();
+  if (prevIntro) prevIntro.remove();
+  nodes.forEach(function (fresh) {
+    // v338 §2.7(5), as carried by v361 §2.4: a settled slot can
+    // carry TWO play buttons (the intention row's + the prayer's
+    // own, now standing on sibling cards) — wire each by its OWN
+    // data-playkey against the descriptor list.
+    fresh.querySelectorAll('[data-playkey]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b.getAttribute('data-playkey'); })[0];
+        if (d) tapPlay(d);
+      });
     });
+    // v343 §2.4: the swap path arms the ellipsis like every other.
+    wireExpand(fresh);
+    armEllipsis(fresh);
+    // v344: the settled card's marker wires here too, and the
+    // played chrome re-applies over the swap.
+    wirePlayed(fresh);
   });
-  // v343 §2.4: the swap path arms the ellipsis like every other.
-  wireExpand(fresh);
-  armEllipsis(fresh);
-  // v344: the settled card's marker wires here too, and the
-  // played chrome re-applies over the swap.
-  wirePlayed(fresh);
   refreshPlayedChrome();
   if (state.current && state.current.episodeId === slot.slotId) markPlaying(slot.slotId);
 }
@@ -2538,18 +2605,25 @@ function blockInsertCards(day, standing) {
         var st2 = state.extSlots[slot.slotId];
         var tmp2 = document.createElement('div');
         tmp2.innerHTML = st2 && st2.state === 'present' ? trackCard(extSlotTrack(slot, st2)) : extPlaceholderCard(slot);
-        var el2 = tmp2.firstChild;
-        if (!el2) return;
-        view.appendChild(el2);
-        el2.querySelectorAll('[data-playkey]').forEach(function (b2) {
-          b2.addEventListener('click', function () {
-            var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
-            if (d) tapPlay(d);
+        // v361 §2.4 (the extSwapCard rule, applied here at
+        // Implement): a present slot's trackCard can return the
+        // pair — take ALL of the fragment's children, in order,
+        // never firstChild alone (which would strand the prayer
+        // card, or the intention row, in the fragment).
+        var nodes2 = [];
+        while (tmp2.firstChild) nodes2.push(tmp2.removeChild(tmp2.firstChild));
+        nodes2.forEach(function (el2) {
+          view.appendChild(el2);
+          el2.querySelectorAll('[data-playkey]').forEach(function (b2) {
+            b2.addEventListener('click', function () {
+              var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
+              if (d) tapPlay(d);
+            });
           });
+          wireExpand(el2);
+          armEllipsis(el2);
+          wirePlayed(el2);
         });
-        wireExpand(el2);
-        armEllipsis(el2);
-        wirePlayed(el2);
       }
     });
   });
@@ -3030,7 +3104,7 @@ function ownSettleMissing(day, row) {
 // text from the shell's introTexts (privacy), streamUrl the feed
 // enclosure. Segment items resolve into state.daySegments (shape
 // only — no presentation is built, §2.2 ruling 6). A feed failure
-// degrades INTENTIONS ONLY: the day renders whole without panels.
+// degrades INTENTIONS ONLY: the day renders whole without intention rows.
 function ownBuildIntentions(day, cachedRec) {
   var date = day.presentedDay || day.date;
   var texts = day.introTexts || {};
@@ -3055,17 +3129,22 @@ function ownBuildIntentions(day, cachedRec) {
     // v343 §2.5(3): the completion leg at the map's assignment
     // point — the descriptor list rebuilds over the full map,
     // then every PRESENT external slot whose standing card still
-    // lacks its panel while its intro now stands re-renders in
-    // this same session through the standing swap path. (On the
-    // cached path applyRec runs before any card exists — the
+    // lacks its intro's row while its intro now stands re-renders
+    // in this same session through the standing swap path. (On
+    // the cached path applyRec runs before any card exists — the
     // guards make the leg a no-op there by construction; the
     // settle path covers that open.)
+    // v361: the guard's panel test re-points to the pair form —
+    // the intention row stands as the prayer card's immediately
+    // preceding sibling when the pair already stands.
     extRebuildDescs(day);
     (state.extStanding || []).forEach(function (slot) {
       var st2 = state.extSlots && state.extSlots[slot.slotId];
       if (!st2 || st2.state !== 'present') return;
       var card = view.querySelector('[data-card="' + slot.slotId + '"]');
-      if (!card || card.querySelector('.intention-panel')) return;
+      if (!card) return;
+      var prev = card.previousElementSibling;
+      if (prev && prev.classList && prev.classList.contains('intention-row')) return;
       if (introForTrack(extSlotTrack(slot, st2))) extSwapCard(slot);
     });
   };
@@ -3335,8 +3414,8 @@ function resolveExternals(day) {
       paintContinue(day);
     }, 9000);
     // §2.8 ruling 3 completion: when the intros map lands, the
-    // already-settled cards re-render with their panels and the
-    // descriptor list rebuilds over the full map.
+    // already-settled cards re-render with their intention rows
+    // and the descriptor list rebuilds over the full map.
     intP.then(function () {
       restoreIntrosDone = true;
       standing.forEach(function (slot) {
@@ -3497,7 +3576,7 @@ function renderPrayers() {
     state.dayPayload = day;
     // v342: the intros map is client-built by the resolution pass
     // (ownBuildIntentions) before descriptors consume it; it
-    // starts empty so the shell's own tracks render panel-free
+    // starts empty so the shell's own tracks render intro-free
     // until it lands.
     day.intros = {};
     state.daySegments = {};
@@ -3776,7 +3855,10 @@ function appendBlockSettingsCards(day, b) {
       if (st2 && st2.state === 'downloading') tmp2.innerHTML = extDownloadingCard(slot);
       else if (st2 && st2.state !== 'loading') tmp2.innerHTML = trackCard(extSlotTrack(slot, st2));
       else tmp2.innerHTML = extPlaceholderCard(slot);
-      if (tmp2.firstChild) view.appendChild(tmp2.firstChild);
+      // v361 §2.4 (the same rule): append ALL of the fragment's
+      // children — a settled slot with a standing intro appends
+      // its intention row AND its prayer card, in order.
+      while (tmp2.firstChild) view.appendChild(tmp2.removeChild(tmp2.firstChild));
     }
   });
 }

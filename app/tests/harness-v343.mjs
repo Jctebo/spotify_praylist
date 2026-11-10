@@ -2,6 +2,47 @@
 // harness-v343 — v343 UNIFORM INTENTION ROWS gate (Plan §2.8,
 // 11 legs; leg-family regressions v342 · v339 · v338 · v337 ·
 // v336 · v335 · v334 run separately and are tallied in §3).
+//
+// v361 AMENDMENT (2026-11-10, per v361 §2.8's judgment rule —
+// every combined-row leg is green under a re-pointed form or
+// named-retired here, none silently failing or silently
+// passing against the old DOM):
+//   leg 1  STANDS unchanged (fixture integrity, form-independent)
+//   leg 2  RETIRED — the 136px uniform-height + clip contract
+//          was the combined row's own; replaced by a premise
+//          check (no .card.intro-row stands; intention rows
+//          stand at natural height). The single-row form is
+//          gated by harness-v361 L1.
+//   leg 3  RE-POINTED to the intention row (the cap/expand
+//          semantics survive under v361 §2.2/§2.6). Note: the
+//          fixture texts were calibrated at the 25% panel
+//          width; at the row's full width T_EXACT2 reads as a
+//          short text — the row-width exact-two-line case is
+//          carried by harness-v361 L3 with its own calibration.
+//   leg 4  RE-POINTED to the intention row (expand/collapse +
+//          settle-survival semantics; the 136px geometry
+//          assertions give way to relative heights)
+//   leg 5  RE-POINTED (panel -> the intention row standing
+//          before the settled card, same session)
+//   leg 6  RE-POINTED (same substitution)
+//   leg 7  RE-POINTED (the intention row's text + play button)
+//   leg 8  RETIRED — the compacted combined-row chrome (9px
+//          padding, 25% panel, 13px label, 30px panel button)
+//          was the combined row's contract; the intention row
+//          uses the standard card chrome (harness-v361 L2
+//          asserts the standard 42px button). Replaced by a
+//          premise check: no .intention-panel stands.
+//   leg 9  RE-POINTED in wording (no intention row stands
+//          before a no-intro card; shapes otherwise unchanged)
+//   leg 10 RE-POINTED (the intention row's own play button)
+//   leg 11 RE-POINTED (SW pin v361-1; the v361 seams)
+// NAVIGATION (v361, the same pass): this file predates v353's
+// DOM narrowing — its legs read the flat all-blocks paint,
+// which no longer exists. The legs now open the block page
+// their rows stand on (Morning for the Open A/B legs, Night +
+// Afternoon for leg 9), and the row-count thresholds follow
+// the page's rows (5 intention rows stand on the Morning
+// page), not the old flat paint's.
 // Tallies from COMPLETE log files only.
 //
 //   1  fixture integrity: the presented-day Divine Office courier
@@ -409,11 +450,11 @@ async function main() {
   const swJs = (await apiRaw(BASE, "/sw.js")).buf.toString("utf8");
   let servedParses = true;
   try { new Function(appJs.replace(/import[^;]+;/g, "")); } catch { servedParses = false; }
-  check("11 served build parses and executes (construction proof deferred to the browser legs) and carries the v343 seams",
-    servedParses && appJs.includes("introForTrack") && appJs.includes("armEllipsis") && appJs.includes("expandedIntros"),
+  check("11 served build parses and executes (construction proof deferred to the browser legs) and carries the standing seams (v361 re-point: + intentionRowCard)",
+    servedParses && appJs.includes("introForTrack") && appJs.includes("armEllipsis") && appJs.includes("expandedIntros") && appJs.includes("intentionRowCard"),
     `parses=${servedParses}`);
-  check("11 SW pin ora-pro-nobis-v343-1 with the opn-ext-audio-v1 purge exemption verbatim",
-    swJs.includes('var CACHE = "ora-pro-nobis-v343-1";') && swJs.includes('k !== CACHE && k !== "opn-ext-audio-v1"'));
+  check("11 SW pin ora-pro-nobis-v361-1 with the opn-ext-audio-v1 purge exemption verbatim (v361 re-point)",
+    swJs.includes('var CACHE = "ora-pro-nobis-v361-1";') && swJs.includes('k !== CACHE && k !== "opn-ext-audio-v1"'));
 
   // ================= browser legs =================================
   const browserEnv = { ...process.env };
@@ -451,19 +492,26 @@ async function main() {
     if (!s || !Object.keys(s).length) return false;
     return Object.values(s).every((st) => st.state !== "loading" && st.state !== "downloading");
   }, null, { timeout }).catch(() => {});
+  // v361 re-point: the "panel" reads now read the intention ROW
+  // (the card standing at data-card="intro:<id>", immediately
+  // before its prayer card). panel := an intention row stands
+  // before the prayer card; text/ellipsis/expanded read the row.
   const waitPanel = (page, cardId, timeout = 30000) => page.waitForFunction((id) => {
-    const c = document.querySelector(`[data-card="${id}"]`);
-    return !!c && !!c.querySelector(".intention-panel");
+    return !!document.querySelector(`[data-card="intro:${id}"]`);
   }, cardId, { timeout }).catch(() => {});
   const cardInfo = (page, cardId) => page.evaluate((id) => {
     const c = document.querySelector(`[data-card="${id}"]`);
     if (!c) return null;
-    const txt = c.querySelector(".intention-text");
-    const btn = c.querySelector(".ellipsis-btn");
+    const intro = document.querySelector(`[data-card="intro:${id}"]`);
+    const src = intro || c;
+    const txt = src.querySelector(".intention-text");
+    const btn = src.querySelector(".ellipsis-btn");
     return {
-      introRow: c.classList.contains("intro-row"), expanded: c.classList.contains("expanded"),
+      introRow: c.classList.contains("intro-row"),
+      expanded: src.classList.contains("expanded"),
       h: c.offsetHeight, scrollH: c.scrollHeight,
-      panel: !!c.querySelector(".intention-panel"),
+      introH: intro ? intro.offsetHeight : -1,
+      panel: !!intro && intro.nextElementSibling === c,
       panelText: txt ? txt.textContent : null,
       textSH: txt ? txt.scrollHeight : -1, textCH: txt ? txt.clientHeight : -1,
       btnStands: !!btn && btn.classList.contains("stands"),
@@ -483,6 +531,9 @@ async function main() {
   await pageA.goto(BASE + "/", { waitUntil: "load" });
   await waitOwnSettled(pageA);
   await waitExtSettled(pageA);
+  // v361 navigation: rows stand on their block pages under
+  // v353's DOM narrowing — open Morning before reading them.
+  await pageA.evaluate(() => window.openBlockPage("Morning"));
   await waitPanel(pageA, "daily-rosary");
   await waitPanel(pageA, "ext-invitatory");
 
@@ -499,105 +550,116 @@ async function main() {
   check("1 the intros fixture stands complete for the fixture day (all 10 ids in the built map)",
     INTRO_IDS.every((id) => stateA.intros.includes(id)), JSON.stringify(stateA.intros));
 
+  // LEG 2 RETIRED at v361 (see the header disposition): the
+  // 136px uniform height + clip guard was the combined row's
+  // contract. Premise checks stand in its place: no combined
+  // row stands, and the intention rows stand at NATURAL heights
+  // (not one fixed height — heights follow their own text).
   const rowsA = await pageA.evaluate(() => {
     const out = [];
-    document.querySelectorAll(".card.intro-row").forEach((el) => out.push({ id: el.getAttribute("data-card"), h: el.offsetHeight, scrollH: el.scrollHeight }));
-    return out;
+    document.querySelectorAll(".card.intention-row").forEach((el) => out.push({ id: el.getAttribute("data-card"), h: el.offsetHeight, scrollH: el.scrollHeight }));
+    return { combined: document.querySelectorAll(".card.intro-row").length, rows: out };
   });
-  check("2 every combined row stands at exactly 136px (own + external, short + long intention, two-line novena title)",
-    rowsA.length >= 10 && rowsA.every((r) => r.h === 136), JSON.stringify(rowsA));
-  check("2 clip guard: no combined row's content exceeds the fixed height (scrollHeight <= 137 collapsed)",
-    rowsA.length >= 10 && rowsA.every((r) => r.scrollH <= 137), JSON.stringify(rowsA.map((r) => `${r.id}:${r.scrollH}`)));
+  check("2 RETIRED (v361): no combined row stands anywhere — the 136px contract is gone with the form it governed",
+    rowsA.combined === 0 && rowsA.rows.length >= 5, JSON.stringify(rowsA.rows.map((r) => r.id)));
+  check("2 RETIRED (v361): intention rows stand at natural heights (no fixed-height rule: the long-text row stands taller than the short-text row)",
+    rowsA.rows.length >= 5 && Math.max(...rowsA.rows.map((r) => r.h)) > Math.min(...rowsA.rows.map((r) => r.h)), JSON.stringify(rowsA.rows.map((r) => `${r.id}:${r.h}`)));
 
   const rosaryA = await cardInfo(pageA, "daily-rosary");
   const mpA = await cardInfo(pageA, "morning-prayer");
-  const reflA = await cardInfo(pageA, "daily-reflection");
-  check("3 the >2-line panel (rosary, 8-line text) stands its ellipsis",
+  check("3 RE-POINTED (v361): the clamped intention ROW (rosary, long text) stands its ellipsis",
     !!rosaryA && rosaryA.btnStands && rosaryA.textSH > rosaryA.textCH + 1, JSON.stringify(rosaryA));
-  check("3 the exact-two-line panel (morning prayer) stands NO ellipsis — nothing is hidden (scrollHeight == clientHeight)",
+  check("3 RE-POINTED (v361): the short-text intention row (morning prayer) stands NO ellipsis — nothing is hidden (scrollHeight == clientHeight)",
     !!mpA && !mpA.btnStands && mpA.textSH === mpA.textCH, JSON.stringify(mpA));
-  check("3 the one-line panel (daily reflection) stands NO ellipsis",
+  // The reflection's row stands on the Night page — read it
+  // there, then return to Morning for legs 4/7/10.
+  await pageA.evaluate(() => window.openBlockPage("Night"));
+  await waitPanel(pageA, "daily-reflection");
+  const reflA = await cardInfo(pageA, "daily-reflection");
+  check("3 RE-POINTED (v361): the one-line intention row (daily reflection) stands NO ellipsis",
     !!reflA && !reflA.btnStands && reflA.textSH === reflA.textCH, JSON.stringify(reflA));
+  await pageA.evaluate(() => window.openBlockPage("Morning"));
+  await waitPanel(pageA, "daily-rosary");
 
-  // Leg 4: toggle — expand the clamped rosary row; the expansion
-  // must survive the row's settle re-render when the held intro
-  // download lands; a second tap on the re-rendered control
-  // collapses it back to 136.
-  await pageA.evaluate(() => { const c = document.querySelector('[data-card="daily-rosary"]'); if (c) c.__leg4stamp = "before"; });
-  await pageA.click('[data-card="daily-rosary"] .ellipsis-btn');
-  const expA = await cardInfo(pageA, "daily-rosary");
-  const othersA = await pageA.evaluate(() => {
-    const out = [];
-    document.querySelectorAll(".card.intro-row").forEach((el) => { if (el.getAttribute("data-card") !== "daily-rosary") out.push(el.offsetHeight); });
+  // Leg 4 RE-POINTED (v361): toggle — expand the clamped rosary
+  // intention ROW; the expansion must survive the pair's settle
+  // re-render when the held intro download lands; a second tap
+  // on the re-rendered control collapses it back to its natural
+  // collapsed height (the 136px geometry is retired with leg 2;
+  // heights here are relative to the row's own collapsed form).
+  const collapsedH = rosaryA ? rosaryA.introH : -1;
+  const othersBefore = await pageA.evaluate(() => {
+    const out = {};
+    document.querySelectorAll(".card.intention-row").forEach((el) => { if (el.getAttribute("data-card") !== "intro:daily-rosary") out[el.getAttribute("data-card")] = el.offsetHeight; });
     return out;
   });
-  check("4 tapping the ellipsis expands that row only (height > 136, clamp released, full text visible, aria-expanded true)",
-    !!expA && expA.expanded && expA.h > 136 && expA.textSH === expA.textCH && expA.btnAria === "true", JSON.stringify(expA));
-  check("4 every other combined row stays at 136 while one row is expanded",
-    othersA.length >= 9 && othersA.every((h) => h === 136), JSON.stringify(othersA));
-  // Wait for the held download to land and re-render the row.
+  await pageA.evaluate(() => { const c = document.querySelector('[data-card="intro:daily-rosary"]'); if (c) c.__leg4stamp = "before"; });
+  await pageA.click('[data-card="intro:daily-rosary"] .ellipsis-btn');
+  const expA = await cardInfo(pageA, "daily-rosary");
+  const othersA = await pageA.evaluate(() => {
+    const out = {};
+    document.querySelectorAll(".card.intention-row").forEach((el) => { if (el.getAttribute("data-card") !== "intro:daily-rosary") out[el.getAttribute("data-card")] = el.offsetHeight; });
+    return out;
+  });
+  check("4 RE-POINTED (v361): tapping the ellipsis expands that intention row only (height grows past its collapsed form, clamp released, full text visible, aria-expanded true)",
+    !!expA && expA.expanded && expA.introH > collapsedH && expA.textSH === expA.textCH && expA.btnAria === "true", JSON.stringify(expA));
+  check("4 RE-POINTED (v361): every other intention row keeps its height while one row is expanded",
+    Object.keys(othersA).length >= 4 && Object.keys(othersA).every((k) => othersA[k] === othersBefore[k]), JSON.stringify(othersA));
+  // Wait for the held download to land and re-render the pair.
   let rerendered = null;
   for (let i = 0; i < 45; i++) {
     rerendered = await pageA.evaluate(() => {
-      const c = document.querySelector('[data-card="daily-rosary"]');
+      const c = document.querySelector('[data-card="intro:daily-rosary"]');
       if (!c) return null;
       return { fresh: !c.__leg4stamp, expanded: c.classList.contains("expanded"), h: c.offsetHeight };
     }).catch(() => null);
     if (rerendered && rerendered.fresh) break;
     await sleep(1000);
   }
-  check("4 the expansion survives the row's settle re-render (session set re-renders it expanded)",
-    !!rerendered && rerendered.fresh && rerendered.expanded && rerendered.h > 136, JSON.stringify(rerendered));
-  await pageA.click('[data-card="daily-rosary"] .ellipsis-btn');
+  check("4 RE-POINTED (v361): the expansion survives the pair's settle re-render (session set re-renders the fresh row expanded)",
+    !!rerendered && rerendered.fresh && rerendered.expanded && rerendered.h > collapsedH, JSON.stringify(rerendered));
+  await pageA.click('[data-card="intro:daily-rosary"] .ellipsis-btn');
   const colA = await cardInfo(pageA, "daily-rosary");
-  check("4 tapping again on the re-rendered control collapses the row back to 136",
-    !!colA && !colA.expanded && colA.h === 136 && colA.btnAria === "false", JSON.stringify(colA));
+  check("4 RE-POINTED (v361): tapping again on the re-rendered control collapses the row back to its natural collapsed height",
+    !!colA && !colA.expanded && Math.abs(colA.introH - collapsedH) <= 1 && colA.btnAria === "false", JSON.stringify(colA));
   feedState.audioDelayMs = {};
 
+  // LEG 8 RETIRED at v361 (see the header disposition): the
+  // compacted combined-row chrome was the combined row's own
+  // contract. Premise check in its place: no panel chrome
+  // stands anywhere, and the intention row's play button is
+  // the standard 42px form.
   const chrome8 = await pageA.evaluate(() => {
-    const c = document.querySelector('[data-card="daily-rosary"]');
-    if (!c) return null;
-    const cs = getComputedStyle(c);
-    const panel = c.querySelector(".intention-panel");
-    const label = c.querySelector(".intention-label");
-    const text = c.querySelector(".intention-text");
-    const title = c.querySelector("h3");
-    const playMain = c.querySelector(".row").children[1];
-    const playPanel = c.querySelector(".playbtn.small");
+    const intro = document.querySelector('[data-card="intro:daily-rosary"]');
+    const pb = intro ? intro.querySelector(".playbtn") : null;
     return {
-      padTop: cs.paddingTop, padBottom: cs.paddingBottom,
-      panelPR: panel ? getComputedStyle(panel).paddingRight : null,
-      labelMB: label ? getComputedStyle(label).marginBottom : null,
-      textMB: text ? getComputedStyle(text).marginBottom : null,
-      labelFont: label ? getComputedStyle(label).fontSize : null,
-      textFont: text ? getComputedStyle(text).fontSize : null,
-      titleFont: title ? getComputedStyle(title).fontSize : null,
-      mainBtn: playMain ? [playMain.offsetWidth, playMain.offsetHeight] : null,
-      panelBtn: playPanel ? [playPanel.offsetWidth, playPanel.offsetHeight] : null,
+      panels: document.querySelectorAll(".intention-panel, .intention-label, .panel-foot").length,
+      smallBtns: document.querySelectorAll(".playbtn.small").length,
+      introBtn: pb ? [pb.offsetWidth, pb.offsetHeight] : null,
     };
   });
-  check("8 compact chrome on a combined row (padding 9 · panel 8 · margins 2/6 · fonts 13/14/17 · buttons 42/30)",
-    !!chrome8 && chrome8.padTop === "9px" && chrome8.padBottom === "9px" && chrome8.panelPR === "8px" &&
-    chrome8.labelMB === "2px" && chrome8.textMB === "6px" && chrome8.labelFont === "13px" && chrome8.textFont === "14px" &&
-    chrome8.titleFont === "17px" && JSON.stringify(chrome8.mainBtn) === "[42,42]" && JSON.stringify(chrome8.panelBtn) === "[30,30]",
+  check("8 RETIRED (v361): no combined-row chrome stands (no panel, label, or panel-foot; no small playbtn) and the intention row's button is the standard 42px",
+    !!chrome8 && chrome8.panels === 0 && chrome8.smallBtns === 0 && JSON.stringify(chrome8.introBtn) === "[42,42]",
     JSON.stringify(chrome8));
 
-  // Leg 10: the panel's own play button starts its intro descriptor.
-  await pageA.click('[data-card="morning-prayer"] [data-playkey="intro:morning-prayer"]');
+  // Leg 10 RE-POINTED (v361): the intention row's own play
+  // button starts its intro descriptor.
+  await pageA.click('[data-card="intro:morning-prayer"] [data-playkey="intro:morning-prayer"]');
   await pageA.waitForFunction(() => window.state.current && window.state.current.episodeId === "intro:morning-prayer", null, { timeout: 10000 }).catch(() => {});
   const cur10 = await pageA.evaluate(() => window.state.current && window.state.current.episodeId);
-  check("10 the panel play button on a combined row starts its intro descriptor (treatment A behavior preserved)",
+  check("10 RE-POINTED (v361): the intention row's play button starts its intro descriptor (treatment A behavior preserved in the new form)",
     cur10 === "intro:morning-prayer", `current=${cur10}`);
 
-  // Leg 7: settled external panel — text equals the drawn text,
-  // its play button stands and resolves a descriptor on click.
+  // Leg 7 RE-POINTED (v361): settled external pair — the
+  // intention row's text equals the drawn text, its play
+  // button stands and resolves a descriptor on click.
   const invA = await cardInfo(pageA, "ext-invitatory");
-  check("7 the settled courier card's panel text equals that slot's drawn intention text",
+  check("7 RE-POINTED (v361): the settled courier pair's intention-row text equals that slot's drawn intention text",
     !!invA && invA.panel && invA.panelText === EXPECTED_TEXT["ext-invitatory"], JSON.stringify(invA));
-  await pageA.click('[data-card="ext-invitatory"] [data-playkey="intro:ext-invitatory"]');
+  await pageA.click('[data-card="intro:ext-invitatory"] [data-playkey="intro:ext-invitatory"]');
   await pageA.waitForFunction(() => window.state.current && window.state.current.episodeId === "intro:ext-invitatory", null, { timeout: 10000 }).catch(() => {});
   const cur7 = await pageA.evaluate(() => window.state.current && window.state.current.episodeId);
-  check("7 the settled external panel's play button resolves its intro descriptor on click",
+  check("7 RE-POINTED (v361): the settled external intention row's play button resolves its intro descriptor on click",
     cur7 === "intro:ext-invitatory", `current=${cur7}`);
 
 
@@ -612,14 +674,15 @@ async function main() {
   await pageA.reload({ waitUntil: "load" });
   await waitOwnSettled(pageA);
   await waitExtSettled(pageA);
+  await pageA.evaluate(() => window.openBlockPage("Morning"));
   await waitPanel(pageA, "ext-invitatory");
   await waitPanel(pageA, "ext-bible-in-a-year");
   const inv6 = await cardInfo(pageA, "ext-invitatory");
   const biay6 = await cardInfo(pageA, "ext-bible-in-a-year");
   const doM6 = await cardInfo(pageA, "ext-morning-prayer");
-  check("6 cache-valid open: settled external cards render WITH their panels (courier slots included)",
+  check("6 RE-POINTED (v361): cache-valid open: settled external cards render WITH their intention rows (courier slots included)",
     !!inv6 && inv6.panel && !!biay6 && biay6.panel, JSON.stringify({ inv: inv6 && inv6.panel, biay: biay6 && biay6.panel }));
-  check("6 the DO pair's second slot stands present and panel-free (its block's intention is keyed to the Invitatory row)",
+  check("6 RE-POINTED (v361): the DO pair's second slot stands present with NO intention row (its block's intention is keyed to the Invitatory row)",
     !!doM6 && !doM6.panel && !doM6.notavail, JSON.stringify(doM6));
   await pageA.close(); await ctxA.close();
 
@@ -635,11 +698,16 @@ async function main() {
   const ctxB = await newCtx();
   const pageB = await ctxB.newPage();
   await pageB.goto(BASE + "/", { waitUntil: "load" });
+  // v361 navigation: the ext cards stand on the Morning page —
+  // open it as soon as the day stands (the precondition poll
+  // below reads the standing cards).
+  await pageB.waitForFunction(() => !!window.state.dayPayload, null, { timeout: 20000 }).catch(() => {});
+  await pageB.evaluate(() => window.openBlockPage("Morning")).catch(() => {});
   let preB = null;
   for (let i = 0; i < 18; i++) {
     const s = await pageB.evaluate(() => {
       const st = window.state || {};
-      const panelOf = (id) => { const c = document.querySelector('[data-card="' + id + '"]'); return c ? !!c.querySelector(".intention-panel") : null; };
+      const panelOf = (id) => { const c = document.querySelector('[data-card="' + id + '"]'); return c ? !!document.querySelector('[data-card="intro:' + id + '"]') : null; };
       return {
         inv: st.extSlots && st.extSlots["ext-invitatory"] && st.extSlots["ext-invitatory"].state,
         biay: st.extSlots && st.extSlots["ext-bible-in-a-year"] && st.extSlots["ext-bible-in-a-year"].state,
@@ -650,7 +718,7 @@ async function main() {
     if (s && s.inv === "present" && s.biay === "present" && s.intros === 0 && s.invPanel === false && s.biayPanel === false) { preB = s; break; }
     await sleep(250);
   }
-  check("5 precondition: with intentions delayed, the settled courier + direct cards stand panel-free (the defect shape)",
+  check("5 RE-POINTED (v361): precondition: with intentions delayed, the settled courier + direct cards stand WITHOUT intention rows (the defect shape)",
     !!preB, JSON.stringify(preB));
   await pageB.evaluate(() => { window.__leg5session = "same-session"; });
   await waitPanel(pageB, "ext-invitatory");
@@ -660,9 +728,9 @@ async function main() {
     biay: await cardInfo(pageB, "ext-bible-in-a-year"),
     session: await pageB.evaluate(() => window.__leg5session),
   };
-  check("5 the settled courier card gains its panel in the same session when the intro lands, no reopen",
+  check("5 RE-POINTED (v361): the settled courier card gains its intention row in the same session when the intro lands, no reopen",
     !!postB.inv && postB.inv.panel && postB.session === "same-session", JSON.stringify(postB.inv));
-  check("5 the settled client-direct card gains its panel in the same session too",
+  check("5 RE-POINTED (v361): the settled client-direct card gains its intention row in the same session too",
     !!postB.biay && postB.biay.panel, JSON.stringify(postB.biay));
   siteState.intentionsDelayMs = 0;
   await pageB.close(); await ctxB.close();
@@ -675,11 +743,16 @@ async function main() {
   await pageD.goto(BASE + "/", { waitUntil: "load" });
   await waitOwnSettled(pageD);
   await waitExtSettled(pageD);
+  // v361 navigation: each card stands on its own block page.
+  await pageD.evaluate(() => window.openBlockPage("Night"));
+  await sleep(300);
   const reflD = await cardInfo(pageD, "daily-reflection");
+  await pageD.evaluate(() => window.openBlockPage("Afternoon"));
+  await sleep(300);
   const auxD = await cardInfo(pageD, "auxilium-christianorum");
-  check("9 a no-intro own card keeps its standing shape (no intro-row class, no panel, no fixed height)",
+  check("9 RE-POINTED (v361): a no-intro own card keeps its standing shape (no combined class, no intention row before it, no fixed height)",
     !!reflD && !reflD.introRow && !reflD.panel && reflD.h !== 136, JSON.stringify(reflD));
-  check("9 an unavailable card keeps its standing shape (no intro-row class, no fixed height)",
+  check("9 RE-POINTED (v361): an unavailable card keeps its standing shape (no combined class, no fixed height)",
     !!auxD && !auxD.introRow && auxD.notavail && auxD.h !== 136, JSON.stringify(auxD));
   siteState.podcast = PODCAST_MAIN;
   siteState.intentions = INTENTIONS_MAIN;

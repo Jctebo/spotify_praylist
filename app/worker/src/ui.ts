@@ -123,25 +123,22 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .spot { display:inline-block; margin-top:5px; font-size:14px; color:var(--accent); }
 .notavail { font-size:14px; color:#8a4b2a; margin-top:4px; }
 .readtext { font-size:17px; line-height:1.7; white-space:pre-wrap; margin-top:10px; }
-/* Modular intentions (v338): the combined row — intention panel
-   FIRST at ~25%, hairline divider on its right, subordinate type in
-   the .meta tone, no gold, no nested card. */
-/* Uniform intention rows (v343): every combined row stands at one
-   fixed height — 136px, measured on the real DOM at Plan (the
-   two-line-title novena shape governs the family maximum) — with
-   the compacted chrome below. The intention text caps at two
-   lines; overflow sits behind the panel-side ellipsis (⋯), which
+/* Intention rows (v361, replacing the v338 combined row and
+   v343's uniform 136px form): the intention intro stands as its
+   OWN standard .card — no fixed height anywhere in the form;
+   every row stands at its natural content height. The intention
+   text stands as the row's second line under the standing
+   two-line clamp; overflow sits behind the ellipsis (⋯), which
    stands only when the text is actually clamped (armed by
-   measurement in the client). An expanded row grows in place. */
-.card.intro-row { padding:9px 14px; height:136px; overflow:hidden; }
-.intro-row .intention-panel { flex:0 0 25%; border-right:1px solid var(--line); padding-right:8px; font-size:14px; color:#6d6353; }
-.intention-label { font-size:13px; letter-spacing:1px; text-transform:uppercase; margin-bottom:2px; }
+   measurement in the client). An expanded row's text unclamps
+   in place. Retired with the combined row (v361 §2.6): the
+   136px .card.intro-row rule, the 25% .intention-panel rule,
+   .intention-label, .panel-foot, and the combined expanded
+   rules. */
 .intention-text { line-height:1.4; margin-bottom:6px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-.panel-foot { display:flex; align-items:center; gap:6px; }
 .ellipsis-btn { display:none; background:none; border:none; font-family:inherit; font-size:14px; line-height:1; color:#6d6353; cursor:pointer; padding:4px 2px; }
 .ellipsis-btn.stands { display:inline-block; }
-.card.intro-row.expanded { height:auto; overflow:visible; }
-.card.intro-row.expanded .intention-text { display:block; -webkit-line-clamp:none; overflow:visible; }
+.card.intention-row.expanded .intention-text { display:block; -webkit-line-clamp:none; overflow:visible; }
 .playbtn.small { width:30px; height:30px; font-size:12px; }
 .chips { display:flex; flex-wrap:wrap; gap:6px; margin:0 0 12px; }
 .chip { font-family:inherit; font-size:14px; padding:6px 11px; border-radius:20px; border:1px solid var(--line); background:#fff; cursor:pointer; }
@@ -236,8 +233,9 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
    Library list language, and the shared section header. Gradient
    surfaces read the --bar-* set (v352 §2.7's token contract);
    accents read --accent/--accent-ink; body/cream/ink are never
-   themed. The combined-row family (.card.intro-row) is EXEMPT
-   from every geometry change here (v343's 136px is a contract). */
+   themed. (The combined-row exemption that stood here lapsed
+   at v361: the combined row retired, and intention rows are
+   ordinary standard cards under the geometry that stands.) */
 .sectionhead { font-size:16px; letter-spacing:1.5px; color:var(--navy); font-weight:normal; text-transform:uppercase; margin:18px 0 8px; border-bottom:2px solid var(--accent); padding-bottom:4px; }
 .blockgrid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 10px; }
 .blockcard { position:relative; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; cursor:pointer; }
@@ -283,7 +281,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v358-1";
+var CACHE = "ora-pro-nobis-v361-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

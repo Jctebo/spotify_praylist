@@ -122,3 +122,69 @@
 ### 2.9 Sequencing
 
 - Implement (one seat, clean worktree off trunk) → Review after trunk landing (presentation-only, no data/auth surface) → Ship. The v359 Android item and the thumbnails idea are independent and untouched by this line.
+
+## 3 · Implement
+
+- **Seat:** Implement record 1300 · contract 200 (ASAP, hard deadline 2026-11-10T23:42:27Z) · clean worktree `release/v361` off trunk 05b76e4 · **NO migration** (0016 stays free) · SW pin `ora-pro-nobis-v361-1` as §2.6 expected.
+
+### 3.1 Design as built (§2 against the code)
+
+- **§2.1 title helper:** `prayerIntentionTitle(t, intro)` stands as pinned — `"Prayer Intention: " + name`, fallback `t.title` → `intro.title` → bare `"Prayer Intention"`. The queue form `prayerIntentionTitleForDesc(desc)` resolves the prayer descriptor from `state.dayDescs` by the stripped `intro:` id and applies the same chain.
+- **§2.2 the intention row:** `intentionRowCard(t, intro)` — `<div class="card intention-row" data-card="intro:<episodeId>">`, the STANDARD `.playbtn` (42px, not the panel's small variant) with `data-playkey="intro:<episodeId>"`, the helper's `<h3>`, the standing `.intention-text` as the second line, the `.ellipsis-btn` after it. No played dot, no label line, no Read control, no Spotify link.
+- **§2.3 the seam:** `trackCard` returns `intentionRowCard(t, intro) + <plain prayer card>` when an intro stands for an available track; byte-identical plain return when none stands. `wrap()` lost its intro branch (always the plain card, `playedDotHtml` last). `intentionPanelHtml` is **deleted** — no live reference stands anywhere in the served build (grep-clean except historical comments). Unavailable branches unchanged; search hits remain prayer descriptors, rendered as the pair through the seam.
+- **§2.4 swap paths:** `ownSwapRow` unchanged in construction (its per-node `data-own-row` stamping already carries the pair). `extSwapCard` takes ALL fragment children, inserts them in order at the old card's position, and wires each inserted node.
+- **§2.5 queue title:** `renderQueueList`'s intro branch titles via the descriptor helper; the `Intention — ` prefix rule is retired. The `npq-intro` class and the no-dot rule stand.
+- **§2.6 CSS:** retired exactly as listed (136px rule · panel flex · `.intention-label` · `.panel-foot` · the old combined expanded rule); `.intention-text`'s clamp declarations unchanged; the expanded rule re-scoped to `.card.intention-row.expanded .intention-text`; the v353 exemption comment updated (the exemption has lapsed). No fixed row height stands anywhere in the new form.
+
+### 3.2 Build deltas beyond §2's letter (named for Review — the same rule, applied where §2 did not enumerate)
+
+1. **`extSwapCard` removes the standing pair atomically.** §2.4's "the pair replaces atomically" needed one mechanism §2 did not spell out: on a REPEATED swap, the old prayer card's immediately preceding sibling is this slot's standing intention row (`data-card="intro:<slotId>"`) and is removed with the old card. The first build lacked it, and harness-v361 L6b caught the defect live: the settle swap followed by `ownBuildIntentions`' completion-leg swap stranded the first intention row, leaving TWO intention rows before one prayer card. With the removal, L6b's "exactly ONE intention row … however many swaps run" stands green.
+2. **The fragment rule at two further `firstChild` consumers.** §2.3's "zero caller changes" holds for the string-join callers; two paths consume `trackCard(extSlotTrack(...))` through `tmp.firstChild` and would have stranded the pair's prayer card inside the fragment: `blockInsertCards`' external branch and `appendBlockSettingsCards`' external branch now take all fragment children, exactly as `extSwapCard` does.
+3. **`ownBuildIntentions` completion-leg guard re-point.** Its "does the pair already stand" test read `.intention-panel` inside the prayer card; it now tests whether the prayer card's immediately preceding sibling carries `.intention-row`. Same completion rule, new form — without it the leg re-swapped every settled slot (the duplicate-row pressure delta 1 then had to absorb).
+- **`.playbtn.small` CSS stands unused.** Its only consumer was the deleted panel button; §2.6's retire list did not name the rule, so it was left standing and is named here rather than silently kept or silently removed.
+
+### 3.3 Harness-v361 — candidate 39/39 · pristine 17/39 (complete logs)
+
+- **Candidate:** `harness-v361-implement.log` — **39/39 ok, exit 0.** Every L1–L10 leg green, including L6b's repeated-swap atomicity and L10's no-drift reads.
+- **Pristine** (pre-v361 tree, `harness-v361-pristine.log`): **17/39 ok, exit 1** — and the split is §2.8's prediction exactly: **L1 FAIL · L2 FAIL (all three) · L6 FAIL (both swap legs ride the form) · L8 intro-title FAIL** (the old prefix stands) while L8's prayer-row clause passes · **L4 PASS · L5 PASS (both) · L10 PASS (all three)** — the behavior pre-exists the form. L3, L7, L9 FAIL on pristine as form legs (§2.8 made no prediction for them; they assert the row that does not exist pre-v361). L6's precondition passes on both trees (form-neutral). The harness tests the form, not the behavior — proven by the split.
+
+### 3.4 Standing families (complete-log tallies, every delta attributed)
+
+- **harness-v343 — 29 passed, 0 failed** under §3.5's dispositions.
+- **harness-v353 — 45/46.** Every v361-owned leg green (pin re-point · L3 pair legs · L5 intention-row tap). The sole failure is a harness EXCEPTION in L10's second leg (toggle + move + Save): the leg keys its second toggle off the FIRST `.setrow`'s `data-setkey`, and since v358 the Settings list opens with the Playback section's Autoplay row, which carries no `data-setkey` — a **v358-era premise rot on a surface this diff does not touch** (the settings rendering is byte-identical in this build; the crash is in the harness's selector, not the app). The exception aborts the family before L11/L12 execute: L11's behavior is gated by harness-v361 L7 (search renders the pair, 39/39) and L12's floors/contrast surface is the `ui.ts` diff itself (only §2.6's rules changed). Named here, not repaired — the repair belongs to the harness-modernization family.
+- **harness-v354 — 18/21 candidate = 18/21 pristine, identical failing set** (its SW-pin leg · L3 played dots read against a bare-id seed · the `#continue-queue` timeout riding the same seed). **Zero v361 delta**, proven by the pristine run: the seed premise was superseded by v360's occurrence keying (changeover A — a bare Antiphon mark reads unplayed everywhere), a named harness-modernization item.
+- **harness-v360 — 25/26.** Sole failure: its SW-pin leg (`v360-1` → the standing `v361-1`) — the expected per-release delta. Every occurrence-keying leg green on the new form.
+- **harness-v347 — 17/19 candidate = 17/19 pristine, identical failures with identical detail values** (L7's fully-played fallback read against a bare-id seed — the same v360 seeding rot as v354 · its SW-pin leg). **Zero v361 delta**, including at §2.5's queue-title seam: no v347 leg asserts the retired prefix.
+- **harness-v355 (spot) — 20/29**, the identical failing set v358's record already stands for it (the v360 v2-snapshot legs L1a/L9a · the flat-paint tap-premise legs L1b/L3/L7 · the pin leg · L6b's chaining premise, superseded by v358's approved Decision 1). Zero v361 delta.
+- **harness-v358 (spot) — 14/15.** Sole failure: its SW-pin leg.
+
+### 3.5 harness-v343 — per-leg dispositions (per §2.8's judgment rule; all stand in-file)
+
+- **Leg 1 — STANDS** unchanged (fixture integrity, form-independent).
+- **Leg 2 — RETIRED.** The 136px uniform height + clip guard was the combined row's contract. Replaced in-file by premise checks: no `.card.intro-row` stands, and intention rows stand at natural heights (max > min across the page's rows).
+- **Leg 3 — RE-POINTED** to the intention row (long text arms the ellipsis · short texts stand none). Fixture note stands in-file: the texts were calibrated at panel width; at row width T_EXACT2 reads short — the row-width exact-two-line case is harness-v361 L3's, with its own calibration.
+- **Leg 4 — RE-POINTED** (expand grows the row, collapse restores it, sibling rows keep their heights, the expansion survives the own settle re-render) — relative heights replace the 136px assertions.
+- **Leg 5 — RE-POINTED** (the completion leg: the intention row — formerly "the panel" — gains in-session when the intros land).
+- **Leg 6 — RE-POINTED** (cache-valid open renders intention rows; the DO second slot stands with none).
+- **Leg 7 — RE-POINTED** (own settle: the intention row's text and play button).
+- **Leg 8 — RETIRED.** The compact combined-row chrome was the combined row's contract. Replaced by a premise check: no `.intention-panel`, `.intention-label`, `.panel-foot`, or `.playbtn.small` stands in the rendered page, and the intention row's button measures the standard 42px.
+- **Leg 9 — RE-POINTED in wording** (the no-intro and unavailable shapes are unchanged; no intention row stands before a no-intro card).
+- **Leg 10 — RE-POINTED** (external settle: the pair starts from the intention row's own play button).
+- **Leg 11 — RE-POINTED** (SW pin `ora-pro-nobis-v361-1`; the construction seams, `intentionRowCard` among them).
+- **Navigation (same pass, named):** the file predates v353's DOM narrowing — its legs read the flat all-blocks paint, which no longer exists. The legs now open the block page their rows stand on (Morning for Opens A/B · Night + Afternoon for leg 9), and the row-count thresholds follow the page (5 intention rows stand on Morning), not the old flat paint. Without this the re-pointed legs could not execute at all.
+
+### 3.6 harness-v353 — dispositions under the same rule
+
+- SW-pin leg **RE-POINTED** to `ora-pro-nobis-v361-1`.
+- L3's 136px/panel-geometry leg **RETIRED**, replaced by the pair-structure premise (intention row immediately before its prayer card · no panel stands · the row carries its own play button).
+- L3's cap/ellipsis and dot legs **RE-POINTED** (clamp + ellipsis read on the intention row; the dot read on the prayer card); L3's expand leg **RE-POINTED** to the row.
+- L5's panel-button leg **RE-POINTED** to the intention row's own play button (the tap now addresses the intro card, where the button stands).
+- L11's combined-row count **RE-POINTED** to `.card.intention-row` — text-level only in this pass: §3.4's L10 exception aborts the family before L11 executes, so this leg's execution evidence is harness-v361 L7's, stated plainly.
+- Non-intro rows remain byte-identical, as §2.8 scoped the supersession — v353's remaining legs (home, block pages, mini-player, preview, PIN seam, Settings list form) all pass against them.
+
+### 3.7 Deviations from §2 — summary
+
+- No design deviation: §2.1–§2.6's form, titles, fallbacks, and behavior stand as designed, and §2.7's no-disturbance list is untouched (the diff is `client.ts`'s row seam + swap/insert paths + queue title, and `ui.ts`'s §2.6 rules + pin).
+- The three §3.2 build deltas (repeated-swap atomicity · two more fragment consumers · the completion-guard re-point) are §2's own rules carried to the call sites §2 did not enumerate; each is harness-proven above.
+- `.playbtn.small` left standing as unused CSS (§3.2), against a silent removal.
+- **NOT deployed.** Ship is a later phase; production still stands at v358's Worker 1e1ef845.
