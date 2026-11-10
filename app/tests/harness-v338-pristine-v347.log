@@ -1,0 +1,6 @@
+ok - setup: main app boots
+ok - setup: the day's draw stands
+ok - setup: draws stand for the paired items
+harness-v338 crashed: Error: intro push morning-prayer -> 404
+    at main (file:///home/hatch/workspace/.worktrees/v347-pristine/app/tests/harness-v338.mjs:258:53)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)

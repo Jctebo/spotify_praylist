@@ -1,0 +1,5 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - gate identity: port 8971 is free before spawn (no foreign instance answers)
+ok 3 - app up on local wrangler (LOCAL_DEV harness mode)
+HARNESS ERROR: segment push 2027-03-05/Morning -> 404
+# harness-v326: 3 checks, 1 FAIL
