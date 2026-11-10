@@ -232,6 +232,18 @@ async function prayerAudioMap(env: Env): Promise<Map<string, { size: number }>> 
   const r = await env.DB.prepare("SELECT block, size_bytes FROM prayer_audio WHERE date='current'").all<{ block: string; size_bytes: number }>();
   return new Map((r.results ?? []).map((row) => [row.block, { size: row.size_bytes }]));
 }
+// v352 §2.4: the liturgical day record for one date — the
+// OFFICIAL day's name + color as the devotional job pushed it
+// (§2.1's pin: the app displays verbatim and derives nothing).
+// No row stands = no push happened for that date = null, and the
+// client falls back to the plain date label.
+async function liturgicalDayFor(env: Env, date: string) {
+  const row = await env.DB.prepare(
+    "SELECT day_name, color FROM prayer_liturgical_days WHERE date=?",
+  ).bind(date).first<{ day_name: string; color: string }>();
+  return row ? { name: row.day_name, color: row.color } : null;
+}
+
 // The day payload: field-identical in shape to the board module's
 // (the midnight job repoints by door target only), plus this app's
 // own audio record per block (v335's standing segment fact).
@@ -276,6 +288,7 @@ async function prayerDayPayload(env: Env, date: string) {
     date,
     dateLabel: prayerDateLabel(date),
     addendum: addRow?.text ?? "",
+    liturgicalDay: await liturgicalDayFor(env, date),
     blocks,
     devotionCount: enabled.length,
     prayerCount: enabled.filter((i) => i.kind === "prayer").length,
@@ -430,6 +443,7 @@ async function playerDayPayload(env: Env) {
   });
   return {
     ok: true, date: presented, dateLabel: prayerDateLabel(presented), presentedDay: presented,
+    liturgicalDay: await liturgicalDayFor(env, presented),
     version: settings.version, introTexts, blocks,
   };
 }
@@ -907,6 +921,27 @@ export default {
           const draw = await prayerDrawForDate(env, date);
           return json({ ok: true, date, draws: draw.size });
         }
+      }
+      if (seg[2] === "prayer" && seg[3] === "liturgical-day" && request.method === "POST") {
+        // v352 §2.3: the devotional job's step-11 app push — the
+        // OFFICIAL liturgical day's name + color for one date
+        // (§2.1's pin is the job's derivation; the app stores
+        // verbatim). The addenda upsert idiom; a re-push of the
+        // same date overwrites (a corrected calendar heals the
+        // day). Blue is refused here even if a caller sends it —
+        // the accepted set is step 11's: white/red/green/violet/rose.
+        const body = await request.json().catch(() => ({})) as { date?: string; dayName?: string; color?: string };
+        const date = String(body.date ?? "");
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return err(400, "date must be YYYY-MM-DD");
+        const dayName = typeof body.dayName === "string" ? body.dayName.trim() : "";
+        if (dayName.length < 1 || dayName.length > 160) return err(400, "dayName must be 1-160 chars");
+        const color = String(body.color ?? "");
+        if (!["white", "red", "green", "violet", "rose"].includes(color)) return err(400, "color must be one of white, red, green, violet, rose");
+        await env.DB.prepare(
+          `INSERT INTO prayer_liturgical_days (date, day_name, color, pushed_at) VALUES (?, ?, ?, ?)
+           ON CONFLICT(date) DO UPDATE SET day_name = excluded.day_name, color = excluded.color, pushed_at = excluded.pushed_at`,
+        ).bind(date, dayName, color, nowISO()).run();
+        return json({ ok: true, date });
       }
       if (seg[2] === "prayer" && seg[3] === "intros" && request.method === "GET") {
         // v337 §2.7: the standing intro family's read-back — the

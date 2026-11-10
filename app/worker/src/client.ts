@@ -6,7 +6,30 @@ export const APP_JS = `
 'use strict';
 var view = document.getElementById('view');
 var audioEl = document.getElementById('audio');
-var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {}, playedCache: null, previewQueue: null, queuePreviewIdx: -1 };
+var state = { tab: 'intentions', examMode: 'quick', examCat: null, deepIdx: 0, playingUrl: null, queue: [], queueIdx: -1, current: null, storedDay: null, presentedDay: null, dateLabel: '', liturgical: null, pendingResume: null, sleep: { mode: 'off' }, readTracks: {}, dayDescs: [], dayPayload: null, expandedIntros: {}, playedCache: null, previewQueue: null, queuePreviewIdx: -1 };
+
+/* ---------------- Liturgical day (v352) ----------------
+   The brand bar carries the day's OFFICIAL liturgical name and
+   the day's color themes the app through the CSS token layer
+   (ui.ts §2.7: [data-lit] on <html> re-points --accent/--bar-*).
+   The name + color arrive on both day payloads as liturgicalDay
+   — pushed nightly by the devotional job (§2.1's pin: the job
+   derives from the Church observance ONLY; the app displays
+   verbatim and derives nothing). A null field is the missed-push
+   fallback: the header shows the payload's plain date label and
+   no theme attribute stands — never a guessed day or color. */
+function applyLiturgical(day) {
+  if (!day) return;
+  state.liturgical = day.liturgicalDay || null;
+  var el = document.getElementById('litday');
+  if (day.liturgicalDay) {
+    if (el) el.textContent = day.liturgicalDay.name;
+    document.documentElement.setAttribute('data-lit', day.liturgicalDay.color);
+  } else {
+    if (el) el.textContent = day.dateLabel || '';
+    document.documentElement.removeAttribute('data-lit');
+  }
+}
 
 /* ---------------- Playback speed (v336) ----------------
    One rate for the one audio element: a listener preference in
@@ -990,6 +1013,7 @@ function renderIntentions() {
   Promise.all([api('/api/prayer/intentions'), api('/api/prayer/day?date=' + today)]).then(function (res) {
     var intentions = res[0].intentions || [];
     var day = res[1] || {};
+    applyLiturgical(day);
     var active = intentions.filter(function (i) { return i.status === 'active'; });
     var retired = intentions.filter(function (i) { return i.status !== 'active'; });
     var cnt = { H: 0, M: 0, L: 0 }; active.forEach(function (i) { cnt[i.priority] = (cnt[i.priority] || 0) + 1; });
@@ -2748,6 +2772,7 @@ function renderPrayers() {
     state.presentedDay = day.presentedDay || day.date || null;
     state.playedCache = readPlayed();
     state.dateLabel = day.dateLabel || '';
+    applyLiturgical(day);
     // v338 §2.7(5): trackCard consults the day payload's intros map
     // from state, uniformly for both families.
     state.dayPayload = day;
