@@ -767,6 +767,29 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
     const row = prim.get(slot.slotId)!;
     return { slotId: slot.slotId, state: "missing", title: slot.title, streamUrl: null, durationSec: 0, sizeBytes: 0, block: row.block || EXTERNAL_SLOTS[slot.slotId], sortOrder: row.sort_order };
   };
+  // v348 §2.3(a): the Daily Gospel Exegesis leg joins the live
+  // payload through the Worker courier — started BEFORE the
+  // Divine Office fetch so route latency stays bounded by the
+  // slowest single leg. It uses only extFetchFeedItems (15 s
+  // server budget) + extMatchLatestByDate — the identical
+  // function the /externals/audio pass-through uses for this
+  // slot, so the live pick and the pass-through pick are the
+  // same pick by construction. Settings-gated like every courier
+  // slot: an absent/disabled/day-rule-failing row contributes
+  // NO entry. TITLE RULE (named deviation): the present entry
+  // carries the ITEM's title — the exegesis displays its episode
+  // title, unlike the courier class's fixed slot titles.
+  const exegesisP: Promise<unknown[]> = (async () => {
+    const row = prim.get("ext-gospel-exegesis");
+    if (!row || row.enabled !== 1 || !extDayRulePasses(row.day_rule || "daily", weekdayMon0)) return [];
+    try {
+      const it = extMatchLatestByDate(await extFetchFeedItems(env.EXT_DGE_FEED_URL || EXT_DGE_FEED_URL), y, mo, d);
+      if (!it) return [{ slotId: "ext-gospel-exegesis", state: "missing", title: "Daily Gospel Exegesis", streamUrl: null, durationSec: 0, sizeBytes: 0, block: row.block || EXTERNAL_SLOTS["ext-gospel-exegesis"], sortOrder: row.sort_order }];
+      return [{ slotId: "ext-gospel-exegesis", state: "present", title: it.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS["ext-gospel-exegesis"], sortOrder: row.sort_order }];
+    } catch {
+      return [{ slotId: "ext-gospel-exegesis", state: "missing", title: "Daily Gospel Exegesis", streamUrl: null, durationSec: 0, sizeBytes: 0, block: row.block || EXTERNAL_SLOTS["ext-gospel-exegesis"], sortOrder: row.sort_order }];
+    }
+  })();
   let items: ExtFeedItem[] | null = null;
   let error: string | undefined;
   try {
@@ -785,7 +808,7 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
   }
   if (!items) {
     const courierSlots = await extCourierSlotsPayload(env, prim, y, mo, d, weekdayMon0);
-    return { settingsVersion: settings.version, error, slots: [...standing.map(mkMissing), ...courierSlots] };
+    return { settingsVersion: settings.version, error, slots: [...standing.map(mkMissing), ...courierSlots, ...(await exegesisP)] };
   }
   const matches = extMatchDivineOffice(items, y, mo, d);
   const slots = standing.map((slot) => {
@@ -795,6 +818,7 @@ async function externalsLivePayload(env: Env, date: string): Promise<{ slots: un
     return { slotId: slot.slotId, state: "present", title: slot.title, streamUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, block: row.block || EXTERNAL_SLOTS[slot.slotId], sortOrder: row.sort_order };
   });
   slots.push(...(await extCourierSlotsPayload(env, prim, y, mo, d, weekdayMon0)) as typeof slots);
+  slots.push(...(await exegesisP) as typeof slots);
   return { settingsVersion: settings.version, slots };
 }
 

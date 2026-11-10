@@ -1465,7 +1465,7 @@ var EXT_SLOTS = [
   { slotId: 'ext-invitatory', title: 'Invitatory' },
   { slotId: 'ext-morning-prayer', title: 'Morning Prayer', fallbackToken: 'Lauds' },
   { slotId: 'ext-bible-in-a-year', title: null },
-  { slotId: 'ext-gospel-exegesis', title: 'Daily Gospel Exegesis', source: 'Logical Bible Study', feedUrl: 'https://anchor.fm/s/1025ef1c/podcast/rss', matcher: 'latest-by-release-date', download: 'passthrough' },
+  { slotId: 'ext-gospel-exegesis', title: 'Daily Gospel Exegesis', source: 'Logical Bible Study', feedUrl: 'https://anchor.fm/s/1025ef1c/podcast/rss', matcher: 'latest-by-release-date', download: 'passthrough', courier: true },
   { slotId: 'ext-midmorning-prayer', title: 'Midmorning Prayer' },
   { slotId: 'ext-midday-prayer', title: 'Midday Prayer' },
   { slotId: 'ext-saint-of-the-day', title: 'Saint of the Day', source: 'Good Catholic', feedUrl: 'https://rss.buzzsprout.com/2216056.rss', matcher: 'latest-by-release-date-title', download: 'direct-first' },
@@ -1734,41 +1734,76 @@ function extSwapCard(slot) {
   refreshPlayedChrome();
   if (state.current && state.current.episodeId === slot.slotId) markPlaying(slot.slotId);
 }
-function extInsertCards(day, standing) {
-  // Placeholders (or cached cards) stand after the block's own
-  // tracks, in settings sort order within the block. Block sections
-  // are flat siblings: blockhead, then its cards, then the next
-  // blockhead — insertion goes before the next blockhead (or before
-  // the unblocked heading / at the end).
+function blockInsertCards(day, standing) {
+  // v348 §2.1: ONE merged inserter replaces extInsertCards +
+  // ownInsertCards. Per block, own rows and external slots are
+  // merge-sorted by settings sortOrder ACROSS families (own
+  // entries built first, so a production-impossible tie resolves
+  // own-first by the runtime's stable sort) and inserted in that
+  // order against the next-blockhead anchor — the anchor
+  // extInsertCards used — so payload cards the shell already
+  // rendered (the block's Intentions segment) keep their standing
+  // place at the block's head, ahead of every settings row.
   var heads = view.querySelectorAll('.blockhead');
   (day.blocks || []).forEach(function (b, bi) {
-    var mine = standing.filter(function (s) { return s.block === b.block; })
-      .sort(function (a, c) { return (a.sortOrder || 0) - (c.sortOrder || 0); });
-    if (!mine.length || !heads[bi]) return;
+    if (!heads[bi]) return;
+    var entries = [];
+    (state.ownStanding || []).filter(function (r) { return r.block === b.block; })
+      .forEach(function (row) { entries.push({ sortOrder: row.sortOrder || 0, own: row }); });
+    standing.filter(function (sl) { return sl.block === b.block; })
+      .forEach(function (slot) { entries.push({ sortOrder: slot.sortOrder || 0, ext: slot }); });
+    if (!entries.length) return;
+    entries.sort(function (a, c) { return a.sortOrder - c.sortOrder; });
     var anchor = heads[bi + 1] || null;
     if (!anchor) {
       var h2s = view.querySelectorAll('h2');
       for (var i = 0; i < h2s.length; i++) { if (h2s[i].textContent.indexOf('FROM TODAY') === 0) { anchor = h2s[i]; break; } }
     }
-    mine.forEach(function (slot) {
-      var st = state.extSlots[slot.slotId];
-      var tmp = document.createElement('div');
-      tmp.innerHTML = st && st.state === 'present' ? trackCard(extSlotTrack(slot, st)) : extPlaceholderCard(slot);
-      var el = tmp.firstChild;
-      view.insertBefore(el, anchor);
-      // v338 §2.7(5): wire each play button by its own key (a
-      // combined-row card carries the panel's button too).
-      el.querySelectorAll('[data-playkey]').forEach(function (b) {
-        b.addEventListener('click', function () {
-          var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b.getAttribute('data-playkey'); })[0];
-          if (d) playTrack(d);
+    entries.forEach(function (e) {
+      if (e.own) {
+        var row = e.own;
+        var st = state.ownSlots[row.sourceKey];
+        var tmp = document.createElement('div');
+        tmp.innerHTML = st && st.state === 'present' ? st.tracks.map(function (m) { return trackCard(ownSlotTrack(row, m, day.presentedDay || day.date)); }).join('') : ownPlaceholderCard(row);
+        var nodes = [];
+        while (tmp.firstChild) nodes.push(tmp.removeChild(tmp.firstChild));
+        nodes.forEach(function (el) {
+          el.setAttribute('data-own-row', row.sourceKey);
+          view.insertBefore(el, anchor);
+          el.querySelectorAll('[data-playkey]').forEach(function (b2) {
+            b2.addEventListener('click', function () {
+              var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
+              if (d) playTrack(d);
+            });
+          });
+          el.querySelectorAll('[data-read]').forEach(function (b2) {
+            b2.addEventListener('click', function () {
+              var t = state.readTracks[b2.getAttribute('data-read')];
+              if (t) openRead(t);
+            });
+          });
+          wireExpand(el);
+          armEllipsis(el);
+          wirePlayed(el);
         });
-      });
-      // v343 §2.4: the insert path arms the ellipsis too.
-      wireExpand(el);
-      armEllipsis(el);
-      // v344: inserted cards wire their markers the same way.
-      wirePlayed(el);
+      } else {
+        var slot = e.ext;
+        var st2 = state.extSlots[slot.slotId];
+        var tmp2 = document.createElement('div');
+        tmp2.innerHTML = st2 && st2.state === 'present' ? trackCard(extSlotTrack(slot, st2)) : extPlaceholderCard(slot);
+        var el2 = tmp2.firstChild;
+        if (!el2) return;
+        view.insertBefore(el2, anchor);
+        el2.querySelectorAll('[data-playkey]').forEach(function (b2) {
+          b2.addEventListener('click', function () {
+            var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
+            if (d) playTrack(d);
+          });
+        });
+        wireExpand(el2);
+        armEllipsis(el2);
+        wirePlayed(el2);
+      }
     });
   });
   refreshPlayedChrome();
@@ -1785,14 +1820,25 @@ function extRebuildDescs(day) {
   var date = day.presentedDay || day.date;
   (day.blocks || []).forEach(function (b) {
     (b.tracks || []).forEach(function (t) { expandDescs(Object.assign({}, t, { _block: b.block }), day).forEach(function (d) { descs.push(d); }); });
-    // v342: the block's own tracks stand after any payload tracks
-    // and before its externals — settings order within the block
-    // (Antiphon follows its enabled rows only, §2.1 ruling 4). A
-    // settled-missing family emits its one named-missing
-    // descriptor; an unresolved row emits nothing yet.
+    // v342/v348: the block's settings rows stand after any payload
+    // tracks, merged across families in settings order (v348 §2.2).
+    // A settled-missing family emits its one named-missing
+    // descriptor at its sorted position; an unresolved row emits
+    // nothing yet.
+    // v348 §2.2: ONE merged settings list across families, sorted
+    // by the standing comparator — own entries built before
+    // external entries, so a (production-impossible) sortOrder tie
+    // resolves own-first by the runtime's stable sort. Per-entry
+    // emission is the standing behavior verbatim.
+    var merged = [];
     (state.ownStanding || []).filter(function (r) { return r.block === b.block; })
-      .sort(function (a, c) { return (a.sortOrder || 0) - (c.sortOrder || 0); })
-      .forEach(function (row) {
+      .forEach(function (row) { merged.push({ sortOrder: row.sortOrder || 0, own: row }); });
+    (state.extStanding || []).filter(function (s) { return s.block === b.block; })
+      .forEach(function (slot) { merged.push({ sortOrder: slot.sortOrder || 0, ext: slot }); });
+    merged.sort(function (a, c) { return a.sortOrder - c.sortOrder; });
+    merged.forEach(function (e) {
+      if (e.own) {
+        var row = e.own;
         var st = state.ownSlots[row.sourceKey];
         if (!st) return;
         if (st.state === 'present') {
@@ -1800,13 +1846,12 @@ function extRebuildDescs(day) {
         } else if (st.state === 'missing') {
           expandDescs(ownSlotTrack(row, { episodeId: row.episodeId, title: row.title, state: 'missing' }, date), day).forEach(function (d) { descs.push(d); });
         }
-      });
-    (state.extStanding || []).filter(function (s) { return s.block === b.block; })
-      .sort(function (a, c) { return (a.sortOrder || 0) - (c.sortOrder || 0); })
-      .forEach(function (slot) {
-        var st = state.extSlots[slot.slotId];
-        if (st) expandDescs(extSlotTrack(slot, st), day).forEach(function (d) { descs.push(d); });
-      });
+      } else {
+        var slot = e.ext;
+        var st2 = state.extSlots[slot.slotId];
+        if (st2) expandDescs(extSlotTrack(slot, st2), day).forEach(function (d) { descs.push(d); });
+      }
+    });
   });
   (day.episodes || []).forEach(function (t) { expandDescs(t, day).forEach(function (d) { descs.push(d); }); });
   state.dayDescs = descs;
@@ -1878,48 +1923,6 @@ function ownSlotTrack(row, meta, date) {
 }
 function ownPlaceholderCard(row) {
   return '<div class="card" data-card="' + esc(row.episodeId) + '"><h3>' + esc(row.title) + '</h3><div class="meta">Loading&hellip;</div></div>';
-}
-function ownInsertCards(day) {
-  var heads = view.querySelectorAll('.blockhead');
-  (day.blocks || []).forEach(function (b, bi) {
-    var mine = (state.ownStanding || []).filter(function (r) { return r.block === b.block; })
-      .sort(function (a, c) { return (a.sortOrder || 0) - (c.sortOrder || 0); });
-    if (!mine.length || !heads[bi]) return;
-    var ref = heads[bi].nextSibling;
-    mine.forEach(function (row) {
-      var st = state.ownSlots[row.sourceKey];
-      var tmp = document.createElement('div');
-      tmp.innerHTML = st && st.state === 'present' ? st.tracks.map(function (m) { return trackCard(ownSlotTrack(row, m, day.presentedDay || day.date)); }).join('') : ownPlaceholderCard(row);
-      // Insert the row's cards as a run, in order, before ref.
-      // Each card carries its ROW's identity (data-own-row): the
-      // Antiphon's three placements share one episode id, and a
-      // swap must replace only its own row's cards.
-      var nodes = [];
-      while (tmp.firstChild) nodes.push(tmp.removeChild(tmp.firstChild));
-      nodes.forEach(function (el) {
-        el.setAttribute('data-own-row', row.sourceKey);
-        view.insertBefore(el, ref);
-        el.querySelectorAll('[data-playkey]').forEach(function (b2) {
-          b2.addEventListener('click', function () {
-            var d = (state.dayDescs || []).filter(function (x) { return x.episodeId === b2.getAttribute('data-playkey'); })[0];
-            if (d) playTrack(d);
-          });
-        });
-        el.querySelectorAll('[data-read]').forEach(function (b2) {
-          b2.addEventListener('click', function () {
-            var t = state.readTracks[b2.getAttribute('data-read')];
-            if (t) openRead(t);
-          });
-        });
-        // v343 §2.4: the own insert path arms the ellipsis too.
-        wireExpand(el);
-        armEllipsis(el);
-        // v344: inserted own cards wire their markers too.
-        wirePlayed(el);
-      });
-    });
-  });
-  refreshPlayedChrome();
 }
 function ownSwapRow(row, day) {
   // Selection is by the row's own identity (data-own-row), never
@@ -2407,8 +2410,7 @@ function resolveExternals(day) {
         state.extSlots[slot.slotId] = { state: 'loading', title: slot.title || 'Bible in a Year' };
       }
     });
-    extInsertCards(day, standing);
-    ownInsertCards(day);
+    blockInsertCards(day, standing);
     updateBlockCounts(day);
     extRebuildDescs(day);
     var writeCache = function () {
@@ -2466,7 +2468,7 @@ function resolveExternals(day) {
       // CORS header) downloads ONLY through the Worker; every other
       // slot keeps the A1 two-route shape (direct first unless the
       // source is Sing the Hours, whose host forbids the read).
-      var routes = slot.download === 'passthrough' ? [passthrough]
+      var routes = slot.download === 'passthrough' ? [passthrough, passthrough]
         : (meta.source === 'Sing the Hours' ? [passthrough, meta.enclosureUrl] : [meta.enclosureUrl, passthrough]);
       var tryRoute = function (u) {
         return fetch(u).then(function (r) {
@@ -2574,7 +2576,6 @@ function resolveExternals(day) {
     // settle rules; each slot's own source labels its settle.
     var courierSlots = standing.filter(function (s) { return !!EXT_TOKENS[s.slotId] || !!s.courier; });
     var bibleSlot = standing.filter(function (s) { return s.slotId === 'ext-bible-in-a-year'; })[0];
-    var exegesisSlot = standing.filter(function (s) { return s.slotId === 'ext-gospel-exegesis'; })[0];
     var saintSlot = standing.filter(function (s) { return s.slotId === 'ext-saint-of-the-day'; })[0];
     var tvMassSlot = standing.filter(function (s) { return s.slotId === 'ext-daily-tv-mass'; })[0];
     // Courier leg (Divine Office + the v339 courier class) — only
@@ -2615,19 +2616,6 @@ function resolveExternals(day) {
         if (m.item) settleMeta(bibleSlot, { title: extBibleTitle(m.item, m.dayN), enclosureUrl: m.item.url, durationSec: m.item.durationS, sizeBytes: m.item.length, source: 'Bible in a Year' });
         else settle(bibleSlot, { state: 'missing', title: extBibleTitle(null, m.dayN), source: 'Bible in a Year' });
       }).catch(function () { settle(bibleSlot, { state: 'missing', title: extBibleTitle(null, extMatchBibleDayN(date)), source: 'Bible in a Year' }); });
-    }
-    // Gospel Exegesis direct leg (v337 §2.8): the Anchor feed is
-    // client-readable (ACAO *); the pick is latest-by-release-date
-    // against the presented date; the download runs through the
-    // Worker pass-through only (the slot's download pin, applied
-    // in extDownload — the enclosure chain's final hop sends no
-    // CORS header).
-    if (exegesisSlot && uncached(exegesisSlot)) {
-      extFetchText(exegesisSlot.feedUrl).then(function (text) {
-        var it = extMatchLatestByDate(extParseFeed(text), date);
-        if (it) settleMeta(exegesisSlot, { title: it.title || exegesisSlot.title, enclosureUrl: it.url, durationSec: it.durationS, sizeBytes: it.length, source: exegesisSlot.source });
-        else settle(exegesisSlot, { state: 'missing', title: exegesisSlot.title, source: exegesisSlot.source });
-      }).catch(function () { settle(exegesisSlot, { state: 'missing', title: exegesisSlot.title, source: exegesisSlot.source }); });
     }
     // Saint of the Day direct leg (v337 §2.8): the Buzzsprout feed
     // is client-readable; latest-by-release-date with the MM/DD
