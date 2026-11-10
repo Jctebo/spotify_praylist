@@ -106,14 +106,20 @@ function logo512(): Uint8Array {
 // date (High=4, Medium=2, Low=1, persisted, fill-missing only),
 // per-day completions (data only in this app — no behavior is built
 // on them), and the day addendum.
-const PRAYER_BLOCKS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night", "Mass and Homilies"] as const;
+const PRAYER_BLOCKS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night", "Mass and Homilies", "Novenas"] as const;
 const PRAYER_BLOCK_START: Record<string, number> = {
   // v339: "Mass and Homilies" carries no hour of its own — it is
   // the day's closing listening block, not a time-of-day office.
   // 24 keeps it out of the current-block derivation entirely (the
   // ?? 0 fallback would have made it "current" at every hour, as
   // the last block in iteration order).
-  Morning: 0, Midmorning: 9, Midday: 12, Afternoon: 15, Evening: 18, Night: 21, "Mass and Homilies": 24,
+  // v349: "Novenas" stands LAST in the list (John's decision) but
+  // its prayer window is Midmorning's — start 9 makes the block
+  // DUE from 9 AM (a 24 would read it not-due all day, a regression
+  // against its life inside Midmorning). The current-block
+  // derivation below is start-based, not order-based, so a
+  // last-position block with start 9 can never hijack "current".
+  Morning: 0, Midmorning: 9, Midday: 12, Afternoon: 15, Evening: 18, Night: 21, "Mass and Homilies": 24, Novenas: 9,
 };
 const PRAYLIST_URL: Record<string, string> = {
   Morning: "https://open.spotify.com/playlist/0sy9eBsySKuCppI0PxXRJN",
@@ -122,12 +128,19 @@ const PRAYLIST_URL: Record<string, string> = {
   Afternoon: "https://open.spotify.com/playlist/7cyrM9f9LXEfmoqwZvUaXW",
   Evening: "https://open.spotify.com/playlist/6HNvFLWRShih7lgtwHTqXU",
   Night: "https://open.spotify.com/playlist/1TAlNiKHMc41cT0fvkYxTD",
+  // v349: the Novenas Praylist (created 2026-11-10; Mass and
+  // Homilies carries no Praylist and stands absent here, as before).
+  Novenas: "https://open.spotify.com/playlist/2hclGC0JlP4tC51uohete6",
 };
 const BLOCK_CAPTION: Record<string, string> = {
   Morning: "from midnight", Midmorning: "from 9 AM", Midday: "from 12 PM",
   Afternoon: "from 3 PM", Evening: "from 6 PM", Night: "from 9 PM",
   // v339: the block is the day's close, not an hour office.
   "Mass and Homilies": "the day's Mass and the week's homilies",
+  // v349: the content-caption form (the v339 precedent) — NOT an
+  // hour caption: Novenas never becomes the derived current block,
+  // so its caption must not promise an hour behavior.
+  Novenas: "the day's novenas",
 };
 
 interface PrayerItemRow {
@@ -167,7 +180,7 @@ function prayerBlockDue(date: string, block: string, today: string, hour: number
 }
 async function prayerGetItems(env: Env): Promise<PrayerItemRow[]> {
   const r = await env.DB.prepare(
-    "SELECT * FROM prayer_items ORDER BY CASE block WHEN 'Morning' THEN 0 WHEN 'Midmorning' THEN 1 WHEN 'Midday' THEN 2 WHEN 'Afternoon' THEN 3 WHEN 'Evening' THEN 4 WHEN 'Night' THEN 5 ELSE 6 END, sort, id",
+    "SELECT * FROM prayer_items ORDER BY CASE block WHEN 'Morning' THEN 0 WHEN 'Midmorning' THEN 1 WHEN 'Midday' THEN 2 WHEN 'Afternoon' THEN 3 WHEN 'Evening' THEN 4 WHEN 'Night' THEN 5 WHEN 'Mass and Homilies' THEN 6 WHEN 'Novenas' THEN 7 ELSE 6 END, sort, id",
   ).all<PrayerItemRow>();
   return r.results ?? [];
 }
@@ -270,7 +283,18 @@ async function prayerDayPayload(env: Env, date: string) {
     doneCount: enabled.filter((i) => doneSet.has(i.id)).length,
     dueCount: enabled.filter((i) => prayerBlockDue(date, i.block, today, hour)).length,
     currentBlock: date === today
-      ? PRAYER_BLOCKS.reduce((cur, b) => (hour >= (PRAYER_BLOCK_START[b] ?? 0) ? b : cur), "Morning" as string)
+      ? // v349 §2.2.2: order-independent derivation — the current
+        // block is the one with the GREATEST start <= hour; ties
+        // break by EARLIEST list position (strict > keeps the
+        // first). On the standing blocks this returns exactly what
+        // the old list-order reduce returned at every hour; with
+        // Novenas last at start 9, Midmorning wins the 09:00 tie
+        // on position and Novenas is never the current block.
+        PRAYER_BLOCKS.reduce((cur, b) => {
+          const s = PRAYER_BLOCK_START[b] ?? 0;
+          const cs = PRAYER_BLOCK_START[cur] ?? 0;
+          return hour >= s && s > cs ? b : cur;
+        }, "Morning" as string)
       : "Morning",
     isToday: date === today,
   };
