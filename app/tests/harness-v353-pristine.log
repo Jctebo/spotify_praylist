@@ -1,0 +1,26 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - fixture: migration 0015 stands in the tree (the fixture set runs through it)
+ok 3 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 4 - fixture: the presented day's draw stands (status=200)
+ok 5 - fixture: the served /app.js parses (vm.Script)
+not ok 6 - SW pin: the served service worker carries CACHE 'ora-pro-nobis-v353-1'
+ok 7 - boot: the fixture pass reaches readiness (own settled + descriptors + intros) in 566 ms
+not ok 8 - L1 home form: block cards stand in payload order, episodes card last (cards=[])
+not ok 9 - L1: a card carries its gradient face, name, caption + settled count span, heard span, and a block play button
+not ok 10 - L1: the Continue card stands in its slot BEFORE the block cards when its gate stands (Decision 2 order), See queue door standing
+ok 11 - L2 setup: re-boot with a liturgical day standing (the gradient head needs a color standing; without one the v352 flat-navy fallback stands)
+not ok 12 - harness exception: page.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('.blockcard[data-openblock="Morning"] .blockcard-face')
+
+page.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator('.blockcard[data-openblock="Morning"] .blockcard-face')
+
+    at main (/home/hatch/workspace/.worktrees/v353-pristine/app/tests/harness-v353.mjs:435:16) {
+  log: [
+    `  - waiting for locator('.blockcard[data-openblock="Morning"] .blockcard-face')`
+  ],
+  name: 'TimeoutError'
+}
+# harness-v353: 7/12 ok
