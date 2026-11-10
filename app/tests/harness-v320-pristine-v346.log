@@ -1,0 +1,4 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+not ok 3 - harness crashed: segment push 2027-03-05/Morning -> 404
+TALLY: 2 ok / 1 FAIL (3 checks)

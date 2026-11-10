@@ -1,0 +1,13 @@
+ok - setup: candidate app boots
+ok - setup: the day's draw stands
+ok - setup: candidate app re-boots after the draw re-point
+ok - setup: re-pointed draws carry the calibrated texts
+ok - C served build parses and executes (construction proof deferred to the browser legs) and carries both rss-host slot URLs and no feeds-host slot URL
+FAIL - C SW pin ora-pro-nobis-v345-1 with the opn-ext-audio-v1 purge exemption verbatim
+ok - R behind the no-ACAO 301 chain the fixed saint slot settles PRESENT (direct rss-host fetch, no redirect to follow)
+ok - R the Daily TV Mass slot (same defect class, same fix) settles PRESENT behind the chain
+
+regressions (v343 · v342) run separately — tallies in §3.
+
+harness-v345: 7 passed, 1 failed
+failures: C SW pin ora-pro-nobis-v345-1 with the opn-ext-audio-v1 purge exemption verbatim
