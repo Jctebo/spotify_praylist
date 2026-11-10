@@ -54,3 +54,71 @@
 - The intention row's play button plays the pair (intro, then its prayer) exactly as the panel's button does today; a tap on the prayer row behaves exactly as today.
 - Played dots, block counts, Continue, the queue, search, and Now Playing read and behave as before — with the queue's intro rows carrying the same "Prayer Intention: " title.
 - **Concerns and Information Needs:** the prayer NAME for the title comes from the prayer descriptor at the expansion seam — Plan pins the exact source for both families (own + external) and for the case where a prayer's title is itself null (the Bible in a Year slot carries its title from its match; the fallback naming is Plan's to state, never a fabricated name) · search: today an intro-text match surfaces the PRAYER's hit; under separate rows the hit form is Plan's to state (the recommendation: the prayer hit stands as today, and the intention row stands in its block as always) · the v343/v353 harness families carry combined-row legs (136px, panel-first) that this release supersedes — Implement updates or dispositions them with evidence, per the estate's standing rule.
+
+## 2 · Plan
+
+- **Approval (John, voice call, 2026-11-10 ~16:23 CT):** plain "approve" + "go ahead and push that one" — the recommended answers stand: Decision 1 further distinction **NONE** · Decision 2 intention text **kept as the row's second line, capped at two lines with the ⋯ expand** · Decision 3 run level **TO SHIP**. Scope record 1298 passed on that word. Plan record 1299 · contract 199 (package ASAP, hard deadline 2026-11-10T23:09:50Z). Row directive set by full-field upsert + direct-D1 write (the upsert route does not carry `run_directive` — read back set).
+- **Shape of the change:** rendering only, at the one seam §1 found. `client.ts` (the row seam, the swap paths, the ellipsis wiring, the queue title) + `ui.ts` (the CSS retirements + the SW re-pin). **NO migration** (0016 stays free), no Worker route, no payload, no settings, no nightly change — confirmed: the only state the form touches is the session-only `state.expandedIntros`, whose shape does not change.
+
+### 2.1 The title — one helper, pinned source (answers §1's Concerns)
+
+- **`prayerIntentionTitle(t, intro)`** (new, client.ts): returns `"Prayer Intention: " + name`, where **name = the PRAYER track's own title (`t.title`)** — the track standing at the render seam, for BOTH families alike (own tracks via `ownSlotTrack`, external slots via `extSlotTrack`; the Bible in a Year slot's `t.title` is its matched episode title by the time it renders). Fallback chain, in order, never a fabricated name: `t.title` → the intro's own title (`intro.title`, the feed item's title as the payload carries it) → the bare string `"Prayer Intention"` with no suffix.
+- **The queue uses the same title** through a descriptor form of the helper (`renderQueueList`, §2.5): the intro descriptor's prayer is resolved from `state.dayDescs` by stripping the `intro:` prefix; the same fallback chain applies (prayer descriptor title → the intro descriptor's own title → bare).
+
+### 2.2 The intention row (new `intentionRowCard(t, intro)`)
+
+- **Form:** a standard `.card` — `<div class="card intention-row" data-card="intro:<episodeId>">` holding one `.row`: the standard `.playbtn` (NOT the panel's small variant — uniform form is the point) with `data-playkey="intro:<episodeId>"`, then a `.grow` column carrying:
+  - the `<h3>` title from §2.1's helper;
+  - the intention TEXT as the second line: the standing `.intention-text` element (two-line `-webkit-line-clamp`, §2.6 CSS re-homed), with the ⋯ ellipsis button standing after it under the standing rule (rendered measurement arms it — `armEllipsis` re-pointed, §2.4); an expanded row (its prayer id in `state.expandedIntros`) renders unclamped with the button standing as the collapse control.
+- **No played dot** (the v347 queue precedent: played state belongs to the prayer; a completion write already skips `kind === 'intention'`). **No "Intention" label line** — the panel's label retires with the panel; Decision 1 (no further distinction) means the title alone carries the distinction. No Read control, no Spotify link, no meta line beyond the text itself.
+- **Play behavior:** the button wires exactly as every row button wires (`[data-playkey]` against `state.dayDescs` → `tapPlay(introDesc)`), so v351 decision 5 stands untouched: the pair (intro, then its prayer) is selected and plays, exactly as the panel's button does today.
+
+### 2.3 The seam — `trackCard` returns the pair; the wrap loses its intro branch
+
+- `trackCard(t)` keeps its signature and its callers. When `introForTrack(t)` stands for an available track, it returns **`intentionRowCard(t, intro) + <the plain prayer card>`** — two sibling cards from the one call, so every list caller that joins `trackCard` output (`paintBlockPage` · `paintEpisodesPage` · `searchResultsHtml` · `blockInsertCards` · the flat-paint insert paths) emits the pair with **zero caller changes**. When no intro stands, the return is byte-identical to today's plain card.
+- Inside `trackCard`, `wrap()` loses the intro branch: it always returns the plain card (play button · `.grow` · `playedDotHtml(t)` as the row's last element). `intentionPanelHtml` is deleted. The unavailable branches never carried a panel and do not change.
+- **Search (§1's open point, settled as recommended):** hits remain PRAYER descriptors exactly as today (a title hit or an intro-text hit surfaces the prayer); the hit now renders the pair through the seam, so an intro-text hit shows the intention row directly above its prayer. No hit-set change.
+- **Novena rows:** a novena prayer with a standing intro takes the same pair form; the prayer row's `novenaSpanHtml` meta rule is untouched.
+
+### 2.4 The swap paths — the pair replaces atomically, never resurrects a combined row
+
+- **`ownSwapRow`:** builds its html from `trackCard` over the row's tracks — the pair string flows with no change to its construction. Its node loop already stamps `data-own-row` on EVERY emitted node, so both cards carry the row identity, and its selection (`[data-own-row="<sourceKey>"]`) removes and replaces both together. No code change beyond the seam; the harness proves it (L6).
+- **`extSwapCard`:** the ONE caller change. It takes `tmp.firstChild` today; it must take **all** of the fragment's children (one node when no intro stands, two when one does) and replace the old card with them in order (intention row immediately before the prayer card). Its existing `[data-playkey]` wiring loop runs over the whole fresh fragment, so both buttons wire by their own keys (the comment citing v338 §2.7(5)'s two-button case updates to name the pair). Placeholder and downloading cards stand single, unchanged.
+- **Ellipsis machinery re-point:** `armEllipsis` / `armAllEllipses` / `wireExpand` select and climb `.card.intention-row` in place of `.card.intro-row` — same measurement rule (scrollHeight > clientHeight + 1), same per-row session state, same wiring points (initial build, insert, swap). The expand toggle now expands the intention row itself.
+
+### 2.5 The queue title (consistency, §1.3)
+
+- `renderQueueList`'s intro branch: the `'Intention — ' + title` prefix rule retires. An intro row's title = §2.1's helper applied to its descriptor (prayer resolved from `state.dayDescs`). The `npq-intro` class stands (a styling hook only); the no-dot rule for intro rows stands; prayer rows are byte-untouched. Queue preview + Continue preview ride the same function and take the same title.
+
+### 2.6 CSS (ui.ts) — retirements and the surviving form
+
+- **Retire:** `.card.intro-row { height:136px … }` · `.intro-row .intention-panel { flex:0 0 25% … }` · `.intention-label` · `.panel-foot` · `.card.intro-row.expanded` (superseded by the row-scoped rule below) · the v353 comment's combined-row exemption line (the exemption lapses; the comment is updated to say so).
+- **Stand, re-scoped:** `.intention-text`'s two-line clamp (unchanged declarations) + `.card.intention-row.expanded .intention-text { display:block; -webkit-line-clamp:none; overflow:visible }` · `.ellipsis-btn` + `.stands` (unchanged).
+- **Row height / form, stated exactly:** there is NO fixed height in the new form. Every row is a natural-height standard `.card` (the same padding and width the plain tracks already use): a prayer row stands at its content height as today; an intention row stands at title line + up to two text lines + the card padding — shorter when its text is short, taller only by its own text. "Uniform" in this design = one card form, one width, one padding for every track — NOT one pixel height; v343's 136px was a contract of the combined row and retires with it (§1.4 point 5).
+- **SW re-pin** per standing practice (Implement names it, `ora-pro-nobis-v361-1` expected).
+
+### 2.7 Byte-untouched (the no-disturbance list)
+
+- Listen home (block cards, Play All row, Continue card) · Now Playing except §2.5's title line · the queue preview mechanics · the mini-player/dock · sleep/speed controls · the Intentions pool TAB (`intentionRow` / `.liblist`) · Examination/Confession chrome · the Settings screens' own chrome (their swap CARDS take the new form only through §2.4's seam).
+- All behavior: `tapPlay`/`playTrack` and the v351 pair construction · the v344/v360 played store, dots on prayer rows, block counts, Mark-all · v347 queue mechanics · v355 snapshot/restore (descriptors unchanged — the snapshot stores ids, not cards) · v358 autoplay/chaining and its error path · the resume record.
+
+### 2.8 Harness plan — harness-v361 (new) + the standing families
+
+- **harness-v361 legs:**
+  - **L1 (block page, single rows):** a fixture block whose prayer carries an intro renders exactly TWO cards — intention row first (`.card.intention-row`), prayer card second; `querySelectorAll('.intro-row, .intention-panel')` is EMPTY across the whole document.
+  - **L2 (title form, both families):** an own-family intro row and an external-family intro row each carry the exact title `Prayer Intention: <prayer title>`.
+  - **L3 (second line + expand):** the intention text stands as the row's second line under the clamp; a long-text fixture arms the ⋯ (measurement premise built in the fixture, not assumed); a click expands in place (`.expanded`, full text) and collapses back; a short-text fixture stands NO ellipsis.
+  - **L4 (pair selection):** a click on the intention row's play button selects the pair — the standing queue is `[intro, prayer]` and the intro plays (the v351 decision-5 path, asserted at the queue level).
+  - **L5 (prayer row unchanged):** the prayer row keeps its played dot as its last element (and no dot stands on the intention row), its Read/Spotify furniture as fixture-set, and a tap on it behaves as the standing rules.
+  - **L6 (swap paths):** `ownSwapRow` after a late settle replaces BOTH cards (pair stands, both carry `data-own-row`, no combined form); `extSwapCard` on a settling external slot inserts both nodes in order at the old card's position.
+  - **L7 (search):** a title hit renders the pair; an intro-text-only hit renders the prayer hit with its intention row above it.
+  - **L8 (queue titles):** `renderQueueList` shows the intro row titled `Prayer Intention: <prayer name>` with no dot; prayer rows unchanged.
+  - **L9 (title fallback):** prayer title null + intro title standing → the intro's title is used; both null → the bare `Prayer Intention`.
+  - **L10 (no behavior drift):** block played counts and Continue read as before on the fixture day; a Play All build's descriptor order stands `[intro, prayer, …]` unchanged.
+- **Pristine expectations (Implement measures, Plan predicts):** on the pre-v361 tree L1, L2, L6, L8 FAIL (the combined row stands; the queue prefix differs) and L4, L5, L10 PASS (the behavior pre-exists the form) — the split that proves the harness tests the form, not the behavior.
+- **Standing families to re-run:** harness-v343 · harness-v353 · harness-v354 · harness-v360 at minimum, plus harness-v347 (its queue-title legs meet §2.5) and spot re-runs of harness-v355 / harness-v358 (descriptor-level families; expected untouched).
+- **How Review judges harness-v343 (named, per §1.6):** v343's combined-row premises are SUPERSEDED by this approved design. A v343 leg that asserts the standing behavior of `.intro-row`, `.intention-panel`, the 136px fixed height, or panel-first composition is RETIRED by this release — Implement either re-points it (the text-cap and ⋯-expand semantics legs re-point to the intention row, where the behavior survives under §2.2/§2.6) or retires it with a named per-leg disposition in §3; Review FAILS any §3 that leaves a combined-row leg silently failing OR silently passing-against-the-old-DOM, and ACCEPTS the family when every leg is green under its re-pointed form or named-retired. The same rule covers harness-v353's byte-identical-`trackCard` premise for intro-carrying tracks (superseded for those tracks only; non-intro rows remain byte-identical) — its expected delta is that premise's legs plus the SW-pin leg, nothing else.
+
+### 2.9 Sequencing
+
+- Implement (one seat, clean worktree off trunk) → Review after trunk landing (presentation-only, no data/auth surface) → Ship. The v359 Android item and the thumbnails idea are independent and untouched by this line.
