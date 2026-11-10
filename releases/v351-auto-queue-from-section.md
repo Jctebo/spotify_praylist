@@ -1,0 +1,136 @@
+# v351 — Auto-queue from a section — one tap queues the block's unplayed remainder
+
+- **Project:** Ora Pro Nobis
+- **Slug:** v351-auto-queue-from-section
+- **Registry:** DevOps Board app, project ora-pro-nobis, row id 663, version "v351", status Backlog
+- **Branch:** release/v351 in the fork (~/workspace/projects/spotify_praylist-fork), worktree ~/workspace/.worktrees/v351, cut from muse-draft-week @ 411fbe5 (the v349 Implement tree: eight blocks, Novenas last; v350 Live beneath it at 0f8f468)
+- **Run Directive:** Autonomous to Ship (approved by John, Ora thread 2026-11-10 04:26 CT, all Scope recommendations standing). Decisions: (1) start AT the tapped prayer inclusive, intention intro first; (2) stop when the block queue ends, no cross-block chaining; (3) a tap while playing REPLACES the standing queue; (4) Play All and block buttons unchanged; (5) the intention panel play button selects the pair (intro, prayer, then the unplayed remainder). Sequencing: Plan seats only after v349 Implement passes (final block list); Implement lands after v349 and v350.
+
+## 1 · Scope
+
+- **Agent:** Scope via the Ora-thread interactive package (posted 2026-11-10, interactive HTML standard); Scope phase record 1245 passed on the package as its evidence (estate practice for thread-scoped items). Plan record 1255 · time contract 163.
+- **Request (verbatim, John, Ora thread, 2026-11-10 04:10 CT):** when John selects (plays) ONE prayer in a section, the app auto-queues the REMAINING UNPLAYED prayers of that same section after it (played state per v344; played prayers skipped).
+- **Reading of "section":** the app's block (Morning · Midmorning · Midday · Afternoon · Evening · Night · Mass and Homilies · Novenas — the eight-block list as v349 landed it). Every prayer card in the Listen view stands in exactly one block, and every descriptor carries its block. Stated openly in the package; John approved with the recommendations standing.
+- **Discovery (from the package, re-verified first-hand at Plan against trunk 411fbe5 — §2.0):**
+  - **Played state (v344, Live):** store `opn-played-v344` in client.ts, keyed by canonical episode id, then presented date (`isPlayed(episodeId, dateStr)`); a track counts as played only on natural completion (`markCompleted`, called once at the top of the `ended` handler; intro descriptors never mark — the pair shares the PRAYER's record), plus John's manual mark played/unplayed controls. This release reuses that definition unchanged; the store is not touched.
+  - **The build machinery already exists:** `unplayedOnly(descs)` (client.ts:270) is the played filter with intro grouping — an intro descriptor belongs to the prayer that follows it; a played prayer takes its intro out with it. `queueBuild(descs)` (:295) = `unplayedOnly` + the full-replay fallback (a filtered build holding nothing playable hands back the full build, so Play All / block play never face a dead button). `extRebuildDescs(day)` (:1799) is the fresh-at-tap-time whole-day rebuild every queue build flows through (it also reassigns `state.dayDescs`).
+  - **The one path that does NOT queue:** tapping a prayer card's play button runs `playTrack(desc)` (:222), which CLEARS any standing queue (`state.queue = []`), plays that single prayer, and stops at its end. Every Listen-view `[data-playkey]` wiring site resolves the tapped descriptor from `state.dayDescs` by episodeId and calls `playTrack` — five sites: the renderPrayers initial build (:2745), the blockInsertCards insert/swap paths (:1710, :1761, :1785), and the ownSwapRow path (:1935). That card tap is the surface the request names — and the only play entry point this release changes.
+  - **The combined row's two buttons (v338):** the row's main play button carries `data-playkey="<episodeId>"` (trackCard); the intention panel's OWN small play button carries `data-playkey="intro:<episodeId>"` (`intentionPanelHtml`, :1047) and today plays the intro alone through the same `playTrack` path. Both are in the trigger set — the panel button by John's decision 5.
+  - **The v346 seam:** system/lock-screen resume routes through `resumeCurrent()` (:228) — queue- and position-preserving, never through `playTrack`. The dock and Now Playing play buttons call `playTrack(state.current)` only when NO queue stands (the single-play branch); when a queue stands they toggle/resume. Auto-queue is a build path (a built array handed to the queue), never a `playTrack` variant, and it does not touch the media-session handlers.
+  - **The queue (v347, Live):** session state (`state.queue` + `state.queueIdx`), shown as the visible list in Now Playing; `jumpQueueTo(i)` jumps inside the standing queue without rebuilding it; the Continue card's "See queue" door opens a preview of Continue's build (`state.previewQueue`), whose row taps start that build via `previewQueueTap` → `startQueue(slice)`.
+  - **One implementation subtlety (flagged by the package, confirmed at :309):** `startQueue` doubles as a pause toggle while a queue is playing — `if (state.queue.length && state.queueIdx >= 0 && state.current && !audioEl.paused) { audioEl.pause(); return; }`. That is how Play All behaves mid-playback. A card tap on a DIFFERENT prayer while something plays must replace the queue and start the selection — not pause. §2.5 prescribes the exact mechanism.
+- **John's decisions (2026-11-10 04:26 CT, at the package's gate — all recommendations standing):** (1) start AT the tapped prayer, inclusive, intro first — the tapped unit (intention intro, then the prayer) heads the queue; (2) cross-block chaining: STOP when the block's queue ends (Play All and Continue remain the whole-day doors); (3) a tap while another queue is playing REPLACES that queue and starts the selection; (4) Play All and the block play buttons unchanged; (5) the intention panel's small play button selects the pair: intro, its prayer, then the block's unplayed remainder.
+- **Deviations from John's words: none.** The one judgment call is stated openly above: "section" read as the app's block.
+- **Size:** S–M — one new build path reusing the standing filter and queue machinery; the code is small, the verification surface (played filter, queue display, media-session seam, harness family) is the larger half. **Migration: none** — client-only; no Worker, D1, or storage change; the played store and resume record stand byte-identical.
+
+## 2 · Plan
+
+- **Agent:** Plan agent (v351 Plan, 2026-11-10) — Plan claim record 1255, claimed 2026-11-10T10:40:35Z · time contract 163 (expectation: Plan passed — §2 published, ASAP, hard deadline 06:00 CT 2026-11-10).
+- **Inputs read first-hand at Plan:** the registry row 663 + Scope record 1245 · the Scope package's discovery (parent's seating record) · fork trunk muse-draft-week @ 411fbe5 (v349 §3 head; build base 0d8b6ba) · app/worker/src/client.ts in full around the play paths: `isPlayed`/`writePlayedQuiet`/`markCompleted` (:126–175), `playTrack` (:222), `resumeCurrent` (:228), `queueLiveDesc` (:253), `unplayedOnly` (:270), `queueBuild` (:295), `startQueue` (:309), `advanceQueue`, `jumpQueueTo`, `renderQueueList`, `previewQueueTap`, `buildContinueQueue`, `trackDesc` (:992), `introDescFor` (:1000), `expandDescs` (:1008), `intentionPanelHtml` (:1029–1049), `extSlotTrack` (:1692), `blockInsertCards` (:1725), `extRebuildDescs` (:1799), the Continue card wiring (:2030–2050), the renderPrayers build + wiring (:2700–2770) · app/worker/src/ui.ts (SW pin `ora-pro-nobis-v349-1`, :196) · the harness family layout (app/tests/harness-v344/v346/v347/v349/v350.mjs).
+- **Shape in one line:** one new tap dispatch (`tapPlay`) at the five standing `[data-playkey]` wiring sites, one new build (`sectionQueueFrom`) that heads the tapped pair unfiltered and tails the block's unplayed remainder through the standing filter with NO fallback, and one optional force parameter on `startQueue` that carries decision 3 past the pause toggle — everything else in the player stands untouched.
+
+### 2.0 Code verification — the package's discovery against trunk 411fbe5
+
+Every load-bearing claim in §1 was re-read in the code as it stands after v349 landed and v350 shipped. **No contradiction found.** The particulars Plan pins:
+
+1. `playTrack(desc)` (:222): guards `!desc || !desc.available || !desc.url`; same-track-while-playing pauses; otherwise `state.queue = []; state.queueIdx = -1; startDesc(desc)`. It is the only queue-clearing play entry.
+2. `startQueue(descs)` (:309): the toggle branch stands exactly as the package described (quoted in §1). Its live-entry scan (first `queueLiveDesc`-live entry wins, earlier ones `markSkipped`) is the ONLY start seam besides `startDesc` — Plan adds no second one (§2.5).
+3. `unplayedOnly` (:270) groups by forward adjacency: an intro is held as `pendingIntro` and emitted only before an UNPLAYED prayer; a played prayer nulls its pending intro. Slicing a descriptor list immediately AFTER a prayer descriptor is therefore a clean filter boundary — the next intro in the slice belongs to the next prayer (§2.4 relies on this).
+4. `expandDescs(t, day)` (:1008) is the one expansion seam: `[intro, prayer]` when the prayer is available and the intros map carries it; `[prayer]` alone otherwise; an unavailable prayer emits `[d]` with NO intro. Adjacency of intro→prayer in every built list is structural, not incidental (§2.3 relies on this).
+5. Every descriptor carries its block: `trackDesc` sets `block: t._block`; payload tracks are expanded with `_block: b.block`, own settings rows via `ownSlotTrack` (`_block: row.block`), external slots via `extSlotTrack` (`_block: slot.block`). Intro descriptors carry the same block as their prayer. The one group with `block: ''` is `day.episodes` (FROM TODAY'S PODCAST) — §2.7 names its boundary.
+6. The five `[data-playkey]` wiring sites all resolve by episodeId against `state.dayDescs` (the initial build against its local `allDescs`, the same list `state.dayDescs` was just assigned) and call `playTrack(d)`. The Read sheet's play button (:1309–1311) is wired separately and is NOT one of the five (§2.7).
+
+### 2.1 The build — `sectionQueueFrom(all, tappedId)`
+
+One new function beside `queueBuild` in client.ts (final naming is Implement's; the behavior and seams are pinned here). Inputs: the fresh whole-day list and the tapped key exactly as the button carries it (a prayer episodeId, or `intro:<episodeId>` from the panel button).
+
+1. **Re-resolve in the fresh list.** The wiring sites hand over the descriptor they looked up; the build uses it ONLY as identity. The working list is `extRebuildDescs(state.dayPayload)` — the same fresh-at-tap-time rebuild Play All, block play, and Continue all flow through (live slot states as they stand at the tap, `queueLiveDesc` still answering at advance time). The render-time snapshot is never built from.
+2. **Resolve the tapped prayer.** Strip a leading `intro:` from the tapped key to get the prayer id; find that prayer's descriptor in the fresh list. If it is not found (the pair does not stand in the fresh build — e.g. the prayer settled missing and `expandDescs` emitted no intro and a named-missing descriptor whose card carries no panel) the tap is a no-op, exactly as `playTrack`'s guard treats an unresolvable tap today. If the resolved prayer descriptor stands `available: false`, the tap is likewise a no-op — the standing guard, kept.
+3. **The section.** `section = all.filter(d => d.block === prayer.block)`, order preserved — the v348 merged block order across families, as every build since v348 emits it.
+4. **The head (§2.3)** and **the tail (§2.4)** are taken from the section; the queue handed over is `head.concat(tail)`.
+
+### 2.2 The dispatch — `tapPlay(d)` at the five wiring sites
+
+One new dispatch function beside `playTrack`; the five `[data-playkey]` wiring sites (initial build :2745 · insert/swap :1710, :1761, :1785 · ownSwapRow :1935) call `tapPlay(d)` where they call `playTrack(d)` today. Nothing else about the sites changes — same lookup, same guard shape. `tapPlay`:
+
+1. Guards as `playTrack`: no descriptor → return.
+2. **The toggle test (§2.5)** — if the tapped UNIT is what is currently playing, pause and return.
+3. Otherwise build via `sectionQueueFrom` (§2.1). If the build returns null (no section — §2.7's boundary), fall back to `playTrack(d)`, the standing behavior for that surface.
+4. Hand the built queue to `startQueue(build, true)` — force (§2.5).
+
+### 2.3 The head — the tapped pair, unfiltered
+
+- The head is the tapped unit exactly as `expandDescs` emitted it in the fresh list: the intro descriptor standing immediately before the prayer (when one stands), then the prayer. Adjacency is structural (§2.0.4): the head is the section slice from the intro (or the prayer, when no intro stands) through the prayer.
+- **The head is NEVER played-filtered.** The tapped prayer always plays, even if already played — John's tap wins (decision 1, and the package's edge rule). Its intro rides with it on the same terms: the pair travels by the PRAYER's played state at the head just as `unplayedOnly` groups it in the tail.
+- An intro that was itself played or skipped earlier while its prayer was not played changes nothing: the pair is re-formed from the fresh list and the intro plays before its prayer (the standing grouping rule, applied at the head).
+
+### 2.4 The tail — unplayed remainder, NO full-replay fallback
+
+- The tail is `unplayedOnly(section.slice(after the tapped prayer))` — the block's descriptors AFTER the tapped prayer, in block order, played prayers skipped, each unplayed prayer carrying its intro immediately before it (the filter's own grouping, §2.0.3). Unplayed prayers BEFORE the tapped one in the block are not queued (John's words: the remaining after it; Continue already serves the from-the-top case).
+- **Played-filter fidelity rule: `queueBuild` is NOT used for the tail, and its full-replay fallback does NOT apply.** The fallback exists so Play All / block play never face a dead button on a fully-played build; here the head guarantees a playable unit, so a filtered-empty tail is correct and final: if every prayer after the tapped one is already played, the queue is the tapped unit alone and playback stops at its end. The tail must never balloon into a full-block replay.
+- Availability is not the filter's question (the standing split stands): unavailable descriptors in the tail pass through the filter untouched and `queueLiveDesc` answers for them at advance time, exactly as in every build today. A still-downloading slot in the tail is substituted or skipped at its turn by that standing live-check.
+
+### 2.5 The start — decision 3 through the pause toggle (the named design point)
+
+The problem, precisely: a card tap while a queue is playing reaches `startQueue`, whose first branch pauses and returns — the tap would pause the standing queue instead of replacing it. The mechanism Plan prescribes:
+
+1. **`startQueue(descs, force)`:** `startQueue` gains ONE optional second parameter. The toggle branch fires only when `force` is not set: `if (!force && state.queue.length && state.queueIdx >= 0 && state.current && !audioEl.paused) { audioEl.pause(); return; }`. Every standing call site — Play All (:2740s), block play (:2760s), the Continue handler (startQueue(build) / startQueue(build.slice(idx))), `previewQueueTap` — calls with one argument and behaves byte-identically to today. Only the tap path passes `true`. The live-entry scan, the skip marking, and the `startDesc` start are shared, unchanged code — no second start seam is created (the v346 lesson: one seam, guarded).
+2. **The same-unit toggle lives in `tapPlay`, before the build:** if `state.current` stands and its episodeId is the tapped prayer id OR that prayer's intro id (`intro:<id>`), and `!audioEl.paused` → `audioEl.pause(); return;`. Unit granularity in both directions: tapping the prayer card while its intro plays pauses; tapping the panel button while the prayer plays pauses. This preserves the standing same-prayer pause behavior the package required, at the granularity of the pair the feature itself defines.
+3. **Every other tap force-starts the new build** — including a tap on the currently-loaded unit while it stands PAUSED (mid-queue or single): the build replaces the standing queue and the pair restarts from its intro under `startDesc`. This matches `playTrack`'s standing restart semantics for a paused current track (it reloads via `startDesc` today); position-resume remains the business of the Continue card and the in-card Resume button, which are untouched (§2.8). Named here so Review does not read it as a defect.
+4. **Rejected alternatives, named:** (a) clearing `state.queue`/`queueIdx` in the tap path to dodge the toggle branch — mutates shared state ahead of the one seam that owns it, and the dock/Now Playing renders can observe the torn state mid-tap; (b) a second start function duplicating `startQueue`'s live-scan — two start seams to keep in step forever, the exact shape v346's seam discipline exists to prevent.
+
+### 2.6 The eight blocks — one behavior, no per-block cases
+
+The build is block-agnostic: it reads `prayer.block` and filters. All eight blocks behave identically — Morning · Midmorning · Midday · Afternoon · Evening · Night · Mass and Homilies · Novenas. Two named confirmations:
+
+- **Novenas (v349):** its card taps and panel buttons route through the same dispatch; novena descriptors are own-family tracks in the Novenas block with canonical ids (`novena-<slug>`), and their played state reads through the same `isPlayed` the filter already uses — the store keys [canonical id][presented date], so a novena's played mark is read for the presented day exactly like any prayer's. No novena-specific code stands anywhere in this release.
+- **Mass and Homilies:** its external slots (USCCB readings · Daily TV Mass · Fr. Mike homily · Barron sermon) carry `block: 'Mass and Homilies'` through `extSlotTrack`; a tap on any of them auto-queues that block's unplayed remainder on the same terms, intros (the v339/v342 interleave) paired as emitted.
+
+### 2.7 Boundaries — where the trigger does NOT reach
+
+- **The unblocked group (`block: ''`, FROM TODAY'S PODCAST cards):** those cards carry `data-playkey` and stand in the Listen view, but they belong to no block — there is no section to queue from. `sectionQueueFrom` returns null for them and `tapPlay` falls back to `playTrack(d)`: today's single-play behavior, unchanged. Named so Implement does not improvise a pseudo-section.
+- **The Read sheet's play button** (:1309–1311): wired separately from the five sites, over the episode whose text is being read (including podcast episodes). It keeps `playTrack`. It is a text view's control, not a section card; the package's trigger is the prayer card in its block section.
+- **A tap whose pair cannot be resolved in the fresh build** (§2.1.2): no-op, as today.
+
+### 2.8 Untouched surfaces — named, byte-identical behavior
+
+- **Queue-row taps in Now Playing:** `jumpQueueTo` jump semantics stand — a row tap inside the standing queue never rebuilds it.
+- **The Continue preview ("See queue"):** `openQueuePreview` / `previewQueueTap` stand; a preview row tap still starts Continue's build through one-argument `startQueue`.
+- **Continue / in-card Resume:** `buildContinueQueue` and its handler stand — the remaining-unplayed day build, the carry/rotate rule, the pendingResume position mechanism. `loadResume` stands.
+- **Block play buttons (`[data-queue]`) and Play All (`#play-all`):** unchanged (decision 4) — same `queueBuild` builds, same one-argument `startQueue`, same mid-playback pause toggle.
+- **Dock and Now Playing play buttons:** their standing branch (queue stands → toggle/`resumeCurrent`; no queue → `playTrack(state.current)`) is not edited. Note the consequence, intended: after any card tap a queue always stands (even a head-only queue), so the single-play branch is reached only from surfaces that still load single tracks (the Read sheet, `loadResume`).
+- **The v346 media-session seam:** `resumeCurrent`, `reassertMediaSession`, the session handlers — not touched. Auto-queue never routes a system resume through a build.
+- **Sleep timer (v320), speeds (v336), the fade-restore points in `startDesc`:** untouched — every start still passes through `startDesc`.
+- **Played store, `markCompleted`, the manual mark controls, the played dots and Continue counts (v344 chrome):** untouched. Played state stays playback memory — this release adds no counts, no prompts, no "missed" surfaces (the no-checklist guard); the visible queue keeps the v347 played-dot language only.
+- **The v349 derivation and block order** (max-start current-block rule, eight-block list, migration 0013 state) and **the v350 courier leg:** untouched.
+- **Day rollover mid-queue:** the queue is a tap-time snapshot and plays out as built; played marks land under the presented day; tomorrow's builds read tomorrow's played state. No new mechanism (the package's edge rule, standing behavior).
+
+### 2.9 Harness plan — harness-v351 (app/tests/harness-v351.mjs)
+
+Modeled on the harness-v347/v349 fixture shape (local wrangler + headless Chromium, fixture feeds, the presented-day set with intros). Tallies read from COMPLETE log files. Legs:
+
+- **L1 — the tap build:** tap a mid-block prayer's card → the standing queue is exactly [its intro, the prayer, …the block's unplayed remainder in block order], each remainder prayer with its intro; playback starts at the intro. Assert `state.queue` contents by episodeId and Now Playing's list rendering of the same array (v347 view).
+- **L2 — played skipped in the tail:** with two later prayers marked played (via the store), the tail excludes both AND their intros (no orphan intro stands); an unplayed prayer between them keeps its pair.
+- **L3 — the tapped prayer played still heads:** mark the tapped prayer played → tap it → the queue heads with [intro, prayer] regardless; the tail follows the filter as in L1.
+- **L4 — all-remainder-played:** every prayer after the tapped one played → the queue is the tapped unit alone; at its end playback stops, queue clears (the standing advance-at-end behavior), and NO full-block replay stands (the no-fallback leg — assert the queue length is the head's, not the block's).
+- **L5 — replace while playing (decision 3):** start a block queue playing; tap a DIFFERENT block's prayer card → the standing queue is replaced by the new section build and the tapped unit starts; the audio element is NOT paused-and-left (assert current desc + queue identity changed, playback playing).
+- **L6 — same-unit pause preserved:** with a track playing (single or queued), tap its own card → pause, queue untouched; tap the intention panel button of the playing prayer → pause; with the intro playing, tap the prayer card → pause. Resume via the standing controls still works after each.
+- **L7 — the panel button selects the pair (decision 5):** tap the intention panel's small play button on an unplayed prayer → the queue is [intro, prayer, …unplayed remainder], identical to tapping the prayer's own card (L1 equality).
+- **L8 — the Novenas block:** in the eight-block fixture day, tap a novena card in the Novenas block → the queue is that block's remainder only (no Midmorning entries); a novena marked played for the presented day is skipped in a later novena's tail through the same `isPlayed`.
+- **L9 — boundaries:** a FROM TODAY'S PODCAST card tap plays single (queue stands empty, `playTrack` behavior); the Read sheet button plays single; an unavailable tapped prayer no-ops.
+- **L10 — untouched-surface pins:** Play All mid-playback still pause-toggles (one-argument `startQueue`); a block play button's build and toggle stand; a Now Playing queue-row tap jumps without rebuilding (queue array identity before/after); Continue's build + "See queue" preview start stand; the media-session play handler resumes through `resumeCurrent` with the queue intact after an auto-queue build.
+- **Regression families on the candidate:** harness-v344 (played state + Continue), harness-v346 (media-session focus), harness-v347 (visible queue), harness-v349 (eight blocks + derivation), harness-v350 (courier) — complete runs, tallies from complete logs; any fixture-era halt must be shown byte-identical on the pristine tree before it is read as pre-existing (the estate's standing rule).
+- **Pristine comparison:** harness-v351 run against the pristine trunk (411fbe5) fails the new-behavior legs (L1–L5, L7, L8) in order — on pristine, a card tap plays a single track and clears the queue — while the boundary/pin legs that describe standing behavior (L9, L10) pass there too. The candidate passes all legs.
+
+### 2.10 Ship shape
+
+- **Client-only.** The entire change stands in app/worker/src/client.ts (plus the SW pin). No migration, no Worker logic change, no D1/R2 state, no sheet or nightly-job change.
+- **SW pin:** bump `CACHE` in app/worker/src/ui.ts from `ora-pro-nobis-v349-1` to `ora-pro-nobis-v351-1` (the standing per-release pin discipline).
+- **Landing + deploy:** Implement lands ff-only on muse-draft-week from its clean release worktree; Ship deploys from a clean ship worktree via the connector-surrogate wrangler route (dry-run first, version id read back, rollback = the then-current production version). The four-piece flip follows the estate pattern: release row Live by full-field upsert (replaying scope/title/slug/directive — the row's `run_directive` field stands null in the registry; the directive of record is the scope text + this document, and Ship replays the row's fields as they stand, adding status/shipped_at/whats_new_id), shipped record, What's New at the live max + 1 read at Ship time (67 stands consumed by v350; read first, never assume), phase records passed in order.
+- **Phone posture, recorded honestly:** no pre-ship phone verdict stands for this release (the v346/v347 posture for client-only player releases on this surface, per the package's recommendation and John's To Ship approval). John's phone verdict on the shipped build is the real-world test and is recorded in §5 as his, pending — never as passed.
+
+### 2.11 Risks
+
+- **The replace-vs-toggle line (L5/L6)** is the release's one behavioral knife-edge: too broad a toggle test swallows decision 3; too narrow a force breaks the standing pause. The harness legs pin both directions, including the intro/prayer unit-granularity cases.
+- **Mid-playback replacement and the media session:** a force-start flows through the same `startDesc` seam as every start (metadata re-filed, playbackState 'playing'), so the v346 claimant behavior is inherited, not re-implemented; L10 pins the resume path after an auto-queue build.
+- **Snapshot staleness:** building from `extRebuildDescs` at tap time (not the render snapshot) keeps the tap consistent with block play; a slot still downloading at tap time enters as its snapshot descriptor and is answered by `queueLiveDesc` at its turn — the standing split, inherited unchanged.
