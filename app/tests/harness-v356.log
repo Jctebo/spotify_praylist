@@ -1,0 +1,74 @@
+ok 1 - worker bundles clean (esbuild)
+ok 2 - app up on local wrangler (LOCAL_DEV harness mode)
+ok 3 - migration 0014 stands on the test D1 (pin_state + pin_tokens)
+ok 4 - L1: /api/pin/state answers pinSet:false with no PIN set
+ok 5 - L1: examination opens tonight's run with the 23 seeded prompts, no PIN
+ok 6 - L1: entry saves with no PIN set
+ok 7 - L1: free entry saves with no PIN set
+ok 8 - L1: confession payload open with no PIN (guide + the two entries in prep)
+ok 9 - L1: writes run their normal handlers with no PIN (penance without a confession = the standing 400, not a gate refusal)
+ok 10 - L10: Settings PIN section shows the no-PIN state (decision 6)
+ok 11 - L10: set flow refuses a mismatched confirm in the sheet
+ok 12 - L10: the recovery sheet shows the grouped code once, at set (format XXXX-XXXX-XXXX)
+ok 13 - L10: the recovery sheet carries a Copy button
+ok 14 - L10: after set, Settings offers Change + Remove while unlocked
+ok 15 - L7: Examination renders in-session after set (token stands)
+ok 16 - L7: Confession renders in the same session — one unlock opens both (decision 2)
+ok 17 - L7: the token string stands in NEITHER localStorage NOR sessionStorage
+ok 18 - L7: after a page reload the gated tab shows the gate again (memory-only token gone)
+ok 19 - L10: the gate reads the standing accent token (--accent = --gold today: #a8863a)
+ok 20 - L10: a wrong entry shakes the gate card
+ok 21 - L10: the wrong-entry line reads the attempts remaining (4 after the first failure)
+ok 22 - L10: in the wait the pad and Unlock disable with a counting-down line
+ok 23 - L10: Forgot PIN swaps the pad for the recovery form
+ok 24 - browser: zero page errors
+ok 25 - L2: a second set is refused 409 (pin already set)
+ok 26 - L2: a short PIN never creates a row (400 format / 409 already-set)
+ok 27 - L2: exactly one pin_state row (the singleton)
+ok 28 - L2: the pin_state row contains NEITHER the PIN NOR the recovery code in plaintext
+ok 29 - L2: both credentials stored at 100,000 PBKDF2 iterations (the runtime accepted Plan's value)
+ok 30 - L3: GET /api/exam/today refuses 403 pin_required and the body carries NONE of the seeded entry text
+ok 31 - L3: the refused GET created no exam_runs row (refusal before the handler)
+ok 32 - L3: GET /api/confession refuses 403 pin_required with no content bytes
+ok 33 - L3: POST entries without a token refuses 403
+ok 34 - L3: POST confession/made without a token refuses 403
+ok 35 - L3: PUT prompts without a token refuses 403
+ok 36 - L3: PUT guide without a token refuses 403
+ok 37 - L3: the refused writes changed nothing in D1 (entries still 2, confessions still 0)
+ok 38 - L4: four wrong verifies answer 401 with attemptsRemaining 4·3·2·1 (got 4·3·2·1)
+ok 39 - L4: the 5th failure engages a 30s wait (retryAfterSeconds=30)
+ok 40 - L4: even the CORRECT PIN during the wait answers 429 — the wait is real
+ok 41 - L4: the during-wait attempt was NOT evaluated and NOT counted (counter still 5)
+ok 42 - L4→L5: after the wait is time-shifted past, the correct PIN verifies and issues a token
+ok 43 - L4: a successful verify resets the counter and clears the wait
+ok 44 - L5: the verify token opens Examination (content flows)
+ok 45 - L5: the SAME token opens Confession without a second verify (decision 2)
+ok 46 - L5: writes ride the token too (penance answers its standing 400, not a gate refusal)
+ok 47 - L6: an expired token refuses 403 pin_required
+ok 48 - L6: the expired token row is deleted on lookup (rows 2 -> 1; other rows are untouched until their own lookup)
+ok 49 - L8: a wrong recovery code answers 401 on the shared counter (attemptsRemaining 4)
+ok 50 - L8: a wrong PIN next continues the SAME count (3) — one counter for both routes
+ok 51 - L8: the correct code (lowercase, normalized) sets the new PIN and returns a NEW recovery code
+ok 52 - L8: the OLD PIN now fails verify
+ok 53 - L8: the OLD recovery code is dead with its generation
+ok 54 - L8: the pre-set fixture entries stand intact after recovery (content kept, decision 4)
+ok 55 - L8: the confession prep stands intact after recovery
+ok 56 - L9: change without a token refuses 403 pin_required
+ok 57 - L9: change with a token rolls the generation — a NEW recovery code shows
+ok 58 - L9: the pre-change token is revoked by the change (403)
+ok 59 - L9: the pre-change PIN is dead
+ok 60 - L9: remove without a token refuses 403
+ok 61 - L9: remove with a token succeeds
+ok 62 - L9: remove empties pin_state and pin_tokens
+ok 63 - L9→L1: after remove both families stand open with no header — back to the no-PIN world
+ok 64 - L9: /api/pin/state reads pinSet:false after remove
+ok 65 - L11 setup: a fresh PIN stands set and locked (no token used from here)
+ok 66 - L11: agent door prayer/day answers with a PIN set + locked, exactly as with no PIN
+ok 67 - L11: agent door prayer/intros answers with a PIN set + locked
+ok 68 - L11: agent door player/settings answers with a PIN set + locked
+ok 69 - L11: agent door player/day answers with a PIN set + locked
+ok 70 - L11: the PIN still stands after the door reads (the gate never reaches the door)
+ok 71 - SW pin reads ora-pro-nobis-v356-1
+ok 72 - served /app.js parses (vm.Script)
+ok 73 - the served client writes no PIN/token value to any storage (every setItem call is pin-free)
+TALLY: 73 ok / 0 FAIL (73 checks)
