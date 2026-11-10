@@ -194,6 +194,26 @@ label.f { display:block; font-size:13px; letter-spacing:.6px; text-transform:upp
 .npq-meta { font-size:14px; }
 .npq-dot.played-dot { flex:0 0 12px; width:12px; height:12px; margin:0; padding:0; cursor:default; }
 .npq-start { border-color:var(--accent); }
+/* Confession PIN (v356): the gate, the pad, the recovery sheet.
+   Built on the standing tokens — the pad's accent is var(--accent),
+   which v352's liturgical layer re-points by the day's color. */
+.pingate { text-align:center; }
+.pingate .lockline { font-size:17px; color:var(--navy); line-height:1.5; margin:6px 0 4px; }
+.pindots { display:flex; justify-content:center; gap:10px; margin:18px 0 6px; min-height:16px; }
+.pindot { width:14px; height:14px; border-radius:50%; border:2px solid var(--accent); background:transparent; }
+.pindot.on { background:var(--accent); }
+.pinpad { display:grid; grid-template-columns:repeat(3, 76px); gap:10px; justify-content:center; margin:14px 0 6px; }
+.pinpad button { font-family:inherit; font-size:22px; color:var(--navy); background:var(--card); border:1px solid var(--line); border-radius:50%; width:64px; height:64px; cursor:pointer; }
+.pinpad button:active { background:var(--accent); color:var(--accent-ink); }
+.pinpad button:disabled { opacity:.35; cursor:default; }
+.pinpad .pinblank { visibility:hidden; }
+.pinmsg { min-height:22px; font-size:15px; color:#8a2a2a; margin:8px 0 2px; }
+.pinmsg.wait { color:#6d6353; }
+@keyframes pinshake { 0%,100% { transform:translateX(0); } 20% { transform:translateX(-9px); } 40% { transform:translateX(9px); } 60% { transform:translateX(-6px); } 80% { transform:translateX(6px); } }
+.shake { animation: pinshake .45s ease; }
+.recoverycode { font-size:26px; letter-spacing:2px; color:var(--navy); text-align:center; margin:16px 0; }
+.pinsection { margin-top:22px; }
+
 
 `;
 
@@ -210,7 +230,7 @@ export const MANIFEST_JSON = JSON.stringify({
 });
 
 export const SW_JS = `
-var CACHE = "ora-pro-nobis-v355-1";
+var CACHE = "ora-pro-nobis-v356-1";
 var SHELL = ["/", "/styles.css", "/app.js", "/logo.png", "/logo-512.png", "/manifest.json"];
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); }));

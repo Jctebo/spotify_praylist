@@ -80,6 +80,121 @@ function johnOnly(request: Request, env: Env): Response | null {
   return json({ error: "access sign-in required" }, 403);
 }
 
+
+// ---- Confession PIN (v356, Plan §2.1–§2.3) ---------------------------
+// One singleton pin_state row holds the PIN + recovery-code PBKDF2
+// hashes and the ONE shared attempt counter; pin_tokens holds live
+// verification tokens by SHA-256 hash (revocation = DELETE). No
+// pin_state row = no PIN set = the gated families stand open,
+// exactly as before this release (decision 6).
+const PIN_ITERATIONS = 100000;
+const PIN_TOKEN_TTL_MS = 30 * 60 * 1000;
+const RECOVERY_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ"; // Crockford base32 (no I, L, O, U)
+
+function bytesToHex(bytes: Uint8Array): string {
+  return Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+function hexToBytes(hex: string): Uint8Array {
+  const out = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
+  return out;
+}
+async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return bytesToHex(new Uint8Array(digest));
+}
+async function pbkdf2Hex(value: string, saltHex: string, iterations: number): Promise<string> {
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(value), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: hexToBytes(saltHex) as BufferSource, iterations, hash: "SHA-256" }, key, 256,
+  );
+  return bytesToHex(new Uint8Array(bits));
+}
+function randomHex(byteCount: number): string {
+  return bytesToHex(crypto.getRandomValues(new Uint8Array(byteCount)));
+}
+function generateRecoveryCode(): string {
+  // Rejection sampling: 256 is an exact multiple of the 32-char
+  // alphabet, so no byte is ever rejected and no modulo bias exists;
+  // the guard stands so the sampling stays honest if the alphabet
+  // ever changes size.
+  const limit = 256 - (256 % RECOVERY_ALPHABET.length);
+  let chars = "";
+  while (chars.length < 12) {
+    const b = crypto.getRandomValues(new Uint8Array(1))[0];
+    if (b >= limit) continue;
+    chars += RECOVERY_ALPHABET[b % RECOVERY_ALPHABET.length];
+  }
+  return `${chars.slice(0, 4)}-${chars.slice(4, 8)}-${chars.slice(8, 12)}`;
+}
+function normalizeRecoveryCode(code: string): string {
+  return code.replace(/[-\s]/g, "").toUpperCase();
+}
+
+interface PinStateRow {
+  id: number; pin_hash: string; pin_salt: string; pin_iterations: number;
+  recovery_hash: string; recovery_salt: string; recovery_iterations: number;
+  failed_attempts: number; next_allowed_at: string | null;
+  created_at: string; updated_at: string;
+}
+async function loadPinState(env: Env): Promise<PinStateRow | null> {
+  return env.DB.prepare("SELECT * FROM pin_state WHERE id=1").first<PinStateRow>();
+}
+function pinRetryAfterSeconds(state: PinStateRow): number {
+  if (!state.next_allowed_at) return 0;
+  const ms = new Date(state.next_allowed_at).getTime() - Date.now();
+  return ms > 0 ? Math.ceil(ms / 1000) : 0;
+}
+async function registerPinFailure(env: Env, state: PinStateRow): Promise<{ attemptsRemaining: number; retryAfterSeconds: number }> {
+  const failures = state.failed_attempts + 1;
+  let waitSeconds = 0;
+  let nextAllowed: string | null = null;
+  if (failures >= 5) {
+    waitSeconds = Math.min(30 * 2 ** (failures - 5), 300);
+    nextAllowed = new Date(Date.now() + waitSeconds * 1000).toISOString();
+  }
+  await env.DB.prepare("UPDATE pin_state SET failed_attempts=?, next_allowed_at=?, updated_at=? WHERE id=1")
+    .bind(failures, nextAllowed, nowISO()).run();
+  return { attemptsRemaining: Math.max(0, 5 - failures), retryAfterSeconds: waitSeconds };
+}
+async function resetPinAttempts(env: Env): Promise<void> {
+  await env.DB.prepare("UPDATE pin_state SET failed_attempts=0, next_allowed_at=NULL, updated_at=? WHERE id=1").bind(nowISO()).run();
+}
+async function issuePinToken(env: Env): Promise<{ token: string; expiresAt: string }> {
+  const token = randomHex(32);
+  const issuedAt = nowISO();
+  const expiresAt = new Date(Date.now() + PIN_TOKEN_TTL_MS).toISOString();
+  await env.DB.prepare("INSERT INTO pin_tokens (token_hash, issued_at, expires_at) VALUES (?, ?, ?)")
+    .bind(await sha256Hex(token), issuedAt, expiresAt).run();
+  return { token, expiresAt };
+}
+async function pinTokenValid(request: Request, env: Env): Promise<boolean> {
+  const presented = request.headers.get("x-pin-token");
+  if (!presented) return false;
+  const hash = await sha256Hex(presented);
+  const row = await env.DB.prepare("SELECT token_hash, expires_at FROM pin_tokens WHERE token_hash=?").bind(hash)
+    .first<{ token_hash: string; expires_at: string }>();
+  if (!row) return false;
+  if (new Date(row.expires_at).getTime() <= Date.now()) {
+    await env.DB.prepare("DELETE FROM pin_tokens WHERE token_hash=?").bind(hash).run();
+    return false;
+  }
+  return true;
+}
+// The withheld-content gate (§2.3): stands in front of BOTH gated
+// families, reads and writes alike, before any handler runs.
+async function pinGate(request: Request, env: Env): Promise<Response | null> {
+  const state = await loadPinState(env);
+  if (!state) return null;
+  if (await pinTokenValid(request, env)) return null;
+  return err(403, "pin_required");
+}
+async function hashCredential(value: string): Promise<{ hash: string; salt: string; iterations: number }> {
+  const salt = randomHex(16);
+  const hash = await pbkdf2Hex(value, salt, PIN_ITERATIONS);
+  return { hash, salt, iterations: PIN_ITERATIONS };
+}
+
 let logoBytes: Uint8Array | null = null;
 function logo(): Uint8Array {
   if (!logoBytes) {
@@ -1358,6 +1473,112 @@ export default {
           return json({ ok: true, version: meta?.version ?? 0 });
         }
         return err(404, "unknown player route");
+      }
+
+      if (seg[0] === "api" && seg[1] === "pin") {
+        // v356 §2.2 — John's session surface only; the agent door
+        // gains NO pin route of any kind (§2.4).
+        if (seg[2] === "state" && request.method === "GET") {
+          const state = await loadPinState(env);
+          return json({ pinSet: !!state, retryAfterSeconds: state ? pinRetryAfterSeconds(state) : 0 });
+        }
+        if (seg[2] === "set" && request.method === "POST") {
+          const body = await request.json().catch(() => ({})) as { pin?: string };
+          const pin = typeof body.pin === "string" ? body.pin : "";
+          if (!/^\d{4,8}$/.test(pin)) return err(400, "pin must be 4-8 digits");
+          const existing = await loadPinState(env);
+          if (existing) return err(409, "pin already set");
+          const pinCred = await hashCredential(pin);
+          const recoveryCode = generateRecoveryCode();
+          const recCred = await hashCredential(normalizeRecoveryCode(recoveryCode));
+          const ts = nowISO();
+          await env.DB.prepare(
+            `INSERT INTO pin_state (id, pin_hash, pin_salt, pin_iterations, recovery_hash, recovery_salt, recovery_iterations, failed_attempts, next_allowed_at, created_at, updated_at)
+             VALUES (1, ?, ?, ?, ?, ?, ?, 0, NULL, ?, ?)`,
+          ).bind(pinCred.hash, pinCred.salt, pinCred.iterations, recCred.hash, recCred.salt, recCred.iterations, ts, ts).run();
+          const issued = await issuePinToken(env);
+          return json({ recoveryCode, token: issued.token, expiresAt: issued.expiresAt }, 201);
+        }
+        if (seg[2] === "verify" && request.method === "POST") {
+          const state = await loadPinState(env);
+          if (!state) return err(409, "no pin set");
+          const wait = pinRetryAfterSeconds(state);
+          if (wait > 0) return json({ error: "wait", retryAfterSeconds: wait }, 429);
+          const body = await request.json().catch(() => ({})) as { pin?: string };
+          const pin = typeof body.pin === "string" ? body.pin : "";
+          const derived = await pbkdf2Hex(pin, state.pin_salt, state.pin_iterations);
+          if (!timingSafeEqual(derived, state.pin_hash)) {
+            const f = await registerPinFailure(env, state);
+            const out: Record<string, unknown> = { error: "wrong pin", attemptsRemaining: f.attemptsRemaining };
+            if (f.retryAfterSeconds) out.retryAfterSeconds = f.retryAfterSeconds;
+            return json(out, 401);
+          }
+          await resetPinAttempts(env);
+          const issued = await issuePinToken(env);
+          return json({ token: issued.token, expiresAt: issued.expiresAt });
+        }
+        if (seg[2] === "change" && request.method === "POST") {
+          const state = await loadPinState(env);
+          if (!state) return err(409, "no pin set");
+          if (!(await pinTokenValid(request, env))) return err(403, "pin_required");
+          const body = await request.json().catch(() => ({})) as { pin?: string };
+          const pin = typeof body.pin === "string" ? body.pin : "";
+          if (!/^\d{4,8}$/.test(pin)) return err(400, "pin must be 4-8 digits");
+          const pinCred = await hashCredential(pin);
+          const recoveryCode = generateRecoveryCode();
+          const recCred = await hashCredential(normalizeRecoveryCode(recoveryCode));
+          await env.DB.prepare(
+            "UPDATE pin_state SET pin_hash=?, pin_salt=?, pin_iterations=?, recovery_hash=?, recovery_salt=?, recovery_iterations=?, updated_at=? WHERE id=1",
+          ).bind(pinCred.hash, pinCred.salt, pinCred.iterations, recCred.hash, recCred.salt, recCred.iterations, nowISO()).run();
+          await env.DB.prepare("DELETE FROM pin_tokens").run();
+          const issued = await issuePinToken(env);
+          return json({ recoveryCode, token: issued.token, expiresAt: issued.expiresAt });
+        }
+        if (seg[2] === "remove" && request.method === "POST") {
+          const state = await loadPinState(env);
+          if (!state) return err(409, "no pin set");
+          if (!(await pinTokenValid(request, env))) return err(403, "pin_required");
+          await env.DB.batch([
+            env.DB.prepare("DELETE FROM pin_state WHERE id=1"),
+            env.DB.prepare("DELETE FROM pin_tokens"),
+          ]);
+          return json({ ok: true });
+        }
+        if (seg[2] === "recover" && request.method === "POST") {
+          const state = await loadPinState(env);
+          if (!state) return err(409, "no pin set");
+          const body = await request.json().catch(() => ({})) as { code?: string; newPin?: string };
+          const newPin = typeof body.newPin === "string" ? body.newPin : "";
+          if (!/^\d{4,8}$/.test(newPin)) return err(400, "pin must be 4-8 digits");
+          const wait = pinRetryAfterSeconds(state);
+          if (wait > 0) return json({ error: "wait", retryAfterSeconds: wait }, 429);
+          const code = normalizeRecoveryCode(typeof body.code === "string" ? body.code : "");
+          const derived = await pbkdf2Hex(code, state.recovery_salt, state.recovery_iterations);
+          if (!timingSafeEqual(derived, state.recovery_hash)) {
+            const f = await registerPinFailure(env, state);
+            const out: Record<string, unknown> = { error: "wrong code", attemptsRemaining: f.attemptsRemaining };
+            if (f.retryAfterSeconds) out.retryAfterSeconds = f.retryAfterSeconds;
+            return json(out, 401);
+          }
+          // One call rolls the whole credential generation (§2.2):
+          // new PIN hash + a NEW recovery code; no exam or
+          // confession row is read, written, or deleted here.
+          const pinCred = await hashCredential(newPin);
+          const recoveryCode = generateRecoveryCode();
+          const recCred = await hashCredential(normalizeRecoveryCode(recoveryCode));
+          await env.DB.prepare(
+            "UPDATE pin_state SET pin_hash=?, pin_salt=?, pin_iterations=?, recovery_hash=?, recovery_salt=?, recovery_iterations=?, failed_attempts=0, next_allowed_at=NULL, updated_at=? WHERE id=1",
+          ).bind(pinCred.hash, pinCred.salt, pinCred.iterations, recCred.hash, recCred.salt, recCred.iterations, nowISO()).run();
+          await env.DB.prepare("DELETE FROM pin_tokens").run();
+          const issued = await issuePinToken(env);
+          return json({ recoveryCode, token: issued.token, expiresAt: issued.expiresAt });
+        }
+        return err(404, "unknown pin route");
+      }
+
+      if (seg[0] === "api" && (seg[1] === "exam" || seg[1] === "confession")) {
+        const blocked = await pinGate(request, env);
+        if (blocked) return blocked;
       }
 
       if (seg[0] === "api" && seg[1] === "exam") {

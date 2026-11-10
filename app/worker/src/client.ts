@@ -78,14 +78,220 @@ function todayChicago() {
   return p.year + '-' + p.month + '-' + p.day;
 }
 function api(path, opts) {
-  return fetch(path, opts || {}).then(function (r) {
+  opts = opts || {};
+  // v356 \u00a72.6.1: while an unlock stands, its token rides every
+  // /api/ call in the one header the gate reads. The token lives in
+  // the memory-only variable below \u2014 never in any storage.
+  if (pinToken && path.indexOf('/api/') === 0) {
+    var hdrs = {};
+    var src = opts.headers || {};
+    Object.keys(src).forEach(function (k) { hdrs[k] = src[k]; });
+    hdrs['x-pin-token'] = pinToken;
+    opts = Object.assign({}, opts, { headers: hdrs });
+  }
+  return fetch(path, opts).then(function (r) {
     return r.json().catch(function () { return {}; }).then(function (j) {
-      if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status));
+      if (!r.ok) { var e = new Error(j.error || ('HTTP ' + r.status)); e.data = j; e.status = r.status; throw e; }
       return j;
     });
   });
 }
 function post(path, body) { return api(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }); }
+
+/* ---------------- Confession PIN (v356) ----------------
+   The unlock token lives in ONE module-scope variable (\u00a72.6.1):
+   set by verify / set / change / recover, cleared when a gated
+   call answers pin_required after expiry, and written NOWHERE
+   else \u2014 no localStorage, no sessionStorage. Closing the app or
+   reloading the page ends it; one PIN entry restores the session.
+   pinStateCache holds the last /api/pin/state read so a tab render
+   with no PIN set never pays a second fetch. */
+var pinToken = null;
+var pinStateCache = null;
+var pinGateCtx = null;
+var pinWaitTimer = null;
+function clearPinWait() { if (pinWaitTimer) { clearInterval(pinWaitTimer); pinWaitTimer = null; } }
+function fetchPinState() {
+  return api('/api/pin/state').then(function (st) { pinStateCache = st; return st; });
+}
+// The gate stands in the two gated renders (\u00a72.6.2): with a token
+// standing, or no PIN set, the render proceeds exactly as before
+// this release; otherwise the PIN gate screen stands in its place
+// and NO gated fetch is issued at all.
+function gatedTabRender(tab, contentFn) {
+  if (pinToken) { contentFn(); return; }
+  if (pinStateCache && !pinStateCache.pinSet) { contentFn(); return; }
+  view.innerHTML = '<p class="meta">Loading...</p>';
+  fetchPinState().then(function (st) {
+    if (!st.pinSet || pinToken) { contentFn(); return; }
+    renderPinGate(tab, contentFn, {});
+  }).catch(function () { contentFn(); });
+}
+function pinGateTitles(tab) {
+  if (tab === 'examination') return { screen: 'Tonight&rsquo;s examination', lock: 'Examination of Conscience is protected by your PIN' };
+  if (tab === 'confession') return { screen: 'Confession', lock: 'Confession is protected by your PIN' };
+  return { screen: 'Settings', lock: 'This section is protected by your PIN' };
+}
+function renderPinGate(tab, contentFn, opts) {
+  clearPinWait();
+  var titles = pinGateTitles(tab);
+  pinGateCtx = { tab: tab, contentFn: contentFn, entry: '' };
+  var html = '<h1 class="screen">' + titles.screen + '</h1>';
+  html += '<div class="card pingate" id="pingate-card"><div class="lockline">' + titles.lock + '</div>';
+  html += '<div class="pindots" id="pindots"></div>';
+  html += '<div class="pinpad" id="pinpad">'
+    + ['1','2','3','4','5','6','7','8','9'].map(function (d) { return '<button data-pinkey="' + d + '">' + d + '</button>'; }).join('')
+    + '<span class="pinblank"></span><button data-pinkey="0">0</button><button data-pinkey="back" aria-label="Delete last digit">&#9003;</button></div>';
+  html += '<div class="pinmsg" id="pinmsg"></div>';
+  html += '<button class="btn gold" id="pin-unlock" disabled>Unlock</button>';
+  html += '<p class="meta" style="margin-top:14px"><a href="#" id="pin-forgot">Forgot PIN? Use your recovery code</a></p>';
+  html += '</div>';
+  view.innerHTML = html;
+  paintPinDots();
+  view.querySelectorAll('[data-pinkey]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var k = b.getAttribute('data-pinkey');
+      if (k === 'back') pinGateCtx.entry = pinGateCtx.entry.slice(0, -1);
+      else if (pinGateCtx.entry.length < 8) pinGateCtx.entry += k;
+      paintPinDots();
+    });
+  });
+  document.getElementById('pin-unlock').addEventListener('click', submitPinVerify);
+  document.getElementById('pin-forgot').addEventListener('click', function (ev) { ev.preventDefault(); renderPinRecoveryForm(tab, contentFn); });
+  if (opts && opts.expired) setPinMsg('Session expired \u2014 enter your PIN.', false);
+  var retry = (pinStateCache && pinStateCache.retryAfterSeconds) || (opts && opts.retryAfterSeconds) || 0;
+  if (retry > 0) startPinWait(retry);
+}
+function paintPinDots() {
+  var dots = document.getElementById('pindots');
+  if (!dots || !pinGateCtx) return;
+  var n = pinGateCtx.entry.length;
+  var html = '';
+  for (var i = 0; i < Math.max(4, n); i++) html += '<span class="pindot' + (i < n ? ' on' : '') + '"></span>';
+  dots.innerHTML = html;
+  var un = document.getElementById('pin-unlock');
+  if (un) un.disabled = n < 4;
+}
+function setPinMsg(text, isErr) {
+  var m = document.getElementById('pinmsg');
+  if (!m) return;
+  m.textContent = text;
+  m.classList.toggle('wait', !isErr);
+}
+function startPinWait(seconds) {
+  clearPinWait();
+  var left = seconds;
+  var pad = document.getElementById('pinpad');
+  var un = document.getElementById('pin-unlock');
+  if (pad) pad.querySelectorAll('button').forEach(function (b) { b.disabled = true; });
+  if (un) un.disabled = true;
+  var tick = function () {
+    if (!document.getElementById('pinmsg')) { clearPinWait(); return; }
+    if (left <= 0) {
+      clearPinWait();
+      if (pad) pad.querySelectorAll('button').forEach(function (b) { b.disabled = false; });
+      paintPinDots();
+      setPinMsg('', false);
+      return;
+    }
+    setPinMsg('Too many attempts \u2014 try again in ' + Math.floor(left / 60) + ':' + ('0' + (left % 60)).slice(-2), false);
+    left--;
+  };
+  tick();
+  pinWaitTimer = setInterval(tick, 1000);
+}
+function submitPinVerify() {
+  if (!pinGateCtx || pinGateCtx.entry.length < 4) return;
+  var ctx = pinGateCtx;
+  var pin = ctx.entry;
+  post('/api/pin/verify', { pin: pin }).then(function (res) {
+    pinToken = res.token;
+    clearPinWait();
+    ctx.contentFn();
+  }).catch(function (e) {
+    ctx.entry = '';
+    paintPinDots();
+    var d = e.data || {};
+    if (e.status === 429 || d.retryAfterSeconds) {
+      fetchPinState().catch(function () {});
+      startPinWait(d.retryAfterSeconds || 30);
+      return;
+    }
+    var card = document.getElementById('pingate-card');
+    if (card) { card.classList.remove('shake'); void card.offsetWidth; card.classList.add('shake'); }
+    var rem = typeof d.attemptsRemaining === 'number' ? d.attemptsRemaining : null;
+    setPinMsg(rem === null ? 'Wrong PIN' : ('Wrong PIN \u2014 ' + rem + (rem === 1 ? ' attempt' : ' attempts') + ' before a short wait'), true);
+  });
+}
+function renderPinRecoveryForm(tab, contentFn) {
+  clearPinWait();
+  var html = '<h1 class="screen">' + pinGateTitles(tab).screen + '</h1>';
+  html += '<div class="card"><h3>Use your recovery code</h3>'
+    + '<p class="meta">Enter the code shown when the PIN was set, and choose a new PIN. Your examination and confession content is kept.</p>'
+    + '<label class="f">Recovery code</label><input type="text" id="rec-code" autocomplete="off" style="text-transform:uppercase">'
+    + '<label class="f">New PIN (4-8 digits)</label><input type="password" id="rec-pin1" inputmode="numeric" autocomplete="off">'
+    + '<label class="f">New PIN again</label><input type="password" id="rec-pin2" inputmode="numeric" autocomplete="off">'
+    + '<p class="pinmsg" id="rec-msg"></p>'
+    + '<div class="row"><button class="btn gold" id="rec-go">Set new PIN</button><button class="btn ghost" id="rec-back">Back</button></div></div>';
+  view.innerHTML = html;
+  document.getElementById('rec-back').addEventListener('click', function () { renderPinGate(tab, contentFn, {}); });
+  document.getElementById('rec-go').addEventListener('click', function () {
+    var code = document.getElementById('rec-code').value.trim();
+    var p1 = document.getElementById('rec-pin1').value.trim();
+    var p2 = document.getElementById('rec-pin2').value.trim();
+    var msg = document.getElementById('rec-msg');
+    if (!code) { msg.textContent = 'Enter the recovery code.'; return; }
+    if (p1 !== p2) { msg.textContent = 'The two entries do not match'; return; }
+    if (!/^[0-9]{4,8}$/.test(p1)) { msg.textContent = 'The PIN must be 4-8 digits.'; return; }
+    post('/api/pin/recover', { code: code, newPin: p1 }).then(function (res) {
+      pinToken = res.token;
+      showRecoverySheet(res.recoveryCode, function () { contentFn(); });
+    }).catch(function (e) {
+      var d = e.data || {};
+      if (e.status === 429 || d.retryAfterSeconds) { msg.textContent = 'Too many attempts \u2014 try again in ' + (d.retryAfterSeconds || 30) + ' seconds.'; return; }
+      var rem = typeof d.attemptsRemaining === 'number' ? d.attemptsRemaining : null;
+      msg.textContent = rem === null ? (e.message || 'Wrong code') : ('Wrong code \u2014 ' + rem + (rem === 1 ? ' attempt' : ' attempts') + ' before a short wait');
+    });
+  });
+}
+// The recovery code's one showing (\u00a72.5/\u00a72.6.5): a dedicated
+// sheet, shown once at set / change / recover, with the standing
+// copy and a Copy button; Done is gated on nothing.
+function showRecoverySheet(code, onDone) {
+  var old = document.querySelector('.recoverysheet');
+  if (old) old.remove();
+  var sheet = document.createElement('div'); sheet.className = 'sheet recoverysheet';
+  sheet.innerHTML = '<div class="inner"><h1 class="screen">Your recovery code</h1>'
+    + '<p class="meta">Store it safely. It is shown once. If you forget your PIN, this code lets you set a new one \u2014 your examination and confession content is kept.</p>'
+    + '<div class="recoverycode" id="rec-code-text">' + esc(code) + '</div>'
+    + '<div class="row"><button class="btn ghost" id="rec-copy">Copy</button><button class="btn gold" id="rec-done">Done</button></div></div>';
+  document.body.appendChild(sheet);
+  sheet.querySelector('#rec-copy').addEventListener('click', function () {
+    var btn = sheet.querySelector('#rec-copy');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(function () { btn.textContent = 'Copied'; }, function () { selectRecoveryText(sheet); });
+    } else selectRecoveryText(sheet);
+  });
+  sheet.querySelector('#rec-done').addEventListener('click', function () { sheet.remove(); if (onDone) onDone(); });
+}
+function selectRecoveryText(sheet) {
+  var el = sheet.querySelector('#rec-code-text');
+  if (!el) return;
+  var range = document.createRange(); range.selectNodeContents(el);
+  var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+}
+// A gated fetch that still answers pin_required (the token expired
+// between the state read and the call): the gated DOM is cleared,
+// the token dropped, and the gate stands again (\u00a72.6.2).
+function pinRefusalGate(tab, contentFn, e) {
+  if (!e || e.message !== 'pin_required') return false;
+  var had = !!pinToken;
+  pinToken = null;
+  pinStateCache = null;
+  renderPinGate(tab, contentFn, { expired: had });
+  return true;
+}
+
 /* ---------------- Playback engine (v312 E5/E6) ----------------
    One queue builder serves both Play All shapes. A descriptor is
    {episodeId, title, url, available}; the queue holds ALL descriptors
@@ -1116,6 +1322,7 @@ function paintSettings() {
     });
   });
   html += '<div class="row" style="margin-top:12px"><button class="btn gold" id="set-save">Save mapping</button><button class="btn ghost" id="set-back">&lsaquo; Back</button></div>';
+  html += '<div id="pin-section"></div>';
   view.innerHTML = html;
   view.querySelectorAll('[data-setkey]').forEach(function (el) {
     var key = el.getAttribute('data-setkey');
@@ -1138,6 +1345,68 @@ function paintSettings() {
   });
   document.getElementById('set-save').addEventListener('click', saveSettings);
   document.getElementById('set-back').addEventListener('click', function () { setTab('prayers'); });
+  fillPinSection();
+}
+/* ---------------- Settings \u2014 Confession PIN section (v356 \u00a72.6.4) ----------------
+   A standalone section at the end of Settings, apart from the
+   source-mapping rows. With no PIN set nothing anywhere else in
+   the app mentions the PIN (decision 6). Change and Remove ride
+   on the unlock token, so locked they are not offered \u2014 the
+   recovery path stands on the gate itself. */
+function fillPinSection() {
+  var host = document.getElementById('pin-section');
+  if (!host) return;
+  fetchPinState().then(function (st) {
+    var host2 = document.getElementById('pin-section');
+    if (!host2) return;
+    var html = '<div class="blockhead pinsection"><h2>CONFESSION PIN</h2></div>';
+    if (!st.pinSet) {
+      html += '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">No PIN is set. Confession and Examination open without a PIN.</p><button class="btn gold" id="pin-set-open">Set a PIN</button></div>';
+      host2.innerHTML = html;
+      document.getElementById('pin-set-open').addEventListener('click', function () { openPinSetSheet('set'); });
+    } else if (pinToken) {
+      html += '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">A PIN is set, and this session is unlocked.</p><button class="btn gold" id="pin-change-open">Change PIN</button> <button class="btn ghost" id="pin-remove">Remove PIN</button></div>';
+      host2.innerHTML = html;
+      document.getElementById('pin-change-open').addEventListener('click', function () { openPinSetSheet('change'); });
+      document.getElementById('pin-remove').addEventListener('click', function () {
+        if (!confirm('Remove the PIN? Confession and Examination will open without it.')) return;
+        post('/api/pin/remove', {}).then(function () { pinToken = null; pinStateCache = { pinSet: false, retryAfterSeconds: 0 }; renderSettings(); })
+          .catch(function (e) { if (!pinRefusalGate('settings', renderSettings, e)) alert(e.message); });
+      });
+    } else {
+      html += '<div class="card"><p style="margin:0 0 8px;line-height:1.55;font-size:15px">A PIN is set.</p><button class="btn gold" id="pin-enter-open">Enter PIN</button></div>';
+      host2.innerHTML = html;
+      document.getElementById('pin-enter-open').addEventListener('click', function () { renderPinGate('settings', renderSettings, {}); });
+    }
+  }).catch(function () {});
+}
+function openPinSetSheet(mode) {
+  var old = document.querySelector('.pinsetsheet');
+  if (old) old.remove();
+  var sheet = document.createElement('div'); sheet.className = 'sheet pinsetsheet';
+  sheet.innerHTML = '<div class="inner"><div class="row"><h1 class="screen grow">' + (mode === 'set' ? 'Set a PIN' : 'Change PIN') + '</h1><button class="btn ghost" id="ps-close">Close</button></div>'
+    + '<p class="meta">' + (mode === 'set'
+      ? 'The PIN gates Confession and Examination on this device\u2019s signed-in session. When it is set you will be shown a recovery code, once, for the day the PIN is forgotten.'
+      : 'Choose the new PIN. A new recovery code is shown once, and every standing unlock ends.') + '</p>'
+    + '<label class="f">New PIN (4-8 digits)</label><input type="password" id="ps-pin1" inputmode="numeric" autocomplete="off">'
+    + '<label class="f">New PIN again</label><input type="password" id="ps-pin2" inputmode="numeric" autocomplete="off">'
+    + '<p class="pinmsg" id="ps-msg"></p>'
+    + '<div style="margin-top:10px"><button class="btn gold" id="ps-save">' + (mode === 'set' ? 'Set PIN' : 'Change PIN') + '</button></div></div>';
+  document.body.appendChild(sheet);
+  sheet.querySelector('#ps-close').addEventListener('click', function () { sheet.remove(); });
+  sheet.querySelector('#ps-save').addEventListener('click', function () {
+    var p1 = sheet.querySelector('#ps-pin1').value.trim();
+    var p2 = sheet.querySelector('#ps-pin2').value.trim();
+    var msg = sheet.querySelector('#ps-msg');
+    if (p1 !== p2) { msg.textContent = 'The two entries do not match'; return; }
+    if (!/^[0-9]{4,8}$/.test(p1)) { msg.textContent = 'The PIN must be 4-8 digits.'; return; }
+    post(mode === 'set' ? '/api/pin/set' : '/api/pin/change', { pin: p1 }).then(function (res) {
+      pinToken = res.token;
+      pinStateCache = { pinSet: true, retryAfterSeconds: 0 };
+      sheet.remove();
+      showRecoverySheet(res.recoveryCode, function () { renderSettings(); });
+    }).catch(function (e) { msg.textContent = e.message; });
+  });
 }
 function settingsRebuildOrder() {
   // After a structural change (toggle, block move) the row stands
@@ -3087,7 +3356,8 @@ function renderPrayers() {
 }
 
 /* ---------------- Examination ---------------- */
-function renderExamination() {
+function renderExamination() { gatedTabRender('examination', renderExaminationContent); }
+function renderExaminationContent() {
   view.innerHTML = '<h1 class="screen">Tonight&rsquo;s examination</h1><p class="meta">Loading...</p>';
   api('/api/exam/today').then(function (data) {
     var run = data.run;
@@ -3124,7 +3394,7 @@ function renderExamination() {
     html += '<p class="about">Examination of conscience after Fr. F. X. Lasance, My Prayer Book (Benziger Brothers, 1908; public domain), pp. 347-349 — seeded verbatim; every prompt is editable (Prompts, above). Entries are never read by any job and never leave this app.</p>';
     view.innerHTML = html;
     wireExamination(data);
-  }).catch(function (e) { view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
+  }).catch(function (e) { if (pinRefusalGate('examination', renderExaminationContent, e)) return; view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
 }
 function entriesHtml(list) { return (list || []).map(entryHtml).join(''); }
 function entryHtml(e) { return '<div class="entry">' + esc(e.text) + '<div class="meta">' + esc((e.created_at || '').slice(11, 16)) + ' <a href="#" data-del-entry="' + e.id + '">remove</a></div></div>'; }
@@ -3188,7 +3458,8 @@ function openPromptsEditor(prompts) {
 }
 
 /* ---------------- Confession ---------------- */
-function renderConfession() {
+function renderConfession() { gatedTabRender('confession', renderConfessionContent); }
+function renderConfessionContent() {
   view.innerHTML = '<h1 class="screen">Confession</h1><p class="meta">Loading...</p>';
   api('/api/confession').then(function (c) {
     var html = '<div class="row"><div class="grow"><h1 class="screen">Confession</h1><p class="sub">preparation and guide</p></div><button class="btn ghost small" id="cf-gear">Guide</button></div>';
@@ -3227,7 +3498,7 @@ function renderConfession() {
       if (confirm('Close the preparation list under a confession on ' + date + '?')) post('/api/confession/made', { date: date, note: note }).then(renderConfession);
     });
     document.getElementById('cf-gear').addEventListener('click', function () { openGuideEditor(c.guide || []); });
-  }).catch(function (e) { view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
+  }).catch(function (e) { if (pinRefusalGate('confession', renderConfessionContent, e)) return; view.innerHTML = '<p class="err">' + esc(e.message) + '</p>'; });
 }
 function openGuideEditor(guide) {
   var sheet = document.createElement('div'); sheet.className = 'sheet';
