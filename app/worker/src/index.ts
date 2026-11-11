@@ -221,7 +221,7 @@ function logo512(): Uint8Array {
 // date (High=4, Medium=2, Low=1, persisted, fill-missing only),
 // per-day completions (data only in this app — no behavior is built
 // on them), and the day addendum.
-const PRAYER_BLOCKS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night", "Mass and Homilies", "Novenas"] as const;
+const PRAYER_BLOCKS = ["Morning", "Midmorning", "Midday", "Afternoon", "Evening", "Night", "Mass and Homilies", "Novenas", "The AI Signal"] as const;
 const PRAYER_BLOCK_START: Record<string, number> = {
   // v339: "Mass and Homilies" carries no hour of its own — it is
   // the day's closing listening block, not a time-of-day office.
@@ -235,6 +235,12 @@ const PRAYER_BLOCK_START: Record<string, number> = {
   // derivation below is start-based, not order-based, so a
   // last-position block with start 9 can never hijack "current".
   Morning: 0, Midmorning: 9, Midday: 12, Afternoon: 15, Evening: 18, Night: 21, "Mass and Homilies": 24, Novenas: 9,
+  // v368 §2.2: "The AI Signal" takes the Mass and Homilies value —
+  // 24 keeps it out of the current-block derivation entirely and
+  // prayerBlockDue reads false at every hour of the presented day.
+  // The entry is REQUIRED: the ?? 0 fallback would make an
+  // unlisted block "current" at every hour.
+  "The AI Signal": 24,
 };
 const PRAYLIST_URL: Record<string, string> = {
   Morning: "https://open.spotify.com/playlist/0sy9eBsySKuCppI0PxXRJN",
@@ -256,6 +262,9 @@ const BLOCK_CAPTION: Record<string, string> = {
   // hour caption: Novenas never becomes the derived current block,
   // so its caption must not promise an hour behavior.
   Novenas: "the day's novenas",
+  // v368 §2.2: the content-caption form again — the block is the
+  // day's episode, not an hour office.
+  "The AI Signal": "the day's episode",
 };
 
 interface PrayerItemRow {
@@ -295,7 +304,7 @@ function prayerBlockDue(date: string, block: string, today: string, hour: number
 }
 async function prayerGetItems(env: Env): Promise<PrayerItemRow[]> {
   const r = await env.DB.prepare(
-    "SELECT * FROM prayer_items ORDER BY CASE block WHEN 'Morning' THEN 0 WHEN 'Midmorning' THEN 1 WHEN 'Midday' THEN 2 WHEN 'Afternoon' THEN 3 WHEN 'Evening' THEN 4 WHEN 'Night' THEN 5 WHEN 'Mass and Homilies' THEN 6 WHEN 'Novenas' THEN 7 ELSE 6 END, sort, id",
+    "SELECT * FROM prayer_items ORDER BY CASE block WHEN 'Morning' THEN 0 WHEN 'Midmorning' THEN 1 WHEN 'Midday' THEN 2 WHEN 'Afternoon' THEN 3 WHEN 'Evening' THEN 4 WHEN 'Night' THEN 5 WHEN 'Mass and Homilies' THEN 6 WHEN 'Novenas' THEN 7 WHEN 'The AI Signal' THEN 8 ELSE 6 END, sort, id",
   ).all<PrayerItemRow>();
   return r.results ?? [];
 }
@@ -494,6 +503,12 @@ const INTRO_PAIRING: Record<string, string> = {
   "ext-daily-tv-mass": "Mass",
   "ext-fr-mike-homily": "Mass",
   "ext-barron-sermon": "Mass",
+  // v368 §2.6 (D4-B, John's word 2026-11-10 20:48 CT — the NEW
+  // module item, as designed): the episode pairs to the new item
+  // 'The AI Signal', which migration 0016 plants in its own
+  // module block. The helper's SLOT_PAIRING carries the same
+  // entry — the two tables are one contract, changed together.
+  "the-ai-signal": "The AI Signal",
 };
 // v342 (privacy decision, John 2026-11-09 11:24 CT — the §2
 // Concern 2 alternative, adopted): the drawn intention TEXTS ride
@@ -538,7 +553,9 @@ async function playerIntroTexts(
 // tracks, externals, and intros at open in the one resolution
 // pass (§2.8 ruling 3), exactly as it already filled externals.
 // Named-missing is a client computation (settings standing vs
-// resolution results). player_episodes is not read here at all.
+// resolution results). player_episodes is not read here at all —
+// v368 §2.2.7's ONE bounded exception stands below: the "The AI
+// Signal" block only, whose episode resolves from no feed.
 async function playerDayPayload(env: Env) {
   const labelRows = await env.DB.prepare("SELECT block, label FROM prayer_block_labels").all<{ block: string; label: string }>();
   const labels = new Map((labelRows.results ?? []).map((r) => [r.block, r.label]));
@@ -552,8 +569,32 @@ async function playerDayPayload(env: Env) {
   const presented = prayerChicagoNow().date;
   const settings = await sourceSettingsPayload(env);
   const introTexts = await playerIntroTexts(env, presented);
+  // v368 §2.2.7: the ONE bounded exception to the shell's
+  // no-tracks rule — the "The AI Signal" block only. The
+  // episode's existence is a fact of the app's own store and
+  // resolves from NO feed; the shell is the signed-in surface
+  // that already reads that store for introTexts, and the v312
+  // store-read is the standing precedent for own content. When
+  // the presented date's row stands present, the block carries
+  // the single descriptor; otherwise tracks [] + trackCount 0
+  // and the client computes named-missing from the settings
+  // standing exactly as for every own source. No other block's
+  // shell entry changes; no other payload field changes. A
+  // future store-only source reuses this shape deliberately,
+  // never by drift (§2 Concern 2).
+  const aiRow = await env.DB.prepare(
+    "SELECT title, duration_s, size_bytes, audio_state FROM player_episodes WHERE date=? AND episode_id='the-ai-signal'",
+  ).bind(presented).first<{ title: string; duration_s: number; size_bytes: number; audio_state: string }>();
   const blocks = PRAYER_BLOCKS.map((block) => {
     const route = sources.find((x) => x.block === block && x.source_kind === "playlist");
+    if (block === "The AI Signal" && aiRow && aiRow.audio_state === "present") {
+      const desc = {
+        episodeId: "the-ai-signal", title: aiRow.title, block: "The AI Signal", kind: "episode",
+        durationS: aiRow.duration_s, sizeBytes: aiRow.size_bytes,
+        streamUrl: `/api/player/audio/${presented}/the-ai-signal`, state: "present",
+      };
+      return { block, label: labels.get(block) ?? block, caption: BLOCK_CAPTION[block], spotifyUrl: route?.spotify_url || PRAYLIST_URL[block], tracks: [desc] as unknown[], trackCount: 1 };
+    }
     return { block, label: labels.get(block) ?? block, caption: BLOCK_CAPTION[block], spotifyUrl: route?.spotify_url || PRAYLIST_URL[block], tracks: [] as unknown[], trackCount: 0 };
   });
   return {
@@ -1077,6 +1118,39 @@ export default {
         // generation iterates the presented own tracks from it and
         // pairs them against the day's draw).
         return json(await playerDayPayload(env));
+      }
+      if (seg[2] === "player" && seg[3] === "episode" && request.method === "POST") {
+        // v368 §2.4: the AI Signal job's hand-off — raw MP3 bytes
+        // in, the R2 object + the dated player_episodes row out.
+        // Exactly one episode kind registers through this route;
+        // any other id refuses 400 (widening it is a later
+        // release's Scope, §2 Concern 3). The upsert replaces
+        // whole: a re-generated episode heals its day. The job's
+        // success test is sizeBytes equal to the MP3's byte size
+        // on disk.
+        const episodeId = request.headers.get("x-episode-id") ?? "";
+        if (episodeId !== "the-ai-signal") return err(400, "episode id must be the-ai-signal");
+        const epDate = request.headers.get("x-episode-date") ?? "";
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(epDate)) return err(400, "date must be YYYY-MM-DD");
+        const epTitle = (request.headers.get("x-episode-title") ?? "").trim();
+        if (epTitle.length < 1 || epTitle.length > 160) return err(400, "title must be 1-160 chars");
+        let epDuration = 0;
+        const durRaw = request.headers.get("x-duration-s");
+        if (durRaw !== null && durRaw.trim() !== "") {
+          epDuration = Number(durRaw);
+          if (!isFinite(epDuration) || epDuration < 0) return err(400, "duration must be numeric >= 0");
+        }
+        const epBody = await request.arrayBuffer();
+        if (epBody.byteLength > 25 * 1024 * 1024) return err(400, "episode too large");
+        const epKey = `episodes/${epDate}/the-ai-signal.mp3`;
+        await env.AUDIO.put(epKey, epBody, { httpMetadata: { contentType: "audio/mpeg" } });
+        await env.DB.prepare(
+          `INSERT INTO player_episodes (date, episode_id, title, block, sort, duration_s, r2_key, size_bytes, audio_state, pushed_at)
+           VALUES (?, 'the-ai-signal', ?, 'The AI Signal', 1, ?, ?, ?, 'present', ?)
+           ON CONFLICT(date, episode_id) DO UPDATE SET title = excluded.title, duration_s = excluded.duration_s,
+             r2_key = excluded.r2_key, size_bytes = excluded.size_bytes, audio_state = excluded.audio_state, pushed_at = excluded.pushed_at`,
+        ).bind(epDate, epTitle, epDuration, epKey, epBody.byteLength, nowISO()).run();
+        return json({ ok: true, date: epDate, episodeId, sizeBytes: epBody.byteLength });
       }
       return err(404, "unknown agent route");
     }

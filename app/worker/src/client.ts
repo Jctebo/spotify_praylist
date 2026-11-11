@@ -1464,8 +1464,8 @@ measureBars();
 var settingsRows = [];
 var settingsVersion = null;
 var settingsNote = '';
-var SET_BLOCKS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Mass and Homilies', 'Novenas'];
-var SET_SECTIONS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Mass and Homilies', 'Novenas', 'No block', 'Off'];
+var SET_BLOCKS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Mass and Homilies', 'Novenas', 'The AI Signal'];
+var SET_SECTIONS = ['Morning', 'Midmorning', 'Midday', 'Afternoon', 'Evening', 'Night', 'Mass and Homilies', 'Novenas', 'The AI Signal', 'No block', 'Off'];
 var DAY_RULE_LABELS = { 'daily': 'Daily', 'weekdays': 'Weekdays only', 'weekends': 'Weekends only', 'sundays': 'Sundays only', 'fridays': 'Fridays only', 'fallback-only': 'Fallback only' };
 function settingsFamilyLabel(row) {
   if (row.sourceKey === 'saint-of-the-day') return 'Spotify-side today — this row governs from the day a source leg brings this source into the app.';
@@ -2623,7 +2623,12 @@ function blockInsertCards(day, standing) {
         var row = e.own;
         var st = state.ownSlots[row.sourceKey];
         var tmp = document.createElement('div');
-        tmp.innerHTML = st && st.state === 'present' ? st.tracks.map(function (m) { return trackCard(ownSlotTrack(row, m, day.presentedDay || day.date)); }).join('') : ownPlaceholderCard(row);
+        // v368 §2.5.3: a row settled MISSING before the insert
+        // (the shell-resolved AI Signal row) paints its missing
+        // card, not the placeholder — the append path's standing
+        // shape. Feed rows are never missing at insert time.
+        tmp.innerHTML = st && st.state === 'present' ? st.tracks.map(function (m) { return trackCard(ownSlotTrack(row, m, day.presentedDay || day.date)); }).join('')
+          : (st && st.state === 'missing' ? trackCard(ownSlotTrack(row, { episodeId: row.episodeId, title: row.title, state: 'missing' }, day.presentedDay || day.date)) : ownPlaceholderCard(row));
         var nodes = [];
         while (tmp.firstChild) nodes.push(tmp.removeChild(tmp.firstChild));
         nodes.forEach(function (el) {
@@ -2784,7 +2789,11 @@ function ownSlotTrack(row, meta, date) {
     available: present, streamUrl: present ? (meta.streamUrl || meta.enclosureUrl) : null,
     enclosureUrl: meta ? meta.enclosureUrl : null,
     durationS: meta ? (meta.durationS || 0) : 0, sizeBytes: meta ? (meta.sizeBytes || 0) : 0,
-    hasText: present, textUrl: present ? '/api/player/text/' + date + '/' + (meta ? meta.episodeId : row.episodeId) : null,
+    // v368 §2.5: a meta may declare hasText false — the store-only
+    // episode stages no read-along text object, so no Read control
+    // stands on its row and the no-text fold names it in the meta
+    // (the v363 convention). No standing meta sets the flag.
+    hasText: present && !(meta && meta.hasText === false), textUrl: present ? '/api/player/text/' + date + '/' + (meta ? meta.episodeId : row.episodeId) : null,
     _block: row.block
   };
 }
@@ -3224,12 +3233,60 @@ function ownBuildIntentions(day, cachedRec) {
     state.introRec = null;
   });
 }
+function claimAiSignalShell(day) {
+  // v368 §2.5.3: the shell fills The AI Signal block's tracks
+  // server-side (the §2.2.7 exception) — the ONLY block whose
+  // payload tracks stand non-empty. The client claims that
+  // descriptor into the own-slot machinery (resolveAiSignal) and
+  // empties the payload list here, synchronously at the pass's
+  // open, so no paint path (the block page renders payload tracks
+  // directly) can ever stand the episode twice or in its raw
+  // shell form. Returns the descriptor, or null when the block
+  // carries none (no registration for the presented day).
+  var blk = (day.blocks || []).filter(function (x) { return x.block === 'The AI Signal'; })[0];
+  if (!blk || !blk.tracks || !blk.tracks.length) return null;
+  var desc = blk.tracks[0];
+  blk.tracks = [];
+  return desc;
+}
+function resolveAiSignal(day, settings, shellDesc) {
+  // v368 §2.5.3: the resolution leg for the store-only episode.
+  // Standing = the settings row (family 'own', sourceKey
+  // 'the-ai-signal' — deliberately NO OWN_ROW_EPISODE entry: the
+  // public-feed own leg must never claim this source, §2.5.2);
+  // a Settings disable by John settles the block absent, the
+  // standing rule for own sources. Result = the shell block's
+  // filled descriptor, claimed by claimAiSignalShell. Present
+  // stands the slot present with the descriptor as its one track
+  // (streamUrl is the signed-in audio route; hasText false — no
+  // text object is staged for this episode kind); absent stands
+  // it named-missing (the ownSettleMissing shape, settled inline:
+  // no feed will ever resolve it). The pair machinery is the
+  // standing one — the descriptor carries episodeId
+  // 'the-ai-signal', so ownBuildIntentions' guid join
+  // (intentions-intro-the-ai-signal-<date>) + the shell's
+  // introTexts stand the intention row before it with no new
+  // pair code (§2.5.4; the join call site is this leg's settle +
+  // expandDescs, named in §3).
+  var s = (settings.sources || []).filter(function (x) { return x.sourceKey === 'the-ai-signal'; })[0];
+  if (!s || s.enabled !== 1 || !s.block) return;
+  var row = { sourceKey: 'the-ai-signal', episodeId: 'the-ai-signal', block: s.block, sortOrder: s.sortOrder, title: s.name, enabled: s.enabled, shellResolved: true };
+  state.ownStanding.push(row);
+  if (shellDesc) {
+    state.ownSlots[row.sourceKey] = { state: 'present', tracks: [{ episodeId: 'the-ai-signal', title: shellDesc.title, state: 'present', enclosureUrl: null, streamUrl: shellDesc.streamUrl, durationS: shellDesc.durationS || 0, sizeBytes: shellDesc.sizeBytes || 0, hasText: false }] };
+  } else {
+    state.ownSlots[row.sourceKey] = { state: 'missing', tracks: [] };
+  }
+}
 function resolveExternals(day) {
   // v337 §2.4: resolution keys on the PRESENTED day (the payload's
   // presentedDay; its date field carries the same day). storedDay
   // is the produced fact and no longer keys any consumption path.
   var date = day.presentedDay || day.date;
   if (!date) return;
+  // v368 §2.5.3: claim the shell's AI Signal descriptor before
+  // any paint can consume the payload's block list.
+  var aiShellDesc = claimAiSignalShell(day);
   state.extSlots = {};
   state.extStanding = [];
   api('/api/player/source-settings').then(function (settings) {
@@ -3260,6 +3317,10 @@ function resolveExternals(day) {
     state.ownStanding = ownStanding;
     state.ownSlots = {};
     ownStanding.forEach(function (row) { state.ownSlots[row.sourceKey] = { state: 'loading', tracks: [] }; });
+    // v368 §2.5.3: the store-only episode settles from the shell
+    // in this same pass, before the feed/watchdog machinery runs
+    // (its row is shellResolved — those legs skip it by name).
+    resolveAiSignal(day, settings, aiShellDesc);
     // Day cache: valid only for this date AND this settings version.
     var cache = extCacheRead();
     var cacheValid = !!cache && cache.date === date && cache.settingsVersion === settings.version && cache.slots;
@@ -3336,6 +3397,11 @@ function resolveExternals(day) {
       // built (never a device blob URL, never the drawn texts).
       var ownRec = {};
       ownStanding.forEach(function (row) {
+        // v368 §2.5.3: a shellResolved row never enters the day
+        // cache — its presence is a server fact the shell re-reads
+        // every open; a cached entry would stand it present from
+        // an enclosureUrl it does not have.
+        if (row.shellResolved) return;
         var st = state.ownSlots[row.sourceKey];
         if (!st || st.state !== 'present' || !st.tracks.length) return;
         if (row.episodeId === 'novenas') {
@@ -3443,6 +3509,10 @@ function resolveExternals(day) {
     // the rest resolve from the podcast feed in this same pass.
     var ownNeeded = {};
     ownStanding.forEach(function (row) {
+      // v368 §2.5.3: a shellResolved row settled already in this
+      // pass — the feed leg never claims it (no OWN_ROW_EPISODE
+      // entry stands for it, §2.5.2, by the same rule).
+      if (row.shellResolved) return;
       var st = state.ownSlots[row.sourceKey];
       if (st.state === 'present') ownSettlePresent(day, row, st.tracks);
       else (ownNeeded[row.episodeId] = ownNeeded[row.episodeId] || []).push(row);
