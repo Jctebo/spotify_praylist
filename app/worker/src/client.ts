@@ -2899,13 +2899,18 @@ function ownRegisterReadTracks() {
   });
 }
 function updateBlockCounts(day) {
+  // v374 §2: the count's source of truth is state.dayDescs — the
+  // expanded descriptor list the app itself plays, searches, and
+  // queues from. A block's count is the number of descriptors
+  // carrying its name (intention descriptors included: their rows
+  // are listed tracks of the block; a settled-missing track stands
+  // as exactly one descriptor; loading placeholders emit none).
+  // The old own+ext standing-list arithmetic (with its novenas
+  // special case) is replaced whole by this one tally.
   var counts = {};
-  (state.ownStanding || []).forEach(function (row) {
-    var st = state.ownSlots[row.sourceKey];
-    var n = (row.episodeId === 'novenas' && st && st.tracks && st.tracks.length) ? st.tracks.length : 1;
-    counts[row.block] = (counts[row.block] || 0) + n;
+  (state.dayDescs || []).forEach(function (d) {
+    if (d.block) counts[d.block] = (counts[d.block] || 0) + 1;
   });
-  (state.extStanding || []).forEach(function (s) { counts[s.block] = (counts[s.block] || 0) + 1; });
   view.querySelectorAll('[data-bcount]').forEach(function (el) {
     var b = el.getAttribute('data-bcount');
     var blk = (day.blocks || []).filter(function (x) { return x.block === b; })[0];
@@ -3429,8 +3434,11 @@ function resolveExternals(day) {
       }
     });
     blockInsertCards(day, standing);
-    updateBlockCounts(day);
+    // v374 §2 (site 4): the descriptor build runs BEFORE the count
+    // pass — the count reads state.dayDescs, so the list must stand
+    // built first.
     extRebuildDescs(day);
+    updateBlockCounts(day);
     var writeCache = function () {
       standing.forEach(function (slot) {
         var st = state.extSlots[slot.slotId];
@@ -3472,6 +3480,10 @@ function resolveExternals(day) {
       // landed (descriptor-first, introForTrack).
       extRebuildDescs(day);
       extSwapCard(slot);
+      // v374 §2 (site 2): a settle changes the block's listed
+      // tracks — refresh the count on any standing surface (an
+      // all-external block's page depends on this call).
+      updateBlockCounts(day);
       writeCache();
     };
     var extDownload = function (slot, meta) {
@@ -3589,6 +3601,9 @@ function resolveExternals(day) {
         if (st && st.state === 'present') ownSwapRow(row, day);
       });
       extRebuildDescs(day);
+      // v374 §2 (site 3): intention rows enter the listing at this
+      // landing — the count grows by them on any standing surface.
+      updateBlockCounts(day);
       paintContinue(day);
       renderQueueList();
       maybeRestoreQueue(); // v355 A1: the intentions leg can complete readiness second
@@ -3970,6 +3985,11 @@ function paintBlockPage(day, block) {
   html += (b.tracks || []).map(function (t) { return trackCard(Object.assign({}, t, { _block: b.block })); }).join('');
   view.innerHTML = html;
   appendBlockSettingsCards(day, b);
+  // v374 §2 (site 1): the header span stands in the view now —
+  // rewrite it from the current descriptor count, so a block page
+  // painted after settlement reads the true count at first paint
+  // (the shell seed is 0 for every block but The AI Signal).
+  updateBlockCounts(day);
 }
 function paintEpisodesPage(day) {
   // §2.3.4: the unblocked group in the same page form — a paint
