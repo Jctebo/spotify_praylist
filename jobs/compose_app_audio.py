@@ -158,7 +158,24 @@ SLOT_PAIRING = {
     "ext-daily-tv-mass": "Mass",
     "ext-fr-mike-homily": "Mass",
     "ext-barron-sermon": "Mass",
+    # v368 §2.6 (D4-B, John's word 2026-11-10 20:48 CT — the NEW
+    # module item, as designed): The AI Signal episode pairs to
+    # the new item 'The AI Signal' (migration 0016 plants it in
+    # its own module block). The Worker's INTRO_PAIRING carries
+    # the same entry — the two tables are one contract, changed
+    # together or not at all.
+    "the-ai-signal": "The AI Signal",
 }
+
+# v368 §2.6.3: The AI Signal episode stands in neither the own
+# feed nor the settings slots — the same store-only fact that
+# forces the client's own leg — so the intros leg's presented
+# set gains it by this named constant, appended before
+# eligibility runs. Eligibility is then standing: pairing
+# (SLOT_PAIRING above) + the item's draw for the consumption
+# date (read_draw from the module payload — the item stands
+# there because the module payload is not filtered).
+APP_PRESENTED = ["the-ai-signal"]
 
 
 def pairing_for(track_id: str):
@@ -705,6 +722,12 @@ def main() -> int:
             for k, v in f_titles.items():
                 titles.setdefault(k, v)
     presented = list(dict.fromkeys(own_ids + slot_ids))
+    # v368 §2.6.3: the store-only episode joins the presented set
+    # by the named constant; its report title stands as the show
+    # name. A night the item is not drawn reads the track
+    # unpaired below — named in the report, never fatal.
+    presented = list(dict.fromkeys(presented + APP_PRESENTED))
+    titles["the-ai-signal"] = "The AI Signal"
     eligible, unpaired = [], 0
     for track in presented:
         item = pairing_for(track)
